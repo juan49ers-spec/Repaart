@@ -1,0 +1,189 @@
+import React, { useState } from 'react';
+import { X, RotateCcw } from 'lucide-react';
+
+/**
+ * QuizView - Examen tipo test interactivo
+ * Professional quiz interface with immediate feedback
+ */
+const QuizView = ({ categoryName, quizzes, onComplete, onBack }) => {
+    const [answers, setAnswers] = useState({});
+    const [showResults, setShowResults] = useState(false);
+    const [score, setScore] = useState(null);
+
+    const handleSubmit = () => {
+        let correct = 0;
+        quizzes.forEach((quiz, index) => {
+            if (answers[index] === quiz.correctIndex) {
+                correct++;
+            }
+        });
+
+        const scorePercentage = Math.round((correct / quizzes.length) * 100);
+        const passed = scorePercentage >= 80;
+
+        setScore({
+            percentage: scorePercentage,
+            correct,
+            total: quizzes.length,
+            passed
+        });
+        setShowResults(true);
+
+        if (onComplete) {
+            onComplete(scorePercentage, passed);
+        }
+    };
+
+    const handleRetry = () => {
+        setAnswers({});
+        setShowResults(false);
+        setScore(null);
+    };
+
+    const allAnswered = Object.keys(answers).length === quizzes.length;
+
+    if (showResults && score) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[600px] p-8 animate-fade-in">
+                <div className="text-center max-w-md surface-raised p-10 rounded-2xl elevation-xl border border-slate-200">
+                    <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 ${score.passed ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+                        }`}>
+                        {score.passed ? (
+                            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        ) : (
+                            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        )}
+                    </div>
+
+                    <h2 className="text-h2 text-primary mb-2">
+                        {score.passed ? '¡Aprobado!' : 'Suspendido'}
+                    </h2>
+
+                    <div className="mb-6">
+                        <div className="text-5xl font-black text-primary mb-2">{score.percentage}%</div>
+                        <p className="text-secondary">
+                            {score.correct} aciertos de {score.total} preguntas
+                        </p>
+                        {!score.passed && (
+                            <p className="text-body-sm text-tertiary mt-3">
+                                Necesitas ≥80% para aprobar
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="flex gap-3 justify-center">
+                        {!score.passed && (
+                            <button
+                                onClick={handleRetry}
+                                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors elevation-md"
+                            >
+                                <RotateCcw size={18} />
+                                Reintentar
+                            </button>
+                        )}
+                        <button
+                            onClick={onBack}
+                            className="px-6 py-3 surface-sunken text-primary rounded-xl font-bold hover:bg-slate-200 transition-colors"
+                        >
+                            {score.passed ? 'Continuar' : 'Volver'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="p-8 max-w-3xl mx-auto pb-24 h-full overflow-y-auto custom-scroll">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-8">
+                <div>
+                    <button
+                        onClick={onBack}
+                        className="text-tertiary hover:text-primary flex items-center gap-2 mb-4 transition-colors"
+                    >
+                        <X size={18} />
+                        Salir del examen
+                    </button>
+                    <h2 className="text-h2 text-primary">Examen: {categoryName}</h2>
+                    <p className="text-secondary mt-1">
+                        {quizzes.length} preguntas · Mínimo 80% para aprobar
+                    </p>
+                </div>
+            </div>
+
+            {/* Questions */}
+            <div className="surface-raised rounded-2xl elevation-md border border-slate-200 overflow-hidden">
+                <div className="bg-slate-900 p-8 text-white text-center">
+                    <h3 className="text-h3">Evaluación de Conocimientos</h3>
+                </div>
+
+                <div className="p-8 space-y-8">
+                    {quizzes.map((quiz, index) => (
+                        <div
+                            key={quiz.id}
+                            className="border-b border-slate-100 pb-6 last:border-0 last:pb-0"
+                        >
+                            <p className="font-bold text-primary mb-4 flex gap-3">
+                                <span className="surface-sunken text-tertiary w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0 font-black">
+                                    {index + 1}
+                                </span>
+                                {quiz.question}
+                            </p>
+
+                            <div className="space-y-2 pl-10">
+                                {quiz.options.map((option, optIndex) => {
+                                    const isSelected = answers[index] === optIndex;
+
+                                    return (
+                                        <label
+                                            key={optIndex}
+                                            className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${isSelected
+                                                    ? 'border-blue-600 bg-blue-50 elevation-sm'
+                                                    : 'border-slate-200 hover:bg-slate-50 hover:border-slate-300'
+                                                }`}
+                                        >
+                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? 'border-blue-600' : 'border-slate-300'
+                                                }`}>
+                                                {isSelected && (
+                                                    <div className="w-2.5 h-2.5 bg-blue-600 rounded-full" />
+                                                )}
+                                            </div>
+                                            <span className="text-body text-secondary flex-1">
+                                                {option}
+                                            </span>
+                                            <input
+                                                type="radio"
+                                                name={`question-${index}`}
+                                                className="hidden"
+                                                onChange={() => setAnswers({ ...answers, [index]: optIndex })}
+                                                checked={isSelected}
+                                            />
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Submit Button - Fixed Bottom */}
+            <div className="fixed bottom-0 left-0 w-full surface-raised border-t border-slate-200 p-4 flex justify-center elevation-lg">
+                <button
+                    onClick={handleSubmit}
+                    disabled={!allAnswered}
+                    className="bg-blue-600 text-white px-12 py-4 rounded-xl font-bold elevation-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 transition-all hover:elevation-lg"
+                >
+                    {allAnswered ? 'Entregar Examen' : `Responde las ${quizzes.length - Object.keys(answers).length} restantes`}
+                </button>
+            </div>
+        </div>
+    );
+};
+
+export default React.memo(QuizView);

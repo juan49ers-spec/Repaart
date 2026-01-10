@@ -1,0 +1,83 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@theme {
+  --color-brand-50: oklch(0.97 0.01 291.07);
+  --color-brand-100: oklch(0.93 0.03 289.49);
+  --color-brand-200: oklch(0.88 0.05 288.94);
+  --color-brand-300: oklch(0.81 0.08 288.92);
+  --color-brand-400: oklch(0.71 0.13 289.04);
+  --color-brand-500: oklch(0.61 0.17 289.81);
+  --color-brand-600: oklch(0.51 0.18 290.3);
+  --color-brand-700: oklch(0.42 0.15 290.49);
+  --color-brand-800: oklch(0.35 0.12 290.31);
+  --color-brand-900: oklch(0.29 0.09 289.98);
+  --color-brand-950: oklch(0.18 0.06 289.4);
+}
+
+:root {
+  /* Light Mode Colors - Finance Admin Style */
+  --bg-primary: #f8fafc;
+  --bg-card: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --border: #e2e8f0;
+
+  /* Accent Colors */
+  --primary: #6366f1;
+  --secondary: #8b5cf6;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+}
+
+.dark {
+  /* Dark Mode Colors - Classic Admin Style */
+  --bg-primary: #020617;
+  /* slate-950 */
+  --bg-card: #0f172a;
+  /* slate-900 */
+  --text-primary: #f8fafc;
+  /* slate-50 */
+  --text-secondary: #94a3b8;
+  /* slate-400 */
+  --border: #1e293b;
+  /* slate-800 */
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+
+  /* "Pro" Look Settings */
+  /* SF Pro uses double-story 'a', so we keep Inter defaults. 
+     ss01 (open digits) or cv05 (l with tail) are optional preferences. 
+     We stick to defaults for maximum resemblance to standard SF Pro. */
+  font-feature-settings: 'calt' 1;
+  letter-spacing: -0.011em;
+  /* Slight tightening for that "Display" feel */
+}
+
+/* Custom Scrollbar for Light Mode */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

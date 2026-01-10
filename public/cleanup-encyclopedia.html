@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encyclopedia Cleanup Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #1a202c;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+        }
+
+        .warning {
+            background: #fed7d7;
+            border-left: 4px solid #f56565;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .warning strong {
+            color: #c53030;
+        }
+
+        .status {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .status-line {
+            padding: 4px 0;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        .status-line:last-child {
+            border-bottom: none;
+        }
+
+        .error {
+            color: #e53e3e;
+        }
+
+        .success {
+            color: #38a169;
+        }
+
+        .warning-text {
+            color: #d69e2e;
+        }
+
+        .info {
+            color: #3182ce;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🧹 Encyclopedia Cleanup Tool</h1>
+        <p class="subtitle">Herramienta de limpieza de módulos duplicados</p>
+
+        <div class="warning">
+            <strong>⚠️ ADVERTENCIA:</strong> Esta herramienta eliminará permanentemente los módulos duplicados.
+            Solo ejecuta si eres administrador y estás seguro.
+        </div>
+
+        <div id="authSection">
+            <p style="margin-bottom: 15px;">Por favor, inicia sesión como administrador para continuar:</p>
+            <button onclick="login()">🔐 Iniciar Sesión</button>
+        </div>
+
+        <div id="mainSection" class="hidden">
+            <div class="stats">
+                <div class="stat-card">
+                    <span class="stat-number" id="totalModules">-</span>
+                    <span class="stat-label">Total en BD</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="uniqueModules">-</span>
+                    <span class="stat-label">Únicos</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="duplicateCount">-</span>
+                    <span class="stat-label">Duplicados</span>
+                </div>
+            </div>
+
+            <button onclick="scanDuplicates()" id="scanBtn">🔍 Escanear Duplicados</button>
+            <button onclick="cleanupDuplicates()" id="cleanupBtn" class="hidden">🗑️ Limpiar Duplicados</button>
+
+            <div class="status" id="statusLog"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, collection, getDocs, deleteDoc, doc, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDGU0IjPPFe8Mz0MjbwK9E6EWZfEW7fVD8",
+            authDomain: "repaartfinanzas.firebaseapp.com",
+            projectId: "repaartfinanzas",
+            storageBucket: "repaartfinanzas.firebasestorage.app",
+            messagingSenderId: "893626733062",
+            appId: "1:893626733062:web:6b4d45e43cbeef77ec2856"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let duplicatesToDelete = [];
+
+        window.login = async function () {
+            const email = prompt('Email de administrador:', 'admin@repaart.com');
+            const password = prompt('Contraseña:');
+
+            if (!email || !password) return;
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                log('✅ Sesión iniciada correctamente', 'success');
+            } catch (error) {
+                log('❌ Error al iniciar sesión: ' + error.message, 'error');
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('authSection').classList.add('hidden');
+                document.getElementById('mainSection').classList.remove('hidden');
+                log('👤 Conectado como: ' + user.email, 'info');
+            } else {
+                document.getElementById('authSection').classList.remove('hidden');
+                document.getElementById('mainSection').classList.add('hidden');
+            }
+        });
+
+        window.scanDuplicates = async function () {
+            document.getElementById('scanBtn').disabled = true;
+            document.getElementById('statusLog').innerHTML = '';
+
+            log('🔍 Escaneando base de datos...', 'info');
+
+            try {
+                const modulesRef = collection(db, 'encyclopedia_modules');
+                const modulesQuery = query(modulesRef, orderBy('createdAt', 'asc'));
+                const snapshot = await getDocs(modulesQuery);
+
+                const modules = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+
+                log(`📊 Total de documentos: ${modules.length}`, 'info');
+
+                // Group by title
+                const titleMap = new Map();
+                duplicatesToDelete = [];
+
+                modules.forEach(mod => {
+                    const title = mod.title;
+
+                    if (!titleMap.has(title)) {
+                        titleMap.set(title, mod);
+                    } else {
+                        duplicatesToDelete.push({
+                            id: mod.id,
+                            title: title
+                        });
+                    }
+                });
+
+                document.getElementById('totalModules').textContent = modules.length;
+                document.getElementById('uniqueModules').textContent = titleMap.size;
+                document.getElementById('duplicateCount').textContent = duplicatesToDelete.length;
+
+                if (duplicatesToDelete.length === 0) {
+                    log('✅ ¡No se encontraron duplicados! La base de datos está limpia.', 'success');
+                    document.getElementById('scanBtn').disabled = false;
+                } else {
+                    log(`⚠️ Se encontraron ${duplicatesToDelete.length} módulos duplicados`, 'warning-text');
+                    duplicatesToDelete.slice(0, 10).forEach((dup, i) => {
+                        log(`   ${i + 1}. "${dup.title}" (ID: ${dup.id})`, 'warning-text');
+                    });
+
+                    if (duplicatesToDelete.length > 10) {
+                        log(`   ... y ${duplicatesToDelete.length - 10} más`, 'warning-text');
+                    }
+
+                    document.getElementById('cleanupBtn').classList.remove('hidden');
+                    document.getElementById('scanBtn').disabled = false;
+                }
+
+            } catch (error) {
+                log('❌ Error al escanear: ' + error.message, 'error');
+                document.getElementById('scanBtn').disabled = false;
+            }
+        };
+
+        window.cleanupDuplicates = async function () {
+            if (!confirm(`¿Estás seguro de que quieres ELIMINAR ${duplicatesToDelete.length} módulos duplicados?\n\nEsta acción NO se puede deshacer.`)) {
+                return;
+            }
+
+            document.getElementById('cleanupBtn').disabled = true;
+            log('🗑️ Iniciando limpieza...', 'info');
+
+            let deleted = 0;
+            const total = duplicatesToDelete.length;
+
+            for (const dup of duplicatesToDelete) {
+                try {
+                    await deleteDoc(doc(db, 'encyclopedia_modules', dup.id));
+                    deleted++;
+
+                    if (deleted % 10 === 0 || deleted === total) {
+                        log(`Eliminados ${deleted}/${total}...`, 'info');
+                    }
+                } catch (error) {
+                    log(`❌ Error eliminando ${dup.id}: ${error.message}`, 'error');
+                }
+            }
+
+            log(`✅ ¡LIMPIEZA COMPLETA!`, 'success');
+            log(`✅ Eliminados: ${deleted} módulos duplicados`, 'success');
+            log(`✅ Restantes: ${parseInt(document.getElementById('totalModules').textContent) - deleted} módulos únicos`, 'success');
+            log('', 'info');
+            log('🔄 Recarga la aplicación principal para ver los cambios', 'info');
+
+            document.getElementById('duplicateCount').textContent = '0';
+            document.getElementById('cleanupBtn').classList.add('hidden');
+        };
+
+        function log(message, type = 'info') {
+            const statusLog = document.getElementById('statusLog');
+            const line = document.createElement('div');
+            line.className = `status-line ${type}`;
+            line.textContent = message;
+            statusLog.appendChild(line);
+            statusLog.scrollTop = statusLog.scrollHeight;
+        }
+    </script>
+</body>
+
+</html>

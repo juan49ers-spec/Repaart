@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/icon.jpg" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#102a43" media="(prefers-color-scheme: dark)" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>REPAART | Dashboard Financiero</title>
+  <meta name="description" content="Dashboard de gestión financiera y operativa para franquicias de reparto." />
+  <link rel="apple-touch-icon" href="/icon.jpg" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <script>
+    // SW KILLER: Force unregister any existing Service Worker immediately
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        for (let registration of registrations) {
+          registration.unregister().then(function () {
+            console.warn('Service Worker unregistered via Killer Script');
+            window.location.reload(); // Reload immediately after killing
+          });
+        }
+      });
+    }
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <!-- CACHE BUST v3.9.39 - DEEP CLEAN BUILD -->
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>

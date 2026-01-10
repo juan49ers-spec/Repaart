@@ -1,0 +1,65 @@
+{
+    "indexes": [
+        {
+            "collectionGroup": "weeks",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "franchiseId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "startDate",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "weeks",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "startDate",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "financial_data",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "franchiseId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "month",
+                    "order": "DESCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "financial_records",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "franchise_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "date",
+                    "order": "ASCENDING"
+                }
+            ]
+        }
+    ],
+    "fieldOverrides": []
+}

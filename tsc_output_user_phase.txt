@@ -1,0 +1,2 @@
+src/hooks/useWeeklySchedule.ts(113,57): error TS1005: ',' expected.
+src/hooks/useWeeklySchedule.ts(138,1): error TS1128: Declaration or statement expected.

@@ -1,0 +1,17 @@
+src/features/operations/MotoManagement.tsx(8,33): error TS6133: 'toMotoId' is declared but its value is never read.
+src/features/operations/MotoManagement.tsx(58,63): error TS2345: Argument of type '{ nextRevisionKm: number; currentKm: number; franchiseId: string; status: "active" | "deleted" | "maintenance" | "out_of_service"; plate: string; brand: string; model: string; vin?: string | undefined; insuranceExpiry?: string | undefined; }' is not assignable to parameter of type 'Partial<{ id: MotoId; plate: string; brand: string; model: string; currentKm: number; nextRevisionKm: number; status: "active" | "deleted" | "maintenance" | "out_of_service"; franchiseId?: FranchiseId | undefined; vin?: string | undefined; insuranceExpiry?: string | undefined; createdAt?: string | undefined; updated...'.
+  Types of property 'franchiseId' are incompatible.
+    Type 'string' is not assignable to type 'FranchiseId'.
+      Type 'string' is not assignable to type '{ readonly [brand]: "FranchiseId"; }'.
+src/features/operations/MotoManagement.tsx(60,75): error TS2345: Argument of type '{ status: "active"; nextRevisionKm: number; currentKm: number; franchiseId: string; plate: string; brand: string; model: string; vin?: string | undefined; insuranceExpiry?: string | undefined; }' is not assignable to parameter of type '{ status: "active" | "deleted" | "maintenance" | "out_of_service"; plate: string; brand: string; model: string; currentKm: number; nextRevisionKm: number; franchiseId?: FranchiseId | undefined; vin?: string | undefined; insuranceExpiry?: string | undefined; }'.
+  Types of property 'franchiseId' are incompatible.
+    Type 'string' is not assignable to type 'FranchiseId'.
+      Type 'string' is not assignable to type '{ readonly [brand]: "FranchiseId"; }'.
+src/features/operations/MotoManagement.tsx(94,23): error TS2304: Cannot find name 'operationsService'.
+src/features/operations/MotoManagement.tsx(107,19): error TS2304: Cannot find name 'operationsService'.
+src/services/fleet/fleetService.test.ts(3,22): error TS6133: 'toMotoId' is declared but its value is never read.
+src/services/fleet/fleetService.test.ts(5,10): error TS6133: 'doc' is declared but its value is never read.
+src/services/fleet/fleetService.test.ts(5,23): error TS6133: 'onSnapshot' is declared but its value is never read.
+src/services/fleet/fleetService.ts(5,5): error TS6133: 'getDocs' is declared but its value is never read.
+src/services/fleet/fleetService.ts(17,5): error TS6133: 'MotoStatus' is declared but its value is never read.
+src/services/fleet/fleetService.ts(38,13): error TS2783: 'status' is specified more than once, so this usage will be overwritten.

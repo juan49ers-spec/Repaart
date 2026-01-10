@@ -1,0 +1,6 @@
+src/services/fleet/fleetService.test.ts(3,22): error TS6133: 'toMotoId' is declared but its value is never read.
+src/services/fleet/fleetService.test.ts(5,10): error TS6133: 'doc' is declared but its value is never read.
+src/services/fleet/fleetService.test.ts(5,23): error TS6133: 'onSnapshot' is declared but its value is never read.
+src/services/fleet/fleetService.ts(5,5): error TS6133: 'getDocs' is declared but its value is never read.
+src/services/fleet/fleetService.ts(17,5): error TS6133: 'MotoStatus' is declared but its value is never read.
+src/services/fleet/fleetService.ts(38,13): error TS2783: 'status' is specified more than once, so this usage will be overwritten.

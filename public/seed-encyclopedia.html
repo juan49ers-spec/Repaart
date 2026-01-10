@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encyclopedia Seeder - COMPLETO</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .status {
+            background: #f7fafc;
+            border-left: 4px solid #4299e1;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .progress {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .log {
+            background: #2d3748;
+            color: #a0aec0;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+
+        .log-success {
+            color: #48bb78;
+        }
+
+        .log-error {
+            color: #f56565;
+        }
+
+        .log-info {
+            color: #4299e1;
+        }
+
+        .log-warning {
+            color: #ed8936;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🌱 Encyclopedia Seeder COMPLETO</h1>
+        <p class="subtitle">Carga TOTAL de 12 categorías, 150 módulos y 96 quizzes</p>
+
+        <div class="status" id="status">
+            ⏳ Esperando autenticación...
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Categorías</div>
+                <div class="stat-value" id="catCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Módulos</div>
+                <div class="stat-value" id="modCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Quizzes</div>
+                <div class="stat-value" id="quizCount">0</div>
+            </div>
+        </div>
+
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <button id="seedBtn" onclick="initializeSeed()" disabled>🚀 Inicializar Encyclopedia COMPLETA</button>
+
+        <div class="log" id="log"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, doc, writeBatch, getDocs, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0vTiufm9bWbzXzWwqy2sEuIZLNxYiVdg",
+            authDomain: "repaartfinanzas.firebaseapp.com",
+            projectId: "repaartfinanzas",
+            storageBucket: "repaartfinanzas.firebasestorage.app",
+            messagingSenderId: "651763835836",
+            appId: "1:651763835836:web:1e3fca83a49bf65fef95be"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let isAuthenticated = false;
+        let userEmail = '';
+
+        // Check authentication status
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                isAuthenticated = true;
+                userEmail = user.email;
+                updateStatus(`✅ Autenticado como: ${user.email}`);
+                log(`✓ Usuario autenticado: ${user.email}`, 'success');
+                document.getElementById('seedBtn').disabled = false;
+            } else {
+                isAuthenticated = false;
+                updateStatus('⚠️ Debes iniciar sesión primero en la app principal');
+                log('Abre https://repaartfinanzas.web.app en otra pestaña e inicia sesión', 'warning');
+                log('Luego recarga esta página', 'info');
+                document.getElementById('seedBtn').disabled = true;
+            }
+        });
+
+        function log(message, type = 'info') {
+            const logEl = document.getElementById('log');
+            const className = `log-${type}`;
+            logEl.innerHTML += `<div class="${className}">[${new Date().toLocaleTimeString()}] ${message}</div>`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function updateProgress(percent) {
+            document.getElementById('progressBar').style.width = percent + '%';
+        }
+
+        function updateStatus(text) {
+            document.getElementById('status').textContent = text;
+        }
+
+        window.initializeSeed = async function () {
+            if (!isAuthenticated) {
+                log('❌ Debes iniciar sesión primero', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('seedBtn');
+            btn.disabled = true;
+            updateStatus('🔄 Cargando datos desde seed...');
+            log('═══════════════════════════════════════', 'info');
+            log('Iniciando proceso de seeding COMPLETO...', 'info');
+            log('═══════════════════════════════════════', 'info');
+
+            try {
+                // Load seed data
+                const response = await fetch('/encyclopediaSeed.js');
+                const seedText = await response.text();
+
+                // Extract data using regex
+                const dataMatch = seedText.match(/export const ENCYCLOPEDIA_SEED_DATA = ({[\s\S]*});/);
+                if (!dataMatch) throw new Error('No se pudo parsear encyclopediaSeed.js');
+
+                const SEED_DATA = eval('(' + dataMatch[1] + ')');
+
+                log(`✓ Seed cargado exitosamente:`, 'success');
+                log(`  - ${SEED_DATA.categories.length} categorías`, 'info');
+                log(`  - ${SEED_DATA.modules.length} módulos`, 'info');
+                log(`  - ${SEED_DATA.quizzes.length} quizzes`, 'info');
+
+                // 1. CATEGORÍAS
+                updateStatus('📦 Sincronizando categorías...');
+                updateProgress(5);
+                log('', 'info');
+                log('1️⃣ Cargando CATEGORÍAS...', 'info');
+
+                const catBatch = writeBatch(db);
+                SEED_DATA.categories.forEach(cat => {
+                    const ref = doc(db, 'encyclopedia_categories', cat.id);
+                    catBatch.set(ref, { ...cat, updatedAt: new Date() }, { merge: true });
+                });
+                await catBatch.commit();
+
+                document.getElementById('catCount').textContent = SEED_DATA.categories.length;
+                log(`✓ ${SEED_DATA.categories.length} categorías sincronizadas`, 'success');
+                updateProgress(15);
+
+                // 2. MÓDULOS
+                updateStatus('📚 Cargando módulos...');
+                log('', 'info');
+                log('2️⃣ Cargando MÓDULOS (puede tardar)...', 'info');
+
+                const chunkSize = 450;
+                const moduleChunks = [];
+                for (let i = 0; i < SEED_DATA.modules.length; i += chunkSize) {
+                    moduleChunks.push(SEED_DATA.modules.slice(i, i + chunkSize));
+                }
+
+                for (let i = 0; i < moduleChunks.length; i++) {
+                    const batch = writeBatch(db);
+                    moduleChunks[i].forEach(mod => {
+                        const ref = doc(collection(db, 'encyclopedia_modules'));
+                        batch.set(ref, { ...mod, createdAt: new Date() });
+                    });
+                    await batch.commit();
+                    log(`  ✓ Chunk ${i + 1}/${moduleChunks.length} completado (${moduleChunks[i].length} módulos)`, 'success');
+                    updateProgress(15 + (35 * (i + 1) / moduleChunks.length));
+                }
+
+                document.getElementById('modCount').textContent = SEED_DATA.modules.length;
+                log(`✓ TOTAL: ${SEED_DATA.modules.length} módulos cargados`, 'success');
+                updateProgress(50);
+
+                // 3. QUIZZES (CRÍTICO - LIMPIEZA PREVIA)
+                updateStatus('🎯 Preparando quizzes...');
+                log('', 'info');
+                log('3️⃣ Preparando QUIZZES...', 'info');
+
+                // Verificar y limpiar quizzes antiguos
+                const existingQuizzes = await getDocs(collection(db, 'encyclopedia_quizzes'));
+                log(`  ℹ️  Quizzes existentes: ${existingQuizzes.size}`, 'info');
+
+                if (existingQuizzes.size > 0) {
+                    log(`  🗑️  Limpiando ${existingQuizzes.size} quizzes antiguos...`, 'warning');
+                    updateStatus('🗑️ Limpiando quizzes antiguos...');
+
+                    // Limpiar en chunks para evitar límites
+                    const deleteChunks = [];
+                    let currentChunk = [];
+
+                    existingQuizzes.docs.forEach(doc => {
+                        currentChunk.push(doc);
+                        if (currentChunk.length === 450) {
+                            deleteChunks.push([...currentChunk]);
+                            currentChunk = [];
+                        }
+                    });
+                    if (currentChunk.length > 0) {
+                        deleteChunks.push(currentChunk);
+                    }
+
+                    for (let i = 0; i < deleteChunks.length; i++) {
+                        const deleteBatch = writeBatch(db);
+                        deleteChunks[i].forEach(doc => {
+                            deleteBatch.delete(doc.ref);
+                        });
+                        await deleteBatch.commit();
+                        log(`    ✓ Limpieza chunk ${i + 1}/${deleteChunks.length}`, 'warning');
+                    }
+
+                    log(`  ✓ Limpieza completada`, 'success');
+                }
+
+                updateProgress(55);
+
+                // Cargar nuevos quizzes
+                updateStatus('🎯 Cargando quizzes NUEVOS...');
+                log(`  📝 Cargando ${SEED_DATA.quizzes.length} quizzes...`, 'info');
+
+                const quizChunks = [];
+                for (let i = 0; i < SEED_DATA.quizzes.length; i += chunkSize) {
+                    quizChunks.push(SEED_DATA.quizzes.slice(i, i + chunkSize));
+                }
+
+                for (let i = 0; i < quizChunks.length; i++) {
+                    const batch = writeBatch(db);
+                    quizChunks[i].forEach(quiz => {
+                        const ref = doc(collection(db, 'encyclopedia_quizzes'));
+                        batch.set(ref, { ...quiz, createdAt: new Date() });
+                    });
+                    await batch.commit();
+                    log(`  ✓ Chunk ${i + 1}/${quizChunks.length} completado (${quizChunks[i].length} quizzes)`, 'success');
+                    updateProgress(55 + (40 * (i + 1) / quizChunks.length));
+                }
+
+                document.getElementById('quizCount').textContent = SEED_DATA.quizzes.length;
+                log(`✓ TOTAL: ${SEED_DATA.quizzes.length} quizzes cargados`, 'success');
+                updateProgress(95);
+
+                // VERIFICACIÓN FINAL
+                updateStatus('🔍 Verificando integridad...');
+                log('', 'info');
+                log('4️⃣ VERIFICACIÓN FINAL...', 'info');
+
+                const finalCats = await getDocs(collection(db, 'encyclopedia_categories'));
+                const finalMods = await getDocs(collection(db, 'encyclopedia_modules'));
+                const finalQuiz = await getDocs(collection(db, 'encyclopedia_quizzes'));
+
+                log(`  Categorías: ${finalCats.size} / ${SEED_DATA.categories.length}`, 'info');
+                log(`  Módulos: ${finalMods.size} / ${SEED_DATA.modules.length}`, 'info');
+                log(`  Quizzes: ${finalQuiz.size} / ${SEED_DATA.quizzes.length}`, 'info');
+
+                updateProgress(100);
+
+                if (finalQuiz.size === SEED_DATA.quizzes.length) {
+                    updateStatus('✅ ¡CARGA COMPLETADA AL 100%!');
+                    log('', 'success');
+                    log('═══════════════════════════════════════', 'success');
+                    log('🎉 ¡ENCYCLOPEDIA COMPLETAMENTE CARGADA!', 'success');
+                    log('═══════════════════════════════════════', 'success');
+                    log('', 'info');
+                    log('✅ Puedes cerrar esta ventana', 'info');
+                    log('✅ Recarga la app principal para ver los cambios', 'info');
+                } else {
+                    throw new Error(`Solo se cargaron ${finalQuiz.size} de ${SEED_DATA.quizzes.length} quizzes`);
+                }
+
+            } catch (error) {
+                log('═══════════════════════════════════════', 'error');
+                log('❌ ERROR: ' + error.message, 'error');
+                log('═══════════════════════════════════════', 'error');
+                updateStatus('❌ Error en la carga');
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+            }
+        };
+    </script>
+</body>
+
+</html>

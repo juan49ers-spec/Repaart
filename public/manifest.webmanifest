@@ -1,0 +1,20 @@
+{
+    "name": "REPAART Finanzas",
+    "short_name": "REPAART",
+    "icons": [
+        {
+            "src": "/icon.jpg",
+            "sizes": "192x192",
+            "type": "image/jpeg"
+        },
+        {
+            "src": "/icon.jpg",
+            "sizes": "512x512",
+            "type": "image/jpeg"
+        }
+    ],
+    "start_url": "/",
+    "display": "standalone",
+    "theme_color": "#020617",
+    "background_color": "#020617"
+}

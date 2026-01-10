@@ -1,0 +1,192 @@
+
+> synthetic-sagan@3.2.1 lint
+> eslint .
+
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\debug_records.js
+   8:13  error  'process' is not defined  no-undef
+   9:17  error  'process' is not defined  no-undef
+  10:16  error  'process' is not defined  no-undef
+  11:20  error  'process' is not defined  no-undef
+  12:24  error  'process' is not defined  no-undef
+  13:12  error  'process' is not defined  no-undef
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\functions\index.js
+    1:19  error  'require' is not defined  no-undef
+    2:15  error  'require' is not defined  no-undef
+   10:1   error  'exports' is not defined  no-undef
+   65:1   error  'exports' is not defined  no-undef
+  101:1   error  'exports' is not defined  no-undef
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\inspect_db.js
+   7:13  error  'process' is not defined  no-undef
+   8:17  error  'process' is not defined  no-undef
+   9:16  error  'process' is not defined  no-undef
+  10:20  error  'process' is not defined  no-undef
+  11:24  error  'process' is not defined  no-undef
+  12:12  error  'process' is not defined  no-undef
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\academy\BrutalLearningView.jsx
+  209:33  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  209:56  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\academy\QuizResults.jsx
+  228:20  error  Unknown property 'jsx' found  react/no-unknown-property
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\admin\AdminSimulationEditor.jsx
+  153:97   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  153:110  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\admin\CreateFranchiseModal.jsx
+   42:8   warning  React Hook useEffect has a missing dependency: 'initialFormState'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  107:18  error    'err' is defined but never used                                                                                      no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\admin\components\FranchiseFeatureManager.jsx
+  213:27  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  213:38  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\admin\dashboard\AdminDashboard.jsx
+  45:5   error  'onMonthChange' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  84:38  error  'name' is defined but never used. Allowed unused args must match /^_/u           no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\admin\finance\TariffEditor.jsx
+   85:92   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+   85:98   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  107:92   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  107:100  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\admin\support\TicketDetail.jsx
+  12:21  error  Component definition is missing display name  react/display-name
+  63:27  error  Component definition is missing display name  react/display-name
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\franchise\SupportHub.jsx
+  31:9  error  'setSuggestions' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\franchise\dashboard\widgets\ExpenseStack.jsx
+  3:22  error  Component definition is missing display name  react/display-name
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\franchise\dashboard\widgets\FinancialAdvisorWidget.jsx
+   41:13  error  'kpi' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+   70:37  error  Missing "key" prop for element in array                                              react/jsx-key
+  153:26  error  'Divider' is not defined                                                             react/jsx-no-undef
+  155:29  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                      react/no-unescaped-entities
+  155:68  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                      react/no-unescaped-entities
+  158:26  error  'Divider' is not defined                                                             react/jsx-no-undef
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\franchise\dashboard\widgets\FlipCard.jsx
+  119:29  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  119:45  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\franchise\dashboard\widgets\KPICard.jsx
+  7:40  error  'trend' is defined but never used. Allowed unused args must match /^_/u    no-unused-vars
+  7:47  error  'subtext' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\operations\OperationsTutorialModal.jsx
+  35:63   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  35:78   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  35:89   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  35:103  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  62:52   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  62:65   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  63:92   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  63:105  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\operations\ShiftCard.jsx
+  26:11  error  'conflictClasses' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  55:28  error  'e' is defined but never used. Allowed unused args must match /^_/u                              no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\operations\WeeklyCalendarGrid.jsx
+  16:32  error  'format' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  17:10  error  'es' is defined but never used. Allowed unused vars must match /^[A-Z_]/u      no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\operations\views\WeeklySummaryView.jsx
+  9:56  error  'franchiseId' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\user\UserProfileModal.jsx
+  6:10  error  'logAction' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\hooks\useAcademy.js
+    9:5   error  'limit' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-unused-vars
+   10:5   error  'getDocs' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         no-unused-vars
+   90:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  88 |     useEffect(() => {
+  89 |         if (!moduleId) {
+> 90 |             setLoading(false);
+     |             ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  91 |             return;
+  92 |         }
+  93 |                                                                                                                                                                                                                                                                              react-hooks/set-state-in-effect
+  237:26  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  235 |     const [loading, setLoading] = useState(true);
+  236 |     useEffect(() => {
+> 237 |         if (!moduleId) { setLoading(false); return; }
+      |                          ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  238 |         const q = query(collection(db, COLLECTIONS.QUIZZES), where('moduleId', '==', moduleId));
+  239 |         const unsub = onSnapshot(q, snap => {
+  240 |             if (!snap.empty) setQuiz({ id: snap.docs[0].id, ...snap.docs[0].data() });  react-hooks/set-state-in-effect
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\hooks\useMediaQuery.js
+  8:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+   6 |     useEffect(() => {
+   7 |         const media = window.matchMedia(query);
+>  8 |         setMatches(media.matches);
+     |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+   9 |
+  10 |         const listener = () => setMatches(media.matches);
+  11 |         media.addEventListener('change', listener);  react-hooks/set-state-in-effect
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\hooks\useShiftOperations.js
+  44:48  error  'params' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\hooks\useWeeklySchedule.js
+   2:10  error  'shiftService' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-unused-vars
+  19:48  error  'readOnly' is assigned a value but never used. Allowed unused args must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-unused-vars
+  39:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  37 |     useEffect(() => {
+  38 |         if (!franchiseId) {
+> 39 |             setLoading(false);
+     |             ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  40 |             return;
+  41 |         }
+  42 |  react-hooks/set-state-in-effect
+  56:15  error  'q' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\layouts\components\Header.jsx
+  2:10  error  'useNavigate' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\layouts\components\ViewSwitcher.jsx
+  41:20  error  'setFranchiseView' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\ui\feedback\ErrorBoundary.jsx
+  10:37  error  'error' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+✖ 73 problems (72 errors, 1 warning)
+
