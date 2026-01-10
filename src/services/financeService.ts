@@ -135,7 +135,7 @@ export const financeService = {
         });
 
         // FIXED: Atomic aggregation to keep widgets in sync
-        console.log(`[Finance] addRecord: Adding record for ${franchiseId} (Draft: ${isDraft})`, recordData);
+
         // Only aggregate if NOT a draft (but now we force approved, so always aggregate)
         if (!isDraft) {
             await financeService._aggregateToSummary(franchiseId, recordData);
@@ -240,7 +240,7 @@ export const financeService = {
                         // Assuming breakdown object is the source of truth now.
                     }
 
-                    // console.log(`[Finance] Deleting Record: Decrementing ${revenue}/${expenses} from ${summaryId}`);
+
                     await setDoc(summaryRef, updates, { merge: true });
                 } else {
                     console.warn("[Finance] Could not determine monthKey for deletion", data);
@@ -713,14 +713,14 @@ export const financeService = {
             }
 
             const docId = `${franchiseId}_${monthKey}`;
-            console.log(`[Finance] Aggregating to ${docId} (Month: ${monthKey})`);
+
             const docRef = doc(db, 'financial_summaries', docId);
 
             // Determine values (Safe Fallbacks)
             const revenue = Number(data.revenue || (data.type === 'income' ? data.amount : 0) || 0);
             const expenses = Number(data.expenses || (data.type === 'expense' ? data.amount : 0) || 0);
 
-            console.log(`[Finance] Adding Income: ${revenue}, Expenses: ${expenses} to existing summary.`);
+
 
             // Prepare Updates
             const updates: any = {
@@ -763,7 +763,7 @@ export const financeService = {
      */
     deleteSummaryDocument: async (docId: string): Promise<void> => {
         try {
-            console.log(`[Finance] HARD Deleting Summary Document: ${docId}`);
+
             // HARD DELETE to prevent zombie data
             const docRef = doc(db, 'financial_summaries', docId);
             await deleteDoc(docRef);
@@ -775,7 +775,7 @@ export const financeService = {
 
     resetMonthSummary: async (franchiseId: string, monthKey: string): Promise<void> => {
         try {
-            console.log(`[Finance] DEEP CLEANING month: ${franchiseId} - ${monthKey}`);
+
             const batch = writeBatch(db);
 
             // 1. Calculate Date Range
@@ -795,7 +795,7 @@ export const financeService = {
             recordsSnap.docs.forEach(doc => {
                 batch.delete(doc.ref);
             });
-            console.log(`[Finance] Queued ${recordsSnap.size} orphan records for deletion.`);
+
 
             // 3. Queue Deletion of Summary
             const docId = `${franchiseId}_${monthKey}`;

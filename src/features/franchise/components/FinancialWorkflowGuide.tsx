@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    FileText, Lock, Unlock, Trash2, CheckCircle, AlertTriangle, X,
+    FileText, Lock, Unlock, Trash2, CheckCircle, X,
     Clock, RefreshCw, Bell, ShieldAlert
 } from 'lucide-react';
 

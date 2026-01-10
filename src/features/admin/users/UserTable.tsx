@@ -45,7 +45,7 @@ const UserRow: React.FC<UserRowProps> = ({ user, style, onAction, currentUserRol
                 </div>
                 <div className="flex flex-col">
                     <span className="text-sm font-bold text-white tracking-tight">{user.displayName || 'Usuario Sin Nombre'}</span>
-                    <span className="text-xs text-slate-400 font-mono">{user.email || 'Sin email'}</span>
+                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">{user.email || 'Sin email'}</span>
                 </div>
             </div>
 
@@ -76,7 +76,7 @@ const UserRow: React.FC<UserRowProps> = ({ user, style, onAction, currentUserRol
             )}
 
             {/* Date */}
-            <div className="w-[150px] hidden lg:flex text-xs text-slate-500 font-medium font-mono">
+            <div className="w-[150px] hidden lg:flex text-xs text-slate-500 font-bold uppercase tracking-wider">
                 {formatDate(user.createdAt as any)}
             </div>
 

@@ -123,86 +123,86 @@ const AcademyAnalytics: FC = () => {
         <div className="space-y-8 animate-fade-in">
             {/* Header */}
             <div>
-                <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
+                <h2 className="text-2xl font-normal text-slate-900 flex items-center gap-3">
                     <BarChart3 className="w-8 h-8 text-indigo-600" />
                     Analytics de Formación
                 </h2>
-                <p className="text-slate-500 font-medium">Visión global del rendimiento de la academia</p>
+                <p className="text-slate-500 font-normal">Visión global del rendimiento de la academia</p>
             </div>
 
             {/* KPI Grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all">
                     <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600">
+                        <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl text-indigo-600 dark:text-indigo-400">
                             <Users size={24} />
                         </div>
-                        <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                        <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1">
                             +12%
                         </span>
                     </div>
-                    <p className="text-3xl font-black text-slate-900">{stats.totalStudents}</p>
-                    <p className="text-sm font-bold text-slate-400 uppercase tracking-wide">Estudiantes Activos</p>
+                    <p className="text-3xl font-medium text-slate-900 dark:text-white">{stats.totalStudents}</p>
+                    <p className="text-sm font-medium text-slate-400 uppercase tracking-wide">Estudiantes Activos</p>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all">
                     <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600">
+                        <div className="p-3 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl text-emerald-600 dark:text-emerald-400">
                             <BookOpen size={24} />
                         </div>
                     </div>
-                    <p className="text-3xl font-black text-slate-900">{stats.completedModules}</p>
-                    <p className="text-sm font-bold text-slate-400 uppercase tracking-wide">Módulos Completados</p>
+                    <p className="text-3xl font-medium text-slate-900 dark:text-white">{stats.completedModules}</p>
+                    <p className="text-sm font-medium text-slate-400 uppercase tracking-wide">Módulos Completados</p>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all">
                     <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-purple-50 rounded-xl text-purple-600">
+                        <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-xl text-purple-600 dark:text-purple-400">
                             <Award size={24} />
                         </div>
                     </div>
-                    <p className="text-3xl font-black text-slate-900">{stats.averageScore}%</p>
-                    <p className="text-sm font-bold text-slate-400 uppercase tracking-wide">Nota Promedio Quiz</p>
+                    <p className="text-3xl font-medium text-slate-900 dark:text-white">{stats.averageScore}%</p>
+                    <p className="text-sm font-medium text-slate-400 uppercase tracking-wide">Nota Promedio Quiz</p>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all">
                     <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-amber-50 rounded-xl text-amber-600">
+                        <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-xl text-amber-600 dark:text-amber-400">
                             <Clock size={24} />
                         </div>
                     </div>
-                    <p className="text-3xl font-black text-slate-900">45m</p>
-                    <p className="text-sm font-bold text-slate-400 uppercase tracking-wide">Tiempo Promedio/Módulo</p>
+                    <p className="text-3xl font-medium text-slate-900 dark:text-white">45m</p>
+                    <p className="text-sm font-medium text-slate-400 uppercase tracking-wide">Tiempo Promedio/Módulo</p>
                 </div>
             </div>
 
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Module Progress Chart */}
-                <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
-                    <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700">
+                    <h3 className="text-lg font-medium text-slate-800 dark:text-white mb-6 flex items-center gap-2">
                         <BookOpen className="w-5 h-5 text-indigo-500" />
                         Progreso por Módulo
                     </h3>
                     <div className="h-64 cursor-default">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={stats.moduleProgress}>
-                                <XAxis dataKey="name" fontSize={10} angle={-15} textAnchor="end" height={60} tick={{ fill: '#64748b' }} axisLine={false} tickLine={false} />
-                                <YAxis tick={{ fill: '#64748b' }} axisLine={false} tickLine={false} />
+                                <XAxis dataKey="name" fontSize={10} angle={-15} textAnchor="end" height={60} tick={{ fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                                <YAxis tick={{ fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                                 <Tooltip
                                     contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                                     cursor={{ fill: '#f1f5f9' }}
                                 />
-                                <Bar dataKey="started" name="Iniciados" fill="#e2e8f0" radius={[4, 4, 0, 0]} />
-                                <Bar dataKey="completed" name="Completados" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="started" name="Iniciados" fill="#94a3b8" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="completed" name="Completados" fill="#6366f1" radius={[4, 4, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
 
                 {/* Score Distribution */}
-                <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
-                    <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700">
+                    <h3 className="text-lg font-medium text-slate-800 dark:text-white mb-6 flex items-center gap-2">
                         <Award className="w-5 h-5 text-emerald-500" />
                         Distribución de Notas
                     </h3>

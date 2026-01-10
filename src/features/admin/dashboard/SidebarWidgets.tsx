@@ -74,7 +74,7 @@ const SidebarWidgets: FC<SidebarWidgetsProps> = ({ franchises, setSelectedScorec
                                 </div>
                                 <p className="font-bold text-rose-800 text-sm leading-tight">{alert.title}</p>
                                 <p className="text-xs text-slate-500 mt-1">{alert.message}</p>
-                                <p className="text-xs font-mono font-bold text-rose-500 mt-1 text-right">{alert.metric}</p>
+                                <p className="text-xs font-black text-rose-500 mt-1 text-right tracking-tighter">{alert.metric}</p>
                             </div>
                         ))}
                     </div>

@@ -1,5 +1,5 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { TrendingUp, TrendingDown, Target, Info } from 'lucide-react';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 import { formatMoney } from '../../../../lib/finance';
 
 interface RevenueData {

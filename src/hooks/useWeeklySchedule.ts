@@ -8,6 +8,7 @@ import {
     toFranchiseId,
     toWeekId
 } from '../schemas/scheduler';
+import { toLocalDateString, getStartOfWeek } from '../utils/dateUtils';
 
 // Helper exported for WeeklyScheduler (and now uses strict types if possible, or string for compat)
 export const getWeekIdFromDate = (date: Date): string => {
@@ -32,7 +33,13 @@ export interface Moto {
 
 export const useWeeklySchedule = (franchiseIdString: string | null, _readOnly: boolean = false, externalDate?: Date) => {
     // STATE
-    const [internalDate, setInternalDate] = useState<Date>(new Date());
+    // Initialize strictly to the Monday of the current week to ensure alignment
+    const [internalDate, setInternalDate] = useState<Date>(() => {
+        const d = new Date();
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+        return new Date(d.setDate(diff));
+    });
     const currentDate = externalDate || internalDate;
 
     const [weekData, setWeekData] = useState<WeekData | null>(null);
@@ -41,7 +48,8 @@ export const useWeeklySchedule = (franchiseIdString: string | null, _readOnly: b
     const [loading, setLoading] = useState(true);
 
     // Derived properties
-    const currentWeekIdString = getWeekIdFromDate(currentDate);
+    // Ensure we always get the ISO Week ID for the MONDAY of the week
+    const currentWeekIdString = getWeekIdFromDate(new Date(getStartOfWeek(currentDate)));
 
     // NAVIGATION
     const navigateWeek = useCallback((direction: number) => {
@@ -74,7 +82,7 @@ export const useWeeklySchedule = (franchiseIdString: string | null, _readOnly: b
                 setWeekData(data);
             } else {
                 // Initialize if not exists
-                const startDate = currentDate.toISOString().split('T')[0];
+                const startDate = toLocalDateString(getStartOfWeek(currentDate));
                 WeekService.initWeek(fid, wid, startDate).then((initial) => {
                     setWeekData(initial || null);
                 });

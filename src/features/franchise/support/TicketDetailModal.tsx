@@ -1,10 +1,7 @@
-```
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Send, ShieldCheck, Clock, Paperclip, CheckCircle } from 'lucide-react';
 import { db } from '../../../lib/firebase';
 import { doc, updateDoc, arrayUnion, onSnapshot, serverTimestamp, Timestamp } from 'firebase/firestore';
-import { notificationService } from '../../../services/notificationService'; // IMPORT ADDED
-import { useAuth } from '../../../context/AuthContext';
 
 interface Message {
     id: string;
@@ -103,13 +100,12 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({ isOpen, onClose, 
                 <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/90 backdrop-blur-md z-10">
                     <div className="flex items-center gap-4">
                         {/* Priority Icon */}
-                        <div className={`p - 3 rounded - xl border transition - colors ${
-    ticket.priority === 'high'
-        ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-500 dark:text-rose-400 border-rose-100 dark:border-rose-500/20' :
-        ticket.priority === 'medium'
-            ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400 border-amber-100 dark:border-amber-500/20' :
-            'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border-indigo-100 dark:border-indigo-500/20'
-} `}>
+                        <div className={`p - 3 rounded - xl border transition - colors ${ticket.priority === 'high'
+                                ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-500 dark:text-rose-400 border-rose-100 dark:border-rose-500/20' :
+                                ticket.priority === 'medium'
+                                    ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400 border-amber-100 dark:border-amber-500/20' :
+                                    'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border-indigo-100 dark:border-indigo-500/20'
+                            } `}>
                             <ShieldCheck className="w-6 h-6" />
                         </div>
 
@@ -181,17 +177,16 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({ isOpen, onClose, 
                             : (msg.timestamp ? new Date(msg.timestamp) : new Date());
 
                         return (
-                            <div key={index} className={`flex ${ isUser ? 'justify-end' : 'justify-start' } animate -in fade -in slide -in -from - bottom - 2 duration - 300`}>
-                                <div className={`max - w - [85 %] ${ isUser ? 'order-1' : 'order-2' } `}>
-                                    <div className={`flex items - center gap - 3 mb - 1.5 ${ isUser ? 'justify-end mr-1' : 'ml-1' } `}>
-                                        <span className={`text - [10px] font - black uppercase tracking - widest ${ isUser ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-600' } `}>{isUser ? 'Tú' : 'Soporte HQ'}</span>
+                            <div key={index} className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate -in fade -in slide -in -from - bottom - 2 duration - 300`}>
+                                <div className={`max - w - [85 %] ${isUser ? 'order-1' : 'order-2'} `}>
+                                    <div className={`flex items - center gap - 3 mb - 1.5 ${isUser ? 'justify-end mr-1' : 'ml-1'} `}>
+                                        <span className={`text - [10px] font - black uppercase tracking - widest ${isUser ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-600'} `}>{isUser ? 'Tú' : 'Soporte HQ'}</span>
                                         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-600">{timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                     </div>
-                                    <div className={`p - 4 rounded - 2xl text - sm shadow - md leading - relaxed transition - all ${
-    isUser
-        ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 dark:from-indigo-600 dark:to-blue-700 text-white rounded-tr-sm border border-indigo-500/20 shadow-indigo-500/10'
-        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-tl-sm border border-slate-200 dark:border-slate-700'
-} `}>
+                                    <div className={`p - 4 rounded - 2xl text - sm shadow - md leading - relaxed transition - all ${isUser
+                                            ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 dark:from-indigo-600 dark:to-blue-700 text-white rounded-tr-sm border border-indigo-500/20 shadow-indigo-500/10'
+                                            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-tl-sm border border-slate-200 dark:border-slate-700'
+                                        } `}>
                                         {msg.text}
                                     </div>
                                 </div>
@@ -253,14 +248,13 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({ isOpen, onClose, 
                             <button
                                 type="submit"
                                 disabled={!newMessage.trim() || sending}
-                                className={`h - [60px] w - [60px] rounded - 2xl flex items - center justify - center transition - all ${
-    !newMessage.trim() || sending
-        ? 'bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-700 cursor-not-allowed'
-        : 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-xl shadow-indigo-500/20 hover:scale-[1.05] active:scale-95'
-} `}
+                                className={`h - [60px] w - [60px] rounded - 2xl flex items - center justify - center transition - all ${!newMessage.trim() || sending
+                                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-700 cursor-not-allowed'
+                                        : 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-xl shadow-indigo-500/20 hover:scale-[1.05] active:scale-95'
+                                    } `}
                                 title="Enviar mensaje"
                             >
-                                <Send className={`w - 6 h - 6 ${ sending ? 'animate-pulse' : '' } `} />
+                                <Send className={`w - 6 h - 6 ${sending ? 'animate-pulse' : ''} `} />
                             </button>
                         </form>
                         <p className="mt-3 text-center text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest">Presiona Enter para enviar</p>

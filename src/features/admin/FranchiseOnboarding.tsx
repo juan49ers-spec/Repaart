@@ -208,7 +208,7 @@ const FranchiseOnboarding: React.FC<FranchiseOnboardingProps> = ({ onCancel, onC
                                     <Shield className="absolute left-3 top-3 text-slate-400 w-4 h-4" />
                                     <input
                                         type="text"
-                                        className="w-full pl-10 rounded-lg border-slate-300 focus:ring-blue-500 font-mono"
+                                        className="w-full pl-10 rounded-lg border-slate-300 focus:ring-blue-500 font-bold uppercase tracking-wider"
                                         placeholder="Generar..."
                                         value={data.adminPassword}
                                         onChange={e => handleChange('adminPassword', e.target.value)}

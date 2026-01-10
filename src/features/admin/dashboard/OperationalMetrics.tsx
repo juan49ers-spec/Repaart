@@ -43,7 +43,7 @@ const OperationalMetrics: React.FC<OperationalMetricsProps> = ({ franchises, onC
                 <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800 hover:border-slate-700 transition-colors">
                     <h4 className="flex justify-between items-center mb-4">
                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Productividad (Peds/H)</span>
-                        <span className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono text-slate-400">
+                        <span className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                             Target {'>'} 2.5
                         </span>
                     </h4>
@@ -90,7 +90,7 @@ const OperationalMetrics: React.FC<OperationalMetricsProps> = ({ franchises, onC
                 <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800 hover:border-slate-700 transition-colors">
                     <h4 className="flex justify-between items-center mb-4">
                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Eficiencia Logística</span>
-                        <span className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono text-slate-400">
+                        <span className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                             {'<'} 3.5km
                         </span>
                     </h4>

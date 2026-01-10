@@ -118,7 +118,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                     pack: userToEdit.pack || 'basic',
                     status: (userToEdit.status as 'active' | 'pending' | 'banned') || 'active',
                     name: userToEdit.name || '',
-                    legalName: userToEdit.legalName || '',
+                    legalName: (userToEdit.legalName as string) || '',
                     cif: userToEdit.cif || '',
                     address: userToEdit.address || ''
                 });

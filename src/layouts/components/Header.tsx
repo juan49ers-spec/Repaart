@@ -18,15 +18,13 @@ import Notifications from './Notifications';
 import UserMenu from './UserMenu';
 import ThemeToggle from '../../ui/buttons/ThemeToggle';
 
+import { useAppStore } from '../../store/useAppStore';
+
 export interface HeaderProps {
     isAdmin: boolean;
     isFranchise: boolean;
     targetFranchiseName?: string;
     onLogout: () => void;
-    selectedMonth?: string;
-    onMonthChange?: (month: string) => void;
-    isSidebarOpen: boolean;
-    setIsSidebarOpen: (isOpen: boolean) => void;
     onExport?: () => void;
     onOpenHelp?: (id: string) => void;
 }
@@ -48,12 +46,14 @@ const Header: React.FC<HeaderProps> = ({
     isFranchise,
     targetFranchiseName,
     onLogout,
-    selectedMonth,
-    onMonthChange,
-    isSidebarOpen,
-    setIsSidebarOpen,
     onOpenHelp
 }) => {
+    const {
+        selectedMonth,
+        setSelectedMonth,
+        toggleSidebar
+    } = useAppStore();
+
 
     const location = useLocation();
     const isDashboard = location.pathname === '/dashboard' || location.pathname === '/';
@@ -119,7 +119,7 @@ const Header: React.FC<HeaderProps> = ({
                 <div className="flex items-center gap-6">
                     {/* Mobile Menu Toggle */}
                     <button
-                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        onClick={() => toggleSidebar()}
                         className="md:hidden p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400"
                         title="Abrir menú"
                         aria-label="Abrir menú de navegación"
@@ -176,21 +176,34 @@ const Header: React.FC<HeaderProps> = ({
                                     { path: '/admin/resources', label: 'Recursos', icon: FileText },
                                     { path: '/admin/support', label: 'Soporte', icon: LifeBuoy },
                                     { path: '/academy', label: 'Academia', icon: GraduationCap },
+                                    { path: '/admin/kanban', label: 'Kanban', icon: LayoutGrid },
                                     { path: '/profile', label: 'Configuración', icon: Settings },
                                 ] as NavItem[]
                             ).map((item) => (
                                 <NavLink
                                     key={item.path}
                                     to={item.path}
-                                    className={({ isActive }) => `
+                                    className={({ isActive }) => {
+                                        // Custom styling for Kanban (Highlighted/Professional)
+                                        if (item.path === '/admin/kanban') {
+                                            return `
+                                                flex items-center px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 relative ml-2 group
+                                                ${isActive
+                                                    ? 'text-white bg-gradient-to-r from-indigo-600 to-violet-600 shadow-lg shadow-indigo-500/25 ring-1 ring-white/20'
+                                                    : 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100 hover:text-indigo-700 border border-indigo-200/50'
+                                                }
+                                            `;
+                                        }
+
+                                        return `
                                         flex items-center px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 relative
                                         ${isActive
-                                            ? 'text-white bg-blue-600 shadow-lg'
-                                            : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'
-                                        }
-                                    `}
+                                                ? 'text-white bg-blue-600 shadow-lg'
+                                                : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'
+                                            }
+                                    `}}
                                 >
-                                    <item.icon className="w-4 h-4 mr-2" />
+                                    <item.icon className={`w-4 h-4 mr-2 ${item.path === '/admin/kanban' && !location.pathname.includes('kanban') ? 'text-indigo-500' : ''}`} />
                                     {item.label}
                                 </NavLink>
                             ))}
@@ -245,8 +258,8 @@ const Header: React.FC<HeaderProps> = ({
                         <input
                             type="month"
                             value={selectedMonth || new Date().toISOString().slice(0, 7)}
-                            onChange={(e) => onMonthChange && onMonthChange(e.target.value)}
-                            className="bg-transparent text-slate-600 dark:text-slate-300 text-sm font-mono font-bold outline-none border-none p-0 w-auto cursor-pointer dark:[color-scheme:dark]"
+                            onChange={(e) => setSelectedMonth(e.target.value)}
+                            className="bg-transparent text-slate-600 dark:text-slate-300 text-sm font-bold uppercase tracking-wider outline-none border-none p-0 w-auto cursor-pointer dark:[color-scheme:dark]"
                             title="Seleccionar Mes"
                             aria-label="Seleccionar mes"
                         />

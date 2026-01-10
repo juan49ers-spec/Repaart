@@ -78,7 +78,7 @@ const AuditPanel = () => {
                         <tbody className="divide-y divide-slate-50">
                             {logs.map(log => (
                                 <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-6 py-3 text-sm font-mono text-slate-500 whitespace-nowrap">
+                                    <td className="px-6 py-3 text-sm font-bold text-slate-500 whitespace-nowrap uppercase tracking-wider">
                                         {formatTime(log.timestamp)}
                                     </td>
                                     <td className="px-6 py-3">
@@ -88,7 +88,7 @@ const AuditPanel = () => {
                                             </div>
                                             <div>
                                                 <p className="text-sm font-bold text-slate-800">{log.actorEmail}</p>
-                                                <p className="text-xs text-slate-400 font-mono">UID: {(log.actorId || '').slice(0, 6)}...</p>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">UID: {(log.actorId || '').slice(0, 6)}...</p>
                                             </div>
                                         </div>
                                     </td>
@@ -98,7 +98,7 @@ const AuditPanel = () => {
                                         </span>
                                     </td>
                                     <td className="px-6 py-3">
-                                        <code className="text-[10px] bg-slate-100 p-1.5 rounded text-slate-600 break-all block max-w-xs font-mono">
+                                        <code className="text-[10px] bg-slate-100 p-1.5 rounded text-slate-600 break-all block max-w-xs font-bold uppercase tracking-widest">
                                             {JSON.stringify(log.details || {})}
                                         </code>
                                     </td>

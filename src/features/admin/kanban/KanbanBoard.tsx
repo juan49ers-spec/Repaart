@@ -1,31 +1,45 @@
 import React, { useState, useMemo } from 'react';
-import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { KanbanSquare, Plus, Loader2 } from 'lucide-react';
+import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors, closestCorners, DragOverEvent, KeyboardSensor } from '@dnd-kit/core';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { Plus, Loader2 } from 'lucide-react';
 import { useKanban, KanbanTask } from '../../../hooks/useKanban';
 import KanbanColumn from './KanbanColumn';
 import KanbanCard from './KanbanCard';
 import KanbanFilters from './KanbanFilters';
 import TaskDetailModal from './TaskDetailModal';
 import confetti from 'canvas-confetti';
+import { useEffect } from 'react';
 
 const COLUMNS = [
-    { id: 'todo', title: 'Por Hacer', color: 'from-slate-500/20 to-slate-600/20' },
-    { id: 'in_progress', title: 'En Progreso', color: 'from-blue-500/20 to-indigo-500/20' },
-    { id: 'done', title: 'Completado', color: 'from-emerald-500/20 to-green-500/20' }
+    { id: 'todo', title: 'Por Hacer', color: 'from-sky-400/10 via-sky-400/5 to-transparent', accent: 'text-sky-500', tint: 'bg-sky-500/5', border: 'border-sky-500/20' },
+    { id: 'in_progress', title: 'En Progreso', color: 'from-indigo-400/10 via-indigo-400/5 to-transparent', accent: 'text-indigo-500', tint: 'bg-indigo-500/5', border: 'border-indigo-500/20' },
+    { id: 'done', title: 'Completado', color: 'from-emerald-400/10 via-emerald-400/5 to-transparent', accent: 'text-emerald-500', tint: 'bg-emerald-500/5', border: 'border-emerald-500/20' }
 ] as const;
 
 const KanbanBoard: React.FC = () => {
-    const { tasks, isLoading, addTask, updateTask, deleteTask } = useKanban();
+    const { tasks: backendTasks, isLoading, addTask, updateTask, deleteTask } = useKanban();
 
     // UI State
+    // Local state for smooooooth dragging
+    const [tasks, setTasks] = useState<KanbanTask[]>([]);
     const [dragTask, setDragTask] = useState<KanbanTask | null>(null);
     const [editingTask, setEditingTask] = useState<KanbanTask | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
 
+    // Sync backend tasks to local tasks when not dragging
+    useEffect(() => {
+        if (!dragTask) {
+            setTasks(backendTasks);
+        }
+    }, [backendTasks, dragTask]);
+
     const sensors = useSensors(
         useSensor(PointerSensor, {
-            activationConstraint: { distance: 8 }
+            activationConstraint: { distance: 5 }
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
         })
     );
 
@@ -40,10 +54,37 @@ const KanbanBoard: React.FC = () => {
     }, [tasks, searchQuery, priorityFilter]);
 
     // Handlers
-    const handleDragStart = (event: any) => {
-        const { active } = event;
-        const task = tasks.find(t => t.id === active.id);
-        if (task) setDragTask(task);
+    const handleDragOver = (event: DragOverEvent) => {
+        const { active, over } = event;
+        if (!over) return;
+
+        const activeId = active.id;
+        const overId = over.id;
+
+        // Find the containers
+        const activeTask = tasks.find(t => t.id === activeId);
+        const overTask = tasks.find(t => t.id === overId);
+
+        if (!activeTask) return;
+
+        let newStatus: KanbanTask['status'] | undefined;
+
+        // 1. Drop over a Column directly
+        const isOverColumn = COLUMNS.some(col => col.id === overId);
+        if (isOverColumn) {
+            newStatus = overId as KanbanTask['status'];
+        }
+        // 2. Drop over another Task
+        else if (overTask) {
+            newStatus = overTask.status;
+        }
+
+        // If we found a valid new status and it's different, move it visually IMMEDIATELY
+        if (newStatus && activeTask.status !== newStatus) {
+            setTasks((prev) => prev.map(t =>
+                t.id === activeId ? { ...t, status: newStatus! } : t
+            ));
+        }
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -53,14 +94,25 @@ const KanbanBoard: React.FC = () => {
         if (!over) return;
 
         const taskId = active.id as string;
-        const newStatus = over.id as KanbanTask['status'];
-        const currentTask = tasks.find(t => t.id === taskId);
+        const activeTask = tasks.find(t => t.id === taskId);
 
-        if (currentTask && currentTask.status !== newStatus) {
-            updateTask({ id: taskId, status: newStatus });
+        // At this point, thanks to onDragOver, the activeTask in 'tasks' state 
+        // likely already has the new status. But we need to verify against valid logic
+        // or just persist whatever the final 'over' dictates to be safe.
 
-            // Confetti Effect when moving to DONE
-            if (newStatus === 'done') {
+        // Recalculate robustly for persistence
+        let finalStatus: KanbanTask['status'] | undefined;
+
+        if (COLUMNS.some(col => col.id === over.id)) {
+            finalStatus = over.id as KanbanTask['status'];
+        } else {
+            const overTask = tasks.find(t => t.id === over.id);
+            if (overTask) finalStatus = overTask.status;
+        }
+
+        // We persist the change to Backend
+        if (finalStatus && activeTask) { // Even if status didn't change locally, ensure backend is in sync
+            if (finalStatus === 'done' && activeTask.status !== 'done') {
                 confetti({
                     particleCount: 100,
                     spread: 70,
@@ -68,10 +120,17 @@ const KanbanBoard: React.FC = () => {
                     colors: ['#6366f1', '#10b981', '#f43f5e']
                 });
             }
+            // Always call update to ensure DB consistency
+            updateTask({ id: taskId, status: finalStatus });
         }
     };
 
-    const handleQuickAdd = () => {
+    const handleDragStart = (event: any) => {
+        const task = tasks.find(t => t.id === event.active.id);
+        if (task) setDragTask(task);
+    };
+
+    const handleAddTask = () => {
         const title = prompt("Nueva tarea:");
         if (title) {
             addTask({
@@ -82,78 +141,90 @@ const KanbanBoard: React.FC = () => {
         }
     };
 
-    if (isLoading) {
+    if (isLoading && tasks.length === 0) {
         return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin text-indigo-500" /></div>;
     }
 
     return (
-        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-            <div className="p-6 h-full flex flex-col">
-                {/* Header */}
-                <div className="flex justify-between items-center mb-6">
-                    <div>
-                        <h1 className="text-2xl font-black text-white flex items-center gap-2">
-                            <KanbanSquare className="text-indigo-400" />
-                            Tablero de Proyecto
-                        </h1>
-                        <p className="text-slate-500 text-sm mt-1">Gestión ágil de tareas v2.1</p>
-                    </div>
-                    <button
-                        onClick={handleQuickAdd}
-                        className="
-                            relative overflow-hidden group bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 font-bold 
-                            shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.5)] 
-                            transition-all active:scale-95 border border-indigo-400/20
-                        "
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                        <Plus size={18} className="relative z-10" />
-                        <span className="relative z-10">Nueva Tarea</span>
-                    </button>
-                </div>
+        <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+        >
+            <div className="p-6 h-full flex flex-col relative overflow-hidden">
+                {/* Atmospheric Background Gradient */}
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-sky-500/5 rounded-full blur-[120px] pointer-events-none" />
 
-                {/* Filters */}
-                <KanbanFilters
-                    searchQuery={searchQuery}
-                    setSearchQuery={setSearchQuery}
-                    priorityFilter={priorityFilter}
-                    setPriorityFilter={setPriorityFilter}
-                />
-
-                {/* Columns Grid */}
-                {/* Columns Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 h-[calc(100vh-200px)] min-h-[500px]">
-                    {COLUMNS.map(col => (
-                        <KanbanColumn
-                            key={col.id}
-                            id={col.id}
-                            title={col.title}
-                            color={col.color}
-                            tasks={filteredTasks.filter(t => t.status === col.id)}
-                            onCardClick={(task) => setEditingTask(task)}
-                        />
-                    ))}
-                </div>
-
-                {/* Overlay for Dragging */}
-                <DragOverlay>
-                    {dragTask ? (
-                        <div className="opacity-90 rotate-2 scale-105 cursor-grabbing w-[280px] md:w-[350px]">
-                            <KanbanCard task={dragTask} />
+                <div className="relative z-10 flex flex-col h-full">
+                    {/* Header section with glassmorphism */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                        <div className="space-y-0.5">
+                            <h1 className="text-3xl font-medium text-slate-800 dark:text-white tracking-tight">Gestión Operativa</h1>
+                            <p className="text-sm font-normal text-slate-500 dark:text-slate-400">Panel estratégico para el flujo de tareas y objetivos.</p>
                         </div>
-                    ) : null}
-                </DragOverlay>
 
-                {/* Edit Modal */}
-                {editingTask && (
-                    <TaskDetailModal
-                        isOpen={!!editingTask}
-                        task={editingTask}
-                        onClose={() => setEditingTask(null)}
-                        onUpdate={(id, updates) => updateTask({ id, ...updates })}
-                        onDelete={deleteTask}
+                        <button
+                            onClick={handleAddTask}
+                            className="flex items-center justify-center gap-2.5 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-2xl font-medium text-sm transition-all shadow-lg shadow-indigo-500/25 active:scale-95 group"
+                        >
+                            <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
+                            Nueva Tarea
+                        </button>
+                    </div>
+
+                    {/* Filters */}
+                    <KanbanFilters
+                        searchQuery={searchQuery}
+                        onSearchChange={setSearchQuery}
+                        priorityFilter={priorityFilter}
+                        onPriorityChange={setPriorityFilter}
                     />
-                )}
+
+                    {/* Columns Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1 min-h-0">
+                        {COLUMNS.map(col => (
+                            <KanbanColumn
+                                key={col.id}
+                                title={col.title}
+                                tasks={filteredTasks.filter(t => t.status === col.id)}
+                                onCardClick={(task) => setEditingTask(task)}
+                                colorConfig={col}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Overlay for Dragging */}
+                    <DragOverlay dropAnimation={{
+                        sideEffects: ({ active }) => {
+                            const activeNode = active.data.current?.sortable?.node;
+                            if (activeNode) {
+                                activeNode.style.opacity = '1';
+                            }
+                        },
+                        duration: 250,
+                        easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+                    }}>
+                        {dragTask ? (
+                            <div className="rotate-[4deg] scale-110 cursor-grabbing w-[280px] md:w-[350px] shadow-2xl shadow-indigo-500/30">
+                                <KanbanCard task={dragTask} />
+                            </div>
+                        ) : null}
+                    </DragOverlay>
+
+                    {/* Edit Modal */}
+                    {editingTask && (
+                        <TaskDetailModal
+                            isOpen={!!editingTask}
+                            task={editingTask}
+                            onClose={() => setEditingTask(null)}
+                            onUpdate={(id, updates) => updateTask({ id, ...updates })}
+                            onDelete={deleteTask}
+                        />
+                    )}
+                </div>
             </div>
         </DndContext>
     );

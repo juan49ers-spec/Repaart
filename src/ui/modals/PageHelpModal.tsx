@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, ChevronRight, Target, HelpCircle } from 'lucide-react';
+import { X, ChevronRight } from 'lucide-react';
 import { PageHelpContent } from '../../constants/pageHelpData';
 
 interface PageHelpModalProps {

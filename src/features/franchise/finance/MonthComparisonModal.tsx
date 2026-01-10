@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { X, TrendingUp, TrendingDown, ArrowRight, Lightbulb, AlertCircle, CheckCircle2, Target } from 'lucide-react';
 import { MonthlyRecord } from '../../../hooks/useFranchiseHistory';
 import { formatMoney } from '../../../lib/finance';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface MonthComparisonModalProps {
     month1: MonthlyRecord;

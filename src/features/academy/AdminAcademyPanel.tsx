@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, Save, X, GripVertical, BookOpen, Award, AlertCircle, FileText, ClipboardCheck } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, BookOpen, FileText, ClipboardCheck } from 'lucide-react';
 import { useAcademyModules, useCreateModule, useUpdateModule, useDeleteModule, AcademyModule } from '../../hooks/useAcademy';
 import { formatDate } from '../../utils/formatDate';
-import CreateExampleModuleButton from './CreateExampleModuleButton';
+
 import LessonEditor from './LessonEditor';
 import QuizEditor from './QuizEditor';
 import AcademyAnalytics from './AcademyAnalytics';
@@ -117,318 +117,305 @@ const AdminAcademyPanel: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 p-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-black text-slate-900 flex items-center gap-3">
-                        <BookOpen className="w-8 h-8 text-indigo-600" />
-                        Gestor de Academia
-                    </h1>
-                    <p className="text-slate-500 mt-1 font-medium">
-                        {activeTab === 'modules' ? 'Administra los módulos y lecciones de la academia' : 'Analiza el progreso y resultados de los franquiciados'}
-                    </p>
-                </div>
-
-                <div className="flex items-center gap-6">
-                    {/* Tab Switcher */}
-                    <div className="flex bg-slate-100 p-1 rounded-xl h-fit border border-slate-200">
-                        <button
-                            onClick={() => setActiveTab('modules')}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold transition ${activeTab === 'modules' ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
-                        >
-                            Módulos
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('analytics')}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold transition ${activeTab === 'analytics' ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
-                        >
-                            Analytics
-                        </button>
-                    </div>
-
-                    {activeTab === 'modules' && (
-                        <div className="flex gap-3">
-                            <CreateExampleModuleButton onComplete={() => { }} />
-                            <button
-                                onClick={() => setIsCreating(true)}
-                                className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-600/20 transition active:scale-[0.98]"
-                            >
-                                <Plus className="w-5 h-5" />
-                                Nuevo Módulo
-                            </button>
-                        </div>
-                    )}
-                </div>
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 relative overflow-hidden transition-colors duration-500">
+            {/* Atmospheric Background Gradients */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-[120px] animate-pulse" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-sky-500/5 dark:bg-sky-500/10 rounded-full blur-[120px] animate-pulse [animation-delay:2s]" />
             </div>
 
-            {activeTab === 'analytics' ? (
-                <AcademyAnalytics />
-            ) : (
-                <>
-                    {/* Create Module Form */}
-                    {isCreating && (
-                        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xl shadow-slate-200/50 animate-fade-in-down">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-xl font-bold text-slate-900">Crear Nuevo Módulo</h3>
-                                <button
-                                    onClick={() => setIsCreating(false)}
-                                    aria-label="Cerrar formulario"
-                                    className="p-2 hover:bg-slate-100 rounded-lg transition"
-                                >
-                                    <X className="w-5 h-5 text-slate-500" />
-                                </button>
+            <div className="relative z-10 p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-1000">
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 bg-white dark:bg-indigo-500/10 rounded-2xl border border-slate-200 dark:border-indigo-500/20 backdrop-blur-xl shadow-lg shadow-indigo-500/5">
+                                <BookOpen className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
                             </div>
-
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">
-                                        Título del Módulo *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.title}
-                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                        placeholder="Ej: Introducción a Repaart"
-                                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-medium bg-slate-50 focus:bg-white transition-colors"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">
-                                        Descripción
-                                    </label>
-                                    <textarea
-                                        value={formData.description}
-                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                        placeholder="Breve descripción del contenido del módulo"
-                                        rows={3}
-                                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-medium resize-none bg-slate-50 focus:bg-white transition-colors"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">
-                                        Duración Estimada
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.duration}
-                                        onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                                        placeholder="Ej: 45 min"
-                                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-medium bg-slate-50 focus:bg-white transition-colors"
-                                    />
-                                </div>
-
-                                <div className="flex gap-3 pt-4">
-                                    <button
-                                        onClick={handleCreate}
-                                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-600/20 transition active:scale-[0.98]"
-                                    >
-                                        <Save className="w-5 h-5" />
-                                        Crear Módulo
-                                    </button>
-                                    <button
-                                        onClick={() => setIsCreating(false)}
-                                        className="px-6 py-3 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 font-bold transition"
-                                    >
-                                        Cancelar
-                                    </button>
-                                </div>
-                            </div>
+                            <h1 className="text-3xl font-normal text-slate-900 dark:text-white tracking-tight">Gestor de Academia</h1>
                         </div>
-                    )}
-
-                    {/* Info Banner */}
-                    <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
-                        <div className="text-sm">
-                            <p className="font-bold text-indigo-900 mb-1">ℹ️ Instrucciones</p>
-                            <p className="text-indigo-700">
-                                Los módulos se desbloquean secuencialmente. Los franquiciados deben completar cada módulo con 80% o más para acceder al siguiente.
-                            </p>
-                        </div>
+                        <p className="text-slate-500 dark:text-slate-400 max-w-lg font-normal">
+                            {activeTab === 'modules'
+                                ? 'Diseño y orquestación de la arquitectura educativa.'
+                                : 'Monitorización estratégica del rendimiento.'}
+                        </p>
                     </div>
 
-                    {/* Modules List */}
-                    <div className="space-y-4">
-                        {modules.map((module) => {
-                            const isEditing = editingModule?.id === module.id;
+                    <div className="flex items-center gap-6">
+                        {/* Premium Tab Switcher */}
+                        <div className="flex bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl p-1.5 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-inner">
+                            <button
+                                onClick={() => setActiveTab('modules')}
+                                className={`px-6 py-2.5 rounded-xl text-sm font-normal transition-all duration-300 ${activeTab === 'modules'
+                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
+                                    : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                            >
+                                Módulos
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('analytics')}
+                                className={`px-6 py-2.5 rounded-xl text-sm font-normal transition-all duration-300 ${activeTab === 'analytics'
+                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
+                                    : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                            >
+                                Analytics
+                            </button>
+                        </div>
 
-                            return (
-                                <div
-                                    key={module.id}
-                                    className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-xl hover:shadow-slate-200/50 transition-all hover:border-indigo-200 group"
-                                >
-                                    {isEditing ? (
-                                        /* Edit Mode */
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label className="block text-sm font-bold text-slate-700 mb-2">
-                                                    Título del Módulo
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={editingModule?.title || ''}
-                                                    onChange={(e) => setEditingModule(prev => prev ? ({ ...prev, title: e.target.value }) : null)}
-                                                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 font-medium bg-slate-50 focus:bg-white"
-                                                    title="Título del Módulo"
-                                                    placeholder="Ingrese el título"
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-sm font-bold text-slate-700 mb-2">
-                                                    Descripción
-                                                </label>
-                                                <textarea
-                                                    value={editingModule?.description || ''}
-                                                    onChange={(e) => setEditingModule(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
-                                                    rows={3}
-                                                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 font-medium resize-none bg-slate-50 focus:bg-white"
-                                                    title="Descripción del Módulo"
-                                                    placeholder="Ingrese la descripción"
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-sm font-bold text-slate-700 mb-2">
-                                                    Duración
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={editingModule?.duration || ''}
-                                                    onChange={(e) => setEditingModule(prev => prev ? ({ ...prev, duration: e.target.value }) : null)}
-                                                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 font-medium bg-slate-50 focus:bg-white"
-                                                    title="Duración del Módulo"
-                                                    placeholder="Ej: 45 min"
-                                                />
-                                            </div>
-
-                                            <div className="flex gap-3 pt-2">
-                                                <button
-                                                    onClick={() => handleUpdate(module.id)}
-                                                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-bold transition shadow-lg shadow-emerald-600/20"
-                                                >
-                                                    <Save className="w-5 h-5" />
-                                                    Guardar Cambios
-                                                </button>
-                                                <button
-                                                    onClick={() => setEditingModule(null)}
-                                                    className="px-6 py-3 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 font-bold transition"
-                                                >
-                                                    Cancelar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        /* View Mode */
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-3 mb-2">
-                                                    <GripVertical className="w-5 h-5 text-slate-400 cursor-move" />
-                                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded">
-                                                        Módulo {module.order}
-                                                    </span>
-                                                    {module.duration && (
-                                                        <span className="text-xs text-slate-500 font-medium">
-                                                            {module.duration}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <h3 className="text-xl font-black text-slate-900 mb-2 group-hover:text-indigo-900 transition-colors">
-                                                    {module.title}
-                                                </h3>
-                                                <p className="text-slate-600 mb-3 leading-relaxed">
-                                                    {module.description}
-                                                </p>
-                                                <div className="flex items-center gap-4 text-sm">
-                                                    <span className="text-slate-500 font-medium bg-slate-50 px-2 py-1 rounded-md">
-                                                        {module.lessonCount || 0} lecciones
-                                                    </span>
-                                                    {module.published ? (
-                                                        <span className="text-emerald-700 font-bold flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
-                                                            <Award className="w-4 h-4" />
-                                                            Publicado
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-amber-700 font-bold flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-md border border-amber-100">
-                                                            <AlertCircle className="w-4 h-4" />
-                                                            Borrador
-                                                        </span>
-                                                    )}
-
-                                                </div>
-                                                <div className="mt-2 text-xs text-slate-400 font-medium">
-                                                    Actualizado: {formatDate(module.updatedAt || module.createdAt)}
-                                                </div>
-                                            </div>
-
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={() => setSelectedModule(module)}
-                                                    aria-label="Gestionar lecciones"
-                                                    className="p-2 hover:bg-indigo-50 text-indigo-600 rounded-lg transition border border-transparent hover:border-indigo-100"
-                                                    title="Gestionar lecciones"
-                                                >
-                                                    <FileText className="w-5 h-5" />
-                                                </button>
-                                                <button
-                                                    onClick={() => setSelectedQuizModule(module)}
-                                                    aria-label="Gestionar Quiz"
-                                                    className="p-2 hover:bg-purple-50 text-purple-600 rounded-lg transition border border-transparent hover:border-purple-100"
-                                                    title="Gestionar Quiz"
-                                                >
-                                                    <ClipboardCheck className="w-5 h-5" />
-                                                </button>
-                                                <button
-                                                    onClick={() => setEditingModule(module)}
-                                                    aria-label="Editar módulo"
-                                                    className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg transition border border-transparent hover:border-blue-100"
-                                                    title="Editar módulo"
-                                                >
-                                                    <Edit2 className="w-5 h-5" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(module.id, module.title)}
-                                                    aria-label="Eliminar módulo"
-                                                    className="p-2 hover:bg-rose-50 text-rose-600 rounded-lg transition border border-transparent hover:border-rose-100"
-                                                    title="Eliminar módulo"
-                                                >
-                                                    <Trash2 className="w-5 h-5" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {/* Empty State */}
-                    {modules.length === 0 && !isCreating && (
-                        <div className="text-center py-20 bg-white rounded-3xl border border-slate-200 border-dashed">
-                            <BookOpen className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-                            <h3 className="text-xl font-bold text-slate-800 mb-2">
-                                No hay módulos creados
-                            </h3>
-                            <p className="text-slate-500 mb-6">
-                                Crea tu primer módulo para empezar a construir la academia
-                            </p>
-                            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                                <CreateExampleModuleButton onComplete={() => { }} />
+                        {activeTab === 'modules' && (
+                            <div className="flex gap-3">
+                                {/* <CreateExampleModuleButton onComplete={() => { }} /> */}
                                 <button
                                     onClick={() => setIsCreating(true)}
-                                    className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-600/20 transition active:scale-[0.98]"
+                                    className="group flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-2xl hover:brightness-110 font-medium shadow-xl shadow-indigo-500/20 transition-all active:scale-[0.98] border border-white/10"
                                 >
-                                    <Plus className="w-5 h-5" />
-                                    Crear Módulo Vacío
+                                    <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
+                                    Nuevo Módulo
                                 </button>
                             </div>
+                        )}
+                    </div>
+                </div>
+
+                {activeTab === 'analytics' ? (
+                    <AcademyAnalytics />
+                ) : (
+                    <>
+                        {/* Create Module Form - Glassmorphic overlay */}
+                        {isCreating && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+                                <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-[2rem] border border-slate-200 dark:border-white/10 p-8 shadow-2xl shadow-slate-200/50 dark:shadow-black/50 max-w-2xl w-full animate-in zoom-in-95 duration-300 relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
+
+                                    <div className="flex items-center justify-between mb-8 relative z-10">
+                                        <div className="space-y-1">
+                                            <h3 className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">Nuevo Módulo Estratégico</h3>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400">Define la identidad y objetivos de la nueva formación.</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setIsCreating(false)}
+                                            className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-all text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                                            title="Cerrar modal"
+                                        >
+                                            <X className="w-6 h-6" />
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-6 relative z-10">
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-300 mb-2 uppercase tracking-wider">
+                                                Título del Módulo
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={formData.title}
+                                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                                placeholder="Ej: Introducción a Repaart"
+                                                className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all outline-none"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-300 mb-2 uppercase tracking-wider">
+                                                Descripción
+                                            </label>
+                                            <textarea
+                                                value={formData.description}
+                                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                                placeholder="Breve descripción del contenido del módulo"
+                                                rows={3}
+                                                className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all outline-none resize-none"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-300 mb-2 uppercase tracking-wider">
+                                                Duración Estimada
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={formData.duration}
+                                                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                                                placeholder="Ej: 45 min"
+                                                className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all outline-none"
+                                            />
+                                        </div>
+
+                                        <div className="flex gap-3 pt-6">
+                                            <button
+                                                onClick={handleCreate}
+                                                className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 font-bold shadow-lg shadow-indigo-600/20 transition active:scale-[0.98]"
+                                            >
+                                                <Save className="w-5 h-5" />
+                                                Crear Módulo
+                                            </button>
+                                            <button
+                                                onClick={() => setIsCreating(false)}
+                                                className="px-6 py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 font-medium transition border border-slate-200 dark:border-white/5"
+                                            >
+                                                Cancelar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Modules Grid */}
+                        <div className="grid grid-cols-1 gap-6">
+                            {modules.length === 0 && !isCreating ? (
+                                <div className="text-center py-24 bg-white/60 dark:bg-slate-900/30 rounded-[2.5rem] border border-slate-200 dark:border-white/5 backdrop-blur-sm border-dashed">
+                                    <div className="w-20 h-20 mx-auto mb-6 bg-slate-100 dark:bg-slate-800/50 rounded-full flex items-center justify-center">
+                                        <BookOpen className="w-10 h-10 text-slate-400 dark:text-slate-600" />
+                                    </div>
+                                    <h3 className="text-2xl font-semibold text-slate-900 dark:text-white mb-3">
+                                        No hay módulos creados
+                                    </h3>
+                                    <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-sm mx-auto font-normal">
+                                        Crea tu primer módulo para empezar a construir la estructura educativa.
+                                    </p>
+                                    <button
+                                        onClick={() => setIsCreating(true)}
+                                        className="inline-flex items-center gap-3 px-8 py-4 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-500 font-medium shadow-xl shadow-indigo-600/20 transition active:scale-[0.98]"
+                                    >
+                                        <Plus className="w-5 h-5" />
+                                        Crear Módulo Vacío
+                                    </button>
+                                </div>
+                            ) : (
+                                modules.map((module: AcademyModule) => {
+                                    const isEditing = editingModule?.id === module.id;
+
+                                    return (
+                                        <div
+                                            key={module.id}
+                                            className="group relative bg-white dark:bg-slate-900/40 backdrop-blur-xl rounded-[2rem] border border-slate-200 dark:border-white/5 hover:border-indigo-500/30 hover:bg-slate-50 dark:hover:bg-slate-900/60 transition-all duration-300 p-8 overflow-hidden shadow-sm dark:shadow-none"
+                                        >
+                                            {/* Glow Effect */}
+                                            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-[80px] -mr-32 -mt-32 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+                                            {isEditing ? (
+                                                <div className="space-y-6 relative z-10 max-w-3xl">
+                                                    <div>
+                                                        <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Título</label>
+                                                        <div className="space-y-4">
+                                                            <input
+                                                                type="text"
+                                                                value={editingModule?.title || ''}
+                                                                onChange={(e) => setEditingModule(prev => prev ? ({ ...prev, title: e.target.value }) : null)}
+                                                                className="w-full px-4 py-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white outline-none"
+                                                                placeholder="Título del módulo"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Descripción</label>
+                                                            <textarea
+                                                                value={editingModule?.description || ''}
+                                                                onChange={(e) => setEditingModule(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
+                                                                className="w-full px-4 py-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white outline-none resize-none"
+                                                                rows={2}
+                                                                placeholder="Descripción"
+                                                            />
+                                                        </div>
+                                                        <div className="flex gap-3">
+                                                            <button
+                                                                onClick={() => handleUpdate(module.id)}
+                                                                className="px-6 py-2.5 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+                                                            >
+                                                                <Save className="w-4 h-4" /> Guardar
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setEditingModule(null)}
+                                                                className="px-6 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                                                            >
+                                                                Cancelar
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 relative z-10">
+                                                    <div className="space-y-3 flex-1">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="px-3 py-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                                                Módulo {module.order}
+                                                            </div>
+                                                            {module.duration && (
+                                                                <span className="text-xs font-medium text-slate-500">{module.duration}</span>
+                                                            )}
+                                                            {module.published ? (
+                                                                <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
+                                                                    Publicado
+                                                                </span>
+                                                            ) : (
+                                                                <span className="px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400" />
+                                                                    Borrador
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        <h3 className="text-2xl font-medium text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                                            {module.title}
+                                                        </h3>
+                                                        <p className="text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl">
+                                                            {module.description}
+                                                        </p>
+
+                                                        <div className="pt-2 flex items-center gap-4">
+                                                            <div className="text-xs text-slate-500 font-medium">
+                                                                <span className="text-slate-800 dark:text-white font-semibold">{module.lessonCount || 0}</span> Lecciones
+                                                            </div>
+                                                            <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+                                                            <div className="text-xs text-slate-500 font-medium">
+                                                                Actualizado: {formatDate(module.updatedAt || module.createdAt)}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={() => setSelectedModule(module)}
+                                                            className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white transition-all duration-300 font-medium text-sm flex items-center gap-2 group/btn"
+                                                            title="Gestionar Lecciones"
+                                                        >
+                                                            <FileText className="w-4 h-4" />
+                                                            <span className="hidden md:inline">Lecciones</span>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setSelectedQuizModule(module)}
+                                                            className="p-3 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-500/20 hover:bg-purple-600 hover:text-white dark:hover:bg-purple-500 dark:hover:text-white transition-all duration-300"
+                                                            title="Editar Quiz"
+                                                        >
+                                                            <ClipboardCheck className="w-4 h-4" />
+                                                        </button>
+                                                        <div className="w-px h-8 bg-slate-200 dark:bg-white/10 mx-1" />
+                                                        <button
+                                                            onClick={() => setEditingModule(module)}
+                                                            className="p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all"
+                                                            title="Configurar Módulo"
+                                                        >
+                                                            <Edit2 className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(module.id, module.title)}
+                                                            className="p-3 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-all"
+                                                            title="Eliminar Módulo"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })
+                            )}
                         </div>
-                    )}
-                </>
-            )}
+                    </>
+                )}
+            </div>
         </div>
     );
 };

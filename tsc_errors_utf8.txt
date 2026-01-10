@@ -1,168 +1,32 @@
-﻿src/features/academy/AcademyAnalytics.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/academy/AcademyAnalytics.tsx(3,36): error TS6133: 'DocumentData' is declared but its value is never read.
-src/features/academy/AcademyAnalytics.tsx(5,5): error TS6133: 'TrendingUp' is declared but its value is never read.
-src/features/academy/AcademyDashboard.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/academy/AcademyDashboard.tsx(17,11): error TS6196: 'ModuleProgress' is declared but never used.
-src/features/academy/AdminAcademyPanel.tsx(135,93): error TS2367: This comparison appears to be unintentional because the types '"analytics"' and '"modules"' have no overlap.
-src/features/academy/AdminAcademyPanel.tsx(176,89): error TS2367: This comparison appears to be unintentional because the types '"modules"' and '"analytics"' have no overlap.
-src/features/academy/BrutalLearningView.tsx(1,38): error TS6133: 'useMemo' is declared but its value is never read.
-src/features/academy/CalculatorWidget.tsx(2,10): error TS6133: 'Calculator' is declared but its value is never read.
-src/features/academy/CalculatorWidget.tsx(2,22): error TS6133: 'DollarSign' is declared but its value is never read.
-src/features/academy/CalculatorWidget.tsx(2,57): error TS6133: 'PieChart' is declared but its value is never read.
-src/features/academy/CalculatorWidget.tsx(117,37): error TS2503: Cannot find namespace 'JSX'.
-src/features/academy/CalculatorWidget.tsx(178,27): error TS2503: Cannot find namespace 'JSX'.
-src/features/academy/CalculatorWidget.tsx(226,29): error TS2503: Cannot find namespace 'JSX'.
-src/features/academy/ModuleViewer.tsx(4,89): error TS6133: 'Quiz' is declared but its value is never read.
-src/features/academy/QuizEditor.tsx(2,30): error TS6133: 'X' is declared but its value is never read.
-src/features/academy/QuizEditor.tsx(3,68): error TS6133: 'Quiz' is declared but its value is never read.
-src/features/admin/AdminResourcesPanel.tsx(381,17): error TS2322: Type 'Resource | null' is not assignable to type 'FileData | null'.
-  Type 'Resource' is not assignable to type 'FileData'.
-    Types of property 'name' are incompatible.
-      Type 'string | undefined' is not assignable to type 'string'.
-        Type 'undefined' is not assignable to type 'string'.
-src/features/admin/AdminSimulationEditor.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/admin/AdminSupportPanel.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/admin/AuditPanel.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/admin/dashboard/IntelligenceWidget.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/admin/dashboard/IntelligenceWidget.tsx(2,10): error TS6133: 'Activity' is declared but its value is never read.
-src/features/admin/dashboard/PowerMetrics.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/admin/dashboard/SidebarWidgets.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/admin/dashboard/SidebarWidgets.tsx(38,41): error TS2345: Argument of type 'Franchise' is not assignable to parameter of type 'FinancialData'.
-  Types of property 'metrics' are incompatible.
-    Type 'FranchiseMetrics' is missing the following properties from type 'Metrics': totalKm, incidentCost, otherExpenses, laborRatio, and 4 more.
-src/features/admin/dashboard/widgets/NetworkStatusWidget.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/admin/finance/AdminNetworkDashboard.tsx(4,17): error TS6133: 'TrendingDown' is declared but its value is never read.
-src/features/admin/finance/AdminNetworkDashboard.tsx(16,22): error TS6133: 'value' is declared but its value is never read.
-src/features/admin/finance/AdminNetworkDashboard.tsx(232,48): error TS2365: Operator '>' cannot be applied to types '{}' and 'number'.
-src/features/admin/finance/AdminNetworkDashboard.tsx(232,66): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
-src/features/admin/finance/AdminNetworkDashboard.tsx(235,47): error TS2365: Operator '>' cannot be applied to types '{}' and 'number'.
-src/features/admin/finance/AdminNetworkDashboard.tsx(235,68): error TS2365: Operator '>' cannot be applied to types '{}' and 'number'.
-src/features/admin/finance/AdminNetworkDashboard.tsx(250,64): error TS2322: Type '{}' is not assignable to type 'number'.
-src/features/admin/finance/AdminNetworkDashboard.tsx(253,66): error TS2345: Argument of type '{}' is not assignable to parameter of type 'string | number | null | undefined'.
-src/features/admin/finance/AdminNetworkDashboard.tsx(260,82): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
-src/features/admin/finance/TariffEditor.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/admin/FranchiseOnboarding.tsx(1,27): error TS6133: 'useMemo' is declared but its value is never read.
-src/features/admin/overview/OverviewTab.tsx(9,5): error TS6133: 'Clock' is declared but its value is never read.
-src/features/admin/overview/OverviewTab.tsx(11,5): error TS6133: 'ArrowRight' is declared but its value is never read.
-src/features/admin/overview/OverviewTab.tsx(12,5): error TS6133: 'Users' is declared but its value is never read.
-src/features/admin/overview/OverviewTab.tsx(13,5): error TS6133: 'Settings' is declared but its value is never read.
-src/features/admin/overview/OverviewTab.tsx(45,11): error TS6133: 'healthVariant' is declared but its value is never read.
-src/features/admin/overview/OverviewTab.tsx(120,51): error TS2322: Type '{ limit: number; compact: true; }' is not assignable to type 'IntrinsicAttributes'.
-  Property 'limit' does not exist on type 'IntrinsicAttributes'.
-src/features/admin/resources/ResourceUploadModal.tsx(2,45): error TS6133: 'ImageIcon' is declared but its value is never read.
-src/features/admin/resources/ResourceUploadModal.tsx(2,56): error TS6133: 'File' is declared but its value is never read.
-src/features/admin/support/SupportMetrics.tsx(2,29): error TS6133: 'AlertTriangle' is declared but its value is never read.
-src/features/admin/support/SupportMetrics.tsx(2,44): error TS6133: 'Search' is declared but its value is never read.
-src/features/admin/support/SupportMetrics.tsx(2,52): error TS6133: 'CheckSquare' is declared but its value is never read.
-src/features/admin/support/SupportMetrics.tsx(2,65): error TS6133: 'AlertOctagon' is declared but its value is never read.
-src/features/admin/support/TicketDetail.tsx(6,10): error TS2459: Module '"../../../hooks/useSupportManager"' declares 'Ticket' locally, but it is not exported.
-src/features/admin/support/TicketDetail.tsx(30,41): error TS6133: 'isAdmin' is declared but its value is never read.
-src/features/admin/support/TicketList.tsx(6,10): error TS2459: Module '"../../../hooks/useSupportManager"' declares 'Ticket' locally, but it is not exported.
-src/features/auth/Login.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/auth/Login.tsx(3,22): error TS6133: 'AlertCircle' is declared but its value is never read.
-src/features/auth/Login.tsx(4,42): error TS6133: 'sendPasswordResetEmail' is declared but its value is never read.
-src/features/auth/Login.tsx(4,71): error TS2305: Module '"firebase/auth"' has no exported member 'FirebaseError'.
-src/features/auth/Login.tsx(17,13): error TS2339: Property 'toast' does not exist on type 'UseToastReturn | null'.
-src/features/auth/ProtectedRoute.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/CoverageStats.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/DashboardCharts.tsx(182,56): error TS6133: 'entry' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/FinancialAdvisorWidget.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/FinancialAdvisorWidget.tsx(201,34): error TS2322: Type '"left"' is not assignable to type 'Orientation | undefined'.
-src/features/franchise/dashboard/widgets/FinancialAdvisorWidget.tsx(206,34): error TS2322: Type '"left"' is not assignable to type 'Orientation | undefined'.
-src/features/franchise/dashboard/widgets/FleetCard.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/ForecastingWidget.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/GamificationWidget.tsx(2,18): error TS6133: 'TrendingUp' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/MonthlyTaxWidget.tsx(2,19): error TS6133: 'TrendingUp' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/MonthlyTaxWidget.tsx(2,31): error TS6133: 'TrendingDown' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/MonthlyTaxWidget.tsx(2,45): error TS6133: 'ArrowRight' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/MonthlyTrendChart.tsx(16,11): error TS6196: 'CustomTooltipPayload' is declared but never used.
-src/features/franchise/dashboard/widgets/NewsFeedWidget.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/NewsFeedWidget.tsx(49,26): error TS2741: Property 'children' is missing in type '{ className: string; }' but required in type 'CardProps'.
-src/features/franchise/dashboard/widgets/TaxVaultWidget.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/TaxVaultWidget.tsx(2,29): error TS6133: 'TrendingUp' is declared but its value is never read.
-src/features/franchise/finance/BreakEvenWidget.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
-src/features/franchise/finance/BreakEvenWidget.tsx(2,71): error TS6133: 'ReferenceLine' is declared but its value is never read.
-src/features/franchise/finance/BreakEvenWidget.tsx(5,28): error TS7031: Binding element 'trendData' implicitly has an 'any' type.
-src/features/franchise/finance/BreakEvenWidget.tsx(10,37): error TS7006: Parameter 'd' implicitly has an 'any' type.
-src/features/franchise/finance/FranchiseHistoryView.tsx(4,31): error TS6133: 'AreaChart' is declared but its value is never read.
-src/features/franchise/finance/MonthlyHistoryTable.tsx(3,10): error TS6133: 'Edit' is declared but its value is never read.
-src/features/franchise/finance/MonthlyHistoryTable.tsx(3,52): error TS6133: 'FileText' is declared but its value is never read.
-src/features/franchise/finance/SmartInsightsWidget.tsx(174,19): error TS6133: 'taxRate' is declared but its value is never read.
-src/features/franchise/FranchiseDashboard.tsx(4,5): error TS6133: 'Activity' is declared but its value is never read.
-src/features/franchise/FranchiseDashboard.tsx(4,15): error TS6133: 'Edit3' is declared but its value is never read.
-src/features/franchise/FranchiseDashboard.tsx(4,61): error TS6133: 'TrendingUp' is declared but its value is never read.
-src/features/franchise/FranchiseDashboard.tsx(4,73): error TS6133: 'TrendingDown' is declared but its value is never read.
-src/features/franchise/FranchiseDashboard.tsx(4,87): error TS6133: 'Clock' is declared but its value is never read.
-src/features/franchise/FranchiseDashboard.tsx(4,94): error TS6133: 'Package' is declared but its value is never read.
-src/features/franchise/FranchiseDashboard.tsx(69,11): error TS6133: 'productivity' is declared but its value is never read.
-src/features/franchise/FranchiseDashboard.tsx(70,11): error TS6133: 'costPerOrder' is declared but its value is never read.
-src/features/franchise/ResourcesPanel.tsx(239,17): error TS2322: Type 'ResourceFile | null' is not assignable to type 'FileData | null'.
-  Type 'ResourceFile' is not assignable to type 'FileData'.
-    Types of property 'name' are incompatible.
-      Type 'string | undefined' is not assignable to type 'string'.
-        Type 'undefined' is not assignable to type 'string'.
-src/features/franchise/support/TicketHistory.tsx(3,57): error TS6133: 'Timestamp' is declared but its value is never read.
-src/features/franchise/SupportHub.tsx(29,9): error TS2339: Property 'setSuccess' does not exist on type '{ tickets: Ticket[]; allTicketsCount: number; loading: boolean; sending: boolean; success: boolean; suggestions: any[]; setSuggestions: Dispatch<SetStateAction<any[]>>; ... 7 more ...; resetSuccess: () => void; }'.
-src/features/franchise/wizard/AcademyPanel.tsx(2,90): error TS6133: 'PlayCircle' is declared but its value is never read.
-src/features/operations/components/KpiCard.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/operations/components/OperationsTabs.tsx(2,8): error TS6133: 'React' is declared but its value is never read.
-src/features/operations/FleetManager.tsx(58,13): error TS2322: Type 'VehicleStatus' is not assignable to type '"active" | "maintenance" | "stopped" | "sold" | undefined'.
-  Type '"retired"' is not assignable to type '"active" | "maintenance" | "stopped" | "sold" | undefined'.
-src/features/operations/OperationsDashboard.tsx(25,66): error TS6133: 'readOnly' is declared but its value is never read.
-src/features/operations/OperationsDashboard.tsx(138,29): error TS2322: Type '{ currentDate: Date; onSlotClick: (date: Date) => void; franchiseId: string; weekData: { shifts: Shift[]; id?: string | undefined; startDate?: string | undefined; endDate?: string | undefined; status?: "draft" | ... 2 more ... | undefined; metrics?: { ...; } | undefined; }; loading: boolean; }' is not assignable to type 'IntrinsicAttributes & WeeklySummaryViewProps'.
-  Property 'franchiseId' does not exist on type 'IntrinsicAttributes & WeeklySummaryViewProps'.
-src/features/operations/ShiftPlanner.tsx(409,25): error TS2322: Type 'number | null' is not assignable to type 'number | undefined'.
-  Type 'null' is not assignable to type 'number | undefined'.
-src/features/operations/views/ShiftManagerView.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/operations/views/WeeklySummaryView.tsx(6,34): error TS6133: 'Shift' is declared but its value is never read.
-src/features/operations/WeeklyScheduler.tsx(87,60): error TS18047: 'weekData' is possibly 'null'.
-src/features/user/UserProfile.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/features/user/UserProfile.tsx(118,33): error TS2322: Type 'RoleConfig | null' is not assignable to type 'RoleConfig | undefined'.
-  Type 'null' is not assignable to type 'RoleConfig | undefined'.
-src/hooks/useAcademy.ts(180,60): error TS2554: Expected 1 arguments, but got 2.
-src/hooks/useAdminAnnouncements.ts(37,13): error TS6133: 'error' is declared but its value is never read.
-src/hooks/useFinancialPulse.ts(3,62): error TS6133: 'DocumentData' is declared but its value is never read.
-src/hooks/useFleet.ts(59,72): error TS2345: Argument of type '(data: Vehicle[]) => void' is not assignable to parameter of type '(vehicles: Vehicle[]) => void'.
-  Types of parameters 'data' and 'vehicles' are incompatible.
-    Type 'import("C:/Users/Usuario/.gemini/antigravity/playground/synthetic-sagan/src/services/fleetService").Vehicle[]' is not assignable to type 'import("C:/Users/Usuario/.gemini/antigravity/playground/synthetic-sagan/src/hooks/useFleet").Vehicle[]'.
-      Type 'Vehicle' is missing the following properties from type 'Vehicle': type, franchiseId
-src/hooks/useFranchiseFinance.ts(56,70): error TS2339: Property 'revenue' does not exist on type 'FinancialReport'.
-src/hooks/useNetworkFinance.ts(7,1): error TS6133: 'FranchiseMetadata' is declared but its value is never read.
-src/hooks/useSupportManager.ts(119,54): error TS2339: Property 'TICKET_UPDATE' does not exist on type '{ readonly LOGIN_SUCCESS: "LOGIN_SUCCESS"; readonly LOGOUT: "LOGOUT"; readonly PASSWORD_CHANGED: "PASSWORD_CHANGED"; readonly PASSWORD_RESET_REQ: "PASSWORD_RESET_REQ"; readonly USER_APPROVED: "USER_APPROVED"; ... 11 more ...; readonly CLIENT_CRASH: "CLIENT_CRASH"; }'.
-src/hooks/useSupportManager.ts(136,21): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
-  Type 'undefined' is not assignable to type 'string'.
-src/hooks/useSupportManager.ts(167,67): error TS2339: Property 'TICKET_NOTE' does not exist on type '{ readonly LOGIN_SUCCESS: "LOGIN_SUCCESS"; readonly LOGOUT: "LOGOUT"; readonly PASSWORD_CHANGED: "PASSWORD_CHANGED"; readonly PASSWORD_RESET_REQ: "PASSWORD_RESET_REQ"; readonly USER_APPROVED: "USER_APPROVED"; ... 11 more ...; readonly CLIENT_CRASH: "CLIENT_CRASH"; }'.
-src/hooks/useSupportManager.ts(173,21): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
-  Type 'undefined' is not assignable to type 'string'.
-src/hooks/useVersionCheck.ts(18,13): error TS2339: Property 'toast' does not exist on type 'UseToastReturn | null'.
-src/layouts/components/DashboardSwitcher.tsx(39,17): error TS2322: Type '{ onSelectFranchise: (franchiseId: string) => void; selectedMonth: string; onMonthChange: (month: string) => void; onManageTariffs: () => void; onOpenSimulator: () => void; }' is not assignable to type 'IntrinsicAttributes & AdminDashboardProps'.
-  Property 'onManageTariffs' does not exist on type 'IntrinsicAttributes & AdminDashboardProps'.
-src/layouts/components/dev/ConsoleViewer.tsx(2,31): error TS6133: 'Filter' is declared but its value is never read.
-src/layouts/components/dev/ConsoleViewer.tsx(3,32): error TS6133: 'getLogs' is declared but its value is never read.
-src/layouts/components/dev/DevToolsPanel.tsx(26,64): error TS6133: 'runPerformanceCheck' is declared but its value is never read.
-src/layouts/components/dev/DevToolsPanel.tsx(29,36): error TS6133: 'clearHistory' is declared but its value is never read.
-src/layouts/components/dev/DevToolsPanel.tsx(29,71): error TS6133: 'formatRelativeTime' is declared but its value is never read.
-src/layouts/components/dev/DevToolsPanel.tsx(120,12): error TS6133: 'history' is declared but its value is never read.
-src/layouts/components/dev/DevToolsPanel.tsx(122,12): error TS6133: 'favorites' is declared but its value is never read.
-src/layouts/components/dev/DevToolsPanel.tsx(155,11): error TS6133: 'toggleFavorite' is declared but its value is never read.
-src/layouts/components/dev/NetworkMonitor.tsx(2,31): error TS6133: 'TrendingUp' is declared but its value is never read.
-src/layouts/components/dev/NetworkMonitor.tsx(3,26): error TS6133: 'getQueries' is declared but its value is never read.
-src/layouts/components/dev/PerformanceDashboard.tsx(2,24): error TS6133: 'Smartphone' is declared but its value is never read.
-src/layouts/components/Header.tsx(9,5): error TS6133: 'ShieldAlert' is declared but its value is never read.
-src/layouts/components/ViewSwitcher.tsx(57,5): error TS6133: 'currentData' is declared but its value is never read.
-src/layouts/DashboardLayout.tsx(129,17): error TS2322: Type '{ isAdmin: boolean; isFranchise: boolean; }' is not assignable to type 'IntrinsicAttributes & BottomTabBarProps'.
-  Property 'isFranchise' does not exist on type 'IntrinsicAttributes & BottomTabBarProps'.
-src/lib/email.ts(58,61): error TS6133: 'subject' is declared but its value is never read.
-src/lib/schemas.ts(20,13): error TS2769: No overload matches this call.
-  Overload 1 of 2, '(values: readonly ["admin", "franchise", "staff", "driver", "user"], params?: string | { error?: string | $ZodErrorMap<$ZodIssueInvalidValue<unknown>> | undefined; message?: string | undefined; } | undefined): ZodEnum<...>', gave the following error.
-    Object literal may only specify known properties, and 'errorMap' does not exist in type '{ error?: string | $ZodErrorMap<$ZodIssueInvalidValue<unknown>> | undefined; message?: string | undefined; }'.
-  Overload 2 of 2, '(entries: Readonly<Record<string, EnumValue>>, params?: string | { error?: string | $ZodErrorMap<$ZodIssueInvalidValue<unknown>> | undefined; message?: string | undefined; } | undefined): ZodEnum<...>', gave the following error.
-    Argument of type 'string[]' is not assignable to parameter of type 'Readonly<Record<string, EnumValue>>'.
-      Index signature for type 'string' is missing in type 'string[]'.
-src/pages/DevSandbox.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
-src/scripts/cleanupFranchises.ts(2,45): error TS6133: 'deleteDoc' is declared but its value is never read.
-src/scripts/consoleCapture.ts(131,9): error TS2769: No overload matches this call.
-  Overload 1 of 3, '(locales?: LocalesArgument, options?: DateTimeFormatOptions | undefined): string', gave the following error.
-    Object literal may only specify known properties, and 'fractionalSecondDigits' does not exist in type 'DateTimeFormatOptions'.
-  Overload 2 of 3, '(locales?: string | string[] | undefined, options?: DateTimeFormatOptions | undefined): string', gave the following error.
-    Object literal may only specify known properties, and 'fractionalSecondDigits' does not exist in type 'DateTimeFormatOptions'.
+﻿src/features/auth/Login.tsx(4,1): error TS6133: 'signInWithEmailAndPassword' is declared but its value is never read.
+src/features/franchise/support/ResourceLibrary.tsx(2,20): error TS6133: 'AlertCircle' is declared but its value is never read.
+src/features/franchise/support/ResourceLibrary.tsx(2,33): error TS6133: 'Settings' is declared but its value is never read.
+src/features/franchise/support/ResourceLibrary.tsx(2,43): error TS6133: 'LifeBuoy' is declared but its value is never read.
+src/features/franchise/support/ResourceLibrary.tsx(2,53): error TS6133: 'Video' is declared but its value is never read.
+src/features/franchise/support/ResourceLibrary.tsx(2,116): error TS6133: 'LucideIcon' is declared but its value is never read.
+src/features/franchise/support/TicketHistory.tsx(4,17): error TS6133: 'CheckCircle' is declared but its value is never read.
+src/features/franchise/support/TicketHistory.tsx(76,11): error TS6133: 'formatDate' is declared but its value is never read.
+src/features/franchise/SupportHub.tsx(9,24): error TS6133: 'Send' is declared but its value is never read.
+src/features/franchise/SupportHub.tsx(9,40): error TS6133: 'Video' is declared but its value is never read.
+src/features/franchise/SupportHub.tsx(9,47): error TS6133: 'Phone' is declared but its value is never read.
+src/features/franchise/wizard/steps/SummaryStep.tsx(5,1): error TS6192: All imports in import declaration are unused.
+src/features/franchise/wizard/steps/SummaryStep.tsx(5,83): error TS2307: Cannot find module '@/utils/financialUtils' or its corresponding type declarations.
+src/features/franchise/wizard/steps/SummaryStep.tsx(10,11): error TS6196: 'SummaryStepProps' is declared but never used.
+src/features/user/components/AdminTab.tsx(3,71): error TS6133: 'Settings' is declared but its value is never read.
+src/hooks/useAdminControl.ts(1,31): error TS6133: 'useMemo' is declared but its value is never read.
+src/hooks/useAdminControl.ts(2,45): error TS6133: 'onSnapshot' is declared but its value is never read.
+src/hooks/useAdminControl.ts(2,57): error TS6133: 'orderBy' is declared but its value is never read.
+src/hooks/useAdminControl.ts(7,10): error TS6133: 'startOfMonth' is declared but its value is never read.
+src/hooks/useAdminControl.ts(7,24): error TS6133: 'endOfMonth' is declared but its value is never read.
+src/layouts/components/ViewSwitcher.tsx(145,30): error TS2322: Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ReactNode'.
+src/layouts/components/ViewSwitcher.tsx(154,30): error TS2322: Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ReactNode'.
+src/layouts/components/ViewSwitcher.tsx(163,30): error TS2322: Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ReactNode'.
+src/layouts/components/ViewSwitcher.tsx(170,30): error TS2322: Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ReactNode'.
+src/schemas/scheduler.ts(46,51): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(def: { totalHours: number; activeRiders: number; motosInUse: number; }): ZodDefault<ZodOptional<ZodObject<{ totalHours: ZodDefault<ZodNumber>; activeRiders: ZodDefault<ZodNumber>; motosInUse: ZodDefault<...>; }, $strip>>>', gave the following error.
+    Argument of type '{}' is not assignable to parameter of type '{ totalHours: number; activeRiders: number; motosInUse: number; }'.
+      Type '{}' is missing the following properties from type '{ totalHours: number; activeRiders: number; motosInUse: number; }': totalHours, activeRiders, motosInUse
+  Overload 2 of 2, '(def: () => { totalHours: number; activeRiders: number; motosInUse: number; }): ZodDefault<ZodOptional<ZodObject<{ totalHours: ZodDefault<ZodNumber>; activeRiders: ZodDefault<ZodNumber>; motosInUse: ZodDefault<...>; }, $strip>>>', gave the following error.
+    Argument of type '{}' is not assignable to parameter of type '() => { totalHours: number; activeRiders: number; motosInUse: number; }'.
+      Type '{}' provides no match for the signature '(): { totalHours: number; activeRiders: number; motosInUse: number; }'.
+src/services/sportsService.ts(19,7): error TS6133: 'MOCK_OPPONENTS' is declared but its value is never read.

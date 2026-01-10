@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, CheckSquare, Tag, AlignLeft, Plus, Trash2 } from 'lucide-react';
+import { X, Calendar, CheckSquare, Tag, AlignLeft, Plus, Trash2, Briefcase, Clock, ArrowRight, Layers } from 'lucide-react';
 import { KanbanTask } from '../../../hooks/useKanban';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -23,18 +23,26 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, isOpen, onClose
         task.dueDate?.toDate ? format(task.dueDate.toDate(), 'yyyy-MM-dd') : ''
     );
 
-    // Sync state when task changes (if modal is kept open or reopened)
+    const [currentStatus, setCurrentStatus] = useState(task.status);
+    const [currentPriority, setCurrentPriority] = useState(task.priority);
+
     useEffect(() => {
         setTitle(task.title);
         setDescription(task.description || '');
         setChecklist(task.checklist || []);
         setTags(task.tags || []);
-        setDueDate(task.dueDate?.toDate ? format(task.dueDate.toDate(), 'yyyy-MM-dd') : '');
+        if (task.dueDate) {
+            const date = task.dueDate.toDate ? task.dueDate.toDate() : new Date(task.dueDate);
+            setDueDate(format(date, 'yyyy-MM-dd'));
+        } else {
+            setDueDate('');
+        }
+        setCurrentStatus(task.status);
+        setCurrentPriority(task.priority);
     }, [task]);
 
     if (!isOpen) return null;
 
-    // Handlers
     const handleTitleBlur = () => {
         if (title !== task.title) onUpdate(task.id, { title });
     };
@@ -85,8 +93,6 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, isOpen, onClose
     const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const updatedDate = e.target.value;
         setDueDate(updatedDate);
-        // Convert to Firestore Timestamp or proper date object would happen in useKanban or here
-        // For simplicity we pass the Date object and useKanban/Firebase handles it
         if (updatedDate) {
             onUpdate(task.id, { dueDate: new Date(updatedDate) as any });
         } else {
@@ -95,170 +101,252 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, isOpen, onClose
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-slate-900 border border-slate-700 w-full max-w-2xl max-h-[90vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-                {/* Header Image / Cover (Optional, pure aesthetic) */}
-                <div className="h-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xl animate-in fade-in duration-500">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 w-full max-w-4xl max-h-[90vh] rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col scale-in-center overflow-y-auto custom-scrollbar">
 
-                <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1">
-                    {/* Header Controls */}
-                    <div className="flex justify-between items-start mb-6">
-                        <div className="flex-1 mr-4">
+                {/* Visual Accent */}
+                <div className={`h-1.5 w-full ${currentPriority === 'high' ? 'bg-rose-500' :
+                    currentPriority === 'medium' ? 'bg-amber-500' : 'bg-emerald-500'
+                    } transition-colors duration-500`} />
+
+                <div className="p-8 md:p-12 flex-1">
+                    {/* TOP HEADER */}
+                    <div className="flex justify-between items-start gap-8 mb-10">
+                        <div className="flex-1 space-y-3">
+                            <div className="flex items-center gap-3 mb-2">
+                                <span className="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-semibold uppercase tracking-[0.15em] px-3 py-1 rounded-xl border border-indigo-100 dark:border-indigo-500/20">
+                                    TASK-ID #{task.id.slice(0, 8).toUpperCase()}
+                                </span>
+                                {task.createdAt && (
+                                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                        <Clock size={12} />
+                                        {format(task.createdAt.toDate(), 'dd MMM', { locale: es })}
+                                    </span>
+                                )}
+                            </div>
                             <input
                                 type="text"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 onBlur={handleTitleBlur}
-                                className="w-full bg-transparent text-2xl md:text-3xl font-bold text-white border-none focus:ring-0 p-0 placeholder-slate-600"
+                                className="w-full bg-transparent text-2xl font-medium text-slate-800 dark:text-white border-none focus:ring-0 p-0 placeholder-slate-200 dark:placeholder-slate-800 tracking-tight"
                                 placeholder="Título de la tarea"
                             />
-                            <div className="text-sm text-slate-500 mt-1 flex items-center gap-2">
-                                en la lista <span className="text-indigo-400 font-medium px-2 py-0.5 bg-indigo-500/10 rounded uppercase text-xs">{task.status}</span>
-                            </div>
                         </div>
-                        <button onClick={onClose} aria-label="Cerrar modal" className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition-colors">
-                            <X size={24} />
+                        <button
+                            onClick={onClose}
+                            className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all hover:rotate-90 active:scale-90 border border-slate-100 dark:border-white/5"
+                            title="Cerrar detalles"
+                        >
+                            <X size={20} />
                         </button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                        {/* Main Content (Left Col) */}
-                        <div className="md:col-span-3 space-y-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                        {/* MAIN WORKSPACE (Left Side) */}
+                        <div className="lg:col-span-8 space-y-12">
 
-                            {/* Tags Section */}
-                            <div className="flex flex-wrap gap-2 mb-4">
+                            {/* Tags Bar */}
+                            <div className="flex flex-wrap items-center gap-2 pb-6 border-b border-slate-100 dark:border-white/5">
+                                <Tag size={14} className="text-slate-400 mr-2" />
                                 {tags.map(tag => (
-                                    <span key={tag} className="bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full text-xs font-medium border border-blue-500/20 flex items-center gap-1 group">
+                                    <span key={tag} className="group relative bg-slate-50/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 px-3 py-1.5 rounded-xl text-[10px] font-semibold uppercase tracking-wider border border-slate-200/50 dark:border-white/5 flex items-center gap-2 shadow-sm transition-all hover:bg-slate-100">
                                         {tag}
-                                        <button onClick={() => removeTag(tag)} aria-label={`Eliminar etiqueta ${tag}`} className="hover:text-white">×</button>
+                                        <button
+                                            onClick={() => removeTag(tag)}
+                                            className="opacity-0 group-hover:opacity-100 hover:text-rose-500 transition-all ml-1 bg-white dark:bg-slate-700 rounded-full p-0.5"
+                                            title={`Eliminar etiqueta ${tag}`}
+                                        >
+                                            <X size={10} />
+                                        </button>
                                     </span>
                                 ))}
                                 <form onSubmit={addTag} className="relative">
-                                    <Tag className="absolute left-2 top-1.5 w-3 h-3 text-slate-500" />
                                     <input
                                         type="text"
                                         value={newTag}
                                         onChange={(e) => setNewTag(e.target.value)}
-                                        placeholder="Add tag..."
-                                        aria-label="Añadir nueva etiqueta"
-                                        className="bg-slate-800/50 border border-slate-700 rounded-full py-1 pl-7 pr-3 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 w-24 focus:w-32 transition-all"
+                                        placeholder="+ Etiqueta"
+                                        className="bg-transparent border-none text-[10px] font-semibold uppercase tracking-wider text-indigo-500 placeholder-indigo-300 focus:ring-0 p-1 w-24"
                                     />
                                 </form>
                             </div>
 
-                            {/* Description */}
-                            <div>
-                                <div className="flex items-center gap-3 mb-3 text-slate-300 font-medium">
-                                    <AlignLeft size={20} />
-                                    <h3>Descripción</h3>
+                            {/* Description Block */}
+                            <section className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center border border-violet-500/20">
+                                        <AlignLeft size={16} className="text-violet-600 dark:text-violet-400" />
+                                    </div>
+                                    <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Descripción Detallada</h3>
                                 </div>
-                                <textarea
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    onBlur={handleDescriptionBlur}
-                                    placeholder="Añade una descripción más detallada..."
-                                    className="w-full bg-slate-950/30 border border-slate-800 rounded-xl p-4 text-slate-300 text-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 min-h-[120px] resize-y leading-relaxed"
-                                />
-                            </div>
+                                <div className="group relative">
+                                    <textarea
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        onBlur={handleDescriptionBlur}
+                                        placeholder="Define los objetivos y alcances de esta tarea..."
+                                        className="w-full bg-slate-50/50 dark:bg-slate-950/40 border border-slate-200/50 dark:border-white/5 rounded-2xl p-6 text-slate-700 dark:text-slate-200 text-sm focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/5 min-h-[160px] resize-none leading-relaxed transition-all outline-none"
+                                    />
+                                </div>
+                            </section>
 
-                            {/* Checklist */}
-                            <div>
-                                <div className="flex items-center justify-between mb-3">
-                                    <div className="flex items-center gap-3 text-slate-300 font-medium">
-                                        <CheckSquare size={20} />
-                                        <h3>Checklist</h3>
+                            {/* Checklist Block */}
+                            <section className="space-y-5">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                                            <CheckSquare size={16} className="text-emerald-600 dark:text-emerald-400" />
+                                        </div>
+                                        <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Plan de Acción</h3>
                                     </div>
                                     {checklist.length > 0 && (
-                                        <span className="text-xs text-slate-500">
-                                            {Math.round((checklist.filter(i => i.completed).length / checklist.length) * 100)}% completado
-                                        </span>
+                                        <div className="flex items-center gap-3 text-right">
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Progreso</span>
+                                                <span className="text-lg font-semibold text-emerald-600 dark:text-emerald-400 leading-none">
+                                                    {Math.round((checklist.filter(i => i.completed).length / checklist.length) * 100)}%
+                                                </span>
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
 
-                                {/* Progress Bar */}
-                                {checklist.length > 0 && (
-                                    <div className="h-1.5 w-full bg-slate-800 rounded-full mb-4 overflow-hidden">
-                                        <div
-                                            className="h-full bg-indigo-500 transition-all duration-500"
-                                            style={{ width: `${(checklist.filter(i => i.completed).length / checklist.length) * 100}%` }}
-                                        />
-                                    </div>
-                                )}
-
-                                <div className="space-y-2 mb-3">
+                                <div className="bg-slate-50/50 dark:bg-slate-950/20 rounded-[2.5rem] p-6 border border-slate-200/50 dark:border-white/5 space-y-3">
                                     {checklist.map(item => (
-                                        <div key={item.id} className="flex items-start gap-3 group">
-                                            <input
-                                                type="checkbox"
-                                                checked={item.completed}
-                                                onChange={() => toggleChecklistItem(item.id)}
-                                                aria-label={`Marcar ${item.text} como completado`}
-                                                className="mt-1 rounded border-slate-600 bg-slate-800 text-indigo-500 focus:ring-indigo-500/20"
-                                            />
-                                            <span className={`text-sm flex-1 ${item.completed ? 'text-slate-500 line-through' : 'text-slate-300'}`}>
+                                        <div key={item.id} className="flex items-center gap-4 group bg-white/80 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-200/50 dark:border-white/5 shadow-sm transition-all hover:translate-x-1 hover:shadow-md">
+                                            <div className="relative flex items-center justify-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={item.completed}
+                                                    onChange={() => toggleChecklistItem(item.id)}
+                                                    className="w-5 h-5 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-transparent text-emerald-500 focus:ring-emerald-500/20 cursor-pointer transition-all checked:scale-110"
+                                                    aria-label={`Marcar "${item.text}" como completado`}
+                                                />
+                                            </div>
+                                            <span className={`text-sm font-medium flex-1 transition-all ${item.completed ? 'text-slate-400 line-through opacity-60' : 'text-slate-700 dark:text-slate-200'}`}>
                                                 {item.text}
                                             </span>
-                                            <button onClick={() => deleteChecklistItem(item.id)} aria-label="Eliminar elemento" className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-rose-500 transition-all">
+                                            <button
+                                                onClick={() => deleteChecklistItem(item.id)}
+                                                className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-rose-500 transition-all"
+                                                title="Eliminar paso"
+                                            >
                                                 <Trash2 size={14} />
                                             </button>
                                         </div>
                                     ))}
-                                </div>
 
-                                <form onSubmit={addChecklistItem}>
-                                    <div className="flex items-center gap-3">
-                                        <Plus className="w-4 h-4 text-slate-500" />
-                                        <input
-                                            type="text"
-                                            value={newChecklistItem}
-                                            onChange={(e) => setNewChecklistItem(e.target.value)}
-                                            placeholder="Añadir un elemento..."
-                                            aria-label="Nuevo elemento de checklist"
-                                            className="bg-transparent border-none focus:ring-0 p-0 text-sm text-slate-300 placeholder-slate-600 w-full"
-                                        />
+                                    <form onSubmit={addChecklistItem} className="pt-2">
+                                        <div className="flex items-center gap-4 p-4 bg-white/40 dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-2xl transition-all focus-within:border-indigo-500/50">
+                                            <Plus size={16} className="text-indigo-500" />
+                                            <input
+                                                type="text"
+                                                value={newChecklistItem}
+                                                onChange={(e) => setNewChecklistItem(e.target.value)}
+                                                placeholder="Añadir paso al plan..."
+                                                className="bg-transparent border-none focus:ring-0 p-0 text-sm font-medium text-slate-600 dark:text-slate-300 placeholder:text-slate-400 w-full outline-none"
+                                            />
+                                        </div>
+                                    </form>
+                                </div>
+                            </section>
+
+                            <section className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                                        <Layers size={16} className="text-amber-600 dark:text-amber-400" />
                                     </div>
-                                </form>
-                            </div>
+                                    <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Historial & Comentarios</h3>
+                                </div>
+                                <div className="p-10 bg-slate-50/50 dark:bg-slate-900/40 rounded-[2.5rem] border border-dashed border-slate-200 dark:border-white/5 text-center space-y-2">
+                                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Sin actividad reciente</p>
+                                    <p className="text-[10px] text-slate-500 italic opacity-60">Las actualizaciones de estado y comentarios profesionales aparecerán aquí.</p>
+                                </div>
+                            </section>
                         </div>
 
-                        {/* Sidebar (Right Col) */}
-                        <div className="space-y-6">
-                            {/* Date Picker */}
-                            <div className="bg-slate-800/30 p-4 rounded-xl border border-slate-700/50">
-                                <h4 className="text-xs font-bold text-slate-400 uppercase mb-3 text-left">Fecha de Entrega</h4>
-                                <div className="relative">
-                                    <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                        {/* CONTROL PANEL (Right Side) */}
+                        <div className="lg:col-span-4 space-y-8">
+                            <div className="bg-slate-50/50 dark:bg-slate-800/40 p-6 rounded-[2.5rem] border border-slate-200/50 dark:border-white/5 space-y-6">
+                                <div className="space-y-4">
+                                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] block ml-1">Estado</label>
+                                    <div className="flex flex-col gap-2">
+                                        {(['todo', 'in_progress', 'done'] as const).map(s => (
+                                            <button
+                                                key={s}
+                                                onClick={() => {
+                                                    setCurrentStatus(s);
+                                                    onUpdate(task.id, { status: s });
+                                                }}
+                                                className={`flex items-center justify-between p-4 rounded-2xl border font-medium text-xs uppercase tracking-wider transition-all ${currentStatus === s
+                                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-500/10 translate-x-1'
+                                                    : 'bg-white/80 dark:bg-slate-900 text-slate-500 border-slate-200/50 dark:border-white/5 hover:border-indigo-300'
+                                                    }`}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <Briefcase size={14} />
+                                                    {s.replace('_', ' ')}
+                                                </div>
+                                                {currentStatus === s && <ArrowRight size={14} />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="h-px bg-slate-200/50 dark:bg-white/5 mx-2" />
+
+                                <div className="space-y-4">
+                                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] block ml-1">Prioridad</label>
+                                    <div className="flex gap-2">
+                                        {(['low', 'medium', 'high'] as const).map(p => (
+                                            <button
+                                                key={p}
+                                                onClick={() => {
+                                                    setCurrentPriority(p);
+                                                    onUpdate(task.id, { priority: p });
+                                                }}
+                                                className={`flex-1 py-3.5 rounded-2xl border font-medium text-[10px] uppercase tracking-wider transition-all ${currentPriority === p
+                                                    ? p === 'high' ? 'bg-rose-500 text-white border-rose-500 shadow-lg shadow-rose-500/10' :
+                                                        p === 'medium' ? 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/10' :
+                                                            'bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/10'
+                                                    : 'bg-white/80 dark:bg-slate-900 text-slate-400 border-slate-200/50 dark:border-white/5'
+                                                    }`}
+                                            >
+                                                {p}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-50/50 dark:bg-slate-800/40 p-6 rounded-[2.5rem] border border-slate-200/50 dark:border-white/5 space-y-4">
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] block ml-1">Vencimiento</label>
+                                <div className="relative group">
+                                    <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500 opacity-60" />
                                     <input
                                         type="date"
                                         value={dueDate}
                                         onChange={handleDateChange}
-                                        aria-label="Fecha de entrega"
-                                        className="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg block w-full pl-10 p-2.5 focus:ring-indigo-500 focus:border-indigo-500 color-scheme-dark"
+                                        className="w-full bg-white/80 dark:bg-slate-900 border border-slate-200/50 dark:border-white/5 rounded-2xl p-4 pl-12 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:border-indigo-500/50 transition-all outline-none"
+                                        aria-label="Fecha de vencimiento"
                                     />
                                 </div>
                             </div>
 
-                            {/* Actions */}
-                            <div className="bg-slate-800/30 p-4 rounded-xl border border-slate-700/50">
-                                <h4 className="text-xs font-bold text-slate-400 uppercase mb-3 text-left">Acciones</h4>
+                            <div className="pt-4 border-t border-slate-100 dark:border-white/5">
                                 <button
                                     onClick={() => {
-                                        if (confirm('¿Seguro que deseas eliminar esta tarea?')) {
+                                        if (confirm('¿Confirmas la eliminación permanente de este registro?')) {
                                             onDelete(task.id);
                                             onClose();
                                         }
                                     }}
-                                    className="w-full flex items-center justify-center gap-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                                    className="w-full flex items-center justify-center gap-3 bg-white/80 dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-400 hover:text-rose-600 border border-slate-200/50 dark:border-white/5 p-4 rounded-2xl text-[10px] font-semibold uppercase tracking-widest transition-all"
                                 >
                                     <Trash2 size={16} />
-                                    Eliminar Tarea
+                                    Eliminar Registro
                                 </button>
-                            </div>
-
-                            {/* Metadata */}
-                            <div className="text-xs text-slate-600 space-y-2 pt-4 border-t border-slate-800">
-                                <p>Creado: {task.createdAt?.toDate ? format(task.createdAt.toDate(), 'dd MMM yyyy, HH:mm', { locale: es }) : 'Reciente'}</p>
-                                <p>ID: {task.id.slice(0, 8)}</p>
                             </div>
                         </div>
                     </div>

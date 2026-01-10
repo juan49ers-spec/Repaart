@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip as ChartTooltip } from 'recharts';
 import { AlertTriangle, TrendingUp as TrendUp, Target, Calendar } from 'lucide-react';
 
@@ -29,7 +29,7 @@ const KPICard: React.FC<KPICardProps> = ({
     lastYearValue,
     showPrediction = true
 }) => {
-    const [showDetails, setShowDetails] = useState(false);
+
 
     // Map colors to hex values for charts and badges
     const colorMap = {

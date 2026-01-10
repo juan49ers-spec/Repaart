@@ -17,6 +17,72 @@ import { getRiderColorMap } from '../../utils/riderColors';
 import { useWeather } from '../../hooks/useWeather';
 import { getWeatherIcon } from '../../utils/weather';
 import { useAuth } from '../../context/AuthContext';
+import { validateWeeklySchedule, generateScheduleFix, generateFullSchedule } from '../../lib/gemini';
+import { BadgeCheck, AlertTriangle, ShieldCheck, XCircle, Wand2, Sparkles, Trophy, Calendar, CloudRain } from 'lucide-react';
+import { useOperationsIntel, intelService } from '../../services/intelService';
+
+// --- PREMIUM UI UTILS ---
+const TeamLogo: React.FC<{ src?: string, name?: string, size?: number }> = ({ src, name = '?', size = 24 }) => {
+    const [error, setError] = useState(false);
+    const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+    if (!src || error) {
+        return (
+            <div
+                style={{ width: size, height: size }}
+                className="rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center border border-white/20 shadow-inner"
+            >
+                <span className="text-[10px] font-black text-white/90 tracking-tighter">{initials}</span>
+            </div>
+        );
+    }
+
+    return (
+        <img
+            src={src}
+            alt={name}
+            style={{ width: size, height: size }}
+            className="object-contain drop-shadow-md rounded-full bg-white/10 p-0.5"
+            onError={() => setError(true)}
+        />
+    );
+};
+
+const getDayDemandLevel = (dayDate: string, dayIntel: any[]) => {
+    const hasCritical = dayIntel.some(e => e.severity === 'critical');
+    const hasWarning = dayIntel.some(e => e.severity === 'warning');
+    const dayOfWeek = new Date(dayDate).getDay(); // 0: Sun, 5: Fri, 6: Sat
+
+    // Friday to Sunday are naturally "warning" (Medium) unless "critical" exists
+    if (hasCritical) return 'critical';
+    if (hasWarning || [0, 5, 6].includes(dayOfWeek)) return 'warning';
+    return 'normal';
+};
+
+const getDayStyling = (level: string, isToday: boolean, isWeekend: boolean) => {
+    const base = `relative px-2 py-3 transition-all duration-300 hover:z-30 group/dayhead border-r h-full flex flex-col justify-between cursor-default hover:scale-[1.01] hover:shadow-2xl hover:shadow-slate-200/50`;
+    const weekendBorder = isWeekend ? 'border-r-4 border-slate-300' : 'border-slate-100';
+
+    const colors = {
+        critical: 'bg-rose-500/[0.04] border-l-rose-500/20',
+        warning: 'bg-amber-500/[0.04] border-l-amber-500/20',
+        normal: 'bg-emerald-500/[0.02] border-l-emerald-500/10'
+    };
+
+    const outLine = {
+        critical: 'ring-1 ring-inset ring-rose-500/30',
+        warning: 'ring-1 ring-inset ring-amber-500/30',
+        normal: 'ring-1 ring-inset ring-emerald-500/20'
+    };
+
+    const focusStyles = `group-hover/daygrid:opacity-60 hover:!opacity-100 hover:backdrop-saturate-[1.8] hover:backdrop-blur-2xl`;
+
+    return `${base} ${weekendBorder} ${isToday ? 'bg-indigo-50/60 shadow-inner' : colors[level as keyof typeof colors]} ${outLine[level as keyof typeof outLine]} ${focusStyles}`;
+};
+
+// ... (Existing types and constants)
+
+
 
 interface WeeklySchedulerProps {
     franchiseId: string;
@@ -67,6 +133,9 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
 
     const [viewMode, setViewMode] = useState<'full' | 'prime'>('full');
 
+    const { events: intelEvents } = useOperationsIntel(referenceDate, weatherDaily);
+    const intelByDay = useMemo(() => intelService.getEventsByDay(intelEvents), [intelEvents]);
+
     const [confirmDialog, setConfirmDialog] = useState({
         isOpen: false,
         title: '',
@@ -76,14 +145,162 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
         confirmText: 'Confirmar'
     });
 
+    // SHERIFF STATE
+    const [sheriffResult, setSheriffResult] = useState<{
+        score: number;
+        status: 'optimal' | 'warning' | 'critical';
+        feedback: string;
+        missingCoverage: string[];
+    } | null>(null);
+    const [isAuditing, setIsAuditing] = useState(false);
+    const [isFixing, setIsFixing] = useState(false); // Auto-Fix State
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [showGenModal, setShowGenModal] = useState(false);
+    const [genPrompt, setGenPrompt] = useState('');
+
     // Helpers
     const changeWeek = (dir: number) => navigateWeek(dir);
     const isMobile = useMediaQuery('(max-width: 768px)');
     const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
-    const isSaving = loading || isProcessing;
+    const isSaving = loading || isProcessing || isFixing;
     const closeConfirm = () => setConfirmDialog(prev => ({ ...prev, isOpen: false }));
 
     // --- LOGIC: Shift Operations ---
+
+    // ... (Existing logic) ...
+
+    const handleAutoFix = async () => {
+        if (!sheriffResult || !weekData) return;
+
+        setIsFixing(true);
+        try {
+            const fixResult = await generateScheduleFix(
+                weekData.shifts || [],
+                riders || [],
+                sheriffResult.missingCoverage
+            );
+
+            if (fixResult && fixResult.newShifts.length > 0) {
+                // Confirm before applying
+                const confirmed = window.confirm(
+                    `El Sheriff sugiere ${fixResult.newShifts.length} nuevos turnos:\n\n` +
+                    fixResult.explanation +
+                    `\n\n¿Aplicar cambios ahora?`
+                );
+
+                if (confirmed) {
+                    const newShiftsObjects: Shift[] = fixResult.newShifts.map(s => {
+                        // Parse "YYYY-MM-DD" and startHour to ISO
+                        const startD = new Date(s.startDay);
+                        startD.setHours(s.startHour, 0, 0, 0);
+
+                        const endD = new Date(startD);
+                        endD.setHours(s.startHour + s.duration, 0, 0, 0);
+
+                        // Find rider name
+                        const rider = riders?.find(r => r.id === s.riderId);
+
+                        return {
+                            id: `fix_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                            shiftId: `fix_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                            riderId: s.riderId,
+                            riderName: rider ? (rider.fullName || 'Rider') : 'Desconocido',
+                            motoId: null,
+                            motoPlate: null,
+                            startAt: toLocalISOStringWithOffset(startD),
+                            endAt: toLocalISOStringWithOffset(endD),
+                            notes: `Sheriff Auto-Fix: ${s.reason}`
+                        };
+                    });
+
+                    // Merge and Save
+                    const currentShifts = weekData.shifts || [];
+                    const updatedShifts = [...currentShifts, ...newShiftsObjects];
+
+                    const updatedWeekData: WeekData = {
+                        ...(weekData),
+                        shifts: updatedShifts,
+                        id: currentWeekId,
+                        startDate: toLocalDateString(getStartOfWeek(referenceDate))
+                    } as WeekData;
+
+                    await WeekService.saveWeek(toFranchiseId(franchiseId), toWeekId(currentWeekId), updatedWeekData);
+                    updateWeekData(updatedWeekData);
+
+                    // Re-audit automatically to show improved score
+                    setTimeout(() => handleAuditoria(), 1000);
+
+                }
+            } else {
+                alert("El Sheriff no encontró una solución automática viable. Intenta mover turnos manualmente.");
+            }
+        } catch (error) {
+            console.error("Auto-Fix Error:", error);
+            alert("Error al aplicar la corrección automática.");
+        } finally {
+            setIsFixing(false);
+        }
+    };
+
+    const handleGeneration = async () => {
+        if (!genPrompt.trim()) return;
+        setIsGenerating(true);
+        try {
+            const startDate = weekData?.startDate || (referenceDate instanceof Date ? referenceDate.toISOString() : referenceDate).split('T')[0];
+            const endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + 6);
+
+            const result = await generateFullSchedule(
+                genPrompt,
+                riders || [],
+                startDate,
+                endDate.toISOString().split('T')[0]
+            );
+
+            if (result && result.shifts.length > 0) {
+                const apply = window.confirm(`He generado ${result.shifts.length} turnos:\n\n${result.explanation}\n\n¿Aplicar al cuadrante?`);
+
+                if (apply) {
+                    const newShiftsObjects = result.shifts.map(s => {
+                        const startD = new Date(s.startDay);
+                        startD.setHours(s.startHour, 0, 0, 0);
+                        const endD = new Date(startD);
+                        endD.setHours(s.startHour + s.duration, 0, 0, 0);
+
+                        const rider = riders?.find(r => r.id === s.riderId);
+
+                        return {
+                            id: `gen_${Date.now()}_${Math.random()}`,
+                            shiftId: `gen_${Date.now()}_${Math.random()}`,
+                            riderId: s.riderId,
+                            riderName: rider ? rider.fullName : 'Rider IA',
+                            motoId: null,
+                            motoPlate: null,
+                            startAt: toLocalISOStringWithOffset(startD),
+                            endAt: toLocalISOStringWithOffset(endD),
+                            notes: `IA: ${s.reason}`
+                        };
+                    });
+
+                    // Adding to existing
+                    const updatedWeek = {
+                        ...weekData,
+                        shifts: [...(weekData?.shifts || []), ...newShiftsObjects]
+                    } as WeekData;
+
+                    await WeekService.saveWeek(toFranchiseId(franchiseId), toWeekId(currentWeekId), updatedWeek);
+                    updateWeekData(updatedWeek);
+                    setShowGenModal(false);
+                    setGenPrompt('');
+                }
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error generando horario");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
 
     const handleOpenNew = (dateIsoString?: string) => {
         if (readOnly) return;
@@ -119,7 +336,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                     ...(weekData || {}),
                     shifts: updatedShifts,
                     id: currentWeekId,
-                    startDate: weekData?.startDate || referenceDate.toISOString().split('T')[0],
+                    startDate: toLocalDateString(getStartOfWeek(referenceDate)),
                     status: weekData?.status || 'draft',
                     metrics: weekData?.metrics || { totalHours: 0, activeRiders: 0, motosInUse: 0 }
                 } as WeekData;
@@ -193,7 +410,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                 ...weekData,
                 shifts: updatedShifts,
                 id: currentWeekId,
-                startDate: weekData.startDate || referenceDate.toISOString().split('T')[0]
+                startDate: toLocalDateString(getStartOfWeek(referenceDate))
             } as WeekData;
             await WeekService.saveWeek(toFranchiseId(franchiseId), toWeekId(currentWeekId), updatedWeekData);
             updateWeekData(updatedWeekData);
@@ -254,7 +471,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                 ...(weekData || {}),
                 shifts: updatedShifts,
                 id: currentWeekId,
-                startDate: weekData?.startDate || referenceDate.toISOString().split('T')[0]
+                startDate: toLocalDateString(getStartOfWeek(referenceDate))
             } as WeekData;
             await WeekService.saveWeek(toFranchiseId(franchiseId), toWeekId(currentWeekId), updatedWeekData);
             updateWeekData(updatedWeekData);
@@ -269,23 +486,20 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
     // --- HELPERS FOR RENDERING ---
 
     const getDays = () => {
-        let start: Date;
-        if (weekData?.startDate) {
-            const [y, m, d] = weekData.startDate.split('-').map(Number);
-            start = new Date(y, m - 1, d);
-        } else {
-            const startString = getStartOfWeek(referenceDate);
-            start = new Date(startString);
-        }
+        // ALWAYS calculate Monday from referenceDate to ensure strict Weekly View (Mon-Mon)
+        const startString = getStartOfWeek(referenceDate);
+        const [y, m, d] = startString.split('-').map(Number);
+        const start = new Date(y, m - 1, d);
+
         const days = [];
         for (let i = 0; i < 7; i++) {
-            const d = new Date(start);
-            d.setDate(d.getDate() + i);
+            const dateObj = new Date(start);
+            dateObj.setDate(start.getDate() + i);
             days.push({
-                dateObj: d,
-                label: d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' }),
-                isoDate: toLocalDateString(d),
-                shortLabel: d.toLocaleDateString('es-ES', { weekday: 'short' })
+                dateObj: dateObj,
+                label: dateObj.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' }),
+                isoDate: toLocalDateString(dateObj),
+                shortLabel: dateObj.toLocaleDateString('es-ES', { weekday: 'short' })
             });
         }
         return days;
@@ -438,10 +652,101 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const onSaveAll = () => saveWeek(franchiseId, currentWeekId, weekData as WeekData);
 
+    const handleAuditoria = async () => {
+        if (!weekData?.shifts || weekData.shifts.length === 0) {
+            alert("El cuadrante está vacío. Añade turnos antes de auditar.");
+            return;
+        }
+        setIsAuditing(true);
+        setSheriffResult(null);
+        try {
+            const result = await validateWeeklySchedule(weekData.shifts);
+            if (result) {
+                setSheriffResult(result);
+            } else {
+                alert("El Sheriff no ha podido validar el cuadrante. Inténtalo de nuevo.");
+            }
+        } catch (error) {
+            console.error("Error en auditoría:", error);
+            alert("Error de conexión con el Sheriff.");
+        } finally {
+            setIsAuditing(false);
+        }
+    };
+
     return (
         <div className="flex flex-col h-full bg-gradient-to-br from-slate-50 to-indigo-50/30 font-sans text-slate-900 overflow-hidden relative selection:bg-indigo-100 selection:text-indigo-900">
             {/* Background Texture */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
+
+            {/* Inline Intelligence Injection Points are in the Day Headers below */}
+
+            {/* SHERIFF RESULT OVERLAY */}
+            {sheriffResult && (
+                <div className="absolute top-16 right-4 z-50 w-80 animate-in slide-in-from-right-10 fade-in duration-300">
+                    <div className={`
+                        p-4 rounded-xl shadow-2xl border backdrop-blur-md
+                        ${sheriffResult.status === 'optimal'
+                            ? 'bg-emerald-50/90 border-emerald-200 text-emerald-900'
+                            : sheriffResult.status === 'critical'
+                                ? 'bg-rose-50/90 border-rose-200 text-rose-900'
+                                : 'bg-amber-50/90 border-amber-200 text-amber-900'
+                        }
+                    `}>
+                        <div className="flex justify-between items-start mb-2">
+                            <div className="flex items-center gap-2">
+                                {sheriffResult.status === 'optimal'
+                                    ? <ShieldCheck className="w-6 h-6 text-emerald-600" />
+                                    : <AlertTriangle className="w-6 h-6" />
+                                }
+                                <div>
+                                    <h3 className="font-black text-sm uppercase tracking-wider">Reporte del Sheriff</h3>
+                                    <span className="text-xs font-bold opacity-80">Puntuación: {sheriffResult.score}/100</span>
+                                </div>
+                            </div>
+                            <button onClick={() => setSheriffResult(null)} className="opacity-50 hover:opacity-100" title="Cerrar reporte">
+                                <XCircle className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <p className="text-xs font-medium mb-3 leading-relaxed">
+                            "{sheriffResult.feedback}"
+                        </p>
+
+                        {sheriffResult.missingCoverage.length > 0 && (
+                            <div className="bg-white/50 rounded-lg p-2 text-[10px] font-mono mb-2">
+                                <strong className="block mb-1 opacity-70">ALERTAS DE COBERTURA:</strong>
+                                <ul className="list-disc pl-4 space-y-0.5">
+                                    {sheriffResult.missingCoverage.map((item, i) => (
+                                        <li key={i}>{item}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {/* AUTO-FIX ACTION */}
+                        {sheriffResult.status !== 'optimal' && (
+                            <button
+                                onClick={handleAutoFix}
+                                disabled={isFixing}
+                                className="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white py-1.5 rounded-lg text-xs font-bold shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
+                            >
+                                {isFixing ? (
+                                    <>
+                                        <div className="animate-spin w-3 h-3 border-2 border-white/30 border-t-white rounded-full" />
+                                        Generando Solución...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Wand2 className="w-3 h-3" />
+                                        Corregir con IA
+                                    </>
+                                )}
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* --- HEADER --- */}
             <div className="flex items-center justify-between p-2 border-b border-white/50 bg-white/60 backdrop-blur-xl sticky top-0 z-30 shadow-sm supports-[backdrop-filter]:bg-white/40 h-14">
@@ -538,9 +843,28 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                                 <Save className="w-3 h-3" />
                                 {isSaving ? 'Guardando...' : 'Guardar'}
                             </button>
+                            <button
+                                onClick={handleAuditoria}
+                                disabled={isAuditing || isSaving}
+                                className={`
+                                    flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all text-[10px] font-bold shadow-sm hover:shadow-md active:scale-95 border
+                                    ${sheriffResult ? (sheriffResult.status === 'optimal' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200') : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}
+                                `}
+                            >
+                                {isAuditing ? <div className="animate-spin w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full" /> : <BadgeCheck className="w-3 h-3" />}
+                                {sheriffResult ? `Sheriff: ${sheriffResult.score}/100` : 'Auditar Turnos'}
+                            </button>
                             <button onClick={() => setIsQuickFillOpen(true)} disabled={readOnly} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-md transition-all disabled:opacity-50 text-[10px] font-bold active:scale-95 shadow-sm">
                                 <Zap className="w-3 h-3" />
                                 Relleno Rápido
+                            </button>
+                            <button
+                                onClick={() => setShowGenModal(true)}
+                                disabled={readOnly}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white border border-indigo-400/20 rounded-md transition-all disabled:opacity-50 text-[10px] font-black active:scale-95 shadow-sm hover:shadow-indigo-500/25 ml-2"
+                            >
+                                <Sparkles className="w-3 h-3 text-amber-200" />
+                                IA Mágica
                             </button>
                         </>
                     )}
@@ -567,6 +891,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                                     days={days}
                                     // Optimized: Pass dictionary directly for O(1) access
                                     visualEvents={visualEvents}
+                                    intelByDay={intelByDay}
                                     onEditShift={handleEditShift}
                                     onDeleteShift={handleDeleteShift}
                                     onAddShift={handleOpenNew}
@@ -577,45 +902,120 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                         // --- DESKTOP VIEW ---
                         <div className="min-w-[1000px] h-full flex flex-col bg-white/40 border-l border-white/20">
                             {/* Days Header */}
-                            <div className="grid grid-cols-7 border-b border-slate-200/60 bg-white/80 backdrop-blur-md sticky top-0 z-20 shadow-sm pl-9">
+                            <div className="grid grid-cols-7 border-b border-slate-200/60 bg-white/80 backdrop-blur-md sticky top-0 z-20 shadow-sm pl-9 group/daygrid">
                                 {days.map((day, i) => {
                                     const isToday = new Date().toISOString().split('T')[0] === day.isoDate;
+                                    const dayIntel = intelByDay[day.isoDate] || [];
+                                    const demandLevel = getDayDemandLevel(day.isoDate, dayIntel);
+                                    const dayDate = new Date(day.isoDate);
+                                    const isWeekend = [0, 5, 6].includes(dayDate.getDay());
+
                                     return (
-                                        <div key={i} className={`px-2 py-3 border-r border-slate-100 last:border-r-0 ${isToday ? 'bg-indigo-50/50 backdrop-blur-sm shadow-[inset_0_-2px_4px_rgba(0,0,0,0.02)]' : ''} transition-colors hover:bg-white/60 flex items-center justify-between gap-1`}>
-                                            <div className="flex items-baseline gap-1.5">
-                                                <div className={`text-xs font-black uppercase tracking-widest ${isToday ? 'text-indigo-600' : 'text-slate-400'}`}>
-                                                    {day.label.split(' ')[0]}
+                                        <div key={i} className={getDayStyling(demandLevel, isToday, isWeekend)}>
+                                            {/* Accent Top Border for Events */}
+                                            {demandLevel === 'critical' && (
+                                                <>
+                                                    <div className="absolute top-0 left-0 right-0 h-1.5 bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.6)] z-10" />
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-rose-500/[0.03] via-transparent to-rose-500/[0.05] opacity-50 animate-pulse pointer-events-none" />
+                                                </>
+                                            )}
+                                            {demandLevel === 'warning' && <div className="absolute top-0 left-0 right-0 h-1 bg-amber-500 z-10" />}
+                                            {demandLevel === 'normal' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-emerald-500/40 z-10" />}
+
+                                            <div className="flex flex-col gap-2 relative z-0">
+                                                <div className="flex items-center justify-between gap-1 w-full">
+                                                    <div className="flex items-baseline gap-1.5 min-w-0">
+                                                        <div className={`text-[10px] font-semibold uppercase tracking-[0.15em] truncate ${isToday ? 'text-indigo-600' : 'text-slate-400'}`}>
+                                                            {day.label.split(' ')[0]}
+                                                        </div>
+                                                        <div className={`text-2xl font-bold tracking-tight leading-none ${isToday ? 'text-indigo-700 drop-shadow-sm' : 'text-slate-800'}`}>
+                                                            {day.label.split(' ')[1]}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Weather Forecast Mini-Pill (Always visible if available) */}
+                                                    {weatherDaily && (
+                                                        <div className="opacity-60 group-hover/dayhead:opacity-100 transition-opacity flex items-center gap-1 bg-white/40 px-1.5 py-0.5 rounded-lg border border-white/40 shadow-sm shrink-0">
+                                                            {(() => {
+                                                                const idx = weatherDaily.time.findIndex((t: string) => t === day.isoDate);
+                                                                if (idx !== -1) {
+                                                                    const max = Math.round(weatherDaily.temperature_2m_max[idx]);
+                                                                    const code = weatherDaily.weathercode[idx];
+                                                                    return (
+                                                                        <>
+                                                                            <div className="scale-100">{getWeatherIcon(code, "w-4 h-4")}</div>
+                                                                            <span className="text-[10px] font-black text-slate-500">{max}°</span>
+                                                                        </>
+                                                                    );
+                                                                }
+                                                                return null;
+                                                            })()}
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <div className={`text-lg font-black tracking-tight leading-none ${isToday ? 'text-indigo-600 drop-shadow-sm' : 'text-slate-700'}`}>
-                                                    {day.label.split(' ')[1]}
+
+                                                {/* High-Impact Intel Badges */}
+                                                <div className="flex flex-col gap-2">
+                                                    {dayIntel.map((event) => {
+                                                        const isMatch = event.type === 'match';
+                                                        const isLive = event.metadata?.isLive;
+
+                                                        return (
+                                                            <div
+                                                                key={event.id}
+                                                                className={`
+                                                                    flex flex-col gap-1.5 p-2 rounded-2xl border backdrop-blur-xl transition-all hover:scale-[1.03] cursor-help relative group/badge overflow-hidden
+                                                                    shadow-[0_4px_12px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)]
+                                                                    hover:shadow-[0_8px_20px_rgba(0,0,0,0.06),0_2px_4px_rgba(0,0,0,0.03)]
+                                                                    ${event.severity === 'critical' ? 'bg-rose-500/10 border-rose-500/30 text-rose-800 ring-1 ring-rose-500/10' :
+                                                                        event.severity === 'warning' ? 'bg-amber-500/10 border-amber-500/30 text-amber-800 ring-1 ring-amber-500/10' :
+                                                                            'bg-indigo-500/5 border-indigo-500/20 text-indigo-800 ring-1 ring-indigo-500/5'}
+                                                                `}
+                                                                title={`${event.title}: ${event.impact}`}
+                                                            >
+                                                                {/* Live Pulse Glow */}
+                                                                {isLive && (
+                                                                    <div className="absolute inset-0 bg-rose-500/5 animate-pulse pointer-events-none" />
+                                                                )}
+
+                                                                {isMatch ? (
+                                                                    <div className="flex flex-col gap-2 relative z-10">
+                                                                        <div className="flex items-center justify-between gap-2 bg-white/40 p-1 rounded-xl border border-white/20">
+                                                                            <TeamLogo src={event.metadata?.teamLogo} name={event.metadata?.team} size={28} />
+                                                                            <div className="flex flex-col items-center gap-0.5">
+                                                                                <span className="text-[8px] font-black text-slate-400 font-mono leading-none">VS</span>
+                                                                                {isLive && (
+                                                                                    <div className="flex flex-col items-center">
+                                                                                        <span className="text-[9px] font-black text-rose-600 animate-pulse">{event.metadata?.score?.home} - {event.metadata?.score?.away}</span>
+                                                                                        <span className="text-[7px] font-bold text-rose-500/70">{event.metadata?.minute}'</span>
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                            <TeamLogo src={event.metadata?.opponentLogo} name={event.metadata?.opponent} size={28} />
+                                                                        </div>
+                                                                        <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-tighter px-0.5">
+                                                                            <span className="flex items-center gap-1 opacity-70">
+                                                                                <Trophy size={9} />
+                                                                                {event.subtitle?.includes('Champions') ? 'UCL' : 'Liga'}
+                                                                            </span>
+                                                                            <span className="bg-slate-950/80 text-white px-1.5 py-0.5 rounded-lg text-[8px] shadow-sm">
+                                                                                {event.date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="flex items-center gap-2.5 relative z-10">
+                                                                        <div className="w-6 h-6 rounded-full bg-white/80 flex items-center justify-center shadow-sm border border-white">
+                                                                            {event.type === 'weather' ? <CloudRain size={12} className="text-slate-600" /> : <Calendar size={12} className="text-slate-600" />}
+                                                                        </div>
+                                                                        <span className="text-[10px] font-black leading-tight truncate pr-1">{event.title}</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
-
-                                            {/* Weather Forecast */}
-                                            {weatherDaily && (
-                                                <div className="flex flex-col items-center justify-center animate-in fade-in duration-500">
-                                                    {(() => {
-                                                        const idx = weatherDaily.time.findIndex(t => t === day.isoDate);
-
-                                                        if (idx !== -1) {
-                                                            const max = Math.round(weatherDaily.temperature_2m_max[idx]);
-                                                            const min = Math.round(weatherDaily.temperature_2m_min[idx]);
-                                                            const code = weatherDaily.weathercode[idx];
-                                                            return (
-                                                                <div className="flex items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity bg-white/40 px-1.5 py-0.5 rounded-lg border border-white/40 shadow-sm">
-                                                                    <div className="scale-125 origin-center">
-                                                                        {getWeatherIcon(code, "w-6 h-6")}
-                                                                    </div>
-                                                                    <div className="text-[10px] font-bold text-slate-500 flex items-center leading-none pl-1">
-                                                                        <span>{max}°</span>
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        }
-                                                        return null;
-                                                    })()}
-                                                </div>
-                                            )}
                                         </div>
                                     );
                                 })}
@@ -694,11 +1094,12 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                                         const dayEvents = visualEvents[day.isoDate] || [];
                                         // Improved: Min card width 80px triggers Deck Mode earlier (smart stacking)
                                         const layoutEvents = calculateDayLayout(dayEvents as any[], 140, 80);
+                                        const isToday = new Date().toISOString().split('T')[0] === day.isoDate;
 
                                         return (
                                             <div
                                                 key={colIndex}
-                                                className="relative border-r border-slate-200/60 last:border-r-0 h-full group transition-colors hover:bg-indigo-50/10"
+                                                className={`relative border-r border-slate-200/60 last:border-r-0 h-full group transition-colors ${isToday ? 'bg-indigo-50/10 ring-inset ring-2 ring-indigo-500/10' : 'hover:bg-indigo-50/10'}`}
                                                 onClick={(e) => handleColumnClick(e, day.isoDate)}
                                                 onDragOver={handleDragOver}
                                                 onDragLeave={handleDragLeave}
@@ -739,15 +1140,13 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                                                     return (
                                                         <div
                                                             key={ev.id + (ev.isContinuation ? '-c' : '')}
-                                                            className={`absolute transition-all duration-300 ${style.isDeck ? 'hover:z-50' : 'hover:z-50'}`}
+                                                            className={`absolute transition-all duration-300 pr-0.5 pl-0.5 ${style.isDeck ? 'hover:z-50' : 'hover:z-50'}`}
                                                             style={{
                                                                 top: `${adjustedTop}px`,
                                                                 height: `${style.height}px`,
                                                                 left: style.left,
                                                                 width: style.width,
-                                                                zIndex: style.zIndex,
-                                                                paddingRight: '2px',
-                                                                paddingLeft: '2px'
+                                                                zIndex: style.zIndex
                                                             } as React.CSSProperties}
                                                         >
                                                             <div className="h-full w-full relative drop-shadow-sm hover:drop-shadow-md transition-shadow">
@@ -802,6 +1201,74 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                 isDestructive={confirmDialog.isDestructive}
                 confirmText={confirmDialog.confirmText}
             />
+
+            {/* Generative Scheduling Modal */}
+            {showGenModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 border border-indigo-100">
+                        <div className="bg-gradient-to-r from-indigo-600 to-violet-600 p-6 text-white relative overflow-hidden">
+                            <div className="relative z-10">
+                                <h3 className="text-xl font-black flex items-center gap-2">
+                                    <Sparkles className="w-6 h-6 text-amber-300" />
+                                    Generador de Horarios IA
+                                </h3>
+                                <p className="text-indigo-100 text-sm mt-1 font-medium">Describe qué necesitas y la IA creará el cuadrante.</p>
+                            </div>
+                            <div className="absolute top-0 right-0 p-4 opacity-10">
+                                <Wand2 className="w-24 h-24 rotate-12" />
+                            </div>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Instrucción para la IA</label>
+                                <textarea
+                                    value={genPrompt}
+                                    onChange={(e) => setGenPrompt(e.target.value)}
+                                    placeholder="Ej: Necesito 4 riders cada noche, y refuerzo el sábado. Lunes y Martes solo 2 riders al mediodía..."
+                                    className="w-full h-32 p-3 rounded-xl border border-slate-200 text-slate-700 font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none bg-slate-50 placeholder:text-slate-400 focus:outline-none"
+                                    autoFocus
+                                />
+                            </div>
+
+                            <div className="bg-indigo-50 p-3 rounded-lg flex items-start gap-3">
+                                <div className="bg-white p-1.5 rounded-full shadow-sm mt-0.5">
+                                    <Wand2 className="w-4 h-4 text-indigo-600" />
+                                </div>
+                                <p className="text-xs text-indigo-800 leading-relaxed font-medium">
+                                    La IA analizará tus riders disponibles y creará turnos óptimos respetando las reglas de descanso y cobertura.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowGenModal(false)}
+                                className="px-4 py-2 text-slate-500 hover:text-slate-700 font-bold text-sm transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleGeneration}
+                                disabled={isGenerating || !genPrompt.trim()}
+                                className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-500/30 flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isGenerating ? (
+                                    <>
+                                        <div className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
+                                        Generando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="w-4 h-4" />
+                                        Generar Magia
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
 
         </div>

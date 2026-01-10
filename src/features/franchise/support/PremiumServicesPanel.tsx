@@ -228,7 +228,7 @@ const PremiumServicesPanel: React.FC = () => {
         <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-950 overflow-hidden relative">
 
             {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#6366f1 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(#6366f1_1px,transparent_1px)] bg-[length:32px_32px]" />
 
             {/* Header & Sub-Nav */}
             <div className="px-5 py-3 border-b border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl relative z-10 shrink-0 flex justify-between items-end">
@@ -355,7 +355,7 @@ const ServiceCard: React.FC<{ service: ServiceOption, selected: boolean, onClick
                 {selected && (
                     <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/40 via-violet-900/40 to-slate-900/0 pointer-events-none" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none transform -translate-x-full group-hover:translate-x-full" style={{ transitionDuration: '1.5s' }} />
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-[1500ms] pointer-events-none transform -translate-x-full group-hover:translate-x-full" />
 
                 <div className="absolute top-0 right-0">
                     <div className={`${selected ? 'bg-indigo-500 text-white' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'} text-[10px] font-black px-4 py-1 rounded-bl-2xl uppercase tracking-widest shadow-sm transition-colors duration-300`}>
@@ -421,7 +421,7 @@ const ServiceCard: React.FC<{ service: ServiceOption, selected: boolean, onClick
             `}
         >
             {/* Glossy sheen effect on hover */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/40 to-white/0 dark:from-slate-800/0 dark:via-slate-700/10 dark:to-slate-800/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none transform -translate-x-full group-hover:translate-x-full" style={{ transitionDuration: '1s' }} />
+            <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/40 to-white/0 dark:from-slate-800/0 dark:via-slate-700/10 dark:to-slate-800/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none transform -translate-x-full group-hover:translate-x-full duration-1000" />
 
             <div className={`
                 w-10 h-10 rounded-xl flex items-center justify-center mb-4 transition-all duration-300 shadow-sm

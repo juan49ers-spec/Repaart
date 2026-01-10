@@ -1,10 +1,10 @@
 import { useState, type FC, type FormEvent } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Lock, User, Briefcase, UserPlus, ArrowLeft } from 'lucide-react';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+
 import { type FirebaseError } from 'firebase/app';
 import { doc, setDoc } from 'firebase/firestore';
-import { auth, db } from '../../lib/firebase';
+import { db } from '../../lib/firebase';
 import logo from '../../assets/logo.jpg';
 import { logAction, AUDIT_ACTIONS } from '../../lib/audit';
 import { useToast } from '../../hooks/useToast';

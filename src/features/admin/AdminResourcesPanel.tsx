@@ -21,6 +21,7 @@ import DocPreviewModal from '../../ui/overlays/DocPreviewModal';
 import ConfirmationModal from '../../ui/feedback/ConfirmationModal';
 import ResourceUploadModal from './resources/ResourceUploadModal';
 import AdminGuidesPanel from './knowledge/AdminGuidesPanel';
+import UserManual from '../common/UserManual/UserManual';
 
 interface Resource {
     id: string;
@@ -77,7 +78,7 @@ const CATEGORIES: Record<string, CategoryConfig> = {
 
 const AdminResourcesPanel = () => {
     // Tab State
-    const [activeTab, setActiveTab] = useState<'files' | 'guides'>('files');
+    const [activeTab, setActiveTab] = useState<'files' | 'guides' | 'manual'>('files');
 
     // Data State
     const [resources, setResources] = useState<Resource[]>([]);
@@ -212,7 +213,17 @@ const AdminResourcesPanel = () => {
                                 : 'text-slate-500 dark:text-slate-400 hover:text-indigo-500'
                                 }`}
                         >
+
                             Guías Interactivas
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('manual')}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'manual'
+                                ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-white shadow-sm'
+                                : 'text-slate-500 dark:text-slate-400 hover:text-indigo-500'
+                                }`}
+                        >
+                            Manual de Uso
                         </button>
                     </div>
 
@@ -220,10 +231,10 @@ const AdminResourcesPanel = () => {
                         <div className="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-700">
                             {/* View Toggles */}
                             <div className="flex bg-slate-100 dark:bg-slate-900 rounded-lg p-1 border border-slate-200 dark:border-slate-800">
-                                <button onClick={() => setViewMode('list')} className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
+                                <button onClick={() => setViewMode('list')} title="Vista de lista" aria-label="Vista de lista" className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
                                     <ListIcon className="w-4 h-4" />
                                 </button>
-                                <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
+                                <button onClick={() => setViewMode('grid')} title="Vista de cuadrícula" aria-label="Vista de cuadrícula" className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
                                     <Grid className="w-4 h-4" />
                                 </button>
                             </div>
@@ -241,189 +252,203 @@ const AdminResourcesPanel = () => {
             </div>
 
             {/* CONTENT */}
-            {activeTab === 'guides' ? (
-                <div className="flex-1 overflow-hidden bg-slate-50 dark:bg-slate-950">
-                    <AdminGuidesPanel />
-                </div>
-            ) : (
-                <div className="flex-1 overflow-auto p-6">
-                    {/* FILTERS */}
-                    <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between">
-                        {/* Tabs */}
-                        <div className="flex flex-wrap gap-2">
-                            {['all', 'manuals', 'marketing', 'legal', 'hr', 'general'].map(cat => (
-                                <button
-                                    key={cat}
-                                    onClick={() => setSelectedCategory(cat)}
-                                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all border ${selectedCategory === cat
-                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200 dark:shadow-none'
-                                        : 'bg-white dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-slate-600 hover:text-indigo-600 dark:hover:text-slate-200'
-                                        }`}
-                                >
-                                    {cat === 'all' ? 'Todos' : CATEGORIES[cat]?.label || cat}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Search */}
-                        <div className="relative w-full max-w-xs">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                            <input
-                                type="text"
-                                placeholder="Buscar..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-                            />
-                        </div>
+            {
+                activeTab === 'guides' ? (
+                    <div className="flex-1 overflow-hidden bg-slate-50 dark:bg-slate-950">
+                        <AdminGuidesPanel />
                     </div>
+                ) : activeTab === 'manual' ? (
+                    <div className="flex-1 overflow-hidden p-6">
+                        <UserManual role="admin" />
+                    </div>
+                ) : (
+                    <div className="flex-1 overflow-auto p-6">
+                        {/* FILTERS */}
+                        <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between">
+                            {/* Tabs */}
+                            <div className="flex flex-wrap gap-2">
+                                {['all', 'manuals', 'marketing', 'legal', 'hr', 'general'].map(cat => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => setSelectedCategory(cat)}
+                                        className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all border ${selectedCategory === cat
+                                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200 dark:shadow-none'
+                                            : 'bg-white dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-slate-600 hover:text-indigo-600 dark:hover:text-slate-200'
+                                            }`}
+                                    >
+                                        {cat === 'all' ? 'Todos' : CATEGORIES[cat]?.label || cat}
+                                    </button>
+                                ))}
+                            </div>
 
-                    {loading ? (
-                        <div className="flex justify-center py-20">
-                            <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+                            {/* Search */}
+                            <div className="relative w-full max-w-xs">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                                />
+                            </div>
                         </div>
-                    ) : (
-                        <>
-                            {/* LIST VIEW */}
-                            {viewMode === 'list' && (
-                                <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/60 rounded-xl shadow-sm overflow-hidden">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="border-b border-slate-100 dark:border-slate-800/60 bg-slate-50 dark:bg-slate-900/60 text-xs uppercase tracking-wider text-slate-500 font-semibold">
-                                                <th className="p-4 pl-6 w-8" />
-                                                <th className="p-4">Nombre</th>
-                                                <th className="p-4">Categoría</th>
-                                                <th className="p-4">Tamaño</th>
-                                                <th className="p-4">Fecha</th>
-                                                <th className="p-4 text-right pr-6">Acciones</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40">
-                                            {filteredResources.map((file) => {
-                                                const catStyle = CATEGORIES[file.category || 'general'] || CATEGORIES['general'];
-                                                return (
-                                                    <tr key={file.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                                        <td className="p-4 pl-6">
-                                                            <button
-                                                                onClick={(e) => togglePin(file, e)}
-                                                                className={`p-1.5 rounded-md transition-all ${file.isPinned ? 'text-amber-400 bg-amber-400/10' : 'text-slate-600 hover:text-slate-400'}`}
-                                                            >
-                                                                <Pin size={14} className={file.isPinned ? "fill-current" : ""} />
-                                                            </button>
-                                                        </td>
-                                                        <td className="p-4">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50">
-                                                                    {getFileIcon(file.type)}
-                                                                </div>
-                                                                <div>
-                                                                    <p className="text-sm font-medium text-slate-900 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-white transition-colors">
-                                                                        {file.title || file.name}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="p-4">
-                                                            <span className={`text-[10px] font-bold px-2 py-1 rounded-md border uppercase tracking-wider ${catStyle.color}`}>
-                                                                {catStyle.label}
-                                                            </span>
-                                                        </td>
-                                                        <td className="p-4 text-sm text-slate-500 font-mono">
-                                                            {formatBytes(file.size)}
-                                                        </td>
-                                                        <td className="p-4 text-sm text-slate-500">
-                                                            {file.createdAt ? file.createdAt.toDate().toLocaleDateString() : '-'}
-                                                        </td>
-                                                        <td className="p-4 text-right pr-6">
-                                                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+
+                        {loading ? (
+                            <div className="flex justify-center py-20">
+                                <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+                            </div>
+                        ) : (
+                            <>
+                                {/* LIST VIEW */}
+                                {viewMode === 'list' && (
+                                    <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/60 rounded-xl shadow-sm overflow-hidden">
+                                        <table className="w-full text-left border-collapse">
+                                            <thead>
+                                                <tr className="border-b border-slate-100 dark:border-slate-800/60 bg-slate-50 dark:bg-slate-900/60 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                                                    <th className="p-4 pl-6 w-8" />
+                                                    <th className="p-4">Nombre</th>
+                                                    <th className="p-4">Categoría</th>
+                                                    <th className="p-4">Tamaño</th>
+                                                    <th className="p-4">Fecha</th>
+                                                    <th className="p-4 text-right pr-6">Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40">
+                                                {filteredResources.map((file) => {
+                                                    const catStyle = CATEGORIES[file.category || 'general'] || CATEGORIES['general'];
+                                                    return (
+                                                        <tr key={file.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                                            <td className="p-4 pl-6">
                                                                 <button
-                                                                    onClick={() => setPreviewFile(file)}
-                                                                    className="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors"
+                                                                    onClick={(e) => togglePin(file, e)}
+                                                                    title={file.isPinned ? "Desanclar" : "Anclar"}
+                                                                    aria-label={file.isPinned ? "Desanclar recurso" : "Anclar recurso"}
+                                                                    className={`p-1.5 rounded-md transition-all ${file.isPinned ? 'text-amber-400 bg-amber-400/10' : 'text-slate-600 hover:text-slate-400'}`}
                                                                 >
-                                                                    <Eye size={16} />
+                                                                    <Pin size={14} className={file.isPinned ? "fill-current" : ""} />
                                                                 </button>
-                                                                <a
-                                                                    href={file.url}
-                                                                    target="_blank"
-                                                                    rel="noreferrer"
-                                                                    className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
-                                                                >
-                                                                    <Download size={16} />
-                                                                </a>
-                                                                <button
-                                                                    onClick={() => handleDelete(file)}
-                                                                    className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
-                                                                >
-                                                                    <Trash2 size={16} />
-                                                                </button>
-                                                            </div>
+                                                            </td>
+                                                            <td className="p-4">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50">
+                                                                        {getFileIcon(file.type)}
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="text-sm font-medium text-slate-900 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-white transition-colors">
+                                                                            {file.title || file.name}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="p-4">
+                                                                <span className={`text-[10px] font-bold px-2 py-1 rounded-md border uppercase tracking-wider ${catStyle.color}`}>
+                                                                    {catStyle.label}
+                                                                </span>
+                                                            </td>
+                                                            <td className="p-4 text-sm text-slate-500 font-bold uppercase tracking-wider">
+                                                                {formatBytes(file.size)}
+                                                            </td>
+                                                            <td className="p-4 text-sm text-slate-500">
+                                                                {file.createdAt ? file.createdAt.toDate().toLocaleDateString() : '-'}
+                                                            </td>
+                                                            <td className="p-4 text-right pr-6">
+                                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <button
+                                                                        onClick={() => setPreviewFile(file)}
+                                                                        title="Vista previa"
+                                                                        aria-label="Vista previa"
+                                                                        className="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors"
+                                                                    >
+                                                                        <Eye size={16} />
+                                                                    </button>
+                                                                    <a
+                                                                        href={file.url}
+                                                                        target="_blank"
+                                                                        rel="noreferrer"
+                                                                        title="Descargar"
+                                                                        aria-label="Descargar archivo"
+                                                                        className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                                                                    >
+                                                                        <Download size={16} />
+                                                                    </a>
+                                                                    <button
+                                                                        onClick={() => handleDelete(file)}
+                                                                        title="Eliminar"
+                                                                        aria-label="Eliminar recurso"
+                                                                        className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+                                                                    >
+                                                                        <Trash2 size={16} />
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                                {filteredResources.length === 0 && (
+                                                    <tr>
+                                                        <td colSpan={6} className="p-12 text-center text-slate-500">
+                                                            <FolderOpen className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                                                            No se encontraron recursos.
                                                         </td>
                                                     </tr>
-                                                );
-                                            })}
-                                            {filteredResources.length === 0 && (
-                                                <tr>
-                                                    <td colSpan={6} className="p-12 text-center text-slate-500">
-                                                        <FolderOpen className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                                                        No se encontraron recursos.
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-
-                            {/* GRID VIEW */}
-                            {viewMode === 'grid' && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    {filteredResources.map((file) => {
-                                        const catStyle = CATEGORIES[file.category || 'general'] || CATEGORIES['general'];
-                                        return (
-                                            <div key={file.id} className="group bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/60 rounded-xl p-4 hover:border-indigo-300 dark:hover:border-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/5 dark:hover:shadow-black/20 hover:-translate-y-1 transition-all relative">
-
-                                                {/* Pin Badge */}
-                                                {file.isPinned && (
-                                                    <div className="absolute top-3 right-3 text-amber-400">
-                                                        <Pin size={14} className="fill-current" />
-                                                    </div>
                                                 )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
 
-                                                <div className="flex justify-between items-start mb-4">
-                                                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/30 shadow-inner group-hover:scale-110 transition-transform">
-                                                        {getFileIcon(file.type)}
+                                {/* GRID VIEW */}
+                                {viewMode === 'grid' && (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                        {filteredResources.map((file) => {
+                                            const catStyle = CATEGORIES[file.category || 'general'] || CATEGORIES['general'];
+                                            return (
+                                                <div key={file.id} className="group bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/60 rounded-xl p-4 hover:border-indigo-300 dark:hover:border-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/5 dark:hover:shadow-black/20 hover:-translate-y-1 transition-all relative">
+
+                                                    {/* Pin Badge */}
+                                                    {file.isPinned && (
+                                                        <div className="absolute top-3 right-3 text-amber-400">
+                                                            <Pin size={14} className="fill-current" />
+                                                        </div>
+                                                    )}
+
+                                                    <div className="flex justify-between items-start mb-4">
+                                                        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/30 shadow-inner group-hover:scale-110 transition-transform">
+                                                            {getFileIcon(file.type)}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="mb-3">
+                                                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200 truncate mb-1.5" title={file.title}>
+                                                            {file.title || file.name}
+                                                        </h4>
+                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${catStyle.color}`}>
+                                                            {catStyle.label}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-slate-800/50">
+                                                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">{formatBytes(file.size)}</span>
+                                                        <div className="flex gap-1">
+                                                            <button onClick={() => setPreviewFile(file)} title="Vista previa" aria-label="Vista previa" className="p-1.5 text-slate-500 hover:text-white transition-colors">
+                                                                <Eye size={14} />
+                                                            </button>
+                                                            <button onClick={() => handleDelete(file)} title="Eliminar" aria-label="Eliminar" className="p-1.5 text-slate-500 hover:text-rose-400 transition-colors">
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
-
-                                                <div className="mb-3">
-                                                    <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200 truncate mb-1.5" title={file.title}>
-                                                        {file.title || file.name}
-                                                    </h4>
-                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${catStyle.color}`}>
-                                                        {catStyle.label}
-                                                    </span>
-                                                </div>
-
-                                                <div className="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-slate-800/50">
-                                                    <span className="text-[10px] text-slate-500 font-mono">{formatBytes(file.size)}</span>
-                                                    <div className="flex gap-1">
-                                                        <button onClick={() => setPreviewFile(file)} className="p-1.5 text-slate-500 hover:text-white transition-colors">
-                                                            <Eye size={14} />
-                                                        </button>
-                                                        <button onClick={() => handleDelete(file)} className="p-1.5 text-slate-500 hover:text-rose-400 transition-colors">
-                                                            <Trash2 size={14} />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </>
-                    )}
-                </div>
-            )}
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                )
+            }
 
             {/* MODALS */}
             <ResourceUploadModal
@@ -451,7 +476,7 @@ const AdminResourcesPanel = () => {
                 isDestructive={confirmDialog.isDestructive}
                 confirmText={confirmDialog.confirmText}
             />
-        </div>
+        </div >
     );
 };
 

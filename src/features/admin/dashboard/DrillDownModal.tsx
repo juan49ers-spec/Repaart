@@ -26,9 +26,9 @@ const DrillDownModal: React.FC<DrillDownModalProps> = ({ isOpen, onClose, data, 
                 <div className="p-5 border-b border-slate-800 bg-slate-900/50 rounded-t-2xl flex justify-between items-center">
                     <div>
                         <h3 className="text-lg font-bold text-white">{title}</h3>
-                        <p className="text-xs text-slate-400 font-mono mt-0.5">Desglose detallado</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Desglose detallado</p>
                     </div>
-                    <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors">
+                    <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors" title="Cerrar modal">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -55,7 +55,7 @@ const DrillDownModal: React.FC<DrillDownModalProps> = ({ isOpen, onClose, data, 
                                         <td className="px-5 py-3 font-medium text-slate-300">
                                             {item.label}
                                         </td>
-                                        <td className="px-5 py-3 text-right font-mono text-slate-200">
+                                        <td className="px-5 py-3 text-right text-slate-200">
                                             {item.value}
                                         </td>
                                         <td className="px-5 py-3 text-right">

@@ -95,15 +95,15 @@ const CommandPalette: FC = () => {
                         </Command.Empty>
 
                         <Command.Group heading="Acciones Rápidas" className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 px-2">
-                            <Item onSelect={() => runCommand(() => console.log('New Moto'))}>
+                            <Item onSelect={() => runCommand(() => { })}>
                                 <Plus className="w-4 h-4 mr-2 text-emerald-400" />
                                 <span>Registrar Nueva Moto</span>
                             </Item>
-                            <Item onSelect={() => runCommand(() => console.log('New Rider'))}>
+                            <Item onSelect={() => runCommand(() => { })}>
                                 <Plus className="w-4 h-4 mr-2 text-blue-400" />
                                 <span>Añadir Rider</span>
                             </Item>
-                            <Item onSelect={() => runCommand(() => console.log('Close Month'))}>
+                            <Item onSelect={() => runCommand(() => { })}>
                                 <Calculator className="w-4 h-4 mr-2 text-amber-400" />
                                 <span>Registrar Cierre Mensual</span>
                             </Item>

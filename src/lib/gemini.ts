@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI, GenerativeModel, ChatSession } from "@google/generative-ai";
 import { FRANCHISE_KNOWLEDGE } from './companyKnowledge';
+import { APP_CAPABILITIES } from './appCapabilities';
 
 // Initialize the API with the key (will be set in .env)
 const API_KEY = import.meta.env.VITE_GOOGLE_AI_KEY || '';
@@ -8,17 +9,25 @@ let chatSession: ChatSession | null = null;
 
 const SYSTEM_INSTRUCTION = `
 Eres REPAART AI, el asistente virtual experto de la franquicia Repaart.
-Tu objetivo es ayudar a los franquiciados a resolver dudas operativas, financieras y de soporte.
+Tu objetivo es ayudar a los franquiciados a resolver dudas operativas, financieras y DE USO DE LA PLATAFORMA.
 
-UTILIZA ESTA BASE DE CONOCIMIENTO (TU CEREBRO):
+CEREBRO 1: CONOCIMIENTO DE LA APP (DÓNDE ESTÁ TODO):
+${APP_CAPABILITIES}
+
+CEREBRO 2: MANUAL OPERATIVO (CÓMO FUNCIONA EL NEGOCIO):
 ${FRANCHISE_KNOWLEDGE}
 
-Tus conocimientos clave adicionales son:
-1. MANUALES: Sabes que los manuales están en la sección "Soporte" > "Recursos".
-2. TICKETS: Si hay un problema grave, sugiere abrir un ticket en "Soporte".
-3. FINANZAS: Las dudas de pagos se ven en el "Dashboard Financiero" mensual.
-4. TONO: Adáptate al tono definido en tu base de conocimiento.
-5. CONTEXTO: Respondes preguntas sobre Repaart (logística, delivery, costes). Si te preguntan algo fuera de tema, reconduce amablemente.
+TUS SUPERPODERES:
+1. NAVEGADOR: Si preguntan "¿Dónde veo mis facturas?", diles EXACTAMENTE la ruta (Ej: "Ve a Finanzas > Gastos").
+2. SOPORTE TÉCNICO: Si tienen un problema técnico con la app, sugiere limpiar caché o abrir ticket en /support.
+3. OPERACIONES: Resuelve dudas sobre riders, motos y turnos usando el Manual Operativo.
+4. FINANZAS: Explica conceptos financieros basándote en la sección 3 y 4 del manual.
+
+TONO Y ESTILO:
+- Profesional pero cercano ("Compañero").
+- Ve al grano. No des discursos vacíos.
+- Si es una duda de APP, usa CEREBRO 1.
+- Si es una duda de NEGOCIO, usa CEREBRO 2.
 
 Si no sabes una respuesta específica, sugiere contactar a soporte@repaart.es o abrir un ticket.
 `;
@@ -271,4 +280,200 @@ const generateJson = async (promptText: string): Promise<any> => {
         console.error("AI Analysis Failed", e);
         return null; // Silent fail in UI is better than crash for this feature
     }
+};
+
+/**
+ * Analyzes a ticket draft and suggests immediate solutions from the Knowledge Base
+ */
+export const suggestSupportSolution = async (subject: string, description: string): Promise<{
+    suggestion: string;
+    confidence: number;
+    isSolvable: boolean;
+} | null> => {
+
+    const prompt = `
+    ACTUA COMO: Soporte Técnico Nivel 1 de "Repaart".
+    TAREA: Analiza este borrador de ticket y sugiere una solución inmediata si existe en el manual básico.
+
+    TICKET:
+    Asunto: "${subject}"
+    Descripción: "${description}"
+
+    BASE DE CONOCIMIENTO (Resumida):
+    - TPV/Datáfono no conecta -> Reiniciar pulsando botón rojo 10s. Comprobar Wifi "Repaart_Devices".
+    - Moto no arranca -> Comprobar botón rojo de manillar (Run/Stop). Comprobar patilla lateral.
+    - App Rider bloqueada -> Borrar caché en Ajustes > Aplicaciones > Repaart Rider.
+    - Falta dinero en cierre -> Revisar tickets de datáfono no liquidados o propinas en efectivo mal anotadas.
+    - Impresora térmica falla -> Comprobar papel y luz parpadeante. Abrir y cerrar tapa fuerte.
+
+    REGLAS:
+    - Si el problema parece coincidir CLARAMENTE con la base de conocimiento, dalo como "isSolvable": true.
+    - La sugerencia debe ser CORTA (max 15 palabras) y DIRECTA.
+    - Si no te suena de nada o es ambiguo, devuelve null o "isSolvable": false.
+
+    SALIDA JSON:
+    {
+        "suggestion": "Texto de la solución...",
+        "confidence": 0-100,
+        "isSolvable": boolean
+    }
+    `;
+
+    return await generateJson(prompt);
+};
+
+/**
+ * Validates a weekly schedule for operational risks
+ */
+export const validateWeeklySchedule = async (shifts: any[]): Promise<{
+    score: number;
+    status: 'optimal' | 'warning' | 'critical';
+    feedback: string;
+    missingCoverage: string[];
+} | null> => {
+
+    // Condensed Shift Representation for Token Efficiency
+    const scheduleSummary = shifts.map(s => {
+        const start = new Date(s.startAt);
+        const day = start.toLocaleDateString('es-ES', { weekday: 'short' });
+        const hour = start.getHours();
+        return `${day} ${hour}h-${new Date(s.endAt).getHours()}h (${s.riderName})`;
+    }).join('\n');
+
+    const prompt = `
+    ACTUA COMO: "Sheriff de Operaciones" de Repaart.
+    TAREA: Audita este cuadrante semanal y busca huecos peligrosos.
+
+    CUADRANTE:
+    ${scheduleSummary}
+
+    REGLAS DE ORO (PRIME TIME):
+    1. VIERNES NOCHE (20:00-23:00): Mínimo 2 riders.
+    2. SÁBADO NOCHE (20:00-23:00): Mínimo 3 riders.
+    3. DOMINGO NOCHE (20:00-23:00): Mínimo 2 riders.
+    4. DIARIO (13:00-15:00): Mínimo 1 rider.
+
+    SI EL CUADRANTE ESTÁ VACÍO, ES CRÍTICO.
+
+    SALIDA JSON:
+    {
+        "score": 0-100,
+        "status": "optimal" (>80), "warning" (50-80), "critical" (<50),
+        "feedback": "Comentario corto con tono de Sheriff (duro pero justo).",
+        "missingCoverage": ["Viernes Noche (Falta 1)", "Sábado Noche (Vacío)"]
+    }
+    `;
+
+    return await generateJson(prompt);
+};
+
+/**
+ * Generates NEW shifts to fix coverage gaps
+ */
+export const generateScheduleFix = async (currentShifts: any[], riders: any[], missingCoverage: string[]): Promise<{
+    newShifts: {
+        riderId: string;
+        startDay: string; // "YYYY-MM-DD"
+        startHour: number;
+        duration: number;
+        reason: string;
+    }[];
+    explanation: string;
+} | null> => {
+
+    const ridersList = riders.map(r => `${r.id} (${r.fullName})`).join(', ');
+    const issues = missingCoverage.join('\n- ');
+
+    // Simplify shifts to reduce tokens
+    const scheduleSummary = currentShifts.map(s => {
+        const start = new Date(s.startAt);
+        const day = start.toLocaleDateString('es-ES', { weekday: 'short' });
+        const date = s.startAt.split('T')[0];
+        return `${date} (${day}) ${start.getHours()}h-${new Date(s.endAt).getHours()}h: ${s.riderName}`;
+    }).join('\n');
+
+    const prompt = `
+    ACTUA COMO: Jefe de Operaciones de Repaart.
+    TAREA: Genera NUEVOS turnos para solucionar estos problemas de cobertura.
+
+    PROBLEMAS DETECTADOS:
+    - ${issues}
+
+    RIDERS DISPONIBLES:
+    ${ridersList}
+
+    CUADRANTE ACTUAL (Para evitar solapes):
+    ${scheduleSummary}
+
+    REGLAS:
+    1. Crea turnos lógicos (min 3h, max 5h).
+    2. Prioriza huecos de Viernes/Sábado Noche (20:00-23:00).
+    3. NO solapes turnos para el mismo rider.
+    4. Usa solo los riders de la lista.
+
+    SALIDA JSON:
+    {
+        "newShifts": [
+            {
+                "riderId": "ID_DEL_RIDER",
+                "startDay": "YYYY-MM-DD",
+                "startHour": 20,
+                "duration": 4,
+                "reason": "Refuerzo Viernes Noche"
+            }
+        ],
+        "explanation": "Breve explicación de los cambios."
+    }
+    `;
+
+    return await generateJson(prompt);
+};
+
+/**
+ * Generates a FULL schedule based on natural language prompt
+ */
+export const generateFullSchedule = async (
+    userPrompt: string,
+    riders: any[],
+    weekStart: string, // YYYY-MM-DD
+    weekEnd: string // YYYY-MM-DD
+): Promise<{
+    shifts: {
+        riderId: string;
+        startDay: string; // YYYY-MM-DD
+        startHour: number;
+        duration: number;
+        reason: string;
+    }[];
+    explanation: string;
+} | null> => {
+
+    const ridersList = riders.map(r => `${r.id} (${r.fullName})`).join(', ');
+
+    const prompt = `
+    ACTUA COMO: Planificador Experto de Logística "Repaart".
+    TAREA: Crea un cuadrante de turnos COMPLETO para la semana del ${weekStart} al ${weekEnd}.
+    
+    INSTRUCCIÓN DEL USUARIO:
+    "${userPrompt}"
+
+    RECURSOS (RIDERS):
+    ${ridersList}
+
+    REGLAS DE NEGOCIO:
+    1. Turnos estándar: Almuerzos (13:00-16:00 aprox) y Cenas (20:00-24:00 aprox).
+    2. Evita turnos de más de 5 horas seguidas sin descanso.
+    3. Distribuye equitativamente si no se dice lo contrario.
+    4. Cubre SIEMPRE los picos (Viernes/Sábado Noche) con más fuerza.
+
+    SALIDA JSON:
+    {
+        "shifts": [
+            { "riderId": "...", "startDay": "YYYY-MM-DD", "startHour": 13, "duration": 3, "reason": "Almuerzo Lunes" }
+        ],
+        "explanation": "He creado una planificación centrada en..."
+    }
+    `;
+
+    return await generateJson(prompt);
 };

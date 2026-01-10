@@ -1,5 +1,5 @@
 import React from 'react';
-import { Wallet, TrendingUp, Info, Sparkles, PartyPopper, Target } from 'lucide-react';
+import { Wallet, TrendingUp, Info, PartyPopper } from 'lucide-react';
 import { formatMoney } from '../../../../lib/finance';
 
 interface TakeHomeProfitWidgetProps {
@@ -29,8 +29,7 @@ interface TakeHomeProfitWidgetProps {
 const TakeHomeProfitWidget: React.FC<TakeHomeProfitWidgetProps> = ({
     revenue,
     totalExpenses,
-    irpfPercent = 20,
-    trend = []
+    irpfPercent = 20
 }) => {
     const [showBreakdown, setShowBreakdown] = React.useState(false);
 

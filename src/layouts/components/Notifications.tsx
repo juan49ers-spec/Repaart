@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { db } from '../../lib/firebase';
 import { collection, query, where, orderBy, onSnapshot, limit, Timestamp } from 'firebase/firestore';
-import { Bell, Ticket, DollarSign, AlertTriangle, ArrowRight, Lock } from 'lucide-react';
+import { Bell, Ticket, DollarSign, AlertTriangle, ArrowRight, Lock, Check } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { markNotificationAsRead } from '../../lib/notifications';
 import { notificationService, NotificationPayload } from '../../services/notificationService';

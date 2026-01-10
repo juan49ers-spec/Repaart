@@ -1,19 +1,12 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
-import { Card, CardContent } from '@/components/ui/card';
+
 import { Info, TrendingUp, Wallet, ReceiptText, Banknote } from 'lucide-react';
-import { calculateTotalExpenses, calculateNetProfit, calculateProfitMargin } from '@/utils/financialUtils';
 import { formatMoney } from '../../../../lib/finance';
-import { ExpenseData } from '../../types';
+
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
 
-interface SummaryStepProps {
-    totalIncome: number;
-    totalExpenses: number;
-    grossProfit: number;
-    expenses: ExpenseData;
-    totalHours: number;
-}
+
 
 interface SummaryCardProps {
     title: string;

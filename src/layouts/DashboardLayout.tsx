@@ -8,6 +8,9 @@ import PageHelpModal from '../ui/modals/PageHelpModal';
 import { pageHelpData, PageHelpContent } from '../constants/pageHelpData';
 
 // Define explicit types for props
+import { useAppStore } from '../store/useAppStore';
+
+// Define explicit types for props
 interface DashboardLayoutProps {
     children?: React.ReactNode;
     isAdmin: boolean;
@@ -18,24 +21,22 @@ interface DashboardLayoutProps {
     setFranchiseView?: (view: string) => void;
     targetFranchiseName?: string | null;
 
-    selectedMonth: string;
-    onMonthChange: (month: string) => void;
-    viewPeriod?: string;
-    setViewPeriod?: (period: string) => void;
+    // Data Control Props
+    // selectedMonth & onMonthChange REMOVED (Handled by Store)
+    // viewPeriod?: string; -> REMOVED
+    // setViewPeriod?: (period: string) => void; -> REMOVED
 
     onLogout: () => void;
     onExport: () => void;
     onPrint?: () => void;
-    onCalculate?: (values: any) => void; // Using any for now, refine with proper SidebarData type if available
+    onCalculate?: (values: any) => void;
 
-    sidebarData?: any; // Replace with concrete FinancialData type
+    sidebarData?: any;
     readOnly?: boolean;
     saving?: boolean;
 
-    isChatOpen?: boolean;
-    setIsChatOpen?: (isOpen: boolean) => void;
     chatData?: { report: any };
-    outletContext?: any; // Allow flexible context for now, or define a specific interface
+    outletContext?: any;
 }
 
 /**
@@ -55,10 +56,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     targetFranchiseName,
 
     // Data Control Props
-    selectedMonth,
-    onMonthChange,
-    viewPeriod,
-    setViewPeriod,
+    // selectedMonth, -> REMOVED
+    // onMonthChange, -> REMOVED
+    // viewPeriod, -> REMOVED
+    // setViewPeriod, -> REMOVED
 
     // Actions
     onLogout,
@@ -72,16 +73,23 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     saving = false,
 
     // Chat Props
-    isChatOpen,
-    setIsChatOpen,
+    // isChatOpen, -> REMOVED
+    // setIsChatOpen, -> REMOVED
     chatData,
-    outletContext // <--- NEW PROP for Router Context
+    outletContext
 }) => {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const {
+        isSidebarOpen,
+        toggleSidebar: setIsSidebarOpen,
+        isChatOpen,
+        toggleChat: setIsChatOpen
+    } = useAppStore();
+
+    // const [isSidebarOpen, setIsSidebarOpen] = useState(false); -> REMOVED
     const [helpContent, setHelpContent] = useState<PageHelpContent | null>(null);
 
     // Mobile Chat Toggle
-    const handleToggleChat = () => setIsChatOpen && setIsChatOpen(!isChatOpen);
+    // const handleToggleChat = () => setIsChatOpen(!isChatOpen); -> REMOVED
 
     const openHelp = (id: string) => {
         const content = pageHelpData[id] || null;
@@ -91,11 +99,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     // Header Props Bundle
     const headerProps = {
         isAdmin, isFranchise, viewMode, setViewMode, franchiseView, setFranchiseView,
-        isSidebarOpen, setIsSidebarOpen, selectedMonth, viewPeriod, setViewPeriod,
+        // isSidebarOpen, setIsSidebarOpen, selectedMonth, -> REMOVED
+        // viewPeriod, setViewPeriod, -> REMOVED
         targetFranchiseName: targetFranchiseName || undefined,
         saving, onLogout,
         onExport, onPrint,
-        onMonthChange,
+        // onMonthChange, -> REMOVED
         onOpenHelp: openHelp
     };
 
@@ -111,14 +120,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
             {/* Sidebar (Input Panel) */}
             <InputSidebar
-                isOpen={isSidebarOpen}
-                onClose={() => setIsSidebarOpen(false)}
+                // isOpen={isSidebarOpen} -> REMOVED
+                // onClose={() => setIsSidebarOpen(false)} -> REMOVED
                 initialData={sidebarData}
-                selectedMonth={selectedMonth}
-                onMonthChange={onMonthChange}
+                // selectedMonth={selectedMonth} -> REMOVED
+                // onMonthChange={onMonthChange} -> REMOVED
                 onCalculate={onCalculate || (() => { })}
                 readOnly={readOnly}
-                onToggleChat={handleToggleChat}
+                // onToggleChat={handleToggleChat} -> REMOVED
                 onOpenHelp={openHelp}
             />
 
@@ -129,7 +138,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 {/* Content Injection with bottom padding for tab bar */}
                 <main className="flex-1 overflow-y-auto w-full" style={{ paddingBottom: 'max(8rem, calc(env(safe-area-inset-bottom) + 6rem))' }}>
                     {/* Pass context to Outlet so child routes can access data AND layout controls */}
-                    {outletContext ? <Outlet context={{ ...outletContext, setIsSidebarOpen, isSidebarOpen }} /> : children}
+                    {outletContext ? <Outlet context={{ ...outletContext }} /> : children}
                 </main>
             </div>
 
@@ -145,7 +154,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <ChatAssistant
                 contextData={chatData?.report}
                 isOpen={isChatOpen || false}
-                onClose={() => setIsChatOpen && setIsChatOpen(false)}
+                onClose={() => setIsChatOpen(false)}
             />
 
             <PageHelpModal

@@ -3,8 +3,7 @@ import { ToastContext } from '../../../context/contexts';
 import { useForm, useFieldArray, SubmitHandler } from 'react-hook-form';
 import {
     Building, MapPin, Save, User, Camera,
-    Mail, Phone, Shield, Trash2, Plus, DollarSign,
-    LucideIcon, Lock
+    Mail, Phone, Shield, Trash2, Plus, DollarSign, Lock
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { userService, UserProfile } from '../../../services/userService';
@@ -48,40 +47,14 @@ interface FranchiseProfileFormData {
     userPhotoURL: string;
 }
 
-interface TabButtonProps {
-    id: string;
-    label: string;
-    icon: LucideIcon;
-    activeTab: string;
-    setActiveTab: (id: string) => void;
-}
 
-const TabButton: React.FC<TabButtonProps> = ({ id, label, icon: Icon, activeTab, setActiveTab }) => (
-    <button
-        type="button"
-        onClick={() => setActiveTab(id)}
-        className={`
-            relative flex items-center gap-2.5 px-6 py-4 text-xs font-bold uppercase tracking-widest transition-all
-            ${activeTab === id
-                ? 'text-white'
-                : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'
-            }
-        `}
-    >
-        <Icon className={`w-4 h-4 mb-0.5 ${activeTab === id ? 'text-indigo-400 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]' : 'text-slate-600'}`} />
-        {label}
-        {activeTab === id && (
-            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,1)]" />
-        )}
-    </button>
-);
 
 interface FranchiseProfileProps {
     franchiseId?: string;
     readOnly?: boolean;
 }
 
-const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId, readOnly = false }) => {
+const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
     const { user, isAdmin } = useAuth();
     const toastCtx = useContext(ToastContext);
     const addToast = useMemo(() => toastCtx?.addToast || (() => { }), [toastCtx]);
@@ -94,7 +67,6 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId, readOn
 
     const [activeTab, setActiveTab] = useState('user'); // Default to User for a personal feel
     const [loading, setLoading] = useState(false);
-    const [logoPreview, setLogoPreview] = useState<string | null>(null); // For Franchise Logo (Future)
     const fileInputRef = useRef<HTMLInputElement>(null);
     const initialRatesRef = useRef<LogisticsRate[]>([]);
 

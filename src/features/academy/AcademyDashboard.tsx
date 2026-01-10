@@ -1,5 +1,5 @@
-import { type FC, type ReactNode, type CSSProperties, useState, useMemo } from 'react';
-import { BookOpen, Lock, CheckCircle, Clock, PlayCircle, Award, Search, Filter } from 'lucide-react';
+import { type FC, type ReactNode, useState, useMemo } from 'react';
+import { BookOpen, Lock, CheckCircle, Clock, PlayCircle, Award, Search } from 'lucide-react';
 import { useAcademyModules, useAcademyProgress } from '../../hooks/useAcademy';
 import { useAuth } from '../../context/AuthContext';
 
@@ -66,18 +66,7 @@ const AcademyDashboard: FC<AcademyDashboardProps> = ({ onModuleClick }) => {
         }
     };
 
-    const getStatusColor = (status: ModuleStatus): string => {
-        switch (status) {
-            case 'completed':
-                return 'border-emerald-500 bg-emerald-50';
-            case 'in_progress':
-                return 'border-blue-500 bg-blue-50';
-            case 'locked':
-                return 'border-slate-200 bg-slate-50 opacity-60';
-            default:
-                return 'border-blue-500 bg-blue-50';
-        }
-    };
+
 
     // Filtered and searched modules
     const filteredModules = useMemo(() => {

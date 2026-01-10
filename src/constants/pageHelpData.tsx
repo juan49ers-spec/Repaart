@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Users, GraduationCap, UserCircle, MessageSquare, BookOpen, Clock, TrendingUp, Settings } from 'lucide-react';
+import { LayoutDashboard, GraduationCap, UserCircle, MessageSquare, BookOpen, Clock, Settings } from 'lucide-react';
 
 export interface HelpItem {
     term: string;

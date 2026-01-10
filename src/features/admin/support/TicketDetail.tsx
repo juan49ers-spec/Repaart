@@ -16,6 +16,7 @@ interface SupportContextDetailValue {
     setIsInternal: (val: boolean) => void;
     handleReply: () => void;
     isSendingReply: boolean;
+    handleDeleteTicket: (id: string) => void;
     messagesEndRef: React.RefObject<HTMLDivElement>;
 }
 
@@ -34,13 +35,15 @@ const MessageItem = memo(({ msg, email }: MessageItemProps) => {
 
     if (isInternal) {
         return (
-            <div className="flex justify-center my-6">
-                <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-400 p-4 rounded-2xl max-w-lg text-sm flex items-start gap-3 shadow-sm transition-colors">
-                    <Lock className="w-4 h-4 mt-0.5 shrink-0" />
+            <div className="flex justify-center my-8">
+                <div className="bg-amber-50/50 dark:bg-amber-500/5 border border-amber-200/50 dark:border-amber-500/10 text-amber-800 dark:text-amber-400 p-5 rounded-3xl max-w-xl text-sm flex items-start gap-4 shadow-sm transition-all animate-in fade-in zoom-in-95 duration-500 underline-offset-4 decoration-amber-500/30">
+                    <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center shrink-0">
+                        <Lock className="w-4 h-4" />
+                    </div>
                     <div>
-                        <p className="font-black text-[10px] uppercase mb-1.5 tracking-widest opacity-70">Nota Interna (Sólo Admin)</p>
+                        <p className="font-semibold text-[10px] uppercase mb-2 tracking-widest opacity-60">Nota Interna (Privado)</p>
                         <div
-                            className='prose prose-sm prose-amber dark:prose-invert'
+                            className='prose prose-sm prose-amber dark:prose-invert font-medium leading-relaxed'
                             dangerouslySetInnerHTML={{ __html: msg.text }}
                         />
                     </div>
@@ -50,21 +53,21 @@ const MessageItem = memo(({ msg, email }: MessageItemProps) => {
     }
 
     return (
-        <div className={`flex ${senderIsAdmin ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-            <div className={`p-5 rounded-2xl max-w-[85%] shadow-sm transition-all ${senderIsAdmin
-                ? 'bg-slate-900 dark:bg-indigo-600 text-white rounded-tr-sm shadow-indigo-500/10'
-                : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-tl-sm'
+        <div className={`flex ${senderIsAdmin ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-400`}>
+            <div className={`p-6 rounded-3xl max-w-[85%] lg:max-w-[75%] shadow-sm transition-all ${senderIsAdmin
+                ? 'bg-slate-900 dark:bg-indigo-600 text-white rounded-tr-none shadow-indigo-500/10'
+                : 'bg-white dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50 text-slate-700 dark:text-slate-200 rounded-tl-none'
                 }`}>
-                <div className="flex items-center gap-2 mb-2">
-                    <span className={`text-[10px] font-black uppercase tracking-wider ${senderIsAdmin ? 'text-slate-400 dark:text-indigo-200' : 'text-indigo-600 dark:text-indigo-400'}`}>
+                <div className="flex items-center gap-3 mb-2.5">
+                    <span className={`text-[10px] font-semibold uppercase tracking-wider ${senderIsAdmin ? 'text-indigo-200/70' : 'text-indigo-600 dark:text-indigo-400'}`}>
                         {senderIsAdmin ? 'Soporte HQ' : email}
                     </span>
-                    <span className={`text-[10px] font-bold ${senderIsAdmin ? 'text-slate-500 dark:text-indigo-300/50' : 'text-slate-400 dark:text-slate-500'}`}>
+                    <span className={`text-[10px] font-medium opacity-50 ${senderIsAdmin ? 'text-indigo-100' : 'text-slate-500'}`}>
                         {formatDate(msg.createdAt)}
                     </span>
                 </div>
                 <div
-                    className={`prose prose-sm ${senderIsAdmin ? 'prose-invert' : 'prose-slate dark:prose-invert font-medium text-slate-700 dark:text-slate-200'}`}
+                    className={`prose prose-sm leading-relaxed ${senderIsAdmin ? 'prose-invert' : 'prose-slate dark:prose-invert font-medium text-slate-700 dark:text-slate-200'}`}
                     dangerouslySetInnerHTML={{ __html: msg.text }}
                 />
             </div>
@@ -86,6 +89,7 @@ interface TicketDetailInnerProps {
     setIsInternal: (val: boolean) => void;
     onReply: () => void;
     isSendingReply: boolean;
+    onDelete: (id: string) => void;
     messagesEndRef: React.RefObject<HTMLDivElement>;
 }
 
@@ -99,21 +103,24 @@ const TicketDetailInner = memo(({
     setIsInternal,
     onReply,
     isSendingReply,
+    onDelete,
     messagesEndRef
 }: TicketDetailInnerProps) => {
+    const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
+    const [isDeleting, setIsDeleting] = React.useState(false);
 
     if (!selectedTicket) {
         return (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col h-full relative transition-colors">
-                <div className="h-full flex flex-col items-center justify-center text-slate-300 dark:text-slate-700 bg-slate-50/30 dark:bg-slate-950/20">
-                    <div className="w-24 h-24 bg-white dark:bg-slate-800 rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-slate-200/50 dark:shadow-none transition-transform hover:scale-110 duration-500">
+            <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl shadow-lg border border-slate-200/50 dark:border-slate-800/50 overflow-hidden flex flex-col h-full relative transition-all">
+                <div className="h-full flex flex-col items-center justify-center text-slate-300 dark:text-slate-700 bg-slate-50/20 dark:bg-slate-950/20">
+                    <div className="w-24 h-24 bg-white dark:bg-slate-800 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl shadow-indigo-500/10 dark:shadow-none transition-transform hover:scale-110 duration-700">
                         <MessageSquare className="w-10 h-10 text-indigo-500 dark:text-indigo-400" />
                     </div>
-                    <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Atención al Cliente</p>
-                    <p className="text-sm font-bold text-slate-400 dark:text-slate-500 mt-2">Selecciona un caso para comenzar la gestión</p>
-                    <div className="mt-8 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center gap-3 shadow-sm">
-                        <kbd className="font-black bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded textxs text-slate-600 dark:text-slate-400 transition-colors">⌘K</kbd>
-                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Búsqueda Rápida</span>
+                    <p className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">Atención al Cliente</p>
+                    <p className="text-sm font-medium text-slate-400 dark:text-slate-500 mt-2.5">Selecciona un caso para comenzar la gestión</p>
+                    <div className="mt-10 px-5 py-2.5 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl flex items-center gap-4 shadow-sm backdrop-blur-sm">
+                        <kbd className="font-bold bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-lg text-[10px] text-slate-600 dark:text-slate-400 transition-colors">⌘K</kbd>
+                        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-wide uppercase">Búsqueda Rápida</span>
                     </div>
                 </div>
             </div>
@@ -122,71 +129,116 @@ const TicketDetailInner = memo(({
 
     const ticketStatus = getStatusConfig(selectedTicket.status);
 
+    const handleDelete = async () => {
+        setIsDeleting(true);
+        try {
+            await onDelete(selectedTicket.id);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsDeleting(false);
+            setShowDeleteConfirm(false);
+        }
+    };
+
     return (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col h-full relative transition-colors">
+        <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl shadow-xl border border-slate-200/50 dark:border-slate-800/50 overflow-hidden flex flex-col h-full relative transition-all">
             <div className="h-full flex flex-col animate-in fade-in slide-in-from-right-4 duration-500">
                 {/* Detail Header */}
-                <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex justify-between items-start">
+                <div className="p-8 border-b border-slate-100/50 dark:border-slate-800/50 bg-white/40 dark:bg-slate-900/40 flex justify-between items-start">
                     <div className="max-w-xl">
-                        <div className="flex items-center gap-3 mb-3">
-                            <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${ticketStatus.bg} ${ticketStatus.text} ${ticketStatus.border} dark:bg-opacity-20 transition-colors`}>
+                        <div className="flex items-center gap-4 mb-4">
+                            <span className={`px-2.5 py-1 rounded-xl text-[10px] font-semibold uppercase tracking-wider border ${ticketStatus.bg} ${ticketStatus.text} ${ticketStatus.border} dark:bg-opacity-20 transition-all`}>
                                 {ticketStatus.label}
                             </span>
-                            <span className="text-slate-300 dark:text-slate-700 font-bold">•</span>
-                            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest">ID: {selectedTicket.id.slice(0, 8)}</span>
+                            <span className="text-slate-200 dark:text-slate-700 font-bold">•</span>
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-[0.2em]">Ref: {selectedTicket.id.slice(0, 8)}</span>
                         </div>
-                        <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2 leading-tight">{selectedTicket.subject}</h2>
-                        <div className="flex items-center gap-6 text-xs text-slate-500 dark:text-slate-400 font-bold">
-                            <span className="flex items-center gap-2 group transition-colors hover:text-indigo-500">
+                        <h2 className="text-3xl font-semibold text-slate-900 dark:text-white mb-3 leading-tight tracking-tight">{selectedTicket.subject}</h2>
+                        <div className="flex items-center gap-6 text-xs text-slate-500 dark:text-slate-400 font-medium tracking-wide">
+                            <span className="flex items-center gap-2.5 group transition-colors hover:text-indigo-500">
                                 <User className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-indigo-400 transition-colors" />
-                                {selectedTicket.email}
+                                <span className="uppercase">{selectedTicket.email}</span>
                             </span>
-                            <span className="flex items-center gap-2">
+                            <span className="flex items-center gap-2.5">
                                 <Clock className="w-4 h-4 text-slate-300 dark:text-slate-600" />
-                                {formatDate(selectedTicket.createdAt)}
+                                <span>{formatDate(selectedTicket.createdAt)}</span>
                             </span>
                         </div>
                     </div>
 
-                    {/* Status Selector */}
-                    <div className="flex flex-col items-end gap-2">
-                        <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Actualizar Estado</label>
-                        <select
-                            value={selectedTicket.status || 'open'}
-                            onChange={(e) => onStatusChange(selectedTicket.id, e.target.value)}
-                            className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs font-black text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 cursor-pointer transition-all hover:bg-white dark:hover:bg-slate-900"
-                        >
-                            {Object.values(TICKET_STATUSES).map(s => (
-                                <option key={s.id} value={s.id}>{s.label}</option>
-                            ))}
-                        </select>
+                    {/* Actions Header */}
+                    <div className="flex flex-col items-end gap-4">
+                        <div className="flex items-center gap-3">
+                            {!showDeleteConfirm ? (
+                                <button
+                                    onClick={() => setShowDeleteConfirm(true)}
+                                    className="p-2.5 bg-rose-50 dark:bg-rose-500/10 text-rose-500 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 rounded-xl transition-all active:scale-95"
+                                    title="Eliminar Ticket"
+                                >
+                                    <Download className="w-4 h-4 rotate-180" />
+                                </button>
+                            ) : (
+                                <div className="flex items-center gap-2 animate-in slide-in-from-right-2 duration-300">
+                                    <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-widest mr-1">¿Confirmar borrado?</span>
+                                    <button
+                                        onClick={handleDelete}
+                                        disabled={isDeleting}
+                                        className="px-3 py-1.5 bg-rose-600 text-white rounded-lg text-[10px] font-bold uppercase hover:bg-rose-700 transition-all disabled:opacity-50"
+                                    >
+                                        {isDeleting ? '...' : 'SÍ'}
+                                    </button>
+                                    <button
+                                        onClick={() => setShowDeleteConfirm(false)}
+                                        className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg text-[10px] font-bold uppercase hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+                                    >
+                                        NO
+                                    </button>
+                                </div>
+                            )}
+
+                            <div className="w-px h-8 bg-slate-100 dark:bg-slate-800 mx-1" />
+
+                            <div className="flex flex-col items-end">
+                                <select
+                                    value={selectedTicket.status || 'open'}
+                                    onChange={(e) => onStatusChange(selectedTicket.id, e.target.value)}
+                                    aria-label="Cambiar estado del ticket"
+                                    className="bg-white/50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-3 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 cursor-pointer transition-all hover:bg-white dark:hover:bg-slate-900 shadow-sm appearance-none min-w-[160px]"
+                                >
+                                    {Object.values(TICKET_STATUSES).map(s => (
+                                        <option key={s.id} value={s.id}>{s.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 {/* Content Scrollable - CHAT MODE */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-slate-50/30 dark:bg-slate-950/20">
+                <div className="flex-1 overflow-y-auto p-8 space-y-10 bg-slate-50/20 dark:bg-slate-950/20 scroll-smooth">
                     {/* Original Ticket Info Block */}
-                    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden transition-all group hover:shadow-md">
-                        <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-500" />
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center transition-colors">
-                                <User className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                    <div className="bg-white/80 dark:bg-slate-900/80 p-8 rounded-3xl border border-slate-100/50 dark:border-slate-800/50 shadow-sm relative overflow-hidden transition-all group hover:shadow-lg backdrop-blur-sm">
+                        <div className="absolute top-0 left-0 w-2 h-full bg-indigo-500/80" />
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center transition-colors shadow-inner">
+                                <User className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
                             </div>
                             <div>
-                                <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">Consulta Inicial</p>
+                                <p className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-widest mb-1">Descripción del Problema</p>
                                 {/* @ts-ignore - Firestore timestamp handling */}
-                                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Enviado hace {selectedTicket.createdAt?.toDate ? Math.floor((new Date().getTime() - selectedTicket.createdAt.toDate().getTime()) / (1000 * 60 * 60)) : 0} horas</p>
+                                <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-tighter">Iniciado {selectedTicket.createdAt?.toDate ? formatDate(selectedTicket.createdAt) : 'hace poco'}</p>
                             </div>
                         </div>
-                        <div className="pl-12">
-                            <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-medium leading-relaxed text-sm">
+                        <div className="pl-16">
+                            <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-medium leading-relaxed text-[15px]">
                                 {selectedTicket.message}
                             </p>
 
                             {selectedTicket.attachmentUrl && (
-                                <div className="mt-6 pt-5 border-t border-slate-50 dark:border-slate-800">
-                                    <a href={selectedTicket.attachmentUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2.5 px-4 py-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-sm">
-                                        <Download className="w-4 h-4" /> Ver Archivo Adjunto
+                                <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800/50">
+                                    <a href={selectedTicket.attachmentUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-3 px-5 py-3 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 rounded-2xl text-[10px] font-semibold uppercase tracking-widest transition-all shadow-sm active:scale-95">
+                                        <Download className="w-4 h-4" /> Ver Material Adjunto
                                     </a>
                                 </div>
                             )}
@@ -194,7 +246,7 @@ const TicketDetailInner = memo(({
                     </div>
 
                     {/* Messages Feed */}
-                    <div className="space-y-6">
+                    <div className="space-y-8 pb-4">
                         {messages.map(msg => (
                             <MessageItem key={msg.id} msg={msg} email={selectedTicket.email} />
                         ))}
@@ -204,35 +256,34 @@ const TicketDetailInner = memo(({
 
                 {/* Reply Box */}
                 {selectedTicket.status !== 'resolved' && (
-                    <div className="p-5 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 relative z-20">
+                    <div className="p-8 border-t border-slate-200/50 dark:border-slate-800/50 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl relative z-20">
                         <div className="max-w-4xl mx-auto relative group">
-                            <div className={`rounded-2xl border-2 transition-all duration-300 shadow-sm overflow-hidden focus-within:shadow-xl focus-within:shadow-indigo-500/5 ${isInternal
-                                ? "bg-amber-50/30 dark:bg-amber-500/5 border-amber-200 dark:border-amber-500/30 focus-within:border-amber-400"
-                                : "bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus-within:border-indigo-500 dark:focus-within:border-indigo-400"}`}>
+                            <div className={`rounded-3xl border-2 transition-all duration-300 shadow-sm overflow-hidden focus-within:shadow-2xl focus-within:shadow-indigo-500/10 ${isInternal
+                                ? "bg-amber-50/50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30 focus-within:border-amber-400"
+                                : "bg-white dark:bg-slate-950 border-slate-200/50 dark:border-white/5 focus-within:border-indigo-500 dark:focus-within:border-indigo-400"}`}>
                                 <textarea
                                     value={reply}
                                     onChange={(e) => setReply(e.target.value)}
                                     placeholder={isInternal ? "Escribe una nota interna privada (sólo visible para el staff)..." : "Redacta tu respuesta al cliente..."}
-                                    className={`w-full min-h-[140px] p-5 text-sm font-medium focus:outline-none bg-transparent text-slate-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 resize-none transition-colors`}
-                                    style={{ fontFamily: 'inherit' }}
+                                    className={`w-full min-h-[160px] p-6 text-sm font-medium focus:outline-none bg-transparent text-slate-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 resize-none transition-colors`}
                                 />
-                                <div className="flex items-center justify-between p-3 bg-white/50 dark:bg-black/20 border-t border-inherit">
+                                <div className="flex items-center justify-between px-6 py-4 bg-slate-50/50 dark:bg-black/20 border-t border-inherit/50">
                                     <button
                                         type="button"
                                         onClick={() => setIsInternal(!isInternal)}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest ${isInternal
+                                        className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl transition-all font-semibold text-[10px] uppercase tracking-[0.15em] ${isInternal
                                             ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
-                                            : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-700'
+                                            : 'bg-slate-200/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 hover:bg-slate-300/50 dark:hover:bg-slate-700'
                                             }`}
                                     >
-                                        <Lock className="w-3.5 h-3.5" />
+                                        <Lock size={14} className={isInternal ? 'animate-pulse' : ''} />
                                         <span>{isInternal ? 'Nota Interna' : 'Hacer Interna'}</span>
                                     </button>
 
                                     <button
                                         onClick={onReply}
                                         disabled={isSendingReply || !reply.trim()}
-                                        className={`flex items-center justify-center gap-2 px-8 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-lg ${isSendingReply || !reply.trim()
+                                        className={`flex items-center justify-center gap-3 px-10 py-3 rounded-2xl font-semibold text-[10px] uppercase tracking-widest transition-all shadow-xl ${isSendingReply || !reply.trim()
                                             ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none'
                                             : `text-white hover:scale-[1.02] active:scale-95 ${isInternal ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-500/20' : 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-500/20'}`
                                             }`}
@@ -265,6 +316,7 @@ const TicketDetail = () => {
         setIsInternal,
         handleReply,
         isSendingReply,
+        handleDeleteTicket,
         messagesEndRef
     } = useSupport() as unknown as SupportContextDetailValue;
 
@@ -279,6 +331,7 @@ const TicketDetail = () => {
             setIsInternal={setIsInternal}
             onReply={handleReply}
             isSendingReply={isSendingReply}
+            onDelete={handleDeleteTicket}
             messagesEndRef={messagesEndRef}
         />
     );

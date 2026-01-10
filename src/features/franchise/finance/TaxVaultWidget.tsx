@@ -13,8 +13,8 @@ interface TaxVaultWidgetProps {
     minimal?: boolean;
 }
 
-const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, minimal = false }) => {
-    const { ivaAPagar, irpfPago, totalReserve, ivaRepercutido, ivaSoportado } = taxes;
+const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes }) => {
+    const { ivaAPagar, irpfPago, totalReserve, ivaRepercutido } = taxes;
 
     // Prevenir divisiones por cero
     const safeTotal = (ivaRepercutido + irpfPago) || 1;

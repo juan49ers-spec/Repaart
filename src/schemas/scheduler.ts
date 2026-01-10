@@ -43,7 +43,7 @@ export const WeekDataSchema = z.object({
     startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format YYYY-MM-DD"),
     endDate: z.string().optional(),
     status: z.enum(['draft', 'published', 'completed']).default('draft'),
-    metrics: WeekMetricsSchema.optional().default({}),
+    metrics: WeekMetricsSchema.optional().default({ totalHours: 0, activeRiders: 0, motosInUse: 0 }),
     shifts: z.array(ShiftSchema).default([]),
 });
 

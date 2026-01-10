@@ -13,6 +13,7 @@ const FleetManager = lazy(() => import('../operations/FleetManager'));
 const FranchiseProfile = lazy(() => import('./settings/FranchiseProfile'));
 const FranchiseDashboard = lazy(() => import('../franchise/FranchiseDashboard'));
 
+
 // =====================================================
 // TYPES & INTERFACES
 // =====================================================
@@ -29,7 +30,7 @@ interface FranchiseData {
     [key: string]: unknown;
 }
 
-type TabId = 'dashboard' | 'operations' | 'team' | 'fleet' | 'academy' | 'finance' | 'settings';
+type TabId = 'dashboard' | 'operations' | 'team' | 'fleet' | 'academy' | 'finance' | 'settings' | 'kanban';
 
 interface TabConfig {
     id: TabId;
@@ -62,6 +63,7 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
         { id: 'fleet', label: 'Flota', icon: Bike },
         { id: 'academy', label: 'Academia', icon: GraduationCap },
         { id: 'finance', label: 'Finanzas', icon: Wallet },
+
         { id: 'settings', label: 'Configuración', icon: Settings },
     ];
 
@@ -173,6 +175,8 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
                         <FranchiseProfile franchiseId={franchiseData?.id || franchiseId} readOnly={false} />
                     </Suspense>
                 )}
+
+
 
                 {activeTab === 'dashboard' && (
                     <Suspense fallback={<div className="p-12 text-center text-slate-400">Cargando dashboard...</div>}>

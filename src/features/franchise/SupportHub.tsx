@@ -6,7 +6,7 @@ import NewTicketForm from './support/NewTicketForm';
 
 import UserProfileModal from '../user/UserProfileModal'; // Import modal
 import PremiumServicesPanel from './support/PremiumServicesPanel';
-import { User, LogOut, Send, Activity, Video, Phone, HelpCircle, BadgePercent, Ticket } from 'lucide-react'; // Import icons
+import { User, LogOut, Activity, HelpCircle, BadgePercent, Ticket } from 'lucide-react'; // Import icons
 
 const SupportHub: React.FC = () => {
     const { user, logout } = useAuth(); // Get logout

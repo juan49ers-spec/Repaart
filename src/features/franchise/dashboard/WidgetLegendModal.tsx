@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, HelpCircle, TrendingUp, DollarSign, PiggyBank, Clock, Target, ChevronRight, Info, CheckCircle } from 'lucide-react';
+import { X, HelpCircle, TrendingUp, DollarSign, PiggyBank, Clock, Target, ChevronRight, Info } from 'lucide-react';
 
 interface WidgetLegendModalProps {
     isOpen: boolean;

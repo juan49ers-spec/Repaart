@@ -1,159 +1,116 @@
-import React, { Suspense } from 'react';
-import {
-    DollarSign,
-    Wallet,
-    Store,
-    Activity,
-    TrendingUp,
-    AlertTriangle,
-    Calendar
-} from 'lucide-react';
-import BentoCard from '../../../ui/data-display/BentoCard';
+import React from 'react';
+import { AlertTriangle, ArrowRight } from 'lucide-react';
 import DashboardSkeleton from '../../../ui/layout/DashboardSkeleton';
 import EmptyState from '../../../ui/feedback/EmptyState';
-import { useAdminDashboardData } from '../../../hooks/useAdminDashboardData';
-import { useIntelligence } from '../../../hooks/useIntelligence';
-import PendingTasksWidgetSimple from '../dashboard/widgets/PendingTasksWidget';
-import SmartInsightsWidget from '../../franchise/finance/SmartInsightsWidget';
+import { useAdminControl } from '../../../hooks/useAdminControl';
 
-// Lazy load heavy charts
-const TrendsSection = React.lazy(() => import('../dashboard/TrendsSection'));
+// Control Widgets
+import ControlNetworkWidget from '../dashboard/widgets/ControlNetworkWidget';
+import ControlPendingActionsWidget from '../dashboard/widgets/ControlPendingActionsWidget';
+import ControlEventsWidget from '../dashboard/widgets/ControlEventsWidget';
+import ControlEarningsWidget from '../dashboard/widgets/ControlEarningsWidget';
 
 interface OverviewTabProps {
     onNavigate: (view: string) => void;
     selectedMonth: string;
 }
 
-const OverviewTab: React.FC<OverviewTabProps> = ({ onNavigate, selectedMonth }) => {
-    const { stats, trendData, franchises, loading, error } = useAdminDashboardData(selectedMonth);
-
-    // Intelligence Hooks (Health Score)
-    const { alerts } = useIntelligence({
-        tickets: [],
-        users: [],
-        dashboardData: stats
-    });
+const OverviewTab: React.FC<OverviewTabProps> = ({ onNavigate }) => {
+    const { data, loading, error } = useAdminControl();
+    // We still keep the original dashboard data hook if we need trendData for the lower section
+    // but for the main "Control Center" row, we use useAdminControl.
 
     if (loading) return <DashboardSkeleton />;
     if (error) return <EmptyState title="Error de conexión" description={error || 'Unknown error'} icon={AlertTriangle} />;
 
-    const safeStats = stats || { totalRevenue: 0, totalProfit: 0, margin: 0, franchiseCount: 0 };
-
-    // Get top 3 active franchises for display
-    const activeFranchises = franchises?.filter(f => f.status === 'active' || f.status === 'warning').slice(0, 3) || [];
-
     return (
-        <div className="space-y-6">
-            {/* Header / Welcome (Optional, or handled by Layout) */}
+        <div className="space-y-8 pb-12">
 
-            {/* BENTO GRID */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[minmax(180px,auto)]">
+            {/* CONTROL CENTER AREA */}
+            <section>
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="h-6 w-1 bg-indigo-600 rounded-full" />
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-wider">Control Hub</h2>
+                </div>
 
-                {/* 1. Facturación (Primary KPI) */}
-                <BentoCard
-                    title="Facturación Red"
-                    subtitle="Mes actual"
-                    value={`${safeStats.totalRevenue.toLocaleString()}€`}
-                    icon={DollarSign}
-                    variant="primary"
-                    trend="up"
-                    trendValue="+12.5%" // Mocked for design
-                    onClick={() => onNavigate('finance')}
-                    description="Ingresos brutos agregados de todas las franquicias."
-                />
-
-                {/* 2. Beneficio Neto */}
-                <BentoCard
-                    title="Beneficio Neto"
-                    subtitle="Mes actual"
-                    value={`${safeStats.totalProfit.toLocaleString()}€`}
-                    icon={Wallet}
-                    variant="success"
-                    trend="up"
-                    trendValue={`${safeStats.margin.toFixed(1)}% margen`}
-                    onClick={() => onNavigate('finance')}
-                />
-
-                {/* 3. Franquicias Activas */}
-                <BentoCard
-                    title="Red de Franquicias"
-                    subtitle="Operativas"
-                    value={safeStats.franchiseCount}
-                    icon={Store}
-                    variant="purple"
-                    trend="neutral"
-                    trendValue="En funcionamiento"
-                    onClick={() => onNavigate('franchises')}
-                >
-                    <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 space-y-2">
-                        {activeFranchises.length > 0 ? activeFranchises.map((f, i) => (
-                            <div key={i} className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-white/5 px-2 rounded-lg transition-colors cursor-pointer" onClick={(e) => { e.stopPropagation(); onNavigate('franchises'); }}>
-                                <span className="font-medium text-slate-700 dark:text-slate-300">{f.name}</span>
-                                <span className={f.status === 'active' ? "text-emerald-500 dark:text-emerald-400" : "text-amber-500 dark:text-amber-400"}>●</span>
-                            </div>
-                        )) : (
-                            <div className="text-center py-2 text-slate-500">No hay franquicias activas</div>
-                        )}
-                        {franchises && franchises.length > 3 && (
-                            <div className="text-center pt-1 text-[10px] text-indigo-400 font-bold">
-                                +{franchises.length - 3} más...
-                            </div>
-                        )}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {/* Widget 1: Network Health */}
+                    <div className="h-[420px]">
+                        <ControlNetworkWidget data={data.network} loading={loading} />
                     </div>
-                </BentoCard>
 
-                {/* 4. Tareas Pendientes (Moved to Top Row for visibility) */}
-                <BentoCard
-                    colSpan={1}
-                    title="Tareas Pendientes"
-                    subtitle="Acciones"
-                    icon={Calendar}
-                    variant="default"
-                    onClick={() => onNavigate('tasks')}
-                >
-                    <div className="mt-3">
-                        <PendingTasksWidgetSimple limit={2} compact />
+                    {/* Widget 2: Pending Actions */}
+                    <div className="h-[420px]">
+                        <ControlPendingActionsWidget data={data.pending} loading={loading} />
                     </div>
-                </BentoCard>
 
-                {/* ROW 2 */}
+                    {/* Widget 3: Upcoming Intel/Events */}
+                    <div className="h-[420px]">
+                        <ControlEventsWidget events={data.events} loading={loading} />
+                    </div>
 
-                {/* 5. Financial Trend (Main Graph) */}
-                <BentoCard
-                    colSpan={3}
-                    rowSpan={2}
-                    title="Tendencia Financiera"
-                    subtitle="Últimos 6 meses"
-                    icon={TrendingUp}
-                    className="min-h-[400px]"
-                >
-                    <Suspense fallback={<div className="h-full w-full flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-2 border-slate-600" /></div>}>
-                        <div className="h-full w-full mt-4">
-                            <TrendsSection trendData={trendData || []} />
+                    {/* Widget 4: Administrative Earnings (Royalties) */}
+                    <div className="h-[420px]">
+                        <ControlEarningsWidget data={data.earnings} loading={loading} />
+                    </div>
+                </div>
+            </section>
+
+            {/* SECONDARY INSIGHTS (Optional Bottom Row) */}
+            <section className="pt-4 border-t border-slate-200 dark:border-slate-800">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="col-span-3 bg-gradient-to-br from-indigo-900 to-slate-900 rounded-3xl p-10 text-white shadow-2xl shadow-indigo-900/40 flex flex-col lg:flex-row justify-between items-center overflow-hidden relative border border-white/10">
+                        {/* Aesthetic Element */}
+                        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/20 blur-[150px] rounded-full -mr-32 -mt-32 pointer-events-none" />
+                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 blur-[100px] rounded-full -ml-20 -mb-20 pointer-events-none" />
+
+                        <div className="relative z-10 max-w-2xl">
+                            <h3 className="text-3xl font-bold uppercase tracking-tight mb-4 flex items-center gap-3">
+                                <span className="p-2 bg-white/10 rounded-xl backdrop-blur-md border border-white/10">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
+                                </span>
+                                Visión Estratégica & Tendencias
+                            </h3>
+                            <p className="text-indigo-100/80 text-lg font-medium leading-relaxed">
+                                El Centro de Control unifica la operativa de toda la red, supervisando el crecimiento de los royalties, la facturación global y las tendencias de mercado a largo plazo.
+                            </p>
+
+                            <div className="mt-8 flex flex-wrap gap-4">
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-300 mb-1">Facturación Global (Red)</span>
+                                    <span className="text-4xl font-bold tracking-tight tabular-nums text-white">
+                                        {data.earnings.totalNetworkRevenue.toLocaleString()}€
+                                    </span>
+                                </div>
+                                <div className="w-px bg-white/10 mx-4 h-12 hidden lg:block" />
+                                <div className="flex flex-col justify-center">
+                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-300 mb-1">Estado de Red</span>
+                                    <div className="flex items-center gap-2 text-emerald-400 font-bold">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                        Operativo - Crecimiento Sostenido
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </Suspense>
-                </BentoCard>
 
-                {/* 6. Smart Insights (Replaces Quick Actions - Taking Vertical Sidebar Slot) */}
-                <BentoCard
-                    colSpan={1}
-                    rowSpan={2}
-                    title="Smart Insights"
-                    subtitle="Analista AI"
-                    icon={Activity}
-                    className="p-0 border-0 bg-transparent overflow-visible"
-                >
-                    <div className="-m-4 h-[calc(100%+2rem)]">
-                        <SmartInsightsWidget
-                            mode="admin"
-                            stats={stats}
-                            trendData={trendData || []}
-                            alerts={alerts}
-                        />
+                        <div className="mt-8 lg:mt-0 relative z-10 flex flex-col gap-3 min-w-[300px]">
+                            <button
+                                onClick={() => onNavigate('finance')}
+                                className="bg-white text-indigo-950 w-full py-4 px-8 rounded-2xl font-bold uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-black/20 flex items-center justify-center gap-2 group"
+                            >
+                                Gestionar Finanzas Globales
+                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                            <button
+                                onClick={() => onNavigate('analytics')}
+                                className="bg-indigo-500/10 text-indigo-200 border border-indigo-500/30 w-full py-4 px-8 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-indigo-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                            >
+                                Ver Reportes de Tendencia
+                            </button>
+                        </div>
                     </div>
-                </BentoCard>
-
-            </div>
+                </div>
+            </section>
         </div>
     );
 };

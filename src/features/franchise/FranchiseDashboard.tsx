@@ -88,7 +88,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
 
     // --- METRICS CALCULATION ---
     const totalExpenses = report?.totalExpenses || 0;
-    const profit = (revenue || 0) - totalExpenses;
+
 
 
     // Cost Per Hour

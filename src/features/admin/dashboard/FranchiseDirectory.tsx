@@ -71,8 +71,8 @@ const FranchiseDirectory: FC<FranchiseDirectoryProps> = ({ franchises, onSelectF
                                             <span className="inline-flex w-3 h-3 rounded-full bg-rose-500 shadow-sm border border-white ring-2 ring-rose-100" />
                                         )}
                                     </td>
-                                    <td className="px-6 py-4 text-right text-slate-600 font-medium font-mono">{formatMoney(f.metrics.revenue, 0)}€</td>
-                                    <td className={`px-6 py-4 text-right font-bold font-mono ${f.metrics.profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    <td className="px-6 py-4 text-right text-slate-600 font-bold uppercase tracking-wider">{formatMoney(f.metrics.revenue, 0)}€</td>
+                                    <td className={`px-6 py-4 text-right font-black ${f.metrics.profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                                         {formatMoney(f.metrics.profit, 0)}€
                                     </td>
                                     <td className="px-6 py-4 text-right">
@@ -121,11 +121,11 @@ const FranchiseDirectory: FC<FranchiseDirectoryProps> = ({ franchises, onSelectF
                         <div className="grid grid-cols-2 gap-4 border-t border-blue-50 pt-3">
                             <div>
                                 <p className="text-[10px] text-slate-400 uppercase font-bold">Ingresos</p>
-                                <p className="font-mono font-bold text-blue-900">{formatMoney(f.metrics.revenue, 0)}€</p>
+                                <p className="font-black text-blue-900">{formatMoney(f.metrics.revenue, 0)}€</p>
                             </div>
                             <div className="text-right">
                                 <p className="text-[10px] text-slate-400 uppercase font-bold">Beneficio</p>
-                                <p className={`font-mono font-bold ${f.metrics.profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                <p className={`font-black ${f.metrics.profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                                     {formatMoney(f.metrics.profit, 0)}€
                                 </p>
                             </div>

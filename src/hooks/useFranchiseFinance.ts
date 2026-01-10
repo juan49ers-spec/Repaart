@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { financeService } from '../services/financeService';
-import { calculateMonthlyRevenue, calculateExpenses, analyzeFinancialHealth, DEFAULT_MONTH_DATA } from '../lib/finance';
+import { calculateMonthlyRevenue, calculateExpenses, analyzeFinancialHealth, DEFAULT_MONTH_DATA, type MonthlyData, type FinancialReport, type FinancialAnalysis } from '../lib/finance';
 import { useAuth } from '../context/AuthContext';
 import { logAction, AUDIT_ACTIONS } from '../lib/audit';
 
@@ -10,7 +10,28 @@ interface FranchiseFinanceParams {
     tariffs?: any;
 }
 
-export const useFranchiseFinance = ({ franchiseId, month, tariffs }: FranchiseFinanceParams) => {
+export interface FranchiseFinanceHook {
+    rawData: MonthlyData;
+    trendData: any[]; // Specific Trend type could be added later
+    operations: {
+        totalOperationalHours: number;
+        totalShiftsCount: number;
+    };
+    accounting: {
+        revenue: number;
+        orders: number;
+        report: FinancialReport;
+    };
+    analysis: FinancialAnalysis;
+    loading: boolean;
+    isFetching: boolean;
+    error: Error | null;
+    updateFinance: (data: Partial<MonthlyData>) => Promise<void>;
+    isSaving: boolean;
+    refetch: () => void;
+}
+
+export const useFranchiseFinance = ({ franchiseId, month, tariffs }: FranchiseFinanceParams): FranchiseFinanceHook => {
     const { user } = useAuth();
     const queryClient = useQueryClient();
     const queryKey = ['franchise-finance', franchiseId, month];
@@ -36,7 +57,7 @@ export const useFranchiseFinance = ({ franchiseId, month, tariffs }: FranchiseFi
 
     // 2. CALCULATE DERIVED STATE
     // Combine Accounting & Operational logic
-    const currentData = (rawData || DEFAULT_MONTH_DATA) as any;
+    const currentData = (rawData || DEFAULT_MONTH_DATA) as MonthlyData;
 
     // A. Operational Data (From useFinancialPulse)
     const operations = {
@@ -69,7 +90,7 @@ export const useFranchiseFinance = ({ franchiseId, month, tariffs }: FranchiseFi
 
     // 4. MUTATIONS (Save/Update)
     const saveMutation = useMutation({
-        mutationFn: async (newData: any) => {
+        mutationFn: async (newData: Partial<MonthlyData>) => {
             if (!franchiseId || !month) throw new Error("Missing Context");
             await financeService.updateFinancialData(franchiseId, month, newData);
             if (user) {

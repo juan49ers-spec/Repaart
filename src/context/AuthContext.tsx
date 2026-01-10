@@ -95,7 +95,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     }
 
                     // Calculamos si es admin de una vez por todas
-                    setIsAdmin(finalConfig?.role === 'admin' || currentUser.email === 'hola@repaart.es');
+                    setIsAdmin(finalConfig?.role === 'admin');
 
                     // Guardamos el usuario "dopado" con su rol
                     setUser(enhancedUser);

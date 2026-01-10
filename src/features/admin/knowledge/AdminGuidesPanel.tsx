@@ -163,7 +163,7 @@ const AdminGuidesPanel: React.FC = () => {
             {/* --- HEADER TOOLBAR --- */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 pb-2 shrink-0">
                 <div>
-                    <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Gestión de Guías</h2>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Gestión de Guías</h2>
                     <p className="text-slate-500 text-sm font-medium">Administra los manuales y procedimientos visibles para la franquicia.</p>
                 </div>
 
@@ -186,6 +186,7 @@ const AdminGuidesPanel: React.FC = () => {
                             value={filterCategory}
                             onChange={(e) => setFilterCategory(e.target.value)}
                             title="Filtrar por categoría"
+                            aria-label="Filtrar por categoría"
                             className="appearance-none pl-4 pr-10 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
                         >
                             <option value="all">Todas las Categorías</option>
@@ -243,7 +244,7 @@ const AdminGuidesPanel: React.FC = () => {
                                             <Icon className={`w-6 h-6 ${theme.text}`} />
                                         </div>
                                         {guide.isCritical && (
-                                            <span className="bg-rose-500 text-white text-[9px] font-black px-2 py-1 rounded-full uppercase tracking-wider shadow-sm animate-pulse">
+                                            <span className="bg-rose-500 text-white text-[9px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm animate-pulse">
                                                 Crítico
                                             </span>
                                         )}
@@ -292,7 +293,7 @@ const AdminGuidesPanel: React.FC = () => {
                         <div className="relative">
                             <div className="flex justify-between items-start mb-6">
                                 <div>
-                                    <h3 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                         <Sparkles className="w-6 h-6 text-fuchsia-500" />
                                         Asistente IA
                                     </h3>
@@ -319,7 +320,7 @@ const AdminGuidesPanel: React.FC = () => {
                             <button
                                 onClick={handleAiGenerate}
                                 disabled={isGenerating || !aiPrompt.trim()}
-                                className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100 flex items-center justify-center gap-3 shadow-xl"
+                                className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-bold uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100 flex items-center justify-center gap-3 shadow-xl"
                             >
                                 {isGenerating ? (
                                     <>
@@ -357,7 +358,7 @@ const AdminGuidesPanel: React.FC = () => {
             >
                 {/* Drawer Header */}
                 <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                         {selectedGuide ? 'Editar Guía' : 'Nueva Guía'}
                     </h3>
                     <div className="flex items-center gap-2">
@@ -440,6 +441,7 @@ const AdminGuidesPanel: React.FC = () => {
                                     value={formData.category}
                                     onChange={e => setFormData({ ...formData, category: e.target.value })}
                                     className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold text-sm text-slate-700 dark:text-slate-200"
+                                    aria-label="Categoría"
                                 >
                                     <option value="operativa">Operativa</option>
                                     <option value="tecnico">Técnico</option>
@@ -547,7 +549,7 @@ const AdminGuidesPanel: React.FC = () => {
                     </button>
                     <button
                         onClick={handleSave}
-                        className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black uppercase tracking-widest shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                        className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold uppercase tracking-widest shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-0.5 transition-all flex items-center gap-2"
                     >
                         <Save className="w-4 h-4" />
                         Guardar

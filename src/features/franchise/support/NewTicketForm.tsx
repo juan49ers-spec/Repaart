@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { Send, AlertCircle, HelpCircle, Zap, MapPin, LucideIcon, Plus } from 'lucide-react';
+import { Send, AlertCircle, HelpCircle, Zap, LucideIcon, Plus } from 'lucide-react';
 import { notificationService } from '../../../services/notificationService';
 import { useAuth } from '../../../context/AuthContext';
+import { suggestSupportSolution } from '../../../lib/gemini';
 
 interface NewTicketFormProps {
-    onSubmit?: (data: any) => void; // Optional compatibility
-    onSubjectChange?: (subject: string) => void; // Optional compatibility
-    sending?: boolean; // Optional compatibility
-    success?: boolean; // Optional compatibility
-    setSuccess?: (success: boolean) => void; // Optional compatibility
-    suggestions?: any[]; // Optional
-    file?: File | null; // Optional
-    setFile?: (file: File | null) => void; // Optional
-    uploading?: boolean; // Optional
-    onClose?: () => void; // Main new prop
+    onSubmit?: (data: any) => void;
+    onSubjectChange?: (subject: string) => void;
+    sending?: boolean;
+    success?: boolean;
+    setSuccess?: (success: boolean) => void;
+    suggestions?: any[];
+    file?: File | null;
+    setFile?: (file: File | null) => void;
+    uploading?: boolean;
+    onClose?: () => void;
 }
 
 interface TicketFormData {
@@ -27,7 +28,6 @@ interface TicketFormData {
 
 const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
     const { user } = useAuth();
-    // Capturamos la URL actual al montar el componente
     const [currentPath, setCurrentPath] = useState('');
 
     useEffect(() => {
@@ -41,6 +41,35 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
         priority: 'low'
     });
     const [loading, setLoading] = useState(false);
+    const [suggestion, setSuggestion] = useState<{ text: string, confidence: number } | null>(null);
+
+    // AI AUTO-RESOLUTION
+    useEffect(() => {
+        const timer = setTimeout(async () => {
+            // Updated Logic: Trigger if Subject is meaningful (>4 chars) OR Description is meaningful
+            const hasSubject = formData.subject.length > 4;
+            const hasDesc = formData.description.length > 4;
+
+            if (hasSubject || hasDesc) {
+                // Determine text to analyze
+                const subjectText = hasSubject ? formData.subject : "Consulta General";
+                const descText = hasDesc ? formData.description : formData.subject; // Fallback to subject if desc is empty
+
+                console.log("🤖 Asking Gemini:", subjectText, descText); // Debug log
+
+                const result = await suggestSupportSolution(subjectText, descText);
+                if (result && result.isSolvable) {
+                    setSuggestion({ text: result.suggestion, confidence: result.confidence });
+                } else {
+                    setSuggestion(null);
+                }
+            } else {
+                setSuggestion(null);
+            }
+        }, 1000); // Reduced delay to 1.0s for snappier feel
+
+        return () => clearTimeout(timer);
+    }, [formData.description, formData.subject]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -70,7 +99,7 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
                     message: `Prioridad: ${formData.priority.toUpperCase()}\nCategoría: ${formData.category}\n\n${formData.description.substring(0, 100)}...`,
                     priority: formData.priority === 'high' ? 'high' : 'normal',
                     metadata: {
-                        ticketId: 'unknown', // Ideally we'd get the ID from addDoc ref
+                        ticketId: 'unknown',
                         category: formData.category
                     }
                 }
@@ -91,7 +120,7 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
         colorClass: string;
         activeColor: string;
         borderClass: string;
-    }> = ({ level, label, icon: Icon, colorClass, activeColor, borderClass }) => (
+    }> = ({ level, label, icon: Icon, colorClass, activeColor }) => (
         <div
             onClick={() => setFormData({ ...formData, priority: level })}
             className={`
@@ -107,15 +136,12 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
         </div>
     );
 
-    // ... (imports and interfaces remain same until component starts)
-
     return (
         <div className="h-full flex flex-col bg-gradient-to-br from-slate-50 to-indigo-50/20 dark:bg-slate-950 text-slate-900 dark:text-slate-200 transition-colors relative overflow-hidden">
 
-            {/* Subtle textured background */}
-            <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#6366f1 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+            <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[radial-gradient(#6366f1_1px,transparent_1px)] bg-[length:24px_24px]" />
 
-            {/* Ultra-Compact Header */}
+            {/* Header */}
             <div className="px-5 py-3 border-b border-white/50 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl relative z-10 shrink-0 flex justify-between items-center">
                 <div className="flex items-center gap-2.5">
                     <div className="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-800 flex items-center justify-center shadow-inner">
@@ -145,6 +171,46 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
             <form onSubmit={handleSubmit} className="flex-1 p-5 relative z-10 overflow-hidden flex flex-col min-h-0">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 h-full content-start">
 
+                    {/* AI SUGGESTION BANNER */}
+                    {suggestion && (
+                        <div className="lg:col-span-12 px-1 animate-in fade-in slide-in-from-top-2 duration-500">
+                            <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 rounded-xl p-3 flex gap-3 shadow-sm">
+                                <div className="p-2 bg-white dark:bg-emerald-900 rounded-lg shadow-sm shrink-0 h-fit">
+                                    <Zap className="w-4 h-4 text-emerald-500 animate-pulse" />
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex justify-between items-start">
+                                        <h4 className="text-xs font-bold text-emerald-800 dark:text-emerald-300 mb-1">
+                                            Solución Inteligente Detectada
+                                        </h4>
+                                        <span className="text-[9px] bg-emerald-100 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-200 px-1.5 py-0.5 rounded font-bold">
+                                            {suggestion.confidence}% Confianza
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-emerald-700 dark:text-emerald-400 leading-relaxed font-medium">
+                                        {suggestion.text}
+                                    </p>
+                                    <div className="mt-2 flex gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => onClose ? onClose() : alert("Genial! Ticket evitado.")}
+                                            className="text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-md font-bold transition-colors shadow-sm"
+                                        >
+                                            ¡Funcionó! (Cerrar)
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSuggestion(null)}
+                                            className="text-[10px] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-800/50 px-3 py-1 rounded-md font-bold transition-colors"
+                                        >
+                                            No ayudó
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Row 1: Asunto (Full) */}
                     <div className="lg:col-span-12 space-y-1 shrink-0">
                         <label className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-1 font-mono">Asunto</label>
@@ -165,6 +231,7 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
                             <select
                                 value={formData.category}
                                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                aria-label="Categoría del ticket"
                                 className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 rounded-lg p-2 text-xs font-semibold appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all cursor-pointer hover:bg-white dark:hover:bg-slate-800 shadow-sm"
                             >
                                 <option value="general">General</option>

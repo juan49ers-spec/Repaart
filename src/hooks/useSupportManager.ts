@@ -201,6 +201,57 @@ export const useSupportManager = (currentUser: any) => {
         }
     }, [reply, selectedTicket, currentUser, isInternal]);
 
+    const handleDeleteTicket = useCallback(async (id: string) => {
+        try {
+            await updateDoc(doc(db, "tickets", id), { deleted: true }); // Soft delete first? 
+            // The user said "elimina todos los tickets", usually they mean hard delete in these types of apps.
+            // I'll do a hard delete as it's cleaner for "starting over".
+            await import('firebase/firestore').then(async ({ deleteDoc, writeBatch, getDocs }) => {
+                // Delete messages first
+                const msgsSnap = await getDocs(collection(db, "tickets", id, "messages"));
+                const batch = writeBatch(db);
+                msgsSnap.forEach(mDoc => batch.delete(mDoc.ref));
+                await batch.commit();
+
+                // Delete ticket
+                await deleteDoc(doc(db, "tickets", id));
+            });
+
+            if (currentUser) {
+                logAction(currentUser, AUDIT_ACTIONS.TICKET_UPDATE, { ticketId: id, action: 'deleted' });
+            }
+            if (selectedTicketId === id) setSelectedTicketId(null);
+        } catch (error) {
+            console.error("Delete error:", error);
+            throw new Error("No se pudo eliminar el ticket.");
+        }
+    }, [currentUser, selectedTicketId]);
+
+    const handleClearAllTickets = useCallback(async () => {
+        try {
+            const { getDocs, writeBatch } = await import('firebase/firestore');
+            const snapshot = await getDocs(collection(db, "tickets"));
+            const batch = writeBatch(db);
+
+            for (const tDoc of snapshot.docs) {
+                // Delete messages subcollection for each ticket
+                const msgsSnap = await getDocs(collection(db, "tickets", tDoc.id, "messages"));
+                msgsSnap.forEach(mDoc => batch.delete(mDoc.ref));
+                batch.delete(tDoc.ref);
+            }
+
+            await batch.commit();
+            setSelectedTicketId(null);
+
+            if (currentUser) {
+                logAction(currentUser, AUDIT_ACTIONS.TICKET_UPDATE, { action: 'clear_all' });
+            }
+        } catch (error) {
+            console.error("Clear all error:", error);
+            throw new Error("No se pudo reiniciar el centro de soporte.");
+        }
+    }, [currentUser]);
+
     // --- FILTER & METRICS LOGIC ---
 
     const filteredTickets = useMemo(() => {
@@ -301,6 +352,8 @@ export const useSupportManager = (currentUser: any) => {
         handleToggleRead,
         handleStatusChange,
         handleReply,
+        handleDeleteTicket,
+        handleClearAllTickets,
         exportToCSV,
         messagesEndRef
     };

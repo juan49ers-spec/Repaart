@@ -88,6 +88,7 @@ const MigrationPanel: React.FC = () => {
                             }}
                             className={`relative w-14 h-7 rounded-full transition-colors ${isDryRun ? 'bg-emerald-500' : 'bg-slate-600'
                                 }`}
+                            title={isDryRun ? "Desactivar modo prueba" : "Activar modo prueba"}
                         >
                             <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${isDryRun ? '' : 'translate-x-7'
                                 }`} />
@@ -177,7 +178,7 @@ const MigrationPanel: React.FC = () => {
                                 <p className="text-sm font-bold text-white mb-2">Franchise Mappings:</p>
                                 <div className="space-y-2">
                                     {result.mappings.map((m: any, i: number) => (
-                                        <div key={i} className="text-xs font-mono bg-black/30 rounded p-2">
+                                        <div key={i} className="text-[10px] font-bold uppercase tracking-wider bg-black/30 rounded p-2 text-slate-300">
                                             <span className="text-amber-400">{m.franchiseId}</span>
                                             {' → '}
                                             <span className="text-emerald-400">{m.uid}</span>
@@ -214,9 +215,9 @@ const MigrationPanel: React.FC = () => {
                                 <p className="text-sm font-bold text-rose-300 mb-2">Errors:</p>
                                 <div className="space-y-1">
                                     {result.errors.map((err: string, i: number) => (
-                                        <div key={i} className="text-xs bg-black/30 rounded p-2 text-rose-200">
+                                        <code key={i} className="text-[10px] bg-slate-100 p-1.5 rounded text-slate-600 break-all block max-w-xs font-bold uppercase tracking-widest">
                                             {err}
-                                        </div>
+                                        </code>
                                     ))}
                                 </div>
                             </div>

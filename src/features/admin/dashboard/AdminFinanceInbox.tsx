@@ -157,7 +157,7 @@ const AdminFinanceInbox: React.FC = () => {
 
                         <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-800 mb-6">
                             <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Transacción</p>
-                            <div className="flex justify-between items-center font-mono">
+                            <div className="flex justify-between items-center font-bold uppercase tracking-wider">
                                 <span className="text-slate-800 dark:text-white">{auditModal.record.description}</span>
                                 <span className={auditModal.record.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}>
                                     {Number(auditModal.record.amount).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}

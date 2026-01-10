@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../../lib/firebase';
-import { collection, query, orderBy, onSnapshot, limit, Timestamp } from 'firebase/firestore';
-import { Clock, CheckCircle, AlertCircle, ChevronRight } from 'lucide-react';
+import { collection, query, orderBy, onSnapshot, limit } from 'firebase/firestore';
+import { Clock, AlertCircle, ChevronRight } from 'lucide-react';
 import { type Ticket } from '../../../types/support';
 
 
@@ -73,13 +73,7 @@ const TicketHistory: React.FC<TicketHistoryProps> = ({
         );
     };
 
-    const formatDate = (timestamp: Timestamp) => {
-        if (!timestamp) return '-';
-        return new Date(timestamp.seconds * 1000).toLocaleDateString(undefined, {
-            day: '2-digit',
-            month: 'short'
-        });
-    };
+
 
     // --- Sub-components (Inline for simplicity) ---
     const SkeletonTicket = () => (

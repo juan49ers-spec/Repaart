@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, AlertCircle, Settings, LifeBuoy, Video, Package, DollarSign, Wrench, AlertTriangle, ArrowRight, LucideIcon } from 'lucide-react';
+import { BookOpen, Package, DollarSign, Wrench, AlertTriangle, ArrowRight } from 'lucide-react';
 
 export const CATEGORIES = [
     { id: 'operativa', label: 'Operativa', icon: Package, color: 'indigo', desc: 'Logística, riders, rutas' },

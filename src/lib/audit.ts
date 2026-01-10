@@ -73,7 +73,21 @@ export const logAction = async (user: AuditUser | null, action: AuditActionType,
         }
     } catch (error) {
         console.error("Audit Critical Error: Failed to log action", action, error);
-        // In a real banking app, we might block the action if audit fails. 
-        // Here, we just log the error to console to not break UX.
+
+        // SECURITY HARDENING: Block critical actions if audit fails
+        const CRITICAL_ACTIONS = [
+            AUDIT_ACTIONS.LOGIN_SUCCESS,
+            AUDIT_ACTIONS.USER_APPROVED,
+            AUDIT_ACTIONS.USER_REVOKED,
+            AUDIT_ACTIONS.USER_ROLE_UPDATED,
+            AUDIT_ACTIONS.CREATE_USER,
+            AUDIT_ACTIONS.UPDATE_USER,
+            AUDIT_ACTIONS.DELETE_USER,
+            AUDIT_ACTIONS.PASSWORD_CHANGED
+        ];
+
+        if (CRITICAL_ACTIONS.includes(action as any)) {
+            throw new Error(`CRITICAL SECURITY: Action ${action} blocked because audit log failed.`);
+        }
     }
 };

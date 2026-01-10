@@ -123,7 +123,7 @@ const PendingTasksWidget: React.FC<PendingTasksWidgetProps> = ({ limit = 3, comp
                                 </div>
                             </div>
                             <div className="text-right">
-                                <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400 transition-colors">
+                                <div className="font-black text-emerald-600 dark:text-emerald-400 transition-colors">
                                     {record.amount.toFixed(record.amount < 1000 ? 2 : 0)}€
                                 </div>
                                 {!compact && (

@@ -209,7 +209,7 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
             <div className="min-h-[400px] flex items-center justify-center">
                 <div className="p-8 bg-rose-50 border border-rose-100 rounded-2xl text-center max-w-md">
                     <ShieldAlert className="w-12 h-12 text-rose-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-black text-rose-900 mb-2">Error de Acceso</h3>
+                    <h3 className="text-lg font-bold text-rose-900 mb-2">Error de Acceso</h3>
                     <p className="text-rose-700">{fetchError}</p>
                 </div>
             </div>
@@ -220,7 +220,7 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
         <div className="p-8 min-h-screen bg-transparent font-sans text-slate-100 animate-in fade-in duration-500">
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
                     <div className="p-2 glass-panel-exec border-0 rounded-xl shadow-sm">
                         <Users className="w-6 h-6 text-indigo-400" />
                     </div>

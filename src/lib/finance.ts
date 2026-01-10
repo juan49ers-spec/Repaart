@@ -48,6 +48,9 @@ export interface MonthlyData {
     quota?: number;
     royaltyPercent?: number;
     irpfPercent?: number;
+    // Operational Metrics
+    totalOperationalHours?: number;
+    totalShiftsCount?: number;
     // Explicit Aggregates
     totalIncome?: number;
     totalExpenses?: number;
@@ -121,6 +124,9 @@ export interface FinancialReport {
     taxes: TaxInfo;
     metrics: Metrics;
     breakdown: BreakdownItem[];
+    // Legacy support fields (for ViewSwitcher)
+    revenue?: number;
+    orders?: number;
 }
 
 export interface FinancialAlert {

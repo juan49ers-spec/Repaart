@@ -2,6 +2,7 @@ import React, { useState, useEffect, ChangeEvent } from 'react';
 import { Settings, Truck, Users, Landmark, Calendar, MapPin, Lock, Activity, Sparkles, Wrench, HelpCircle } from 'lucide-react';
 import DevToolsPanel from './dev/DevToolsPanel';
 import RealMadridWidget from '../../features/user/components/RealMadridWidget';
+import { useAppStore } from '../../store/useAppStore';
 
 export interface SidebarFormData {
     // Orders
@@ -45,28 +46,28 @@ export interface SidebarFormData {
 }
 
 export interface InputSidebarProps {
-    isOpen: boolean;
-    onClose: () => void;
     onCalculate: (data: SidebarFormData) => void;
     initialData?: SidebarFormData | null;
-    selectedMonth: string;
-    onMonthChange: (month: string) => void;
     readOnly?: boolean;
-    onToggleChat?: () => void;
     onOpenHelp?: (id: string) => void;
 }
 
 const InputSidebar: React.FC<InputSidebarProps> = ({
-    isOpen,
-    onClose,
     onCalculate,
     initialData,
-    selectedMonth,
-    onMonthChange,
     readOnly = false,
-    onToggleChat,
     onOpenHelp
 }) => {
+    const {
+        isSidebarOpen: isOpen,
+        toggleSidebar,
+        selectedMonth,
+        setSelectedMonth: onMonthChange,
+        toggleChat
+    } = useAppStore();
+
+    const onClose = () => toggleSidebar(false);
+    const onToggleChat = () => toggleChat();
     const [formData, setFormData] = useState<SidebarFormData>(initialData || {});
     const [isDevToolsOpen, setIsDevToolsOpen] = useState(false);
 

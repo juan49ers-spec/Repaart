@@ -132,7 +132,7 @@ const CreateFranchiseModal: React.FC<CreateFranchiseModalProps> = ({ isOpen, onC
                 {/* Header */}
                 <div className="flex justify-between items-center p-6 border-b border-gray-100">
                     <h2 className="text-xl font-bold text-gray-800">Nueva Franquicia</h2>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors" title="Cerrar modal">
                         <X size={20} className="text-gray-500" />
                     </button>
                 </div>
@@ -167,8 +167,9 @@ const CreateFranchiseModal: React.FC<CreateFranchiseModalProps> = ({ isOpen, onC
                                 name="slug"
                                 value={formData.slug}
                                 onChange={handleInputChange}
-                                className="w-full px-4 py-2 border rounded-lg bg-gray-50 text-gray-600 font-mono text-sm"
+                                className="w-full px-4 py-2 border rounded-lg bg-gray-50 text-gray-600 font-bold uppercase tracking-wider text-sm"
                                 required
+                                aria-label="Slug (URL)"
                             />
                         </div>
                     </div>
@@ -206,7 +207,7 @@ const CreateFranchiseModal: React.FC<CreateFranchiseModalProps> = ({ isOpen, onC
                             {formData.location.zipCodes.map(zip => (
                                 <span key={zip} className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
                                     {zip}
-                                    <button type="button" onClick={() => handleRemoveZip(zip)} className="hover:text-blue-900">
+                                    <button type="button" onClick={() => handleRemoveZip(zip)} className="hover:text-blue-900" title={`Eliminar CP ${zip}`}>
                                         <X size={14} />
                                     </button>
                                 </span>
@@ -226,6 +227,7 @@ const CreateFranchiseModal: React.FC<CreateFranchiseModalProps> = ({ isOpen, onC
                                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                                 min="0"
                                 step="0.01"
+                                aria-label="Pedido Mínimo (€)"
                             />
                         </div>
                         <div>
@@ -238,6 +240,7 @@ const CreateFranchiseModal: React.FC<CreateFranchiseModalProps> = ({ isOpen, onC
                                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                                 min="0"
                                 step="0.01"
+                                aria-label="Costo Envío Base (€)"
                             />
                         </div>
                     </div>

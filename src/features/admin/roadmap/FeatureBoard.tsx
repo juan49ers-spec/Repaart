@@ -230,8 +230,9 @@ const FeatureBoard: React.FC = () => {
                         />
                         {searchQuery && (
                             <button
-                                onClick={() => setSearchQuery('')}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+                                title="Limpiar búsqueda"
+                                aria-label="Limpiar búsqueda"
                             >
                                 <X className="w-3 h-3" />
                             </button>
@@ -269,7 +270,7 @@ const FeatureBoard: React.FC = () => {
                                     <h2 className="text-white font-bold text-sm">
                                         {column.title}
                                     </h2>
-                                    <span className="bg-black/20 text-white/90 px-2 py-0.5 rounded text-xs font-mono">
+                                    <span className="bg-black/20 text-white/90 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest">
                                         {columnFeatures.length}
                                     </span>
                                 </div>

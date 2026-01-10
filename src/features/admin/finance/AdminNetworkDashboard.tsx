@@ -13,7 +13,7 @@ interface AdminNetworkDashboardProps {
 }
 
 // Simple Sparkline Component (Visual Simulation of "Trend")
-const Sparkline = ({ trend }: { value?: number, trend: 'up' | 'down' | 'neutral' }) => {
+const Sparkline = ({ trend }: { trend: 'up' | 'down' | 'neutral' }) => {
     // Determine color
     const color = trend === 'up' ? '#34d399' : trend === 'down' ? '#f43f5e' : '#94a3b8';
 
@@ -66,7 +66,7 @@ const AdminNetworkDashboard: React.FC<AdminNetworkDashboardProps> = ({ selectedM
             {/* HEADER */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3 transition-colors">
+                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-3 transition-colors">
                         <div className="p-2 bg-indigo-600 dark:bg-indigo-500 rounded-lg shadow-lg shadow-indigo-200 dark:shadow-none">
                             <TrendingUp className="w-6 h-6 text-white" />
                         </div>
@@ -106,7 +106,7 @@ const AdminNetworkDashboard: React.FC<AdminNetworkDashboardProps> = ({ selectedM
                         </span>
                     </div>
                     <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Facturación Red</p>
-                    <h3 className="text-3xl font-black text-slate-900 dark:text-white mt-1 transition-colors">{formatMoney(aggregates.totalRevenue)}€</h3>
+                    <h3 className="text-3xl font-bold text-slate-900 dark:text-white mt-1 transition-colors">{formatMoney(aggregates.totalRevenue)}€</h3>
                 </div>
 
                 {/* Net Profit */}
@@ -125,7 +125,7 @@ const AdminNetworkDashboard: React.FC<AdminNetworkDashboardProps> = ({ selectedM
                         </div>
                     </div>
                     <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Beneficio Neto Global</p>
-                    <h3 className="text-3xl font-black text-slate-900 dark:text-white mt-1 transition-colors">{formatMoney(aggregates.totalProfit)}€</h3>
+                    <h3 className="text-3xl font-bold text-slate-900 dark:text-white mt-1 transition-colors">{formatMoney(aggregates.totalProfit)}€</h3>
                 </div>
 
                 {/* Global Tax Vault */}
@@ -139,7 +139,7 @@ const AdminNetworkDashboard: React.FC<AdminNetworkDashboardProps> = ({ selectedM
                         </span>
                     </div>
                     <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Hucha Fiscal Global</p>
-                    <h3 className="text-3xl font-black text-slate-900 dark:text-white mt-1 transition-colors">{formatMoney(aggregates.totalTaxVault)}€</h3>
+                    <h3 className="text-3xl font-bold text-slate-900 dark:text-white mt-1 transition-colors">{formatMoney(aggregates.totalTaxVault)}€</h3>
                 </div>
 
                 {/* Compliance */}
@@ -241,15 +241,15 @@ const AdminNetworkDashboard: React.FC<AdminNetworkDashboardProps> = ({ selectedM
                                     >
                                         <td className="p-4 pl-6">
                                             <div className="font-bold text-slate-900 dark:text-white transition-colors">{item.franchiseName}</div>
-                                            <div className="text-xs text-slate-400 dark:text-slate-500 font-mono transition-colors">{item.franchiseId}</div>
+                                            <div className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider transition-colors">{item.franchiseId}</div>
                                         </td>
                                         <td className="p-4 text-right">
                                             <div className="flex items-center justify-end gap-3">
                                                 {/* SPARKLINE */}
                                                 <div className="hidden md:block" title="Tendencia últimos 3 meses">
-                                                    <Sparkline value={rev} trend={trend} />
+                                                    <Sparkline trend={trend} />
                                                 </div>
-                                                <div className="font-mono font-bold text-slate-700 dark:text-slate-300 transition-colors">
+                                                <div className="font-bold text-slate-700 dark:text-slate-300 transition-colors">
                                                     {formatMoney(rev)}€
                                                 </div>
                                             </div>
@@ -262,8 +262,7 @@ const AdminNetworkDashboard: React.FC<AdminNetworkDashboardProps> = ({ selectedM
                                             </div>
                                         </td>
                                         <td className="p-4 text-right">
-                                            <div className={`font-mono font-bold transition-colors ${margin > 15 ? 'text-emerald-600 dark:text-emerald-400' : margin > 5 ? 'text-amber-600 dark:text-yellow-400' : 'text-rose-600 dark:text-rose-400'
-                                                }`}>
+                                            <div className={`font-bold transition-colors tabular-nums ${margin > 15 ? 'text-emerald-600 dark:text-emerald-400' : margin > 5 ? 'text-amber-600 dark:text-yellow-400' : 'text-rose-600 dark:text-rose-400'}`}>
                                                 {margin.toFixed(1)}%
                                             </div>
                                             <div className="text-xs text-slate-500 dark:text-slate-500 transition-colors">
@@ -316,6 +315,7 @@ const AdminNetworkDashboard: React.FC<AdminNetworkDashboardProps> = ({ selectedM
                                         <td className="p-4 text-right">
                                             <button
                                                 onClick={() => navigate(`/admin/finance/${item.franchiseId}`)}
+                                                aria-label="Ver detalles"
                                                 className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 dark:hover:bg-indigo-600 rounded-lg text-slate-500 dark:text-slate-400 hover:text-white dark:hover:text-white transition-all shadow-sm group-hover:shadow-indigo-500/20"
                                             >
                                                 <ArrowRight className="w-5 h-5" />

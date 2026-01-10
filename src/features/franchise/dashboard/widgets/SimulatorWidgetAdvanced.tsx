@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calculator, TrendingUp, TrendingDown, AlertCircle, Lightbulb, ArrowRight, BarChart3, Target } from 'lucide-react';
+import { Calculator, Lightbulb, ArrowRight, BarChart3, Target } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 interface SimulatorWidgetAdvancedProps {
@@ -115,10 +115,10 @@ const SimulatorWidgetAdvanced: React.FC<SimulatorWidgetAdvancedProps> = ({
                             key={s}
                             onClick={() => setScenario(s)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${scenario === s
-                                    ? s === 'optimistic' ? 'bg-emerald-500 text-white shadow-lg'
-                                        : s === 'pessimistic' ? 'bg-rose-500 text-white shadow-lg'
-                                            : 'bg-indigo-600 text-white shadow-lg'
-                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                ? s === 'optimistic' ? 'bg-emerald-500 text-white shadow-lg'
+                                    : s === 'pessimistic' ? 'bg-rose-500 text-white shadow-lg'
+                                        : 'bg-indigo-600 text-white shadow-lg'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                                 }`}
                         >
                             {s === 'optimistic' ? '📈 +20%' : s === 'pessimistic' ? '📉 -20%' : '🎯 Real'}
@@ -138,6 +138,7 @@ const SimulatorWidgetAdvanced: React.FC<SimulatorWidgetAdvancedProps> = ({
                         value={avgOrderPrice}
                         onChange={(e) => setAvgOrderPrice(Number(e.target.value))}
                         className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-2 py-1 text-sm font-bold"
+                        aria-label="Precio Pedido"
                     />
                 </div>
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
@@ -149,6 +150,7 @@ const SimulatorWidgetAdvanced: React.FC<SimulatorWidgetAdvancedProps> = ({
                         value={ordersPerDay}
                         onChange={(e) => setOrdersPerDay(Number(e.target.value))}
                         className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-2 py-1 text-sm font-bold"
+                        aria-label="Pedidos por día"
                     />
                 </div>
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
@@ -160,6 +162,7 @@ const SimulatorWidgetAdvanced: React.FC<SimulatorWidgetAdvancedProps> = ({
                         value={platformFee}
                         onChange={(e) => setPlatformFee(Number(e.target.value))}
                         className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-2 py-1 text-sm font-bold"
+                        aria-label="Comisión porcentaje"
                     />
                 </div>
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
@@ -171,6 +174,7 @@ const SimulatorWidgetAdvanced: React.FC<SimulatorWidgetAdvancedProps> = ({
                         value={riderCostPerHour}
                         onChange={(e) => setRiderCostPerHour(Number(e.target.value))}
                         className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-2 py-1 text-sm font-bold"
+                        aria-label="Coste Riders por hora"
                     />
                 </div>
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
@@ -182,6 +186,7 @@ const SimulatorWidgetAdvanced: React.FC<SimulatorWidgetAdvancedProps> = ({
                         value={hoursPerDay}
                         onChange={(e) => setHoursPerDay(Number(e.target.value))}
                         className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-2 py-1 text-sm font-bold"
+                        aria-label="Horas por día"
                     />
                 </div>
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
@@ -193,6 +198,7 @@ const SimulatorWidgetAdvanced: React.FC<SimulatorWidgetAdvancedProps> = ({
                         value={fixedCosts}
                         onChange={(e) => setFixedCosts(Number(e.target.value))}
                         className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-2 py-1 text-sm font-bold"
+                        aria-label="Costes fijos por mes"
                     />
                 </div>
             </div>

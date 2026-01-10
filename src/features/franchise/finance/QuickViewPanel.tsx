@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { X, TrendingUp, TrendingDown, Edit3, PieChart as PieChartIcon } from 'lucide-react';
 import { MonthlyRecord } from '../../../hooks/useFranchiseHistory';
@@ -95,7 +96,7 @@ const QuickViewPanel: React.FC<QuickViewPanelProps> = ({ record, onClose, onEdit
                                         dataKey="value"
                                         stroke="none"
                                     >
-                                        {chartData.map((entry, index) => (
+                                        {chartData.map((_, index) => (
                                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                         ))}
                                     </Pie>

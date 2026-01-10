@@ -1,7 +1,8 @@
-import React, { useState, Suspense } from 'react';
+import React, { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { useExport } from './hooks/useExport';
+import { useAppStore } from './store/useAppStore';
 
 // Layout & Security
 import DashboardLayout from './layouts/DashboardLayout';
@@ -32,6 +33,7 @@ import AdminResourcesPanel from './features/admin/AdminResourcesPanel';
 const OperationsPage = React.lazy(() => import('./features/operations/OperationsPage'));
 const Academy = React.lazy(() => import('./features/academy/Academy'));
 const AdminFranchiseView = React.lazy(() => import('./features/admin/AdminFranchiseView'));
+const KanbanBoard = React.lazy(() => import('./features/admin/kanban/KanbanBoard'));
 
 import { useFranchiseFinance } from './hooks/useFranchiseFinance';
 import { useVersionCheck } from './hooks/useVersionCheck';
@@ -39,18 +41,18 @@ import { useVersionCheck } from './hooks/useVersionCheck';
 function App() {
     const { user, loading: authLoading, roleConfig, logout, isAdmin } = useAuth();
 
+    // Global UI State from Store
+    const {
+        selectedMonth,
+        setSelectedMonth
+    } = useAppStore();
+
     // 🔄 AUTO-UPDATE CHECKER
     useVersionCheck();
 
-    // --- STATE ---
-    const getCurrentMonth = () => new Date().toISOString().slice(0, 7);
-    const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
-    const [viewPeriod, setViewPeriod] = useState('month'); // 'month' | 'year'
-    const [isChatOpen, setIsChatOpen] = useState(false);
-
     // Admin Selection State
-    const [targetFranchiseId, setTargetFranchiseId] = useState<string | null>(null);
-    const [targetFranchiseName, setTargetFranchiseName] = useState<string | null>(null);
+    const [targetFranchiseId, setTargetFranchiseId] = React.useState<string | null>(null);
+    const [targetFranchiseName, setTargetFranchiseName] = React.useState<string | null>(null);
 
     const { exportCSV } = useExport();
 
@@ -58,7 +60,7 @@ function App() {
     const isFranchise = roleConfig?.role === 'franchise';
 
     // 🛠️ DEBUG & CACHE CLEANUP
-    console.log("🚀 Running App Version: v3.11.7.1 (Finance Unified)");
+    console.log("🚀 Running App Version: v3.12.0 (Zustand State)");
 
     // --- DATA FETCHING ---
     const dataHookFranchiseId = (isAdmin && targetFranchiseId)
@@ -92,13 +94,15 @@ function App() {
         franchiseView: 'cockpit', setFranchiseView: () => { },
 
         targetFranchiseName,
-        selectedMonth, onMonthChange: setSelectedMonth,
-        viewPeriod, setViewPeriod,
+        // selectedMonth, -> Handled by Store
+        // onMonthChange: setSelectedMonth, -> Handled by Store
+        // viewPeriod, setViewPeriod, -> Handled by Store
         onLogout: logout,
         onExport: () => exportCSV(report as any, selectedMonth, isAdmin && targetFranchiseName ? targetFranchiseName : 'REPAART'),
         sidebarData: currentData, onCalculate: handleUpdate, readOnly: false,
         saving,
-        isChatOpen, setIsChatOpen, chatData: { report }
+        // isChatOpen, setIsChatOpen, -> Handled by Store (DashboardLayout uses store)
+        chatData: { report }
     };
 
     // Context to be exposed via Outlet
@@ -110,7 +114,7 @@ function App() {
         handleAdminSelectFranchise,
         targetFranchiseId,
         setIsSidebarOpen: (_isOpen: boolean) => {
-            // Placeholder, handled by DashboardLayout
+            // Placeholder, handled by Store now
         }
     };
 
@@ -183,6 +187,16 @@ function App() {
                     <Route path="admin/shifts" element={
                         <ProtectedRoute requireAdmin={true}>
                             <div className="p-5 md:p-8 space-y-6 h-[calc(100vh-64px)] overflow-hidden"><WeeklyScheduler franchiseId={targetFranchiseId || ''} readOnly={false} /></div>
+                        </ProtectedRoute>
+                    } />
+
+                    <Route path="admin/kanban" element={
+                        <ProtectedRoute requireAdmin={true}>
+                            <div className="p-5 md:p-8 space-y-6 h-[calc(100vh-64px)] overflow-hidden">
+                                <React.Suspense fallback={<DashboardSkeleton />}>
+                                    <KanbanBoard />
+                                </React.Suspense>
+                            </div>
                         </ProtectedRoute>
                     } />
 

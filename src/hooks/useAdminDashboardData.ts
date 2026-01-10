@@ -27,10 +27,10 @@ export const useAdminDashboardData = (selectedMonth: string) => {
 
             // 1. Cargar Franquicias (Entidades reales, no users)
             const franchiseResult = await franchiseService.getAllFranchises();
-            console.log('🔍 DEBUG: franchiseResult =', franchiseResult);
+
 
             if (franchiseResult.success) {
-                console.log('✅ Franquicias cargadas:', franchiseResult.data.length, franchiseResult.data);
+
             } else {
                 console.error('❌ Error cargando franquicias:', franchiseResult.error);
             }

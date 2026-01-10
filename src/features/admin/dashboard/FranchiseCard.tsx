@@ -125,7 +125,7 @@ const FranchiseCard: React.FC<FranchiseCardProps> = ({ franchise }) => {
                     title="Click para copiar ID"
                     onClick={handleCopyId}
                 >
-                    <span className="font-mono text-[10px] text-slate-600 group-hover:text-slate-400 transition-colors">
+                    <span className="font-bold text-[10px] text-slate-600 group-hover:text-slate-400 transition-colors uppercase tracking-widest">
                         ID: {uid.substring(0, 8)}...
                     </span>
                     <Copy className="w-3 h-3 text-slate-600 opacity-0 group-hover/uid:opacity-100 transition-opacity" />
