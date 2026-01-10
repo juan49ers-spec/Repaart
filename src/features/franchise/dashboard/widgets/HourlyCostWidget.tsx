@@ -1,6 +1,10 @@
 import { type FC } from 'react';
 import { Clock, TrendingDown, TrendingUp, Info, Users, Euro } from 'lucide-react';
 import { formatMoney } from '../../../../lib/finance';
+import { Card } from '../../../../ui/primitives/Card';
+import { SectionHeader } from '../../../../ui/primitives/SectionHeader';
+import { Badge, BadgeIntent } from '../../../../ui/primitives/Badge';
+import { StatValue } from '../../../../ui/primitives/StatValue';
 
 interface HourlyCostWidgetProps {
     totalCost: number;
@@ -38,76 +42,53 @@ const HourlyCostWidget: FC<HourlyCostWidgetProps> = ({
     const benchmarkPercentDiff = (benchmarkDiff / INDUSTRY_BENCHMARK_OPTIMAL) * 100;
 
     // Determine health status
-    const statusConfig = isOverBenchmark
-        ? {
-            color: 'text-rose-600 dark:text-rose-400',
-            bg: 'bg-rose-50 dark:bg-rose-950/30',
-            border: 'border-rose-200 dark:border-rose-800',
-            lightBg: 'bg-rose-500/5',
+    const getStatusConfig = () => {
+        if (isOverBenchmark) return {
+            intent: 'danger' as BadgeIntent,
             icon: '⚠️',
-            label: 'Alto'
-        }
-        : isUnderBenchmark
-            ? {
-                color: 'text-amber-600 dark:text-amber-400',
-                bg: 'bg-amber-50 dark:bg-amber-950/30',
-                border: 'border-amber-200 dark:border-amber-800',
-                lightBg: 'bg-amber-500/5',
-                icon: '⚡',
-                label: 'Bajo'
-            }
-            : {
-                color: 'text-emerald-600 dark:text-emerald-400',
-                bg: 'bg-emerald-50 dark:bg-emerald-950/30',
-                border: 'border-emerald-200 dark:border-emerald-800',
-                lightBg: 'bg-emerald-500/5',
-                icon: '✓',
-                label: 'Óptimo'
-            };
+            label: 'Alto',
+            message: `${Math.abs(benchmarkPercentDiff).toFixed(0)}% sobre benchmark. Optimiza gastos.`
+        };
+        if (isUnderBenchmark) return {
+            intent: 'warning' as BadgeIntent,
+            icon: '⚡',
+            label: 'Bajo',
+            message: `Coste bajo. Verifica calidad del servicio.`
+        };
+        return {
+            intent: 'success' as BadgeIntent,
+            icon: '✓',
+            label: 'Óptimo',
+            message: `Coste óptimo. Benchmark: ${INDUSTRY_BENCHMARK_MIN}-${INDUSTRY_BENCHMARK_MAX}€/h`
+        };
+    };
+
+    const statusConfig = getStatusConfig();
+    const trendText = trend !== 0 ? `${Math.abs(trend).toFixed(1)}% vs mes anterior` : undefined;
 
     return (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col relative overflow-hidden group">
-            {/* Subtle hover background */}
-            <div className={`absolute inset-0 ${statusConfig.lightBg} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-
+        <Card className="h-full flex flex-col relative group">
             {/* Header */}
-            <div className="flex items-start justify-between mb-5 relative z-10">
-                <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-950/20 flex items-center justify-center border border-amber-100 dark:border-amber-900 transition-all duration-300 group-hover:scale-110 group-hover:shadow-md">
-                        <Clock className="w-5 h-5 text-amber-600 dark:text-amber-500" />
-                    </div>
-                    <div>
-                        <h3 className="text-sm font-bold text-slate-800 dark:text-white tracking-tight">Coste Operativo</h3>
-                        <p className="text-[9px] text-slate-500 font-semibold uppercase tracking-[0.08em] leading-none mt-1.5">Gasto por hora trabajada</p>
-                    </div>
-                </div>
-                <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg ${statusConfig.bg} border ${statusConfig.border} transition-all duration-300 group-hover:scale-105`}>
-                    <span className="text-xs">{statusConfig.icon}</span>
-                    <span className={`text-xs font-bold ${statusConfig.color}`}>{statusConfig.label}</span>
-                </div>
-            </div>
+            <SectionHeader
+                title="Coste Operativo"
+                subtitle="Gasto por hora trabajada"
+                icon={<Clock className="w-5 h-5 text-amber-600 dark:text-amber-500" />}
+                action={
+                    <Badge intent={statusConfig.intent} className="gap-1.5">
+                        <span className="text-xs">{statusConfig.icon}</span> {statusConfig.label}
+                    </Badge>
+                }
+            />
 
             {/* Main Value with Benchmark Context */}
             <div className="mb-5 relative z-10">
-                <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-black text-slate-900 dark:text-white tabular-nums tracking-tight">
-                        {formatMoney(costPerHour)}
-                    </span>
-                    <span className="text-xl font-bold text-slate-400">€/h</span>
-                </div>
-                <div className="flex items-center gap-2 mt-2 flex-wrap">
-                    <span className="text-[10px] text-slate-500 font-medium">{totalHours}h operativas</span>
-                    <div className="h-1 w-1 rounded-full bg-slate-300" />
-                    <div className={`text-[10px] font-bold uppercase tracking-wider ${statusConfig.color}`}>
-                        {benchmarkDiff >= 0 ? '+' : ''}{formatMoney(Math.abs(benchmarkDiff))}€ vs benchmark
-                    </div>
-                </div>
-                {trend !== 0 && (
-                    <div className={`flex items-center gap-1 text-[10px] font-bold mt-1 ${!isPositiveTrend ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {!isPositiveTrend ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />}
-                        {Math.abs(trend).toFixed(1)}% vs mes anterior
-                    </div>
-                )}
+                <StatValue
+                    value={formatMoney(costPerHour)}
+                    unit="€/h"
+                    description={`${totalHours}h operativas`}
+                    trend={{ value: trend, label: trendText }}
+                    size="xl"
+                />
             </div>
 
             {/* Enhanced Cost Breakdown */}
@@ -155,16 +136,12 @@ const HourlyCostWidget: FC<HourlyCostWidgetProps> = ({
 
             {/* Footer with Industry Insight */}
             <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800 relative z-10">
-                <div className={`flex items-center gap-1.5 text-[9px] font-medium italic ${statusConfig.color} text-center justify-center`}>
+                <div className="flex items-center gap-1.5 text-[9px] font-medium italic text-slate-500 text-center justify-center">
                     <Info className="w-3 h-3" />
-                    <p>
-                        {isOptimal && `Coste óptimo. Benchmark: ${INDUSTRY_BENCHMARK_MIN}-${INDUSTRY_BENCHMARK_MAX}€/h`}
-                        {isOverBenchmark && `${Math.abs(benchmarkPercentDiff).toFixed(0)}% sobre benchmark. Optimiza gastos.`}
-                        {isUnderBenchmark && `Coste bajo. Verifica calidad del servicio.`}
-                    </p>
+                    <p>{statusConfig.message}</p>
                 </div>
             </div>
-        </div>
+        </Card>
     );
 };
 
