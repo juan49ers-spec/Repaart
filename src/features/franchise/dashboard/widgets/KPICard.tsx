@@ -1,7 +1,10 @@
 import React from 'react';
 import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip as ChartTooltip } from 'recharts';
 import { AlertTriangle, TrendingUp as TrendUp, Target, Calendar } from 'lucide-react';
-
+import { Card } from '../../../../ui/primitives/Card';
+import { Badge, BadgeIntent } from '../../../../ui/primitives/Badge';
+import { StatValue } from '../../../../ui/primitives/StatValue';
+import { SectionHeader } from '../../../../ui/primitives/SectionHeader';
 
 interface KPICardProps {
     title: string;
@@ -29,15 +32,13 @@ const KPICard: React.FC<KPICardProps> = ({
     lastYearValue,
     showPrediction = true
 }) => {
-
-
-    // Map colors to hex values for charts and badges
-    const colorMap = {
-        blue: { main: '#3b82f6', bg: 'bg-blue-50 dark:bg-blue-950/20', text: 'text-blue-600', border: 'border-blue-100 dark:border-blue-900', stroke: '#3b82f6', lightBg: 'bg-blue-500/5' },
-        purple: { main: '#8b5cf6', bg: 'bg-purple-50 dark:bg-purple-950/20', text: 'text-purple-600', border: 'border-purple-100 dark:border-purple-900', stroke: '#8b5cf6', lightBg: 'bg-purple-500/5' },
-        emerald: { main: '#10b981', bg: 'bg-emerald-50 dark:bg-emerald-950/20', text: 'text-emerald-600', border: 'border-emerald-100 dark:border-emerald-900', stroke: '#10b981', lightBg: 'bg-emerald-500/5' },
-        amber: { main: '#f59e0b', bg: 'bg-amber-50 dark:bg-amber-950/20', text: 'text-amber-600', border: 'border-amber-100 dark:border-amber-900', stroke: '#f59e0b', lightBg: 'bg-amber-500/5' },
-        rose: { main: '#f43f5e', bg: 'bg-rose-50 dark:bg-rose-950/20', text: 'text-rose-600', border: 'border-rose-100 dark:border-rose-900', stroke: '#f43f5e', lightBg: 'bg-rose-500/5' },
+    // Map colors to hex values for charts and badge intents
+    const colorMap: Record<string, { main: string, intent: BadgeIntent }> = {
+        blue: { main: '#3b82f6', intent: 'info' },
+        purple: { main: '#8b5cf6', intent: 'accent' },
+        emerald: { main: '#10b981', intent: 'success' },
+        amber: { main: '#f59e0b', intent: 'warning' },
+        rose: { main: '#f43f5e', intent: 'danger' },
     };
 
     const theme = colorMap[color];
@@ -69,73 +70,54 @@ const KPICard: React.FC<KPICardProps> = ({
     const isStrongTrend = trendStrength > 15;
     const isModerateTrend = trendStrength > 5 && trendStrength <= 15;
 
+    // Trend Text Description
+    let trendText = '';
+    if (trend !== undefined) {
+        if (isStrongTrend) trendText = isPositive ? 'Crecimiento Fuerte' : 'Caída Fuerte';
+        else if (isModerateTrend) trendText = isPositive ? 'Crecimiento Moderado' : 'Reducción Moderada';
+        else trendText = isPositive ? 'Crecimiento Leve' : 'Reducción Leve';
+    }
+
     // Format trend data for recharts
     const chartData = trendData?.map((val, i) => ({ i, val, label: `Día ${i + 1}` })) || [];
 
+    // Trend Badge Intent override (always traffic light for +/-)
+    const trendBadgeIntent: BadgeIntent = isPositive ? 'success' : 'danger';
+
     return (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden group h-full flex flex-col">
-            {/* Subtle Background Pattern */}
-            <div className={`absolute inset-0 ${theme.lightBg} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+        <Card className="h-full relative group">
 
             {/* Critical Alert Banner */}
             {isCriticalDrop && (
-                <div className="absolute top-0 left-0 right-0 bg-rose-500 text-white px-3 py-1 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 z-20">
+                <div className="absolute top-0 left-0 right-0 bg-rose-500 text-white px-3 py-1 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 z-20 rounded-t-xl">
                     <AlertTriangle className="w-3 h-3" />
                     <span>Alerta: Caída significativa</span>
                 </div>
             )}
 
-            {/* Header */}
-            <div className={`flex items-start justify-between ${isCriticalDrop ? 'mt-7' : 'mb-5'} relative z-10`}>
-                <div className="flex items-center gap-3">
-                    {icon && (
-                        <div className={`w-11 h-11 rounded-xl flex items-center justify-center border ${theme.border} ${theme.bg} ${theme.text} transition-all duration-300 group-hover:scale-110 group-hover:shadow-md`}>
-                            {icon}
-                        </div>
-                    )}
-                    <div>
-                        <h3 className="text-sm font-bold text-slate-800 dark:text-white tracking-tight">{title}</h3>
-                        <p className="text-[9px] text-slate-500 font-semibold uppercase tracking-[0.08em] leading-none mt-1.5">
-                            {subtext || 'Métrica Principal'}
-                        </p>
-                    </div>
-                </div>
-
-                {/* Trend Badge - More Informative */}
-                {trend !== undefined && (
-                    <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg ${isPositive
-                        ? 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800'
-                        : 'bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800'
-                        } transition-all duration-300 group-hover:scale-105`}>
-                        <span className={`text-xs font-bold ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                            {isPositive ? '↑' : '↓'} {Math.abs(trend).toFixed(1)}%
-                        </span>
-                    </div>
+            {/* Header using Primitive */}
+            <SectionHeader
+                title={title}
+                subtitle={subtext || 'Métrica Principal'}
+                icon={icon}
+                className={isCriticalDrop ? 'mt-6' : ''}
+                action={trend !== undefined && (
+                    <Badge intent={trendBadgeIntent}>
+                        {isPositive ? '↑' : '↓'} {Math.abs(trend).toFixed(1)}%
+                    </Badge>
                 )}
-            </div>
+            />
 
-            {/* Main Value with Enhanced Typography */}
+            {/* Main Value using Primitive */}
             <div className="mb-4 relative z-10">
-                <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-black text-slate-900 dark:text-white tabular-nums tracking-tight">{value}</span>
-                </div>
-
-                {/* Trend Context - More Detailed */}
-                {trend !== undefined && (
-                    <div className="flex items-center gap-2 mt-2">
-                        <div className={`text-[10px] font-bold uppercase tracking-wider ${isPositive ? 'text-emerald-600' : 'text-rose-600'
-                            }`}>
-                            {isStrongTrend && (isPositive ? 'Crecimiento Fuerte' : 'Caída Fuerte')}
-                            {isModerateTrend && (isPositive ? 'Crecimiento Moderado' : 'Reducción Moderada')}
-                            {!isStrongTrend && !isModerateTrend && (isPositive ? 'Crecimiento Leve' : 'Reducción Leve')}
-                        </div>
-                        <div className="h-1 w-1 rounded-full bg-slate-300" />
-                        <span className="text-[10px] text-slate-400 font-medium">vs mes anterior</span>
-                    </div>
-                )}
+                <StatValue
+                    value={value}
+                    description={trendText} // Shows below value
+                    trend={trend !== undefined ? { value: trend } : undefined} // We already show badge, but StatValue uses this to color description
+                />
             </div>
 
-            {/* Advanced Metrics Grid */}
+            {/* Advanced Metrics Grid (Custom Layout) */}
             <div className="grid grid-cols-2 gap-2 mb-4 relative z-10">
                 {/* YoY Comparison */}
                 {yoyChange !== null && (
@@ -164,7 +146,7 @@ const KPICard: React.FC<KPICardProps> = ({
                 )}
             </div>
 
-            {/* Monthly Goal Progress */}
+            {/* Monthly Goal Progress (Custom but clean) */}
             {monthlyGoal && goalProgress !== null && (
                 <div className="mb-4 relative z-10">
                     <div className="flex items-center justify-between mb-1.5">
@@ -186,7 +168,7 @@ const KPICard: React.FC<KPICardProps> = ({
                 </div>
             )}
 
-            {/* Enhanced Sparkline */}
+            {/* Chart (Custom) */}
             {trendData && trendData.length > 0 && (
                 <div className="mt-auto h-16 w-full relative z-10 opacity-60 group-hover:opacity-100 transition-all duration-500">
                     <ResponsiveContainer width="100%" height="100%">
@@ -215,7 +197,7 @@ const KPICard: React.FC<KPICardProps> = ({
                     <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent opacity-50" />
                 </div>
             )}
-        </div>
+        </Card>
     );
 };
 

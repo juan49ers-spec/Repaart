@@ -1,6 +1,9 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { formatMoney } from '../../../../lib/finance';
+import { Card } from '../../../../ui/primitives/Card';
+import { SectionHeader } from '../../../../ui/primitives/SectionHeader';
+import { Badge } from '../../../../ui/primitives/Badge';
 
 interface RevenueData {
     month: string;
@@ -41,19 +44,19 @@ const RevenueAreaChart: React.FC<RevenueAreaChartProps> = ({ data }) => {
     });
 
     return (
-        <div className="bg-white border border-slate-100/60 rounded-[2.5rem] p-8 shadow-[0_4px_30px_rgb(0,0,0,0.03)] h-full flex flex-col group transition-all duration-500 hover:shadow-[0_10px_40px_rgb(0,0,0,0.05)] border-t border-t-white/50">
+        <Card className="h-full flex flex-col group border-t-white/50">
             {/* Header */}
-            <div className="flex justify-between items-start mb-6">
-                <div>
-                    <div className="flex items-center gap-2 mb-1">
-                        <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                            <TrendingUp className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                        </div>
-                        <h3 className="text-base font-bold text-slate-800 dark:text-white">Evolución Financiera</h3>
-                    </div>
-                    <p className="text-[11px] text-slate-500 font-medium pl-9">Métricas de facturación y rentabilidad mensual</p>
-                </div>
-            </div>
+            <SectionHeader
+                title="Evolución Financiera"
+                subtitle="Métricas de facturación y rentabilidad mensual"
+                icon={<TrendingUp className="w-5 h-5 text-indigo-500" />}
+                action={
+                    <Badge intent={revenueTrend >= 0 ? 'success' : 'danger'}>
+                        {revenueTrend >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                        {Math.abs(revenueTrend).toFixed(1)}%
+                    </Badge>
+                }
+            />
 
             <div className="flex items-center gap-10 mb-8 pl-2">
                 <div>
@@ -74,12 +77,6 @@ const RevenueAreaChart: React.FC<RevenueAreaChartProps> = ({ data }) => {
                     <div className="flex items-baseline gap-1">
                         <span className="text-xl font-bold text-emerald-600 tabular-nums">{formatMoney(avgProfit)}</span>
                         <span className="text-base font-bold text-emerald-200">€</span>
-                    </div>
-                </div>
-                <div className="flex-1 text-right">
-                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg ${revenueTrend >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                        {revenueTrend >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                        <span className="text-xs font-bold tabular-nums">{Math.abs(revenueTrend).toFixed(1)}%</span>
                     </div>
                 </div>
             </div>
@@ -202,7 +199,7 @@ const RevenueAreaChart: React.FC<RevenueAreaChartProps> = ({ data }) => {
                     </AreaChart>
                 </ResponsiveContainer>
             </div>
-        </div>
+        </Card>
     );
 };
 

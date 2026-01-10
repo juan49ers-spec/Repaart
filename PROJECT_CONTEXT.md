@@ -14,8 +14,11 @@ Synthetic Sagan is a financial management and operational dashboard for franchis
 
 **Architecture Map:**
 
-- **`src/features/`**: Contains the core business logic and domain-specific views (e.g., `franchise`, `admin`, `auth`). This is where "Smart" components live.
+- **`src/features/`**: Contains the core business logic and domain-specific views.
+  - `FranchiseDashboard.tsx`: **Container** (Logic, Hooks, Data).
+  - `FranchiseDashboardView.tsx`: **Presenter** (Pure UI, Stateless).
 - **`src/ui/`**: A consolidated UI Kit for "Dumb" or presentational components. Atomic design inspired.
+  - `primitives/`: **NEW** Atomic components (`Card`, `Badge`, `StatValue`, `SectionHeader`).
   - `overlays/`: Tooltips, Modals.
   - `inputs/`: Form elements.
   - `feedback/`: Loaders, Alerts.
@@ -29,8 +32,12 @@ Synthetic Sagan is a financial management and operational dashboard for franchis
   - ✅ **Phase 0: Deep Audit** (Health check and roadmap).
   - ✅ **Phase 1: Cleanup** (Deleted `src/legacy`, merged `src/components` into `src/ui`).
   - ✅ **Phase 2: Type Hardening** (Dead code removal, `MonthlyData` standardization).
-- **Next Steps:**
-  - 📅 **Phase 3: Modularization** (Breaking down `FranchiseDashboard`).
+  - ✅ **Phase 3: Modularization** (Container/Presenter separation for `FranchiseDashboard`).
+  - ✅ **Phase 4: Atomic Design** (Implemented Primitives and refactored Widgets).
+
+**Suggested Next Steps:**
+
+- 🧪 **Testing:** Implement Unit Tests for `useFranchiseFinance`.
 
 **Key Conventions:**
 

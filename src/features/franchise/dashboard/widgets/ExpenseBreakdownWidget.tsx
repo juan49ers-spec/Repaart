@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { List, PieChart as PieChartIcon } from 'lucide-react';
 import { formatMoney } from '../../../../lib/finance';
+import { Card } from '../../../../ui/primitives/Card';
+import { SectionHeader } from '../../../../ui/primitives/SectionHeader';
 
 interface ExpenseCategory {
     label: string;
@@ -53,40 +55,36 @@ const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdo
     };
 
     return (
-        <div className="bg-white border border-slate-100 rounded-[2rem] p-8 shadow-[0_4px_20px_rgb(0,0,0,0.02)] h-full flex flex-col overflow-hidden">
+        <Card className="h-full flex flex-col overflow-hidden">
             {/* Header with Toggle */}
-            <div className="flex items-center justify-between mb-6">
-                <div>
-                    <h3 className="text-lg font-bold text-slate-800 tracking-tight">Desglose de Gastos</h3>
-                    <p className="text-xs text-slate-400 font-medium mt-1">
-                        {viewMode === 'list' ? `${sortedData.length} categorías` : 'Visualización gráfica'}
-                    </p>
-                </div>
-
-                {/* View Toggle - More Prominent */}
-                <div className="bg-slate-100 rounded-xl p-1.5 flex gap-1 border border-slate-200">
-                    <button
-                        onClick={() => setViewMode('list')}
-                        className={`px-3 py-2 rounded-lg transition-all text-xs font-bold uppercase tracking-wider ${viewMode === 'list'
-                            ? 'bg-indigo-600 text-white shadow-md'
-                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-                            }`}
-                    >
-                        <List className="w-4 h-4 inline mr-1" />
-                        Lista
-                    </button>
-                    <button
-                        onClick={() => setViewMode('chart')}
-                        className={`px-3 py-2 rounded-lg transition-all text-xs font-bold uppercase tracking-wider ${viewMode === 'chart'
-                            ? 'bg-indigo-600 text-white shadow-md'
-                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-                            }`}
-                    >
-                        <PieChartIcon className="w-4 h-4 inline mr-1" />
-                        Gráfico
-                    </button>
-                </div>
-            </div>
+            <SectionHeader
+                title="Desglose de Gastos"
+                subtitle={viewMode === 'list' ? `${sortedData.length} categorías` : 'Visualización gráfica'}
+                action={
+                    <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-1 flex gap-1 border border-slate-200 dark:border-slate-700">
+                        <button
+                            onClick={() => setViewMode('list')}
+                            className={`p-1.5 rounded-lg transition-all ${viewMode === 'list'
+                                ? 'bg-indigo-600 text-white shadow-sm'
+                                : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                                }`}
+                            title="Lista"
+                        >
+                            <List className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                            onClick={() => setViewMode('chart')}
+                            className={`p-1.5 rounded-lg transition-all ${viewMode === 'chart'
+                                ? 'bg-indigo-600 text-white shadow-sm'
+                                : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                                }`}
+                            title="Gráfico"
+                        >
+                            <PieChartIcon className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                }
+            />
 
             {/* Content Area */}
             <div className="flex-1 overflow-hidden">
@@ -100,7 +98,7 @@ const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdo
                             return (
                                 <div
                                     key={index}
-                                    className="group flex items-center justify-between py-2 px-3 hover:bg-slate-50 rounded-lg transition-colors"
+                                    className="group flex items-center justify-between py-2 px-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors"
                                 >
                                     {/* Left: Color Dot + Label */}
                                     <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -108,21 +106,21 @@ const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdo
                                             className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                                             style={{ backgroundColor: color }}
                                         />
-                                        <span className="text-xs font-medium text-slate-700 truncate">
+                                        <span className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
                                             {item.label}
                                         </span>
                                     </div>
 
                                     {/* Right: Amount + % + Mini Bar */}
                                     <div className="flex items-center gap-3 flex-shrink-0">
-                                        <span className="text-sm font-bold text-slate-900 tabular-nums min-w-[70px] text-right">
+                                        <span className="text-sm font-bold text-slate-900 dark:text-white tabular-nums min-w-[70px] text-right">
                                             {formatMoney(item.amount)}€
                                         </span>
                                         <span className="text-[10px] text-slate-400 w-10 text-right tabular-nums font-bold">
                                             {percent.toFixed(1)}%
                                         </span>
                                         {/* Mini Progress Bar */}
-                                        <div className="w-16 h-1 bg-slate-100 rounded-full overflow-hidden">
+                                        <div className="w-16 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                                             <div
                                                 className="h-full rounded-full"
                                                 style={{
@@ -137,12 +135,12 @@ const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdo
                         })}
 
                         {/* Total Box - Compact */}
-                        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-xl p-3 mt-3 sticky bottom-0">
+                        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-900/20 border border-indigo-100 dark:border-indigo-900 rounded-xl p-3 mt-3 sticky bottom-0">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs text-indigo-600 font-bold uppercase tracking-wide">
+                                <span className="text-xs text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wide">
                                     Total
                                 </span>
-                                <span className="text-xl font-black text-indigo-900 tabular-nums">
+                                <span className="text-xl font-black text-indigo-900 dark:text-indigo-100 tabular-nums">
                                     {formatMoney(totalExpenses)}€
                                 </span>
                             </div>
@@ -174,9 +172,9 @@ const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdo
                         </div>
 
                         {/* Center Total */}
-                        <div className="text-center py-3 flex-shrink-0 border-b border-slate-100">
+                        <div className="text-center py-3 flex-shrink-0 border-b border-slate-100 dark:border-slate-800">
                             <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wide">Total Gastos</p>
-                            <p className="text-xl font-black text-slate-900 tabular-nums mt-0.5">
+                            <p className="text-xl font-black text-slate-900 dark:text-white tabular-nums mt-0.5">
                                 {formatMoney(totalExpenses)}€
                             </p>
                         </div>
@@ -186,18 +184,18 @@ const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdo
                             {chartData.map((item, index) => {
                                 const percent = (item.value / totalExpenses) * 100;
                                 return (
-                                    <div key={index} className="flex items-center justify-between py-1.5 px-2 hover:bg-slate-50 rounded transition-colors text-xs">
+                                    <div key={index} className="flex items-center justify-between py-1.5 px-2 hover:bg-slate-50 dark:hover:bg-slate-800/30 rounded transition-colors text-xs">
                                         <div className="flex items-center gap-2 flex-1 min-w-0">
                                             <div
                                                 className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                                                 style={{ backgroundColor: item.color }}
                                             />
-                                            <span className="font-medium text-slate-600 truncate">
+                                            <span className="font-medium text-slate-600 dark:text-slate-400 truncate">
                                                 {item.name}
                                             </span>
                                         </div>
                                         <div className="flex items-baseline gap-2 flex-shrink-0">
-                                            <span className="font-bold text-slate-800 tabular-nums">
+                                            <span className="font-bold text-slate-800 dark:text-slate-200 tabular-nums">
                                                 {formatMoney(item.value)}€
                                             </span>
                                             <span className="text-[10px] text-slate-400 w-10 text-right tabular-nums">
@@ -211,7 +209,7 @@ const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdo
                     </div>
                 )}
             </div>
-        </div>
+        </Card>
     );
 };
 
