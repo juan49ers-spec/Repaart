@@ -57,6 +57,10 @@ export interface MonthlyData {
     expenses?: number;
     grossIncome?: number;
     profit?: number;
+    // Status Fields
+    status?: 'pending' | 'draft' | 'submitted' | 'approved' | 'locked' | 'unlock_requested';
+    is_locked?: boolean;
+    breakdown?: Record<string, number>;
 }
 
 export interface BreakdownItem {
