@@ -5,19 +5,16 @@ import { financeService } from '../../services/financeService';
 import { userService } from '../../services/userService';
 import { notificationService } from '../../services/notificationService';
 import { OrderCounts, ExpenseData, SimpleFinanceData } from './finance/types';
-import { formatMoney, MonthlyData } from '../../lib/finance';
+import { formatMoney } from '../../lib/finance';
 
 // --- TYPES ---
 type AdvisoryStatus = 'safe' | 'warning' | 'danger' | 'neutral';
 
 interface AdvisoryTip {
-// ...
-// ...
-    const mapDataToState = (data: MonthlyData) => {
     title: string;
     content: string;
     status: AdvisoryStatus;
-    metric ?: string;
+    metric?: string;
     icon: React.ReactNode;
 }
 

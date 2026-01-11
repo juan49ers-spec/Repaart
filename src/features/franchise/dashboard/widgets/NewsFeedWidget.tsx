@@ -1,7 +1,7 @@
 import { useMemo, type FC } from 'react';
 import { useAdminAnnouncements } from '../../../../hooks/useAdminAnnouncements';
 import { Megaphone, Bell, CheckCircle } from 'lucide-react';
-import Card from '../../../../ui/layout/Card';
+import { Card } from '../../../../ui/primitives/Card';
 import { useAuth } from '../../../../context/AuthContext';
 
 interface Announcement {

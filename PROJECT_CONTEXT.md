@@ -27,7 +27,8 @@ Synthetic Sagan is a financial management and operational dashboard for franchis
 
 **Current State (Jan 2026):**
 
-- **Status:** Active Refactoring.
+- **Status:** Ready for QA & Deployment.
+- **Refactor Status:** The project has been fully refactored to Hexagonal Architecture (Container/Presenter) and Atomic Design. Ready for QA and Deployment.
 - **Completed Phases:**
   - ✅ **Phase 0: Deep Audit** (Health check and roadmap).
   - ✅ **Phase 1: Cleanup** (Deleted `src/legacy`, merged `src/components` into `src/ui`).

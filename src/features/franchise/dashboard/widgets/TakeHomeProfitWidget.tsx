@@ -35,7 +35,7 @@ const TakeHomeProfitWidget: React.FC<TakeHomeProfitWidgetProps> = ({
 
     const isExcellent = margin >= 20;
     const isWarning = margin < 8;
-    const isHealthy = margin >= 12 && margin < 20;
+
 
     const getConfig = () => {
         if (isExcellent) return {

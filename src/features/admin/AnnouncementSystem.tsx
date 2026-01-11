@@ -3,7 +3,7 @@ import { useAdminAnnouncements } from '../../hooks/useAdminAnnouncements';
 import { db } from '../../lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import { Plus, Trash2, Megaphone, AlertTriangle, Info, X, Users, Eye } from 'lucide-react';
-import Card from '../../ui/layout/Card';
+import { Card } from '../../ui/primitives/Card';
 import Button from '../../ui/inputs/Button';
 
 // Interface for Franchise from Firestore

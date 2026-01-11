@@ -1,5 +1,5 @@
 import { type FC } from 'react';
-import { Clock, TrendingDown, TrendingUp, Info, Users, Euro } from 'lucide-react';
+import { Clock, Info, Users, Euro } from 'lucide-react';
 import { formatMoney } from '../../../../lib/finance';
 import { Card } from '../../../../ui/primitives/Card';
 import { SectionHeader } from '../../../../ui/primitives/SectionHeader';
@@ -25,7 +25,7 @@ const HourlyCostWidget: FC<HourlyCostWidgetProps> = ({
     const laborCostPerHour = totalHours > 0 ? laborCost / totalHours : 0;
     const otherCostPerHour = totalHours > 0 ? otherCosts / totalHours : 0;
 
-    const isPositiveTrend = trend >= 0;
+
     const laborPercentage = totalCost > 0 ? (laborCost / totalCost) * 100 : 0;
     const otherPercentage = totalCost > 0 ? (otherCosts / totalCost) * 100 : 0;
 
@@ -35,7 +35,7 @@ const HourlyCostWidget: FC<HourlyCostWidgetProps> = ({
     const INDUSTRY_BENCHMARK_OPTIMAL = 20; // €/h
 
     const isUnderBenchmark = costPerHour < INDUSTRY_BENCHMARK_MIN;
-    const isOptimal = costPerHour >= INDUSTRY_BENCHMARK_MIN && costPerHour <= INDUSTRY_BENCHMARK_MAX;
+
     const isOverBenchmark = costPerHour > INDUSTRY_BENCHMARK_MAX;
 
     const benchmarkDiff = costPerHour - INDUSTRY_BENCHMARK_OPTIMAL;
