@@ -15,6 +15,9 @@ interface MobileAgendaViewProps {
     onEditShift: (shift: any) => void;
     onDeleteShift: (shiftId: string) => void;
     onAddShift: (isoDate: string) => void;
+    readOnly?: boolean;
+    expandedShiftId?: string | null;
+    isRiderMode?: boolean;
 }
 
 const TeamLogo: React.FC<{ src?: string, name?: string, size?: number }> = ({ src, name = '?', size = 20 }) => {
@@ -59,7 +62,10 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> = ({
     intelByDay = {},
     onEditShift,
     onDeleteShift,
-    onAddShift
+    onAddShift,
+    readOnly = false,
+    expandedShiftId,
+    isRiderMode = false
 }) => {
     return (
         <div className="space-y-6 pb-20">
@@ -157,6 +163,7 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> = ({
                                 onClick={() => onAddShift(day.isoDate)}
                                 className={`absolute right-2 top-1/2 -translate-y-1/2 p-2.5 rounded-full shadow-lg active:scale-95 transition-all
                                     ${isToday ? 'bg-indigo-600 text-white shadow-indigo-500/30' : 'bg-slate-800 text-white shadow-slate-800/20'}
+                                    ${readOnly ? 'hidden' : ''}
                                 `}
                                 title="Añadir turno"
                             >
@@ -178,7 +185,9 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> = ({
                                         onClick={() => onEditShift(ev)}
                                         onClone={() => { }}
                                         onDelete={onDeleteShift}
-                                        readOnly={false}
+                                        readOnly={readOnly}
+                                        isExpanded={expandedShiftId === ev.shiftId}
+                                        isRiderMode={isRiderMode}
                                         style={{ width: '100%' }}
                                     />
                                 ))

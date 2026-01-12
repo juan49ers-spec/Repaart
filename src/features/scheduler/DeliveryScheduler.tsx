@@ -1,0 +1,541 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, Zap, Sun, Moon, CloudRain, Shield, Trophy, Flag, Save, Loader2, X, Plus, Clock } from 'lucide-react';
+import { cn } from '../../lib/utils';
+import { getRiderInitials } from '../../utils/colorPalette';
+import { toLocalDateString, toLocalISOString } from '../../utils/dateUtils';
+import ShiftModal from '../../features/operations/ShiftModal';
+import QuickFillModal from '../../features/operations/QuickFillModal';
+import MobileAgendaView from '../../features/operations/MobileAgendaView';
+
+import { useWeeklySchedule } from '../../hooks/useWeeklySchedule';
+import { useAuth } from '../../context/AuthContext';
+import { getRiderColor } from '../../utils/riderColors';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { format, startOfWeek, addDays, parseISO, setHours, differenceInMinutes, isToday } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { useFleetStore } from '../../store/useFleetStore';
+import { useVehicleStore } from '../../store/useVehicleStore';
+import { shiftService } from '../../services/shiftService';
+import { migrationService } from '../../services/migrationService';
+
+const DeliveryScheduler: React.FC<{
+    franchiseId: string;
+    selectedDate: Date;
+    onDateChange: (date: Date) => void;
+    readOnly?: boolean;
+}> = ({ franchiseId, selectedDate, onDateChange, readOnly }) => {
+    const { user } = useAuth();
+    const safeFranchiseId = franchiseId || user?.uid || '';
+    const isMobile = useMediaQuery('(max-width: 768px)');
+
+    // --- UI STATE ---
+    const [viewMode, setViewMode] = useState<'day' | 'week'>('week');
+    const [showPrime, setShowPrime] = useState(false);
+    const [isPublishing, setIsPublishing] = useState(false);
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    // Update time every minute for the Red Line
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+        return () => clearInterval(timer);
+    }, []);
+
+    // --- DATA HOOKS ---
+    const {
+        weekData,
+        loading,
+        navigateWeek: changeWeek,
+        motos
+    } = useWeeklySchedule(safeFranchiseId, readOnly, selectedDate);
+
+    // --- DRAFT MODE STATE ---
+    const [localShifts, setLocalShifts] = useState<any[]>([]);
+    const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+    const hasUnsavedChanges = localShifts.length > 0 || deletedIds.size > 0;
+
+    // --- STORES ---
+    const { riders: rosterRiders, fetchRiders } = useFleetStore();
+    const { vehicles, fetchVehicles } = useVehicleStore();
+
+    useEffect(() => {
+        if (safeFranchiseId) {
+            fetchRiders(safeFranchiseId);
+            fetchVehicles(safeFranchiseId);
+        }
+    }, [fetchRiders, fetchVehicles, safeFranchiseId]);
+
+    // --- ACTIONS ---
+    const saveShift = (shiftData: any) => {
+        const existingId = shiftData.id || shiftData.shiftId;
+        const isNewToken = !existingId || (typeof existingId === 'string' && existingId.startsWith('draft-'));
+
+        const finalShift = {
+            ...shiftData,
+            id: existingId || `draft-${crypto.randomUUID()}`,
+            isDraft: true,
+            isNew: isNewToken
+        };
+
+        setLocalShifts(prev => {
+            const filtered = prev.filter(s => String(s.id) !== String(finalShift.id));
+            return [...filtered, finalShift];
+        });
+    };
+
+    const deleteShift = (shiftId: string) => {
+        const shiftIdStr = String(shiftId);
+        if (shiftIdStr.startsWith('draft-')) {
+            setLocalShifts(prev => prev.filter(s => String(s.id) !== shiftIdStr));
+        } else {
+            setDeletedIds(prev => {
+                const newSet = new Set(prev);
+                newSet.add(shiftIdStr);
+                return newSet;
+            });
+            setLocalShifts(prev => prev.filter(s => String(s.id) !== shiftIdStr));
+        }
+    };
+
+    const handlePublish = async () => {
+        if (!safeFranchiseId || isPublishing) return;
+        setIsPublishing(true);
+        try {
+            for (const id of deletedIds) {
+                await shiftService.deleteShift(id);
+            }
+            for (const s of localShifts) {
+                const inputData = {
+                    franchiseId: safeFranchiseId,
+                    riderId: s.riderId,
+                    riderName: s.riderName || rosterRiders.find(r => r.id === s.riderId)?.fullName || 'Rider',
+                    motoId: s.motoId || null,
+                    motoPlate: s.motoPlate || '',
+                    startAt: s.startAt,
+                    endAt: s.endAt
+                };
+
+                const isTrulyNew = (typeof s.id === 'string' && s.id.startsWith('draft-')) || !weekData?.shifts?.some(rs => rs.id === s.id);
+
+                if (isTrulyNew) {
+                    await shiftService.createShift(inputData);
+                } else {
+                    await shiftService.updateShift(s.id, inputData);
+                }
+            }
+            setLocalShifts([]);
+            setDeletedIds(new Set());
+            alert("✅ Cambios publicados.");
+        } catch (error: any) {
+            console.error(error);
+            alert("Error al publicar.");
+        } finally {
+            setIsPublishing(false);
+        }
+    };
+
+    // --- EVENT SIMULATION ---
+    const getEventsForDate = (dateIso: string) => {
+        const [y, m, d] = dateIso.split('-').map(Number);
+        const date = new Date(y, m - 1, d);
+        const month = date.getMonth();
+        const dayOfMonth = date.getDate();
+        const events = [];
+
+        if (month === 0 && dayOfMonth === 1) events.push({ label: 'Año Nuevo', icon: Flag, color: 'text-red-400', bg: 'bg-red-500/10' });
+        if (month === 0 && dayOfMonth === 6) events.push({ label: 'Reyes', icon: Trophy, color: 'text-amber-400', bg: 'bg-amber-500/10' });
+        if (month === 0 && dayOfMonth === 11) events.push({ label: '⚽ CLÁSICO', icon: Trophy, color: 'text-amber-300', bg: 'bg-amber-500/20' });
+
+        const hash = dateIso.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+        if (hash % 7 === 0) events.push({ label: '🌧️ Lluvia', icon: CloudRain, color: 'text-blue-300', bg: 'bg-blue-500/10' });
+
+        return events;
+    };
+
+    const days = useMemo(() => {
+        const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
+        return Array.from({ length: 7 }).map((_, i) => {
+            const date = addDays(start, i);
+            return {
+                date,
+                dateObj: date,
+                isoDate: toLocalDateString(date),
+                label: format(date, 'EEEE d', { locale: es }),
+                shortLabel: format(date, 'EEE', { locale: es })
+            };
+        });
+    }, [selectedDate]);
+
+    const eventsByDay = useMemo(() => {
+        const map: Record<string, any[]> = {};
+        days.forEach(d => {
+            map[d.isoDate] = getEventsForDate(d.isoDate);
+        });
+        return map;
+    }, [days]);
+
+    // --- GRID CALCULATION ---
+    const mergedShifts = useMemo(() => {
+        const remote = weekData?.shifts || [];
+        const liveRemote = remote.filter(s => !deletedIds.has(String(s.id || s.shiftId)));
+        return [...liveRemote, ...localShifts];
+    }, [weekData?.shifts, localShifts, deletedIds]);
+
+    const ridersGrid = useMemo(() => {
+        const ridersMap = new Map();
+        rosterRiders.forEach(r => {
+            if (r.status === 'active' || r.status === 'on_route') {
+                ridersMap.set(r.id, {
+                    id: r.id,
+                    fullName: r.fullName,
+                    shifts: [],
+                    contractHours: r.contractHours || 40
+                });
+            }
+        });
+
+        mergedShifts.forEach(s => {
+            const rid = s.riderId;
+            if (ridersMap.has(rid)) {
+                ridersMap.get(rid).shifts.push(s);
+            }
+        });
+
+        return Array.from(ridersMap.values()).map(rider => {
+            const totalHours = rider.shifts.reduce((acc: number, s: any) => {
+                return acc + (differenceInMinutes(new Date(s.endAt), new Date(s.startAt))) / 60;
+            }, 0);
+            return { ...rider, totalWeeklyHours: totalHours };
+        }).sort((a, b) => a.fullName.localeCompare(b.fullName));
+    }, [mergedShifts, rosterRiders]);
+
+    const coverage = useMemo(() => {
+        const res: Record<string, number[]> = {};
+        days.forEach(d => res[d.isoDate] = Array(24).fill(0));
+        mergedShifts.forEach(s => {
+            const date = toLocalDateString(new Date(s.startAt));
+            if (res[date]) {
+                const sStart = new Date(s.startAt);
+                const sEnd = new Date(s.endAt);
+                const start = sStart.getHours();
+                const end = sEnd.getHours();
+                const endM = sEnd.getMinutes();
+                const realEnd = (end === 0 && endM === 0) ? 24 : end;
+                for (let h = start; h < realEnd; h++) {
+                    if (h >= 0 && h < 24) res[date][h]++;
+                }
+            }
+        });
+        return res;
+    }, [days, mergedShifts]);
+
+    // --- TIME INDICATOR CALC ---
+    const viewingToday = isToday(selectedDate);
+    const redLinePosition = viewingToday ? (currentTime.getHours() * 60 + currentTime.getMinutes()) / 1440 * 100 : null;
+
+    // --- UI HELPERS ---
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingShift, setEditingShift] = useState<any | null>(null);
+    const [selectedDateForNew, setSelectedDateForNew] = useState<string | null>(null);
+    const [prefillHour, setPrefillHour] = useState<number | undefined>(undefined);
+    const [isQuickFillOpen, setIsQuickFillOpen] = useState(false);
+
+    const hours = Array.from({ length: 24 }, (_, i) => i);
+
+    const handleQuickAdd = (dateIso: string, riderId: string, hour?: number) => {
+        if (readOnly) return;
+        const h = hour ?? 13;
+        const baseDate = parseISO(dateIso);
+        saveShift({
+            riderId,
+            startAt: toLocalISOString(setHours(baseDate, h)),
+            endAt: toLocalISOString(setHours(baseDate, h + 4)),
+            date: dateIso
+        });
+    };
+
+    const handleAddShift = (dateIso: string, _riderId?: string, hour?: number) => {
+        if (readOnly) return;
+        setEditingShift(null);
+        setSelectedDateForNew(dateIso);
+        setPrefillHour(hour);
+        setIsModalOpen(true);
+    };
+
+    const handleEditShift = (shift: any) => {
+        if (readOnly) return;
+        setEditingShift(shift);
+        setIsModalOpen(true);
+    };
+
+    const simpleRiders = useMemo(() => rosterRiders.map(r => ({ id: r.id, fullName: r.fullName, name: r.fullName })), [rosterRiders]);
+
+    if (loading) return <div className="p-8 text-center animate-pulse text-slate-400 font-medium">Cargando Matrix V3...</div>;
+
+    if (isMobile) {
+        return <MobileAgendaView
+            days={days}
+            visualEvents={mergedShifts.reduce((acc: any, s: any) => {
+                const d = toLocalDateString(new Date(s.startAt));
+                if (!acc[d]) acc[d] = [];
+                acc[d].push({ ...s, visualStart: s.startAt, visualEnd: s.endAt, shiftId: s.id || s.shiftId });
+                return acc;
+            }, {})}
+            onEditShift={handleEditShift}
+            onDeleteShift={deleteShift}
+            onAddShift={handleAddShift}
+        />;
+    }
+
+    return (
+        <div className="flex flex-col h-full bg-white relative overflow-hidden font-sans">
+            {/* --- HEADER V3 --- */}
+            <div className="bg-white/80 backdrop-blur-md border-b border-slate-100 z-30 sticky top-0">
+                <div className="px-6 py-4 flex items-center justify-between">
+                    <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-1">
+                            <button onClick={() => changeWeek(-1)} className="p-2 hover:bg-slate-100 rounded-full transition-all text-slate-500"><ChevronLeft size={20} /></button>
+                            <span className="px-2 text-lg font-medium text-slate-900 capitalize">
+                                {format(selectedDate, 'MMMM yyyy', { locale: es })}
+                            </span>
+                            <button onClick={() => changeWeek(1)} className="p-2 hover:bg-slate-100 rounded-full transition-all text-slate-500"><ChevronRight size={20} /></button>
+                        </div>
+
+                        <div className="flex bg-slate-100/50 p-1 rounded-full border border-slate-100">
+                            <button onClick={() => setViewMode('day')} className={cn("px-4 py-1.5 text-xs font-medium rounded-full transition-all", viewMode === 'day' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700")}>Día</button>
+                            <button onClick={() => setViewMode('week')} className={cn("px-4 py-1.5 text-xs font-medium rounded-full transition-all", viewMode === 'week' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700")}>Semana</button>
+                        </div>
+
+                        <button onClick={() => setShowPrime(!showPrime)} className={cn("px-4 py-1.5 text-xs font-medium rounded-full border transition-all flex items-center gap-2", showPrime ? "bg-amber-50 border-amber-200 text-amber-600 shadow-sm" : "bg-white border-slate-200 text-slate-500 hover:border-slate-300 shadow-sm")}>
+                            <Zap size={14} className={showPrime ? "fill-amber-500" : ""} /> PRIME
+                        </button>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => setIsQuickFillOpen(true)} className="px-5 py-2 bg-indigo-600 text-white text-xs font-medium rounded-full hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-lg shadow-indigo-100">
+                            <Zap size={14} className="fill-white/20" /> Relleno Rápido
+                        </button>
+                        <button onClick={() => migrationService.cleanDuplicateShifts(safeFranchiseId).then(r => alert(`Limpio: ${r.count}`))} className="p-2 text-slate-300 hover:text-slate-500 rounded-full hover:bg-slate-50 transition-colors">
+                            <Shield size={18} />
+                        </button>
+                    </div>
+                </div>
+
+                {/* --- TICKER V3 --- */}
+                <div className="px-6 py-2 flex items-center gap-6 overflow-x-auto scrollbar-hide border-t border-slate-50">
+                    {days.map(d => (eventsByDay[d.isoDate] || []).map((e, idx) => (
+                        <div key={`${d.isoDate}-${idx}`} className={cn("flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-medium whitespace-nowrap shadow-sm", e.bg, e.color.replace('text-', 'border-').replace('400', '100'))}>
+                            <e.icon size={12} className="opacity-70" />
+                            <span className="opacity-50 font-bold uppercase tracking-tighter">{d.shortLabel}:</span>
+                            <span>{e.label}</span>
+                        </div>
+                    )))}
+                    {days.every(d => (eventsByDay[d.isoDate] || []).length === 0) && (
+                        <span className="text-slate-300 text-[10px] italic font-medium">Despejado para toda la semana.</span>
+                    )}
+                </div>
+            </div>
+
+            <div className="flex-1 overflow-auto bg-white">
+                <table className="w-full border-collapse table-fixed">
+                    <thead className="sticky top-0 z-20 bg-slate-50/80 backdrop-blur-sm shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
+                        <tr>
+                            <th className="w-64 p-4 text-left border-r border-slate-50 bg-white sticky left-0 z-40 text-[10px] uppercase font-bold tracking-widest text-slate-400">Personal</th>
+                            {viewMode === 'week' ? days.map(d => (
+                                <th key={d.isoDate} className={cn("p-3 text-center transition-colors hover:bg-slate-50/50", d.isoDate === toLocalDateString(new Date()) && "bg-indigo-50")}>
+                                    <div className="flex flex-col items-center gap-1">
+                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">{d.shortLabel}</span>
+                                        <span className={cn("text-base font-medium w-8 h-8 flex items-center justify-center rounded-full", d.isoDate === toLocalDateString(new Date()) ? "bg-indigo-600 text-white shadow-md shadow-indigo-100" : "text-slate-700")}>{format(d.date, 'd')}</span>
+                                    </div>
+                                </th>
+                            )) : hours.map(h => (
+                                <th key={h} className={cn("p-0 text-center text-[10px] font-bold tracking-tighter border-r border-dashed border-slate-100 relative h-10 align-middle transition-colors", showPrime && ((h >= 13 && h <= 15) || (h >= 20 && h <= 23)) ? "bg-amber-50/80 text-amber-600" : "text-slate-400/80")}>
+                                    <span className="z-10 relative">{h}:00</span>
+                                    {viewingToday && currentTime.getHours() === h && (
+                                        <div
+                                            className="absolute top-2 w-3 h-3 bg-red-500 rounded-full shadow-sm z-50 -translate-x-1/2"
+                                            style={{ left: `${(currentTime.getMinutes() / 60) * 100}%` }}
+                                        />
+                                    )}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {ridersGrid.map(rider => (
+                            <tr key={rider.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors group">
+                                <td className="p-4 border-r border-slate-100 bg-white sticky left-0 z-30 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.03)]">
+                                    <div className="flex items-center gap-4">
+                                        <div className={cn("w-11 h-11 rounded-2xl flex items-center justify-center text-sm font-bold text-white shadow-lg", getRiderColor(rider.id).bg)}>
+                                            {getRiderInitials(rider.fullName)}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-semibold text-slate-900 truncate tracking-tight">{rider.fullName}</p>
+                                            <div className="mt-1.5">
+                                                <div className="flex justify-between text-[9px] font-bold uppercase mb-1">
+                                                    <span className={rider.totalWeeklyHours < (rider.contractHours * 0.5) ? "text-amber-500" : rider.totalWeeklyHours <= rider.contractHours ? "text-emerald-500" : "text-rose-500"}>
+                                                        {rider.totalWeeklyHours < (rider.contractHours * 0.5) ? "Carga Parcial" : rider.totalWeeklyHours <= rider.contractHours ? "Optimizado" : "Saturación"}
+                                                    </span>
+                                                    <span className="text-slate-400 tabular-nums">{rider.totalWeeklyHours.toFixed(1)} / {rider.contractHours}h</span>
+                                                </div>
+                                                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-50">
+                                                    <div
+                                                        className={cn("h-full transition-all duration-500", rider.totalWeeklyHours < (rider.contractHours * 0.5) ? "bg-amber-400" : rider.totalWeeklyHours <= rider.contractHours ? "bg-emerald-500" : "bg-rose-500")}
+                                                        style={{ width: `${Math.min((rider.totalWeeklyHours / rider.contractHours) * 100, 100)}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                {viewMode === 'week' ? days.map(d => {
+                                    const dayShifts = rider.shifts.filter((s: any) => toLocalDateString(new Date(s.startAt)) === d.isoDate);
+                                    return (
+                                        <td key={d.isoDate} className={cn("p-2 align-top relative cursor-crosshair group/cell hover:bg-slate-50/30", coverage[d.isoDate]?.some(c => c < 4) ? "bg-rose-500/[0.02]" : "", d.isoDate === toLocalDateString(new Date()) && "bg-indigo-50")} onClick={() => handleQuickAdd(d.isoDate, rider.id)} onDoubleClick={() => handleAddShift(d.isoDate, rider.id)}>
+                                            <div className="flex flex-col gap-1.5">
+                                                {dayShifts.map((s: any) => {
+                                                    const sStart = new Date(s.startAt);
+                                                    const sEnd = new Date(s.endAt);
+                                                    const isExpress = (differenceInMinutes(sEnd, sStart) / 60) < 3;
+
+                                                    if (s.isDraft) {
+                                                        return (
+                                                            <div key={s.id} onClick={(e) => { e.stopPropagation(); handleEditShift(s); }} className="px-2.5 py-2 rounded-xl bg-white/50 border-2 border-dashed border-indigo-200 text-indigo-500 text-[10px] font-medium shadow-sm transition-all hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-between">
+                                                                <span className="truncate">{format(sStart, 'HH:mm')} - {format(sEnd, 'HH:mm')}</span>
+                                                                <Clock size={10} className="animate-spin-slow opacity-40" />
+                                                            </div>
+                                                        );
+                                                    }
+
+                                                    return (
+                                                        <div key={s.id} onClick={(e) => { e.stopPropagation(); handleEditShift(s); }} className={cn("px-2.5 py-2 rounded-md shadow-sm ring-1 ring-black/5 text-[10px] font-medium text-white transition-all hover:scale-[1.02] hover:shadow-md cursor-pointer flex items-center justify-between gap-1", sStart.getHours() < 15 ? "bg-gradient-to-br from-emerald-500 to-teal-400" : "bg-gradient-to-br from-indigo-600 to-blue-500")}>
+                                                            <span className="whitespace-nowrap tracking-tighter">{format(sStart, 'HH:mm')} - {format(sEnd, 'HH:mm')}</span>
+                                                            {isExpress && <Zap size={10} className="fill-white/20 border-none" />}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </td>
+                                    );
+                                }) : (
+                                    <td className="p-0 relative h-16 bg-white" colSpan={24}>
+                                        <div className="absolute inset-0 flex">
+                                            {hours.map(h => (
+                                                <div key={h} className={cn("flex-1 border-r border-slate-100/50 relative cursor-crosshair transition-colors", showPrime && ((h >= 13 && h <= 15) || (h >= 20 && h <= 23)) ? "bg-amber-100/30" : "hover:bg-slate-50/30")} onClick={() => handleQuickAdd(toLocalDateString(selectedDate), rider.id, h)} onDoubleClick={() => handleAddShift(toLocalDateString(selectedDate), rider.id, h)}>
+                                                    {rider.shifts.filter((s: any) => {
+                                                        const sStart = new Date(s.startAt);
+                                                        const sEnd = new Date(s.endAt);
+                                                        if (toLocalDateString(sStart) !== toLocalDateString(selectedDate)) return false;
+                                                        const start = sStart.getHours();
+                                                        const end = sEnd.getHours();
+                                                        const endM = sEnd.getMinutes();
+                                                        const realEnd = (end === 0 && endM === 0) ? 24 : end;
+                                                        return h >= start && h < realEnd;
+                                                    }).map(s => {
+                                                        const sStart = new Date(s.startAt);
+                                                        const isStart = sStart.getHours() === h;
+                                                        const isDraft = s.isDraft;
+
+                                                        return (
+                                                            <div
+                                                                key={s.id}
+                                                                onClick={(e) => { e.stopPropagation(); handleEditShift(s); }}
+                                                                className={cn(
+                                                                    "absolute top-0 h-full w-[calc(100%+1px)] -right-[0.5px] z-10 flex items-center select-none transition-all cursor-pointer shadow-sm border-t border-white/20",
+                                                                    isStart ? "rounded-l-lg pl-2" : "rounded-l-none",
+                                                                    (new Date(s.endAt).getHours() === h + 1 || (new Date(s.endAt).getHours() === 0 && h === 23)) ? "rounded-r-lg" : "rounded-r-none",
+                                                                    isDraft
+                                                                        ? "bg-white border-2 border-dashed border-indigo-400 text-indigo-600 z-20"
+                                                                        : (sStart.getHours() < 15 ? "bg-gradient-to-b from-emerald-400 to-emerald-500 text-white" : "bg-gradient-to-b from-blue-500 to-blue-600 text-white")
+                                                                )}
+                                                            >
+                                                                {isStart && (
+                                                                    <span className="text-[10px] font-medium tracking-tight whitespace-nowrap overflow-visible z-20 text-white/90 drop-shadow-sm">
+                                                                        {format(sStart, 'HH:mm')} - {format(new Date(s.endAt), 'HH:mm')}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            ))}
+                                            {viewingToday && (
+                                                <div
+                                                    className="absolute top-0 bottom-0 border-l-[2px] border-red-500 z-50 pointer-events-none transition-all"
+                                                    style={{ left: `${redLinePosition}%` }}
+                                                />
+                                            )}
+                                        </div>
+                                    </td>
+                                )}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            <div className="bg-white border-t border-slate-100 px-8 py-4 flex items-center gap-8 shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.02)] z-30">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Cobertura Mínima
+                </span>
+                <div className="flex-1 flex gap-3">
+                    {days.map(d => {
+                        const min = Math.min(...(coverage[d.isoDate] || []));
+                        return (
+                            <div key={d.isoDate} className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden relative group/foot transition-all hover:h-2.5">
+                                <div className={cn("h-full transition-all duration-700", min < 4 ? "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.3)]" : "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]")} style={{ width: `${Math.min((min / 4) * 100, 100)}%` }} />
+                                <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1.5 rounded-xl opacity-0 group-hover/foot:opacity-100 pointer-events-none transition-all scale-95 group-hover/foot:scale-100 shadow-xl whitespace-nowrap">
+                                    <span className="font-bold">{min}/4</span> riders activos en {d.shortLabel}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {isModalOpen && (
+                <ShiftModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    onSave={saveShift}
+                    onDelete={deleteShift}
+                    initialData={editingShift}
+                    selectedDate={selectedDateForNew || toLocalDateString(selectedDate)}
+                    prefillHour={prefillHour}
+                    riders={simpleRiders}
+                    motos={vehicles.map(v => ({ id: (v.id || 'none') as string, licensePlate: (v.matricula || '') as string, model: (v.modelo || '') as string }))}
+                />
+            )}
+
+            {isQuickFillOpen && (
+                <QuickFillModal
+                    isOpen={isQuickFillOpen}
+                    onClose={() => setIsQuickFillOpen(false)}
+                    onRefresh={() => { }}
+                    franchiseId={safeFranchiseId}
+                    riders={simpleRiders}
+                    motos={motos}
+                    weekDays={days}
+                    existingShifts={mergedShifts}
+                />
+            )}
+
+            {hasUnsavedChanges && (
+                <div className="fixed bottom-28 right-10 z-[60] animate-in zoom-in-95 slide-in-from-bottom-5">
+                    <button
+                        onClick={handlePublish}
+                        disabled={isPublishing}
+                        className="flex items-center gap-4 px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-medium shadow-[0_20px_40px_-10px_rgba(79,70,229,0.4)] hover:scale-105 active:scale-95 transition-all disabled:opacity-50 ring-8 ring-indigo-50"
+                    >
+                        {isPublishing ? <Loader2 size={24} className="animate-spin" /> : <Save size={20} />}
+                        <div className="flex flex-col items-start leading-tight">
+                            <span className="text-sm">Publicar Horario</span>
+                            <span className="text-[10px] opacity-70 italic">{localShifts.length + deletedIds.size} cambios pendientes</span>
+                        </div>
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default DeliveryScheduler;

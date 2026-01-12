@@ -1,17 +1,21 @@
-import { useState, Suspense } from 'react';
+import { useState, Suspense, lazy } from 'react';
 import { Calendar, Users, Bike, Loader2 } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
-import WeeklyScheduler from './WeeklyScheduler';
 import RealMadridWidget from '../user/components/RealMadridWidget';
-import RiderManagement from './RiderManagement'; // Componente especializado
-import FleetManager from './FleetManager';
+import RidersView from '../fleet/RidersView'; // New Backend-Connected View
+import { VehiclesView } from '../fleet/vehicles/VehiclesView'; // New Atomic Component
 import ErrorBoundary from '../../ui/feedback/ErrorBoundary';
+
+// Lazy load the new Scheduler
+// Lazy load the new Scheduler
+const DeliveryScheduler = lazy(() => import('../scheduler/DeliveryScheduler'));
 
 const OperationsPage = () => {
     // Get context if available from dashboard layout, or use standard hooks inside components
     const outletContext = useOutletContext<{ franchiseId?: string }>();
     const franchiseId = outletContext?.franchiseId || '';
     const [activeTab, setActiveTab] = useState<'scheduler' | 'riders' | 'motos'>('scheduler');
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
     return (
         <div className="h-full bg-slate-50 p-6 overflow-hidden flex flex-col space-y-6">
@@ -86,17 +90,21 @@ const OperationsPage = () => {
                     }>
                         {activeTab === 'scheduler' && (
                             <div className="h-full animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                <WeeklyScheduler franchiseId={franchiseId} readOnly={false} />
+                                <DeliveryScheduler
+                                    franchiseId={franchiseId}
+                                    selectedDate={selectedDate}
+                                    onDateChange={setSelectedDate}
+                                />
                             </div>
                         )}
                         {activeTab === 'riders' && (
                             <div className="h-full overflow-y-auto animate-in fade-in slide-in-from-right-4 duration-300 p-4">
-                                <RiderManagement franchiseId={franchiseId} readOnly={false} />
+                                <RidersView franchiseId={franchiseId} />
                             </div>
                         )}
                         {activeTab === 'motos' && (
                             <div className="h-full overflow-y-auto animate-in fade-in slide-in-from-right-4 duration-300 p-4">
-                                <FleetManager franchiseId={franchiseId} />
+                                <VehiclesView />
                             </div>
                         )}
                     </Suspense>

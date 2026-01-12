@@ -3,10 +3,12 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { useExport } from './hooks/useExport';
 import { useAppStore } from './store/useAppStore';
+import { lazyWithRetry } from './utils/lazyWithRetry';
 
 // Layout & Security
 import DashboardLayout from './layouts/DashboardLayout';
 import ProtectedRoute from './features/auth/ProtectedRoute';
+import RequireRole from './layouts/RequireRole';
 import DashboardSkeleton from './ui/layout/DashboardSkeleton';
 import Login from './features/auth/Login';
 import NotFound from './layouts/pages/NotFound';
@@ -27,16 +29,23 @@ import TariffEditor from './features/admin/finance/TariffEditor';
 import AdminSupportPanel from './features/admin/AdminSupportPanel';
 import AdminResourcesPanel from './features/admin/AdminResourcesPanel';
 
-// Lazy Load Heavy Components (Code Splitting)
-// const FranchiseDashboard = React.lazy(() => import('./features/franchise/FranchiseDashboard'));
-// const OperationsDashboard = React.lazy(() => import('./features/operations/OperationsDashboard'));
-const OperationsPage = React.lazy(() => import('./features/operations/OperationsPage'));
-const Academy = React.lazy(() => import('./features/academy/Academy'));
-const AdminFranchiseView = React.lazy(() => import('./features/admin/AdminFranchiseView'));
-const KanbanBoard = React.lazy(() => import('./features/admin/kanban/KanbanBoard'));
+// Lazy Load Heavy Components (Durability with lazyWithRetry)
+// const FranchiseDashboard = lazyWithRetry(() => import('./features/franchise/FranchiseDashboard'));
+const OperationsPage = lazyWithRetry(() => import('./features/operations/OperationsPage'));
+const Academy = lazyWithRetry(() => import('./features/academy/Academy'));
+const AdminFranchiseView = lazyWithRetry(() => import('./features/admin/AdminFranchiseView'));
+const KanbanBoard = lazyWithRetry(() => import('./features/admin/kanban/KanbanBoard'));
+const RidersView = lazyWithRetry(() => import('./features/fleet/RidersView'));
 
 import { useFranchiseFinance } from './hooks/useFranchiseFinance';
 import { useVersionCheck } from './hooks/useVersionCheck';
+import { RiderLayout } from './layouts/RiderLayout';
+
+
+
+const RiderScheduleView = lazyWithRetry(() => import('./features/rider/schedule/RiderScheduleView').then(module => ({ default: module.RiderScheduleView })));
+const RiderProfileView = lazyWithRetry(() => import('./features/rider/profile/RiderProfileView').then(module => ({ default: module.RiderProfileView })));
+const RiderHomeView = lazyWithRetry(() => import('./features/rider/home/RiderHomeView').then(module => ({ default: module.RiderHomeView })));
 
 function App() {
     const { user, loading: authLoading, roleConfig, logout, isAdmin } = useAuth();
@@ -60,7 +69,7 @@ function App() {
     const isFranchise = roleConfig?.role === 'franchise';
 
     // 🛠️ DEBUG & CACHE CLEANUP
-    console.log("🚀 Running App Version: v3.12.0 (Zustand State)");
+    console.log("🚀 Running App Version: v3.12.2 (Buttons Fixed)");
 
     // --- DATA FETCHING ---
     const dataHookFranchiseId = (isAdmin && targetFranchiseId)
@@ -124,28 +133,70 @@ function App() {
 
     return (
         <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><DashboardSkeleton /></div>}>
+
             <Routes>
                 {/* PUBLIC */}
-                <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" replace />} />
+                <Route path="/login" element={
+                    !user ? <Login /> : (
+                        ['rider', 'driver'].includes(user.role || '')
+                            ? <Navigate to="/rider/dashboard" replace />
+                            : <Navigate to="/dashboard" replace />
+                    )
+                } />
 
                 {/* PROTECTED LAYOUT */}
                 <Route path="/" element={
                     <ProtectedRoute>
-                        <DashboardLayout {...layoutProps} outletContext={outletContext} />
+                        {['rider', 'driver'].includes(user?.role || '') ? (
+                            <Navigate to="/rider/dashboard" replace />
+                        ) : (
+                            <DashboardLayout {...layoutProps} outletContext={outletContext} />
+                        )}
                     </ProtectedRoute>
                 }>
-                    <Route index element={<Navigate to="/dashboard" replace />} />
+                    <Route index element={
+                        ['rider', 'driver'].includes(user?.role || '')
+                            ? <Navigate to="/rider/dashboard" replace />
+                            : (user?.role === 'admin' || user?.role === 'franchise'
+                                ? <Navigate to="/dashboard" replace />
+                                : <Navigate to="/profile" replace />)
+                    } />
 
-                    {/* CORE */}
-                    <Route path="dashboard" element={<DashboardSwitcher />} />
-                    <Route path="operations" element={<OperationsPage />} />
-                    <Route path="academy" element={<Academy />} />
+                    {/* CORE (Admin/Franchise Only) */}
+                    <Route path="dashboard" element={
+                        <RequireRole allowedRoles={['admin', 'franchise']}>
+                            <DashboardSwitcher />
+                        </RequireRole>
+                    } />
+                    <Route path="operations" element={
+                        <RequireRole allowedRoles={['admin', 'franchise']}>
+                            <OperationsPage />
+                        </RequireRole>
+                    } />
+                    <Route path="academy" element={
+                        <RequireRole allowedRoles={['admin', 'franchise']}>
+                            <Academy />
+                        </RequireRole>
+                    } />
+                    <Route path="fleet" element={
+                        <RequireRole allowedRoles={['admin', 'franchise']}>
+                            <RidersView />
+                        </RequireRole>
+                    } />
                     <Route path="profile" element={<UserProfile />} />
                     <Route path="demo/smart-input" element={<DevSandbox />} />
 
                     {/* FRANCHISE SPECIFIC */}
-                    <Route path="support" element={<SupportHub />} />
-                    <Route path="resources" element={<ResourcesPanel />} />
+                    <Route path="support" element={
+                        <RequireRole allowedRoles={['admin', 'franchise']}>
+                            <SupportHub />
+                        </RequireRole>
+                    } />
+                    <Route path="resources" element={
+                        <RequireRole allowedRoles={['admin', 'franchise']}>
+                            <ResourcesPanel />
+                        </RequireRole>
+                    } />
 
                     {/* ADMIN SPECIFIC */}
                     <Route path="admin/users" element={
@@ -207,10 +258,25 @@ function App() {
                         </ProtectedRoute>
                     } />
 
-                    {/* 404 */}
+                    {/* 404 for DashboardLayout */}
                     <Route path="*" element={<NotFound />} />
                 </Route>
+
+                {/* RIDER SPECIFIC APP (Independent from Admin Layout) */}
+                <Route path="/rider" element={
+                    <ProtectedRoute>
+                        <RequireRole allowedRoles={['rider', 'driver', 'admin']}>
+                            <RiderLayout />
+                        </RequireRole>
+                    </ProtectedRoute>
+                }>
+                    <Route index element={<Navigate to="dashboard" replace />} />
+                    <Route path="dashboard" element={<RiderHomeView />} />
+                    <Route path="schedule" element={<RiderScheduleView />} />
+                    <Route path="profile" element={<RiderProfileView />} />
+                </Route>
             </Routes>
+            {/* <Seeder /> (Removed by User Request) */}
         </Suspense>
     );
 }

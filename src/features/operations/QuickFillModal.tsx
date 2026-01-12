@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { X, Zap, User, Truck, Sun, Moon, Split } from 'lucide-react';
+import { X, Zap, User, Truck, Sun, Moon, Split, Copy, Loader2 } from 'lucide-react';
+import { toLocalISOString } from '../../utils/dateUtils';
+import { shiftService } from '../../services/shiftService';
+import { subDays, addDays, parseISO, setHours, setMinutes, setSeconds, areIntervalsOverlapping } from 'date-fns';
 
 interface Rider {
     id: string;
@@ -18,34 +21,29 @@ interface WeekDay {
     shortLabel: string;
 }
 
-interface Shift {
-    riderId: string;
-    riderName: string;
-    motoId: string | null;
-    motoPlate: string | null;
-    startAt: string;
-    endAt: string;
-    date: string;
-    startTime: string;
-    endTime: string;
-}
+// Shift interface removed to avoid unused warning
 
 interface QuickFillModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onCreateShifts: (shifts: Shift[]) => void;
+    onRefresh: () => void;
+    franchiseId: string;
     riders: Rider[];
     motos: Moto[];
     weekDays: WeekDay[];
+    existingShifts: any[]; // relaxed type to avoid deep interface mismatch
 }
 
 type PresetType = 'custom' | 'comida' | 'cena' | 'partido';
 
-const QuickFillModal: React.FC<QuickFillModalProps> = ({ isOpen, onClose, onCreateShifts, riders, motos, weekDays }) => {
+const QuickFillModal: React.FC<QuickFillModalProps> = ({
+    isOpen, onClose, onRefresh, franchiseId, riders, motos, weekDays, existingShifts
+}) => {
     // Estado local del formulario
     const [selectedRiderId, setSelectedRiderId] = useState('');
     const [selectedMotoId, setSelectedMotoId] = useState('');
     const [selectedDays, setSelectedDays] = useState<string[]>([]);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     // Preset State
     const [activePreset, setActivePreset] = useState<PresetType>('custom');
@@ -77,66 +75,180 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({ isOpen, onClose, onCrea
         }
     };
 
-    const handleGenerate = () => {
+    const handleGenerate = async () => {
         if (!selectedRiderId || selectedDays.length === 0) {
             alert("Selecciona al menos un rider y un día.");
             return;
         }
 
-        const generatedShifts: Shift[] = [];
-        const rider = riders.find(r => r.id === selectedRiderId);
-        if (!rider) return;
+        setIsProcessing(true);
+        try {
+            const rider = riders.find(r => r.id === selectedRiderId);
+            if (!rider) return;
 
-        const moto = motos.find(m => m.id === selectedMotoId);
+            const moto = motos.find(m => m.id === selectedMotoId);
+            const promises: Promise<void>[] = [];
 
-        selectedDays.forEach(dayIso => {
-            // LOGIC FOR SPLIT SHIFTS (TURNO PARTIDO)
-            if (activePreset === 'partido') {
-                // Shift 1: Comida (12-16)
-                generatedShifts.push(createShiftObject(rider, moto, dayIso, '12', '16'));
-                // Shift 2: Cena (20-24)
-                generatedShifts.push(createShiftObject(rider, moto, dayIso, '20', '24'));
-            } else {
-                // Standard Single Shift (Custom or Preset)
-                if (parseInt(startHour) >= parseInt(endHour)) {
-                    alert("La hora de fin debe ser posterior a la de inicio");
-                    return;
+            for (const dayIso of selectedDays) {
+                if (activePreset === 'partido') {
+                    // Turno 1: Comida (12-16)
+                    const s1 = createSafeShift(dayIso, '12', '16');
+                    if (!hasConflict(s1)) {
+                        promises.push(saveShift(rider, moto, s1));
+                    }
+
+                    // Turno 2: Cena (20-24)
+                    const s2 = createSafeShift(dayIso, '20', '24');
+                    if (!hasConflict(s2)) {
+                        promises.push(saveShift(rider, moto, s2));
+                    }
+                } else {
+                    if (parseInt(startHour) >= parseInt(endHour)) {
+                        throw new Error(`Hora inválida el día ${dayIso}`);
+                    }
+                    const s = createSafeShift(dayIso, startHour, endHour);
+                    if (!hasConflict(s)) {
+                        promises.push(saveShift(rider, moto, s));
+                    }
                 }
-                generatedShifts.push(createShiftObject(rider, moto, dayIso, startHour, endHour));
             }
-        });
 
-        onCreateShifts(generatedShifts);
-        onClose();
-        // Reset simple
-        setSelectedDays([]);
+            if (promises.length === 0) {
+                alert("No se crearon turnos nuevos: Todos los seleccionados ya existen o tienen conflictos.");
+                setIsProcessing(false);
+                return;
+            }
+
+            await Promise.all(promises);
+            onRefresh();
+            onClose();
+        } catch (error: any) {
+            console.error("Generación fallida:", error);
+            alert("Error al generar turnos: " + error.message);
+        } finally {
+            setIsProcessing(false);
+            setSelectedDays([]);
+        }
     };
 
-    const createShiftObject = (rider: any, moto: any, dayIso: string, sHour: string, eHour: string): Shift => {
-        const startAt = `${dayIso}T${sHour.padStart(2, '0')}:00:00`;
-        // Handle midnight (24:00) -> Next Day 00:00 logic
-        let endAt;
-        if (eHour === '24') {
-            // Calculate next day strictly for ISO string
-            const d = new Date(dayIso);
-            d.setDate(d.getDate() + 1);
-            const nextDayIso = d.toISOString().split('T')[0];
-            endAt = `${nextDayIso}T00:00:00`;
-        } else {
-            endAt = `${dayIso}T${eHour.padStart(2, '0')}:00:00`;
-        }
+    const createSafeShift = (dayIso: string, sHour: string, eHour: string) => {
+        // Robust construction with date-fns
+        let start = parseISO(dayIso);
+        start = setHours(start, parseInt(sHour));
+        start = setMinutes(start, 0);
+        start = setSeconds(start, 0);
 
-        return {
+        let end = parseISO(dayIso);
+        if (eHour === '24') {
+            end = addDays(end, 1);
+            end = setHours(end, 0);
+        } else {
+            end = setHours(end, parseInt(eHour));
+        }
+        end = setMinutes(end, 0);
+        end = setSeconds(end, 0);
+
+        return { start, end, startAt: toLocalISOString(start), endAt: toLocalISOString(end) };
+    };
+
+    const hasConflict = (newShift: { start: Date, end: Date, startAt: string }) => {
+        return existingShifts.some(es => {
+            if (es.riderId !== selectedRiderId) return false;
+
+            const esStart = new Date(es.startAt);
+            const esEnd = new Date(es.endAt);
+
+            // Exact duplication check (same ISO start)
+            if (es.startAt === newShift.startAt) return true;
+
+            // Overlap check
+            return areIntervalsOverlapping(
+                { start: newShift.start, end: newShift.end },
+                { start: esStart, end: esEnd }
+            );
+        });
+    };
+
+    const saveShift = async (rider: any, moto: any, safeShift: { startAt: string, endAt: string }) => {
+        await shiftService.createShift({
+            franchiseId,
             riderId: rider.id,
-            riderName: rider.name || rider.email || 'Unknown',
+            riderName: rider.name || rider.email || 'Rider',
             motoId: moto?.id || null,
-            motoPlate: moto?.licensePlate || null,
-            startAt,
-            endAt,
-            date: dayIso,
-            startTime: `${sHour.padStart(2, '0')}:00`,
-            endTime: eHour === '24' ? '23:59' : `${eHour.padStart(2, '0')}:00` // Legacy UI field
-        };
+            motoPlate: moto?.licensePlate || '',
+            startAt: safeShift.startAt,
+            endAt: safeShift.endAt
+        });
+    };
+
+    const handleClonePreviousWeek = async () => {
+        if (!franchiseId || weekDays.length === 0) return;
+
+        const confirmClone = window.confirm("¿Importar la planificación completa de la semana pasada?");
+        if (!confirmClone) return;
+
+        setIsProcessing(true);
+        try {
+            // 1. Calcular rango de la semana pasada
+            const currentStart = parseISO(weekDays[0].isoDate);
+            const prevStart = subDays(currentStart, 7);
+            const prevEnd = subDays(currentStart, 1);
+            prevEnd.setHours(23, 59, 59, 999);
+
+            // 2. Obtener turnos de la semana pasada
+            const oldShifts = await shiftService.getShiftsInRange(franchiseId, prevStart, prevEnd);
+
+            if (oldShifts.length === 0) {
+                alert("No hay turnos en la semana pasada para clonar.");
+                return;
+            }
+
+            // 3. Filtrar y Replicar
+            const replicatedPromises = oldShifts
+                .map(s => {
+                    const newStart = addDays(new Date(s.startAt), 7);
+                    const newEnd = addDays(new Date(s.endAt), 7);
+                    const startAt = toLocalISOString(newStart);
+                    const endAt = toLocalISOString(newEnd);
+
+                    // Check if this replication already exists or overlaps
+                    const conflict = existingShifts.some(es =>
+                        es.riderId === s.riderId &&
+                        (es.startAt === startAt || areIntervalsOverlapping(
+                            { start: newStart, end: newEnd },
+                            { start: new Date(es.startAt), end: new Date(es.endAt) }
+                        ))
+                    );
+
+                    if (conflict) return null;
+
+                    return shiftService.createShift({
+                        franchiseId,
+                        riderId: s.riderId,
+                        riderName: s.riderName,
+                        motoId: s.motoId,
+                        motoPlate: s.motoPlate,
+                        startAt,
+                        endAt
+                    });
+                })
+                .filter(p => p !== null);
+
+            if (replicatedPromises.length === 0) {
+                alert("La semana pasada ya está replicada o todos los turnos tienen conflictos.");
+                return;
+            }
+
+            await Promise.all(replicatedPromises);
+            alert(`✅ Se han importado ${replicatedPromises.length} turnos.`);
+            onRefresh();
+            onClose();
+        } catch (error: any) {
+            console.error("Clonación fallida:", error);
+            alert("Error Crítico al importar: " + error.message);
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     return (
@@ -154,7 +266,7 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({ isOpen, onClose, onCrea
                         </h3>
                         <p className="text-xs text-slate-500 font-medium ml-1 mt-1">Generación inteligente de turnos</p>
                     </div>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-700 hover:bg-white/50 p-2 rounded-full transition-all"><X size={20} /></button>
+                    <button onClick={onClose} title="Cerrar modal" className="text-slate-400 hover:text-slate-700 hover:bg-white/50 p-2 rounded-full transition-all"><X size={20} /></button>
                 </div>
 
                 {/* Body */}
@@ -167,8 +279,8 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({ isOpen, onClose, onCrea
                             <button
                                 onClick={() => applyPreset('comida')}
                                 className={`relative p-3 rounded-2xl border transition-all duration-300 flex flex-col items-center gap-2 group ${activePreset === 'comida'
-                                        ? 'bg-amber-100/50 border-amber-200 ring-2 ring-amber-400 ring-offset-2'
-                                        : 'bg-slate-50 border-slate-100 hover:bg-amber-50 hover:border-amber-200'
+                                    ? 'bg-amber-100/50 border-amber-200 ring-2 ring-amber-400 ring-offset-2'
+                                    : 'bg-slate-50 border-slate-100 hover:bg-amber-50 hover:border-amber-200'
                                     }`}
                             >
                                 <Sun className={`w-6 h-6 ${activePreset === 'comida' ? 'text-amber-600' : 'text-slate-400 group-hover:text-amber-500'}`} />
@@ -179,8 +291,8 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({ isOpen, onClose, onCrea
                             <button
                                 onClick={() => applyPreset('cena')}
                                 className={`relative p-3 rounded-2xl border transition-all duration-300 flex flex-col items-center gap-2 group ${activePreset === 'cena'
-                                        ? 'bg-indigo-100/50 border-indigo-200 ring-2 ring-indigo-400 ring-offset-2'
-                                        : 'bg-slate-50 border-slate-100 hover:bg-indigo-50 hover:border-indigo-200'
+                                    ? 'bg-indigo-100/50 border-indigo-200 ring-2 ring-indigo-400 ring-offset-2'
+                                    : 'bg-slate-50 border-slate-100 hover:bg-indigo-50 hover:border-indigo-200'
                                     }`}
                             >
                                 <Moon className={`w-6 h-6 ${activePreset === 'cena' ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500'}`} />
@@ -191,13 +303,23 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({ isOpen, onClose, onCrea
                             <button
                                 onClick={() => applyPreset('partido')}
                                 className={`relative p-3 rounded-2xl border transition-all duration-300 flex flex-col items-center gap-2 group ${activePreset === 'partido'
-                                        ? 'bg-emerald-100/50 border-emerald-200 ring-2 ring-emerald-400 ring-offset-2'
-                                        : 'bg-slate-50 border-slate-100 hover:bg-emerald-50 hover:border-emerald-200'
+                                    ? 'bg-emerald-100/50 border-emerald-200 ring-2 ring-emerald-400 ring-offset-2'
+                                    : 'bg-slate-50 border-slate-100 hover:bg-emerald-50 hover:border-emerald-200'
                                     }`}
                             >
                                 <Split className={`w-6 h-6 ${activePreset === 'partido' ? 'text-emerald-600' : 'text-slate-400 group-hover:text-emerald-500'}`} />
                                 <div className="text-xs font-bold text-slate-700">Partido</div>
                                 <div className="text-[9px] font-bold text-emerald-600 bg-emerald-100/50 px-2 py-0.5 rounded-full">DOBLE TURNO</div>
+                            </button>
+
+                            <button
+                                onClick={handleClonePreviousWeek}
+                                disabled={isProcessing}
+                                className={`relative p-3 rounded-2xl border transition-all duration-300 flex flex-col items-center gap-2 group bg-indigo-50 border-indigo-100 hover:bg-indigo-100 hover:border-indigo-300 active:scale-95 disabled:opacity-50`}
+                                title="Importar turnos de la semana anterior"
+                            >
+                                <Copy className={`w-6 h-6 text-indigo-500`} />
+                                <div className="text-[10px] font-black text-indigo-700 uppercase tracking-tighter text-center">Importar W-1</div>
                             </button>
                         </div>
                     </div>
@@ -213,6 +335,7 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({ isOpen, onClose, onCrea
                                     className="w-full bg-slate-50 hover:bg-white border border-slate-200 text-slate-900 text-sm rounded-xl p-3 appearance-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none shadow-sm transition-all font-medium"
                                     value={selectedRiderId}
                                     onChange={(e) => setSelectedRiderId(e.target.value)}
+                                    title="Seleccionar Rider"
                                 >
                                     <option value="">Seleccionar Rider...</option>
                                     {riders.map(r => (
@@ -230,6 +353,7 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({ isOpen, onClose, onCrea
                                     className="w-full bg-slate-50 hover:bg-white border border-slate-200 text-slate-900 text-sm rounded-xl p-3 appearance-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none shadow-sm transition-all font-medium"
                                     value={selectedMotoId}
                                     onChange={(e) => setSelectedMotoId(e.target.value)}
+                                    title="Seleccionar Moto"
                                 >
                                     <option value="">Sin vehículo</option>
                                     {motos.map(m => (
@@ -243,7 +367,18 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({ isOpen, onClose, onCrea
 
                     {/* 2. Días */}
                     <div className="space-y-3">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Días a aplicar</label>
+                        <div className="flex items-center justify-between pl-1">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Días a aplicar</label>
+                            <button
+                                onClick={() => {
+                                    if (selectedDays.length === weekDays.length) setSelectedDays([]);
+                                    else setSelectedDays(weekDays.map(d => d.isoDate));
+                                }}
+                                className="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 transition-colors uppercase tracking-widest"
+                            >
+                                {selectedDays.length === weekDays.length ? 'Desmarcar' : 'Toda la semana'}
+                            </button>
+                        </div>
                         <div className="flex flex-wrap gap-2">
                             {weekDays.map(day => {
                                 const isSelected = selectedDays.includes(day.isoDate);
@@ -251,6 +386,7 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({ isOpen, onClose, onCrea
                                     <button
                                         key={day.isoDate}
                                         onClick={() => toggleDay(day.isoDate)}
+                                        title={`Alternar ${day.shortLabel}`}
                                         className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border shadow-sm active:scale-95 ${isSelected
                                             ? 'bg-slate-800 border-slate-800 text-white shadow-lg shadow-slate-900/20'
                                             : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-slate-50'
@@ -275,6 +411,7 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({ isOpen, onClose, onCrea
                                         value={startHour}
                                         onChange={(e) => { setStartHour(e.target.value); setActivePreset('custom'); }}
                                         className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-center font-mono text-lg font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none shadow-sm transition-all"
+                                        title="Hora de Inicio"
                                     />
                                 </div>
                                 <span className="text-slate-300 font-black text-xl mt-6">:</span>
@@ -285,6 +422,7 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({ isOpen, onClose, onCrea
                                         value={endHour}
                                         onChange={(e) => { setEndHour(e.target.value); setActivePreset('custom'); }}
                                         className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-center font-mono text-lg font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none shadow-sm transition-all"
+                                        title="Hora de Fin"
                                     />
                                 </div>
                             </div>
@@ -303,11 +441,16 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({ isOpen, onClose, onCrea
                     </span>
                     <button
                         onClick={handleGenerate}
-                        disabled={selectedDays.length === 0 || !selectedRiderId}
-                        className="px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-xl shadow-slate-900/10 transition-all flex items-center gap-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5"
+                        disabled={selectedDays.length === 0 || !selectedRiderId || isProcessing}
+                        className="px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-xl shadow-slate-900/10 transition-all flex items-center gap-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 min-w-[180px] justify-center"
+                        title="Generar turnos seleccionados"
                     >
-                        <Zap size={18} className={activePreset === 'partido' ? 'fill-yellow-400 text-yellow-400' : 'fill-white'} />
-                        Generar Turnos
+                        {isProcessing ? (
+                            <Loader2 size={18} className="animate-spin" />
+                        ) : (
+                            <Zap size={18} className={activePreset === 'partido' ? 'fill-yellow-400 text-yellow-400' : 'fill-white'} />
+                        )}
+                        {isProcessing ? 'Procesando...' : 'Generar Turnos'}
                     </button>
                 </div>
             </div>

@@ -4,7 +4,7 @@ import {
     Plus, Edit2, Trash2, Search, Truck,
     Wrench, CheckCircle, Shield, FileText, X
 } from 'lucide-react';
-import { FleetService } from '../../services/fleet/fleetService';
+import { FleetService } from '../../services/fleetService';
 import { Moto, CreateMotoInput } from '../../schemas/fleet';
 import { toFranchiseId } from '../../schemas/scheduler';
 

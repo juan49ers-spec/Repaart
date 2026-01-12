@@ -44,7 +44,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
     initialFranchiseId = null,
     initialData = null // New prop
 }) => {
-    const [showPassword, setShowPassword] = React.useState(false);
+    const [showPassword, setShowPassword] = React.useState(true);
 
     const toastContext = useToast();
     const toast = toastContext?.toast;
@@ -64,7 +64,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
             password: '',
             displayName: '',
             phoneNumber: '',
-            role: (initialFranchiseId ? 'driver' : 'franchise') as UserRole,
+            role: (initialFranchiseId ? 'rider' : 'franchise') as UserRole,
             franchiseId: initialFranchiseId || '',
             pack: 'basic',
             status: 'active',
@@ -128,7 +128,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                     password: '',
                     displayName: '',
                     phoneNumber: '',
-                    role: 'driver',
+                    role: 'rider',
                     franchiseId: initialFranchiseId,
                     pack: 'basic',
                     status: 'active',
@@ -144,7 +144,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                     password: '',
                     displayName: '',
                     phoneNumber: '',
-                    role: (initialFranchiseId ? 'driver' : 'franchise') as UserRole,
+                    role: (initialFranchiseId ? 'rider' : 'franchise') as UserRole,
                     franchiseId: initialFranchiseId || '',
                     pack: 'basic',
                     status: 'active',
@@ -286,7 +286,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                             </div>
 
                             {/* Password - Only for users who need Auth (admin, franchise, user) */}
-                            {!['driver', 'staff'].includes(role) && (
+                            {!['staff'].includes(role) && (
                                 <div className="space-y-1.5">
                                     <div className="flex justify-between items-center">
                                         <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">
@@ -374,11 +374,11 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                                     >
                                         {initialFranchiseId ? (
                                             /* Franchisee Context: Only Riders */
-                                            <option value="driver">Rider / Repartidor</option>
+                                            <option value="rider">Rider / Repartidor</option>
                                         ) : (
                                             /* Admin Context: All Roles */
                                             <>
-                                                <option value="driver">Rider / Repartidor</option>
+                                                <option value="rider">Rider / Repartidor</option>
                                                 <option value="user">Usuario App</option>
                                                 <option value="staff">Staff Oficina</option>
                                                 <option value="franchise">Franquiciado</option>
@@ -390,7 +390,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                             </div>
 
                             {/* Franchise Specifics */}
-                            {(role === 'franchise' || role === 'driver' || role === 'staff' || !!initialFranchiseId) && (
+                            {(role === 'franchise' || role === 'rider' || role === 'staff' || !!initialFranchiseId) && (
                                 <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/10 space-y-4 animate-in slide-in-from-right-4 duration-300">
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-bold text-amber-200/80 uppercase tracking-wider ml-1">ID Franquicia</label>

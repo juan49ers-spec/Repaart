@@ -9,6 +9,7 @@ import UserTable from './UserTable';
 import CriticalActionModal from '../../../ui/overlays/CriticalActionModal';
 import CreateUserModal, { CreateUserInput, UpdateUserInput } from './CreateUserModal';
 import { UserProfile } from '../../../services/userService';
+import { MigrationPanel } from '../../admin/components/MigrationPanel';
 
 // --- SUB-COMPONENTS (Local for now to keep orchestrator clean) ---
 
@@ -70,8 +71,9 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
     // --- STATE FOR TABS ---
     // 'structure' = Admin + Franchise
     // 'riders' = Users
+    // 'maintenance' = DB Tools
     // If franchiseId is present, we FORCE 'riders' view and hide structure
-    const [activeTab, setActiveTab] = useState<'structure' | 'riders'>(franchiseId ? 'riders' : 'structure');
+    const [activeTab, setActiveTab] = useState<'structure' | 'riders' | 'maintenance'>(franchiseId ? 'riders' : 'structure');
 
     // Logic Hook
     const {

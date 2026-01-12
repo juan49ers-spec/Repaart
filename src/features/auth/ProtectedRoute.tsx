@@ -28,8 +28,8 @@ const ProtectedRoute: FC<ProtectedRouteProps> = ({ children, requireAdmin = fals
     }
 
     if (requireAdmin && roleConfig?.role !== 'admin') {
-        // If the route requires admin but the user is not an admin, redirect to dashboard
-        return <Navigate to="/dashboard" replace />;
+        // If the route requires admin but the user is not an admin, redirect to profile instead of dashboard for safety
+        return <Navigate to="/profile" replace />;
     }
 
     return <>{children}</>;

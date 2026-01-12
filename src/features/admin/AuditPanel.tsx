@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../lib/firebase';
 import { collection, query, orderBy, limit, onSnapshot, Timestamp } from 'firebase/firestore';
-import { ShieldAlert, RefreshCcw, User } from 'lucide-react';
+import { ShieldAlert, RefreshCcw, User, Database, Ghost } from 'lucide-react';
+import { migrationService } from '../../services/migrationService';
 import EmptyState from '../../ui/feedback/EmptyState';
 
 interface AuditLog {
@@ -17,6 +18,36 @@ interface AuditLog {
 const AuditPanel = () => {
     const [logs, setLogs] = useState<AuditLog[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isMigrating, setIsMigrating] = useState(false);
+    const [isCleaning, setIsCleaning] = useState(false);
+
+    const handleMigration = async () => {
+        if (!confirm("⚠️ ¿Estás seguro de migrar las colecciones?\nEsto moverá:\n- financial_data -> financial_records\n- academy_modules -> academy_courses")) return;
+
+        setIsMigrating(true);
+        const result = await migrationService.migrateCollections();
+        setIsMigrating(false);
+
+        if (result.success) {
+            alert(`Migración completada.\nDocumentos procesados: ${result.count}`);
+        } else {
+            alert("Error en la migración. Revisa la consola.");
+        }
+    };
+
+    const handleCleanGhosts = async () => {
+        if (!confirm("👻 ¿Eliminar turnos de usuarios borrados?\nEsto eliminará permanentemente los turnos asignados a riders que ya no existen en la base de datos.")) return;
+
+        setIsCleaning(true);
+        const result = await migrationService.cleanOrphanedShifts();
+        setIsCleaning(false);
+
+        if (result.success) {
+            alert(`Limpieza completada.\nTurnos fantasmas eliminados: ${result.count}`);
+        } else {
+            alert("Error en la limpieza. Revisa la consola.");
+        }
+    };
 
     useEffect(() => {
         // Query recent 100 logs
@@ -59,8 +90,27 @@ const AuditPanel = () => {
                     </h2>
                     <p className="text-slate-500 mt-1">Historial inmutable de acciones críticas (Últimos 100 eventos).</p>
                 </div>
-                <div className="bg-slate-100 px-3 py-1 rounded-full flex items-center text-xs font-bold text-slate-500">
-                    <RefreshCcw className="w-3 h-3 mr-2 animate-spin-slow" /> En vivo
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={handleMigration}
+                        disabled={isMigrating}
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold text-xs hover:bg-indigo-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    >
+                        <Database className={`w-3.5 h-3.5 ${isMigrating ? 'animate-bounce' : ''}`} />
+                        {isMigrating ? 'Migrando...' : 'Migrar BD'}
+                    </button>
+                    <button
+                        onClick={handleCleanGhosts}
+                        disabled={isCleaning}
+                        className="px-4 py-2 bg-rose-600 text-white rounded-lg font-bold text-xs hover:bg-rose-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                        title="Eliminar turnos de usuarios borrados"
+                    >
+                        <Ghost className={`w-3.5 h-3.5 ${isCleaning ? 'animate-pulse' : ''}`} />
+                        {isCleaning ? 'Limpiando...' : 'Borrar Fantasmas'}
+                    </button>
+                    <div className="bg-slate-100 px-3 py-1 rounded-full flex items-center text-xs font-bold text-slate-500">
+                        <RefreshCcw className="w-3 h-3 mr-2 animate-spin-slow" /> En vivo
+                    </div>
                 </div>
             </div>
 

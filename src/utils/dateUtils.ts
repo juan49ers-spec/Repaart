@@ -8,7 +8,16 @@
  */
 export const toLocalDateString = (date: Date | string | null | undefined): string => {
     if (!date) return '';
+
+    // If it's already a simple YYYY-MM-DD string (optionally followed by time), extracts the date part literally.
+    // This avoids "new Date('2026-01-06')" being interpreted as UTC Midnight and shifting to Jan 5th in negative timezones.
+    if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}/.test(date)) {
+        return date.substring(0, 10);
+    }
+
     const d = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(d.getTime())) return '';
+
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
@@ -27,11 +36,16 @@ export const toLocalTimeString = (date: Date | string | null | undefined): strin
 };
 
 /**
- * Returns a full ISO-like string "YYYY-MM-DDTHH:mm:ss" in Local Time (no Z).
+ * Returns a full ISO-8601 string "YYYY-MM-DDTHH:mm:ss+HH:mm" in Local Time with offset.
+ * This is the MISSION CRITICAL format for absolute time consistency.
  */
 export const toLocalISOString = (date: Date | string | null | undefined): string => {
     if (!date) return '';
-    return `${toLocalDateString(date)}T${toLocalTimeString(date)}:00`;
+    const d = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(d.getTime())) return '';
+
+    // We reuse the robust offset logic
+    return toLocalISOStringWithOffset(d);
 };
 
 /**
@@ -68,7 +82,16 @@ export const toLocalISOStringWithOffset = (date: Date | null | undefined): strin
 };
 
 export const getStartOfWeek = (date: Date | string): string => {
-    const d = new Date(date);
+    let d: Date;
+    if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}/.test(date)) {
+        const [y, m, d_part] = date.split('-').map(Number);
+        d = new Date(y, m - 1, d_part, 12, 0, 0); // Use noon to avoid DST edge cases
+    } else {
+        d = new Date(date);
+    }
+
+    if (isNaN(d.getTime())) return '';
+
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
     const monday = new Date(d.setDate(diff));

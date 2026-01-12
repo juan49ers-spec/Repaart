@@ -114,8 +114,14 @@ export const ROLE_CONFIG: Record<string, RoleConfig> = {
         text: 'text-indigo-800',
         border: 'border-indigo-200'
     },
+    rider: {
+        label: 'Rider',
+        bg: 'bg-blue-100',
+        text: 'text-blue-600',
+        border: 'border-blue-200'
+    },
     user: {
-        label: 'Rider', // Rename to Rider
+        label: 'Usuario',
         bg: 'bg-slate-100',
         text: 'text-slate-600',
         border: 'border-slate-200'

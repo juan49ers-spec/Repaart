@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Truck, AlertCircle, Edit2, Copy, Trash2, Move } from 'lucide-react';
+import { Truck, AlertCircle, Edit2, Copy, Trash2, Move, RefreshCw, CheckCheck, CheckCircle2 } from 'lucide-react';
 import { getRiderColor, getShiftDuration, getRiderInitials } from '../../utils/colorPalette';
 import { cn } from '../../lib/utils';
 
@@ -33,6 +33,8 @@ interface ShiftCardProps {
     onDragStart?: (event: ShiftEvent) => void;
     onDragEnd?: () => void;
     readOnly?: boolean;
+    isExpanded?: boolean;
+    isRiderMode?: boolean;
 }
 
 const ShiftCard: React.FC<ShiftCardProps> = ({
@@ -45,11 +47,15 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
     onContextMenu,
     onDragStart,
     onDragEnd,
-    readOnly = false
+    readOnly = false,
+    isExpanded = false,
+    isRiderMode = false
 }) => {
     const { riderName, riderId, visualStart, visualEnd, motoAssignments, startAt, endAt } = event;
     const [showActions, setShowActions] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    const [swapRequested, setSwapRequested] = useState(false);
+    const [isConfirmed, setIsConfirmed] = useState(false);
 
     // Get rider color
     const riderColor = getRiderColor(riderId);
@@ -75,7 +81,7 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
     };
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
-        if (readOnly) return;
+        if (readOnly || isRiderMode) return;
         setIsDragging(true);
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('application/json', JSON.stringify(event));
@@ -97,9 +103,12 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
         if (onDragEnd) onDragEnd();
     };
 
+    // Determine if drag is allowed
+    const canDrag = !readOnly && !isRiderMode && !hasConflict;
+
     return (
         <div
-            draggable={!readOnly && !hasConflict}
+            draggable={canDrag}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             className={cn(
@@ -109,13 +118,16 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                 // Conflict State
                 hasConflict
                     ? 'bg-red-50/90 backdrop-blur-md border-red-200 shadow-[0_8px_30px_rgb(239,68,68,0.15)] hover:border-red-300'
-                    : cn(
-                        "hover:z-50 shadow-sm hover:shadow-xl hover:-translate-y-1",
-                        // Backdrops & Borders
-                        "bg-white/80 backdrop-blur-md supports-[backdrop-filter]:bg-white/60",
-                        riderColor.border ? riderColor.border.replace('border-', 'border-opacity-50 border-') : 'border-slate-100'
-                    ),
-                !readOnly && !hasConflict && "active:scale-[0.98] active:cursor-grabbing"
+                    : swapRequested
+                        ? 'bg-amber-50/80 border-amber-400 border-dashed shadow-lg scale-[1.02]'
+                        : cn(
+                            "hover:z-50 shadow-sm hover:shadow-xl hover:-translate-y-1",
+                            // Backdrops & Borders
+                            "bg-white/80 backdrop-blur-md supports-[backdrop-filter]:bg-white/60",
+                            riderColor.border ? riderColor.border.replace('border-', 'border-opacity-50 border-') : 'border-slate-100'
+                        ),
+                canDrag && "active:scale-[0.98] active:cursor-grabbing",
+                isExpanded && isRiderMode && "ring-2 ring-indigo-400/30 scale-[1.01]"
             )}
             style={style}
             onClick={onClick}
@@ -129,8 +141,17 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                 hasConflict ? "bg-red-500" : (riderColor.bg?.replace('bg-', 'bg-') || 'bg-slate-400')
             )} />
 
-            {/* Drag Handle Icon - Only on Hover */}
-            {!readOnly && !hasConflict && (
+            {/* CONFIRMATION CHECK (RIDER MODE) - Top Right - Visual Feedback Only */}
+            {isRiderMode && isConfirmed && (
+                <div className="absolute top-1 right-1 p-1 z-20 animate-in fade-in zoom-in">
+                    <div className="bg-emerald-500 text-white rounded-full p-0.5 shadow-sm">
+                        <CheckCircle2 size={12} />
+                    </div>
+                </div>
+            )}
+
+            {/* Drag Handle Icon - Only on Hover (ADMIN MODE) */}
+            {!readOnly && !hasConflict && !isRiderMode && (
                 <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     <Move className="w-3 h-3 text-slate-400/70" />
                 </div>
@@ -153,8 +174,8 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                 {duration}h
             </div>
 
-            {/* Quick Actions Overlay (Glass) */}
-            {showActions && !hasConflict && !readOnly && (
+            {/* Quick Actions Overlay (Glass) - ADMIN ONLY */}
+            {showActions && !hasConflict && !readOnly && !isRiderMode && (
                 <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-30 flex items-center justify-center gap-2 animate-in fade-in duration-200">
                     <button
                         onClick={(e) => { e.stopPropagation(); onClick(e); }}
@@ -184,7 +205,7 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
             <div className="pl-3.5 flex flex-col h-full justify-between">
 
                 {/* Rider Info */}
-                <div className="flex items-start gap-2.5 mb-1">
+                <div className="flex items-start gap-2.5 mb-1 transition-all">
                     <div
                         className={cn(
                             "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm ring-2 ring-white shrink-0 mt-0.5",
@@ -207,17 +228,59 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                     </div>
                 </div>
 
-                {/* Footer Info: Moto & Status */}
-                <div className="flex items-center justify-between pl-0.5">
-                    {moto ? (
-                        <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 bg-slate-50/80 px-2 py-0.5 rounded-full border border-slate-100">
-                            <Truck className="w-3 h-3 text-indigo-400" />
-                            <span className="truncate max-w-[80px]">{moto.plate}</span>
-                        </div>
-                    ) : (
-                        <div className="h-5" /> // Spacer
-                    )}
-                </div>
+                {/* Footer Info: Moto & Status (Hide if RiderMode because we show actions footer) */}
+                {!isRiderMode && (
+                    <div className="flex items-center justify-between pl-0.5 fade-in duration-200">
+                        {moto ? (
+                            <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 bg-slate-50/80 px-2 py-0.5 rounded-full border border-slate-100">
+                                <Truck className="w-3 h-3 text-indigo-400" />
+                                <span className="truncate max-w-[80px]">{moto.plate}</span>
+                            </div>
+                        ) : (
+                            <div className="h-5" />
+                        )}
+                    </div>
+                )}
+
+                {/* RIDER ACTIONS FOOTER */}
+                {isRiderMode && (
+                    <div className="mt-2 pt-2 border-t border-slate-100 grid grid-cols-2 gap-2 animate-in slide-in-from-top-1">
+                        {/* Confirm Button */}
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setIsConfirmed(!isConfirmed); }}
+                            className={cn(
+                                "flex items-center justify-center gap-1.5 py-2 px-1 rounded-lg text-[10px] font-bold transition-all min-h-[44px] active:scale-95",
+                                isConfirmed
+                                    ? "bg-emerald-500 text-white shadow-emerald-500/20 shadow-md"
+                                    : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100"
+                            )}
+                        >
+                            {isConfirmed ? (
+                                <>
+                                    <CheckCheck size={14} /> Confirmado
+                                </>
+                            ) : (
+                                <>
+                                    <CheckCircle2 size={14} /> Confirmar
+                                </>
+                            )}
+                        </button>
+
+                        {/* Swap Button */}
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setSwapRequested(!swapRequested); }}
+                            className={cn(
+                                "flex items-center justify-center gap-1.5 py-2 px-1 rounded-lg text-[10px] font-bold transition-all min-h-[44px] active:scale-95",
+                                swapRequested
+                                    ? "bg-amber-100 text-amber-700 border border-amber-200"
+                                    : "bg-white text-slate-500 hover:text-amber-600 hover:bg-amber-50 border border-slate-100"
+                            )}
+                        >
+                            <RefreshCw size={14} className={cn(swapRequested && "animate-spin-slow")} />
+                            {swapRequested ? "Cancelar" : "Cambiar"}
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Conflict Banner (Bottom) */}

@@ -44,7 +44,7 @@ export const notificationService = {
                 createdAt: serverTimestamp()
             };
 
-            await addDoc(collection(db, 'admin_notifications'), payload);
+            await addDoc(collection(db, 'notifications'), payload);
             console.log(`[NotificationService] Sent ${type}:`, payload);
         } catch (error) {
             console.error('[NotificationService] Failed to send notification:', error);

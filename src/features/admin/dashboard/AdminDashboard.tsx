@@ -29,6 +29,8 @@ const UserManagementPanel = React.lazy(() => import('../users/UserManagementPane
 const KanbanBoard = React.lazy(() => import('../kanban/KanbanBoard')); // v2
 const AdminNetworkDashboard = React.lazy(() => import('../finance/AdminNetworkDashboard'));
 const OverviewTab = React.lazy(() => import('../overview/OverviewTab'));
+const SystemReset = React.lazy(() => import('../components/SystemReset'));
+const AuditPanel = React.lazy(() => import('../AuditPanel'));
 
 interface AdminDashboardProps {
     onSelectFranchise?: (id: string) => void;
@@ -99,6 +101,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 {/* DEVELOPER TOOLS BUTTON - DISCRETE */}
                 <div className="flex items-center gap-3">
                     <button
+                        onClick={() => setActiveTab('audit')}
+                        className="px-3 py-1.5 bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+                        title="Ir a Auditoría y Migración"
+                    >
+                        <span>🛡️</span>
+                        <span>Auditoría</span>
+                    </button>
+                    <button
                         onClick={() => setIsDevToolsOpen(true)}
                         className="px-3 py-1.5 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 border border-slate-200 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 shadow-sm dark:shadow-none"
                         title="Herramientas de desarrollo y diagnóstico"
@@ -109,7 +119,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <ThemeToggle />
                 </div>
 
-                <DevToolsPanel isOpen={isDevToolsOpen} onClose={() => setIsDevToolsOpen(false)} />
+                <DevToolsPanel
+                    isOpen={isDevToolsOpen}
+                    onClose={() => setIsDevToolsOpen(false)}
+                    onOpenReset={() => setActiveTab('reset')}
+                />
 
                 <OverviewTab
                     onNavigate={setActiveTab}
@@ -173,6 +187,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             case 'inbox': return <AdminFinanceInbox />;
             case 'users': return <UserManagementPanel />;
             case 'kanban': return <KanbanBoard />;
+            case 'reset': return <SystemReset />;
+            case 'audit': return <AuditPanel />;
             default: return renderGlobalView();
         }
     };

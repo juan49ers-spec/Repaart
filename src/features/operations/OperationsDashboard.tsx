@@ -9,7 +9,7 @@ import ShiftManagerView from './views/ShiftManagerView';
 import OperationsFranchiseSelector from './OperationsFranchiseSelector';
 import OperationsTutorialModal from './OperationsTutorialModal';
 import { ShieldAlert } from 'lucide-react';
-import FinancialDashboard from '../../legacy/FinancialDashboard';
+import FranchiseDashboard from '../franchise/FranchiseDashboard';
 import UserManagementPanel from '../admin/users/UserManagementPanel';
 
 // Lazy load heavy components
@@ -156,7 +156,7 @@ const OperationsDashboard: React.FC<OperationsDashboardProps> = () => {
 
                     {activeTab === 'finance' && (
                         <div className="h-full bg-white p-6 overflow-y-auto custom-scrollbar">
-                            <FinancialDashboard franchiseId={activeFranchiseId || ''} />
+                            <FranchiseDashboard />
                         </div>
                     )}
 

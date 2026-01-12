@@ -58,7 +58,8 @@ const UserProfileModal: FC<UserProfileModalProps> = ({ isOpen, onClose, user, is
 
                 if (isForced) {
                     setTimeout(() => {
-                        window.location.reload(); // Force reload to clear state and ensure fresh start
+                        // Success handled by hook
+                        // window.location.reload(); // Removed to prevent jarring UX
                     }, 1500);
                 }
             }

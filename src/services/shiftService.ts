@@ -1,4 +1,5 @@
 import { db } from '../lib/firebase';
+import { toLocalDateString, toLocalISOString } from '../utils/dateUtils';
 import {
     collection,
     query,
@@ -11,7 +12,8 @@ import {
     onSnapshot,
     Timestamp,
     Unsubscribe,
-    DocumentData
+    DocumentData,
+    getDocs
 } from 'firebase/firestore';
 
 // =====================================================
@@ -19,9 +21,11 @@ import {
 // =====================================================
 
 export interface Shift {
+    id: string;      // Alias for shiftId
     shiftId: string;
     startAt: string; // ISO string
     endAt: string;   // ISO string
+    date: string;    // YYYY-MM-DD
     riderId: string | null;
     riderName: string;
     motoId: string | null;
@@ -40,14 +44,13 @@ export interface ShiftInput {
 }
 
 // =====================================================
-// SERVICE
 // =====================================================
 
 const COLLECTION = 'work_shifts';
 
 export const shiftService = {
     /**
-     * Suscribe a los turnos de un rango de fechas (Semana)
+     * Subscribe to shifts (Week)
      */
     subscribeToWeekShifts: (
         franchiseId: string,
@@ -57,53 +60,52 @@ export const shiftService = {
     ): Unsubscribe => {
         if (!franchiseId) return () => { };
 
-        // Convertir fechas JS a Timestamps de Firestore para la query
         const startTs = Timestamp.fromDate(startOfWeek);
         const endTs = Timestamp.fromDate(endOfWeek);
 
         const q = query(
             collection(db, COLLECTION),
-            where('franchise_id', '==', franchiseId),
-            where('start_time', '>=', startTs),
-            where('start_time', '<=', endTs)
+            where('franchiseId', '==', franchiseId),
+            where('startAt', '>=', startTs),
+            where('startAt', '<=', endTs)
         );
 
         return onSnapshot(q, (snapshot) => {
             const shifts: Shift[] = snapshot.docs.map(doc => {
                 const data = doc.data() as DocumentData;
+                const getTs = (keyCamel: string, keySnake: string) => data[keyCamel] || data[keySnake];
+                const startVal = getTs('startAt', 'start_time');
+                const endVal = getTs('endAt', 'end_time');
+
                 return {
+                    id: doc.id,
                     shiftId: doc.id,
-                    // Mapeo crítico para el Frontend
-                    startAt: data.start_time?.toDate().toISOString() ?? '',
-                    endAt: data.end_time?.toDate().toISOString() ?? '',
-                    riderId: data.rider_id ?? null,
-                    riderName: data.rider_name ?? 'Sin asignar', // Desnormalizado para lectura rápida
-                    motoId: data.vehicle_id ?? null,
-                    motoPlate: data.vehicle_plate ?? '', // Desnormalizado
-                    franchiseId: data.franchise_id
+                    startAt: startVal ? (startVal.toDate ? toLocalISOString(startVal.toDate()) : startVal) : '',
+                    endAt: endVal ? (endVal.toDate ? toLocalISOString(endVal.toDate()) : endVal) : '',
+                    date: startVal ? (startVal.toDate ? toLocalDateString(startVal.toDate()) : toLocalDateString(new Date(startVal))) : '',
+                    riderId: data.riderId ?? data.rider_id ?? '',
+                    riderName: data.riderName ?? data.rider_name ?? 'Sin asignar',
+                    motoId: data.motoId ?? data.vehicle_id ?? null,
+                    motoPlate: data.motoPlate ?? data.vehicle_plate ?? '',
+                    franchiseId: data.franchiseId ?? data.franchise_id
                 };
             });
             callback(shifts);
         }, (error) => {
             console.error("Error subscribing to shifts:", error);
-            // Si el error es de índices, lo mostramos claro
-            if (error.code === 'failed-precondition') {
-                console.warn("⚠️ FALTA ÍNDICE COMPUESTO EN FIRESTORE. Crea este índice: " + error.message);
-            }
         });
     },
 
     createShift: async (shiftData: ShiftInput): Promise<void> => {
-        // Conversión de ISO String a Timestamp
         const payload = {
-            franchise_id: shiftData.franchiseId,
-            rider_id: shiftData.riderId ?? null,
-            rider_name: shiftData.riderName ?? 'Sin asignar',
-            vehicle_id: shiftData.motoId ?? null,
-            vehicle_plate: shiftData.motoPlate ?? '',
-            start_time: Timestamp.fromDate(new Date(shiftData.startAt)),
-            end_time: Timestamp.fromDate(new Date(shiftData.endAt)),
-            created_at: serverTimestamp(),
+            franchiseId: shiftData.franchiseId,
+            riderId: shiftData.riderId ?? null,
+            riderName: shiftData.riderName ?? 'Sin asignar',
+            motoId: shiftData.motoId ?? null,
+            motoPlate: shiftData.motoPlate ?? '',
+            startAt: Timestamp.fromDate(new Date(shiftData.startAt)),
+            endAt: Timestamp.fromDate(new Date(shiftData.endAt)),
+            createdAt: serverTimestamp(),
             type: 'standard'
         };
         await addDoc(collection(db, COLLECTION), payload);
@@ -111,14 +113,17 @@ export const shiftService = {
 
     updateShift: async (shiftId: string, updates: Partial<ShiftInput>): Promise<void> => {
         const payload: Record<string, unknown> = {};
-        if (updates.riderId !== undefined) payload.rider_id = updates.riderId;
-        if (updates.riderName !== undefined) payload.rider_name = updates.riderName;
-        if (updates.motoId !== undefined) payload.vehicle_id = updates.motoId;
-        if (updates.motoPlate !== undefined) payload.vehicle_plate = updates.motoPlate;
-        if (updates.startAt) payload.start_time = Timestamp.fromDate(new Date(updates.startAt));
-        if (updates.endAt) payload.end_time = Timestamp.fromDate(new Date(updates.endAt));
 
-        payload.updated_at = serverTimestamp();
+        if (updates.riderId !== undefined) payload.riderId = updates.riderId;
+        if (updates.riderName !== undefined) payload.riderName = updates.riderName;
+        if (updates.motoId !== undefined) payload.motoId = updates.motoId;
+        if (updates.motoPlate !== undefined) payload.motoPlate = updates.motoPlate;
+        if (updates.franchiseId !== undefined) payload.franchiseId = updates.franchiseId;
+
+        if (updates.startAt) payload.startAt = Timestamp.fromDate(new Date(updates.startAt));
+        if (updates.endAt) payload.endAt = Timestamp.fromDate(new Date(updates.endAt));
+
+        payload.updatedAt = serverTimestamp();
 
         const ref = doc(db, COLLECTION, shiftId);
         await updateDoc(ref, payload);
@@ -126,5 +131,89 @@ export const shiftService = {
 
     deleteShift: async (shiftId: string): Promise<void> => {
         await deleteDoc(doc(db, COLLECTION, shiftId));
+    },
+
+    /**
+     * Get My Shifts (Rider)
+     */
+    getMyShifts: (
+        riderId: string,
+        start: Date,
+        end: Date,
+        callback: (shifts: Shift[]) => void
+    ): Unsubscribe => {
+        const startTs = Timestamp.fromDate(start);
+        const endTs = Timestamp.fromDate(end);
+
+        const q = query(
+            collection(db, COLLECTION),
+            where('riderId', '==', riderId),
+            where('startAt', '>=', startTs),
+            where('startAt', '<=', endTs)
+        );
+
+        return onSnapshot(q, (snapshot) => {
+            const shifts: Shift[] = snapshot.docs.map(doc => {
+                const data = doc.data() as DocumentData;
+                const getTs = (keyCamel: string, keySnake: string) => data[keyCamel] || data[keySnake];
+                const startVal = getTs('startAt', 'start_time');
+                const endVal = getTs('endAt', 'end_time');
+
+                return {
+                    id: doc.id,
+                    shiftId: doc.id,
+                    startAt: startVal ? (startVal.toDate ? toLocalISOString(startVal.toDate()) : startVal) : '',
+                    endAt: endVal ? (endVal.toDate ? toLocalISOString(endVal.toDate()) : endVal) : '',
+                    date: startVal ? (startVal.toDate ? toLocalDateString(startVal.toDate()) : toLocalDateString(new Date(startVal))) : '',
+                    riderId: data.riderId ?? data.rider_id ?? '',
+                    riderName: data.riderName ?? data.rider_name ?? 'Sin asignar',
+                    motoId: data.motoId ?? data.vehicle_id ?? null,
+                    motoPlate: data.motoPlate ?? data.vehicle_plate ?? '',
+                    franchiseId: data.franchiseId ?? data.franchise_id
+                };
+            });
+            shifts.sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+            callback(shifts);
+        }, (error) => {
+            console.error("Error subscribing to my shifts:", error);
+        });
+    },
+
+    /**
+     * Get shifts in a range (one-time fetch)
+     */
+    getShiftsInRange: async (franchiseId: string, start: Date, end: Date): Promise<Shift[]> => {
+        if (!franchiseId) return [];
+
+        const startTs = Timestamp.fromDate(start);
+        const endTs = Timestamp.fromDate(end);
+
+        const q = query(
+            collection(db, COLLECTION),
+            where('franchiseId', '==', franchiseId),
+            where('startAt', '>=', startTs),
+            where('startAt', '<=', endTs)
+        );
+
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => {
+            const data = doc.data() as DocumentData;
+            const getTs = (keyCamel: string, keySnake: string) => data[keyCamel] || data[keySnake];
+            const startVal = getTs('startAt', 'start_time');
+            const endVal = getTs('endAt', 'end_time');
+
+            return {
+                id: doc.id,
+                shiftId: doc.id,
+                startAt: startVal ? (startVal.toDate ? toLocalISOString(startVal.toDate()) : startVal) : '',
+                endAt: endVal ? (endVal.toDate ? toLocalISOString(endVal.toDate()) : endVal) : '',
+                date: startVal ? (startVal.toDate ? toLocalDateString(startVal.toDate()) : toLocalDateString(new Date(startVal))) : '',
+                riderId: data.riderId ?? data.rider_id ?? '',
+                riderName: data.riderName ?? data.rider_name ?? 'Sin asignar',
+                motoId: data.motoId ?? data.vehicle_id ?? null,
+                motoPlate: data.motoPlate ?? data.vehicle_plate ?? '',
+                franchiseId: data.franchiseId ?? data.franchise_id
+            };
+        });
     }
 };

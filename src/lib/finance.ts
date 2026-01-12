@@ -252,8 +252,8 @@ const safeFloat = (val: string | number | null | undefined): number => {
     let strVal = String(val).trim();
     if (strVal === '') return 0;
 
-    // Replace comma with dot
-    strVal = strVal.replace(',', '.');
+    // Replace comma with dot after removing possible thousand dots
+    strVal = strVal.replace(/\./g, '').replace(',', '.');
 
     const parsed = parseFloat(strVal);
     if (isNaN(parsed)) return 0;
@@ -330,10 +330,11 @@ export const calculateMonthlyRevenue = (
  */
 export const formatMoney = (amount: number | string | null | undefined, decimals = 2): string => {
     const val = safeFloat(amount);
-    return val.toLocaleString('es-ES', {
+    return new Intl.NumberFormat('es-ES', {
         minimumFractionDigits: decimals,
-        maximumFractionDigits: decimals
-    });
+        maximumFractionDigits: decimals,
+        useGrouping: true
+    }).format(val);
 };
 
 /**

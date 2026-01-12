@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { WeekService } from '../services/scheduler/weekService';
 import { UserService } from '../services/users/userService';
-import { FleetService } from '../services/fleet/fleetService';
+import { FleetService } from '../services/fleetService';
+import { shiftService } from '../services/shiftService';
 import {
     WeekData,
     Shift,
@@ -23,6 +24,7 @@ export interface Rider {
     fullName: string;
     role: string;
     status: string;
+    contractHours?: number;
 }
 
 export interface Moto {
@@ -70,35 +72,71 @@ export const useWeeklySchedule = (franchiseIdString: string | null, _readOnly: b
             return;
         }
 
-        setLoading(true);
+        if (!weekData || weekData.id !== currentWeekIdString) {
+            setLoading(true);
+        }
 
         // Convert to Branded Types for Service
         const fid = toFranchiseId(franchiseIdString);
         const wid = toWeekId(currentWeekIdString);
 
-        // 1. Subscribe using WeekService
-        const unsubscribe = WeekService.subscribeToWeek(franchiseIdString, currentWeekIdString, (data) => {
+        // 1. Subscribe using WeekService (Metadata & Legacy)
+        const unsubscribeWeek = WeekService.subscribeToWeek(franchiseIdString, currentWeekIdString, (data) => {
             if (data) {
-                setWeekData(data);
+                setWeekData(prev => {
+                    if (prev && prev.id === currentWeekIdString) {
+                        return { ...prev, ...data };
+                    }
+                    return data;
+                });
             } else {
                 // Initialize if not exists
                 const startDate = toLocalDateString(getStartOfWeek(currentDate));
                 WeekService.initWeek(fid, wid, startDate).then((initial) => {
-                    setWeekData(initial || null);
+                    if (initial) setWeekData(initial);
                 });
             }
-            setLoading(false);
+            if (data) setLoading(false); // Only unset loading if we have data, else wait for init
         });
 
-        // 2. Riders (via UserService) - Filter by role AND active status
-        const unsubscribeRiders = UserService.subscribeToUsers(toFranchiseId(franchiseIdString), undefined, (users) => {
-            const drivers = users
-                .filter(u => (u.role === 'driver' || u.role === 'staff') && u.status === 'active') // Only active riders
-                .map(u => ({
-                    ...u,
-                    fullName: u.displayName || 'Sin Nombre' // UI compat
-                } as unknown as Rider));
-            setRiders(drivers);
+        // 1.5 Subsrcibe to Real Shifts (Source of Truth: work_shifts collection)
+        const startOfWeekString = getStartOfWeek(currentDate);
+
+        // Parse "YYYY-MM-DD" safely to local midnight Date object
+        const [y, m, d] = startOfWeekString.split('-').map(Number);
+        const startOfWeekDate = new Date(y, m - 1, d, 0, 0, 0, 0);
+
+        const endOfWeekDate = new Date(startOfWeekDate);
+        endOfWeekDate.setDate(endOfWeekDate.getDate() + 6);
+        endOfWeekDate.setHours(23, 59, 59, 999);
+
+        const unsubscribeShifts = shiftService.subscribeToWeekShifts(
+            franchiseIdString,
+            startOfWeekDate,
+            endOfWeekDate,
+            (realShifts) => {
+                setWeekData(prev => {
+                    if (!prev) return null;
+                    return {
+                        ...prev,
+                        shifts: realShifts // Override legacy shifts with real ones
+                    };
+                });
+            }
+        );
+
+        // 2. Riders (via FleetService - Source of Truth for Riders)
+        const unsubscribeRiders = FleetService.subscribeToRiders(franchiseIdString, (fleetRiders) => {
+            const schedulerRiders = fleetRiders
+                .filter(r => r.status === 'active')
+                .map(r => ({
+                    id: r.id,
+                    fullName: r.fullName,
+                    role: 'rider', // Fleet service riders are always riders
+                    status: r.status,
+                    contractHours: r.contractHours || 40 // Default to 40 if missing
+                }));
+            setRiders(schedulerRiders);
         });
 
         // 3. Motos (via FleetService)
@@ -112,7 +150,8 @@ export const useWeeklySchedule = (franchiseIdString: string | null, _readOnly: b
         });
 
         return () => {
-            unsubscribe();
+            unsubscribeWeek();
+            unsubscribeShifts();
             unsubscribeRiders();
             unsubscribeMotos();
         };

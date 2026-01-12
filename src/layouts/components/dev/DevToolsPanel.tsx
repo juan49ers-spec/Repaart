@@ -32,7 +32,6 @@ import ConsoleViewer from './ConsoleViewer';
 import NetworkMonitor from './NetworkMonitor';
 import PerformanceDashboard from './PerformanceDashboard';
 import SchedulerInspector from './SchedulerInspector';
-
 interface DevToolsPanelProps {
     isOpen: boolean;
     onClose: () => void;
@@ -122,7 +121,10 @@ const ToolButton: React.FC<ToolButtonProps> = ({ icon, title, description, usage
     );
 };
 
-const DevToolsPanel: React.FC<DevToolsPanelProps> = ({ isOpen, onClose }) => {
+const DevToolsPanel: React.FC<DevToolsPanelProps> = ({
+    isOpen,
+    onClose
+}) => {
     const [activeSection, setActiveSection] = useState<string | null>('health');
     const [isExecuting, setIsExecuting] = useState(false);
     const [healthResult, setHealthResult] = useState<HealthCheckResult | null>(null);
@@ -425,6 +427,8 @@ const DevToolsPanel: React.FC<DevToolsPanelProps> = ({ isOpen, onClose }) => {
                                         }}
                                         variant="amber"
                                     />
+
+
                                 </div>
                             )}
                         </div>

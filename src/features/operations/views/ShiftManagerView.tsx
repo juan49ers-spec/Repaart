@@ -1,7 +1,7 @@
 import { Suspense, lazy, type FC } from 'react';
 
 // Lazy load heavy component
-const ShiftPlanner = lazy(() => import('../ShiftPlanner'));
+const DeliveryScheduler = lazy(() => import('../../scheduler/DeliveryScheduler').then(module => ({ default: module.DeliveryScheduler })));
 
 interface ShiftManagerViewProps {
     franchiseId: string;
@@ -15,13 +15,11 @@ const ShiftManagerView: FC<ShiftManagerViewProps> = ({ franchiseId, readOnly = f
     return (
         <div className="h-full w-full">
             {/* Wrapper allows for future injection of specific toolbar or context for the editor specifically */}
-            <Suspense fallback={<div className="p-8 text-center text-slate-400">Cargando planificador...</div>}>
-                <ShiftPlanner
+            <Suspense fallback={<div className="p-8 text-center text-slate-400">Cargando Smart Scheduler...</div>}>
+                <DeliveryScheduler
                     franchiseId={franchiseId}
-                    readOnly={readOnly}
                     selectedDate={selectedDate}
                     onDateChange={onDateChange}
-                    overrideScheduleState={overrideScheduleState}
                 />
             </Suspense>
         </div>

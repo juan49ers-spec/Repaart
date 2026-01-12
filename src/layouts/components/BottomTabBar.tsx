@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, LifeBuoy, Activity, GraduationCap, LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, LifeBuoy, Activity, GraduationCap, LucideIcon, Bike } from 'lucide-react';
 import { useFeatureAccess } from '../../hooks/useFeatureAccess';
 
 // =====================================================
@@ -37,6 +37,7 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({ isAdmin, isFranchise: _isFr
         { path: '/operations', label: 'Horarios', icon: Activity }, // Or Calendar if imported
         { path: '/resources', label: 'Recursos', icon: FileText },
         { path: '/support', label: 'Soporte', icon: LifeBuoy },
+        { path: '/fleet', label: 'Flota', icon: Bike },
         { path: '/academy', label: 'Academia', icon: GraduationCap },
     ], []);
 

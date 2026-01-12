@@ -55,12 +55,138 @@ body {
   text-rendering: optimizeLegibility;
 
   /* "Pro" Look Settings */
+  /* Native Mobile Hardening */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  -webkit-overflow-scrolling: touch;
+
   /* SF Pro uses double-story 'a', so we keep Inter defaults. 
      ss01 (open digits) or cv05 (l with tail) are optional preferences. 
      We stick to defaults for maximum resemblance to standard SF Pro. */
   font-feature-settings: 'calt' 1;
   letter-spacing: -0.011em;
   /* Slight tightening for that "Display" feel */
+}
+
+/* Safe Area Utilities */
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.mt-safe {
+  margin-top: env(safe-area-inset-top);
+}
+
+.mb-safe {
+  margin-bottom: env(safe-area-inset-bottom);
+}
+
+.h-safe {
+  height: env(safe-area-inset-top);
+}
+
+.h-safe-bottom {
+  height: env(safe-area-inset-bottom);
+}
+
+.min-h-safe {
+  min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+/* Hide scrollbar utility */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+/* Apple Typography Extensions */
+.text-apple-h1 {
+  @apply text-4xl font-black tracking-tight leading-none text-white;
+}
+
+.text-apple-h2 {
+  @apply text-2xl font-extrabold tracking-tight text-white;
+}
+
+.text-apple-body {
+  @apply text-base font-medium text-slate-300;
+}
+
+.text-apple-sub {
+  @apply text-xs font-bold uppercase tracking-widest text-slate-500;
+}
+
+/* Hyper-Cockpit V3 FX */
+@keyframes orb-float {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
+
+.animate-orb {
+  animation: orb-float 20s ease-in-out infinite;
+}
+
+@keyframes haptic-shake {
+
+  10%,
+  90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+
+  20%,
+  80% {
+    transform: translate3d(2px, 0, 0);
+  }
+
+  30%,
+  50%,
+  70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+
+  40%,
+  60% {
+    transform: translate3d(4px, 0, 0);
+  }
+}
+
+.animate-haptic {
+  animation: haptic-shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+}
+
+.glass-premium {
+  @apply bg-slate-900/40 backdrop-blur-2xl border border-white/10 ring-1 ring-white/5 shadow-2xl;
+}
+
+.neon-glow-emerald {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.2), 0 0 40px rgba(16, 185, 129, 0.1);
+}
+
+.neon-glow-rose {
+  box-shadow: 0 0 20px rgba(244, 63, 94, 0.2), 0 0 40px rgba(244, 63, 94, 0.1);
 }
 
 /* Custom Scrollbar for Light Mode */

@@ -9,7 +9,8 @@ export const UserIdSchema = z.string().min(1).transform(t => t as UserId);
 export const toUserId = (id: string): UserId => id as UserId;
 
 // --- Enums ---
-export const UserRoleEnum = z.enum(['admin', 'staff', 'driver', 'franchise_owner', 'franchisee', 'user']);
+// export const UserRoleEnum = z.enum(['admin', 'staff', 'driver', 'franchise_owner', 'franchisee', 'user', 'superadmin']);
+export const UserRoleEnum = z.string(); // EMERGENCY RELAX to prevent crash
 export type UserRole = z.infer<typeof UserRoleEnum>;
 
 export const UserStatusEnum = z.enum(['active', 'pending', 'banned', 'deleted']);
@@ -27,7 +28,7 @@ export const UserSchema = z.object({
     franchiseId: FranchiseIdSchema.optional(),
 
     phoneNumber: z.string().optional(),
-    photoURL: z.string().url().optional(),
+    photoURL: z.string().optional().or(z.literal('')), // Relaxed validation
 
     // Metadata
     createdAt: z.union([z.string(), z.date(), z.object({ seconds: z.number(), nanoseconds: z.number() })]).optional().transform(val => {

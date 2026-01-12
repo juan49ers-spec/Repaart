@@ -138,31 +138,56 @@ export const useUserManager = (currentUser: { uid: string; role?: string; email?
             }
 
             // 2. Profile Creation (Unified in 'users' collection)
-            const profileData: any = {
-                uid,
-                email: userData.email,
-                displayName: userData.displayName || userData.email,
-                role: userData.role || 'user',
-                franchiseId: franchiseId || userData.franchiseId || null, // Inject context franchiseId if present
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-                status: userData.status || 'active'
-            };
+            try {
+                const profileData: any = {
+                    uid,
+                    email: userData.email,
+                    displayName: userData.displayName || userData.email,
+                    role: userData.role || 'user',
+                    franchiseId: franchiseId || userData.franchiseId || null, // Inject context franchiseId if present
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                    status: userData.status || 'active'
+                };
 
-            if (userData.pack) profileData.pack = userData.pack;
-            if (userData.phoneNumber) profileData.phoneNumber = userData.phoneNumber;
+                if (userData.pack) profileData.pack = userData.pack;
+                if (userData.phoneNumber) profileData.phoneNumber = userData.phoneNumber;
 
-            // Franchise-specific fields
-            if (userData.name) profileData.name = userData.name;
-            if (userData.legalName) profileData.legalName = userData.legalName;
-            if (userData.cif) profileData.cif = userData.cif;
-            if (userData.address) profileData.address = userData.address;
+                // Franchise-specific fields
+                if (userData.name) profileData.name = userData.name;
+                if (userData.legalName) profileData.legalName = userData.legalName;
+                if (userData.cif) profileData.cif = userData.cif;
+                if (userData.address) profileData.address = userData.address;
 
-            // Single Source of Truth Write
-            await userService.setUserProfile(uid, profileData);
+                // Single Source of Truth Write
+                await userService.setUserProfile(uid, profileData);
 
-            await logAction(currentUser, AUDIT_ACTIONS.CREATE_USER, { email: userData.email });
-            return uid;
+                await logAction(currentUser, AUDIT_ACTIONS.CREATE_USER, { email: userData.email });
+                return uid;
+            } catch (firestoreError) {
+                console.error("Firestore creation failed, rolling back Auth user:", firestoreError);
+
+                // ROLLBACK: Delete the Auth user if Firestore write fails
+                if (password && uid) {
+                    try {
+                        const secondaryAuth = getAuth(secondaryApp);
+                        // We need to sign in again or use the existing currentUser object if we had it, 
+                        // but here we just created it. 
+                        // Actually, 'createUserWithEmailAndPassword' signs the user in automatically on the secondaryAuth instance.
+                        const currentUserToDelete = secondaryAuth.currentUser;
+                        if (currentUserToDelete && currentUserToDelete.uid === uid) {
+                            await currentUserToDelete.delete();
+                            console.log("Rollback successful: Auth user deleted.");
+                        } else {
+                            console.error("Rollback failed: Could not find current user to delete.");
+                        }
+                        await signOut(secondaryAuth);
+                    } catch (rollbackError) {
+                        console.error("CRITICAL: Rollback failed. Zombie user exists in Auth:", uid, rollbackError);
+                    }
+                }
+                throw new Error("Error creating user profile. Auth rolled back. Please try again.");
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['users'] });

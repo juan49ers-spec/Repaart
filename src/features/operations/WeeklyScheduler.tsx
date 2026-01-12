@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Save, Zap, Filter } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Save, Zap, Filter, XCircle } from 'lucide-react';
+import { cn } from '../../lib/utils';
+import { getShiftDuration, getRiderInitials } from '../../utils/colorPalette';
 import ShiftModal from './ShiftModal';
-import ShiftCard from './ShiftCard';
 import QuickFillModal from './QuickFillModal';
 
 import { findMotoConflict, findRiderConflict } from '../../utils/schedulerValidation';
@@ -11,42 +12,14 @@ import MobileAgendaView from './MobileAgendaView';
 import { useWeeklySchedule, getWeekIdFromDate, type Shift, type WeekData } from '../../hooks/useWeeklySchedule';
 import { WeekService } from '../../services/scheduler/weekService';
 import { toFranchiseId, toWeekId } from '../../schemas/scheduler';
-import { calculateDayLayout } from '../../utils/eventLayout';
 import ConfirmationModal from '../../ui/feedback/ConfirmationModal';
 import { getRiderColorMap } from '../../utils/riderColors';
 import { useWeather } from '../../hooks/useWeather';
 import { getWeatherIcon } from '../../utils/weather';
 import { useAuth } from '../../context/AuthContext';
 import { validateWeeklySchedule, generateScheduleFix, generateFullSchedule } from '../../lib/gemini';
-import { BadgeCheck, AlertTriangle, ShieldCheck, XCircle, Wand2, Sparkles, Trophy, Calendar, CloudRain } from 'lucide-react';
+import { BadgeCheck, AlertTriangle, ShieldCheck, Wand2, Sparkles } from 'lucide-react';
 import { useOperationsIntel, intelService } from '../../services/intelService';
-
-// --- PREMIUM UI UTILS ---
-const TeamLogo: React.FC<{ src?: string, name?: string, size?: number }> = ({ src, name = '?', size = 24 }) => {
-    const [error, setError] = useState(false);
-    const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-
-    if (!src || error) {
-        return (
-            <div
-                style={{ width: size, height: size }}
-                className="rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center border border-white/20 shadow-inner"
-            >
-                <span className="text-[10px] font-black text-white/90 tracking-tighter">{initials}</span>
-            </div>
-        );
-    }
-
-    return (
-        <img
-            src={src}
-            alt={name}
-            style={{ width: size, height: size }}
-            className="object-contain drop-shadow-md rounded-full bg-white/10 p-0.5"
-            onError={() => setError(true)}
-        />
-    );
-};
 
 const getDayDemandLevel = (dayDate: string, dayIntel: any[]) => {
     const hasCritical = dayIntel.some(e => e.severity === 'critical');
@@ -57,27 +30,6 @@ const getDayDemandLevel = (dayDate: string, dayIntel: any[]) => {
     if (hasCritical) return 'critical';
     if (hasWarning || [0, 5, 6].includes(dayOfWeek)) return 'warning';
     return 'normal';
-};
-
-const getDayStyling = (level: string, isToday: boolean, isWeekend: boolean) => {
-    const base = `relative px-2 py-3 transition-all duration-300 hover:z-30 group/dayhead border-r h-full flex flex-col justify-between cursor-default hover:scale-[1.01] hover:shadow-2xl hover:shadow-slate-200/50`;
-    const weekendBorder = isWeekend ? 'border-r-4 border-slate-300' : 'border-slate-100';
-
-    const colors = {
-        critical: 'bg-rose-500/[0.04] border-l-rose-500/20',
-        warning: 'bg-amber-500/[0.04] border-l-amber-500/20',
-        normal: 'bg-emerald-500/[0.02] border-l-emerald-500/10'
-    };
-
-    const outLine = {
-        critical: 'ring-1 ring-inset ring-rose-500/30',
-        warning: 'ring-1 ring-inset ring-amber-500/30',
-        normal: 'ring-1 ring-inset ring-emerald-500/20'
-    };
-
-    const focusStyles = `group-hover/daygrid:opacity-60 hover:!opacity-100 hover:backdrop-saturate-[1.8] hover:backdrop-blur-2xl`;
-
-    return `${base} ${weekendBorder} ${isToday ? 'bg-indigo-50/60 shadow-inner' : colors[level as keyof typeof colors]} ${outLine[level as keyof typeof outLine]} ${focusStyles}`;
 };
 
 // ... (Existing types and constants)
@@ -98,10 +50,94 @@ interface VisualEvent extends Shift {
 }
 
 interface ShiftEvent extends VisualEvent {
-    // Ensuring it has all properties needed by ShiftCard/Layout
     riderId: string;
     riderName: string;
 }
+
+// --- V13 SUB-COMPONENTS ---
+
+const ShiftPill: React.FC<{
+    event: ShiftEvent;
+    onClick: (e: React.MouseEvent) => void;
+    onDelete: (id: string, e: React.MouseEvent) => void;
+    riderColor?: { bg: string, border: string, text: string };
+    readOnly?: boolean;
+}> = ({ event, onClick, onDelete, riderColor, readOnly }) => {
+    const duration = getShiftDuration(event.startAt, event.endAt);
+    const startTime = event.visualStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const endTime = event.visualEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Premium Gradient Logic based on duration/type
+    const getGradientClass = () => {
+        if (riderColor?.bg?.includes('rose')) return "bg-gradient-to-r from-rose-500 to-rose-600 border-rose-400/50 shadow-rose-500/20";
+        if (riderColor?.bg?.includes('amber')) return "bg-gradient-to-r from-amber-500 to-amber-600 border-amber-400/50 shadow-amber-500/20";
+        if (riderColor?.bg?.includes('emerald')) return "bg-gradient-to-r from-emerald-500 to-emerald-600 border-emerald-400/50 shadow-emerald-500/20";
+        if (riderColor?.bg?.includes('indigo')) return "bg-gradient-to-r from-indigo-500 to-indigo-600 border-indigo-400/50 shadow-indigo-500/20";
+        if (riderColor?.bg?.includes('slate')) return "bg-gradient-to-r from-slate-500 to-slate-600 border-slate-400/50 shadow-slate-500/20";
+        return "bg-gradient-to-r from-indigo-500 to-indigo-600 border-indigo-400/50 shadow-indigo-500/20";
+    };
+
+    return (
+        <div
+            onClick={onClick}
+            className={cn(
+                "group/pill relative h-8 rounded-md border shadow-sm transition-all duration-300 cursor-pointer overflow-hidden flex items-center px-1.5",
+                getGradientClass(),
+                "hover:scale-[1.02] hover:shadow-lg hover:z-50 active:scale-95 hover:brightness-110",
+                "ring-1 ring-white/10"
+            )}
+            title={`${event.riderName} | ${startTime} - ${endTime} (${duration}h)`}
+        >
+            {/* Glossy Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+
+            <div className="flex items-center gap-1.5 min-w-0 relative z-10">
+                <span className="text-[9px] font-black truncate uppercase tracking-tight text-white/95 drop-shadow-sm">
+                    {duration}h
+                </span>
+                <div className="w-0.5 h-3 bg-white/20 rounded-full" />
+                <span className="text-[8px] font-bold text-white/80 truncate">
+                    {startTime}-{endTime}
+                </span>
+            </div>
+
+            {/* Hover Delete Action */}
+            {!readOnly && (
+                <button
+                    onClick={(e) => { e.stopPropagation(); onDelete(event.shiftId, e); }}
+                    className="absolute right-0.5 opacity-0 group-hover/pill:opacity-100 transition-opacity bg-white/20 hover:bg-white/40 rounded p-0.5"
+                >
+                    <XCircle className="w-3 h-3 text-white" />
+                </button>
+            )}
+        </div>
+    );
+};
+
+const CurrentTimeIndicator: React.FC<{ startHour: number, endHour: number }> = ({ startHour, endHour }) => {
+    const [now, setNow] = React.useState(new Date());
+
+    React.useEffect(() => {
+        const timer = setInterval(() => setNow(new Date()), 60000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const hour = now.getHours();
+    const minute = now.getMinutes();
+
+    if (hour < startHour || hour >= endHour) return null;
+
+    const percent = ((hour - startHour) * 60 + minute) / ((endHour - startHour) * 60) * 100;
+
+    return (
+        <div
+            className="absolute top-0 bottom-0 w-0.5 bg-rose-500 z-40 pointer-events-none shadow-[0_0_12px_rgba(244,63,94,0.8)]"
+            style={{ left: `${percent}%` }}
+        >
+            <div className="absolute top-0 -left-1.5 w-3.5 h-3.5 bg-rose-500 rounded-full border-[3px] border-white shadow-md animate-pulse" />
+        </div>
+    );
+};
 
 const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly = false }) => {
     // --- STATE MANAGEMENT (HOOK) ---
@@ -129,7 +165,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
 
     const { user } = useAuth();
     // Fetch weather for this franchise context (Franchises are in 'users' collection)
-    const { daily: weatherDaily } = useWeather(franchiseId || user?.uid, 'users');
+    const { daily: weatherDaily } = useWeather((franchiseId || user?.uid || '') as string, 'users');
 
     const [viewMode, setViewMode] = useState<'full' | 'prime'>('full');
 
@@ -161,7 +197,6 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
     // Helpers
     const changeWeek = (dir: number) => navigateWeek(dir);
     const isMobile = useMediaQuery('(max-width: 768px)');
-    const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
     const isSaving = loading || isProcessing || isFixing;
     const closeConfirm = () => setConfirmDialog(prev => ({ ...prev, isOpen: false }));
 
@@ -454,35 +489,6 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
         });
     };
 
-    const handleCloneShift = async (shift: Shift, e: React.MouseEvent) => {
-        if (e) e.stopPropagation();
-        try {
-            setIsProcessing(true);
-            const clonedShift = {
-                ...shift,
-                shiftId: `shift_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                id: `shift_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-            };
-            const currentShifts = weekData?.shifts || [];
-            const updatedShifts = [...currentShifts, clonedShift];
-            const updatedWeekData: WeekData = {
-                status: 'draft',
-                metrics: { totalHours: 0, activeRiders: 0, motosInUse: 0 },
-                ...(weekData || {}),
-                shifts: updatedShifts,
-                id: currentWeekId,
-                startDate: toLocalDateString(getStartOfWeek(referenceDate))
-            } as WeekData;
-            await WeekService.saveWeek(toFranchiseId(franchiseId), toWeekId(currentWeekId), updatedWeekData);
-            updateWeekData(updatedWeekData);
-        } catch (error) {
-            console.error("Error cloning shift:", error);
-            alert("Error al duplicar turno.");
-        } finally {
-            setIsProcessing(false);
-        }
-    };
-
     // --- HELPERS FOR RENDERING ---
 
     const getDays = () => {
@@ -577,6 +583,76 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
     const riderColorMap = useMemo(() => {
         return getRiderColorMap(riders || []);
     }, [riders]);
+
+    // --- V13 CORE LOGIC: GROUPING BY RIDER ---
+    const ridersGrid = useMemo(() => {
+        if (!riders) return [];
+
+        // Sort riders: Active first, then alphabet
+        const sortedRiders = [...riders].sort((a, b) => {
+            if (a.status === 'active' && b.status !== 'active') return -1;
+            if (a.status !== 'active' && b.status === 'active') return 1;
+            return a.fullName.localeCompare(b.fullName);
+        });
+
+        // Group shifts by rider
+        const riderShiftsMap: Record<string, Record<string, ShiftEvent[]>> = {};
+
+        // Initialize map
+        sortedRiders.forEach(r => {
+            riderShiftsMap[r.id] = {};
+            days.forEach(d => riderShiftsMap[r.id][d.isoDate] = []);
+        });
+
+        // Fill map with Merging Logic
+        Object.keys(visualEvents).forEach(dayKey => {
+            visualEvents[dayKey].forEach(ev => {
+                if (riderShiftsMap[ev.riderId]) {
+                    const riderDayShifts = riderShiftsMap[ev.riderId][dayKey];
+
+                    // Visual Merging: If this shift starts exactly when the last one ended
+                    const lastShift = riderDayShifts[riderDayShifts.length - 1];
+                    if (lastShift && lastShift.endAt === ev.startAt && !ev.isContinuation) {
+                        // Merge!
+                        lastShift.endAt = ev.endAt;
+                        lastShift.visualEnd = ev.visualEnd;
+                        // Keep the original id, but update data
+                    } else {
+                        riderDayShifts.push({ ...ev } as ShiftEvent);
+                    }
+                }
+            });
+        });
+
+        return sortedRiders.map(rider => ({
+            ...rider,
+            days: days.map(day => ({
+                ...day,
+                shifts: riderShiftsMap[rider.id][day.isoDate] || []
+            }))
+        }));
+    }, [riders, visualEvents, days]);
+
+    // Position calc constants
+    const START_HOUR = 8;
+    const END_HOUR = 24;
+    const TOTAL_MINUTES = (END_HOUR - START_HOUR) * 60;
+
+    const getShiftPosition = (start: Date, end: Date) => {
+        const sHour = start.getHours();
+        const sMin = start.getMinutes();
+        const eHour = end.getHours();
+        const eMin = end.getMinutes();
+
+        // Clamp to grid range
+        const safeStart = Math.max(sHour * 60 + sMin, START_HOUR * 60);
+        const safeEnd = Math.min(eHour * 60 + eMin, END_HOUR * 60);
+
+        const leftPercent = ((safeStart - START_HOUR * 60) / TOTAL_MINUTES) * 100;
+        const widthPercent = ((safeEnd - safeStart) / TOTAL_MINUTES) * 100;
+
+        return { left: `${leftPercent}%`, width: `${widthPercent}%` };
+    };
 
     // Drag & Drop
     const handleDrop = async (e: React.DragEvent, targetDay: { isoDate: string }) => {
@@ -882,290 +958,136 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                     <span className="font-medium text-slate-500">Cargando semana...</span>
                 </div>
             ) : (
-                <div className="flex-1 overflow-auto bg-slate-50 relative">
+                <div className="flex-1 overflow-hidden bg-slate-50 relative flex flex-col">
                     {isMobile ? (
-                        // --- MOBILE VIEW ---
-                        <div className="flex-1 overflow-auto bg-slate-50 relative pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
-                            <div className="p-4">
-                                <MobileAgendaView
-                                    days={days}
-                                    // Optimized: Pass dictionary directly for O(1) access
-                                    visualEvents={visualEvents}
-                                    intelByDay={intelByDay}
-                                    onEditShift={handleEditShift}
-                                    onDeleteShift={handleDeleteShift}
-                                    onAddShift={handleOpenNew}
-                                />
-                            </div>
+                        <div className="flex-1 overflow-auto p-4">
+                            <MobileAgendaView
+                                days={days}
+                                visualEvents={visualEvents}
+                                intelByDay={intelByDay}
+                                onEditShift={handleEditShift}
+                                onDeleteShift={handleDeleteShift}
+                                onAddShift={handleOpenNew}
+                            />
                         </div>
                     ) : (
-                        // --- DESKTOP VIEW ---
-                        <div className="min-w-[1000px] h-full flex flex-col bg-white/40 border-l border-white/20">
-                            {/* Days Header */}
-                            <div className="grid grid-cols-7 border-b border-slate-200/60 bg-white/80 backdrop-blur-md sticky top-0 z-20 shadow-sm pl-9 group/daygrid">
-                                {days.map((day, i) => {
-                                    const isToday = new Date().toISOString().split('T')[0] === day.isoDate;
-                                    const dayIntel = intelByDay[day.isoDate] || [];
-                                    const demandLevel = getDayDemandLevel(day.isoDate, dayIntel);
-                                    const dayDate = new Date(day.isoDate);
-                                    const isWeekend = [0, 5, 6].includes(dayDate.getDay());
-
-                                    return (
-                                        <div key={i} className={getDayStyling(demandLevel, isToday, isWeekend)}>
-                                            {/* Accent Top Border for Events */}
-                                            {demandLevel === 'critical' && (
-                                                <>
-                                                    <div className="absolute top-0 left-0 right-0 h-1.5 bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.6)] z-10" />
-                                                    <div className="absolute inset-0 bg-gradient-to-br from-rose-500/[0.03] via-transparent to-rose-500/[0.05] opacity-50 animate-pulse pointer-events-none" />
-                                                </>
-                                            )}
-                                            {demandLevel === 'warning' && <div className="absolute top-0 left-0 right-0 h-1 bg-amber-500 z-10" />}
-                                            {demandLevel === 'normal' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-emerald-500/40 z-10" />}
-
-                                            <div className="flex flex-col gap-2 relative z-0">
-                                                <div className="flex items-center justify-between gap-1 w-full">
-                                                    <div className="flex items-baseline gap-1.5 min-w-0">
-                                                        <div className={`text-[10px] font-semibold uppercase tracking-[0.15em] truncate ${isToday ? 'text-indigo-600' : 'text-slate-400'}`}>
-                                                            {day.label.split(' ')[0]}
-                                                        </div>
-                                                        <div className={`text-2xl font-bold tracking-tight leading-none ${isToday ? 'text-indigo-700 drop-shadow-sm' : 'text-slate-800'}`}>
-                                                            {day.label.split(' ')[1]}
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Weather Forecast Mini-Pill (Always visible if available) */}
-                                                    {weatherDaily && (
-                                                        <div className="opacity-60 group-hover/dayhead:opacity-100 transition-opacity flex items-center gap-1 bg-white/40 px-1.5 py-0.5 rounded-lg border border-white/40 shadow-sm shrink-0">
-                                                            {(() => {
-                                                                const idx = weatherDaily.time.findIndex((t: string) => t === day.isoDate);
-                                                                if (idx !== -1) {
-                                                                    const max = Math.round(weatherDaily.temperature_2m_max[idx]);
-                                                                    const code = weatherDaily.weathercode[idx];
-                                                                    return (
-                                                                        <>
-                                                                            <div className="scale-100">{getWeatherIcon(code, "w-4 h-4")}</div>
-                                                                            <span className="text-[10px] font-black text-slate-500">{max}°</span>
-                                                                        </>
-                                                                    );
-                                                                }
-                                                                return null;
-                                                            })()}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* High-Impact Intel Badges */}
-                                                <div className="flex flex-col gap-2">
-                                                    {dayIntel.map((event) => {
-                                                        const isMatch = event.type === 'match';
-                                                        const isLive = event.metadata?.isLive;
-
-                                                        return (
-                                                            <div
-                                                                key={event.id}
-                                                                className={`
-                                                                    flex flex-col gap-1.5 p-2 rounded-2xl border backdrop-blur-xl transition-all hover:scale-[1.03] cursor-help relative group/badge overflow-hidden
-                                                                    shadow-[0_4px_12px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)]
-                                                                    hover:shadow-[0_8px_20px_rgba(0,0,0,0.06),0_2px_4px_rgba(0,0,0,0.03)]
-                                                                    ${event.severity === 'critical' ? 'bg-rose-500/10 border-rose-500/30 text-rose-800 ring-1 ring-rose-500/10' :
-                                                                        event.severity === 'warning' ? 'bg-amber-500/10 border-amber-500/30 text-amber-800 ring-1 ring-amber-500/10' :
-                                                                            'bg-indigo-500/5 border-indigo-500/20 text-indigo-800 ring-1 ring-indigo-500/5'}
-                                                                `}
-                                                                title={`${event.title}: ${event.impact}`}
-                                                            >
-                                                                {/* Live Pulse Glow */}
-                                                                {isLive && (
-                                                                    <div className="absolute inset-0 bg-rose-500/5 animate-pulse pointer-events-none" />
-                                                                )}
-
-                                                                {isMatch ? (
-                                                                    <div className="flex flex-col gap-2 relative z-10">
-                                                                        <div className="flex items-center justify-between gap-2 bg-white/40 p-1 rounded-xl border border-white/20">
-                                                                            <TeamLogo src={event.metadata?.teamLogo} name={event.metadata?.team} size={28} />
-                                                                            <div className="flex flex-col items-center gap-0.5">
-                                                                                <span className="text-[8px] font-black text-slate-400 font-mono leading-none">VS</span>
-                                                                                {isLive && (
-                                                                                    <div className="flex flex-col items-center">
-                                                                                        <span className="text-[9px] font-black text-rose-600 animate-pulse">{event.metadata?.score?.home} - {event.metadata?.score?.away}</span>
-                                                                                        <span className="text-[7px] font-bold text-rose-500/70">{event.metadata?.minute}'</span>
-                                                                                    </div>
-                                                                                )}
-                                                                            </div>
-                                                                            <TeamLogo src={event.metadata?.opponentLogo} name={event.metadata?.opponent} size={28} />
-                                                                        </div>
-                                                                        <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-tighter px-0.5">
-                                                                            <span className="flex items-center gap-1 opacity-70">
-                                                                                <Trophy size={9} />
-                                                                                {event.subtitle?.includes('Champions') ? 'UCL' : 'Liga'}
-                                                                            </span>
-                                                                            <span className="bg-slate-950/80 text-white px-1.5 py-0.5 rounded-lg text-[8px] shadow-sm">
-                                                                                {event.date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                                            </span>
-                                                                        </div>
-                                                                    </div>
-                                                                ) : (
-                                                                    <div className="flex items-center gap-2.5 relative z-10">
-                                                                        <div className="w-6 h-6 rounded-full bg-white/80 flex items-center justify-center shadow-sm border border-white">
-                                                                            {event.type === 'weather' ? <CloudRain size={12} className="text-slate-600" /> : <Calendar size={12} className="text-slate-600" />}
-                                                                        </div>
-                                                                        <span className="text-[10px] font-black leading-tight truncate pr-1">{event.title}</span>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Scrollable Timeline Area (Fixed CSS) */}
-                            <div className="flex-1 overflow-y-auto relative no-scrollbar bg-slate-50/30">
-                                {/* Current Time Indicator Line (if functional requirement, strictly visual here) */}
-
-                                {/* Time Lines */}
-                                <div className="absolute inset-0 pointer-events-none z-0">
-                                    {(() => {
-                                        // Filtrar horas según modo
-                                        const hoursToShow = viewMode === 'prime'
-                                            ? hours.filter(h => {
-                                                const hourNum = parseInt(h);
-                                                return (hourNum >= 12 && hourNum <= 15) || (hourNum >= 19 && hourNum <= 23);
-                                            })
-                                            : hours;
-
-                                        return hoursToShow.map((hour, i) => {
-                                            const hourNum = parseInt(hour);
-                                            const isPrimeComida = hourNum >= 12 && hourNum <= 15;
-                                            const isPrimeCena = hourNum >= 19 && hourNum <= 23;
-                                            const isPrimeBlock = isPrimeComida || isPrimeCena;
-
-                                            // En modo prime, recalcular posición para que sea contiguo
-                                            const topPos = viewMode === 'prime'
-                                                ? i * 60 // Posiciones consecutivas
-                                                : hourNum * 60; // Posiciones absolutas
-
-                                            return (
-                                                <div key={i} className={`absolute w-full flex items-start group ${isPrimeBlock
-                                                    ? 'border-t border-amber-200/40 bg-gradient-to-r from-amber-50/50 to-transparent'
-                                                    : 'border-t border-slate-100/60'
-                                                    }`} style={{ top: `${topPos}px`, height: '60px' } as React.CSSProperties}>
-
-                                                    {/* Hour Label */}
-                                                    <div className="flex flex-col pl-2 pt-2 w-9 shrink-0 items-center relative">
-                                                        <span className={`text-[10px] font-bold tracking-tighter ${isPrimeBlock ? 'text-amber-600' : 'text-slate-300'
-                                                            }`}>{hour}</span>
-
-                                                        {/* Professional Vertical Indicators */}
-                                                        {isPrimeComida && hourNum === 12 && (
-                                                            <div className="absolute top-8 left-2 flex flex-col items-center gap-1 opacity-70">
-                                                                <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest [writing-mode:vertical-rl] rotate-180">
-                                                                    COMIDA
-                                                                </span>
-                                                                <div className="w-0.5 h-6 bg-amber-300/50 rounded-full" />
-                                                            </div>
-                                                        )}
-                                                        {isPrimeCena && hourNum === 19 && (
-                                                            <div className="absolute top-8 left-2 flex flex-col items-center gap-1 opacity-70">
-                                                                <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest [writing-mode:vertical-rl] rotate-180">
-                                                                    CENA
-                                                                </span>
-                                                                <div className="w-0.5 h-6 bg-amber-300/50 rounded-full" />
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    {/* Subtle Block Divider for Prime */}
-                                                    {isPrimeBlock && (
-                                                        <div className="absolute inset-0 border-l border-amber-100/30 pointer-events-none" />
-                                                    )}
-                                                </div>
-                                            );
-                                        });
-                                    })()}
+                        <div className="flex-1 flex flex-col bg-white overflow-hidden rounded-tl-2xl border-l border-slate-200/50 shadow-xl shadow-slate-200/30">
+                            {/* V13 GANTT HEADER (Days) - Glassmorphic */}
+                            <div className="flex bg-white/80 border-b border-slate-200/80 sticky top-0 z-40 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60">
+                                <div className="w-48 shrink-0 border-r border-slate-200 p-3 flex items-center justify-between">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">RIDER</span>
+                                    <Filter className="w-3 h-3 text-slate-300" />
                                 </div>
-
-                                {/* Columns Container */}
-                                <div className={`grid grid-cols-7 relative z-10 pl-9 ${viewMode === 'prime' ? 'h-[540px]' : 'h-[1440px]'}`}>
-                                    {days.map((day, colIndex) => {
-                                        // O(1) Lookup - No more .filter()
-                                        const dayEvents = visualEvents[day.isoDate] || [];
-                                        // Improved: Min card width 80px triggers Deck Mode earlier (smart stacking)
-                                        const layoutEvents = calculateDayLayout(dayEvents as any[], 140, 80);
+                                <div className="flex-1 grid grid-cols-7 divide-x divide-slate-200">
+                                    {days.map((day, i) => {
                                         const isToday = new Date().toISOString().split('T')[0] === day.isoDate;
+                                        const intel = intelByDay[day.isoDate] || [];
+                                        const demand = getDayDemandLevel(day.isoDate, intel);
 
                                         return (
-                                            <div
-                                                key={colIndex}
-                                                className={`relative border-r border-slate-200/60 last:border-r-0 h-full group transition-colors ${isToday ? 'bg-indigo-50/10 ring-inset ring-2 ring-indigo-500/10' : 'hover:bg-indigo-50/10'}`}
-                                                onClick={(e) => handleColumnClick(e, day.isoDate)}
-                                                onDragOver={handleDragOver}
-                                                onDragLeave={handleDragLeave}
-                                                onDrop={(e) => handleDrop(e, day)}
-                                            >
-                                                {!readOnly && (
-                                                    <div className="hidden group-hover:flex items-center justify-center absolute w-full h-12 bg-indigo-50/40 border-y border-indigo-100 pointer-events-none z-0 backdrop-blur-[2px] top-0 shadow-sm">
-                                                        <span className="text-[10px] text-indigo-500 font-bold uppercase tracking-wider flex items-center gap-1">
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-                                                            Añadir Turno
-                                                        </span>
-                                                    </div>
-                                                )}
-
-                                                {layoutEvents.map((ev: any) => {
-                                                    const style = ev.layout;
-                                                    const shiftEvent = ev as ShiftEvent;
-
-                                                    // Calcular posición ajustada para modo Prime
-                                                    let adjustedTop = style.top;
-                                                    if (viewMode === 'prime' && shiftEvent.visualStart) {
-                                                        const startHour = shiftEvent.visualStart.getHours();
-                                                        const startMinutes = shiftEvent.visualStart.getMinutes();
-
-                                                        // Mapear horas Prime a posiciones consecutivas
-                                                        if (startHour >= 12 && startHour <= 15) {
-                                                            // Comida: 12-15 → posiciones 0-3 (0-240px)
-                                                            adjustedTop = (startHour - 12) * 60 + startMinutes;
-                                                        } else if (startHour >= 19 && startHour <= 23) {
-                                                            // Cena: 19-23 → posiciones 4-8 (240-540px)
-                                                            adjustedTop = ((startHour - 19) + 4) * 60 + startMinutes;
-                                                        } else {
-                                                            // Turno fuera de Prime (ocultar)
-                                                            adjustedTop = -9999;
-                                                        }
-                                                    }
-
-                                                    return (
-                                                        <div
-                                                            key={ev.id + (ev.isContinuation ? '-c' : '')}
-                                                            className={`absolute transition-all duration-300 pr-0.5 pl-0.5 ${style.isDeck ? 'hover:z-50' : 'hover:z-50'}`}
-                                                            style={{
-                                                                top: `${adjustedTop}px`,
-                                                                height: `${style.height}px`,
-                                                                left: style.left,
-                                                                width: style.width,
-                                                                zIndex: style.zIndex
-                                                            } as React.CSSProperties}
-                                                        >
-                                                            <div className="h-full w-full relative drop-shadow-sm hover:drop-shadow-md transition-shadow">
-                                                                <ShiftCard
-                                                                    event={shiftEvent as any}
-                                                                    onClick={(e) => { e.stopPropagation(); handleEditShift(shiftEvent); }}
-                                                                    onClone={(ev: any, e: any) => handleCloneShift(ev as Shift, e)}
-                                                                    onDelete={handleDeleteShift}
-                                                                    readOnly={readOnly}
-                                                                    style={{ height: '100%' }}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
+                                            <div key={i} className={cn(
+                                                "p-2 flex flex-col gap-1 transition-all",
+                                                isToday ? "bg-indigo-50/50" : "bg-white/80",
+                                                demand === 'critical' ? "border-b-2 border-b-rose-500" :
+                                                    demand === 'warning' ? "border-b-2 border-b-amber-500" : ""
+                                            )}>
+                                                <div className="flex items-center justify-between">
+                                                    <span className={cn("text-[9px] font-bold uppercase tracking-tighter", isToday ? "text-indigo-600" : "text-slate-400")}>
+                                                        {day.shortLabel}
+                                                    </span>
+                                                    <span className={cn("text-xs font-black", isToday ? "text-indigo-700" : "text-slate-800")}>
+                                                        {day.label.split(' ')[1]}
+                                                    </span>
+                                                </div>
+                                                {/* Mini Timeline Grid for Day Header */}
+                                                <div className="flex justify-between px-0.5 opacity-30">
+                                                    {[8, 12, 16, 20, 24].map(h => (
+                                                        <span key={h} className="text-[7px] font-black font-mono">{h}</span>
+                                                    ))}
+                                                </div>
                                             </div>
                                         );
                                     })}
                                 </div>
+                            </div>
+
+                            {/* V13 GANTT ROWS - With improved spacing and separation */}
+                            <div className="flex-1 overflow-y-auto no-scrollbar bg-slate-50/50">
+                                {ridersGrid.map((row, rIdx) => (
+                                    <div key={row.id} className={cn(
+                                        "flex border-b border-slate-100/80 items-center transition-all duration-200 group/row h-[52px]", // Fixed taller height for Pro feel
+                                        rIdx % 2 === 0 ? "bg-white" : "bg-slate-50/40"
+                                    )}>
+                                        {/* Rider Info Side - Sticky Glass */}
+                                        <div className="w-48 shrink-0 border-r border-slate-100/80 p-3 flex items-center gap-3 sticky left-0 z-30 transition-colors backdrop-blur-md supports-[backdrop-filter]:bg-white/80">
+                                            <div className="relative">
+                                                <div className={cn(
+                                                    "w-9 h-9 rounded-full flex items-center justify-center text-[10px] font-black border-[3px] border-white shadow-sm ring-1 ring-slate-100 transition-transform group-hover/row:scale-105",
+                                                    riderColorMap.get(row.id)?.bg || 'bg-slate-200'
+                                                )}>
+                                                    {getRiderInitials(row.fullName)}
+                                                </div>
+                                                {row.status === 'active' && (
+                                                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full shadow-sm" />
+                                                )}
+                                            </div>
+                                            <div className="min-w-0 flex flex-col">
+                                                <div className="text-xs font-bold text-slate-700 truncate group-hover/row:text-indigo-600 transition-colors">{row.fullName}</div>
+                                                <div className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">{row.status}</div>
+                                            </div>
+                                        </div>
+
+                                        {/* Days Grid - Subtle grid lines */}
+                                        <div className="flex-1 grid grid-cols-7 divide-x divide-slate-100/80 h-full">
+                                            {row.days.map((day, dIdx) => (
+                                                <div
+                                                    key={dIdx}
+                                                    className="h-12 relative flex items-center px-1 overflow-hidden cursor-crosshair group/cell"
+                                                    onClick={(e) => handleColumnClick(e, day.isoDate)}
+                                                    onDragOver={handleDragOver}
+                                                    onDragLeave={handleDragLeave}
+                                                    onDrop={(e) => handleDrop(e, day)}
+                                                >
+                                                    {/* Background Timeline Ticks (Subtle dashed) */}
+                                                    <div className="absolute inset-0 flex justify-between px-0.5 opacity-[0.04] pointer-events-none">
+                                                        {Array.from({ length: 9 }).map((_, i) => (
+                                                            <div key={i} className="w-[1px] h-full border-r border-dashed border-slate-900" />
+                                                        ))}
+                                                    </div>
+
+                                                    {/* Current Time Indicator (Only today, Only in this day cells) */}
+                                                    {new Date().toISOString().split('T')[0] === day.isoDate && (
+                                                        <CurrentTimeIndicator startHour={START_HOUR} endHour={END_HOUR} />
+                                                    )}
+
+                                                    {/* Shifts Container */}
+                                                    <div className="relative w-full h-full flex items-center">
+                                                        {day.shifts.map((ev) => (
+                                                            <div
+                                                                key={ev.shiftId}
+                                                                className="absolute"
+                                                                style={getShiftPosition(ev.visualStart, ev.visualEnd)}
+                                                            >
+                                                                <ShiftPill
+                                                                    event={ev}
+                                                                    onClick={(e) => { e.stopPropagation(); handleEditShift(ev); }}
+                                                                    onDelete={handleDeleteShift}
+                                                                    riderColor={riderColorMap.get(row.id)}
+                                                                    readOnly={readOnly}
+                                                                />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+
+                                                    {/* Add Trigger (Hidden until hover) */}
+                                                    {!readOnly && (
+                                                        <div className="absolute inset-0 bg-indigo-500/0 group-hover/cell:bg-indigo-500/[0.03] transition-colors pointer-events-none" />
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}

@@ -39,7 +39,7 @@ const Login: FC = () => {
             logAction(userCredential.user, AUDIT_ACTIONS.LOGIN_SUCCESS);
         }
         toast?.success('¡Bienvenido de nuevo!');
-        setTimeout(() => window.location.reload(), 1000);
+        // Allow App.tsx to handle redirect based on user state change
     };
 
     // Logic: Handle Registration Request (Lead)
@@ -54,7 +54,7 @@ const Login: FC = () => {
             createdAt: new Date().toISOString()
         });
         toast?.success('Solicitud enviada. Contactaremos contigo en breve.');
-        setTimeout(() => window.location.reload(), 2000);
+        setIsLogin(true); // Return to login view
     };
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {

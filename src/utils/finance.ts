@@ -51,7 +51,7 @@ export const formatCurrency = (value: string | number | null | undefined): strin
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
             useGrouping: true, // Explicitly enforce grouping
-        }).format(num as number);
+        }).format(num as number).replace(/\u00a0/g, ' ');
     } catch {
         return ''; // Fail safe
     }
@@ -62,13 +62,16 @@ export const formatCurrency = (value: string | number | null | undefined): strin
  * e.g. "=50*12" -> 600
  */
 export const evaluateFormula = (expression: string): number => {
-    if (!expression || typeof expression !== 'string') return 0;
+    const normalized = expression?.replace(/^=/, '').trim();
+    if (!normalized) throw new Error("Fórmula vacía");
 
-    // 1. Clean: Allow only digits, operators (+-*/), parens, dots, commas
-    // Remove '=' if present at start
-    const clean = expression.replace(/^=/, '').replace(',', '.').replace(/[^0-9+\-*/().]/g, '');
+    // Strict validation: Only allow numbers, math operators, parens, dots, and commas.
+    // This ensures XSS/Injections like <script> or alert() are rejected (thrown)
+    if (/[^0-9+\-*/().,\s]/.test(normalized)) {
+        throw new Error("Sintaxis incorrecta");
+    }
 
-    if (!clean.trim()) return 0;
+    const clean = normalized.replace(/,/g, '.').replace(/\s/g, '');
 
     // Safety: Prevent infinite loops or heavy calc, though unlikely in regex sanitized string
     // Safety: Check for div by zero
@@ -81,7 +84,7 @@ export const evaluateFormula = (expression: string): number => {
         if (!isFinite(result) || isNaN(result as number)) throw new Error("Resultado inválido");
         return result as number;
     } catch {
-        throw new Error("Fórmula inválida");
+        throw new Error("Sintaxis incorrecta");
     }
 };
 

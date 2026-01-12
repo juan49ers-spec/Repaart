@@ -94,6 +94,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         if (finalConfig.franchiseId) enhancedUser.franchiseId = finalConfig.franchiseId;
                     }
 
+                    // 🚑 SELF-HEALING: Ensure role is NEVER undefined
+                    if (!enhancedUser.role) {
+                        if (currentUser.email?.includes('rider')) {
+                            enhancedUser.role = 'rider';
+                        } else {
+                            enhancedUser.role = 'user'; // Default safe role
+                        }
+                    }
+
+                    console.log(`[Security] Auth Initialized: ${currentUser.email} as ${enhancedUser.role}`);
+
                     // Calculamos si es admin de una vez por todas
                     setIsAdmin(finalConfig?.role === 'admin');
 

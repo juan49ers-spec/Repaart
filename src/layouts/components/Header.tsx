@@ -12,7 +12,8 @@ import {
     LayoutGrid,
     Settings,
     HelpCircle,
-    LucideIcon
+    LucideIcon,
+    Bike
 } from 'lucide-react';
 import Notifications from './Notifications';
 import UserMenu from './UserMenu';
