@@ -6,6 +6,14 @@ import { userService } from '../services/userService';
 import { intelService, IntellectualEvent } from '../services/intelService';
 import { format } from 'date-fns';
 
+export interface PendingAction {
+    id: string;
+    type: 'ticket' | 'premium' | 'record' | 'alert';
+    title: string;
+    subtitle: string;
+    priority: string;
+}
+
 export interface AdminControlData {
     network: {
         total: number;
@@ -20,7 +28,7 @@ export interface AdminControlData {
         premium: number;
         records: number;
         alerts: number;
-        list: any[];
+        list: PendingAction[];
     };
     events: IntellectualEvent[];
     earnings: {
@@ -117,11 +125,11 @@ export const useAdminControl = (monthKey?: string) => {
                             records: pendingRecords.length,
                             alerts: unreadAlerts,
                             list: [
-                                ...standardTickets.map(t => ({ id: t.id, type: 'ticket', title: t.subject, subtitle: t.email, priority: t.urgency })),
-                                ...premiumTickets.map(t => ({ id: t.id, type: 'premium', title: t.subject, subtitle: 'Solicitud Premium', priority: 'high' })),
+                                ...standardTickets.map(t => ({ id: t.id as string, type: 'ticket' as const, title: t.subject as string, subtitle: t.email as string, priority: t.urgency as string })),
+                                ...premiumTickets.map(t => ({ id: t.id as string, type: 'premium' as const, title: t.subject as string, subtitle: 'Solicitud Premium', priority: 'high' })),
                                 ...pendingRecords.map(r => ({
                                     id: r.id,
-                                    type: 'record',
+                                    type: 'record' as const,
                                     title: 'Cierre Mensual',
                                     subtitle: `Sede: ${franchiseMap.get(r.franchise_id) || r.franchise_id}`,
                                     priority: 'normal'
@@ -137,10 +145,10 @@ export const useAdminControl = (monthKey?: string) => {
                     });
                     setLoading(false);
                 }
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error("Error loading admin control data:", err);
                 if (isMounted) {
-                    setError(err.message);
+                    setError(err instanceof Error ? err.message : 'Error cargando datos de control');
                     setLoading(false);
                 }
             }

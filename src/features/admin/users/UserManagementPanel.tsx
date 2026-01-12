@@ -12,7 +12,15 @@ import { UserProfile } from '../../../services/userService';
 
 // --- SUB-COMPONENTS (Local for now to keep orchestrator clean) ---
 
-
+interface RegistrationRequest {
+    id: string;
+    legalName: string;
+    email: string;
+    cif: string;
+    phone: string;
+    status: 'pending' | 'approved' | 'rejected';
+    [key: string]: unknown;
+}
 
 // --- MAIN ORCHESTRATOR ---
 
@@ -25,7 +33,7 @@ interface ModalConfig {
     isOpen: boolean;
     type: 'create' | 'edit' | 'delete' | 'ban' | null;
     target: UserProfile | null;
-    requestData?: any; // For approval flow
+    requestData?: RegistrationRequest; // For approval flow
 }
 
 const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId = null, readOnly = false }) => {
@@ -35,20 +43,20 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
     const toast = toastContext?.toast;
 
     // --- NEW: Pending Requests Listener ---
-    const [pendingRequests, setPendingRequests] = useState<any[]>([]);
+    const [pendingRequests, setPendingRequests] = useState<RegistrationRequest[]>([]);
 
     React.useEffect(() => {
         if (franchiseId || readOnly) return; // Only global admin sees requests
 
         const q = query(collection(db, "registration_requests"), where("status", "==", "pending"));
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const reqs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            const reqs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as RegistrationRequest));
             setPendingRequests(reqs);
         });
         return () => unsubscribe();
     }, [franchiseId, readOnly]);
 
-    const handleApproveRequest = (request: any) => {
+    const handleApproveRequest = (request: RegistrationRequest) => {
         setModalConfig({
             isOpen: true,
             type: 'create',
@@ -62,7 +70,7 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
         try {
             await deleteDoc(doc(db, "registration_requests", requestId));
             toast?.success("Solicitud eliminada");
-        } catch (e) {
+        } catch {
             toast?.error("Error al eliminar");
         }
     };
@@ -173,8 +181,8 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
             await deleteUser(modalConfig.target.uid);
             toast?.success('Usuario eliminado permanentemente');
             setModalConfig({ isOpen: false, type: null, target: null });
-        } catch (err: any) {
-            toast?.error(err.message || 'Error al eliminar usuario');
+        } catch (err: unknown) {
+            toast?.error(err instanceof Error ? err.message : 'Error al eliminar usuario');
         } finally {
             setActionLoading(false);
         }
@@ -187,8 +195,8 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
             await toggleUserStatus(target.uid, target.status ?? 'active');
             toast?.success(`Estado de usuario actualizado`);
             setModalConfig({ isOpen: false, type: null, target: null });
-        } catch (err: any) {
-            toast?.error(err.message || 'Error al cambiar estado');
+        } catch (err: unknown) {
+            toast?.error(err instanceof Error ? err.message : 'Error al cambiar estado');
         } finally {
             setActionLoading(false);
         }
@@ -223,25 +231,25 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
 
 
             {/* --- TABS --- */}
-            <div className="flex gap-2 border-b border-white/10 pb-0 shrink-0 px-6 pt-4">
+            <div className="flex gap-2 pb-0 shrink-0 px-6 pt-6 mb-8">
                 <button
                     onClick={() => setActiveTab('structure')}
-                    className={`px-4 py-2 font-bold text-sm rounded-t-lg transition-colors flex items-center gap-2 ${activeTab === 'structure' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                    className={`px-5 py-2.5 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all duration-300 flex items-center gap-2 ${activeTab === 'structure' ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}`}
                 >
-                    <Building className="w-4 h-4" />
-                    <span>Estructura (Admin/Franquicias)</span>
+                    <Building className="w-3.5 h-3.5" />
+                    <span>Estructura de Red</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('riders')}
-                    className={`px-4 py-2 font-bold text-sm rounded-t-lg transition-colors flex items-center gap-2 ${activeTab === 'riders' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                    className={`px-5 py-2.5 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all duration-300 flex items-center gap-2 ${activeTab === 'riders' ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}`}
                 >
-                    <Users className="w-4 h-4" />
-                    <span>Riders (Usuarios)</span>
+                    <Users className="w-3.5 h-3.5" />
+                    <span>Usuarios Finales</span>
                 </button>
             </div>
 
             {/* Toolbar (Simplified - No Role Filter in UI) */}
-            <div className="flex flex-col lg:flex-row gap-4 my-6 justify-between items-end lg:items-center px-6 shrink-0">
+            <div className="flex flex-col lg:flex-row gap-4 mb-8 justify-between items-end lg:items-center px-6 shrink-0">
                 {/* Search */}
                 <div className="relative flex-1 w-full lg:max-w-md">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
@@ -259,16 +267,16 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
                         aria-label="Filtrar por estado"
-                        className="glass-panel-exec border-0 px-3 py-2.5 rounded-xl text-sm font-bold text-slate-300 outline-none focus:ring-2 focus:ring-indigo-500/50"
+                        className="bg-slate-950 border border-white/10 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest text-slate-400 outline-none focus:ring-2 focus:ring-indigo-500/50"
                     >
-                        <option value="all" className="bg-slate-900 text-slate-200">Todos los Estados</option>
-                        <option value="active" className="bg-slate-900 text-slate-200">Activos</option>
-                        <option value="banned" className="bg-slate-900 text-slate-200">Bloqueados</option>
+                        <option value="all" className="bg-slate-900 text-slate-200">Status: All</option>
+                        <option value="active" className="bg-slate-900 text-slate-200">Status: Active</option>
+                        <option value="banned" className="bg-slate-900 text-slate-200">Status: Blocked</option>
                     </select>
 
                     <button
                         onClick={() => refetch()} // ✅ Use refetch
-                        className="p-2.5 text-slate-400 hover:bg-white/10 rounded-xl transition-colors"
+                        className="p-2.5 text-slate-500 hover:bg-white/5 hover:text-white rounded-xl transition-all"
                         title="Refrescar"
                     >
                         <RefreshCw className="w-4 h-4" />
@@ -277,11 +285,11 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
                     {!readOnly && (
                         <button
                             onClick={() => setModalConfig({ isOpen: true, type: 'create', target: null })}
-                            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-indigo-500/30 transition-all active:scale-95 whitespace-nowrap"
+                            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-[0.15em] shadow-xl shadow-indigo-500/20 transition-all active:scale-95 whitespace-nowrap border border-white/10"
                         >
                             <UserPlus className="w-4 h-4" />
                             <span className="hidden sm:inline">
-                                {activeTab === 'structure' ? 'Nuevo Admin/Franq.' : 'Nuevo Rider'}
+                                {activeTab === 'structure' ? 'Desplegar Nodo' : 'Alta Usuario'}
                             </span>
                         </button>
                     )}
