@@ -22,7 +22,7 @@ function cn(...inputs: ClassValue[]) {
 
 export interface InsightCard {
     id: string;
-    type: 'weather' | 'holiday' | 'ai_tip';
+    type: 'holiday' | 'ai_tip';
     severity: 'low' | 'medium' | 'high';
     message: string;
     actionable: string;

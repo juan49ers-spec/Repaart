@@ -4,15 +4,13 @@ import { toLocalDateString } from '../utils/dateUtils';
 
 export interface IntellectualEvent {
     id: string;
-    type: 'holiday' | 'match' | 'weather' | 'custom';
+    type: 'holiday' | 'match' | 'custom';
     title: string;
     subtitle?: string;
     date: Date;
     severity: 'info' | 'warning' | 'critical';
     impact: string;
-    metadata?: {
-        weatherCode?: number;
-    };
+    metadata?: any;
 }
 
 // 2026 Spanish National Holidays (Simplified)
@@ -55,7 +53,7 @@ export const intelService = {
         // 2. Weather Risks - Disabled (per user request)
 
         // Mock sports removed by user request (non-real data)
-        return events; // Return only events already in the array (e.g. weather)
+        return events;
     },
 
     getEventsByDay: (events: IntellectualEvent[]): Record<string, IntellectualEvent[]> => {
