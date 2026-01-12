@@ -15,8 +15,8 @@ interface OverviewTabProps {
     selectedMonth: string;
 }
 
-const OverviewTab: React.FC<OverviewTabProps> = ({ onNavigate }) => {
-    const { data, loading, error } = useAdminControl();
+const OverviewTab: React.FC<OverviewTabProps> = ({ onNavigate, selectedMonth }) => {
+    const { data, loading, error } = useAdminControl(selectedMonth);
     // We still keep the original dashboard data hook if we need trendData for the lower section
     // but for the main "Control Center" row, we use useAdminControl.
 
@@ -41,7 +41,11 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onNavigate }) => {
 
                     {/* Widget 2: Pending Actions */}
                     <div className="h-[420px]">
-                        <ControlPendingActionsWidget data={data.pending} loading={loading} />
+                        <ControlPendingActionsWidget
+                            data={data.pending}
+                            loading={loading}
+                            onNavigate={onNavigate}
+                        />
                     </div>
 
                     {/* Widget 3: Upcoming Intel/Events */}
@@ -51,7 +55,11 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onNavigate }) => {
 
                     {/* Widget 4: Administrative Earnings (Royalties) */}
                     <div className="h-[420px]">
-                        <ControlEarningsWidget data={data.earnings} loading={loading} />
+                        <ControlEarningsWidget
+                            data={data.earnings}
+                            loading={loading}
+                            onNavigate={onNavigate}
+                        />
                     </div>
                 </div>
             </section>
@@ -102,7 +110,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onNavigate }) => {
                                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                             </button>
                             <button
-                                onClick={() => onNavigate('analytics')}
+                                onClick={() => onNavigate('finance')}
                                 className="bg-indigo-500/10 text-indigo-200 border border-indigo-500/30 w-full py-4 px-8 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-indigo-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
                             >
                                 Ver Reportes de Tendencia

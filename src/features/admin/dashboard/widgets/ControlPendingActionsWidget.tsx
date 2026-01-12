@@ -20,9 +20,10 @@ interface ControlPendingActionsWidgetProps {
         list: PendingAction[];
     };
     loading?: boolean;
+    onNavigate?: (tab: string) => void;
 }
 
-const ControlPendingActionsWidget: React.FC<ControlPendingActionsWidgetProps> = ({ data, loading }) => {
+const ControlPendingActionsWidget: React.FC<ControlPendingActionsWidgetProps> = ({ data, loading, onNavigate }) => {
     const navigate = useNavigate();
 
     if (loading) {
@@ -69,7 +70,10 @@ const ControlPendingActionsWidget: React.FC<ControlPendingActionsWidgetProps> = 
                             key={action.id}
                             onClick={() => {
                                 if (action.type === 'ticket' || action.type === 'premium') navigate('/admin/support');
-                                else if (action.type === 'record') navigate('/admin/finance');
+                                else if (action.type === 'record') {
+                                    if (onNavigate) onNavigate('inbox');
+                                    else navigate('/dashboard?view=inbox');
+                                }
                             }}
                             className={`group flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer border ${action.priority === 'critical'
                                 ? 'bg-rose-50/80 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'

@@ -30,7 +30,7 @@ export interface AdminControlData {
     };
 }
 
-export const useAdminControl = () => {
+export const useAdminControl = (monthKey?: string) => {
     const [data, setData] = useState<AdminControlData>({
         network: { total: 0, excellent: 0, acceptable: 0, critical: 0, franchises: [] },
         pending: { total: 0, tickets: 0, premium: 0, records: 0, alerts: 0, list: [] },
@@ -49,6 +49,7 @@ export const useAdminControl = () => {
 
                 // 1. Fetch Franchises & Analyze Network
                 const franchises = await userService.fetchFranchises();
+                const franchiseMap = new Map(franchises.map(f => [f.id, f.name]));
                 const networkStats = franchises.reduce((acc, f) => {
                     const margin = f.metrics?.margin || 0;
                     if (margin > 20) acc.excellent++;
@@ -82,11 +83,11 @@ export const useAdminControl = () => {
                 // 5. Fetch Events for current week
                 const upcomingEvents = await intelService.getIntelForWeek(new Date());
 
-                // 6. Calculate Earnings (Current Month)
-                const monthKey = format(new Date(), 'yyyy-MM');
+                // 6. Calculate Earnings (Target Month)
+                const activeMonthKey = monthKey || format(new Date(), 'yyyy-MM');
                 const summariesQuery = query(
                     collection(db, "financial_summaries"),
-                    where("month", "==", monthKey)
+                    where("month", "==", activeMonthKey)
                 );
                 const summariesSnap = await getDocs(summariesQuery);
                 const summaries = summariesSnap.docs.map(doc => doc.data() as any);
@@ -118,7 +119,13 @@ export const useAdminControl = () => {
                             list: [
                                 ...standardTickets.map(t => ({ id: t.id, type: 'ticket', title: t.subject, subtitle: t.email, priority: t.urgency })),
                                 ...premiumTickets.map(t => ({ id: t.id, type: 'premium', title: t.subject, subtitle: 'Solicitud Premium', priority: 'high' })),
-                                ...pendingRecords.map(r => ({ id: r.id, type: 'record', title: 'Cierre Mensual', subtitle: `Franquicia: ${r.franchise_id}`, priority: 'normal' }))
+                                ...pendingRecords.map(r => ({
+                                    id: r.id,
+                                    type: 'record',
+                                    title: 'Cierre Mensual',
+                                    subtitle: `Sede: ${franchiseMap.get(r.franchise_id) || r.franchise_id}`,
+                                    priority: 'normal'
+                                }))
                             ].slice(0, 10)
                         },
                         events: upcomingEvents,
@@ -142,7 +149,7 @@ export const useAdminControl = () => {
         loadControlData();
 
         return () => { isMounted = false; };
-    }, []);
+    }, [monthKey]);
 
     return { data, loading, error };
 };

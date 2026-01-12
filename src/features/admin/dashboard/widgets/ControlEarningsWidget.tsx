@@ -8,9 +8,10 @@ interface ControlEarningsWidgetProps {
         totalNetworkRevenue: number;
     };
     loading?: boolean;
+    onNavigate?: (tab: string) => void;
 }
 
-const ControlEarningsWidget: React.FC<ControlEarningsWidgetProps> = ({ data, loading }) => {
+const ControlEarningsWidget: React.FC<ControlEarningsWidgetProps> = ({ data, loading, onNavigate }) => {
     if (loading) {
         return (
             <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6 h-full animate-pulse shadow-2xl">
@@ -92,7 +93,10 @@ const ControlEarningsWidget: React.FC<ControlEarningsWidgetProps> = ({ data, loa
 
             {/* Footer Action */}
             <div className="mt-8 relative z-10">
-                <div className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition-all group/footer cursor-pointer">
+                <div
+                    onClick={onNavigate ? () => onNavigate('finance') : undefined}
+                    className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition-all group/footer cursor-pointer"
+                >
                     <div className="flex justify-between items-center mb-1">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Total Admin Credit</span>
                         <ArrowUpRight className="w-4 h-4 text-emerald-400 group-hover/footer:translate-x-1 group-hover/footer:-translate-y-1 transition-transform" />

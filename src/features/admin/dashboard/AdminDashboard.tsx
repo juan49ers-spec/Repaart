@@ -98,33 +98,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const renderGlobalView = () => {
         return (
             <div className="animate-in fade-in duration-500 relative">
-                {/* DEVELOPER TOOLS BUTTON - DISCRETE */}
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setActiveTab('audit')}
-                        className="px-3 py-1.5 bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
-                        title="Ir a Auditoría y Migración"
-                    >
-                        <span>🛡️</span>
-                        <span>Auditoría</span>
-                    </button>
-                    <button
-                        onClick={() => setIsDevToolsOpen(true)}
-                        className="px-3 py-1.5 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 border border-slate-200 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 shadow-sm dark:shadow-none"
-                        title="Herramientas de desarrollo y diagnóstico"
-                    >
-                        <span className="text-sm">🛠️</span>
-                        <span>Dev Tools</span>
-                    </button>
-                    <ThemeToggle />
-                </div>
-
-                <DevToolsPanel
-                    isOpen={isDevToolsOpen}
-                    onClose={() => setIsDevToolsOpen(false)}
-                    onOpenReset={() => setActiveTab('reset')}
-                />
-
                 <OverviewTab
                     onNavigate={setActiveTab}
                     selectedMonth={selectedMonth || ''}
@@ -202,6 +175,37 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500
                 ${activeTab === 'kanban' ? 'w-full p-0' : 'max-w-[1600px] p-4 md:p-8'}
             `}>
+                {/* 🛠️ PERSISTENT TOOLS (Admin) */}
+                {activeTab !== 'kanban' && (
+                    <div className="flex justify-end mb-8">
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setActiveTab('audit')}
+                                className="px-3 py-1.5 bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+                                title="Ir a Auditoría y Migración"
+                            >
+                                <span>🛡️</span>
+                                <span>Auditoría</span>
+                            </button>
+                            <button
+                                onClick={() => setIsDevToolsOpen(true)}
+                                className="px-3 py-1.5 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 border border-slate-200 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 shadow-sm dark:shadow-none"
+                                title="Herramientas de desarrollo y diagnóstico"
+                            >
+                                <span className="text-sm">🛠️</span>
+                                <span>Dev Tools</span>
+                            </button>
+                            <ThemeToggle />
+                        </div>
+                    </div>
+                )}
+
+                <DevToolsPanel
+                    isOpen={isDevToolsOpen}
+                    onClose={() => setIsDevToolsOpen(false)}
+                    onOpenReset={() => setActiveTab('reset')}
+                />
+
                 <ErrorBoundary>
                     <Suspense fallback={<DashboardSkeleton />}>
                         {renderActiveTabContent()}

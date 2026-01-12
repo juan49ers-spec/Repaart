@@ -88,7 +88,7 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
             </div>
 
             <button
-                onClick={() => navigate('/admin/franchise')}
+                onClick={() => navigate('/dashboard?view=franchises')}
                 className="mt-4 w-full py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all"
             >
                 Ver Directorio Completo
