@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { X, Calendar, CheckSquare, Tag, AlignLeft, Plus, Trash2, Briefcase, Clock, ArrowRight, Layers } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Calendar, CheckSquare, Tag, AlignLeft, Plus, Trash2, Clock, ArrowRight, Layers, CheckCircle2 } from 'lucide-react';
 import { KanbanTask } from '../../../hooks/useKanban';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 
 interface TaskDetailModalProps {
     task: KanbanTask;
@@ -22,33 +21,25 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, isOpen, onClose
     const [dueDate, setDueDate] = useState<string>(
         task.dueDate?.toDate ? format(task.dueDate.toDate(), 'yyyy-MM-dd') : ''
     );
+    const [isSaving, setIsSaving] = useState(false);
 
     const [currentStatus, setCurrentStatus] = useState(task.status);
     const [currentPriority, setCurrentPriority] = useState(task.priority);
 
-    useEffect(() => {
-        setTitle(task.title);
-        setDescription(task.description || '');
-        setChecklist(task.checklist || []);
-        setTags(task.tags || []);
-        if (task.dueDate) {
-            const date = task.dueDate.toDate ? task.dueDate.toDate() : new Date(task.dueDate);
-            setDueDate(format(date, 'yyyy-MM-dd'));
-        } else {
-            setDueDate('');
-        }
-        setCurrentStatus(task.status);
-        setCurrentPriority(task.priority);
-    }, [task]);
-
     if (!isOpen) return null;
 
+    const wrapUpdate = (updates: Partial<KanbanTask>) => {
+        setIsSaving(true);
+        onUpdate(task.id, updates);
+        setTimeout(() => setIsSaving(false), 800);
+    };
+
     const handleTitleBlur = () => {
-        if (title !== task.title) onUpdate(task.id, { title });
+        if (title !== task.title) wrapUpdate({ title });
     };
 
     const handleDescriptionBlur = () => {
-        if (description !== (task.description || '')) onUpdate(task.id, { description });
+        if (description !== (task.description || '')) wrapUpdate({ description });
     };
 
     const addChecklistItem = (e: React.FormEvent) => {
@@ -57,7 +48,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, isOpen, onClose
         const newItem = { id: crypto.randomUUID(), text: newChecklistItem, completed: false };
         const updatedList = [...checklist, newItem];
         setChecklist(updatedList);
-        onUpdate(task.id, { checklist: updatedList });
+        wrapUpdate({ checklist: updatedList });
         setNewChecklistItem('');
     };
 
@@ -66,13 +57,13 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, isOpen, onClose
             item.id === itemId ? { ...item, completed: !item.completed } : item
         );
         setChecklist(updatedList);
-        onUpdate(task.id, { checklist: updatedList });
+        wrapUpdate({ checklist: updatedList });
     };
 
     const deleteChecklistItem = (itemId: string) => {
         const updatedList = checklist.filter(item => item.id !== itemId);
         setChecklist(updatedList);
-        onUpdate(task.id, { checklist: updatedList });
+        wrapUpdate({ checklist: updatedList });
     };
 
     const addTag = (e: React.FormEvent) => {
@@ -80,274 +71,267 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, isOpen, onClose
         if (!newTag.trim() || tags.includes(newTag)) return;
         const updatedTags = [...tags, newTag.trim()];
         setTags(updatedTags);
-        onUpdate(task.id, { tags: updatedTags });
+        wrapUpdate({ tags: updatedTags });
         setNewTag('');
     };
 
     const removeTag = (tagToRemove: string) => {
         const updatedTags = tags.filter(t => t !== tagToRemove);
         setTags(updatedTags);
-        onUpdate(task.id, { tags: updatedTags });
+        wrapUpdate({ tags: updatedTags });
     };
 
     const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const updatedDate = e.target.value;
         setDueDate(updatedDate);
         if (updatedDate) {
-            onUpdate(task.id, { dueDate: new Date(updatedDate) as any });
+            wrapUpdate({ dueDate: new Date(updatedDate) as unknown as KanbanTask['dueDate'] });
         } else {
-            onUpdate(task.id, { dueDate: null as any });
+            wrapUpdate({ dueDate: null as unknown as KanbanTask['dueDate'] });
         }
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xl animate-in fade-in duration-500">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 w-full max-w-4xl max-h-[90vh] rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col scale-in-center overflow-y-auto custom-scrollbar">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/20 dark:bg-slate-950/60 backdrop-blur-xl animate-in fade-in duration-500">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 w-full max-w-5xl max-h-[92vh] rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col scale-in-center">
 
-                {/* Visual Accent */}
-                <div className={`h-1.5 w-full ${currentPriority === 'high' ? 'bg-rose-500' :
-                    currentPriority === 'medium' ? 'bg-amber-500' : 'bg-emerald-500'
-                    } transition-colors duration-500`} />
+                {/* 🌈 Priority Glow Bar */}
+                <div className={`h-1.5 w-full ${currentPriority === 'high' ? 'bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.4)]' :
+                    currentPriority === 'medium' ? 'bg-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.4)]' :
+                        'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.4)]'
+                    } transition-all duration-700`} />
 
-                <div className="p-8 md:p-12 flex-1">
-                    {/* TOP HEADER */}
-                    <div className="flex justify-between items-start gap-8 mb-10">
-                        <div className="flex-1 space-y-3">
-                            <div className="flex items-center gap-3 mb-2">
-                                <span className="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-semibold uppercase tracking-[0.15em] px-3 py-1 rounded-xl border border-indigo-100 dark:border-indigo-500/20">
-                                    TASK-ID #{task.id.slice(0, 8).toUpperCase()}
+                <div className="flex flex-1 min-h-0">
+                    {/* LEFT: MAIN WORKSPACE */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-8 md:p-14 space-y-12 bg-white dark:bg-transparent">
+
+                        {/* Status/Save Indicator */}
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                                <span className="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-indigo-100 dark:border-indigo-500/20">
+                                    Módulo de Tarea
                                 </span>
-                                {task.createdAt && (
-                                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                        <Clock size={12} />
-                                        {format(task.createdAt.toDate(), 'dd MMM', { locale: es })}
+                                {isSaving ? (
+                                    <span className="flex items-center gap-2 text-[10px] font-bold text-indigo-500 uppercase tracking-widest animate-pulse">
+                                        <Clock size={12} className="animate-spin" /> Guardando...
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center gap-2 text-[10px] font-bold text-slate-300 dark:text-slate-600 uppercase tracking-widest">
+                                        <CheckCircle2 size={12} /> Sincronizado
                                     </span>
                                 )}
                             </div>
-                            <input
-                                type="text"
+                        </div>
+
+                        {/* Title Block */}
+                        <div className="space-y-4">
+                            <textarea
+                                rows={1}
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 onBlur={handleTitleBlur}
-                                className="w-full bg-transparent text-2xl font-medium text-slate-800 dark:text-white border-none focus:ring-0 p-0 placeholder-slate-200 dark:placeholder-slate-800 tracking-tight"
-                                placeholder="Título de la tarea"
+                                className="w-full bg-transparent text-4xl font-black text-slate-900 dark:text-white border-none focus:ring-0 p-0 placeholder:text-slate-200 dark:placeholder:text-slate-800 tracking-tight leading-tight resize-none"
+                                placeholder="Nombre de la iniciativa..."
                             />
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all hover:rotate-90 active:scale-90 border border-slate-100 dark:border-white/5"
-                            title="Cerrar detalles"
-                        >
-                            <X size={20} />
-                        </button>
-                    </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-                        {/* MAIN WORKSPACE (Left Side) */}
-                        <div className="lg:col-span-8 space-y-12">
+                        {/* Description Section */}
+                        <section className="space-y-6">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 rounded-2xl bg-violet-500/5 text-violet-500 border border-violet-500/10">
+                                    <AlignLeft size={18} />
+                                </div>
+                                <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">Documentación Técnica</h3>
+                            </div>
+                            <textarea
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                onBlur={handleDescriptionBlur}
+                                placeholder="Escribe aquí los detalles, objetivos y contexto de la tarea..."
+                                className="w-full bg-slate-50 dark:bg-slate-800/20 border border-slate-200/60 dark:border-white/5 rounded-3xl p-8 text-slate-700 dark:text-slate-300 text-base focus:border-indigo-500/30 focus:ring-8 focus:ring-indigo-500/5 min-h-[220px] resize-none leading-relaxed transition-all outline-none shadow-inner"
+                            />
+                        </section>
 
-                            {/* Tags Bar */}
-                            <div className="flex flex-wrap items-center gap-2 pb-6 border-b border-slate-100 dark:border-white/5">
-                                <Tag size={14} className="text-slate-400 mr-2" />
-                                {tags.map(tag => (
-                                    <span key={tag} className="group relative bg-slate-50/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 px-3 py-1.5 rounded-xl text-[10px] font-semibold uppercase tracking-wider border border-slate-200/50 dark:border-white/5 flex items-center gap-2 shadow-sm transition-all hover:bg-slate-100">
-                                        {tag}
+                        {/* Action Plan Section */}
+                        <section className="space-y-6">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 rounded-2xl bg-emerald-500/5 text-emerald-500 border border-emerald-500/10">
+                                        <CheckSquare size={18} />
+                                    </div>
+                                    <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">Plan de Ejecución</h3>
+                                </div>
+                                {checklist.length > 0 && (
+                                    <div className="px-4 py-2 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
+                                        <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">
+                                            {Math.round((checklist.filter(i => i.completed).length / checklist.length) * 100)}% Completado
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="space-y-3">
+                                {checklist.map(item => (
+                                    <div key={item.id} className="group flex items-center gap-5 p-5 bg-white dark:bg-slate-800/40 rounded-[1.5rem] border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 transition-all outline outline-2 outline-transparent hover:outline-indigo-500/10 hover:-translate-y-0.5">
+                                        <input
+                                            type="checkbox"
+                                            checked={item.completed}
+                                            onChange={() => toggleChecklistItem(item.id)}
+                                            className="w-6 h-6 rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-transparent text-indigo-600 focus:ring-indigo-500/20 cursor-pointer transition-all checked:bg-indigo-600"
+                                            title={`Marcar "${item.text}"`}
+                                        />
+                                        <span className={`flex-1 text-sm font-bold tracking-tight transition-all ${item.completed ? 'text-slate-300 dark:text-slate-600 line-through' : 'text-slate-700 dark:text-slate-200'}`}>
+                                            {item.text}
+                                        </span>
                                         <button
-                                            onClick={() => removeTag(tag)}
-                                            className="opacity-0 group-hover:opacity-100 hover:text-rose-500 transition-all ml-1 bg-white dark:bg-slate-700 rounded-full p-0.5"
-                                            title={`Eliminar etiqueta ${tag}`}
+                                            onClick={() => deleteChecklistItem(item.id)}
+                                            className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-rose-500 transition-all active:scale-90"
+                                            title="Eliminar ítem"
                                         >
-                                            <X size={10} />
+                                            <Trash2 size={16} />
                                         </button>
-                                    </span>
+                                    </div>
                                 ))}
-                                <form onSubmit={addTag} className="relative">
-                                    <input
-                                        type="text"
-                                        value={newTag}
-                                        onChange={(e) => setNewTag(e.target.value)}
-                                        placeholder="+ Etiqueta"
-                                        className="bg-transparent border-none text-[10px] font-semibold uppercase tracking-wider text-indigo-500 placeholder-indigo-300 focus:ring-0 p-1 w-24"
-                                    />
+
+                                <form onSubmit={addChecklistItem}>
+                                    <div className="flex items-center gap-4 p-5 bg-slate-50/50 dark:bg-slate-900/40 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-[1.5rem] focus-within:border-indigo-500/40 focus-within:bg-white dark:focus-within:bg-slate-800 transition-all group">
+                                        <Plus size={18} className="text-indigo-500 group-focus-within:rotate-90 transition-transform" />
+                                        <input
+                                            type="text"
+                                            value={newChecklistItem}
+                                            onChange={(e) => setNewChecklistItem(e.target.value)}
+                                            placeholder="¿Cuál es el siguiente paso?"
+                                            className="w-full bg-transparent border-none focus:ring-0 p-0 text-sm font-black text-slate-600 dark:text-slate-400 placeholder:text-slate-300 outline-none"
+                                        />
+                                    </div>
                                 </form>
                             </div>
+                        </section>
+                    </div>
 
-                            {/* Description Block */}
-                            <section className="space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center border border-violet-500/20">
-                                        <AlignLeft size={16} className="text-violet-600 dark:text-violet-400" />
-                                    </div>
-                                    <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Descripción Detallada</h3>
-                                </div>
-                                <div className="group relative">
-                                    <textarea
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        onBlur={handleDescriptionBlur}
-                                        placeholder="Define los objetivos y alcances de esta tarea..."
-                                        className="w-full bg-slate-50/50 dark:bg-slate-950/40 border border-slate-200/50 dark:border-white/5 rounded-2xl p-6 text-slate-700 dark:text-slate-200 text-sm focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/5 min-h-[160px] resize-none leading-relaxed transition-all outline-none"
-                                    />
-                                </div>
-                            </section>
+                    {/* RIGHT: PROPERTIES PANEL */}
+                    <div className="w-[320px] bg-slate-50/80 dark:bg-slate-900/40 backdrop-blur-md border-l border-slate-200 dark:border-white/10 p-8 space-y-10 overflow-y-auto custom-scrollbar">
 
-                            {/* Checklist Block */}
-                            <section className="space-y-5">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                                            <CheckSquare size={16} className="text-emerald-600 dark:text-emerald-400" />
-                                        </div>
-                                        <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Plan de Acción</h3>
-                                    </div>
-                                    {checklist.length > 0 && (
-                                        <div className="flex items-center gap-3 text-right">
-                                            <div className="flex flex-col">
-                                                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Progreso</span>
-                                                <span className="text-lg font-semibold text-emerald-600 dark:text-emerald-400 leading-none">
-                                                    {Math.round((checklist.filter(i => i.completed).length / checklist.length) * 100)}%
-                                                </span>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="bg-slate-50/50 dark:bg-slate-950/20 rounded-[2.5rem] p-6 border border-slate-200/50 dark:border-white/5 space-y-3">
-                                    {checklist.map(item => (
-                                        <div key={item.id} className="flex items-center gap-4 group bg-white/80 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-200/50 dark:border-white/5 shadow-sm transition-all hover:translate-x-1 hover:shadow-md">
-                                            <div className="relative flex items-center justify-center">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={item.completed}
-                                                    onChange={() => toggleChecklistItem(item.id)}
-                                                    className="w-5 h-5 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-transparent text-emerald-500 focus:ring-emerald-500/20 cursor-pointer transition-all checked:scale-110"
-                                                    aria-label={`Marcar "${item.text}" como completado`}
-                                                />
-                                            </div>
-                                            <span className={`text-sm font-medium flex-1 transition-all ${item.completed ? 'text-slate-400 line-through opacity-60' : 'text-slate-700 dark:text-slate-200'}`}>
-                                                {item.text}
-                                            </span>
-                                            <button
-                                                onClick={() => deleteChecklistItem(item.id)}
-                                                className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-rose-500 transition-all"
-                                                title="Eliminar paso"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
-                                        </div>
-                                    ))}
-
-                                    <form onSubmit={addChecklistItem} className="pt-2">
-                                        <div className="flex items-center gap-4 p-4 bg-white/40 dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-2xl transition-all focus-within:border-indigo-500/50">
-                                            <Plus size={16} className="text-indigo-500" />
-                                            <input
-                                                type="text"
-                                                value={newChecklistItem}
-                                                onChange={(e) => setNewChecklistItem(e.target.value)}
-                                                placeholder="Añadir paso al plan..."
-                                                className="bg-transparent border-none focus:ring-0 p-0 text-sm font-medium text-slate-600 dark:text-slate-300 placeholder:text-slate-400 w-full outline-none"
-                                            />
-                                        </div>
-                                    </form>
-                                </div>
-                            </section>
-
-                            <section className="space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-                                        <Layers size={16} className="text-amber-600 dark:text-amber-400" />
-                                    </div>
-                                    <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Historial & Comentarios</h3>
-                                </div>
-                                <div className="p-10 bg-slate-50/50 dark:bg-slate-900/40 rounded-[2.5rem] border border-dashed border-slate-200 dark:border-white/5 text-center space-y-2">
-                                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Sin actividad reciente</p>
-                                    <p className="text-[10px] text-slate-500 italic opacity-60">Las actualizaciones de estado y comentarios profesionales aparecerán aquí.</p>
-                                </div>
-                            </section>
+                        <div className="flex justify-end">
+                            <button
+                                onClick={onClose}
+                                className="p-4 rounded-3xl bg-white dark:bg-slate-800 text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-100 dark:border-white/5 shadow-xl shadow-slate-200/20 hover:rotate-90 transition-all active:scale-95"
+                                title="Cerrar Mesa de Trabajo"
+                            >
+                                <X size={20} />
+                            </button>
                         </div>
 
-                        {/* CONTROL PANEL (Right Side) */}
-                        <div className="lg:col-span-4 space-y-8">
-                            <div className="bg-slate-50/50 dark:bg-slate-800/40 p-6 rounded-[2.5rem] border border-slate-200/50 dark:border-white/5 space-y-6">
-                                <div className="space-y-4">
-                                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] block ml-1">Estado</label>
-                                    <div className="flex flex-col gap-2">
-                                        {(['todo', 'in_progress', 'done'] as const).map(s => (
-                                            <button
-                                                key={s}
-                                                onClick={() => {
-                                                    setCurrentStatus(s);
-                                                    onUpdate(task.id, { status: s });
-                                                }}
-                                                className={`flex items-center justify-between p-4 rounded-2xl border font-medium text-xs uppercase tracking-wider transition-all ${currentStatus === s
-                                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-500/10 translate-x-1'
-                                                    : 'bg-white/80 dark:bg-slate-900 text-slate-500 border-slate-200/50 dark:border-white/5 hover:border-indigo-300'
-                                                    }`}
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <Briefcase size={14} />
-                                                    {s.replace('_', ' ')}
-                                                </div>
-                                                {currentStatus === s && <ArrowRight size={14} />}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="h-px bg-slate-200/50 dark:bg-white/5 mx-2" />
-
-                                <div className="space-y-4">
-                                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] block ml-1">Prioridad</label>
-                                    <div className="flex gap-2">
-                                        {(['low', 'medium', 'high'] as const).map(p => (
-                                            <button
-                                                key={p}
-                                                onClick={() => {
-                                                    setCurrentPriority(p);
-                                                    onUpdate(task.id, { priority: p });
-                                                }}
-                                                className={`flex-1 py-3.5 rounded-2xl border font-medium text-[10px] uppercase tracking-wider transition-all ${currentPriority === p
-                                                    ? p === 'high' ? 'bg-rose-500 text-white border-rose-500 shadow-lg shadow-rose-500/10' :
-                                                        p === 'medium' ? 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/10' :
-                                                            'bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/10'
-                                                    : 'bg-white/80 dark:bg-slate-900 text-slate-400 border-slate-200/50 dark:border-white/5'
-                                                    }`}
-                                            >
-                                                {p}
-                                            </button>
-                                        ))}
-                                    </div>
+                        {/* Management Stats */}
+                        <div className="grid grid-cols-1 gap-6">
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 ml-1">Estado del Flujo</label>
+                                <div className="flex flex-col gap-2.5">
+                                    {(['todo', 'in_progress', 'done'] as const).map(s => (
+                                        <button
+                                            key={s}
+                                            onClick={() => {
+                                                setCurrentStatus(s);
+                                                wrapUpdate({ status: s });
+                                            }}
+                                            className={`flex items-center justify-between p-5 rounded-[1.5rem] border-2 font-black text-[10px] uppercase tracking-widest transition-all ${currentStatus === s
+                                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-xl shadow-indigo-500/20 translate-x-2'
+                                                : 'bg-white dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 border-transparent hover:border-slate-200 shadow-sm'
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <Layers size={14} strokeWidth={2} />
+                                                {s.replace('_', ' ')}
+                                            </div>
+                                            {currentStatus === s && <ArrowRight size={14} />}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
 
-                            <div className="bg-slate-50/50 dark:bg-slate-800/40 p-6 rounded-[2.5rem] border border-slate-200/50 dark:border-white/5 space-y-4">
-                                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] block ml-1">Vencimiento</label>
+                            <div className="h-px bg-slate-200 dark:bg-white/5" />
+
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 ml-1">Prioridad Crítica</label>
+                                <div className="flex gap-2">
+                                    {(['low', 'medium', 'high'] as const).map(p => (
+                                        <button
+                                            key={p}
+                                            onClick={() => {
+                                                setCurrentPriority(p);
+                                                wrapUpdate({ priority: p });
+                                            }}
+                                            className={`flex-1 py-4 rounded-[1.25rem] border-2 font-black text-[9px] uppercase tracking-widest transition-all ${currentPriority === p
+                                                ? p === 'high' ? 'bg-rose-500 text-white border-rose-500 shadow-lg shadow-rose-500/20' :
+                                                    p === 'medium' ? 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/20' :
+                                                        'bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/20'
+                                                : 'bg-white dark:bg-slate-800/80 text-slate-400 border-transparent'
+                                                }`}
+                                        >
+                                            {p}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 ml-1">Fecha de Entrega</label>
                                 <div className="relative group">
-                                    <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500 opacity-60" />
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-indigo-500 pointer-events-none">
+                                        <Calendar size={18} />
+                                    </div>
                                     <input
                                         type="date"
                                         value={dueDate}
                                         onChange={handleDateChange}
-                                        className="w-full bg-white/80 dark:bg-slate-900 border border-slate-200/50 dark:border-white/5 rounded-2xl p-4 pl-12 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:border-indigo-500/50 transition-all outline-none"
-                                        aria-label="Fecha de vencimiento"
+                                        className="w-full bg-white dark:bg-slate-800/80 border-2 border-transparent focus:border-indigo-500/30 rounded-[1.25rem] p-5 pl-14 text-sm font-black text-slate-700 dark:text-slate-100 transition-all outline-none shadow-sm"
+                                        title="Seleccionar fecha"
                                     />
                                 </div>
                             </div>
 
-                            <div className="pt-4 border-t border-slate-100 dark:border-white/5">
-                                <button
-                                    onClick={() => {
-                                        if (confirm('¿Confirmas la eliminación permanente de este registro?')) {
-                                            onDelete(task.id);
-                                            onClose();
-                                        }
-                                    }}
-                                    className="w-full flex items-center justify-center gap-3 bg-white/80 dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-400 hover:text-rose-600 border border-slate-200/50 dark:border-white/5 p-4 rounded-2xl text-[10px] font-semibold uppercase tracking-widest transition-all"
-                                >
-                                    <Trash2 size={16} />
-                                    Eliminar Registro
-                                </button>
+                            {/* Tags Section */}
+                            <div className="space-y-4 pt-4">
+                                <label className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 ml-1 flex items-center gap-2">
+                                    <Tag size={12} /> Etiquetas
+                                </label>
+                                <div className="flex flex-wrap gap-2">
+                                    {tags.map(tag => (
+                                        <span key={tag} className="group flex items-center gap-2 px-3 py-1.5 bg-indigo-500/5 text-indigo-600 dark:text-indigo-400 rounded-xl text-[9px] font-black uppercase tracking-wider border border-indigo-500/10">
+                                            {tag}
+                                            <button onClick={() => removeTag(tag)} className="hover:text-rose-500" title="Eliminar tag">
+                                                <X size={10} />
+                                            </button>
+                                        </span>
+                                    ))}
+                                    <form onSubmit={addTag} className="flex-1 min-w-[100px]">
+                                        <input
+                                            type="text"
+                                            value={newTag}
+                                            onChange={(e) => setNewTag(e.target.value)}
+                                            placeholder="+ Nueva..."
+                                            className="w-full bg-transparent border-none text-[10px] font-black uppercase tracking-widest text-indigo-400 placeholder:text-slate-300 focus:ring-0 p-1"
+                                        />
+                                    </form>
+                                </div>
                             </div>
+                        </div>
+
+                        {/* Danger Zone */}
+                        <div className="pt-10">
+                            <button
+                                onClick={() => {
+                                    if (confirm('¿Eliminar permanentemente este registro del ecosistema?')) {
+                                        onDelete(task.id);
+                                        onClose();
+                                    }
+                                }}
+                                className="w-full flex items-center justify-center gap-3 bg-white dark:bg-slate-800 hover:bg-rose-500 hover:text-white text-slate-400 border-2 border-transparent hover:border-rose-500/20 p-5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.2em] transition-all group"
+                                title="Eliminar tarea"
+                            >
+                                <Trash2 size={16} className="group-hover:scale-110 transition-transform" />
+                                Eliminar Tarea
+                            </button>
                         </div>
                     </div>
                 </div>
