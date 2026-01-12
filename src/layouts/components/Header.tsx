@@ -88,8 +88,14 @@ const Header: React.FC<HeaderProps> = ({
 
     const getTitle = (): string => {
         const path = location.pathname;
+        const searchParams = new URLSearchParams(location.search);
+        const view = searchParams.get('view');
+
         if (isAdmin) {
-            if (path === '/dashboard' || path === '/') return 'Admin Console';
+            if (path === '/dashboard' || path === '/') {
+                if (view === 'franchises') return 'Directorio de Sedes';
+                return 'Admin Console';
+            }
             if (path.includes('/admin/finance/')) return targetFranchiseName || 'Detalle Franquicia';
             if (path.includes('support')) return 'Centro de Soporte';
             if (path === '/profile') return 'Configuración';
@@ -144,7 +150,7 @@ const Header: React.FC<HeaderProps> = ({
                                         if (path.includes('profile')) helpId = 'profile';
                                         if (path.includes('support')) helpId = 'support';
                                         if (path.includes('resources')) helpId = 'resources';
-                                        onOpenHelp && onOpenHelp(helpId);
+                                        if (onOpenHelp) onOpenHelp(helpId);
                                     }}
                                     className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-indigo-500 transition-all active:scale-90"
                                     title="Ayuda de esta página"
@@ -172,6 +178,7 @@ const Header: React.FC<HeaderProps> = ({
                             {(
                                 [
                                     { path: '/dashboard', label: 'Finanzas', icon: Activity },
+                                    { path: '/dashboard?view=franchises', label: 'Sedes', icon: LayoutGrid },
                                     { path: '/admin/resources', label: 'Recursos', icon: FileText },
                                     { path: '/admin/support', label: 'Soporte', icon: LifeBuoy },
                                     { path: '/academy', label: 'Academia', icon: GraduationCap },
@@ -196,7 +203,7 @@ const Header: React.FC<HeaderProps> = ({
 
                                         return `
                                         flex items-center px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 relative
-                                        ${isActive
+                                        ${(isActive && !item.path.includes('?')) || (item.path.includes('?') && location.search.includes(item.path.split('?')[1]))
                                                 ? 'text-white bg-blue-600 shadow-lg'
                                                 : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'
                                             }

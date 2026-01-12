@@ -26,6 +26,7 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({ isAdmin, isFranchise: _isFr
     // Memoize tab configurations to prevent recreation on every render
     const adminTabs = useMemo<Tab[]>(() => [
         { path: '/dashboard', label: 'Central', icon: Activity },
+        { path: '/dashboard?view=franchises', label: 'Sedes', icon: LayoutDashboard },
         { path: '/admin/users', label: 'Usuarios', icon: Users },
         { path: '/admin/resources', label: 'Recursos', icon: FileText },
         { path: '/admin/support', label: 'Soporte', icon: LifeBuoy },

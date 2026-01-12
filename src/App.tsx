@@ -49,7 +49,7 @@ const RiderProfileView = lazyWithRetry(() => import('./features/rider/profile/Ri
 const RiderHomeView = lazyWithRetry(() => import('./features/rider/home/RiderHomeView').then(module => ({ default: module.RiderHomeView })));
 
 function App() {
-    const { user, loading: authLoading, roleConfig, logout, isAdmin } = useAuth();
+    const { user, loading: authLoading, roleConfig, logout, isAdmin, impersonatedFranchiseId, stopImpersonation } = useAuth();
 
     // Global UI State from Store
     const {
@@ -67,7 +67,7 @@ function App() {
     const { exportCSV } = useExport();
 
     // Helper flags
-    const isFranchise = roleConfig?.role === 'franchise';
+    const isFranchise = roleConfig?.role === 'franchise' || !!impersonatedFranchiseId;
 
     // 🛠️ DEBUG & CACHE CLEANUP
     console.log("🚀 Running App Version: v4.1.0 - STABLE");

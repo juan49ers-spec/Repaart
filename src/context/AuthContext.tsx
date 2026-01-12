@@ -36,6 +36,10 @@ export interface AuthContextType {
     ) => Promise<void>;
     resetPassword: (email: string) => Promise<void>;
     loading: boolean;
+    // Impersonation feature
+    impersonatedFranchiseId: string | null;
+    startImpersonation: (franchiseId: string) => void;
+    stopImpersonation: () => void;
 }
 
 interface AuthProviderProps {
@@ -63,6 +67,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [loading, setLoading] = useState(true);
     // ✅ NUEVO: Estado calculado para facilitar la vida a los componentes
     const [isAdmin, setIsAdmin] = useState(false);
+    // 🎭 IMPERSONATION: Para que el admin vea la app como una franquicia
+    const [impersonatedFranchiseId, setImpersonatedFranchiseId] = useState<string | null>(null);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -167,6 +173,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
     };
 
+    const startImpersonation = (franchiseId: string) => {
+        if (!isAdmin) return;
+        setImpersonatedFranchiseId(franchiseId);
+        if (user) {
+            setUser({ ...user, franchiseId, role: 'franchise' });
+        }
+    };
+
+    const stopImpersonation = () => {
+        setImpersonatedFranchiseId(null);
+        if (user && roleConfig) {
+            setUser({ ...user, franchiseId: roleConfig.franchiseId, role: roleConfig.role });
+        }
+    };
+
     // 📦 EXPORTAMOS EL PAQUETE COMPLETO
     const value: AuthContextType = {
         user,           // El usuario (ahora con .role inyectado)
@@ -179,7 +200,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const { sendPasswordResetEmail } = await import("firebase/auth");
             return sendPasswordResetEmail(auth, email);
         },
-        loading
+        loading,
+        impersonatedFranchiseId,
+        startImpersonation,
+        stopImpersonation
     };
 
     return (

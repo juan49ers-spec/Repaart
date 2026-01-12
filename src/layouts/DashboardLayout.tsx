@@ -39,6 +39,8 @@ interface DashboardLayoutProps {
     outletContext?: any;
 }
 
+import ImpersonationBanner from '../components/ImpersonationBanner';
+
 /**
  *  DashboardLayout
  * Wrapper for the main dashboard shell (Sidebar + Header + Bottom Tab Bar).
@@ -133,6 +135,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
             {/* Main Content Area */}
             <div className={`flex-1 flex flex-col transition-all duration-300 w-full ${isSidebarOpen ? 'md:ml-96' : 'ml-0'}`}>
+                <ImpersonationBanner />
                 <Header {...headerProps} />
 
                 {/* Content Injection with bottom padding for tab bar */}

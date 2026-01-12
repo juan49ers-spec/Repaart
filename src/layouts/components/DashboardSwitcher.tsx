@@ -12,7 +12,7 @@ interface DashboardContext {
 }
 
 const DashboardSwitcher: React.FC = () => {
-    const { isAdmin } = useAuth();
+    const { isAdmin, impersonatedFranchiseId } = useAuth();
     // Context from DashboardLayout (via Outlet)
     const context = useOutletContext<DashboardContext | null>();
 
@@ -25,8 +25,8 @@ const DashboardSwitcher: React.FC = () => {
         selectedMonth
     } = context;
 
-    // --- ADMIN VIEW ---
-    if (isAdmin) {
+    // --- ADMIN VIEW (Only if NOT impersonating) ---
+    if (isAdmin && !impersonatedFranchiseId) {
         return (
             <AdminDashboard
                 onSelectFranchise={handleAdminSelectFranchise}

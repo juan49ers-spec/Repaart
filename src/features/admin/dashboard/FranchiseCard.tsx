@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Copy, TrendingUp, ArrowRight } from 'lucide-react';
+import { MapPin, Copy, TrendingUp, ArrowRight, LogIn } from 'lucide-react';
 import { formatMoney } from '../../../lib/finance';
+import { useAuth } from '../../../context/AuthContext';
 
 // =====================================================
 // TYPES & INTERFACES
@@ -35,6 +36,7 @@ interface FranchiseCardProps {
 
 const FranchiseCard: React.FC<FranchiseCardProps> = ({ franchise }) => {
     const navigate = useNavigate();
+    const { startImpersonation } = useAuth();
 
     // Data Adapter: Map existing data structure to the new UI requirements
     const {
@@ -132,9 +134,23 @@ const FranchiseCard: React.FC<FranchiseCardProps> = ({ franchise }) => {
                 </div>
 
                 {/* Call to action */}
-                <div className="flex items-center gap-1 text-xs font-bold text-slate-500 group-hover:text-blue-400 transition-colors">
-                    <span>Ver detalles</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            startImpersonation(uid);
+                            navigate('/dashboard');
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-all"
+                    >
+                        <LogIn size={12} />
+                        Entrar
+                    </button>
+
+                    <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500 group-hover:text-blue-400 transition-colors uppercase tracking-widest">
+                        <span>Detalles</span>
+                        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
                 </div>
             </div>
 

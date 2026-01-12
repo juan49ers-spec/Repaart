@@ -1,5 +1,6 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { ArrowLeft, Bike, CalendarDays, Wallet, Users, LucideIcon } from 'lucide-react';
+import { ArrowLeft, Bike, CalendarDays, Wallet, Users, LucideIcon, LogIn } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
 import { franchiseService } from '../../services/franchiseService';
 import { isOk } from '../../types/result';
@@ -44,8 +45,9 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
     const { franchiseId: paramId } = useParams<{ franchiseId: string }>();
     const navigate = useNavigate();
 
+    const { startImpersonation } = useAuth();
     const franchiseId = propId || paramId;
-    const onBack = propOnBack || (() => navigate('/admin/dashboard'));
+    const onBack = propOnBack || (() => navigate('/dashboard?view=franchises'));
 
     // Default to finance
     const [activeTab, setActiveTab] = useState<TabId>('finance');
@@ -100,9 +102,22 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
                         <button
                             onClick={onBack}
                             className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                            title="Volver al Panel Global"
+                            title="Volver al Listado"
                         >
-                            <ArrowLeft size={20} className="text-indigo-400" />
+                            <ArrowLeft size={20} className="text-slate-400" />
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (franchiseId) {
+                                    startImpersonation(franchiseId);
+                                    navigate('/dashboard');
+                                }
+                            }}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 rounded-lg text-xs font-bold transition-all border border-indigo-500/30"
+                            title="Entrar como esta franquicia (Inmersión Completa)"
+                        >
+                            <LogIn size={14} />
+                            <span>Entrar</span>
                         </button>
                         <div>
                             <div className="flex items-center gap-2">
