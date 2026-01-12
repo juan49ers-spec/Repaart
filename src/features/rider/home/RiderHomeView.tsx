@@ -4,7 +4,6 @@ import { useRiderStore } from '../../../store/useRiderStore';
 import { format, startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
 import { SlideToWork } from './components/SlideToWork';
 import {
-    CloudSun,
     Bike,
     Zap,
     Trophy,
@@ -17,12 +16,10 @@ import {
 import { riderService } from '../../../services/riderService';
 import { IncidentReportModal } from './modals/IncidentReportModal';
 import { VehicleChecklistModal } from './modals/VehicleChecklistModal';
-import { useWeather } from './hooks/useWeather';
 
 export const RiderHomeView: React.FC = () => {
     const { user } = useAuth() as { user: AuthUser | null };
     const { myShifts, fetchMyShifts } = useRiderStore();
-    const weather = useWeather();
     const [currentTime, setCurrentTime] = useState(new Date());
     const [isIncidentModalOpen, setIsIncidentModalOpen] = useState(false);
     const [isChecklistModalOpen, setIsChecklistModalOpen] = useState(false);
@@ -138,12 +135,12 @@ export const RiderHomeView: React.FC = () => {
                     </div>
                 </div>
 
-                {/* WIDGET 2: WEATHER (Bento 2x1) */}
+                {/* WIDGET 2: STATUS (Bento 2x1) */}
                 <div className="col-span-2 glass-premium rounded-[2rem] p-5 flex flex-col justify-between group hover:scale-[1.02] transition-transform">
-                    <CloudSun className="text-amber-400" size={24} />
+                    <Zap className="text-amber-400" size={24} />
                     <div>
-                        <span className="text-2xl font-black text-white">{weather?.temp ?? '--'}°C</span>
-                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-1">{weather?.city ?? 'Cargando...'}</p>
+                        <span className="text-2xl font-black text-white">{activeShift ? 'ON' : 'OFF'}</span>
+                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-1">Status</p>
                     </div>
                 </div>
 

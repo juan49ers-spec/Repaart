@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-    CloudRain,
     Calendar,
     Sparkles,
     ChevronLeft,
@@ -73,7 +72,6 @@ export const OpsIntelligenceBar: React.FC<OpsIntelligenceBarProps> = ({ weekDays
 
     const getIcon = () => {
         switch (insight.type) {
-            case 'weather': return <CloudRain className="text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.4)]" size={18} />;
             case 'holiday': return <Calendar className="text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]" size={18} />;
             case 'ai_tip': return <Sparkles className="text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.4)]" size={18} />;
         }

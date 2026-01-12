@@ -53,7 +53,6 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> = ({
                     // Preparing Icons
                     const dayIcons = intelByDay?.[day.isoDate]?.map((intel, idx) => (
                         <div key={idx} className="flex items-center gap-2 p-1 rounded-full bg-zinc-800/50 border border-white/5" title={intel.title}>
-                            {intel.type === 'weather' && (intel.severity === 'critical' ? <span className="text-lg">⛈️</span> : <span className="text-lg">🌧️</span>)}
                             {intel.type === 'holiday' && <span className="text-lg">🎉</span>}
                         </div>
                     ));

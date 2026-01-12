@@ -15,7 +15,6 @@ import KPICard from './dashboard/widgets/KPICard';
 import HourlyCostWidget from './dashboard/widgets/HourlyCostWidget';
 import WidgetLegendModal from './dashboard/WidgetLegendModal';
 import FinancialWorkflowGuide from './components/FinancialWorkflowGuide';
-import WeatherWidget from './dashboard/widgets/WeatherWidget';
 
 export interface DashboardTrendItem {
     month: string;
@@ -138,7 +137,6 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
 
 
                     <div className="flex items-center gap-3">
-                        <WeatherWidget franchiseId={franchiseId} />
                         {/* Help Button */}
                         <button
                             onClick={() => setIsLegendOpen(true)}

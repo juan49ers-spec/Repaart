@@ -187,14 +187,8 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
 
     // PRIME MODE STATE - Horario Prime: 12:00-16:00 (comidas) y 19:00-24:00 (cenas)
 
-    // Fetch weather for this franchise context (Franchises are in 'users' collection)
-    // 🔥 FORCED BYPASS OF WEATHER HOOK
-    // const { daily: weatherDaily } = useWeather(...)
-    const weatherDaily: any[] = [];
-
     const [viewMode, setViewMode] = useState<'full' | 'prime'>('full');
-
-    const { events: intelEvents } = useOperationsIntel(referenceDate, weatherDaily);
+    const { events: intelEvents } = useOperationsIntel(referenceDate);
     const intelByDay = useMemo(() => intelService.getEventsByDay(intelEvents), [intelEvents]);
 
     const [confirmDialog, setConfirmDialog] = useState({
@@ -375,7 +369,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
         setIsModalOpen(true);
     };
 
-     
+
     // const handleCopyWeek = async () => { ... } // Kept commented as in original if not used
 
     const handleSaveShift = async (shiftPayload: any) => {
@@ -762,7 +756,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
     const handleDragLeave = (e: React.DragEvent) => { e.currentTarget.classList.remove('bg-blue-500/10', 'border-blue-400/50'); };
     const handleEditShift = (shift: any) => { setEditingShift(shift); setSelectedDateForNew(null); setIsModalOpen(true); };
     const handleColumnClick = (e: React.MouseEvent, dateIso: string) => { if (e.target === e.currentTarget) handleOpenNew(dateIso); };
-     
+
     const onSaveAll = () => saveWeek(franchiseId, currentWeekId, weekData as WeekData);
 
     const handleAuditoria = async () => {

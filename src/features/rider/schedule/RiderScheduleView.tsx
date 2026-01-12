@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useWeather } from '../../../hooks/useWeather';
 import { useOperationsIntel, intelService } from '../../../services/intelService';
 import MobileAgendaView from '../../operations/MobileAgendaView';
 import { shiftService, Shift } from '../../../services/shiftService';
@@ -28,8 +27,7 @@ const RiderScheduleView: React.FC = () => {
     const [expandedShiftId, setExpandedShiftId] = useState<string | null>(null);
 
     // Real Data Hooks
-    const weatherData = useWeather(user?.uid, 'users');
-    const { events: intelEvents } = useOperationsIntel(selectedDate, weatherData.daily);
+    const { events: intelEvents } = useOperationsIntel(selectedDate);
 
     // Group events for the view
     const intelByDay = React.useMemo(() => {

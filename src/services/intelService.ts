@@ -30,16 +30,9 @@ const HOLIDAYS_2026 = [
     { date: new Date(2026, 11, 25), title: 'Natividad del Señor' },
 ];
 
-const getWeatherRisk = (code: number): { title: string; severity: 'warning' | 'critical' } | null => {
-    if ([95, 96, 99].includes(code)) return { title: 'Tormenta Eléctrica', severity: 'critical' };
-    if ([65, 82].includes(code)) return { title: 'Lluvia Muy Fuerte', severity: 'critical' };
-    if ([55, 61, 63, 80, 81].includes(code)) return { title: 'Lluvia Moderada', severity: 'warning' };
-    if ([71, 73, 75, 77, 85, 86].includes(code)) return { title: 'Nieve/Granizo', severity: 'critical' };
-    return null;
-};
 
 export const intelService = {
-    getIntelForWeek: async (dateInRange: Date, weatherDaily?: any): Promise<IntellectualEvent[]> => {
+    getIntelForWeek: async (dateInRange: Date): Promise<IntellectualEvent[]> => {
         const start = startOfWeek(dateInRange, { weekStartsOn: 1 });
         const end = endOfWeek(dateInRange, { weekStartsOn: 1 });
         const events: IntellectualEvent[] = [];
@@ -59,28 +52,7 @@ export const intelService = {
             }
         });
 
-        // 2. Weather Risks
-        if (weatherDaily?.time) {
-            weatherDaily.time.forEach((t: string, i: number) => {
-                const date = new Date(t);
-                if (isWithinInterval(date, { start, end })) {
-                    const code = weatherDaily.weathercode[i];
-                    const risk = getWeatherRisk(code);
-                    if (risk) {
-                        events.push({
-                            id: `weather-${date.getTime()}`,
-                            type: 'weather',
-                            title: risk.title,
-                            subtitle: 'Riesgo Seguridad / Demanda Delivery',
-                            date: date,
-                            severity: risk.severity,
-                            impact: risk.severity === 'critical' ? 'reduce_fleet_safety' : 'increase_fleet_weather',
-                            metadata: { weatherCode: code }
-                        });
-                    }
-                }
-            });
-        }
+        // 2. Weather Risks - Disabled (per user request)
 
         // Mock sports removed by user request (non-real data)
         return events; // Return only events already in the array (e.g. weather)
@@ -97,20 +69,19 @@ export const intelService = {
     }
 };
 
-export const useOperationsIntel = (referenceDate: Date, weatherDaily?: any) => {
+export const useOperationsIntel = (referenceDate: Date) => {
     const [events, setEvents] = useState<IntellectualEvent[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const loadIntel = async () => {
-        setLoading(true);
-        const data = await intelService.getIntelForWeek(referenceDate, weatherDaily);
-        setEvents(data);
-        setLoading(false);
-    };
-
     useEffect(() => {
+        const loadIntel = async () => {
+            setLoading(true);
+            const data = await intelService.getIntelForWeek(referenceDate);
+            setEvents(data);
+            setLoading(false);
+        };
         loadIntel();
-    }, [referenceDate.getTime(), weatherDaily ? JSON.stringify(weatherDaily.time) : 'none']);
+    }, [referenceDate]);
 
     return {
         events,
