@@ -50,8 +50,6 @@ export const intelService = {
             }
         });
 
-        // 2. Weather Risks - Disabled (per user request)
-
         // Mock sports removed by user request (non-real data)
         return events;
     },
