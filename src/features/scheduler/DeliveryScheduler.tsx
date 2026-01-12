@@ -402,7 +402,15 @@ const DeliveryScheduler: React.FC<{
     const [prefillHour, setPrefillHour] = useState<number | undefined>(undefined);
     const [isQuickFillOpen, setIsQuickFillOpen] = useState(false);
 
-    const hours = Array.from({ length: 24 }, (_, i) => i);
+    // PRIME Filter Logic:
+    // User requested: 13:00-16:00 and 20:00-24:00
+    // This exactly corresponds to blocks starting at: 13, 14, 15 and 20, 21, 22, 23
+    const hours = useMemo(() => {
+        const fullDay = Array.from({ length: 24 }, (_, i) => i);
+        if (!showPrime) return fullDay;
+
+        return fullDay.filter(h => (h >= 13 && h < 16) || (h >= 20 && h < 24));
+    }, [showPrime]);
 
     const handleQuickAdd = (dateIso: string, riderId: string, hour?: number) => {
         if (readOnly) return;
@@ -544,7 +552,7 @@ const DeliveryScheduler: React.FC<{
                         </div>
 
                         <p className="text-xs font-medium mb-3 leading-relaxed">
-                            "{sheriffResult.feedback}"
+                            &quot;{sheriffResult.feedback}&quot;
                         </p>
 
                         {sheriffResult.missingCoverage.length > 0 && (
@@ -666,7 +674,7 @@ const DeliveryScheduler: React.FC<{
                                         </td>
                                     );
                                 }) : (
-                                    <td className="p-0 relative h-16 bg-white" colSpan={24}>
+                                    <td className="p-0 relative h-16 bg-white" colSpan={hours.length}>
                                         <div className="absolute inset-0 flex">
                                             {hours.map(h => (
                                                 <div key={h} className={cn("flex-1 border-r border-slate-100/50 relative cursor-crosshair transition-colors", showPrime && ((h >= 13 && h <= 15) || (h >= 20 && h <= 23)) ? "bg-amber-100/30" : "hover:bg-slate-50/30")} onClick={() => handleQuickAdd(toLocalDateString(selectedDate), rider.id, h)} onDoubleClick={() => handleAddShift(toLocalDateString(selectedDate), rider.id, h)}>

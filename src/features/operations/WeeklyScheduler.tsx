@@ -15,7 +15,7 @@ import { toFranchiseId, toWeekId } from '../../schemas/scheduler';
 import ConfirmationModal from '../../ui/feedback/ConfirmationModal';
 import { getRiderColorMap } from '../../utils/riderColors';
 import { validateWeeklySchedule, generateScheduleFix, generateFullSchedule } from '../../lib/gemini';
-import { BadgeCheck, AlertTriangle, ShieldCheck, Wand2, Sparkles, CheckCircle2 } from 'lucide-react';
+import { BadgeCheck, AlertTriangle, ShieldCheck, Wand2, Sparkles } from 'lucide-react';
 import { useOperationsIntel, intelService } from '../../services/intelService';
 
 // 🔥 FILE LOAD LOG matches user request
@@ -64,74 +64,68 @@ const ShiftPill: React.FC<{
     event: ShiftEvent;
     onClick: (e: React.MouseEvent) => void;
     onDelete: (id: string, e: React.MouseEvent) => void;
-    riderColor?: { bg: string, border: string, text: string };
+    riderColor?: { bg: string, border: string, text: string }; // Kept for future optional use
     readOnly?: boolean;
-}> = ({ event, onClick, onDelete, riderColor, readOnly }) => {
+}> = ({ event, onClick, onDelete, readOnly }) => {
     const isConfirmed = event.isConfirmed;
     const changeRequested = event.changeRequested;
     const changeReason = event.changeReason;
     const duration = getShiftDuration(event.startAt, event.endAt);
     const startTime = event.visualStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
     const endTime = event.visualEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const isNight = event.visualStart.getHours() >= 19;
 
+    // --- NEW VISUAL LOGIC: Status Borders + Neutral Backgrounds ---
+    const getBaseStyle = () => {
+        // 1. Critical Errors (Conflicts) -> Red Border
+        // TODO: Pass 'isConflict' prop if available. For now, assuming standard logic.
 
+        // 2. Change Requested -> Amber Border
+        if (changeRequested) {
+            return "bg-slate-100 border-l-[3px] border-l-amber-400 border-t border-b border-r border-slate-200 text-slate-700";
+        }
 
-    // Premium Gradient Logic based on duration/type
-    // Premium Gradient Logic based on duration/type
-    const getGradientClass = () => {
-        if (changeRequested) return "bg-gradient-to-r from-amber-500 to-amber-600 border-amber-400/50 shadow-amber-500/20";
-        if (isConfirmed && !changeRequested) return "bg-gradient-to-r from-emerald-500 to-emerald-600 border-emerald-400/50 shadow-emerald-500/20";
+        // 3. Normal / Confirmed -> Neutral Identity
+        // Day shifts: Lighter / Night shifts: Darker
+        if (isNight) {
+            return "bg-slate-800 border border-slate-700 text-slate-100 shadow-sm";
+        }
 
-        if (riderColor?.bg?.includes('rose')) return "bg-gradient-to-r from-rose-500 to-rose-600 border-rose-400/50 shadow-rose-500/20";
-        if (riderColor?.bg?.includes('amber')) return "bg-gradient-to-r from-amber-500 to-amber-600 border-amber-400/50 shadow-amber-500/20";
-        if (riderColor?.bg?.includes('emerald')) return "bg-gradient-to-r from-emerald-500 to-emerald-600 border-emerald-400/50 shadow-emerald-500/20";
-        if (riderColor?.bg?.includes('indigo')) return "bg-gradient-to-r from-indigo-500 to-indigo-600 border-indigo-400/50 shadow-indigo-500/20";
-        if (riderColor?.bg?.includes('slate')) return "bg-gradient-to-r from-slate-500 to-slate-600 border-slate-400/50 shadow-slate-500/20";
-        return "bg-gradient-to-r from-indigo-500 to-indigo-600 border-indigo-400/50 shadow-indigo-500/20";
+        return "bg-white border border-slate-200 text-slate-600 shadow-sm";
     };
 
     return (
         <div
             onClick={onClick}
             className={cn(
-                "group/pill relative h-8 rounded-md border shadow-sm transition-all duration-300 cursor-pointer overflow-hidden flex items-center px-1.5",
-                getGradientClass(),
-                "hover:scale-[1.02] hover:shadow-lg hover:z-50 active:scale-95 hover:brightness-110",
-                "ring-1 ring-white/10"
+                "group/pill relative h-[26px] rounded-md transition-all duration-200 cursor-pointer overflow-hidden flex items-center px-2 select-none",
+                getBaseStyle(),
+                "hover:brightness-95 hover:scale-[1.01] hover:shadow-md hover:z-50 active:scale-95",
+                changeRequested && "hover:bg-amber-50"
             )}
             title={`${event.riderName} | ${startTime} - ${endTime} (${duration}h)${changeRequested ? ` | MOTIVO: ${changeReason || 'Sin motivo'}` : ''}`}
         >
-            {/* Glossy Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+            <div className="flex items-center gap-1.5 min-w-0 w-full relative z-10">
+                {/* Status Icons */}
+                {changeRequested && <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0 animate-pulse" />}
+                {isConfirmed && !changeRequested && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />}
 
-            <div className="flex items-center gap-1.5 min-w-0 relative z-10">
-                <span className="text-[9px] font-black truncate uppercase tracking-tight text-white/95 drop-shadow-sm">
+                <span className="text-[10px] font-bold tracking-tight truncate flex-1">
+                    {startTime} - {endTime}
+                </span>
+
+                <span className="text-[9px] font-medium opacity-70 shrink-0">
                     {duration}h
                 </span>
-                <div className="w-0.5 h-3 bg-white/20 rounded-full" />
-                <span className="text-[8px] font-bold text-white/80 truncate">
-                    {startTime}-{endTime}
-                </span>
-                {isConfirmed && (
-                    <div className="w-3 h-3 bg-white/20 rounded-full flex items-center justify-center ml-1">
-                        <CheckCircle2 className="w-2 h-2 text-white" />
-                    </div>
-                )}
-                {(changeRequested || event.swapRequested) && (
-                    <div className="w-3 h-3 bg-white/20 rounded-full flex items-center justify-center ml-1 animate-pulse" title={changeReason || 'Solicitud de cambio'}>
-                        <AlertTriangle className="w-2 h-2 text-white" />
-                    </div>
-                )}
             </div>
 
-            {/* Hover Delete Action */}
+            {/* Delete Action */}
             {!readOnly && (
                 <button
                     onClick={(e) => { e.stopPropagation(); onDelete(event.shiftId || '', e); }}
-                    className="absolute right-0.5 opacity-0 group-hover/pill:opacity-100 transition-opacity bg-white/20 hover:bg-white/40 rounded p-0.5"
+                    className="absolute right-0.5 opacity-0 group-hover/pill:opacity-100 transition-opacity p-0.5 hover:bg-slate-200 rounded text-slate-400 hover:text-rose-500"
                 >
-                    <XCircle className="w-3 h-3 text-white" />
+                    <XCircle className="w-3 h-3" />
                 </button>
             )}
         </div>
@@ -381,7 +375,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
         setIsModalOpen(true);
     };
 
-    // eslint-disable-next-line no-unused-vars
+     
     // const handleCopyWeek = async () => { ... } // Kept commented as in original if not used
 
     const handleSaveShift = async (shiftPayload: any) => {
@@ -768,7 +762,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
     const handleDragLeave = (e: React.DragEvent) => { e.currentTarget.classList.remove('bg-blue-500/10', 'border-blue-400/50'); };
     const handleEditShift = (shift: any) => { setEditingShift(shift); setSelectedDateForNew(null); setIsModalOpen(true); };
     const handleColumnClick = (e: React.MouseEvent, dateIso: string) => { if (e.target === e.currentTarget) handleOpenNew(dateIso); };
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const onSaveAll = () => saveWeek(franchiseId, currentWeekId, weekData as WeekData);
 
     const handleAuditoria = async () => {
@@ -829,7 +823,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                         </div>
 
                         <p className="text-xs font-medium mb-3 leading-relaxed">
-                            "{sheriffResult.feedback}"
+                            &quot;{sheriffResult.feedback}&quot;
                         </p>
 
                         {sheriffResult.missingCoverage.length > 0 && (
@@ -1025,7 +1019,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                         <div className="flex-1 flex flex-col bg-white overflow-hidden rounded-tl-2xl border-l border-slate-200/50 shadow-xl shadow-slate-200/30">
                             {/* V13 GANTT HEADER (Days) - Glassmorphic */}
                             <div className="flex bg-white/80 border-b border-slate-200/80 sticky top-0 z-40 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60">
-                                <div className="w-48 shrink-0 border-r border-slate-200 p-3 flex items-center justify-between">
+                                <div className="w-40 shrink-0 border-r border-slate-200 p-2 flex items-center justify-between">
                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">RIDER</span>
                                     <Filter className="w-3 h-3 text-slate-300" />
                                 </div>
@@ -1066,25 +1060,25 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                             <div className="flex-1 overflow-y-auto no-scrollbar bg-slate-50/50">
                                 {ridersGrid.map((row, rIdx) => (
                                     <div key={row.id} className={cn(
-                                        "flex border-b border-slate-100/80 items-center transition-all duration-200 group/row h-[52px]", // Fixed taller height for Pro feel
+                                        "flex border-b border-slate-100/80 items-center transition-all duration-200 group/row h-[38px]",
                                         rIdx % 2 === 0 ? "bg-white" : "bg-slate-50/40"
                                     )}>
                                         {/* Rider Info Side - Sticky Glass */}
-                                        <div className="w-48 shrink-0 border-r border-slate-100/80 p-3 flex items-center gap-3 sticky left-0 z-30 transition-colors backdrop-blur-md supports-[backdrop-filter]:bg-white/80">
+                                        <div className="w-40 shrink-0 border-r border-slate-100/80 p-2 flex items-center gap-2 sticky left-0 z-30 transition-colors backdrop-blur-md supports-[backdrop-filter]:bg-white/80">
                                             <div className="relative">
                                                 <div className={cn(
-                                                    "w-9 h-9 rounded-full flex items-center justify-center text-[10px] font-black border-[3px] border-white shadow-sm ring-1 ring-slate-100 transition-transform group-hover/row:scale-105",
+                                                    "w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black border-2 border-white shadow-sm ring-1 ring-slate-100 transition-transform group-hover/row:scale-105",
                                                     riderColorMap.get(row.id)?.bg || 'bg-slate-200'
                                                 )}>
                                                     {getRiderInitials(row.fullName)}
                                                 </div>
                                                 {row.status === 'active' && (
-                                                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full shadow-sm" />
+                                                    <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-500 border border-white rounded-full shadow-sm" />
                                                 )}
                                             </div>
                                             <div className="min-w-0 flex flex-col">
-                                                <div className="text-xs font-bold text-slate-700 truncate group-hover/row:text-indigo-600 transition-colors">{row.fullName}</div>
-                                                <div className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">{row.status}</div>
+                                                <div className="text-[10px] font-bold text-slate-700 truncate group-hover/row:text-indigo-600 transition-colors leading-tight">{row.fullName}</div>
+                                                {/* Hidden status text to save space, relies on dot */}
                                             </div>
                                         </div>
 

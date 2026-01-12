@@ -49,9 +49,9 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
     // Preset State
     const [activePreset, setActivePreset] = useState<PresetType>('custom');
 
-    // Horas (Editable if custom)
-    const [startHour, setStartHour] = useState('12');
-    const [endHour, setEndHour] = useState('16');
+    // Horas (Editable if custom) - Support HH:mm
+    const [startHour, setStartHour] = useState('13:30');
+    const [endHour, setEndHour] = useState('16:00');
 
     if (!isOpen) return null;
 
@@ -64,15 +64,15 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
     const applyPreset = (preset: PresetType) => {
         setActivePreset(preset);
         if (preset === 'comida') {
-            setStartHour('12');
-            setEndHour('16');
+            setStartHour('13:30');
+            setEndHour('16:00');
         } else if (preset === 'cena') {
-            setStartHour('20');
-            setEndHour('24');
+            setStartHour('20:30');
+            setEndHour('23:00');
         } else if (preset === 'partido') {
             // Visualmente mostramos el rango completo o indicamos que es especial
-            setStartHour('12');
-            setEndHour('24'); // Indicativo
+            setStartHour('13:30');
+            setEndHour('23:00'); // Indicativo
         }
     };
 
@@ -92,8 +92,9 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                 const shiftsToCreate = [];
                 for (const dayIso of selectedDays) {
                     if (activePreset === 'partido') {
-                        shiftsToCreate.push({ ...createSafeShift(dayIso, '12', '16'), date: dayIso, startTime: '12', endTime: '16', riderId: selectedRiderId, riderName: rider.name || rider.email || 'Rider', motoId: selectedMotoId });
-                        shiftsToCreate.push({ ...createSafeShift(dayIso, '20', '24'), date: dayIso, startTime: '20', endTime: '24', riderId: selectedRiderId, riderName: rider.name || rider.email || 'Rider', motoId: selectedMotoId });
+                        // PARTIDO: 13:30-16:00 y 20:30-23:00
+                        shiftsToCreate.push({ ...createSafeShift(dayIso, '13:30', '16:00'), date: dayIso, startTime: '13:30', endTime: '16:00', riderId: selectedRiderId, riderName: rider.name || rider.email || 'Rider', motoId: selectedMotoId });
+                        shiftsToCreate.push({ ...createSafeShift(dayIso, '20:30', '23:00'), date: dayIso, startTime: '20:30', endTime: '23:00', riderId: selectedRiderId, riderName: rider.name || rider.email || 'Rider', motoId: selectedMotoId });
                     } else {
                         shiftsToCreate.push({ ...createSafeShift(dayIso, startHour, endHour), date: dayIso, startTime: startHour, endTime: endHour, riderId: selectedRiderId, riderName: rider.name || rider.email || 'Rider', motoId: selectedMotoId });
                     }
@@ -103,9 +104,9 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                 const promises: Promise<void>[] = [];
                 for (const dayIso of selectedDays) {
                     if (activePreset === 'partido') {
-                        const s1 = createSafeShift(dayIso, '12', '16');
+                        const s1 = createSafeShift(dayIso, '13:30', '16:00');
                         if (!hasConflict(s1)) promises.push(saveShift(rider, moto, s1));
-                        const s2 = createSafeShift(dayIso, '20', '24');
+                        const s2 = createSafeShift(dayIso, '20:30', '23:00');
                         if (!hasConflict(s2)) promises.push(saveShift(rider, moto, s2));
                     } else {
                         const s = createSafeShift(dayIso, startHour, endHour);
@@ -126,21 +127,34 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
         }
     };
 
-    const createSafeShift = (dayIso: string, sHour: string, eHour: string) => {
-        // Robust construction with date-fns
+    const createSafeShift = (dayIso: string, sTime: string, eTime: string) => {
+        // Parse time support for HH:mm or HH
+        const parseTime = (t: string) => {
+            if (t.includes(':')) {
+                const [h, m] = t.split(':').map(Number);
+                return { h, m };
+            }
+            return { h: parseInt(t), m: 0 };
+        };
+
+        const startT = parseTime(sTime);
+        const endT = parseTime(eTime);
+
         let start = parseISO(dayIso);
-        start = setHours(start, parseInt(sHour));
-        start = setMinutes(start, 0);
+        start = setHours(start, startT.h);
+        start = setMinutes(start, startT.m);
         start = setSeconds(start, 0);
 
         let end = parseISO(dayIso);
-        if (eHour === '24') {
+        // Handle 24 or 00 as midnight next day
+        if (endT.h === 24 || (endT.h === 0 && endT.m === 0 && parseInt(eTime) !== 0)) {
             end = addDays(end, 1);
             end = setHours(end, 0);
+            end = setMinutes(end, 0);
         } else {
-            end = setHours(end, parseInt(eHour));
+            end = setHours(end, endT.h);
+            end = setMinutes(end, endT.m);
         }
-        end = setMinutes(end, 0);
         end = setSeconds(end, 0);
 
         return { start, end, startAt: toLocalISOString(start), endAt: toLocalISOString(end) };
@@ -280,7 +294,7 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                             >
                                 <Sun className={`w-6 h-6 ${activePreset === 'comida' ? 'text-amber-600' : 'text-slate-400 group-hover:text-amber-500'}`} />
                                 <div className="text-xs font-bold text-slate-700">Comida</div>
-                                <div className="text-[9px] font-mono text-slate-400 bg-white/50 px-2 py-0.5 rounded-full">12:00 - 16:00</div>
+                                <div className="text-[9px] font-mono text-slate-400 bg-white/50 px-2 py-0.5 rounded-full">13:30 - 16:00</div>
                             </button>
 
                             <button
@@ -292,7 +306,7 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                             >
                                 <Moon className={`w-6 h-6 ${activePreset === 'cena' ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500'}`} />
                                 <div className="text-xs font-bold text-slate-700">Cena</div>
-                                <div className="text-[9px] font-mono text-slate-400 bg-white/50 px-2 py-0.5 rounded-full">20:00 - 00:00</div>
+                                <div className="text-[9px] font-mono text-slate-400 bg-white/50 px-2 py-0.5 rounded-full">20:30 - 23:00</div>
                             </button>
 
                             <button
@@ -304,7 +318,7 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                             >
                                 <Split className={`w-6 h-6 ${activePreset === 'partido' ? 'text-emerald-600' : 'text-slate-400 group-hover:text-emerald-500'}`} />
                                 <div className="text-xs font-bold text-slate-700">Partido</div>
-                                <div className="text-[9px] font-bold text-emerald-600 bg-emerald-100/50 px-2 py-0.5 rounded-full">DOBLE TURNO</div>
+                                <div className="text-[9px] font-bold text-emerald-600 bg-emerald-100/50 px-2 py-0.5 rounded-full">DOBLE (Ext)</div>
                             </button>
 
                             <button
@@ -394,7 +408,7 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                         </div>
                     </div>
 
-                    {/* 3. Horario Custom (Only if not Partido/fixed) - Or allow override? Let's allow override for custom, hide for presets maybe? No, let's keep it visible but disabled or indicative for presets to keep it simple, or editable. For 'Partido' it's complex to show 2 ranges. Let's hide time inputs if 'partido' is selected. */}
+                    {/* 3. Horario Custom */}
                     {activePreset !== 'partido' && (
                         <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Horario Personalizado</label>
@@ -402,7 +416,7 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                                 <div className="flex-1">
                                     <span className="text-[10px] text-slate-400 mb-1.5 block font-bold uppercase">Inicio</span>
                                     <input
-                                        type="number" min="0" max="23"
+                                        type="time"
                                         value={startHour}
                                         onChange={(e) => { setStartHour(e.target.value); setActivePreset('custom'); }}
                                         className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-center font-mono text-lg font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none shadow-sm transition-all"
@@ -413,7 +427,7 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                                 <div className="flex-1">
                                     <span className="text-[10px] text-slate-400 mb-1.5 block font-bold uppercase">Fin</span>
                                     <input
-                                        type="number" min="0" max="24"
+                                        type="time"
                                         value={endHour}
                                         onChange={(e) => { setEndHour(e.target.value); setActivePreset('custom'); }}
                                         className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-center font-mono text-lg font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none shadow-sm transition-all"
@@ -433,6 +447,7 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                         ) : (
                             <>Creará <span className="text-indigo-600 font-bold">{selectedDays.length}</span> turnos</>
                         )}
+                        <span className="ml-2 text-[10px] opacity-60 italic">(Riders Externos)</span>
                     </span>
                     <button
                         onClick={handleGenerate}
