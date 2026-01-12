@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks, isWithinInterval } from 'date-fns';
+import * as React from 'react';
+import { useState, useEffect } from 'react';
+import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import MobileAgendaView from '../../operations/MobileAgendaView';
-import { useAuth } from '../../../context/AuthContext';
-import { useRiderStore } from '../../../store/useRiderStore';
+import { shiftService, Shift } from '../../../services/shiftService';
+import { useAuth, AuthUser } from '../../../context/AuthContext';
 
 // Helper to generate day columns
 const getWeekDays = (start: Date) => {
@@ -18,35 +19,41 @@ const getWeekDays = (start: Date) => {
     });
 };
 
-export const RiderScheduleView: React.FC = () => {
-    const { user } = useAuth();
-    const { myShifts, fetchMyShifts } = useRiderStore();
+const RiderScheduleView: React.FC = () => {
+    const { user } = useAuth() as { user: AuthUser | null };
     const [selectedDate, setSelectedDate] = useState(new Date());
+    const [shifts, setShifts] = useState<Shift[]>([]);
+    const [expandedShiftId, setExpandedShiftId] = useState<string | null>(null);
 
     // Calculate Week Range
     const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 }); // Monday start
     const weekEnd = endOfWeek(selectedDate, { weekStartsOn: 1 });
     const agendaDays = getWeekDays(weekStart);
 
-    // Fetch Shifts via Store (Centralized)
+    // Fetch Shifts Real-time
     useEffect(() => {
-        if (user?.uid) {
-            fetchMyShifts(user.uid);
-        }
-    }, [user, fetchMyShifts]);
+        if (!user?.uid) return;
 
-    // Filter Shifts for Selected Week
-    const visualEvents = useMemo(() => {
-        // Filter shifts that fall within the current week view
-        const weeklyShifts = myShifts.filter(s =>
-            isWithinInterval(new Date(s.startAt), { start: weekStart, end: weekEnd })
+        // Subscribe to my shifts for the designated week range
+        const unsubscribe = shiftService.getMyShifts(
+            user.uid,
+            weekStart,
+            weekEnd,
+            (data) => {
+                setShifts(data);
+            }
         );
 
-        return weeklyShifts.reduce((acc, shift) => {
+        return () => unsubscribe();
+    }, [user?.uid, weekStart, weekEnd]);
+
+    // Transform Shifts for MobileAgendaView
+    const visualEvents = React.useMemo(() => {
+        return shifts.reduce((acc, shift) => {
             const dateKey = shift.date; // shift.date is YYYY-MM-DD
             if (!acc[dateKey]) acc[dateKey] = [];
 
-            // Map shift to the format expected by ShiftCard/MobileAgendaView
+            // Map shift to the format expected by ShiftCard / ShiftEvent
             acc[dateKey].push({
                 shiftId: shift.shiftId,
                 riderId: shift.riderId,
@@ -55,8 +62,8 @@ export const RiderScheduleView: React.FC = () => {
                 endAt: shift.endAt,
                 visualStart: new Date(shift.startAt),
                 visualEnd: new Date(shift.endAt),
-                isConfirmed: shift.isConfirmed || false,
-                swapRequested: shift.swapRequested || false,
+                isConfirmed: shift.isConfirmed,
+                swapRequested: shift.swapRequested,
                 motoAssignments: shift.motoId ? [{
                     motoId: shift.motoId,
                     plate: shift.motoPlate,
@@ -66,19 +73,16 @@ export const RiderScheduleView: React.FC = () => {
             });
             return acc;
         }, {} as Record<string, any[]>);
-    }, [myShifts, weekStart, weekEnd]);
+    }, [shifts]);
 
     // Calculate Weekly Metrics
-    const totalHours = useMemo(() => {
-        const weeklyShifts = myShifts.filter(s =>
-            isWithinInterval(new Date(s.startAt), { start: weekStart, end: weekEnd })
-        );
-        return weeklyShifts.reduce((acc, s) => {
+    const totalHours = React.useMemo(() => {
+        return shifts.reduce((acc, s) => {
             const start = new Date(s.startAt).getTime();
             const end = new Date(s.endAt).getTime();
             return acc + (end - start) / (1000 * 60 * 60);
         }, 0);
-    }, [myShifts, weekStart, weekEnd]);
+    }, [shifts]);
 
     const handlePrevWeek = () => setSelectedDate(d => subWeeks(d, 1));
     const handleNextWeek = () => setSelectedDate(d => addWeeks(d, 1));
@@ -89,11 +93,7 @@ export const RiderScheduleView: React.FC = () => {
             <div className="sticky top-0 z-30 -mx-4 px-4 py-6 glass-premium border-b border-white/10 shadow-2xl">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
-                        <button
-                            onClick={handlePrevWeek}
-                            className="p-2 hover:bg-white/5 rounded-full transition-colors text-slate-400"
-                            aria-label="Semana anterior"
-                        >
+                        <button onClick={handlePrevWeek} className="p-2 hover:bg-white/5 rounded-full transition-colors text-slate-400">
                             <ChevronLeft size={20} />
                         </button>
                         <div className="text-center">
@@ -102,11 +102,7 @@ export const RiderScheduleView: React.FC = () => {
                                 {format(weekStart, 'd MMM')} - {format(weekEnd, 'd MMM', { locale: es })}
                             </p>
                         </div>
-                        <button
-                            onClick={handleNextWeek}
-                            className="p-2 hover:bg-white/5 rounded-full transition-colors text-slate-400"
-                            aria-label="Semana siguiente"
-                        >
+                        <button onClick={handleNextWeek} className="p-2 hover:bg-white/5 rounded-full transition-colors text-slate-400">
                             <ChevronRight size={20} />
                         </button>
                     </div>
@@ -123,11 +119,12 @@ export const RiderScheduleView: React.FC = () => {
             <MobileAgendaView
                 days={agendaDays}
                 visualEvents={visualEvents}
-                onEditShift={() => { }}
+                onEditShift={(s) => setExpandedShiftId(expandedShiftId === (s.shiftId || s.id) ? null : (s.shiftId || s.id))}
                 onDeleteShift={() => { }}
                 onAddShift={() => { }}
-                readOnly={false}
+                readOnly={true}
                 isRiderMode={true}
+                expandedShiftId={expandedShiftId}
             />
         </div>
     );

@@ -38,10 +38,6 @@ export interface Shift {
     isConfirmed?: boolean;
     swapRequested?: boolean;
     isDraft?: boolean;
-    // For legacy/migration compatibility
-    _ghostBusted?: any;
-    _migrated?: boolean;
-    _migratedFrom?: string;
 }
 
 export interface ShiftInput {
@@ -58,7 +54,7 @@ export interface ShiftInput {
 }
 
 // =====================================================
-// =====================================================
+// =====================================
 
 const COLLECTION = 'work_shifts';
 
@@ -106,8 +102,6 @@ export const shiftService = {
                     isConfirmed: data.isConfirmed || false,
                     swapRequested: data.swapRequested || false,
                     isDraft: data.isDraft || false,
-                    actualStart: data.actualStart ? toLocalISOString(data.actualStart.toDate()) : undefined,
-                    actualEnd: data.actualEnd ? toLocalISOString(data.actualEnd.toDate()) : undefined
                 };
             });
             callback(shifts);
@@ -244,8 +238,6 @@ export const shiftService = {
                     status: data.status || 'scheduled',
                     isConfirmed: data.isConfirmed || false,
                     swapRequested: data.swapRequested || false,
-                    actualStart: data.actualStart ? toLocalISOString(data.actualStart.toDate()) : undefined,
-                    actualEnd: data.actualEnd ? toLocalISOString(data.actualEnd.toDate()) : undefined
                 };
             });
             shifts.sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());

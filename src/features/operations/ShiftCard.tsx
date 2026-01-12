@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Truck, AlertCircle, Edit2, Copy, Trash2, Move, RefreshCw, Check, CheckCircle, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Truck, AlertCircle, Edit2, Copy, Trash2, Move, RefreshCw, CheckCheck, CheckCircle2 } from 'lucide-react';
 import { getRiderColor, getShiftDuration, getRiderInitials } from '../../utils/colorPalette';
 import { cn } from '../../lib/utils';
 import { shiftService } from '../../services/shiftService';
@@ -15,8 +15,8 @@ export interface ShiftEvent {
     shiftId: string;
     riderId: string | null;
     riderName: string;
-    startAt: string; // ISO
-    endAt: string;   // ISO
+    startAt: string; // ISO string
+    endAt: string;   // ISO string
     visualStart: Date;
     visualEnd: Date;
     isConfirmed?: boolean;
@@ -35,6 +35,7 @@ interface ShiftCardProps {
     onDragStart?: (event: ShiftEvent) => void;
     onDragEnd?: () => void;
     readOnly?: boolean;
+    isExpanded?: boolean;
     isRiderMode?: boolean;
 }
 
@@ -49,6 +50,7 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
     onDragStart,
     onDragEnd,
     readOnly = false,
+    isExpanded = false,
     isRiderMode = false
 }) => {
     const { riderName, riderId, visualStart, visualEnd, motoAssignments, startAt, endAt, isConfirmed: propConfirmed, swapRequested: propRequested } = event;
@@ -56,13 +58,21 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
     const [isDragging, setIsDragging] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
 
-    // Sync local state with props for immediate feedback
+    // Sync local state with props
     const [localConfirmed, setLocalConfirmed] = useState(propConfirmed || false);
     const [localRequested, setLocalRequested] = useState(propRequested || false);
 
-    // Effective state (prefer prop if available, fallback to local for optimistic update)
-    const isConfirmed = propConfirmed !== undefined ? propConfirmed : localConfirmed;
-    const swapRequested = propRequested !== undefined ? propRequested : localRequested;
+    useEffect(() => {
+        setLocalConfirmed(propConfirmed || false);
+    }, [propConfirmed]);
+
+    useEffect(() => {
+        setLocalRequested(propRequested || false);
+    }, [propRequested]);
+
+    // Effective state
+    const isConfirmed = localConfirmed;
+    const swapRequested = localRequested;
 
     // Get rider color
     const riderColor = getRiderColor(riderId || '');
@@ -113,15 +123,14 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
     const handleConfirm = async (e: React.MouseEvent) => {
         e.stopPropagation();
         if (isProcessing) return;
-
         setIsProcessing(true);
-        setLocalConfirmed(true); // Optimistic
+        const nextState = !isConfirmed;
+        setLocalConfirmed(nextState); // Optimistic
         try {
             await shiftService.confirmShift(event.shiftId);
         } catch (err) {
-            console.error("Failed to confirm shift:", err);
-            setLocalConfirmed(false);
-            alert("No se pudo confirmar el turno.");
+            console.error("Error confirming shift:", err);
+            setLocalConfirmed(!nextState);
         } finally {
             setIsProcessing(false);
         }
@@ -130,16 +139,14 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
     const handleSwapRequest = async (e: React.MouseEvent) => {
         e.stopPropagation();
         if (isProcessing) return;
-
-        const newRequested = !swapRequested;
         setIsProcessing(true);
-        setLocalRequested(newRequested); // Optimistic
+        const nextState = !swapRequested;
+        setLocalRequested(nextState); // Optimistic
         try {
-            await shiftService.requestSwap(event.shiftId, newRequested);
+            await shiftService.requestSwap(event.shiftId, nextState);
         } catch (err) {
-            console.error("Failed to swap shift:", err);
-            setLocalRequested(!newRequested);
-            alert("Error al procesar la solicitud.");
+            console.error("Error swapping shift:", err);
+            setLocalRequested(!nextState);
         } finally {
             setIsProcessing(false);
         }
@@ -148,104 +155,6 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
     // Determine if drag is allowed
     const canDrag = !readOnly && !isRiderMode && !hasConflict;
 
-    // --- RENDER FOR RIDER MODE (Modern Timeline Card) ---
-    if (isRiderMode) {
-        return (
-            <div
-                className={cn(
-                    "relative overflow-hidden rounded-lg border transition-all duration-300",
-                    isConfirmed
-                        ? "bg-gradient-to-br from-emerald-950/40 to-slate-900/60 border-emerald-500/30 shadow-[0_2px_10px_-5px_rgba(16,185,129,0.15)]"
-                        : swapRequested
-                            ? "bg-gradient-to-br from-amber-950/40 to-slate-900/60 border-amber-500/30 shadow-[0_2px_10px_-5px_rgba(245,158,11,0.15)]"
-                            : "bg-slate-900/60 backdrop-blur-md border-slate-800 shadow-sm"
-                )}
-            >
-                {/* Status Stripe */}
-                <div className={cn(
-                    "absolute left-0 top-0 bottom-0 w-1",
-                    isConfirmed ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-indigo-500"
-                )} />
-
-                <div className="p-2 pl-3">
-                    {/* Header Row: Time & Duration */}
-                    <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-1.5">
-                            <div className="bg-slate-800/80 p-1 rounded-md text-indigo-400">
-                                <Clock size={12} />
-                            </div>
-                            <span className="text-sm font-bold text-white tracking-tight">
-                                {startTime} <span className="text-slate-600 mx-0.5">-</span> {endTime}
-                            </span>
-                        </div>
-                        <span className="text-[9px] font-bold bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700">
-                            {duration}h
-                        </span>
-                    </div>
-
-                    {/* Secondary Row: Moto & Status */}
-                    <div className="flex items-center gap-2 mb-2">
-                        {moto ? (
-                            <div className="flex items-center gap-1 text-[10px] text-slate-300 bg-slate-800/50 px-1.5 py-0.5 rounded border border-slate-700/50">
-                                <Truck size={10} className="text-indigo-400" />
-                                <span className="font-mono tracking-wide truncate max-w-[60px]">{moto.plate}</span>
-                            </div>
-                        ) : (
-                            <div className="flex items-center gap-1 text-[10px] text-slate-500 bg-slate-800/30 px-1.5 py-0.5 rounded border border-slate-800">
-                                <Truck size={10} />
-                                <span>Sin Moto</span>
-                            </div>
-                        )}
-
-                        {isConfirmed && (
-                            <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-400 bg-emerald-950/50 px-1.5 py-0.5 rounded border border-emerald-900/50">
-                                <CheckCircle size={9} />
-                                <span>LISTO</span>
-                            </div>
-                        )}
-                        {swapRequested && (
-                            <div className="flex items-center gap-1 text-[9px] font-bold text-amber-400 bg-amber-950/50 px-1.5 py-0.5 rounded border border-amber-900/50">
-                                <RefreshCw size={9} className="animate-spin-slow" />
-                                <span>SOLICITADO</span>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Actions Row - Conditional */}
-                    <div className="mt-2">
-                        {!isConfirmed ? (
-                            <button
-                                onClick={handleConfirm}
-                                disabled={isProcessing}
-                                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-md text-[11px] font-bold bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-900/20 transition-all active:scale-95 disabled:opacity-50"
-                                aria-label={isProcessing ? "Procesando confirmación" : "Confirmar Asistencia"}
-                            >
-                                <Check size={14} strokeWidth={3} />
-                                {isProcessing ? "Procesando..." : "Confirmar Asistencia"}
-                            </button>
-                        ) : (
-                            <button
-                                onClick={handleSwapRequest}
-                                disabled={isProcessing}
-                                className={cn(
-                                    "w-full flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[10px] font-bold transition-all active:scale-95 border disabled:opacity-50",
-                                    swapRequested
-                                        ? "bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20"
-                                        : "bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border-slate-700"
-                                )}
-                                aria-label={swapRequested ? "Cancelar solicitud de cambio" : "Solicitar cambio de turno"}
-                            >
-                                <RefreshCw size={12} strokeWidth={2} className={swapRequested ? "animate-spin-reverse" : ""} />
-                                {swapRequested ? "Cancelar Solicitud" : "Solicitar Cambio"}
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    // --- RENDER FOR ADMIN MODE (Original Card) ---
     return (
         <div
             draggable={canDrag}
@@ -258,13 +167,16 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                 // Conflict State
                 hasConflict
                     ? 'bg-red-50/90 backdrop-blur-md border-red-200 shadow-[0_8px_30px_rgb(239,68,68,0.15)] hover:border-red-300'
-                    : cn(
-                        "hover:z-50 shadow-sm hover:shadow-xl hover:-translate-y-1",
-                        // Backdrops & Borders
-                        "bg-white/80 backdrop-blur-md supports-[backdrop-filter]:bg-white/60",
-                        riderColor.border ? riderColor.border.replace('border-', 'border-opacity-50 border-') : 'border-slate-100'
-                    ),
-                canDrag && "active:scale-[0.98] active:cursor-grabbing"
+                    : swapRequested
+                        ? 'bg-amber-50/80 border-amber-400 border-dashed shadow-lg scale-[1.02]'
+                        : cn(
+                            "hover:z-50 shadow-sm hover:shadow-xl hover:-translate-y-1",
+                            // Backdrops & Borders
+                            "bg-white/80 backdrop-blur-md supports-[backdrop-filter]:bg-white/60",
+                            riderColor.border ? riderColor.border.replace('border-', 'border-opacity-50 border-') : 'border-slate-100'
+                        ),
+                canDrag && "active:scale-[0.98] active:cursor-grabbing",
+                isExpanded && isRiderMode && "ring-2 ring-indigo-400/30 scale-[1.01]"
             )}
             style={style}
             onClick={onClick}
@@ -277,6 +189,15 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                 "absolute left-1 top-1 bottom-1 w-1 rounded-full opacity-60",
                 hasConflict ? "bg-red-500" : (riderColor.bg?.replace('bg-', 'bg-') || 'bg-slate-400')
             )} />
+
+            {/* CONFIRMATION CHECK (RIDER MODE) - Top Right - Visual Feedback Only */}
+            {isRiderMode && isConfirmed && (
+                <div className="absolute top-1 right-1 p-1 z-20 animate-in fade-in zoom-in">
+                    <div className="bg-emerald-500 text-white rounded-full p-0.5 shadow-sm">
+                        <CheckCircle2 size={12} />
+                    </div>
+                </div>
+            )}
 
             {/* Drag Handle Icon - Only on Hover (ADMIN MODE) */}
             {!readOnly && !hasConflict && !isRiderMode && (
@@ -309,7 +230,6 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                         onClick={(e) => { e.stopPropagation(); onClick(e); }}
                         className="p-1.5 bg-white hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 rounded-full shadow-md border border-slate-100 transition-all hover:scale-110"
                         title="Editar"
-                        aria-label="Editar turno"
                     >
                         <Edit2 className="w-3.5 h-3.5" />
                     </button>
@@ -317,7 +237,6 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                         onClick={(e) => { e.stopPropagation(); onClone(event, e); }}
                         className="p-1.5 bg-white hover:bg-emerald-50 text-slate-600 hover:text-emerald-600 rounded-full shadow-md border border-slate-100 transition-all hover:scale-110"
                         title="Duplicar"
-                        aria-label="Duplicar turno"
                     >
                         <Copy className="w-3.5 h-3.5" />
                     </button>
@@ -325,7 +244,6 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                         onClick={(e) => { e.stopPropagation(); onDelete(event.shiftId, e); }}
                         className="p-1.5 bg-white hover:bg-red-50 text-slate-600 hover:text-red-600 rounded-full shadow-md border border-slate-100 transition-all hover:scale-110"
                         title="Eliminar"
-                        aria-label="Eliminar turno"
                     >
                         <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -370,6 +288,50 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                         ) : (
                             <div className="h-5" />
                         )}
+                    </div>
+                )}
+
+                {/* RIDER ACTIONS FOOTER */}
+                {isRiderMode && (
+                    <div className="mt-2 pt-2 border-t border-slate-100 grid grid-cols-2 gap-2 animate-in slide-in-from-top-1">
+                        {/* Confirm Button */}
+                        <button
+                            onClick={handleConfirm}
+                            disabled={isProcessing}
+                            className={cn(
+                                "flex items-center justify-center gap-1.5 py-2 px-1 rounded-lg text-[10px] font-bold transition-all min-h-[44px] active:scale-95 disabled:opacity-50",
+                                isConfirmed
+                                    ? "bg-emerald-500 text-white shadow-emerald-500/20 shadow-md"
+                                    : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100"
+                            )}
+                        >
+                            {isProcessing ? (
+                                <RefreshCw size={14} className="animate-spin" />
+                            ) : isConfirmed ? (
+                                <>
+                                    <CheckCheck size={14} /> Confirmado
+                                </>
+                            ) : (
+                                <>
+                                    <CheckCircle2 size={14} /> Confirmar
+                                </>
+                            )}
+                        </button>
+
+                        {/* Swap Button */}
+                        <button
+                            onClick={handleSwapRequest}
+                            disabled={isProcessing}
+                            className={cn(
+                                "flex items-center justify-center gap-1.5 py-2 px-1 rounded-lg text-[10px] font-bold transition-all min-h-[44px] active:scale-95 disabled:opacity-50",
+                                swapRequested
+                                    ? "bg-amber-100 text-amber-700 border border-amber-200"
+                                    : "bg-white text-slate-500 hover:text-amber-600 hover:bg-amber-50 border border-slate-100"
+                            )}
+                        >
+                            <RefreshCw size={14} className={cn(swapRequested && "animate-spin-slow")} />
+                            {swapRequested ? "Cancelar" : "Cambiar"}
+                        </button>
                     </div>
                 )}
             </div>
