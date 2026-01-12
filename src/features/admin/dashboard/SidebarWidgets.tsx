@@ -2,7 +2,7 @@ import { type FC } from 'react';
 import { AlertTriangle, Award, Users } from 'lucide-react';
 import { detectAnomalies } from '../../../lib/fraudDetection';
 import { formatMoney } from '../../../lib/finance';
-import RealMadridWidget from '../../user/components/RealMadridWidget';
+
 
 interface FranchiseMetrics {
     profit: number;
@@ -51,8 +51,7 @@ const SidebarWidgets: FC<SidebarWidgetsProps> = ({ franchises, setSelectedScorec
 
     return (
         <div className="space-y-6">
-            {/* REAL MADRID WIDGET */}
-            <RealMadridWidget variant="sidebar" />
+
 
             {/* ALERTS SECTION (Dynamic Fraud Detection) */}
             {allAlerts.length > 0 && (

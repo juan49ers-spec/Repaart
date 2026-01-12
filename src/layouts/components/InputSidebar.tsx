@@ -1,7 +1,7 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
 import { Settings, Truck, Users, Landmark, Calendar, MapPin, Lock, Activity, Sparkles, Wrench, HelpCircle } from 'lucide-react';
 import DevToolsPanel from './dev/DevToolsPanel';
-import RealMadridWidget from '../../features/user/components/RealMadridWidget';
+
 import { useAppStore } from '../../store/useAppStore';
 
 export interface SidebarFormData {
@@ -379,14 +379,7 @@ const InputSidebar: React.FC<InputSidebarProps> = ({
                     )}
                 </div>
 
-                {/* Real Madrid Widget */}
-                <div className="mt-8 mb-4">
-                    <div className="flex items-center gap-2 mb-3 pl-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                        <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Next Match</span>
-                    </div>
-                    <RealMadridWidget variant="sidebar" />
-                </div>
+
 
                 {/* Version Indicator */}
                 <div className="mt-8 text-center pb-8 opacity-40 text-[10px] text-slate-400 font-mono">

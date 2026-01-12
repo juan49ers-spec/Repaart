@@ -43,7 +43,7 @@ import { RiderLayout } from './layouts/RiderLayout';
 
 
 
-const RiderScheduleView = lazyWithRetry(() => import('./features/rider/schedule/RiderScheduleView').then(module => ({ default: module.RiderScheduleView })));
+const RiderScheduleView = lazyWithRetry(() => import('./features/rider/schedule/RiderScheduleView'));
 const RiderProfileView = lazyWithRetry(() => import('./features/rider/profile/RiderProfileView').then(module => ({ default: module.RiderProfileView })));
 const RiderHomeView = lazyWithRetry(() => import('./features/rider/home/RiderHomeView').then(module => ({ default: module.RiderHomeView })));
 
@@ -69,7 +69,7 @@ function App() {
     const isFranchise = roleConfig?.role === 'franchise';
 
     // 🛠️ DEBUG & CACHE CLEANUP
-    console.log("🚀 Running App Version: v3.12.2 (Buttons Fixed)");
+    console.log("🚀 Running App Version: v4.1.0 - STABLE");
 
     // --- DATA FETCHING ---
     const dataHookFranchiseId = (isAdmin && targetFranchiseId)

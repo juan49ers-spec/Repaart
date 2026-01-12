@@ -1,21 +1,32 @@
-import { useState, Suspense, lazy } from 'react';
+import { useState, Suspense } from 'react';
 import { Calendar, Users, Bike, Loader2 } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
-import RealMadridWidget from '../user/components/RealMadridWidget';
+
 import RidersView from '../fleet/RidersView'; // New Backend-Connected View
 import { VehiclesView } from '../fleet/vehicles/VehiclesView'; // New Atomic Component
 import ErrorBoundary from '../../ui/feedback/ErrorBoundary';
 
 // Lazy load the new Scheduler
 // Lazy load the new Scheduler
-const DeliveryScheduler = lazy(() => import('../scheduler/DeliveryScheduler'));
+// Lazy load the new Scheduler
+// const DeliveryScheduler = lazy(() => import('../scheduler/DeliveryScheduler'));
+import DeliveryScheduler from '../scheduler/DeliveryScheduler';
+import { useAuth } from '../../context/AuthContext';
 
 const OperationsPage = () => {
+    console.log('🏗️ RENDERIZANDO PÁGINA DE OPERACIONES');
+
     // Get context if available from dashboard layout, or use standard hooks inside components
     const outletContext = useOutletContext<{ franchiseId?: string }>();
     const franchiseId = outletContext?.franchiseId || '';
+    const { user } = useAuth();
+
+    console.log('🏗️ Renderizando Página de Operaciones. Usuario:', user?.email, 'FranchiseID:', franchiseId);
+
     const [activeTab, setActiveTab] = useState<'scheduler' | 'riders' | 'motos'>('scheduler');
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+    console.log('🏗️ Renderizando componente padre Operations con ID:', franchiseId);
 
     return (
         <div className="h-full bg-slate-50 p-6 overflow-hidden flex flex-col space-y-6">
@@ -38,18 +49,13 @@ const OperationsPage = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    {activeTab === 'scheduler' && (
-                        <div className="hidden xl:block">
-                            <RealMadridWidget variant="header" />
-                        </div>
-                    )}
                     <div className="bg-slate-100 p-1 rounded-xl flex border border-slate-200">
                         <button
                             onClick={() => setActiveTab('scheduler')}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${activeTab === 'scheduler'
-                                ? 'bg-white text-indigo-700 shadow-sm border border-slate-200'
-                                : 'text-slate-500 hover:text-indigo-600 hover:bg-slate-200/50'
-                                }`}
+                            className={`px - 4 py - 2 rounded - lg text - sm font - bold flex items - center gap - 2 transition - all ${activeTab === 'scheduler'
+                                    ? 'bg-white text-indigo-700 shadow-sm border border-slate-200'
+                                    : 'text-slate-500 hover:text-indigo-600 hover:bg-slate-200/50'
+                                } `}
                         >
                             <Calendar className="w-4 h-4" />
                             <span className="hidden md:inline">Horarios</span>
@@ -57,10 +63,10 @@ const OperationsPage = () => {
                         <div className="w-px bg-slate-200 mx-1 my-2" />
                         <button
                             onClick={() => setActiveTab('riders')}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${activeTab === 'riders'
-                                ? 'bg-white text-blue-700 shadow-sm border border-slate-200'
-                                : 'text-slate-500 hover:text-blue-600 hover:bg-slate-200/50'
-                                }`}
+                            className={`px - 4 py - 2 rounded - lg text - sm font - bold flex items - center gap - 2 transition - all ${activeTab === 'riders'
+                                    ? 'bg-white text-blue-700 shadow-sm border border-slate-200'
+                                    : 'text-slate-500 hover:text-blue-600 hover:bg-slate-200/50'
+                                } `}
                         >
                             <Users className="w-4 h-4" />
                             <span className="hidden md:inline">Equipo</span>
@@ -68,20 +74,20 @@ const OperationsPage = () => {
                         <div className="w-px bg-slate-200 mx-1 my-2" />
                         <button
                             onClick={() => setActiveTab('motos')}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${activeTab === 'motos'
-                                ? 'bg-white text-orange-700 shadow-sm border border-slate-200'
-                                : 'text-slate-500 hover:text-orange-600 hover:bg-slate-200/50'
-                                }`}
+                            className={`px - 4 py - 2 rounded - lg text - sm font - bold flex items - center gap - 2 transition - all ${activeTab === 'motos'
+                                    ? 'bg-white text-orange-700 shadow-sm border border-slate-200'
+                                    : 'text-slate-500 hover:text-orange-600 hover:bg-slate-200/50'
+                                } `}
                         >
                             <Bike className="w-4 h-4" />
                             <span className="hidden md:inline">Flota</span>
                         </button>
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* Content Area */}
-            <div className="flex-1 overflow-hidden relative rounded-2xl bg-white border border-slate-200 shadow-sm">
+            < div className="flex-1 overflow-hidden relative rounded-2xl bg-white border border-slate-200 shadow-sm" >
                 <ErrorBoundary>
                     <Suspense fallback={
                         <div className="absolute inset-0 flex items-center justify-center">
@@ -109,8 +115,8 @@ const OperationsPage = () => {
                         )}
                     </Suspense>
                 </ErrorBoundary>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

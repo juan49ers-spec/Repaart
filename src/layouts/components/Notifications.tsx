@@ -88,9 +88,13 @@ const Notifications: React.FC<NotificationsProps> = ({ isAdmin = false }) => {
 
             } else {
                 // --- FRANCHISE STREAM (legacy notifications) ---
+                // --- FRANCHISE STREAM (legacy notifications) ---
+                const targetIds = [user.uid];
+                if (user.franchiseId) targetIds.push(user.franchiseId);
+
                 const q = query(
                     collection(db, "notifications"),
-                    where("userId", "==", user.uid),
+                    where("userId", "in", targetIds),
                     orderBy("createdAt", "desc"),
                     limit(20)
                 );

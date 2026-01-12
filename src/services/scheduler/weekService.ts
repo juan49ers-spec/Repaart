@@ -101,6 +101,17 @@ export const WeekService = {
                 if (snap.exists()) {
                     try {
                         const parsed = WeekDataSchema.parse(snap.data());
+
+                        // 🔥 USER REQUESTED FIX: Strict Mapping for WeekService 🔥
+                        parsed.shifts = parsed.shifts.map(s => ({
+                            ...s,
+                            isConfirmed: s.isConfirmed === true,
+                            swapRequested: s.swapRequested === true,
+                            changeRequested: s.changeRequested === true,
+                            changeReason: s.changeReason || null,
+                            isDraft: s.isDraft || false
+                        }));
+
                         callback(parsed);
                     } catch (err) {
                         console.error("[WeekService] Validation Error on Realtime Update:", err);

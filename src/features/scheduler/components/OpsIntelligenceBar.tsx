@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-    Trophy,
     CloudRain,
     Calendar,
     Sparkles,
@@ -12,7 +11,6 @@ import {
     Info
 } from 'lucide-react';
 import { format, isSameDay } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -25,7 +23,7 @@ function cn(...inputs: ClassValue[]) {
 
 export interface InsightCard {
     id: string;
-    type: 'sport' | 'weather' | 'holiday' | 'ai_tip';
+    type: 'weather' | 'holiday' | 'ai_tip';
     severity: 'low' | 'medium' | 'high';
     message: string;
     actionable: string;
@@ -42,33 +40,9 @@ export const OpsIntelligenceBar: React.FC<OpsIntelligenceBarProps> = ({ weekDays
     const [isVisible, setIsVisible] = useState(true);
     const [isAnimating, setIsAnimating] = useState(false);
 
-    // V12: Static/Mock Logic (Stable) - Removed Zustand Real-Time Store
     const filteredInsights = useMemo(() => {
-        if (!weekDays || weekDays.length === 0) return [];
-
-        const baseInsights: (Omit<InsightCard, 'date' | 'displayDate'> & { dayOffset?: number })[] = [
-            { id: 'sc-1', type: 'sport', severity: 'high', message: "El Clásico: Real Madrid vs FC Barcelona", actionable: "Sube personal +35% en Zona Centro entre 20h-23h", dayOffset: 6 }, // Sunday
-            { id: 'sc-2', type: 'weather', severity: 'medium', message: "Previsión de Lluvia Intensa", actionable: "Activa bonus de lluvia y revisa baúles estancos", dayOffset: 2 }, // Wednesday
-            { id: 'sc-3', type: 'ai_tip', severity: 'low', message: "Pico de Demanda: Domingo de Resaca", actionable: "La demanda de desayunos sube un 15% este domingo", dayOffset: 6 }, // Sunday
-            { id: 'sc-4', type: 'holiday', severity: 'medium', message: "Evento Local: Procesión en Centro", actionable: "Cierre de calles principales previsto. Desvía riders.", dayOffset: 4 }, // Friday
-        ];
-
-        const mocks = baseInsights.map((insight) => {
-            const targetDate = weekDays[insight.dayOffset ?? 0] || weekDays[0];
-
-            return {
-                id: insight.id,
-                type: insight.type,
-                severity: insight.severity,
-                message: insight.message,
-                actionable: insight.actionable,
-                date: targetDate,
-                displayDate: format(targetDate, 'EEEE d, MMM', { locale: es })
-            } as InsightCard;
-        });
-
-        return mocks;
-    }, [weekDays]);
+        return [] as InsightCard[];
+    }, []);
 
     const nextInsight = useCallback(() => {
         if (filteredInsights.length <= 1) return;
@@ -99,7 +73,6 @@ export const OpsIntelligenceBar: React.FC<OpsIntelligenceBarProps> = ({ weekDays
 
     const getIcon = () => {
         switch (insight.type) {
-            case 'sport': return <Trophy className="text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]" size={18} />;
             case 'weather': return <CloudRain className="text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.4)]" size={18} />;
             case 'holiday': return <Calendar className="text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]" size={18} />;
             case 'ai_tip': return <Sparkles className="text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.4)]" size={18} />;
@@ -131,6 +104,7 @@ export const OpsIntelligenceBar: React.FC<OpsIntelligenceBarProps> = ({ weekDays
             <button
                 onClick={prevInsight}
                 className="p-1.5 hover:bg-white/10 rounded-full text-white/30 hover:text-white transition-all z-10 active:scale-90"
+                title="Anterior"
             >
                 <ChevronLeft size={20} />
             </button>
@@ -210,6 +184,7 @@ export const OpsIntelligenceBar: React.FC<OpsIntelligenceBarProps> = ({ weekDays
                 <button
                     onClick={nextInsight}
                     className="p-1.5 hover:bg-white/10 rounded-full text-white/30 hover:text-white transition-all active:scale-90"
+                    title="Siguiente"
                 >
                     <ChevronRight size={20} />
                 </button>

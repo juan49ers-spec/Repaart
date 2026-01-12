@@ -13,7 +13,6 @@ import { toLocalDateString, getStartOfWeek } from '../utils/dateUtils';
 // Helper exported for WeeklyScheduler (and now uses strict types if possible, or string for compat)
 export const getWeekIdFromDate = (date: Date): string => {
     return WeekService.getWeekId(date); // Reuse logic from service to allow string return for UI compat
-
 };
 
 export type { Shift, WeekData }; // Re-export for components that consumed it from here
@@ -33,6 +32,9 @@ export interface Moto {
 }
 
 export const useWeeklySchedule = (franchiseIdString: string | null, _readOnly: boolean = false, externalDate?: Date) => {
+    // 🔥 PROBE: TOP LEVEL HOOK FIRE 🔥
+    console.log('🔥 EJECUTANDO HOOK useWeeklySchedule PARA:', franchiseIdString);
+
     // STATE
     // Initialize strictly to the Monday of the current week to ensure alignment
     const [internalDate, setInternalDate] = useState<Date>(() => {
@@ -43,7 +45,13 @@ export const useWeeklySchedule = (franchiseIdString: string | null, _readOnly: b
     });
     const currentDate = externalDate || internalDate;
 
+    // 🔥 DUAL STATE PATTERN: Metadata from WeekService vs Shifts from ShiftService 🔥
+    const [docData, setDocData] = useState<WeekData | null>(null);
+    const [liveShifts, setLiveShifts] = useState<Shift[] | null>(null);
+
+    // Combined State
     const [weekData, setWeekData] = useState<WeekData | null>(null);
+
     const [riders, setRiders] = useState<Rider[]>([]);
     const [motos, setMotos] = useState<Moto[]>([]);
     const [loading, setLoading] = useState(true);
@@ -64,68 +72,92 @@ export const useWeeklySchedule = (franchiseIdString: string | null, _readOnly: b
         });
     }, [externalDate]);
 
+
+    // 🔥 MERGE STRATEGY: Combine docData and liveShifts whenever they change
+    useEffect(() => {
+        if (docData && liveShifts) {
+            // If we have both, Prefer Live Shifts
+            setWeekData({
+                ...docData,
+                shifts: liveShifts
+            });
+        } else if (docData) {
+            // Only Doc Data (initial load phase 1)
+            setWeekData(docData);
+        } else {
+            // Waiting...
+            setWeekData(null);
+        }
+    }, [docData, liveShifts]);
+
+
     // FETCH / SUBSCRIPTION
     useEffect(() => {
+        // 🔥 FORCE EXECUTION LOG
+        console.log('🔥 useWeeklySchedule EFFECT TRIGGERED. FranchiseID:', franchiseIdString);
+
         if (!franchiseIdString) {
-            setLoading(false);
-            return;
+            console.warn('⚠️ FranchiseID faltante en hook, pero intentando continuar...');
+            // setLoading(false);
+            // return; // 🔥 REMOVED EARLY RETURN TO FORCE ATTEMPT (Though query might fail empty)
         }
+
 
         if (!weekData || weekData.id !== currentWeekIdString) {
             setLoading(true);
         }
 
+        // Reset local state on week change
+        setDocData(null);
+        setLiveShifts(null);
+
         // Convert to Branded Types for Service
-        const fid = toFranchiseId(franchiseIdString);
+        const fid = toFranchiseId(franchiseIdString || '');
         const wid = toWeekId(currentWeekIdString);
 
         // 1. Subscribe using WeekService (Metadata & Legacy)
-        const unsubscribeWeek = WeekService.subscribeToWeek(franchiseIdString, currentWeekIdString, (data) => {
+        const unsubscribeWeek = WeekService.subscribeToWeek(franchiseIdString || '', currentWeekIdString, (data) => {
             if (data) {
-                setWeekData(prev => {
-                    if (prev && prev.id === currentWeekIdString) {
-                        return { ...prev, ...data };
-                    }
-                    return data;
-                });
+                setDocData(data);
             } else {
                 // Initialize if not exists
                 const startDate = toLocalDateString(getStartOfWeek(currentDate));
-                WeekService.initWeek(fid, wid, startDate).then((initial) => {
-                    if (initial) setWeekData(initial);
-                });
+                if (fid) {
+                    WeekService.initWeek(fid, wid, startDate).then((initial) => {
+                        if (initial) setDocData(initial);
+                    });
+                }
             }
-            if (data) setLoading(false); // Only unset loading if we have data, else wait for init
+            if (data) setLoading(false);
         });
 
         // 1.5 Subsrcibe to Real Shifts (Source of Truth: work_shifts collection)
-        const startOfWeekString = getStartOfWeek(currentDate);
+        // 🔥 SIMPLIFIED DIRECT SUBSCRIPTION 🔥
 
-        // Parse "YYYY-MM-DD" safely to local midnight Date object
+        const startOfWeekString = getStartOfWeek(currentDate);
         const [y, m, d] = startOfWeekString.split('-').map(Number);
         const startOfWeekDate = new Date(y, m - 1, d, 0, 0, 0, 0);
-
         const endOfWeekDate = new Date(startOfWeekDate);
         endOfWeekDate.setDate(endOfWeekDate.getDate() + 6);
         endOfWeekDate.setHours(23, 59, 59, 999);
 
+        // Expand for timezone safety
+        const searchStart = new Date(startOfWeekDate);
+        searchStart.setDate(searchStart.getDate() - 1);
+        const searchEnd = new Date(startOfWeekDate);
+        searchEnd.setDate(searchEnd.getDate() + 8);
+
         const unsubscribeShifts = shiftService.subscribeToWeekShifts(
-            franchiseIdString,
-            startOfWeekDate,
-            endOfWeekDate,
-            (realShifts) => {
-                setWeekData(prev => {
-                    if (!prev) return null;
-                    return {
-                        ...prev,
-                        shifts: realShifts // Override legacy shifts with real ones
-                    };
-                });
+            franchiseIdString || '',
+            searchStart,
+            searchEnd,
+            (shifts) => {
+                setLiveShifts(shifts || []);
             }
         );
 
         // 2. Riders (via FleetService - Source of Truth for Riders)
-        const unsubscribeRiders = FleetService.subscribeToRiders(franchiseIdString, (fleetRiders) => {
+        const unsubscribeRiders = FleetService.subscribeToRiders(franchiseIdString || '', (fleetRiders) => {
             const schedulerRiders = fleetRiders
                 .filter(r => r.status === 'active')
                 .map(r => ({
@@ -139,7 +171,7 @@ export const useWeeklySchedule = (franchiseIdString: string | null, _readOnly: b
         });
 
         // 3. Motos (via FleetService)
-        const unsubscribeMotos = FleetService.subscribeToMotos(toFranchiseId(franchiseIdString), (domainMotos) => {
+        const unsubscribeMotos = FleetService.subscribeToMotos(toFranchiseId(franchiseIdString || ''), (domainMotos) => {
             // Adapt Domain Moto (plate) to UI Moto (licensePlate)
             const uiMotos = domainMotos.map(dm => ({
                 ...dm,

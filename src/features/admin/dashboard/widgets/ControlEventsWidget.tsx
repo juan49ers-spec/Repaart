@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     Calendar,
-    Zap,
-    ArrowRight,
-    Trophy
+    Zap
 } from 'lucide-react';
 import { IntellectualEvent } from '../../../../services/intelService';
 import { format } from 'date-fns';
@@ -75,57 +73,11 @@ const ControlEventsWidget: React.FC<ControlEventsWidgetProps> = ({ events, loadi
                                     {event.impact}
                                 </p>
                             </div>
-
-                            <div className="flex -space-x-3 shrink-0">
-                                {event.type === 'match' && event.metadata?.teamLogo && (
-                                    <LogoWithFallback
-                                        src={event.metadata.teamLogo}
-                                        alt={event.metadata.team || 'Team'}
-                                        className="w-9 h-9 border-2 border-white dark:border-slate-900 rounded-full"
-                                    />
-                                )}
-                                {event.type === 'match' && event.metadata?.opponentLogo && (
-                                    <LogoWithFallback
-                                        src={event.metadata.opponentLogo}
-                                        alt={event.metadata.opponent || 'Opponent'}
-                                        className="w-9 h-9 border-2 border-white dark:border-slate-900 rounded-full"
-                                    />
-                                )}
-                            </div>
                         </div>
                     ))
                 )}
             </div>
-
-            <button
-                className="mt-4 w-full py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-amber-600 dark:hover:text-amber-400 transition-all flex items-center justify-center gap-2"
-            >
-                Calendario Operativo <ArrowRight className="w-3 h-3" />
-            </button>
         </div>
-    );
-};
-
-// --- Sub-components for stability ---
-
-const LogoWithFallback = ({ src, alt, className }: { src: string, alt: string, className: string }) => {
-    const [hasError, setHasError] = useState(false);
-
-    if (hasError) {
-        return (
-            <div className={`${className} bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400`}>
-                <Trophy className="w-4 h-4" />
-            </div>
-        );
-    }
-
-    return (
-        <img
-            src={src}
-            alt={alt}
-            className={`${className} object-contain bg-white dark:bg-slate-900 shadow-sm`}
-            onError={() => setHasError(true)}
-        />
     );
 };
 

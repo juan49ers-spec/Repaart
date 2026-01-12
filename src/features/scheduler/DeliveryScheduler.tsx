@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Zap, CloudRain, Shield, Trophy, Flag, Save, Loader2, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Zap, Shield, Save, Loader2, Clock } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { getRiderInitials } from '../../utils/colorPalette';
 import { toLocalDateString, toLocalISOString } from '../../utils/dateUtils';
@@ -18,12 +18,16 @@ import { useVehicleStore } from '../../store/useVehicleStore';
 import { shiftService } from '../../services/shiftService';
 import { migrationService } from '../../services/migrationService';
 
+console.log('📦 ARCHIVO DeliveryScheduler.tsx CARGADO EN EL NAVEGADOR');
+
 const DeliveryScheduler: React.FC<{
     franchiseId: string;
     selectedDate: Date;
     onDateChange?: (date: Date) => void;
     readOnly?: boolean;
 }> = ({ franchiseId, selectedDate, onDateChange, readOnly }) => {
+
+
     const { user } = useAuth();
     const safeFranchiseId = franchiseId || user?.uid || '';
     const isMobile = useMediaQuery('(max-width: 768px)');
@@ -143,23 +147,6 @@ const DeliveryScheduler: React.FC<{
     };
 
     // --- EVENT SIMULATION ---
-    const getEventsForDate = (dateIso: string) => {
-        const [y, m, d] = dateIso.split('-').map(Number);
-        const date = new Date(y, m - 1, d);
-        const month = date.getMonth();
-        const dayOfMonth = date.getDate();
-        const events = [];
-
-        if (month === 0 && dayOfMonth === 1) events.push({ label: 'Año Nuevo', icon: Flag, color: 'text-red-400', bg: 'bg-red-500/10' });
-        if (month === 0 && dayOfMonth === 6) events.push({ label: 'Reyes', icon: Trophy, color: 'text-amber-400', bg: 'bg-amber-500/10' });
-        if (month === 0 && dayOfMonth === 11) events.push({ label: '⚽ CLÁSICO', icon: Trophy, color: 'text-amber-300', bg: 'bg-amber-500/20' });
-
-        const hash = dateIso.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-        if (hash % 7 === 0) events.push({ label: '🌧️ Lluvia', icon: CloudRain, color: 'text-blue-300', bg: 'bg-blue-500/10' });
-
-        return events;
-    };
-
     const days = useMemo(() => {
         const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
         return Array.from({ length: 7 }).map((_, i) => {
@@ -173,14 +160,6 @@ const DeliveryScheduler: React.FC<{
             };
         });
     }, [selectedDate]);
-
-    const eventsByDay = useMemo(() => {
-        const map: Record<string, any[]> = {};
-        days.forEach(d => {
-            map[d.isoDate] = getEventsForDate(d.isoDate);
-        });
-        return map;
-    }, [days]);
 
     // --- GRID CALCULATION ---
     const mergedShifts = useMemo(() => {
@@ -348,19 +327,7 @@ const DeliveryScheduler: React.FC<{
                     </div>
                 </div>
 
-                {/* --- TICKER V3 --- */}
-                <div className="px-6 py-2 flex items-center gap-6 overflow-x-auto scrollbar-hide border-t border-slate-50">
-                    {days.map(d => (eventsByDay[d.isoDate] || []).map((e, idx) => (
-                        <div key={`${d.isoDate}-${idx}`} className={cn("flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-medium whitespace-nowrap shadow-sm", e.bg, e.color.replace('text-', 'border-').replace('400', '100'))}>
-                            <e.icon size={12} className="opacity-70" />
-                            <span className="opacity-50 font-bold uppercase tracking-tighter">{d.shortLabel}:</span>
-                            <span>{e.label}</span>
-                        </div>
-                    )))}
-                    {days.every(d => (eventsByDay[d.isoDate] || []).length === 0) && (
-                        <span className="text-slate-300 text-[10px] italic font-medium">Despejado para toda la semana.</span>
-                    )}
-                </div>
+
             </div>
 
             <div className="flex-1 overflow-auto bg-white">
@@ -435,9 +402,17 @@ const DeliveryScheduler: React.FC<{
                                                     }
 
                                                     return (
-                                                        <div key={s.id} onClick={(e) => { e.stopPropagation(); handleEditShift(s); }} className={cn("px-2.5 py-2 rounded-md shadow-sm ring-1 ring-black/5 text-[10px] font-medium text-white transition-all hover:scale-[1.02] hover:shadow-md cursor-pointer flex items-center justify-between gap-1", sStart.getHours() < 15 ? "bg-gradient-to-br from-emerald-500 to-teal-400" : "bg-gradient-to-br from-indigo-600 to-blue-500")}>
+                                                        <div key={s.id} onClick={(e) => { e.stopPropagation(); handleEditShift(s); }} className={cn("px-2.5 py-2 rounded-md shadow-sm ring-1 ring-black/5 text-[10px] font-medium text-white transition-all hover:scale-[1.02] hover:shadow-md cursor-pointer flex items-center justify-between gap-1",
+                                                            s.changeRequested ? "bg-gradient-to-r from-amber-500 to-amber-600 border-amber-400/50 shadow-amber-500/20" :
+                                                                s.isConfirmed ? "bg-gradient-to-r from-emerald-500 to-emerald-600 border-emerald-400/50 shadow-emerald-500/20" :
+                                                                    sStart.getHours() < 15 ? "bg-gradient-to-br from-emerald-500 to-teal-400 opacity-90" : "bg-gradient-to-br from-indigo-600 to-blue-500 opacity-90"
+                                                        )}>
                                                             <span className="whitespace-nowrap tracking-tighter">{format(sStart, 'HH:mm')} - {format(sEnd, 'HH:mm')}</span>
-                                                            {isExpress && <Zap size={10} className="fill-white/20 border-none" />}
+                                                            <div className="flex items-center gap-1">
+                                                                {s.changeRequested && <div title="Solicitud de cambio" className="animate-pulse"><Zap size={10} className="fill-white text-white" /></div>}
+                                                                {s.isConfirmed && !s.changeRequested && <div title="Confirmado" className="bg-white/20 rounded-full p-0.5"><Zap size={8} className="fill-white text-white" /></div>}
+                                                                {isExpress && <Zap size={10} className="fill-white/20 border-none" />}
+                                                            </div>
                                                         </div>
                                                     );
                                                 })}
@@ -473,7 +448,9 @@ const DeliveryScheduler: React.FC<{
                                                                     (new Date(shift.endAt).getHours() === h + 1 || (new Date(shift.endAt).getHours() === 0 && h === 23)) ? "rounded-r-lg" : "rounded-r-none",
                                                                     isDraft
                                                                         ? "bg-white border-2 border-dashed border-indigo-400 text-indigo-600 z-20"
-                                                                        : (sStart.getHours() < 15 ? "bg-gradient-to-b from-emerald-400 to-emerald-500 text-white" : "bg-gradient-to-b from-blue-500 to-blue-600 text-white")
+                                                                        : shift.changeRequested ? "bg-gradient-to-r from-amber-500 to-amber-600 border-amber-400" :
+                                                                            shift.isConfirmed ? "bg-gradient-to-r from-emerald-500 to-emerald-600 border-emerald-400 shadow-md ring-1 ring-white/30" :
+                                                                                (sStart.getHours() < 15 ? "bg-gradient-to-b from-emerald-400 to-emerald-500 text-white" : "bg-gradient-to-b from-blue-500 to-blue-600 text-white")
                                                                 )}
                                                             >
                                                                 {isStart && (

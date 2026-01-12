@@ -103,8 +103,12 @@ export const shiftService = {
                     motoPlate: data.motoPlate ?? data.vehicle_plate ?? '',
                     franchiseId: data.franchiseId ?? data.franchise_id,
                     status: data.status || 'scheduled',
-                    isConfirmed: data.isConfirmed || false,
-                    swapRequested: data.swapRequested || false,
+                    // Mapping Legacy & Modern Fields
+
+                    isConfirmed: (data.isConfirmed === true || data.is_confirmed === true),
+                    swapRequested: (data.swapRequested === true || data.swap_requested === true),
+                    changeRequested: (data.changeRequested === true || data.change_requested === true),
+                    changeReason: data.changeReason || data.change_reason || null,
                     isDraft: data.isDraft || false,
                 };
             });
@@ -131,6 +135,7 @@ export const shiftService = {
     },
 
     updateShift: async (shiftId: string, updates: Partial<ShiftInput>): Promise<void> => {
+        console.log(`[ShiftService] Updating shift ${shiftId} in ${COLLECTION}`, updates);
         const payload: Record<string, unknown> = {};
 
         if (updates.riderId !== undefined) payload.riderId = updates.riderId;
@@ -194,6 +199,7 @@ export const shiftService = {
      * Confirm Shift (Rider)
      */
     confirmShift: async (shiftId: string): Promise<void> => {
+        console.log(`[ShiftService] Confirming shift ${shiftId} in ${COLLECTION}`);
         const ref = doc(db, COLLECTION, shiftId);
         await updateDoc(ref, {
             isConfirmed: true,
@@ -213,6 +219,7 @@ export const shiftService = {
      * Request Change (Rider)
      */
     requestChange: async (shiftId: string, requested: boolean, reason?: string): Promise<void> => {
+        console.log(`[ShiftService] Requesting change for shift ${shiftId} in ${COLLECTION}. State: ${requested}`);
         const ref = doc(db, COLLECTION, shiftId);
         await updateDoc(ref, {
             changeRequested: requested,
@@ -259,8 +266,12 @@ export const shiftService = {
                     motoPlate: data.motoPlate ?? data.vehicle_plate ?? '',
                     franchiseId: data.franchiseId ?? data.franchise_id,
                     status: data.status || 'scheduled',
-                    isConfirmed: data.isConfirmed || false,
-                    swapRequested: data.swapRequested || false,
+                    // 🔥 ESTOS SON LOS CAMPOS QUE FALTAN O ESTÁN MAL MAPEADOS 🔥
+                    isConfirmed: data.isConfirmed === true,
+                    swapRequested: data.swapRequested === true,
+                    changeRequested: data.changeRequested === true,
+                    changeReason: data.changeReason || null,
+                    isDraft: data.isDraft || false,
                 };
             });
             shifts.sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
@@ -305,8 +316,11 @@ export const shiftService = {
                 motoPlate: data.motoPlate ?? data.vehicle_plate ?? '',
                 franchiseId: data.franchiseId ?? data.franchise_id,
                 status: data.status || 'scheduled',
-                isConfirmed: data.isConfirmed || false,
-                swapRequested: data.swapRequested || false,
+                // 🔥 ESTOS SON LOS CAMPOS QUE FALTAN O ESTÁN MAL MAPEADOS 🔥
+                isConfirmed: data.isConfirmed === true,
+                swapRequested: data.swapRequested === true,
+                changeRequested: data.changeRequested === true,
+                changeReason: data.changeReason || null,
                 isDraft: data.isDraft || false
             };
         });
