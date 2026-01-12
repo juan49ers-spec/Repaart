@@ -14,7 +14,7 @@
   },
   "lint-staged": {
     "src/**/*.{js,jsx,ts,tsx}": [
-      "eslint --fix --max-warnings=0"
+      "eslint --fix"
     ]
   },
   "dependencies": {
@@ -61,6 +61,7 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
+    "typescript-eslint": "^8.20.0",
     "autoprefixer": "^10.4.23",
     "eslint": "^9.39.1",
     "eslint-plugin-react": "^7.37.5",

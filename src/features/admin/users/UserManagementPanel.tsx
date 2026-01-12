@@ -92,12 +92,12 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
     // Ideally useUserManager should allow fetching all. We assume it does by default.
 
     // --- CLIENT SIDE FILTERING BASED ON TABS ---
-    const filteredUsers = users.filter((u: UserProfile) => { // ✅ Fix type
+    const filteredUsers = users.filter((u: UserProfile) => {
         const role = u.role || 'user';
         if (activeTab === 'structure') {
             return role === 'admin' || role === 'franchise' || role === 'franchisee';
         } else {
-            return role === 'user';
+            return role === 'user' || role === 'rider';
         }
     });
 
@@ -218,22 +218,12 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
     }
 
     return (
-        <div className="p-8 min-h-screen bg-transparent font-sans text-slate-100 animate-in fade-in duration-500">
-            {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
-                    <div className="p-2 glass-panel-exec border-0 rounded-xl shadow-sm">
-                        <Users className="w-6 h-6 text-indigo-400" />
-                    </div>
-                    {franchiseId ? 'Equipo de la Franquicia' : 'Gestión Global de Usuarios'}
-                </h1>
-                <p className="text-slate-400 font-medium ml-[52px]">
-                    {franchiseId ? `Gestionando personal operativo para ${franchiseId}` : 'Administra accesos, roles y seguridad de la plataforma.'}
-                </p>
-            </div>
+        <div className="p-0 h-full bg-transparent font-sans text-slate-100 animate-in fade-in duration-500 flex flex-col">
+            {/* Header Removed - Managed by Parent */}
+
 
             {/* --- TABS --- */}
-            <div className="mb-6 flex gap-2 border-b border-white/10 pb-1">
+            <div className="flex gap-2 border-b border-white/10 pb-0 shrink-0 px-6 pt-4">
                 <button
                     onClick={() => setActiveTab('structure')}
                     className={`px-4 py-2 font-bold text-sm rounded-t-lg transition-colors flex items-center gap-2 ${activeTab === 'structure' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
@@ -251,7 +241,7 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
             </div>
 
             {/* Toolbar (Simplified - No Role Filter in UI) */}
-            <div className="flex flex-col lg:flex-row gap-4 mb-6 justify-between items-end lg:items-center">
+            <div className="flex flex-col lg:flex-row gap-4 my-6 justify-between items-end lg:items-center px-6 shrink-0">
                 {/* Search */}
                 <div className="relative flex-1 w-full lg:max-w-md">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
@@ -268,6 +258,7 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
+                        aria-label="Filtrar por estado"
                         className="glass-panel-exec border-0 px-3 py-2.5 rounded-xl text-sm font-bold text-slate-300 outline-none focus:ring-2 focus:ring-indigo-500/50"
                     >
                         <option value="all" className="bg-slate-900 text-slate-200">Todos los Estados</option>
@@ -339,7 +330,7 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
             )}
 
             {/* Data Layer */}
-            <div className="h-[calc(100vh-280px)] min-h-[500px]">
+            <div className="flex-1 min-h-0 overflow-hidden px-6 pb-6">
                 <UserTable
                     users={filteredUsers}
                     onAction={handleAction}

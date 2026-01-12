@@ -27,6 +27,7 @@ const baseUserSchema = z.object({
     name: z.string().trim().optional(), // Ciudad Franquicia
     legalName: z.string().trim().optional(), // Razón Social
     cif: z.string().trim().optional(),
+    city: z.string().trim().optional(),
     address: z.string().trim().optional()
 });
 

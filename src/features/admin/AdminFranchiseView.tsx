@@ -1,16 +1,14 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { ArrowLeft, LayoutDashboard, Bike, CalendarDays, GraduationCap, Settings, Wallet, Users, LucideIcon } from 'lucide-react';
+import { ArrowLeft, Bike, CalendarDays, Wallet, Users, LucideIcon } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { franchiseService } from '../../services/franchiseService';
 import { isOk } from '../../types/result';
 import MonthlyHistoryTable from '../franchise/finance/MonthlyHistoryTable';
-import Academy from '../academy/Academy';
 import UserManagementPanel from './users/UserManagementPanel';
 
 // Lazy load heavy components
 const WeeklyScheduler = lazy(() => import('../operations/WeeklyScheduler'));
 const FleetManager = lazy(() => import('../operations/FleetManager'));
-const FranchiseProfile = lazy(() => import('./settings/FranchiseProfile'));
 const FranchiseDashboard = lazy(() => import('../franchise/FranchiseDashboard'));
 
 
@@ -46,25 +44,20 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
     const { franchiseId: paramId } = useParams<{ franchiseId: string }>();
     const navigate = useNavigate();
 
-    // Prioridad: Prop (si se usa como modal) > Param (si es ruta directa)
-    // Ensure we have a string, defaulting to undefined if both are missing which handles the logic below
     const franchiseId = propId || paramId;
     const onBack = propOnBack || (() => navigate('/admin/dashboard'));
 
-    const [activeTab, setActiveTab] = useState<TabId>('dashboard');
-    const [franchiseData, setFranchiseData] = useState<FranchiseData | null>(null); // Empezamos en null para saber que carga
+    // Default to finance
+    const [activeTab, setActiveTab] = useState<TabId>('finance');
+    const [franchiseData, setFranchiseData] = useState<FranchiseData | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Navigation Tabs
+    // Simplified Tabs
     const TABS: TabConfig[] = [
-        { id: 'dashboard', label: 'Resumen', icon: LayoutDashboard },
-        { id: 'operations', label: 'Turnos', icon: CalendarDays },
-        { id: 'team', label: 'Personal', icon: Users },
-        { id: 'fleet', label: 'Flota', icon: Bike },
-        { id: 'academy', label: 'Academia', icon: GraduationCap },
         { id: 'finance', label: 'Finanzas', icon: Wallet },
-
-        { id: 'settings', label: 'Configuración', icon: Settings },
+        { id: 'operations', label: 'Horarios', icon: CalendarDays },
+        { id: 'team', label: 'Riders', icon: Users },
+        { id: 'fleet', label: 'Flota', icon: Bike },
     ];
 
     // FETCH REAL FRANCHISE DATA
@@ -152,58 +145,69 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
                 </div>
             </div>
 
-            {/* Content Area - INYECCIÓN DE DEPENDENCIA DE ID */}
-            <div className="max-w-7xl mx-auto px-4 py-8">
-                {activeTab === 'operations' && (
-                    <Suspense fallback={<div className="p-8 text-center text-slate-400">Cargando turnos...</div>}>
-                        <WeeklyScheduler franchiseId={franchiseData?.id || franchiseId} readOnly={false} />
-                    </Suspense>
-                )}
+            {/* Content Area */}
+            <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
 
-                {activeTab === 'team' && (
-                    <UserManagementPanel franchiseId={franchiseData?.id || franchiseId} readOnly={true} />
-                )}
-
-                {activeTab === 'fleet' && (
-                    <Suspense fallback={<div className="p-8 text-center text-slate-400">Cargando flota...</div>}>
-                        <FleetManager franchiseId={franchiseData?.id || franchiseId} readOnly={true} />
-                    </Suspense>
-                )}
-
-                {activeTab === 'settings' && (
-                    <Suspense fallback={<div className="p-8 text-center text-slate-400">Cargando configuración...</div>}>
-                        <FranchiseProfile franchiseId={franchiseData?.id || franchiseId} readOnly={false} />
-                    </Suspense>
-                )}
-
-
-
-                {activeTab === 'dashboard' && (
-                    <Suspense fallback={<div className="p-12 text-center text-slate-400">Cargando dashboard...</div>}>
-                        {/* We pass the resolved franchiseId (either from prop or param) */}
-                        <FranchiseDashboard franchiseId={franchiseId} readOnly={true} />
-                    </Suspense>
-                )}
-
+                {/* 1. FINANZAS: KPIs + History */}
                 {activeTab === 'finance' && (
-                    <div className="space-y-6">
-                        <div>
-                            <h2 className="text-2xl font-black text-slate-900 mb-2">
-                                Histórico Financiero
-                            </h2>
-                            <p className="text-slate-600 text-sm">
-                                Vista de supervisor: Histórico mensual de {franchiseData?.name}
-                            </p>
+                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        {/* KPI SECTION */}
+                        <Suspense fallback={<div className="h-64 bg-white/50 rounded-xl animate-pulse" />}>
+                            <FranchiseDashboard franchiseId={franchiseId} readOnly={true} />
+                        </Suspense>
+
+                        {/* HISTORY SECTION */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-indigo-100 rounded-lg">
+                                    <Wallet className="w-5 h-5 text-indigo-600" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-slate-900">Histórico de Cierres</h2>
+                                    <p className="text-sm text-slate-500">Registro mensual de estados financieros.</p>
+                                </div>
+                            </div>
+                            <MonthlyHistoryTable franchiseId={franchiseData?.id || franchiseId} />
                         </div>
-                        <MonthlyHistoryTable
-                            franchiseId={franchiseData?.id || franchiseId}
-                        />
                     </div>
                 )}
 
-                {activeTab === 'academy' && (
-                    // Nota: Academy suele ser por usuario, pero aquí podríamos ver estadísticas globales de la franquicia
-                    <Academy />
+                {activeTab === 'operations' && (
+                    <div className="h-[calc(100vh-180px)] min-h-[600px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <Suspense fallback={<div className="h-full w-full flex items-center justify-center bg-white/50 rounded-2xl animate-pulse"><div className="text-slate-400 font-medium">Cargando planificador...</div></div>}>
+                            <div className="h-full w-full bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden flex flex-col">
+                                <WeeklyScheduler franchiseId={franchiseData?.id || franchiseId} readOnly={true} />
+                            </div>
+                        </Suspense>
+                    </div>
+                )}
+
+                {/* 3. TEAM: Riders */}
+                {activeTab === 'team' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="mb-6">
+                            <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                                <Users className="w-6 h-6 text-indigo-600" />
+                                Equipo de Riders
+                            </h2>
+                            <p className="text-slate-500">Gestión de personal asociado a la franquicia.</p>
+                        </div>
+                        <UserManagementPanel franchiseId={franchiseData?.id || franchiseId} readOnly={true} />
+                    </div>
+                )}
+
+                {/* 4. FLEET: Motos */}
+                {activeTab === 'fleet' && (
+                    <Suspense fallback={<div className="p-8 text-center text-slate-400">Cargando flota...</div>}>
+                        <div className="mb-6">
+                            <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                                <Bike className="w-6 h-6 text-indigo-600" />
+                                Flota
+                            </h2>
+                            <p className="text-slate-500">Estado de vehículos y asignaciones.</p>
+                        </div>
+                        <FleetManager franchiseId={franchiseData?.id || franchiseId} readOnly={true} />
+                    </Suspense>
                 )}
             </div>
         </div>

@@ -958,33 +958,41 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                                     </div>
                                 )}
                             </div>
-                            <button onClick={onSaveAll} disabled={isSaving || readOnly} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-md transition-all disabled:opacity-50 text-[10px] font-bold shadow-sm hover:shadow-md active:scale-95">
-                                <Save className="w-3 h-3" />
-                                {isSaving ? 'Guardando...' : 'Guardar'}
-                            </button>
-                            <button
-                                onClick={handleAuditoria}
-                                disabled={isAuditing || isSaving}
-                                className={`
-                                    flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all text-[10px] font-bold shadow-sm hover:shadow-md active:scale-95 border
-                                    ${sheriffResult ? (sheriffResult.status === 'optimal' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200') : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}
-                                `}
-                            >
-                                {isAuditing ? <div className="animate-spin w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full" /> : <BadgeCheck className="w-3 h-3" />}
-                                {sheriffResult ? `Sheriff: ${sheriffResult.score}/100` : 'Auditar Turnos'}
-                            </button>
-                            <button onClick={() => setIsQuickFillOpen(true)} disabled={readOnly} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-md transition-all disabled:opacity-50 text-[10px] font-bold active:scale-95 shadow-sm">
-                                <Zap className="w-3 h-3" />
-                                Relleno Rápido
-                            </button>
-                            <button
-                                onClick={() => setShowGenModal(true)}
-                                disabled={readOnly}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white border border-indigo-400/20 rounded-md transition-all disabled:opacity-50 text-[10px] font-black active:scale-95 shadow-sm hover:shadow-indigo-500/25 ml-2"
-                            >
-                                <Sparkles className="w-3 h-3 text-amber-200" />
-                                IA Mágica
-                            </button>
+                            {!readOnly && (
+                                <>
+                                    <button onClick={onSaveAll} disabled={isSaving} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-md transition-all disabled:opacity-50 text-[10px] font-bold shadow-sm hover:shadow-md active:scale-95 ring-1 ring-white/10">
+                                        <Save className="w-3 h-3" />
+                                        {isSaving ? 'Guardando...' : 'Guardar'}
+                                    </button>
+                                    <button
+                                        onClick={handleAuditoria}
+                                        disabled={isAuditing || isSaving}
+                                        className={`
+                                            flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all text-[10px] font-bold shadow-sm hover:shadow-md active:scale-95 border backdrop-blur-sm
+                                            ${sheriffResult ? (sheriffResult.status === 'optimal' ? 'bg-emerald-50/80 text-emerald-700 border-emerald-200' : 'bg-amber-50/80 text-amber-700 border-amber-200') : 'bg-white/80 text-slate-600 border-slate-200 hover:bg-slate-50'}
+                                        `}
+                                    >
+                                        {isAuditing ? <div className="animate-spin w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full" /> : <BadgeCheck className="w-3 h-3" />}
+                                        {sheriffResult ? `Sheriff: ${sheriffResult.score}/100` : 'Auditar'}
+                                    </button>
+
+                                    {/* Tools Group */}
+                                    <div className="flex items-center gap-1 p-0.5 bg-slate-100 rounded-lg border border-slate-200">
+                                        <button onClick={() => setIsQuickFillOpen(true)} className="flex items-center gap-1.5 px-2 py-1 hover:bg-white text-slate-600 hover:text-indigo-600 rounded-md transition-all disabled:opacity-50 text-[10px] font-bold active:scale-95">
+                                            <Zap className="w-3 h-3" />
+                                            <span className="hidden xl:inline">Relleno</span>
+                                        </button>
+                                        <div className="w-px h-3 bg-slate-300 mx-0.5" />
+                                        <button
+                                            onClick={() => setShowGenModal(true)}
+                                            className="flex items-center gap-1.5 px-2 py-1 hover:bg-white text-slate-600 hover:text-violet-600 rounded-md transition-all disabled:opacity-50 text-[10px] font-bold active:scale-95"
+                                        >
+                                            <Sparkles className="w-3 h-3" />
+                                            <span className="hidden xl:inline">IA Mágica</span>
+                                        </button>
+                                    </div>
+                                </>
+                            )}
                         </>
                     )}
                     {isMobile && !readOnly && (

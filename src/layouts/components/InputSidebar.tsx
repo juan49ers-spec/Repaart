@@ -105,7 +105,7 @@ const InputSidebar: React.FC<InputSidebarProps> = ({
 
     return (
         <div className={`fixed inset-y-0 left-0 w-full md:w-96 bg-white dark:bg-slate-900 border-r dark:border-slate-800 shadow-2xl transform transition-transform duration-300 ease-in-out z-50 overflow-y-auto ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-            <div className="p-6">
+            <div className="p-4 md:p-6">
                 <div className="flex justify-between items-center mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
                     <div className="flex items-center gap-2">
                         <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center">

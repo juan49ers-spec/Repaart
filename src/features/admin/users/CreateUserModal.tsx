@@ -392,8 +392,11 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                             {/* Franchise Specifics */}
                             {(role === 'franchise' || role === 'rider' || role === 'staff' || !!initialFranchiseId) && (
                                 <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/10 space-y-4 animate-in slide-in-from-right-4 duration-300">
+                                    {/* ID FIELD */}
                                     <div className="space-y-1.5">
-                                        <label className="text-xs font-bold text-amber-200/80 uppercase tracking-wider ml-1">ID Franquicia</label>
+                                        <label className="text-xs font-bold text-amber-200/80 uppercase tracking-wider ml-1">
+                                            {role === 'franchise' ? 'ID Franquicia (Firebase) *' : 'ID Franquicia'}
+                                        </label>
                                         <div className="relative">
                                             {initialFranchiseId ? (
                                                 <div className="w-full pl-10 pr-4 py-2.5 bg-slate-900/80 border border-green-500/30 rounded-xl text-green-100 text-sm flex items-center">
@@ -408,7 +411,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                                                         type="text"
                                                         {...register('franchiseId')}
                                                         className="w-full pl-10 pr-4 py-2.5 bg-slate-900/80 border border-amber-500/20 rounded-xl text-amber-100 text-sm focus:ring-2 focus:ring-amber-500/50 outline-none"
-                                                        placeholder="Ej: MAD-001"
+                                                        placeholder="Ej: AVDV9ZDFZWGF0"
                                                     />
                                                 </>
                                             )}
@@ -416,87 +419,101 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                                         {errors.franchiseId && <p className="text-rose-500 text-[10px] mt-1 font-medium">{String(errors.franchiseId.message)}</p>}
                                     </div>
 
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-bold text-amber-200/80 uppercase tracking-wider ml-1">Pack</label>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <button
-                                                type="button"
-                                                onClick={() => setValue('pack', 'basic')}
-                                                className={`relative px-4 py-3 rounded-xl text-xs font-bold border-2 transition-all duration-300 ${pack === 'basic'
-                                                    ? 'bg-slate-700 text-white border-slate-500 shadow-lg shadow-slate-500/20 scale-105'
-                                                    : 'bg-slate-900/50 text-slate-400 border-slate-700/50 hover:border-slate-500 hover:bg-slate-800/50'}`}
-                                            >
-                                                <div className="flex flex-col items-center gap-1">
-                                                    <span>BÁSICO</span>
-                                                    {pack === 'basic' && <div className="w-full h-0.5 bg-slate-400 rounded-full" />}
-                                                </div>
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setValue('pack', 'premium')}
-                                                className={`relative px-4 py-3 rounded-xl text-xs font-black border-2 transition-all duration-300 overflow-hidden ${pack === 'premium'
-                                                    ? 'bg-gradient-to-br from-amber-500 via-amber-400 to-yellow-500 text-black border-amber-400 shadow-2xl shadow-amber-500/40 scale-105'
-                                                    : 'bg-slate-900/50 text-slate-400 border-amber-900/30 hover:border-amber-500/50 hover:bg-amber-950/20'}`}
-                                            >
-                                                <div className="flex flex-col items-center gap-1">
-                                                    <span className="flex items-center gap-1">
-                                                        PREMIUM
-                                                        {pack === 'premium' && <span className="text-yellow-200">✨</span>}
-                                                    </span>
+                                    {/* PACK SELECTION (FRANCHISE ONLY) */}
+                                    {role === 'franchise' && (
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold text-amber-200/80 uppercase tracking-wider ml-1">Pack Contratado *</label>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setValue('pack', 'basic')}
+                                                    className={`relative px-4 py-3 rounded-xl text-xs font-bold border-2 transition-all duration-300 ${pack === 'basic'
+                                                        ? 'bg-slate-700 text-white border-slate-500 shadow-lg shadow-slate-500/20 scale-105'
+                                                        : 'bg-slate-900/50 text-slate-400 border-slate-700/50 hover:border-slate-500 hover:bg-slate-800/50'}`}
+                                                >
+                                                    <div className="flex flex-col items-center gap-1">
+                                                        <span>BÁSICO</span>
+                                                        {pack === 'basic' && <div className="w-full h-0.5 bg-slate-400 rounded-full" />}
+                                                    </div>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setValue('pack', 'premium')}
+                                                    className={`relative px-4 py-3 rounded-xl text-xs font-black border-2 transition-all duration-300 overflow-hidden ${pack === 'premium'
+                                                        ? 'bg-gradient-to-br from-amber-500 via-amber-400 to-yellow-500 text-black border-amber-400 shadow-2xl shadow-amber-500/40 scale-105'
+                                                        : 'bg-slate-900/50 text-slate-400 border-amber-900/30 hover:border-amber-500/50 hover:bg-amber-950/20'}`}
+                                                >
+                                                    <div className="flex flex-col items-center gap-1">
+                                                        <span className="flex items-center gap-1">
+                                                            PREMIUM
+                                                            {pack === 'premium' && <span className="text-yellow-200">✨</span>}
+                                                        </span>
+                                                        {pack === 'premium' && (
+                                                            <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-yellow-200 to-transparent rounded-full animate-pulse" />
+                                                        )}
+                                                    </div>
                                                     {pack === 'premium' && (
-                                                        <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-yellow-200 to-transparent rounded-full animate-pulse" />
+                                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
                                                     )}
-                                                </div>
-                                                {pack === 'premium' && (
-                                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-                                                )}
-                                            </button>
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
 
                                     {/* Only show for franchise role (not for drivers/staff) */}
                                     {role === 'franchise' && (
                                         <>
                                             <div className="space-y-1.5">
-                                                <label className="text-xs font-bold text-amber-200/80 uppercase tracking-wider ml-1">Ciudad Franquicia *</label>
+                                                <label className="text-xs font-bold text-amber-200/80 uppercase tracking-wider ml-1">Nombre / Razón Social *</label>
                                                 <input
                                                     type="text"
-                                                    {...register('name')}
-                                                    className={`w-full px-4 py-2.5 bg-slate-900/80 border ${errors.name ? 'border-rose-500' : 'border-amber-500/20'} rounded-xl text-amber-100 text-sm focus:ring-2 focus:ring-amber-500/50 outline-none`}
-                                                    placeholder="Ej: Madrid Centro"
+                                                    {...register('displayName')}
+                                                    className={`w-full px-4 py-2.5 bg-slate-900/80 border ${errors.displayName ? 'border-rose-500' : 'border-amber-500/20'} rounded-xl text-amber-100 text-sm focus:ring-2 focus:ring-amber-500/50 outline-none`}
+                                                    placeholder="Ej: Transportes Rápidos S.L."
                                                 />
-                                                {errors.name && <p className="text-rose-500 text-[10px] mt-1 font-medium">{String(errors.name.message)}</p>}
+                                                {errors.displayName && <p className="text-rose-500 text-[10px] mt-1 font-medium">{String(errors.displayName.message)}</p>}
+                                                <p className="text-[10px] text-slate-500 ml-1">Visible para el administrador y en reportes.</p>
                                             </div>
 
                                             <div className="space-y-1.5">
-                                                <label className="text-xs font-bold text-amber-200/80 uppercase tracking-wider ml-1">Razón Social {role === 'franchise' && '*'}</label>
-                                                <input
-                                                    type="text"
-                                                    {...register('legalName')}
-                                                    className={`w-full px-4 py-2.5 bg-slate-900/80 border ${errors.legalName ? 'border-rose-500' : 'border-amber-500/20'} rounded-xl text-amber-100 text-sm focus:ring-2 focus:ring-amber-500/50 outline-none`}
-                                                    placeholder="Nombre Fiscal S.L."
-                                                />
-                                                {errors.legalName && <p className="text-rose-500 text-[10px] mt-1 font-medium">{String(errors.legalName.message)}</p>}
-                                            </div>
-
-                                            <div className="space-y-1.5">
-                                                <label className="text-xs font-bold text-amber-200/80 uppercase tracking-wider ml-1">CIF / NIF *</label>
+                                                <label className="text-xs font-bold text-amber-200/80 uppercase tracking-wider ml-1">CIF / NIF</label>
                                                 <input
                                                     type="text"
                                                     {...register('cif')}
                                                     className={`w-full px-4 py-2.5 bg-slate-900/80 border ${errors.cif ? 'border-rose-500' : 'border-amber-500/20'} rounded-xl text-amber-100 text-sm focus:ring-2 focus:ring-amber-500/50 outline-none`}
                                                     placeholder="B12345678"
                                                 />
-                                                {errors.cif && <p className="text-rose-500 text-[10px] mt-1 font-medium">{String(errors.cif.message)}</p>}
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-1.5">
+                                                    <label className="text-xs font-bold text-amber-200/80 uppercase tracking-wider ml-1">Localidad</label>
+                                                    <input
+                                                        type="text"
+                                                        {...register('city')}
+                                                        className="w-full px-4 py-2.5 bg-slate-900/80 border border-amber-500/20 rounded-xl text-amber-100 text-sm focus:ring-2 focus:ring-amber-500/50 outline-none"
+                                                        placeholder="Madrid"
+                                                    />
+                                                    <p className="text-[10px] text-slate-500 ml-1">Usado para widget de Clima.</p>
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <label className="text-xs font-bold text-amber-200/80 uppercase tracking-wider ml-1">Teléfono</label>
+                                                    <input
+                                                        type="tel"
+                                                        {...register('phoneNumber')}
+                                                        className="w-full px-4 py-2.5 bg-slate-900/80 border border-amber-500/20 rounded-xl text-amber-100 text-sm focus:ring-2 focus:ring-amber-500/50 outline-none"
+                                                        placeholder="+34 600..."
+                                                    />
+                                                </div>
                                             </div>
 
                                             <div className="space-y-1.5">
-                                                <label className="text-xs font-bold text-amber-200/80 uppercase tracking-wider ml-1">Dirección de Sede</label>
+                                                <label className="text-xs font-bold text-amber-200/80 uppercase tracking-wider ml-1">Dirección Completa</label>
                                                 <input
                                                     type="text"
                                                     {...register('address')}
                                                     className="w-full px-4 py-2.5 bg-slate-900/80 border border-amber-500/20 rounded-xl text-amber-100 text-sm focus:ring-2 focus:ring-amber-500/50 outline-none"
-                                                    placeholder="C/ Principal 123, Sevilla"
+                                                    placeholder="C/ Principal 123, CP 28001"
                                                 />
                                             </div>
                                         </>
@@ -511,9 +528,9 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                                     {...register('status')}
                                     className="w-full px-4 py-2.5 bg-slate-900/50 border border-white/10 rounded-xl text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/50 outline-none appearance-none"
                                 >
-                                    <option value="active">Activo</option>
-                                    <option value="pending">Pendiente</option>
-                                    <option value="banned">Bloqueado</option>
+                                    <option value="active">Activo (Acceso Completo)</option>
+                                    <option value="pending">Pendiente (Solo Recursos/Soporte)</option>
+                                    <option value="banned">Bloqueado (Sin Acceso)</option>
                                 </select>
                             </div>
                         </div>

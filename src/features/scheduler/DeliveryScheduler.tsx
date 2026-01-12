@@ -1,13 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Zap, Shield, Save, Loader2, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Zap, Shield, Save, Loader2, Clock, Sparkles, Filter, BadgeCheck, AlertTriangle, ShieldCheck, Wand2, XCircle } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { getRiderInitials } from '../../utils/colorPalette';
-import { toLocalDateString, toLocalISOString } from '../../utils/dateUtils';
+import { toLocalDateString, toLocalISOString, toLocalISOStringWithOffset, getStartOfWeek } from '../../utils/dateUtils';
 import ShiftModal from '../../features/operations/ShiftModal';
 import QuickFillModal from '../../features/operations/QuickFillModal';
 import MobileAgendaView from '../../features/operations/MobileAgendaView';
 
-import { useWeeklySchedule } from '../../hooks/useWeeklySchedule';
+import { useWeeklySchedule, WeekData, Shift } from '../../hooks/useWeeklySchedule';
 import { useAuth } from '../../context/AuthContext';
 import { getRiderColor } from '../../utils/riderColors';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
@@ -17,6 +17,10 @@ import { useFleetStore } from '../../store/useFleetStore';
 import { useVehicleStore } from '../../store/useVehicleStore';
 import { shiftService } from '../../services/shiftService';
 import { migrationService } from '../../services/migrationService';
+import { notificationService } from '../../services/notificationService';
+import { validateWeeklySchedule, generateScheduleFix, generateFullSchedule } from '../../lib/gemini';
+import { WeekService } from '../../services/scheduler/weekService';
+import { toFranchiseId, toWeekId } from '../../schemas/scheduler';
 
 console.log('📦 ARCHIVO DeliveryScheduler.tsx CARGADO EN EL NAVEGADOR');
 
@@ -37,6 +41,19 @@ const DeliveryScheduler: React.FC<{
     const [showPrime, setShowPrime] = useState(false);
     const [isPublishing, setIsPublishing] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date());
+
+    // --- SHERIFF & MAGIC AI STATE ---
+    const [sheriffResult, setSheriffResult] = useState<{
+        score: number;
+        status: 'optimal' | 'warning' | 'critical';
+        feedback: string;
+        missingCoverage: string[];
+    } | null>(null);
+    const [isAuditing, setIsAuditing] = useState(false);
+    const [isFixing, setIsFixing] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [showGenModal, setShowGenModal] = useState(false);
+    const [genPrompt, setGenPrompt] = useState('');
 
     // Update time every minute for the Red Line
     useEffect(() => {
@@ -79,6 +96,11 @@ const DeliveryScheduler: React.FC<{
 
     // --- ACTIONS ---
     const saveShift = (shiftData: any) => {
+        if (readOnly) {
+            alert("Modo solo lectura: No se pueden guardar cambios.");
+            return;
+        }
+
         const existingId = shiftData.id || shiftData.shiftId;
         const isNewToken = !existingId || (typeof existingId === 'string' && existingId.startsWith('draft-'));
 
@@ -96,6 +118,10 @@ const DeliveryScheduler: React.FC<{
     };
 
     const deleteShift = (shiftId: string) => {
+        if (readOnly) {
+            alert("Modo solo lectura: No se pueden borrar turnos.");
+            return;
+        }
         const shiftIdStr = String(shiftId);
         if (shiftIdStr.startsWith('draft-')) {
             setLocalShifts(prev => prev.filter(s => String(s.id) !== shiftIdStr));
@@ -110,7 +136,7 @@ const DeliveryScheduler: React.FC<{
     };
 
     const handlePublish = async () => {
-        if (!safeFranchiseId || isPublishing) return;
+        if (!safeFranchiseId || isPublishing || readOnly) return;
         setIsPublishing(true);
         try {
             for (const id of deletedIds) {
@@ -135,14 +161,163 @@ const DeliveryScheduler: React.FC<{
                     await shiftService.updateShift(s.id, inputData);
                 }
             }
+
+            // Notify Admin about the published schedule
+            try {
+                await notificationService.notify(
+                    'SCHEDULE_PUBLISHED',
+                    safeFranchiseId,
+                    'Franquicia', // idealmente obtener el nombre real
+                    {
+                        title: 'Horario Publicado',
+                        message: `La franquicia ha publicado su horario para la semana.`,
+                        priority: 'normal',
+                        metadata: { franchiseId: safeFranchiseId }
+                    }
+                );
+                console.log("NOTIFICACIÓN DE PUBLICACIÓN ENVIADA");
+            } catch (err) {
+                console.warn("Error enviando notificación", err);
+            }
+
             setLocalShifts([]);
             setDeletedIds(new Set());
-            alert("✅ Cambios publicados.");
+            // alert("✅ Calendario publicado exitosamente.");
         } catch (error: any) {
             console.error(error);
             alert("Error al publicar.");
         } finally {
             setIsPublishing(false);
+        }
+    };
+
+    // --- SHERIFF & AI LOGIC ---
+    const handleAuditoria = async () => {
+        // Audit merged shifts (remote + local drafts)
+        if (!mergedShifts || mergedShifts.length === 0) {
+            alert("El cuadrante está vacío. Añade turnos antes de auditar.");
+            return;
+        }
+        setIsAuditing(true);
+        setSheriffResult(null);
+        try {
+            const result = await validateWeeklySchedule(mergedShifts);
+            if (result) {
+                setSheriffResult(result);
+            } else {
+                alert("El Sheriff no ha podido validar el cuadrante. Inténtalo de nuevo.");
+            }
+        } catch (error) {
+            console.error("Error en auditoría:", error);
+            alert("Error de conexión con el Sheriff.");
+        } finally {
+            setIsAuditing(false);
+        }
+    };
+
+    const handleAutoFix = async () => {
+        if (!sheriffResult || !weekData) return;
+
+        setIsFixing(true);
+        try {
+            const fixResult = await generateScheduleFix(
+                mergedShifts || [],
+                rosterRiders || [],
+                sheriffResult.missingCoverage
+            );
+
+            if (fixResult && fixResult.newShifts.length > 0) {
+                const confirmed = window.confirm(
+                    `El Sheriff sugiere ${fixResult.newShifts.length} nuevos turnos:\n\n` +
+                    fixResult.explanation +
+                    `\n\n¿Aplicar cambios ahora (como borradores)?`
+                );
+
+                if (confirmed) {
+                    const newDrafts = fixResult.newShifts.map(s => {
+                        const startD = new Date(s.startDay);
+                        startD.setHours(s.startHour, 0, 0, 0);
+                        const endD = new Date(startD);
+                        endD.setHours(s.startHour + s.duration, 0, 0, 0);
+
+                        return {
+                            id: `draft-fix-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+                            shiftId: `draft-fix-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+                            riderId: s.riderId,
+                            riderName: rosterRiders.find(r => r.id === s.riderId)?.fullName || 'Rider',
+                            motoId: null,
+                            motoPlate: null,
+                            startAt: toLocalISOStringWithOffset(startD),
+                            endAt: toLocalISOStringWithOffset(endD),
+                            isDraft: true,
+                            isNew: true
+                        };
+                    });
+
+                    setLocalShifts(prev => [...prev, ...newDrafts]);
+
+                    // Re-audit automatically
+                    setTimeout(() => handleAuditoria(), 1000);
+                }
+            } else {
+                alert("El Sheriff no encontró una solución automática viable. Intenta mover turnos manualmente.");
+            }
+        } catch (error) {
+            console.error("Auto-Fix Error:", error);
+            alert("Error al aplicar la corrección automática.");
+        } finally {
+            setIsFixing(false);
+        }
+    };
+
+    const handleGeneration = async () => {
+        if (!genPrompt.trim()) return;
+        setIsGenerating(true);
+        try {
+            const startDate = toLocalDateString(getStartOfWeek(selectedDate));
+            const endDate = toLocalDateString(addDays(getStartOfWeek(selectedDate), 6));
+
+            const result = await generateFullSchedule(
+                genPrompt,
+                rosterRiders || [],
+                startDate,
+                endDate
+            );
+
+            if (result && result.shifts.length > 0) {
+                const apply = window.confirm(`He generado ${result.shifts.length} turnos:\n\n${result.explanation}\n\n¿Aplicar al cuadrante?`);
+
+                if (apply) {
+                    const newDrafts = result.shifts.map(s => {
+                        const startD = new Date(s.startDay);
+                        startD.setHours(s.startHour, 0, 0, 0);
+                        const endD = new Date(startD);
+                        endD.setHours(s.startHour + s.duration, 0, 0, 0);
+
+                        return {
+                            id: `draft-gen-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+                            shiftId: `draft-gen-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+                            riderId: s.riderId,
+                            riderName: rosterRiders.find(r => r.id === s.riderId)?.fullName || 'Rider',
+                            motoId: null,
+                            motoPlate: null,
+                            startAt: toLocalISOStringWithOffset(startD),
+                            endAt: toLocalISOStringWithOffset(endD),
+                            isDraft: true,
+                            isNew: true
+                        };
+                    });
+
+                    setLocalShifts(prev => [...prev, ...newDrafts]);
+                    setShowGenModal(false);
+                    setGenPrompt('');
+                }
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error generando horario");
+        } finally {
+            setIsGenerating(false);
         }
     };
 
@@ -312,23 +487,94 @@ const DeliveryScheduler: React.FC<{
                         </button>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <button onClick={() => setIsQuickFillOpen(true)} className="px-5 py-2 bg-indigo-600 text-white text-xs font-medium rounded-full hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-lg shadow-indigo-100">
-                            <Zap size={14} className="fill-white/20" /> Relleno Rápido
-                        </button>
-                        <button
-                            onClick={() => migrationService.cleanDuplicateShifts(safeFranchiseId).then(r => alert(`Limpio: ${r.count}`))}
-                            className="p-2 text-slate-300 hover:text-slate-500 rounded-full hover:bg-slate-50 transition-colors"
-                            aria-label="Limpiar turnos duplicados"
-                            title="Limpiar duplicados"
-                        >
-                            <Shield size={18} />
-                        </button>
+                    {!readOnly && (
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={handleAuditoria}
+                                disabled={isAuditing}
+                                className={`
+                                flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all text-xs font-bold shadow-sm hover:shadow-md active:scale-95 border backdrop-blur-sm
+                                ${sheriffResult ? (sheriffResult.status === 'optimal' ? 'bg-emerald-50/80 text-emerald-700 border-emerald-200' : 'bg-amber-50/80 text-amber-700 border-amber-200') : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}
+                            `}
+                            >
+                                {isAuditing ? <div className="animate-spin w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full" /> : <BadgeCheck className="w-4 h-4" />}
+                                {sheriffResult ? `Sheriff: ${sheriffResult.score}/100` : 'Auditar'}
+                            </button>
+
+                            <div className="flex items-center gap-1 p-0.5 bg-slate-100/50 rounded-full border border-slate-200">
+                                <button onClick={() => setIsQuickFillOpen(true)} className="px-3 py-1.5 text-slate-600 hover:text-indigo-600 hover:bg-white rounded-full transition-all text-xs font-medium flex items-center gap-2">
+                                    <Zap size={14} className="fill-slate-300" /> Relleno
+                                </button>
+                                <div className="w-px h-4 bg-slate-300/50" />
+                                <button onClick={() => setShowGenModal(true)} className="px-3 py-1.5 text-slate-600 hover:text-violet-600 hover:bg-white rounded-full transition-all text-xs font-medium flex items-center gap-2">
+                                    <Sparkles size={14} className="text-amber-400" /> IA Mágica
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* SHERIFF VISUAL OVERLAY */}
+            {sheriffResult && (
+                <div className="absolute top-[80px] right-6 z-50 w-80 animate-in slide-in-from-right-10 fade-in duration-300 pointer-events-auto">
+                    <div className={`
+                        p-4 rounded-xl shadow-2xl border backdrop-blur-md
+                        ${sheriffResult.status === 'optimal'
+                            ? 'bg-emerald-50/90 border-emerald-200 text-emerald-900'
+                            : sheriffResult.status === 'critical'
+                                ? 'bg-rose-50/90 border-rose-200 text-rose-900'
+                                : 'bg-amber-50/90 border-amber-200 text-amber-900'
+                        }
+                    `}>
+                        <div className="flex justify-between items-start mb-2">
+                            <div className="flex items-center gap-2">
+                                {sheriffResult.status === 'optimal'
+                                    ? <ShieldCheck className="w-6 h-6 text-emerald-600" />
+                                    : <AlertTriangle className="w-6 h-6" />
+                                }
+                                <div>
+                                    <h3 className="font-black text-sm uppercase tracking-wider">Reporte del Sheriff</h3>
+                                    <span className="text-xs font-bold opacity-80">Puntuación: {sheriffResult.score}/100</span>
+                                </div>
+                            </div>
+                            <button onClick={() => setSheriffResult(null)} className="opacity-50 hover:opacity-100" title="Cerrar reporte">
+                                <XCircle className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <p className="text-xs font-medium mb-3 leading-relaxed">
+                            "{sheriffResult.feedback}"
+                        </p>
+
+                        {sheriffResult.missingCoverage.length > 0 && (
+                            <div className="bg-white/50 rounded-lg p-2 text-[10px] font-mono mb-2">
+                                <strong className="block mb-1 opacity-70">ALERTAS DE COBERTURA:</strong>
+                                <ul className="list-disc pl-4 space-y-0.5">
+                                    {sheriffResult.missingCoverage.map((item, i) => (
+                                        <li key={i}>{item}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {sheriffResult.status !== 'optimal' && (
+                            <button
+                                onClick={handleAutoFix}
+                                disabled={isFixing}
+                                className="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white py-1.5 rounded-lg text-xs font-bold shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
+                            >
+                                {isFixing ? 'Corrigiendo...' : (
+                                    <>
+                                        <Wand2 className="w-3 h-3" />
+                                        Corregir con IA
+                                    </>
+                                )}
+                            </button>
+                        )}
                     </div>
                 </div>
-
-
-            </div>
+            )}
 
             <div className="flex-1 overflow-auto bg-white">
                 <table className="w-full border-collapse table-fixed">

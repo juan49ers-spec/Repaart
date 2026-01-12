@@ -9,6 +9,7 @@ import { lazyWithRetry } from './utils/lazyWithRetry';
 import DashboardLayout from './layouts/DashboardLayout';
 import ProtectedRoute from './features/auth/ProtectedRoute';
 import RequireRole from './layouts/RequireRole';
+import RequireActiveStatus from './layouts/RequireActiveStatus';
 import DashboardSkeleton from './ui/layout/DashboardSkeleton';
 import Login from './features/auth/Login';
 import NotFound from './layouts/pages/NotFound';
@@ -165,22 +166,29 @@ function App() {
                     {/* CORE (Admin/Franchise Only) */}
                     <Route path="dashboard" element={
                         <RequireRole allowedRoles={['admin', 'franchise']}>
-                            <DashboardSwitcher />
+                            <RequireActiveStatus>
+                                <DashboardSwitcher />
+                            </RequireActiveStatus>
                         </RequireRole>
                     } />
                     <Route path="operations" element={
                         <RequireRole allowedRoles={['admin', 'franchise']}>
-                            <OperationsPage />
+                            <RequireActiveStatus>
+                                <OperationsPage />
+                            </RequireActiveStatus>
                         </RequireRole>
                     } />
                     <Route path="academy" element={
                         <RequireRole allowedRoles={['admin', 'franchise']}>
+                            {/* Academy is ALLOWED for Pending users */}
                             <Academy />
                         </RequireRole>
                     } />
                     <Route path="fleet" element={
                         <RequireRole allowedRoles={['admin', 'franchise']}>
-                            <RidersView />
+                            <RequireActiveStatus>
+                                <RidersView />
+                            </RequireActiveStatus>
                         </RequireRole>
                     } />
                     <Route path="profile" element={<UserProfile />} />
@@ -189,11 +197,13 @@ function App() {
                     {/* FRANCHISE SPECIFIC */}
                     <Route path="support" element={
                         <RequireRole allowedRoles={['admin', 'franchise']}>
+                            {/* Support is ALLOWED for Pending users */}
                             <SupportHub />
                         </RequireRole>
                     } />
                     <Route path="resources" element={
                         <RequireRole allowedRoles={['admin', 'franchise']}>
+                            {/* Resources is ALLOWED for Pending users */}
                             <ResourcesPanel />
                         </RequireRole>
                     } />

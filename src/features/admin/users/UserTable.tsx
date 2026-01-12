@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Shield, Trash2, Ban, Edit } from 'lucide-react';
-import { getRoleConfig, getStatusConfig } from '../../../lib/constants';
+import { Shield, Trash2, Ban, Edit, Building, User } from 'lucide-react';
+import { getStatusConfig } from '../../../lib/constants';
 import { formatDate } from '../../../utils/formatDate';
 import { UserProfile } from '../../../services/userService';
 
@@ -33,50 +33,79 @@ interface UserTableProps {
 
 // --- ROW COMPONENT (Pure for performance) ---
 const UserRow: React.FC<UserRowProps> = ({ user, style, onAction, currentUserRole, readOnly, franchiseId }) => {
-    const roleConfig = getRoleConfig(user.role ?? 'user');
+
     const statusConfig = getStatusConfig(user.status ?? 'active');
+
+    // Role Badge Logic
+    const getRoleBadge = (role: string) => {
+        switch (role) {
+            case 'admin':
+                return { label: 'ADMINISTRADOR', bg: 'bg-indigo-500 text-white border-indigo-600', icon: <Shield className="w-3 h-3" /> };
+            case 'franchise':
+                return { label: 'FRANQUICIA', bg: 'bg-amber-500 text-black border-amber-600 font-extrabold', icon: <Building className="w-3 h-3" /> };
+            case 'rider':
+                return { label: 'RIDER', bg: 'bg-slate-700 text-slate-300 border-slate-600', icon: <User className="w-3 h-3" /> };
+            default:
+                return { label: role.toUpperCase(), bg: 'bg-slate-800 text-slate-400 border-slate-700', icon: <User className="w-3 h-3" /> };
+        }
+    };
+
+    const roleBadge = getRoleBadge(user.role || 'user');
 
     return (
         <div style={style} className="flex items-center border-b border-white/5 hover:bg-white/5 transition-colors px-4 group">
             {/* User Info */}
             <div className="flex-1 flex items-center gap-3 min-w-[200px]">
-                <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-xs font-bold text-indigo-300 ring-1 ring-inset ring-indigo-500/30">
-                    {(user.email || 'XX').substring(0, 2).toUpperCase()}
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ring-1 ring-inset ${user.role === 'franchise' ? 'bg-amber-500/20 text-amber-400 ring-amber-500/30' : 'bg-indigo-500/20 text-indigo-300 ring-indigo-500/30'}`}>
+                    {(user.displayName || user.email || 'XX').substring(0, 2).toUpperCase()}
                 </div>
                 <div className="flex flex-col">
-                    <span className="text-sm font-bold text-white tracking-tight">{user.displayName || 'Usuario Sin Nombre'}</span>
-                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">{user.email || 'Sin email'}</span>
+                    <span className="text-sm font-bold text-white tracking-tight truncate max-w-[180px]" title={user.displayName}>{user.displayName || 'Usuario Sin Nombre'}</span>
+                    <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate max-w-[180px]" title={user.email}>{user.email || 'Sin email'}</span>
                 </div>
             </div>
 
             {/* Role */}
-            <div className="w-[150px] hidden md:flex">
-                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${roleConfig.bg === 'bg-slate-100' ? 'bg-slate-800 text-slate-300 border-slate-700' :
-                    roleConfig.bg.replace('bg-', 'bg-').replace('100', '500/10') + ' ' + roleConfig.text.replace('800', '400') + ' ' + roleConfig.border.replace('200', '500/20')
-                    } flex items-center gap-1`}>
-                    <Shield className="w-3 h-3" />
-                    {roleConfig.label}
+            <div className="w-[140px] hidden md:flex">
+                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border flex items-center gap-1.5 shadow-sm ${roleBadge.bg}`}>
+                    {roleBadge.icon}
+                    {roleBadge.label}
                 </span>
+            </div>
+
+            {/* Pack (Franchise Only) */}
+            <div className="w-[100px] hidden lg:flex items-center">
+                {user.role === 'franchise' && user.pack && (
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase border tracking-tight ${user.pack === 'premium'
+                        ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-black border-amber-400'
+                        : 'bg-slate-800 text-slate-400 border-slate-700'
+                        }`}>
+                        {user.pack}
+                    </span>
+                )}
             </div>
 
             {/* Status */}
-            <div className="w-[120px] hidden sm:flex">
+            <div className="w-[100px] hidden sm:flex">
                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${statusConfig.bg === 'bg-emerald-100' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                    'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                    user.status === 'pending' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                        'bg-rose-500/10 text-rose-400 border-rose-500/20'
                     }`}>
-                    {statusConfig.label}
+                    {user.status === 'active' ? 'ACTIVO' : user.status === 'pending' ? 'PENDIENTE' : 'BLOQUEADO'}
                 </span>
             </div>
 
-            {/* Franchise Column (Admin Only) */}
             {!franchiseId && (
-                <div className="w-[150px] hidden xl:flex text-xs text-slate-500 font-medium">
-                    {user.franchiseId || '-'}
+                <div className="w-[120px] hidden xl:flex text-xs text-slate-500 font-medium truncate" title={user.role === 'franchise' ? `UID: ${user.uid || user.id}` : user.franchiseId}>
+                    {user.role === 'franchise'
+                        ? <span className="font-mono text-[10px] bg-slate-100 dark:bg-slate-800 px-1 rounded">{(user.uid || user.id || '').substring(0, 8)}...</span>
+                        : (user.franchiseId || '-')
+                    }
                 </div>
             )}
 
             {/* Date */}
-            <div className="w-[150px] hidden lg:flex text-xs text-slate-500 font-bold uppercase tracking-wider">
+            <div className="w-[100px] hidden 2xl:flex text-[10px] text-slate-600 font-bold uppercase tracking-wider">
                 {formatDate(user.createdAt as any)}
             </div>
 
@@ -86,8 +115,8 @@ const UserRow: React.FC<UserRowProps> = ({ user, style, onAction, currentUserRol
                     <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                         <button
                             onClick={() => onAction('toggleStatus', user)}
-                            className="p-1.5 text-slate-400 hover:text-amber-400 rounded hover:bg-amber-500/10 transition-colors"
-                            title={user.status === 'active' ? "Bloquear" : "Desbloquear"}
+                            className={`p-1.5 rounded transition-colors ${user.status === 'active' ? 'text-green-500 hover:bg-green-500/10' : 'text-slate-400 hover:text-amber-400 hover:bg-amber-500/10'}`}
+                            title={user.status === 'active' ? "Usuario Activo" : "Usuario Bloqueado/Pendiente"}
                         >
                             <Ban className="w-4 h-4" />
                         </button>
@@ -116,7 +145,7 @@ const UserRow: React.FC<UserRowProps> = ({ user, style, onAction, currentUserRol
 
 const ROW_HEIGHT = 60; // Fixed height strictly enforced
 
-const UserTable: React.FC<UserTableProps> = ({ users, onAction, currentUserRole, readOnly }) => {
+const UserTable: React.FC<UserTableProps> = ({ users, onAction, currentUserRole, readOnly, franchiseId }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [scrollTop, setScrollTop] = useState(0);
     const [containerHeight, setContainerHeight] = useState(600);
@@ -160,20 +189,24 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction, currentUserRole,
             {/* Header - Fixed to avoid scroll */}
             <div className="bg-white/5 border-b border-white/5 flex items-center px-4 h-[40px] shrink-0 backdrop-blur-sm">
                 <div className="flex-1 text-xs font-bold text-indigo-300 uppercase tracking-wider">Usuario</div>
-                <div className="w-[150px] hidden md:block text-xs font-bold text-indigo-300 uppercase tracking-wider">Rol</div>
-                <div className="w-[120px] hidden sm:block text-xs font-bold text-indigo-300 uppercase tracking-wider">Estado</div>
-                <div className="w-[150px] hidden lg:block text-xs font-bold text-indigo-300 uppercase tracking-wider">Fecha Registro</div>
+                <div className="w-[140px] hidden md:block text-xs font-bold text-indigo-300 uppercase tracking-wider">Rol</div>
+                <div className="w-[100px] hidden lg:block text-xs font-bold text-indigo-300 uppercase tracking-wider">Pack</div>
+                <div className="w-[100px] hidden sm:block text-xs font-bold text-indigo-300 uppercase tracking-wider">Estado</div>
+                {!franchiseId && <div className="w-[120px] hidden xl:block text-xs font-bold text-indigo-300 uppercase tracking-wider">ID Franq.</div>}
+                <div className="w-[100px] hidden 2xl:block text-xs font-bold text-indigo-300 uppercase tracking-wider">Fecha</div>
                 <div className="w-[60px]" />
             </div>
 
             {/* Virtual Scroll Container */}
+            {/* Virtual Scroll Container with Horizontal Scroll Support */}
             <div
                 ref={containerRef}
                 onScroll={handleScroll}
-                className="flex-1 overflow-y-auto relative custom-scrollbar"
+                className="flex-1 overflow-y-auto relative custom-scrollbar overflow-x-auto"
                 style={{ height: '100%' }}
             >
-                <div style={{ height: totalContentHeight, position: 'relative' }}>
+                {/* Min-width wrapper to force horizontal scroll on small screens */}
+                <div style={{ height: totalContentHeight, position: 'relative', minWidth: '800px' }}>
                     <div style={{ transform: `translateY(${offsetY}px)` }}>
                         {visibleUsers.map((user) => (
                             <UserRow
@@ -183,6 +216,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction, currentUserRole,
                                 onAction={onAction}
                                 currentUserRole={currentUserRole}
                                 readOnly={readOnly}
+                                franchiseId={franchiseId}
                             />
                         ))}
                     </div>

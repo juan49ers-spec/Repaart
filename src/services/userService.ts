@@ -28,6 +28,7 @@ export interface UserProfile {
     pack?: 'basic' | 'premium';
     status?: 'active' | 'pending' | 'banned' | 'deleted';
     name?: string;
+    legalName?: string;
     cif?: string;
     city?: string;
     address?: string;

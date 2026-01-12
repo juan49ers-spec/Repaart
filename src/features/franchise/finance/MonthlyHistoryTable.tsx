@@ -512,12 +512,30 @@ const MonthlyHistoryTable: React.FC<MonthlyHistoryTableProps> = ({ franchiseId, 
             {/* FRANCHISE UNLOCK REQUEST MODAL */}
             {requestingUnlock && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 animate-in zoom-in-95 duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-5 animate-in zoom-in-95 duration-200">
                         <div className="flex items-center gap-3 text-amber-600 mb-2">
                             <div className="p-2 bg-amber-100 rounded-lg">
                                 <Unlock className="w-5 h-5" />
                             </div>
                             <h3 className="text-lg font-bold text-gray-900">Solicitar Desbloqueo</h3>
+                        </div>
+
+                        {/* Visual Status Timeline */}
+                        <div className="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-xl border border-slate-100 mb-4 text-xs font-bold text-slate-400">
+                            <div className="flex flex-col items-center gap-1 text-slate-900">
+                                <span className="w-2.5 h-2.5 rounded-full bg-slate-900" />
+                                <span>Bloqueado</span>
+                            </div>
+                            <div className="h-0.5 flex-1 bg-slate-200 mx-2" />
+                            <div className="flex flex-col items-center gap-1 text-amber-600">
+                                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shadow-[0_0_0_3px_rgba(245,158,11,0.2)]" />
+                                <span>Solicitando...</span>
+                            </div>
+                            <div className="h-0.5 flex-1 bg-slate-200 mx-2" />
+                            <div className="flex flex-col items-center gap-1">
+                                <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+                                <span>Abierto</span>
+                            </div>
                         </div>
 
                         <p className="text-sm text-gray-600">
@@ -567,7 +585,6 @@ const MonthlyHistoryTable: React.FC<MonthlyHistoryTableProps> = ({ franchiseId, 
                                         } catch (notifyError) {
                                             console.warn("UNLOCK_REQUEST notification failed, trying fallback...", notifyError);
                                             try {
-                                                // Fallback to older type if Security Rules block new types
                                                 await notificationService.notify(
                                                     'FINANCE_CLOSING',
                                                     franchiseId,
@@ -589,7 +606,7 @@ const MonthlyHistoryTable: React.FC<MonthlyHistoryTableProps> = ({ franchiseId, 
                                         if (refresh) await refresh();
                                         setRequestingUnlock(null);
                                         setUnlockRequestReason('');
-                                        alert("Solicitud enviada correctamente.");
+                                        // alert("Solicitud enviada correctamente.");
                                     } catch (err) {
                                         console.error(err);
                                         alert("Error al enviar solicitud.");
@@ -613,6 +630,24 @@ const MonthlyHistoryTable: React.FC<MonthlyHistoryTableProps> = ({ franchiseId, 
                                 <Unlock className="w-5 h-5" />
                             </div>
                             <h3 className="text-lg font-bold text-gray-900">Revisar Solicitud de Desbloqueo</h3>
+                        </div>
+
+                        {/* Visual Status Timeline - Admin View */}
+                        <div className="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-xl border border-slate-100 mb-4 text-xs font-bold text-slate-400">
+                            <div className="flex flex-col items-center gap-1 text-slate-900">
+                                <span className="w-2.5 h-2.5 rounded-full bg-slate-900" />
+                                <span>Bloqueado</span>
+                            </div>
+                            <div className="h-0.5 flex-1 bg-amber-500 mx-2" />
+                            <div className="flex flex-col items-center gap-1 text-amber-600">
+                                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_0_3px_rgba(245,158,11,0.2)]" />
+                                <span>Solicitado</span>
+                            </div>
+                            <div className="h-0.5 flex-1 bg-slate-200 mx-2" />
+                            <div className="flex flex-col items-center gap-1">
+                                <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+                                <span>Desbloquear</span>
+                            </div>
                         </div>
 
                         <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">

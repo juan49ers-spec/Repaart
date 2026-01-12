@@ -1,113 +1,177 @@
-import { type FC } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { User, Store, ArrowRight, Activity, Users, Ticket, BarChart3 } from 'lucide-react';
-
+import React, { useState } from 'react';
+import UserManagementPanel from '../../admin/users/UserManagementPanel';
+import { Users, Settings, Activity, Server, FileText, Database, ShieldCheck, Cpu } from 'lucide-react';
 
 interface AdminTabProps {
     setViewMode: (mode: string) => void;
 }
 
-const AdminTab: FC<AdminTabProps> = () => {
-    const navigate = useNavigate();
+const AdminTab: React.FC<AdminTabProps> = () => {
+    const [activeSection, setActiveSection] = useState<'users' | 'system' | 'audit'>('users');
 
     return (
-        <div className="animate-in fade-in duration-500 space-y-8">
+        <div className="animate-in fade-in duration-700 space-y-6 h-full flex flex-col">
 
-            {/* --- HEADER --- */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-6">
-                <div>
-                    <h2 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-                        <Activity className="w-6 h-6 text-indigo-500" />
-                        Command Center
-                    </h2>
-                    <p className="text-slate-500 font-medium mt-1">Gestión centralizada de la red de franquicias</p>
-                </div>
-                {/* Micro Stats */}
-                <div className="flex items-center gap-4 text-sm font-bold text-slate-600">
-                    <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        Sistema Online
+            {/* --- COMMAND CENTER HEADER --- */}
+            <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 shrink-0 pb-2">
+                <div className="relative">
+                    <div className="flex items-center gap-3 mb-1">
+                        <div className="p-2.5 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-500/30 ring-1 ring-white/10">
+                            <Settings className="w-6 h-6 text-white" />
+                        </div>
+                        <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">
+                            Command Center
+                        </h2>
                     </div>
+                    <p className="text-slate-500 font-medium ml-[50px] max-w-md text-sm leading-relaxed">
+                        Control centralizado de usuarios, sistema y auditoría.
+                    </p>
+                </div>
+
+                {/* Segmented Control Navigation - MATCHING APP STYLE (Indigo Active) */}
+                <div className="p-1.5 bg-slate-100 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-1 shadow-inner">
+                    <TabButton
+                        active={activeSection === 'users'}
+                        onClick={() => setActiveSection('users')}
+                        icon={Users}
+                        label="Usuarios"
+                    />
+                    <TabButton
+                        active={activeSection === 'system'}
+                        onClick={() => setActiveSection('system')}
+                        icon={Server}
+                        label="Sistema"
+                    />
+                    <TabButton
+                        active={activeSection === 'audit'}
+                        onClick={() => setActiveSection('audit')}
+                        icon={FileText}
+                        label="Logs"
+                    />
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* --- CONTENT AREA --- */}
+            <div className="flex-1 min-h-0 relative">
 
-                {/* Card: Users */}
-                <div
-                    onClick={() => navigate('/admin/users')}
-                    className="group relative p-6 bg-slate-50 rounded-2xl border border-slate-100 cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-indigo-100 hover:border-indigo-200 hover:-translate-y-1"
-                >
-                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <Users className="w-24 h-24 transform rotate-12" />
+                {/* SECTION: USERS */}
+                {activeSection === 'users' && (
+                    <div className="h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        {/* Standard container style */}
+                        <div className="h-full rounded-2xl overflow-hidden shadow-xl ring-1 ring-black/5 dark:ring-white/10 bg-white dark:bg-slate-900">
+                            <UserManagementPanel />
+                        </div>
                     </div>
-                    <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform mb-4">
-                        <User className="w-6 h-6" />
-                    </div>
-                    <h3 className="text-lg font-black text-slate-800 mb-1 group-hover:text-indigo-700 transition-colors">Gestión de Usuarios</h3>
-                    <p className="text-sm text-slate-500 font-medium mb-4 line-clamp-2">Control de accesos, roles y permisos de toda la red.</p>
-                    <div className="flex items-center text-xs font-bold text-indigo-500 opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all duration-300">
-                        ACCEDER <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                    </div>
-                </div>
+                )}
 
-                {/* Card: Franchises */}
-                <div
-                    onClick={() => navigate('/admin/network')} // Assuming this route exists or similar
-                    className="group relative p-6 bg-slate-50 rounded-2xl border border-slate-100 cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-emerald-100 hover:border-emerald-200 hover:-translate-y-1"
-                >
-                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <Store className="w-24 h-24 transform rotate-12" />
-                    </div>
-                    <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform mb-4">
-                        <Store className="w-6 h-6" />
-                    </div>
-                    <h3 className="text-lg font-black text-slate-800 mb-1 group-hover:text-emerald-700 transition-colors">Red de Franquicias</h3>
-                    <p className="text-sm text-slate-500 font-medium mb-4 line-clamp-2">Monitorización de unidades operativas y rendimiento.</p>
-                    <div className="flex items-center text-xs font-bold text-emerald-500 opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all duration-300">
-                        EXPLORAR <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                    </div>
-                </div>
+                {/* SECTION: SYSTEM */}
+                {activeSection === 'system' && (
+                    <div className="h-full animate-in fade-in slide-in-from-bottom-4 duration-500 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-                {/* Card: Support */}
-                <div
-                    onClick={() => navigate('/admin/support')}
-                    className="group relative p-6 bg-slate-50 rounded-2xl border border-slate-100 cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-amber-100 hover:border-amber-200 hover:-translate-y-1"
-                >
-                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <Ticket className="w-24 h-24 transform rotate-12" />
-                    </div>
-                    <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform mb-4">
-                        <Ticket className="w-6 h-6" />
-                    </div>
-                    <h3 className="text-lg font-black text-slate-800 mb-1 group-hover:text-amber-700 transition-colors">Tickets de Soporte</h3>
-                    <p className="text-sm text-slate-500 font-medium mb-4 line-clamp-2">Resolución de incidencias y asistencia técnica.</p>
-                    <div className="flex items-center text-xs font-bold text-amber-500 opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all duration-300">
-                        VER TICKETS <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                    </div>
-                </div>
+                        {/* Status Card - BOLDER */}
+                        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-6 hover:border-indigo-500/30 transition-colors">
+                            <div className="flex items-center justify-between">
+                                <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-600 dark:text-emerald-400">
+                                    <Activity className="w-6 h-6" />
+                                </div>
+                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                                    <span className="relative flex h-2.5 w-2.5">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                                    </span>
+                                    <span className="text-xs font-black uppercase text-emerald-700 dark:text-emerald-400 tracking-wider">Operativo</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">Estado del Sistema</h3>
+                                <p className="text-slate-500 text-sm font-medium">Todos los servicios funcionando al 100%.</p>
+                            </div>
+                            <div className="mt-auto space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+                                <InfoRow label="Versión Core" value="v4.2.0" monospace />
+                                <InfoRow label="Base de Datos" value="Conectado" />
+                                <InfoRow label="Latencia Media" value="24ms" monospace />
+                            </div>
+                        </div>
 
-                {/* Card: Analytics/Audit */}
-                <div
-                    onClick={() => navigate('/admin/audit')}
-                    className="group relative p-6 bg-slate-50 rounded-2xl border border-slate-100 cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-slate-200 hover:border-slate-300 hover:-translate-y-1"
-                >
-                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <BarChart3 className="w-24 h-24 transform rotate-12" />
+                        {/* Maintenance Card */}
+                        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-6 hover:border-indigo-500/30 transition-colors">
+                            <div className="flex items-center justify-between">
+                                <div className="p-3 bg-indigo-500/10 rounded-xl text-indigo-600 dark:text-indigo-400">
+                                    <Database className="w-6 h-6" />
+                                </div>
+                                <button className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors uppercase tracking-wide">
+                                    Gestionar
+                                </button>
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">Mantenimiento</h3>
+                                <p className="text-slate-500 text-sm font-medium">Herramientas de caché y optimización.</p>
+                            </div>
+                            <div className="mt-auto pt-6 border-t border-slate-100 dark:border-slate-800">
+                                <button className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 font-bold text-xs uppercase tracking-wider cursor-not-allowed flex items-center justify-center gap-2">
+                                    <ShieldCheck className="w-4 h-4" />
+                                    Acciones Protegidas
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Infrastructure Card */}
+                        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col gap-6 hover:border-indigo-500/30 transition-colors">
+                            <div className="flex items-center justify-between">
+                                <div className="p-3 bg-violet-500/10 rounded-xl text-violet-600 dark:text-violet-400">
+                                    <Cpu className="w-6 h-6" />
+                                </div>
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">Infraestructura</h3>
+                                <p className="text-slate-500 text-sm font-medium">Europe-West1 Cloud Functions.</p>
+                            </div>
+                            <div className="mt-auto space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+                                <InfoRow label="Memoria" value="~128MB" monospace />
+                                <InfoRow label="Escalado" value="Auto" />
+                            </div>
+                        </div>
+
                     </div>
-                    <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center text-slate-600 group-hover:scale-110 transition-transform mb-4">
-                        <BarChart3 className="w-6 h-6" />
+                )}
+
+                {/* SECTION: AUDIT */}
+                {activeSection === 'audit' && (
+                    <div className="h-full rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center text-slate-400 animate-in fade-in slide-in-from-bottom-4 duration-300 bg-slate-50 dark:bg-slate-900/50">
+                        <FileText className="w-16 h-16 mb-4 opacity-20" />
+                        <p className="font-bold text-lg text-slate-600 dark:text-slate-400">Registro de Auditoría</p>
+                        <span className="text-sm font-medium opacity-60 mt-1 max-w-xs text-center">Utilice la sección principal de Auditoría.</span>
                     </div>
-                    <h3 className="text-lg font-black text-slate-800 mb-1 group-hover:text-slate-900 transition-colors">Auditoría del Sistema</h3>
-                    <p className="text-sm text-slate-500 font-medium mb-4 line-clamp-2">Logs de actividad y seguridad global.</p>
-                    <div className="flex items-center text-xs font-bold text-slate-600 opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all duration-300">
-                        AUDITAR <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                    </div>
-                </div>
+                )}
 
             </div>
         </div>
     );
 };
+
+// --- HELPER COMPONENTS ---
+
+const TabButton = ({ active, onClick, icon: Icon, label }: any) => (
+    <button
+        onClick={onClick}
+        className={`
+            relative px-5 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 flex items-center gap-2 select-none
+            ${active
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 ring-1 ring-black/5'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800'
+            }
+        `}
+    >
+        <Icon className={`w-4 h-4 ${active ? 'text-white' : 'text-slate-400'}`} />
+        <span>{label}</span>
+    </button>
+);
+
+const InfoRow = ({ label, value, monospace }: any) => (
+    <div className="flex justify-between items-center">
+        <span className="text-slate-500 dark:text-slate-400 font-medium text-[10px] uppercase tracking-wider opacity-80">{label}</span>
+        <span className={`text-slate-700 dark:text-slate-200 text-xs font-semibold ${monospace ? 'font-mono' : ''}`}>{value}</span>
+    </div>
+);
 
 export default AdminTab;

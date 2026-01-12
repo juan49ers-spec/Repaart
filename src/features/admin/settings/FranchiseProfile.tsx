@@ -231,7 +231,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                         ? `${rate.min}-${rate.max} km`
                         : (rate.name || 'Tarifa')
                 })),
-                city: data.city || (data.address ? data.address.split(',')[1]?.trim() : 'Madrid')
+                city: data.city || (data.address ? data.address.split(',')[1]?.trim() : '')
             };
 
             await userService.updateUser(targetId, franchisePayload);
@@ -331,6 +331,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                             accept="image/*"
                             onChange={handleAvatarChange}
                             disabled={!isSelfProfile}
+                            title="Cambiar foto de perfil"
                         />
                         {/* Online Status Dot */}
                         <div className="absolute bottom-2 right-2 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full shadow-sm"></div>
@@ -478,7 +479,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Localidad (Para el Tiempo)</label>
                                     <div className="relative group">
                                         <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-                                        <input {...register('city', { required: true })} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="Ej: Madrid" />
+                                        <input {...register('city', { required: true })} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="Ej: Barcelona" />
                                     </div>
                                     <p className="text-[10px] text-slate-400 ml-1">Escribe solo la ciudad. El sistema asumirá que es en España.</p>
                                 </div>
@@ -488,7 +489,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Dirección Completa</label>
                                     <div className="relative group">
                                         <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-                                        <input {...register('address')} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="Calle Ejemplo 123, Madrid" />
+                                        <input {...register('address')} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="Calle Ejemplo 123, Ciudad" />
                                     </div>
                                 </div>
                             </div>

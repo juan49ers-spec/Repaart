@@ -200,7 +200,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             {/* MAIN CONTENT WRAPPER WITH ERROR BOUNDARY & SUSPENSE */}
             <div className={`
                 mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500
-                ${activeTab === 'kanban' ? 'w-full p-0' : 'max-w-[1600px] p-6 md:p-8'}
+                ${activeTab === 'kanban' ? 'w-full p-0' : 'max-w-[1600px] p-4 md:p-8'}
             `}>
                 <ErrorBoundary>
                     <Suspense fallback={<DashboardSkeleton />}>

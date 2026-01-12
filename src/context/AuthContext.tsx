@@ -19,6 +19,7 @@ export interface RoleConfig {
 export interface AuthUser extends User {
     role?: string;
     franchiseId?: string;
+    status?: 'active' | 'pending' | 'banned';
 }
 
 export interface AuthContextType {
@@ -92,6 +93,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     if (finalConfig) {
                         if (finalConfig.role) enhancedUser.role = finalConfig.role;
                         if (finalConfig.franchiseId) enhancedUser.franchiseId = finalConfig.franchiseId;
+                        if (finalConfig.status) enhancedUser.status = finalConfig.status;
                     }
 
                     // 🚑 SELF-HEALING: Ensure role is NEVER undefined
