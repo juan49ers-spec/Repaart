@@ -31,13 +31,14 @@ interface QuickFillModalProps {
     riders: Rider[];
     motos: Moto[];
     weekDays: WeekDay[];
-    existingShifts: any[]; // relaxed type to avoid deep interface mismatch
+    existingShifts?: any[]; // relaxed type to avoid deep interface mismatch
+    onCreateShifts?: (shifts: any[]) => Promise<void>;
 }
 
 type PresetType = 'custom' | 'comida' | 'cena' | 'partido';
 
 const QuickFillModal: React.FC<QuickFillModalProps> = ({
-    isOpen, onClose, onRefresh, franchiseId, riders, motos, weekDays, existingShifts
+    isOpen, onClose, onRefresh, franchiseId, riders, motos, weekDays, existingShifts = [], onCreateShifts
 }) => {
     // Estado local del formulario
     const [selectedRiderId, setSelectedRiderId] = useState('');
@@ -87,39 +88,33 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
             if (!rider) return;
 
             const moto = motos.find(m => m.id === selectedMotoId);
-            const promises: Promise<void>[] = [];
-
-            for (const dayIso of selectedDays) {
-                if (activePreset === 'partido') {
-                    // Turno 1: Comida (12-16)
-                    const s1 = createSafeShift(dayIso, '12', '16');
-                    if (!hasConflict(s1)) {
-                        promises.push(saveShift(rider, moto, s1));
-                    }
-
-                    // Turno 2: Cena (20-24)
-                    const s2 = createSafeShift(dayIso, '20', '24');
-                    if (!hasConflict(s2)) {
-                        promises.push(saveShift(rider, moto, s2));
-                    }
-                } else {
-                    if (parseInt(startHour) >= parseInt(endHour)) {
-                        throw new Error(`Hora inválida el día ${dayIso}`);
-                    }
-                    const s = createSafeShift(dayIso, startHour, endHour);
-                    if (!hasConflict(s)) {
-                        promises.push(saveShift(rider, moto, s));
+            if (onCreateShifts) {
+                const shiftsToCreate = [];
+                for (const dayIso of selectedDays) {
+                    if (activePreset === 'partido') {
+                        shiftsToCreate.push({ ...createSafeShift(dayIso, '12', '16'), date: dayIso, startTime: '12', endTime: '16', riderId: selectedRiderId, riderName: rider.name || rider.email || 'Rider', motoId: selectedMotoId });
+                        shiftsToCreate.push({ ...createSafeShift(dayIso, '20', '24'), date: dayIso, startTime: '20', endTime: '24', riderId: selectedRiderId, riderName: rider.name || rider.email || 'Rider', motoId: selectedMotoId });
+                    } else {
+                        shiftsToCreate.push({ ...createSafeShift(dayIso, startHour, endHour), date: dayIso, startTime: startHour, endTime: endHour, riderId: selectedRiderId, riderName: rider.name || rider.email || 'Rider', motoId: selectedMotoId });
                     }
                 }
+                await onCreateShifts(shiftsToCreate);
+            } else {
+                const promises: Promise<void>[] = [];
+                for (const dayIso of selectedDays) {
+                    if (activePreset === 'partido') {
+                        const s1 = createSafeShift(dayIso, '12', '16');
+                        if (!hasConflict(s1)) promises.push(saveShift(rider, moto, s1));
+                        const s2 = createSafeShift(dayIso, '20', '24');
+                        if (!hasConflict(s2)) promises.push(saveShift(rider, moto, s2));
+                    } else {
+                        const s = createSafeShift(dayIso, startHour, endHour);
+                        if (!hasConflict(s)) promises.push(saveShift(rider, moto, s));
+                    }
+                }
+                await Promise.all(promises);
             }
 
-            if (promises.length === 0) {
-                alert("No se crearon turnos nuevos: Todos los seleccionados ya existen o tienen conflictos.");
-                setIsProcessing(false);
-                return;
-            }
-
-            await Promise.all(promises);
             onRefresh();
             onClose();
         } catch (error: any) {

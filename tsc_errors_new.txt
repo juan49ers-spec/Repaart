@@ -1,5 +1,3 @@
-src/components/dev/Seeder.tsx(4,1): error TS6133: 'db' is declared but its value is never read.
-src/components/dev/Seeder.tsx(5,1): error TS6192: All imports in import declaration are unused.
 src/features/admin/components/MigrationPanel.tsx(6,10): error TS6133: 'Loader' is declared but its value is never read.
 src/features/admin/components/MigrationPanel.tsx(6,28): error TS6133: 'CheckCircle' is declared but its value is never read.
 src/features/admin/components/MigrationPanel.tsx(6,41): error TS6133: 'AlertTriangle' is declared but its value is never read.
@@ -28,18 +26,24 @@ src/features/fleet/vehicles/components/VehicleForm.tsx(52,38): error TS2345: Arg
   Types of parameters 'data' and 'data' are incompatible.
     Type 'TFieldValues' is not assignable to type '{ matricula: string; modelo: string; km_actuales: number; proxima_revision_km: number; estado: "activo" | "mantenimiento" | "baja"; }'.
       Type 'FieldValues' is missing the following properties from type '{ matricula: string; modelo: string; km_actuales: number; proxima_revision_km: number; estado: "activo" | "mantenimiento" | "baja"; }': matricula, modelo, km_actuales, proxima_revision_km, estado
-src/features/operations/OperationsPage.tsx(96,37): error TS2322: Type '{ franchiseId: string; selectedDate: Date; onDateChange: Dispatch<SetStateAction<Date>>; }' is not assignable to type 'IntrinsicAttributes & { franchiseId: string; selectedDate: Date; readOnly?: boolean | undefined; }'.
-  Property 'onDateChange' does not exist on type 'IntrinsicAttributes & { franchiseId: string; selectedDate: Date; readOnly?: boolean | undefined; }'.
-src/features/operations/ShiftPlanner.tsx(395,25): error TS2322: Type '{ isOpen: boolean; onClose: () => void; onCreateShifts: (data: any) => Promise<void>; riders: any; motos: any; weekDays: WeekDay[]; }' is not assignable to type 'IntrinsicAttributes & QuickFillModalProps'.
-  Property 'onCreateShifts' does not exist on type 'IntrinsicAttributes & QuickFillModalProps'.
-src/features/operations/views/ShiftManagerView.tsx(4,116): error TS2339: Property 'DeliveryScheduler' does not exist on type 'typeof import("C:/Users/Usuario/.gemini/antigravity/playground/synthetic-sagan/src/features/scheduler/DeliveryScheduler")'.
-src/features/operations/views/ShiftManagerView.tsx(14,69): error TS6133: 'readOnly' is declared but its value is never read.
+src/features/operations/ShiftPlanner.tsx(392,22): error TS2739: Type '{ isOpen: boolean; onClose: () => void; onCreateShifts: (data: any) => Promise<void>; riders: any; motos: any; weekDays: WeekDay[]; }' is missing the following properties from type 'QuickFillModalProps': onRefresh, franchiseId
 src/features/operations/views/ShiftManagerView.tsx(14,115): error TS6133: 'overrideScheduleState' is declared but its value is never read.
 src/features/operations/WeeklyScheduler.tsx(18,1): error TS6133: 'getWeatherIcon' is declared but its value is never read.
 src/features/operations/WeeklyScheduler.tsx(107,69): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
   Type 'undefined' is not assignable to type 'string'.
-src/features/operations/WeeklyScheduler.tsx(1100,17): error TS2322: Type '{ isOpen: boolean; onClose: () => void; onCreateShifts: any; riders: Rider[]; motos: any; weekDays: { dateObj: Date; label: string; isoDate: string; shortLabel: string; }[]; }' is not assignable to type 'IntrinsicAttributes & QuickFillModalProps'.
-  Property 'onCreateShifts' does not exist on type 'IntrinsicAttributes & QuickFillModalProps'.
+src/features/operations/WeeklyScheduler.tsx(392,61): error TS2345: Argument of type '{ riderId: string | null; startAt: string; endAt: string; id?: string | undefined; shiftId?: string | undefined; riderName?: string | null | undefined; motoId?: string | null | undefined; ... 4 more ...; swapRequested?: boolean | undefined; }[]' is not assignable to parameter of type 'ValidationShift[]'.
+  Type '{ riderId: string | null; startAt: string; endAt: string; id?: string | undefined; shiftId?: string | undefined; riderName?: string | null | undefined; motoId?: string | null | undefined; ... 4 more ...; swapRequested?: boolean | undefined; }' is not assignable to type 'ValidationShift'.
+    Types of property 'riderId' are incompatible.
+      Type 'string | null' is not assignable to type 'string | undefined'.
+        Type 'null' is not assignable to type 'string | undefined'.
+src/features/operations/WeeklyScheduler.tsx(406,63): error TS2345: Argument of type '{ riderId: string | null; startAt: string; endAt: string; id?: string | undefined; shiftId?: string | undefined; riderName?: string | null | undefined; motoId?: string | null | undefined; ... 4 more ...; swapRequested?: boolean | undefined; }[]' is not assignable to parameter of type 'ValidationShift[]'.
+  Type '{ riderId: string | null; startAt: string; endAt: string; id?: string | undefined; shiftId?: string | undefined; riderName?: string | null | undefined; motoId?: string | null | undefined; ... 4 more ...; swapRequested?: boolean | undefined; }' is not assignable to type 'ValidationShift'.
+    Types of property 'riderId' are incompatible.
+      Type 'string | null' is not assignable to type 'string | undefined'.
+        Type 'null' is not assignable to type 'string | undefined'.
+src/features/operations/WeeklyScheduler.tsx(610,36): error TS2538: Type 'null' cannot be used as an index type.
+src/features/operations/WeeklyScheduler.tsx(611,59): error TS2538: Type 'null' cannot be used as an index type.
+src/features/operations/WeeklyScheduler.tsx(1097,14): error TS2739: Type '{ isOpen: boolean; onClose: () => void; onCreateShifts: any; riders: Rider[]; motos: any; weekDays: { dateObj: Date; label: string; isoDate: string; shortLabel: string; }[]; }' is missing the following properties from type 'QuickFillModalProps': onRefresh, franchiseId
 src/features/rider/home/components/SlideToWork.tsx(20,26): error TS6133: 'e' is declared but its value is never read.
 src/features/rider/home/modals/VehicleChecklistModal.tsx(2,27): error TS6133: 'ListChecks' is declared but its value is never read.
 src/features/rider/profile/RiderNotificationsView.tsx(3,21): error TS6133: 'Bell' is declared but its value is never read.
@@ -59,16 +63,5 @@ src/hooks/useFleet.ts(88,50): error TS2345: Argument of type 'Partial<VehicleInp
       Type '"stopped"' is not assignable to type '"active" | "deleted" | "maintenance" | "out_of_service" | undefined'.
 src/hooks/useShiftOperations.ts(102,27): error TS6133: 'start' is declared but its value is never read.
 src/hooks/useWeeklySchedule.ts(3,1): error TS6133: 'UserService' is declared but its value is never read.
-src/hooks/useWeeklySchedule.ts(118,29): error TS2345: Argument of type '(prev: { id: string; startDate: string; status: "draft" | "published" | "completed"; metrics: { totalHours: number; activeRiders: number; motosInUse: number; }; shifts: { riderId: string; riderName: string; ... 6 more ...; notes?: string | undefined; }[]; endDate?: string | undefined; } | null) => { ...; } | null' is not assignable to parameter of type 'SetStateAction<{ id: string; startDate: string; status: "draft" | "published" | "completed"; metrics: { totalHours: number; activeRiders: number; motosInUse: number; }; shifts: { riderId: string; riderName: string; ... 6 more ...; notes?: string | undefined; }[]; endDate?: string | undefined; } | null>'.
-  Type '(prev: { id: string; startDate: string; status: "draft" | "published" | "completed"; metrics: { totalHours: number; activeRiders: number; motosInUse: number; }; shifts: { riderId: string; riderName: string; ... 6 more ...; notes?: string | undefined; }[]; endDate?: string | undefined; } | null) => { ...; } | null' is not assignable to type '(prevState: { id: string; startDate: string; status: "draft" | "published" | "completed"; metrics: { totalHours: number; activeRiders: number; motosInUse: number; }; shifts: { riderId: string; riderName: string; ... 6 more ...; notes?: string | undefined; }[]; endDate?: string | undefined; } | null) => { ...; } | null'.
-    Type '{ shifts: Shift[]; id: string; startDate: string; status: "draft" | "published" | "completed"; metrics: { totalHours: number; activeRiders: number; motosInUse: number; }; endDate?: string | undefined; } | null' is not assignable to type '{ id: string; startDate: string; status: "draft" | "published" | "completed"; metrics: { totalHours: number; activeRiders: number; motosInUse: number; }; shifts: { riderId: string; riderName: string; ... 6 more ...; notes?: string | undefined; }[]; endDate?: string | undefined; } | null'.
-      Type '{ shifts: Shift[]; id: string; startDate: string; status: "draft" | "published" | "completed"; metrics: { totalHours: number; activeRiders: number; motosInUse: number; }; endDate?: string | undefined; }' is not assignable to type '{ id: string; startDate: string; status: "draft" | "published" | "completed"; metrics: { totalHours: number; activeRiders: number; motosInUse: number; }; shifts: { riderId: string; riderName: string; ... 6 more ...; notes?: string | undefined; }[]; endDate?: string | undefined; }'.
-        Types of property 'shifts' are incompatible.
-          Type 'Shift[]' is not assignable to type '{ riderId: string; riderName: string; startAt: string; endAt: string; id?: string | undefined; shiftId?: string | undefined; motoId?: string | null | undefined; motoPlate?: string | null | undefined; notes?: string | undefined; }[]'.
-            Type 'Shift' is not assignable to type '{ riderId: string; riderName: string; startAt: string; endAt: string; id?: string | undefined; shiftId?: string | undefined; motoId?: string | null | undefined; motoPlate?: string | null | undefined; notes?: string | undefined; }'.
-              Types of property 'riderId' are incompatible.
-                Type 'string | null' is not assignable to type 'string'.
-                  Type 'null' is not assignable to type 'string'.
 src/layouts/components/Header.tsx(16,5): error TS6133: 'Bike' is declared but its value is never read.
 src/services/fleet/fleetService.test.ts(2,30): error TS2307: Cannot find module './fleetService' or its corresponding type declarations.
-src/services/migrationService.ts(2,62): error TS6133: 'getDoc' is declared but its value is never read.

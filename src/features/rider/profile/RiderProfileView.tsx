@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { useRiderStore } from '../../../store/useRiderStore';
-import { User, LogOut, ChevronRight, Bell, Shield, HelpCircle, Clock, Zap, TrendingUp } from 'lucide-react';
+import { User, LogOut, ChevronRight, Bell, Shield, HelpCircle, Clock, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
 
@@ -105,7 +105,7 @@ export const RiderProfileView: React.FC = () => {
                             <div className="h-2 bg-slate-900 rounded-full overflow-hidden border border-white/5">
                                 <div
                                     className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.4)] transition-all duration-1000"
-                                    style={{ width: `${stats.percent}%` }}
+                                    style={{ width: `calc(${stats.percent} * 1%)` } as any}
                                 />
                             </div>
                         </div>

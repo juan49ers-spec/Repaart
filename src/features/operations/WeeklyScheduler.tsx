@@ -15,7 +15,6 @@ import { toFranchiseId, toWeekId } from '../../schemas/scheduler';
 import ConfirmationModal from '../../ui/feedback/ConfirmationModal';
 import { getRiderColorMap } from '../../utils/riderColors';
 import { useWeather } from '../../hooks/useWeather';
-import { getWeatherIcon } from '../../utils/weather';
 import { useAuth } from '../../context/AuthContext';
 import { validateWeeklySchedule, generateScheduleFix, generateFullSchedule } from '../../lib/gemini';
 import { BadgeCheck, AlertTriangle, ShieldCheck, Wand2, Sparkles } from 'lucide-react';
@@ -104,7 +103,7 @@ const ShiftPill: React.FC<{
             {/* Hover Delete Action */}
             {!readOnly && (
                 <button
-                    onClick={(e) => { e.stopPropagation(); onDelete(event.shiftId, e); }}
+                    onClick={(e) => { e.stopPropagation(); onDelete(event.shiftId || '', e); }}
                     className="absolute right-0.5 opacity-0 group-hover/pill:opacity-100 transition-opacity bg-white/20 hover:bg-white/40 rounded p-0.5"
                 >
                     <XCircle className="w-3 h-3 text-white" />
@@ -150,7 +149,8 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
         motos,
         navigateWeek,
         saveWeek,
-        updateWeekData
+        updateWeekData,
+        refresh
     } = useWeeklySchedule(franchiseId, readOnly);
 
     // --- UI Local State ---
@@ -607,7 +607,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
         // Fill map with Merging Logic
         Object.keys(visualEvents).forEach(dayKey => {
             visualEvents[dayKey].forEach(ev => {
-                if (riderShiftsMap[ev.riderId]) {
+                if (ev.riderId && riderShiftsMap[ev.riderId]) {
                     const riderDayShifts = riderShiftsMap[ev.riderId][dayKey];
 
                     // Visual Merging: If this shift starts exactly when the last one ended
@@ -1097,6 +1097,8 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
             <QuickFillModal
                 isOpen={isQuickFillOpen}
                 onClose={() => setIsQuickFillOpen(false)}
+                onRefresh={refresh}
+                franchiseId={toFranchiseId(franchiseId)}
                 onCreateShifts={handleQuickFillCreate as any}
                 riders={riders}
                 motos={motos as any}

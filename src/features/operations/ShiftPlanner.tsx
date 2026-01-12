@@ -392,6 +392,8 @@ const ShiftPlanner: FC<ShiftPlannerProps> = ({
                     <QuickFillModal
                         isOpen={modals.quick}
                         onClose={() => setModals(m => ({ ...m, quick: false }))}
+                        onRefresh={refresh}
+                        franchiseId={activeFranchiseId}
                         onCreateShifts={onQuickFillWrapper}
                         riders={riders}
                         motos={motos}

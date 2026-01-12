@@ -149,7 +149,6 @@ const OperationsDashboard: React.FC<OperationsDashboardProps> = () => {
                                 readOnly={isAdmin}
                                 selectedDate={currentDate}
                                 onDateChange={handleDateChange}
-                                overrideScheduleState={filteredScheduleState}
                             />
                         </div>
                     )}

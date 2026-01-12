@@ -30,7 +30,7 @@ export const useVehicleStore = create<VehicleState>((set) => ({
                 modelo: m.brand && m.model ? `${m.brand} ${m.model}` : (m.model || m.modelo),
                 km_actuales: m.currentKm ?? m.km_actuales ?? 0,
                 proxima_revision_km: m.nextRevisionKm ?? m.proxima_revision_km ?? 5000,
-                estado: (m.status === 'active' ? 'activo' : (m.status === 'maintenance' ? 'mantenimiento' : 'baja')) as any,
+                estado: (m.status === 'active' ? 'active' : (m.status === 'maintenance' ? 'maintenance' : 'deleted')) as any,
                 type: 'vehicle',
                 franchise_id: franchiseId
             }));
@@ -52,7 +52,7 @@ export const useVehicleStore = create<VehicleState>((set) => ({
                 modelo: m.brand && m.model ? `${m.brand} ${m.model}` : (m.model || m.modelo),
                 km_actuales: m.currentKm ?? m.km_actuales ?? 0,
                 proxima_revision_km: m.nextRevisionKm ?? m.proxima_revision_km ?? 5000,
-                estado: (m.status === 'active' ? 'activo' : (m.status === 'maintenance' ? 'mantenimiento' : 'baja')) as any,
+                estado: (m.status === 'active' ? 'active' : (m.status === 'maintenance' ? 'maintenance' : 'deleted')) as any,
                 type: 'vehicle',
                 franchise_id: franchiseId
             };
@@ -77,8 +77,8 @@ export const useVehicleStore = create<VehicleState>((set) => ({
             if (updates.km_actuales !== undefined) serviceUpdates.currentKm = updates.km_actuales;
             if (updates.proxima_revision_km !== undefined) serviceUpdates.nextRevisionKm = updates.proxima_revision_km;
             if (updates.estado) {
-                serviceUpdates.status = updates.estado === 'activo' ? 'active' :
-                    (updates.estado === 'mantenimiento' ? 'maintenance' : 'inactive');
+                serviceUpdates.status = updates.estado === 'active' ? 'active' :
+                    (updates.estado === 'maintenance' ? 'maintenance' : 'deleted');
             }
 
             await vehicleService.updateVehicle(id, serviceUpdates);

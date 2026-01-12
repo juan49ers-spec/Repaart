@@ -29,13 +29,16 @@ export const WeekMetricsSchema = z.object({
 export const ShiftSchema = z.object({
     id: z.string().optional(), // Allow missing ID (legacy data)
     shiftId: z.string().optional(), // Accommodate loose data
-    riderId: z.string(),
-    riderName: z.string(),
+    riderId: z.string().nullable(),
+    riderName: z.string().nullable().optional(),
     startAt: z.string(), // Relax datetime to string to avoid timezone parsing crashes during load
     endAt: z.string(),
     motoId: z.string().nullable().optional(),
     motoPlate: z.string().nullable().optional(),
     notes: z.string().optional(),
+    isDraft: z.boolean().optional(),
+    isConfirmed: z.boolean().optional(),
+    swapRequested: z.boolean().optional(),
 });
 
 export const WeekDataSchema = z.object({

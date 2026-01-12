@@ -1,55 +1,31 @@
-﻿src/features/admin/settings/FranchiseProfile.tsx(57,75): error TS6133: 'readOnly' is declared but its value is never read.
-src/features/auth/Login.tsx(4,1): error TS6133: 'createUserWithEmailAndPassword' is declared but its value is never read.
-src/features/auth/Login.tsx(7,10): error TS6133: 'auth' is declared but its value is never read.
-src/features/common/UserManual/manualContent.ts(1,87): error TS6133: 'Settings' is declared but its value is never read.
-src/features/common/UserManual/UserManual.tsx(2,25): error TS6133: 'ManualTopic' is declared but its value is never read.
-src/features/franchise/components/FinancialWorkflowGuide.tsx(3,50): error TS6133: 'AlertTriangle' is declared but its value is never read.
-src/features/franchise/dashboard/WidgetLegendModal.tsx(2,95): error TS6133: 'CheckCircle' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/KPICard.tsx(32,12): error TS6133: 'showDetails' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/KPICard.tsx(32,25): error TS6133: 'setShowDetails' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/RevenueAreaChart.tsx(2,36): error TS6133: 'Target' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/RevenueAreaChart.tsx(2,44): error TS6133: 'Info' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/SimulatorWidgetAdvanced.tsx(2,22): error TS6133: 'TrendingUp' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/SimulatorWidgetAdvanced.tsx(2,34): error TS6133: 'TrendingDown' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/SimulatorWidgetAdvanced.tsx(2,48): error TS6133: 'AlertCircle' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/TakeHomeProfitWidget.tsx(2,36): error TS6133: 'Sparkles' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/TakeHomeProfitWidget.tsx(2,59): error TS6133: 'Target' is declared but its value is never read.
-src/features/franchise/dashboard/widgets/TakeHomeProfitWidget.tsx(33,5): error TS6133: 'trend' is declared but its value is never read.
-src/features/franchise/finance/MonthComparisonModal.tsx(5,92): error TS6133: 'Cell' is declared but its value is never read.
-src/features/franchise/finance/QuickViewPanel.tsx(98,57): error TS6133: 'entry' is declared but its value is never read.
-src/features/franchise/finance/TaxVaultWidget.tsx(16,65): error TS6133: 'minimal' is declared but its value is never read.
-src/features/franchise/finance/TaxVaultWidget.tsx(17,64): error TS6133: 'ivaSoportado' is declared but its value is never read.
-src/features/franchise/FranchiseDashboard.tsx(91,11): error TS6133: 'profit' is declared but its value is never read.
-src/features/franchise/ResourcesPanel.tsx(12,5): error TS6133: 'ShieldAlert' is declared but its value is never read.
-src/features/franchise/ResourcesPanel.tsx(13,5): error TS6133: 'Wrench' is declared but its value is never read.
-src/features/franchise/support/NewTicketForm.tsx(4,46): error TS6133: 'MapPin' is declared but its value is never read.
-src/features/franchise/support/ResourceLibrary.tsx(2,20): error TS6133: 'AlertCircle' is declared but its value is never read.
-src/features/franchise/support/ResourceLibrary.tsx(2,33): error TS6133: 'Settings' is declared but its value is never read.
-src/features/franchise/support/ResourceLibrary.tsx(2,43): error TS6133: 'LifeBuoy' is declared but its value is never read.
-src/features/franchise/support/ResourceLibrary.tsx(2,53): error TS6133: 'Video' is declared but its value is never read.
-src/features/franchise/support/ResourceLibrary.tsx(2,116): error TS6133: 'LucideIcon' is declared but its value is never read.
-src/features/franchise/support/TicketHistory.tsx(4,17): error TS6133: 'CheckCircle' is declared but its value is never read.
-src/features/franchise/support/TicketHistory.tsx(76,11): error TS6133: 'formatDate' is declared but its value is never read.
-src/features/franchise/SupportHub.tsx(9,24): error TS6133: 'Send' is declared but its value is never read.
-src/features/franchise/SupportHub.tsx(9,40): error TS6133: 'Video' is declared but its value is never read.
-src/features/franchise/SupportHub.tsx(9,47): error TS6133: 'Phone' is declared but its value is never read.
-src/features/franchise/wizard/steps/SummaryStep.tsx(5,1): error TS6192: All imports in import declaration are unused.
-src/features/franchise/wizard/steps/SummaryStep.tsx(5,83): error TS2307: Cannot find module '@/utils/financialUtils' or its corresponding type declarations.
-src/features/franchise/wizard/steps/SummaryStep.tsx(10,11): error TS6196: 'SummaryStepProps' is declared but never used.
-src/hooks/useAdminControl.ts(1,31): error TS6133: 'useMemo' is declared but its value is never read.
-src/hooks/useAdminControl.ts(2,45): error TS6133: 'onSnapshot' is declared but its value is never read.
-src/hooks/useAdminControl.ts(2,57): error TS6133: 'orderBy' is declared but its value is never read.
-src/hooks/useAdminControl.ts(7,10): error TS6133: 'startOfMonth' is declared but its value is never read.
-src/hooks/useAdminControl.ts(7,24): error TS6133: 'endOfMonth' is declared but its value is never read.
-src/layouts/components/ViewSwitcher.tsx(145,30): error TS2322: Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ReactNode'.
-src/layouts/components/ViewSwitcher.tsx(154,30): error TS2322: Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ReactNode'.
-src/layouts/components/ViewSwitcher.tsx(163,30): error TS2322: Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ReactNode'.
-src/layouts/components/ViewSwitcher.tsx(170,30): error TS2322: Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ReactNode'.
-src/schemas/scheduler.ts(46,51): error TS2769: No overload matches this call.
-  Overload 1 of 2, '(def: { totalHours: number; activeRiders: number; motosInUse: number; }): ZodDefault<ZodOptional<ZodObject<{ totalHours: ZodDefault<ZodNumber>; activeRiders: ZodDefault<ZodNumber>; motosInUse: ZodDefault<...>; }, $strip>>>', gave the following error.
-    Argument of type '{}' is not assignable to parameter of type '{ totalHours: number; activeRiders: number; motosInUse: number; }'.
-      Type '{}' is missing the following properties from type '{ totalHours: number; activeRiders: number; motosInUse: number; }': totalHours, activeRiders, motosInUse
-  Overload 2 of 2, '(def: () => { totalHours: number; activeRiders: number; motosInUse: number; }): ZodDefault<ZodOptional<ZodObject<{ totalHours: ZodDefault<ZodNumber>; activeRiders: ZodDefault<ZodNumber>; motosInUse: ZodDefault<...>; }, $strip>>>', gave the following error.
-    Argument of type '{}' is not assignable to parameter of type '() => { totalHours: number; activeRiders: number; motosInUse: number; }'.
-      Type '{}' provides no match for the signature '(): { totalHours: number; activeRiders: number; motosInUse: number; }'.
-src/services/sportsService.ts(19,7): error TS6133: 'MOCK_OPPONENTS' is declared but its value is never read.
+src/features/admin/components/MigrationPanel.tsx(6,10): error TS6133: 'Loader' is declared but its value is never read.
+src/features/admin/components/MigrationPanel.tsx(6,28): error TS6133: 'CheckCircle' is declared but its value is never read.
+src/features/admin/components/MigrationPanel.tsx(6,41): error TS6133: 'AlertTriangle' is declared but its value is never read.
+src/features/admin/dashboard/AdminDashboard.tsx(125,21): error TS2322: Type '{ isOpen: boolean; onClose: () => void; onOpenReset: () => void; }' is not assignable to type 'IntrinsicAttributes & DevToolsPanelProps'.
+  Property 'onOpenReset' does not exist on type 'IntrinsicAttributes & DevToolsPanelProps'.
+src/features/admin/users/UserManagementPanel.tsx(12,1): error TS6133: 'MigrationPanel' is declared but its value is never read.
+src/features/fleet/vehicles/components/VehicleForm.tsx(4,48): error TS6133: 'VehicleStatusEnum' is declared but its value is never read.
+src/features/fleet/vehicles/components/VehicleForm.tsx(28,9): error TS2322: Type 'Resolver<{ matricula: string; modelo: string; km_actuales: number; proxima_revision_km: number; estado?: "activo" | "mantenimiento" | "baja" | undefined; }, any, { matricula: string; modelo: string; km_actuales: number; proxima_revision_km: number; estado: "activo" | ... 1 more ... | "baja"; }>' is not assignable to type 'Resolver<{ matricula: string; modelo: string; km_actuales: number; proxima_revision_km: number; estado: "activo" | "mantenimiento" | "baja"; }, any, { matricula: string; modelo: string; km_actuales: number; proxima_revision_km: number; estado: "activo" | ... 1 more ... | "baja"; }>'.
+  Types of parameters 'options' and 'options' are incompatible.
+    Type 'ResolverOptions<{ matricula: string; modelo: string; km_actuales: number; proxima_revision_km: number; estado: "activo" | "mantenimiento" | "baja"; }>' is not assignable to type 'ResolverOptions<{ matricula: string; modelo: string; km_actuales: number; proxima_revision_km: number; estado?: "activo" | "mantenimiento" | "baja" | undefined; }>'.
+      Type '"activo" | "mantenimiento" | "baja" | undefined' is not assignable to type '"activo" | "mantenimiento" | "baja"'.
+        Type 'undefined' is not assignable to type '"activo" | "mantenimiento" | "baja"'.
+src/features/fleet/vehicles/components/VehicleForm.tsx(52,38): error TS2345: Argument of type '(data: VehicleFormValues) => Promise<void>' is not assignable to parameter of type 'SubmitHandler<TFieldValues>'.
+  Types of parameters 'data' and 'data' are incompatible.
+    Type 'TFieldValues' is not assignable to type '{ matricula: string; modelo: string; km_actuales: number; proxima_revision_km: number; estado: "activo" | "mantenimiento" | "baja"; }'.
+      Type 'FieldValues' is missing the following properties from type '{ matricula: string; modelo: string; km_actuales: number; proxima_revision_km: number; estado: "activo" | "mantenimiento" | "baja"; }': matricula, modelo, km_actuales, proxima_revision_km, estado
+src/features/operations/FleetManager.tsx(57,13): error TS2322: Type 'VehicleStatus' is not assignable to type '"active" | "deleted" | "maintenance" | "out_of_service" | undefined'.
+  Type '"stopped"' is not assignable to type '"active" | "deleted" | "maintenance" | "out_of_service" | undefined'.
+src/features/operations/views/ShiftManagerView.tsx(14,115): error TS6133: 'overrideScheduleState' is declared but its value is never read.
+src/features/operations/WeeklyScheduler.tsx(18,1): error TS6133: 'getWeatherIcon' is declared but its value is never read.
+src/features/rider/home/components/SlideToWork.tsx(20,26): error TS6133: 'e' is declared but its value is never read.
+src/features/rider/home/modals/VehicleChecklistModal.tsx(2,27): error TS6133: 'ListChecks' is declared but its value is never read.
+src/features/rider/profile/RiderNotificationsView.tsx(3,21): error TS6133: 'Bell' is declared but its value is never read.
+src/features/scheduler/components/CoverageFooter.tsx(43,31): error TS6133: 'isPrime' is declared but its value is never read.
+src/features/scheduler/components/SchedulerSidebar.tsx(2,10): error TS6133: 'User' is declared but its value is never read.
+src/features/scheduler/components/SchedulerSidebar.tsx(2,16): error TS6133: 'MapPin' is declared but its value is never read.
+src/features/scheduler/components/SchedulerSidebar.tsx(2,30): error TS6133: 'Car' is declared but its value is never read.
+src/hooks/useShiftOperations.ts(102,27): error TS6133: 'start' is declared but its value is never read.
+src/hooks/useWeeklySchedule.ts(3,1): error TS6133: 'UserService' is declared but its value is never read.
+src/layouts/components/Header.tsx(16,5): error TS6133: 'Bike' is declared but its value is never read.
+src/services/fleet/fleetService.test.ts(2,30): error TS2307: Cannot find module './fleetService' or its corresponding type declarations.

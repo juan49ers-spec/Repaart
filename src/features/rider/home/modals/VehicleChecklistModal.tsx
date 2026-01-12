@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, CheckCircle2, ListChecks, Check } from 'lucide-react';
+import { X, CheckCircle2, Check } from 'lucide-react';
 import { cn } from '../../../../lib/utils'; // Adjust path if needed
 
 interface VehicleChecklistModalProps {

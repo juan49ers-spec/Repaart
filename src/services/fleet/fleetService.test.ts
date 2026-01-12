@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { FleetService } from './fleetService';
+import { FleetService } from '../fleetService';
 import { MotoSchema } from '../../schemas/fleet';
 import { toFranchiseId } from '../../schemas/scheduler';
 import { setDoc } from 'firebase/firestore';

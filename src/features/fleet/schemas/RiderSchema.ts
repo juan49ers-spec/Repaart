@@ -22,11 +22,9 @@ export const riderSchema = z.object({
         .optional()
         .or(z.literal('')), // Allow empty string which will be treated as undefined
 
-    contractHours: z.coerce
-        .number()
+    contractHours: z.number()
         .min(0, 'Las horas no pueden ser negativas')
         .max(168, 'Imposible trabajar más de 168h')
-        .default(40)
 });
 
 export type RiderFormValues = z.infer<typeof riderSchema>;

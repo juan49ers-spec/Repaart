@@ -5,7 +5,7 @@ import { useFleet, Vehicle, VehicleInput } from '../../hooks/useFleet';
 import { Timestamp } from 'firebase/firestore';
 
 // Define VehicleStatus locally to match hook definition
-type VehicleStatus = 'active' | 'maintenance' | 'stopped' | 'sold';
+type VehicleStatus = 'active' | 'maintenance' | 'deleted' | 'out_of_service';
 
 export interface FleetManagerProps {
     franchiseId?: string | null;
@@ -163,8 +163,8 @@ const FleetManager: React.FC<FleetManagerProps> = ({ franchiseId: propFranchiseI
                                 <select name="status" className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none">
                                     <option value="active">🟢 Activo</option>
                                     <option value="maintenance">🟠 Mantenimiento</option>
-                                    <option value="stopped">⚫ Detenido (Stopped)</option>
-                                    <option value="sold">🔴 Vendido</option>
+                                    <option value="out_of_service">⚫ Fuera de Servicio</option>
+                                    <option value="deleted">🔴 Baja</option>
                                 </select>
                             </div>
 
@@ -191,7 +191,8 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, onEdit, readOnly }) 
     const statusColors: Record<string, string> = {
         active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
         maintenance: 'bg-amber-50 text-amber-700 border-amber-200',
-        inactive: 'bg-slate-50 text-slate-500 border-slate-200'
+        out_of_service: 'bg-slate-100 text-slate-600 border-slate-200',
+        deleted: 'bg-rose-50 text-rose-700 border-rose-200'
     };
 
     return (

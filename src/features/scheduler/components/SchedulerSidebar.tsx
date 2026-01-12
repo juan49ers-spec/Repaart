@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, MapPin, Bike, Car, Clock } from 'lucide-react';
+import { Bike, Clock } from 'lucide-react';
 import { Rider, Shift } from '../../../hooks/useWeeklySchedule';
 
 interface SchedulerSidebarProps {

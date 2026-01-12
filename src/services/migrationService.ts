@@ -1,5 +1,5 @@
 import { db } from '../lib/firebase';
-import { collection, getDocs, writeBatch, doc, query, where, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, doc, query, where, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 export const migrationService = {
     /**

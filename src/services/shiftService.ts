@@ -31,6 +31,17 @@ export interface Shift {
     motoId: string | null;
     motoPlate: string;
     franchiseId: string;
+    // Fields for Cockpit V3 & Interactions
+    status?: 'scheduled' | 'active' | 'completed';
+    actualStart?: string;
+    actualEnd?: string;
+    isConfirmed?: boolean;
+    swapRequested?: boolean;
+    isDraft?: boolean;
+    // For legacy/migration compatibility
+    _ghostBusted?: any;
+    _migrated?: boolean;
+    _migratedFrom?: string;
 }
 
 export interface ShiftInput {
@@ -41,6 +52,9 @@ export interface ShiftInput {
     motoPlate?: string;
     startAt: string; // ISO string
     endAt: string;   // ISO string
+    status?: 'scheduled' | 'active' | 'completed';
+    isConfirmed?: boolean;
+    swapRequested?: boolean;
 }
 
 // =====================================================
@@ -87,7 +101,13 @@ export const shiftService = {
                     riderName: data.riderName ?? data.rider_name ?? 'Sin asignar',
                     motoId: data.motoId ?? data.vehicle_id ?? null,
                     motoPlate: data.motoPlate ?? data.vehicle_plate ?? '',
-                    franchiseId: data.franchiseId ?? data.franchise_id
+                    franchiseId: data.franchiseId ?? data.franchise_id,
+                    status: data.status || 'scheduled',
+                    isConfirmed: data.isConfirmed || false,
+                    swapRequested: data.swapRequested || false,
+                    isDraft: data.isDraft || false,
+                    actualStart: data.actualStart ? toLocalISOString(data.actualStart.toDate()) : undefined,
+                    actualEnd: data.actualEnd ? toLocalISOString(data.actualEnd.toDate()) : undefined
                 };
             });
             callback(shifts);
@@ -106,7 +126,8 @@ export const shiftService = {
             startAt: Timestamp.fromDate(new Date(shiftData.startAt)),
             endAt: Timestamp.fromDate(new Date(shiftData.endAt)),
             createdAt: serverTimestamp(),
-            type: 'standard'
+            type: 'standard',
+            status: 'scheduled'
         };
         await addDoc(collection(db, COLLECTION), payload);
     },
@@ -123,6 +144,10 @@ export const shiftService = {
         if (updates.startAt) payload.startAt = Timestamp.fromDate(new Date(updates.startAt));
         if (updates.endAt) payload.endAt = Timestamp.fromDate(new Date(updates.endAt));
 
+        if (updates.status) payload.status = updates.status;
+        if (updates.isConfirmed !== undefined) payload.isConfirmed = updates.isConfirmed;
+        if (updates.swapRequested !== undefined) payload.swapRequested = updates.swapRequested;
+
         payload.updatedAt = serverTimestamp();
 
         const ref = doc(db, COLLECTION, shiftId);
@@ -131,6 +156,52 @@ export const shiftService = {
 
     deleteShift: async (shiftId: string): Promise<void> => {
         await deleteDoc(doc(db, COLLECTION, shiftId));
+    },
+
+    /**
+     * Start Shift (Clock In)
+     */
+    startShift: async (shiftId: string): Promise<void> => {
+        const ref = doc(db, COLLECTION, shiftId);
+        await updateDoc(ref, {
+            status: 'active',
+            actualStart: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        });
+    },
+
+    /**
+     * End Shift (Clock Out)
+     */
+    endShift: async (shiftId: string): Promise<void> => {
+        const ref = doc(db, COLLECTION, shiftId);
+        await updateDoc(ref, {
+            status: 'completed',
+            actualEnd: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        });
+    },
+
+    /**
+     * Confirm Shift (Rider)
+     */
+    confirmShift: async (shiftId: string): Promise<void> => {
+        const ref = doc(db, COLLECTION, shiftId);
+        await updateDoc(ref, {
+            isConfirmed: true,
+            updatedAt: serverTimestamp()
+        });
+    },
+
+    /**
+     * Request Swap (Rider)
+     */
+    requestSwap: async (shiftId: string, requested: boolean): Promise<void> => {
+        const ref = doc(db, COLLECTION, shiftId);
+        await updateDoc(ref, {
+            swapRequested: requested,
+            updatedAt: serverTimestamp()
+        });
     },
 
     /**
@@ -169,7 +240,12 @@ export const shiftService = {
                     riderName: data.riderName ?? data.rider_name ?? 'Sin asignar',
                     motoId: data.motoId ?? data.vehicle_id ?? null,
                     motoPlate: data.motoPlate ?? data.vehicle_plate ?? '',
-                    franchiseId: data.franchiseId ?? data.franchise_id
+                    franchiseId: data.franchiseId ?? data.franchise_id,
+                    status: data.status || 'scheduled',
+                    isConfirmed: data.isConfirmed || false,
+                    swapRequested: data.swapRequested || false,
+                    actualStart: data.actualStart ? toLocalISOString(data.actualStart.toDate()) : undefined,
+                    actualEnd: data.actualEnd ? toLocalISOString(data.actualEnd.toDate()) : undefined
                 };
             });
             shifts.sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
@@ -212,7 +288,11 @@ export const shiftService = {
                 riderName: data.riderName ?? data.rider_name ?? 'Sin asignar',
                 motoId: data.motoId ?? data.vehicle_id ?? null,
                 motoPlate: data.motoPlate ?? data.vehicle_plate ?? '',
-                franchiseId: data.franchiseId ?? data.franchise_id
+                franchiseId: data.franchiseId ?? data.franchise_id,
+                status: data.status || 'scheduled',
+                isConfirmed: data.isConfirmed || false,
+                swapRequested: data.swapRequested || false,
+                isDraft: data.isDraft || false
             };
         });
     }

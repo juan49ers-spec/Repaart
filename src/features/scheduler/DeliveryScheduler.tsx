@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Zap, Sun, Moon, CloudRain, Shield, Trophy, Flag, Save, Loader2, X, Plus, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Zap, CloudRain, Shield, Trophy, Flag, Save, Loader2, Clock } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { getRiderInitials } from '../../utils/colorPalette';
 import { toLocalDateString, toLocalISOString } from '../../utils/dateUtils';
@@ -21,7 +21,7 @@ import { migrationService } from '../../services/migrationService';
 const DeliveryScheduler: React.FC<{
     franchiseId: string;
     selectedDate: Date;
-    onDateChange: (date: Date) => void;
+    onDateChange?: (date: Date) => void;
     readOnly?: boolean;
 }> = ({ franchiseId, selectedDate, onDateChange, readOnly }) => {
     const { user } = useAuth();
@@ -44,9 +44,18 @@ const DeliveryScheduler: React.FC<{
     const {
         weekData,
         loading,
-        navigateWeek: changeWeek,
+        navigateWeek,
         motos
     } = useWeeklySchedule(safeFranchiseId, readOnly, selectedDate);
+
+    const changeWeek = (direction: number) => {
+        if (onDateChange) {
+            const newDate = addDays(selectedDate, direction * 7);
+            onDateChange(newDate);
+        } else {
+            navigateWeek(direction);
+        }
+    };
 
     // --- DRAFT MODE STATE ---
     const [localShifts, setLocalShifts] = useState<any[]>([]);
@@ -293,11 +302,25 @@ const DeliveryScheduler: React.FC<{
                 <div className="px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-6">
                         <div className="flex items-center gap-1">
-                            <button onClick={() => changeWeek(-1)} className="p-2 hover:bg-slate-100 rounded-full transition-all text-slate-500"><ChevronLeft size={20} /></button>
+                            <button
+                                onClick={() => changeWeek(-1)}
+                                className="p-2 hover:bg-slate-100 rounded-full transition-all text-slate-500"
+                                aria-label="Semana anterior"
+                                title="Semana anterior"
+                            >
+                                <ChevronLeft size={20} />
+                            </button>
                             <span className="px-2 text-lg font-medium text-slate-900 capitalize">
                                 {format(selectedDate, 'MMMM yyyy', { locale: es })}
                             </span>
-                            <button onClick={() => changeWeek(1)} className="p-2 hover:bg-slate-100 rounded-full transition-all text-slate-500"><ChevronRight size={20} /></button>
+                            <button
+                                onClick={() => changeWeek(1)}
+                                className="p-2 hover:bg-slate-100 rounded-full transition-all text-slate-500"
+                                aria-label="Semana siguiente"
+                                title="Semana siguiente"
+                            >
+                                <ChevronRight size={20} />
+                            </button>
                         </div>
 
                         <div className="flex bg-slate-100/50 p-1 rounded-full border border-slate-100">
@@ -314,7 +337,12 @@ const DeliveryScheduler: React.FC<{
                         <button onClick={() => setIsQuickFillOpen(true)} className="px-5 py-2 bg-indigo-600 text-white text-xs font-medium rounded-full hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-lg shadow-indigo-100">
                             <Zap size={14} className="fill-white/20" /> Relleno Rápido
                         </button>
-                        <button onClick={() => migrationService.cleanDuplicateShifts(safeFranchiseId).then(r => alert(`Limpio: ${r.count}`))} className="p-2 text-slate-300 hover:text-slate-500 rounded-full hover:bg-slate-50 transition-colors">
+                        <button
+                            onClick={() => migrationService.cleanDuplicateShifts(safeFranchiseId).then(r => alert(`Limpio: ${r.count}`))}
+                            className="p-2 text-slate-300 hover:text-slate-500 rounded-full hover:bg-slate-50 transition-colors"
+                            aria-label="Limpiar turnos duplicados"
+                            title="Limpiar duplicados"
+                        >
                             <Shield size={18} />
                         </button>
                     </div>
@@ -353,7 +381,7 @@ const DeliveryScheduler: React.FC<{
                                     {viewingToday && currentTime.getHours() === h && (
                                         <div
                                             className="absolute top-2 w-3 h-3 bg-red-500 rounded-full shadow-sm z-50 -translate-x-1/2"
-                                            style={{ left: `${(currentTime.getMinutes() / 60) * 100}%` }}
+                                            style={{ left: `calc(${(currentTime.getMinutes() / 60) * 100} * 1%)` } as any}
                                         />
                                     )}
                                 </th>
@@ -380,7 +408,7 @@ const DeliveryScheduler: React.FC<{
                                                 <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-50">
                                                     <div
                                                         className={cn("h-full transition-all duration-500", rider.totalWeeklyHours < (rider.contractHours * 0.5) ? "bg-amber-400" : rider.totalWeeklyHours <= rider.contractHours ? "bg-emerald-500" : "bg-rose-500")}
-                                                        style={{ width: `${Math.min((rider.totalWeeklyHours / rider.contractHours) * 100, 100)}%` }}
+                                                        style={{ width: `calc(${Math.min((rider.totalWeeklyHours / rider.contractHours) * 100, 100)} * 1%)` } as any}
                                                     />
                                                 </div>
                                             </div>
@@ -421,28 +449,28 @@ const DeliveryScheduler: React.FC<{
                                         <div className="absolute inset-0 flex">
                                             {hours.map(h => (
                                                 <div key={h} className={cn("flex-1 border-r border-slate-100/50 relative cursor-crosshair transition-colors", showPrime && ((h >= 13 && h <= 15) || (h >= 20 && h <= 23)) ? "bg-amber-100/30" : "hover:bg-slate-50/30")} onClick={() => handleQuickAdd(toLocalDateString(selectedDate), rider.id, h)} onDoubleClick={() => handleAddShift(toLocalDateString(selectedDate), rider.id, h)}>
-                                                    {rider.shifts.filter((s: any) => {
-                                                        const sStart = new Date(s.startAt);
-                                                        const sEnd = new Date(s.endAt);
+                                                    {rider.shifts.filter((shift: any) => {
+                                                        const sStart = new Date(shift.startAt);
+                                                        const sEnd = new Date(shift.endAt);
                                                         if (toLocalDateString(sStart) !== toLocalDateString(selectedDate)) return false;
                                                         const start = sStart.getHours();
                                                         const end = sEnd.getHours();
                                                         const endM = sEnd.getMinutes();
                                                         const realEnd = (end === 0 && endM === 0) ? 24 : end;
                                                         return h >= start && h < realEnd;
-                                                    }).map(s => {
-                                                        const sStart = new Date(s.startAt);
+                                                    }).map((shift: any) => {
+                                                        const sStart = new Date(shift.startAt);
                                                         const isStart = sStart.getHours() === h;
-                                                        const isDraft = s.isDraft;
+                                                        const isDraft = shift.isDraft;
 
                                                         return (
                                                             <div
-                                                                key={s.id}
-                                                                onClick={(e) => { e.stopPropagation(); handleEditShift(s); }}
+                                                                key={shift.id}
+                                                                onClick={(e) => { e.stopPropagation(); handleEditShift(shift); }}
                                                                 className={cn(
                                                                     "absolute top-0 h-full w-[calc(100%+1px)] -right-[0.5px] z-10 flex items-center select-none transition-all cursor-pointer shadow-sm border-t border-white/20",
                                                                     isStart ? "rounded-l-lg pl-2" : "rounded-l-none",
-                                                                    (new Date(s.endAt).getHours() === h + 1 || (new Date(s.endAt).getHours() === 0 && h === 23)) ? "rounded-r-lg" : "rounded-r-none",
+                                                                    (new Date(shift.endAt).getHours() === h + 1 || (new Date(shift.endAt).getHours() === 0 && h === 23)) ? "rounded-r-lg" : "rounded-r-none",
                                                                     isDraft
                                                                         ? "bg-white border-2 border-dashed border-indigo-400 text-indigo-600 z-20"
                                                                         : (sStart.getHours() < 15 ? "bg-gradient-to-b from-emerald-400 to-emerald-500 text-white" : "bg-gradient-to-b from-blue-500 to-blue-600 text-white")
@@ -450,7 +478,7 @@ const DeliveryScheduler: React.FC<{
                                                             >
                                                                 {isStart && (
                                                                     <span className="text-[10px] font-medium tracking-tight whitespace-nowrap overflow-visible z-20 text-white/90 drop-shadow-sm">
-                                                                        {format(sStart, 'HH:mm')} - {format(new Date(s.endAt), 'HH:mm')}
+                                                                        {format(sStart, 'HH:mm')} - {format(new Date(shift.endAt), 'HH:mm')}
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -461,7 +489,7 @@ const DeliveryScheduler: React.FC<{
                                             {viewingToday && (
                                                 <div
                                                     className="absolute top-0 bottom-0 border-l-[2px] border-red-500 z-50 pointer-events-none transition-all"
-                                                    style={{ left: `${redLinePosition}%` }}
+                                                    style={{ left: `calc(${redLinePosition} * 1%)` } as any}
                                                 />
                                             )}
                                         </div>

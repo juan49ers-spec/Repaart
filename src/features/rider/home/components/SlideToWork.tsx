@@ -17,7 +17,7 @@ export const SlideToWork: React.FC<SlideToWorkProps> = ({
     const containerRef = useRef<HTMLDivElement>(null);
     const [completed, setCompleted] = useState(false);
 
-    const handleStart = (e: React.MouseEvent | React.TouchEvent) => {
+    const handleStart = (_e: React.MouseEvent | React.TouchEvent) => {
         if (disabled || completed) return;
         setIsDragging(true);
     };

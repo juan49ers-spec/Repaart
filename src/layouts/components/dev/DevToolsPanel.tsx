@@ -35,6 +35,7 @@ import SchedulerInspector from './SchedulerInspector';
 interface DevToolsPanelProps {
     isOpen: boolean;
     onClose: () => void;
+    onOpenReset?: () => void;
 }
 
 interface ToolButtonProps {
@@ -123,7 +124,8 @@ const ToolButton: React.FC<ToolButtonProps> = ({ icon, title, description, usage
 
 const DevToolsPanel: React.FC<DevToolsPanelProps> = ({
     isOpen,
-    onClose
+    onClose,
+    onOpenReset
 }) => {
     const [activeSection, setActiveSection] = useState<string | null>('health');
     const [isExecuting, setIsExecuting] = useState(false);
@@ -427,6 +429,20 @@ const DevToolsPanel: React.FC<DevToolsPanelProps> = ({
                                         }}
                                         variant="amber"
                                     />
+
+                                    {onOpenReset && (
+                                        <ToolButton
+                                            icon={<Trash2 className="w-4 h-4" />}
+                                            title="System Reset"
+                                            description="Ir al panel de reinicio del sistema"
+                                            usage="Te redirige a la pestaña de Reset para realizar operaciones de limpieza profunda o reinicio de base de datos."
+                                            onClick={() => {
+                                                onOpenReset();
+                                                onClose();
+                                            }}
+                                            variant="red"
+                                        />
+                                    )}
 
 
                                 </div>

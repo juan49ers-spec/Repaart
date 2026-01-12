@@ -12,6 +12,8 @@ interface RiderState {
     fetchMyShifts: (riderId: string) => void;
     setCurrentDate: (date: Date) => void;
     setSelectedDate: (date: Date) => void;
+    // Optimistic Update
+    updateLocalShift: (shiftId: string, updates: Partial<Shift>) => void;
 }
 
 export const useRiderStore = create<RiderState>((set) => {
@@ -25,6 +27,10 @@ export const useRiderStore = create<RiderState>((set) => {
 
         setCurrentDate: (date: Date) => set({ currentDate: date }),
         setSelectedDate: (date: Date) => set({ selectedDate: date }),
+
+        updateLocalShift: (shiftId: string, updates: Partial<Shift>) => set(state => ({
+            myShifts: state.myShifts.map(s => s.shiftId === shiftId ? { ...s, ...updates } : s)
+        })),
 
         fetchMyShifts: (riderId: string) => {
             set({ isLoading: true });

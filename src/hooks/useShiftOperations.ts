@@ -99,7 +99,6 @@ export const useShiftOperations = (
                     // However, avoiding duplicates is better.
                     // Let's assume the user wants to fill these specific slots.
 
-                    const start = new Date(date); // date string 'YYYY-MM-DD' works with new Date() usually as UTC or Local depending on browser, 
                     // better to construct safely if possible, but params.date comes from format(..., 'yyyy-MM-dd') in Scheduler.
                     // Actually, 'yyyy-MM-dd' + 'T' + HH:mm... is safer.
 

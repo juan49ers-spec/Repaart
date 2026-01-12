@@ -62,21 +62,23 @@ export const RidersView: React.FC<RidersViewProps> = ({ franchiseId }) => {
         {
             header: 'Estado',
             cell: (rider) => {
-                const statusColors = {
+                const statusColors: Record<string, string> = {
                     active: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
                     inactive: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400',
                     on_route: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
                     maintenance: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+                    deleted: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
                 };
-                const labels = {
+                const labels: Record<string, string> = {
                     active: 'Activo',
                     inactive: 'Inactivo',
                     on_route: 'En Ruta',
-                    maintenance: 'Mantenimiento'
+                    maintenance: 'Mantenimiento',
+                    deleted: 'Eliminado'
                 };
                 return (
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[rider.status]}`}>
-                        {labels[rider.status]}
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[rider.status] || statusColors.inactive}`}>
+                        {labels[rider.status] || rider.status}
                     </span>
                 );
             }

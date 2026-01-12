@@ -40,7 +40,6 @@ export const CoverageFooter: React.FC<CoverageFooterProps> = ({ shifts, selected
                     {Array.from({ length: 24 }).map((_, hour) => {
                         const count = coverage[hour];
                         const required = demandCurve[hour] || 0;
-                        const isPrime = required > 2;
 
                         // Status Color
                         let bgClass = "bg-slate-50";

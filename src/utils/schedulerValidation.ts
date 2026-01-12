@@ -12,8 +12,8 @@ interface ValidationShift {
     startAt: string;
     endAt: string;
     shiftId?: string;
-    riderId?: string;
-    riderName?: string;
+    riderId?: string | null;
+    riderName?: string | null;
     motoAssignments?: MotoAssignment[];
 }
 
@@ -82,7 +82,10 @@ export const findRiderConflict = (
     const conflict = existingShifts.find(shift => {
         if (ignoreShiftId && shift.shiftId === ignoreShiftId) return false;
 
-        // Mismo Rider en un turno *diferente* (aunque el riderId sea el mismo en new y existing)
+        // Skip if either shift is unassigned (riderId null/undefined)
+        if (!shift.riderId || !newShift.riderId) return false;
+
+        // Mismo Rider en un turno *diferente*
         if (shift.riderId !== newShift.riderId) return false;
 
         const existingStart = new Date(shift.startAt).getTime();

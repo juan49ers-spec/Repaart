@@ -126,7 +126,7 @@ export const SmartStartButton: React.FC<SmartStartButtonProps> = ({ shiftId, fra
                         onScan={(result) => {
                             if (result) handleScan(result);
                         }}
-                        onError={(error) => console.log(error?.message)}
+                        onError={(error: any) => console.log(error?.message)}
                         // options={{
                         //     delayBetweenScanAttempts: 300,
                         // }}

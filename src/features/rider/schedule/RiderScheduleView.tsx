@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks } from 'date-fns';
+import React, { useState, useEffect, useMemo } from 'react';
+import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks, isWithinInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import MobileAgendaView from '../../operations/MobileAgendaView';
-import { shiftService, Shift } from '../../../services/shiftService';
 import { useAuth } from '../../../context/AuthContext';
+import { useRiderStore } from '../../../store/useRiderStore';
 
 // Helper to generate day columns
 const getWeekDays = (start: Date) => {
@@ -18,64 +18,67 @@ const getWeekDays = (start: Date) => {
     });
 };
 
-const RiderScheduleView: React.FC = () => {
+export const RiderScheduleView: React.FC = () => {
     const { user } = useAuth();
+    const { myShifts, fetchMyShifts } = useRiderStore();
     const [selectedDate, setSelectedDate] = useState(new Date());
-    const [shifts, setShifts] = useState<Shift[]>([]);
-    const [expandedShiftId, setExpandedShiftId] = useState<string | null>(null);
 
     // Calculate Week Range
     const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 }); // Monday start
     const weekEnd = endOfWeek(selectedDate, { weekStartsOn: 1 });
     const agendaDays = getWeekDays(weekStart);
 
-    // Fetch Shifts Real-time
+    // Fetch Shifts via Store (Centralized)
     useEffect(() => {
-        if (!user?.uid) return;
+        if (user?.uid) {
+            fetchMyShifts(user.uid);
+        }
+    }, [user, fetchMyShifts]);
 
-        // Subscribe to my shifts for the designated week range
-        const unsubscribe = shiftService.getMyShifts(
-            user.uid,
-            weekStart,
-            weekEnd,
-            (data) => {
-                setShifts(data);
-            }
+    // Filter Shifts for Selected Week
+    const visualEvents = useMemo(() => {
+        // Filter shifts that fall within the current week view
+        const weeklyShifts = myShifts.filter(s =>
+            isWithinInterval(new Date(s.startAt), { start: weekStart, end: weekEnd })
         );
 
-        return () => unsubscribe();
-    }, [user?.uid, weekStart, weekEnd]);
+        return weeklyShifts.reduce((acc, shift) => {
+            const dateKey = shift.date; // shift.date is YYYY-MM-DD
+            if (!acc[dateKey]) acc[dateKey] = [];
 
-    // Transform Shifts for MobileAgendaView
-    const visualEvents = shifts.reduce((acc, shift) => {
-        const dateKey = shift.date; // shift.date is YYYY-MM-DD
-        if (!acc[dateKey]) acc[dateKey] = [];
-
-        // Map shift to the format expected by ShiftCard/MobileAgendaView
-        acc[dateKey].push({
-            shiftId: shift.shiftId,
-            riderId: shift.riderId,
-            riderName: shift.riderName,
-            startAt: shift.startAt,
-            endAt: shift.endAt,
-            visualStart: new Date(shift.startAt),
-            visualEnd: new Date(shift.endAt),
-            motoAssignments: shift.motoId ? [{
-                motoId: shift.motoId,
-                plate: shift.motoPlate,
+            // Map shift to the format expected by ShiftCard/MobileAgendaView
+            acc[dateKey].push({
+                shiftId: shift.shiftId,
+                riderId: shift.riderId,
+                riderName: shift.riderName,
                 startAt: shift.startAt,
-                endAt: shift.endAt
-            }] : []
-        });
-        return acc;
-    }, {} as Record<string, any[]>);
+                endAt: shift.endAt,
+                visualStart: new Date(shift.startAt),
+                visualEnd: new Date(shift.endAt),
+                isConfirmed: shift.isConfirmed || false,
+                swapRequested: shift.swapRequested || false,
+                motoAssignments: shift.motoId ? [{
+                    motoId: shift.motoId,
+                    plate: shift.motoPlate,
+                    startAt: shift.startAt,
+                    endAt: shift.endAt
+                }] : []
+            });
+            return acc;
+        }, {} as Record<string, any[]>);
+    }, [myShifts, weekStart, weekEnd]);
 
     // Calculate Weekly Metrics
-    const totalHours = shifts.reduce((acc, s) => {
-        const start = new Date(s.startAt).getTime();
-        const end = new Date(s.endAt).getTime();
-        return acc + (end - start) / (1000 * 60 * 60);
-    }, 0);
+    const totalHours = useMemo(() => {
+        const weeklyShifts = myShifts.filter(s =>
+            isWithinInterval(new Date(s.startAt), { start: weekStart, end: weekEnd })
+        );
+        return weeklyShifts.reduce((acc, s) => {
+            const start = new Date(s.startAt).getTime();
+            const end = new Date(s.endAt).getTime();
+            return acc + (end - start) / (1000 * 60 * 60);
+        }, 0);
+    }, [myShifts, weekStart, weekEnd]);
 
     const handlePrevWeek = () => setSelectedDate(d => subWeeks(d, 1));
     const handleNextWeek = () => setSelectedDate(d => addWeeks(d, 1));
@@ -86,7 +89,11 @@ const RiderScheduleView: React.FC = () => {
             <div className="sticky top-0 z-30 -mx-4 px-4 py-6 glass-premium border-b border-white/10 shadow-2xl">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
-                        <button onClick={handlePrevWeek} className="p-2 hover:bg-white/5 rounded-full transition-colors text-slate-400">
+                        <button
+                            onClick={handlePrevWeek}
+                            className="p-2 hover:bg-white/5 rounded-full transition-colors text-slate-400"
+                            aria-label="Semana anterior"
+                        >
                             <ChevronLeft size={20} />
                         </button>
                         <div className="text-center">
@@ -95,7 +102,11 @@ const RiderScheduleView: React.FC = () => {
                                 {format(weekStart, 'd MMM')} - {format(weekEnd, 'd MMM', { locale: es })}
                             </p>
                         </div>
-                        <button onClick={handleNextWeek} className="p-2 hover:bg-white/5 rounded-full transition-colors text-slate-400">
+                        <button
+                            onClick={handleNextWeek}
+                            className="p-2 hover:bg-white/5 rounded-full transition-colors text-slate-400"
+                            aria-label="Semana siguiente"
+                        >
                             <ChevronRight size={20} />
                         </button>
                     </div>
@@ -112,12 +123,11 @@ const RiderScheduleView: React.FC = () => {
             <MobileAgendaView
                 days={agendaDays}
                 visualEvents={visualEvents}
-                onEditShift={(s) => setExpandedShiftId(expandedShiftId === s.shiftId ? null : s.shiftId)}
+                onEditShift={() => { }}
                 onDeleteShift={() => { }}
                 onAddShift={() => { }}
-                readOnly={true}
+                readOnly={false}
                 isRiderMode={true}
-                expandedShiftId={expandedShiftId}
             />
         </div>
     );

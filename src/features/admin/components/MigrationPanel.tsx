@@ -3,7 +3,7 @@ import { collection, getDocs, doc, setDoc, getDoc, serverTimestamp } from 'fireb
 import { db } from '../../../lib/firebase';
 import { Button } from '../../../ui/primitives/Button';
 import { Card } from '../../../ui/primitives/Card';
-import { Loader, Database, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Database } from 'lucide-react';
 
 export const MigrationPanel: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);

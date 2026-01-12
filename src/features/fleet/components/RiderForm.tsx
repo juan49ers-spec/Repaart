@@ -55,7 +55,7 @@ export const RiderForm: React.FC<RiderFormProps> = ({ onSuccess, onCancel, initi
         try {
             const payload = {
                 ...data,
-                contractHours: Number(data.contractHours) || 40 // Ensure numeric persistence
+                contractHours: data.contractHours || 40 // Default handled by schema but good for safety
             };
 
             if (initialData?.id) {
@@ -180,7 +180,7 @@ export const RiderForm: React.FC<RiderFormProps> = ({ onSuccess, onCancel, initi
                 </label>
                 <div className="relative">
                     <input
-                        {...register('contractHours')}
+                        {...register('contractHours', { valueAsNumber: true })}
                         type="number"
                         className={`
                             w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 

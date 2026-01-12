@@ -1,7 +1,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { VehicleFormValues, VehicleFormSchema, VehicleStatusEnum } from '../schemas/VehicleSchema';
+import { VehicleFormValues, VehicleFormSchema } from '../schemas/VehicleSchema';
 import { Button } from '../../../../ui/primitives/Button';
 import { useVehicleStore } from '../../../../store/useVehicleStore';
 // Use a hardcoded franchiseId for now or get from context context, but usually passed via props or store
@@ -31,16 +31,16 @@ export const VehicleForm: React.FC<VehicleFormProps> = ({ onSuccess, onCancel, i
             modelo: '',
             km_actuales: 0,
             proxima_revision_km: 5000,
-            estado: 'activo'
+            estado: 'active'
         }
     });
 
     const onSubmit = async (data: VehicleFormValues) => {
         try {
             if (initialData?.id) {
-                await updateVehicle(initialData.id, data);
+                await updateVehicle(initialData.id, data as any);
             } else {
-                await addVehicle(franchiseId, data);
+                await addVehicle(franchiseId, data as any);
             }
             onSuccess();
         } catch (error) {
@@ -148,9 +148,10 @@ export const VehicleForm: React.FC<VehicleFormProps> = ({ onSuccess, onCancel, i
                     {...register('estado')}
                     className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
                 >
-                    <option value="activo">Activo</option>
-                    <option value="mantenimiento">Mantenimiento</option>
-                    <option value="baja">Baja</option>
+                    <option value="active">Activo</option>
+                    <option value="maintenance">Mantenimiento</option>
+                    <option value="out_of_service">Fuera de Servicio</option>
+                    <option value="deleted">Baja</option>
                 </select>
                 {errors.estado && (
                     <p className="text-xs text-red-500">{errors.estado.message}</p>

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { WeekService } from '../services/scheduler/weekService';
-import { UserService } from '../services/users/userService';
 import { FleetService } from '../services/fleetService';
 import { shiftService } from '../services/shiftService';
 import {

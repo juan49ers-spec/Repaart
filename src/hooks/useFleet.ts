@@ -6,26 +6,17 @@ import { useToast } from './useToast';
 // TYPES & INTERFACES
 // =====================================================
 
-export interface Vehicle {
-    id?: string;
-    plate: string;
-    model: string;
+import { Moto, MotoStatus } from '../schemas/fleet';
+
+export interface Vehicle extends Omit<Moto, 'id'> {
+    id: string; // useFleet expects id to be string, Moto has branded MotoId
     alias?: string;
-    status: 'active' | 'maintenance' | 'stopped' | 'sold';
-    currentKm: number;
-    nextRevisionKm: number;
-    franchise_id: string;
     [key: string]: unknown;
 }
 
-export interface VehicleInput {
-    plate: string;
-    model: string;
-    alias?: string;
-    status?: 'active' | 'maintenance' | 'stopped' | 'sold';
-    currentKm?: number;
-    nextRevisionKm?: number;
-}
+export type VehicleInput = Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt' | 'franchiseId' | 'status'> & {
+    status?: MotoStatus;
+};
 
 export interface UseFleetReturn {
     vehicles: Vehicle[];
@@ -56,8 +47,8 @@ export const useFleet = (franchiseId: string | null | undefined): UseFleetReturn
         setLoading(true);
 
         // Iniciamos la escucha
-        const unsubscribe = fleetService.subscribeToFleet(franchiseId, (data: Vehicle[]) => {
-            setVehicles(data);
+        const unsubscribe = fleetService.subscribeToFleet(franchiseId, (data: Moto[]) => {
+            setVehicles(data as unknown as Vehicle[]);
             setLoading(false);
             setError(null);
         });
@@ -72,7 +63,7 @@ export const useFleet = (franchiseId: string | null | undefined): UseFleetReturn
         if (!franchiseId) return false;
 
         try {
-            await fleetService.addVehicle(franchiseId, data);
+            await fleetService.createVehicle(franchiseId, data);
             toast?.success('Vehículo añadido correctamente');
             return true;
         } catch (err) {

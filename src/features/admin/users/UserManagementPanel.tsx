@@ -9,7 +9,6 @@ import UserTable from './UserTable';
 import CriticalActionModal from '../../../ui/overlays/CriticalActionModal';
 import CreateUserModal, { CreateUserInput, UpdateUserInput } from './CreateUserModal';
 import { UserProfile } from '../../../services/userService';
-import { MigrationPanel } from '../../admin/components/MigrationPanel';
 
 // --- SUB-COMPONENTS (Local for now to keep orchestrator clean) ---
 

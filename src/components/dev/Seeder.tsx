@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { fleetService } from '../../services/fleetService';
-import { db } from '../../lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Database, Loader2, CheckCircle } from 'lucide-react';
 
 const MOCK_RIDERS = [
