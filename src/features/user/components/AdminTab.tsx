@@ -179,7 +179,7 @@ const AdminTab: React.FC<AdminTabProps> = () => {
                             </div>
 
                             <div className="mt-6 flex justify-between items-center text-[10px] text-slate-600 border-t border-white/5 pt-4">
-                                <p>© REP-AART OS V4.2 - KERNEL: REACT_FIREBASE_HYBRID</p>
+                                <p>© REP-AART OS V3.13.0 - KERNEL: REACT_FIREBASE_HYBRID</p>
                                 <button className="hover:text-white transition-colors uppercase font-bold tracking-widest">Download Full History</button>
                             </div>
                         </div>
