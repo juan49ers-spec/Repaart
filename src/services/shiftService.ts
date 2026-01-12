@@ -37,6 +37,8 @@ export interface Shift {
     actualEnd?: string;
     isConfirmed?: boolean;
     swapRequested?: boolean;
+    changeRequested?: boolean;
+    changeReason?: string | null;
     isDraft?: boolean;
 }
 
@@ -51,6 +53,8 @@ export interface ShiftInput {
     status?: 'scheduled' | 'active' | 'completed';
     isConfirmed?: boolean;
     swapRequested?: boolean;
+    changeRequested?: boolean;
+    changeReason?: string | null;
 }
 
 // =====================================================
@@ -142,6 +146,16 @@ export const shiftService = {
         if (updates.isConfirmed !== undefined) payload.isConfirmed = updates.isConfirmed;
         if (updates.swapRequested !== undefined) payload.swapRequested = updates.swapRequested;
 
+        // Auto-resolve change requests on manual update
+        if (updates.changeRequested !== undefined) {
+            payload.changeRequested = updates.changeRequested;
+            payload.changeReason = updates.changeReason ?? null;
+        } else {
+            // If it's a general update (admin editing), we reset the flags
+            payload.changeRequested = false;
+            payload.changeReason = null;
+        }
+
         payload.updatedAt = serverTimestamp();
 
         const ref = doc(db, COLLECTION, shiftId);
@@ -187,13 +201,22 @@ export const shiftService = {
         });
     },
 
-    /**
-     * Request Swap (Rider)
-     */
     requestSwap: async (shiftId: string, requested: boolean): Promise<void> => {
         const ref = doc(db, COLLECTION, shiftId);
         await updateDoc(ref, {
             swapRequested: requested,
+            updatedAt: serverTimestamp()
+        });
+    },
+
+    /**
+     * Request Change (Rider)
+     */
+    requestChange: async (shiftId: string, requested: boolean, reason?: string): Promise<void> => {
+        const ref = doc(db, COLLECTION, shiftId);
+        await updateDoc(ref, {
+            changeRequested: requested,
+            changeReason: requested ? (reason || 'Sin motivo') : null,
             updatedAt: serverTimestamp()
         });
     },

@@ -21,6 +21,9 @@ export interface ShiftEvent {
     visualEnd: Date;
     isConfirmed?: boolean;
     swapRequested?: boolean;
+    changeRequested?: boolean;
+    changeReason?: string | null;
+    franchiseId?: string;
     motoAssignments?: MotoAssignment[];
 }
 
@@ -60,19 +63,19 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
 
     // Sync local state with props
     const [localConfirmed, setLocalConfirmed] = useState(propConfirmed || false);
-    const [localRequested, setLocalRequested] = useState(propRequested || false);
+    const [localRequested, setLocalRequested] = useState(event.changeRequested || false);
 
     useEffect(() => {
         setLocalConfirmed(propConfirmed || false);
     }, [propConfirmed]);
 
     useEffect(() => {
-        setLocalRequested(propRequested || false);
-    }, [propRequested]);
+        setLocalRequested(event.changeRequested || false);
+    }, [event.changeRequested]);
 
     // Effective state
     const isConfirmed = localConfirmed;
-    const swapRequested = localRequested;
+    const changeRequested = localRequested;
 
     // Get rider color
     const riderColor = getRiderColor(riderId || '');
@@ -136,16 +139,35 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
         }
     };
 
-    const handleSwapRequest = async (e: React.MouseEvent) => {
+    const handleRequestChange = async (e: React.MouseEvent) => {
         e.stopPropagation();
         if (isProcessing) return;
         setIsProcessing(true);
-        const nextState = !swapRequested;
+        const nextState = !changeRequested;
+
+        let reason = "";
+        if (nextState) {
+            reason = window.prompt("¿Cuál es el motivo del cambio? (Opcional)") || "";
+        }
+
         setLocalRequested(nextState); // Optimistic
         try {
-            await shiftService.requestSwap(event.shiftId, nextState);
+            await shiftService.requestChange(event.shiftId, nextState, reason);
+            if (nextState) {
+                // Generate notification for franchise
+                await notificationService.notifyRiderAction(
+                    event.franchiseId || '', // Need to ensure franchiseId is in event
+                    riderId || '',
+                    {
+                        type: 'shift_change_request',
+                        title: 'Solicitud de Cambio de Turno',
+                        message: `El rider ${riderName} solicita cambio para el turno del ${new window.Date(event.startAt).toLocaleDateString()}. Motivo: ${reason || 'N/A'}`,
+                        relatedShiftId: event.shiftId
+                    }
+                );
+            }
         } catch (err) {
-            console.error("Error swapping shift:", err);
+            console.error("Error requesting change:", err);
             setLocalRequested(!nextState);
         } finally {
             setIsProcessing(false);
@@ -167,7 +189,7 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                 // Conflict State
                 hasConflict
                     ? 'bg-red-50/90 backdrop-blur-md border-red-200 shadow-[0_8px_30px_rgb(239,68,68,0.15)] hover:border-red-300'
-                    : swapRequested
+                    : changeRequested
                         ? 'bg-amber-50/80 border-amber-400 border-dashed shadow-lg scale-[1.02]'
                         : cn(
                             "hover:z-50 shadow-sm hover:shadow-xl hover:-translate-y-1",
@@ -320,17 +342,17 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
 
                         {/* Swap Button */}
                         <button
-                            onClick={handleSwapRequest}
+                            onClick={handleRequestChange}
                             disabled={isProcessing}
                             className={cn(
                                 "flex items-center justify-center gap-1.5 py-2 px-1 rounded-lg text-[10px] font-bold transition-all min-h-[44px] active:scale-95 disabled:opacity-50",
-                                swapRequested
+                                changeRequested
                                     ? "bg-amber-100 text-amber-700 border border-amber-200"
                                     : "bg-white text-slate-500 hover:text-amber-600 hover:bg-amber-50 border border-slate-100"
                             )}
                         >
-                            <RefreshCw size={14} className={cn(swapRequested && "animate-spin-slow")} />
-                            {swapRequested ? "Cancelar" : "Cambiar"}
+                            <RefreshCw size={14} className={cn(changeRequested && "animate-spin-slow")} />
+                            {changeRequested ? "Cancelar" : "Cambiar"}
                         </button>
                     </div>
                 )}

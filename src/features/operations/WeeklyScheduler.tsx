@@ -17,7 +17,7 @@ import { getRiderColorMap } from '../../utils/riderColors';
 import { useWeather } from '../../hooks/useWeather';
 import { useAuth } from '../../context/AuthContext';
 import { validateWeeklySchedule, generateScheduleFix, generateFullSchedule } from '../../lib/gemini';
-import { BadgeCheck, AlertTriangle, ShieldCheck, Wand2, Sparkles } from 'lucide-react';
+import { BadgeCheck, AlertTriangle, ShieldCheck, Wand2, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useOperationsIntel, intelService } from '../../services/intelService';
 
 const getDayDemandLevel = (dayDate: string, dayIntel: any[]) => {
@@ -45,12 +45,16 @@ interface VisualEvent extends Shift {
     visualStart: Date;
     visualEnd: Date;
     isContinuation: boolean;
+    isConfirmed?: boolean;
+    changeRequested?: boolean;
+    changeReason?: string | null;
     layout?: any;
 }
 
 interface ShiftEvent extends VisualEvent {
     riderId: string;
     riderName: string;
+    franchiseId: string;
 }
 
 // --- V13 SUB-COMPONENTS ---
@@ -62,12 +66,16 @@ const ShiftPill: React.FC<{
     riderColor?: { bg: string, border: string, text: string };
     readOnly?: boolean;
 }> = ({ event, onClick, onDelete, riderColor, readOnly }) => {
+    const isConfirmed = event.isConfirmed;
+    const changeRequested = event.changeRequested;
+    const changeReason = event.changeReason;
     const duration = getShiftDuration(event.startAt, event.endAt);
     const startTime = event.visualStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const endTime = event.visualEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     // Premium Gradient Logic based on duration/type
     const getGradientClass = () => {
+        if (changeRequested) return "bg-gradient-to-r from-amber-400 to-amber-500 border-amber-300 shadow-amber-500/30 ring-amber-200/50";
         if (riderColor?.bg?.includes('rose')) return "bg-gradient-to-r from-rose-500 to-rose-600 border-rose-400/50 shadow-rose-500/20";
         if (riderColor?.bg?.includes('amber')) return "bg-gradient-to-r from-amber-500 to-amber-600 border-amber-400/50 shadow-amber-500/20";
         if (riderColor?.bg?.includes('emerald')) return "bg-gradient-to-r from-emerald-500 to-emerald-600 border-emerald-400/50 shadow-emerald-500/20";
@@ -85,7 +93,7 @@ const ShiftPill: React.FC<{
                 "hover:scale-[1.02] hover:shadow-lg hover:z-50 active:scale-95 hover:brightness-110",
                 "ring-1 ring-white/10"
             )}
-            title={`${event.riderName} | ${startTime} - ${endTime} (${duration}h)`}
+            title={`${event.riderName} | ${startTime} - ${endTime} (${duration}h)${changeRequested ? ` | MOTIVO: ${changeReason || 'Sin motivo'}` : ''}`}
         >
             {/* Glossy Overlay */}
             <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
@@ -98,6 +106,16 @@ const ShiftPill: React.FC<{
                 <span className="text-[8px] font-bold text-white/80 truncate">
                     {startTime}-{endTime}
                 </span>
+                {isConfirmed && (
+                    <div className="w-3 h-3 bg-white/20 rounded-full flex items-center justify-center ml-1">
+                        <CheckCircle2 className="w-2 h-2 text-white" />
+                    </div>
+                )}
+                {changeRequested && (
+                    <div className="w-3 h-3 bg-white/20 rounded-full flex items-center justify-center ml-1 animate-pulse">
+                        <AlertTriangle className="w-2 h-2 text-white" />
+                    </div>
+                )}
             </div>
 
             {/* Hover Delete Action */}
@@ -550,6 +568,10 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                     visualDate: startDay,
                     visualStart: start,
                     visualEnd: end,
+                    isConfirmed: shift.isConfirmed || false,
+                    changeRequested: shift.changeRequested || false,
+                    changeReason: shift.changeReason || null,
+                    franchiseId: shift.franchiseId,
                     isContinuation: false
                 });
             } else {
@@ -561,6 +583,10 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                     visualDate: startDay,
                     visualStart: start,
                     visualEnd: endOfDay,
+                    isConfirmed: shift.isConfirmed || false,
+                    changeRequested: shift.changeRequested || false,
+                    changeReason: shift.changeReason || null,
+                    franchiseId: shift.franchiseId,
                     isContinuation: false
                 });
 
@@ -571,6 +597,10 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                     visualDate: endDay,
                     visualStart: startOfNextDay,
                     visualEnd: end,
+                    isConfirmed: shift.isConfirmed || false,
+                    changeRequested: shift.changeRequested || false,
+                    changeReason: shift.changeReason || null,
+                    franchiseId: shift.franchiseId,
                     isContinuation: true
                 });
             }

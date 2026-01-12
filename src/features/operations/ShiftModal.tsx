@@ -47,6 +47,8 @@ interface ShiftModalProps {
         startAt: string;
         endAt: string;
         motoAssignments?: { motoId: string }[];
+        changeRequested?: boolean;
+        changeReason?: string | null;
     } | null;
     selectedDate?: string;
     prefillHour?: number;
@@ -214,7 +216,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                             </p>
                         </div>
                     </div>
-                    <button onClick={onClose} disabled={isSaving} className="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                    <button onClick={onClose} disabled={isSaving} className="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" title="Cerrar modal" aria-label="Cerrar">
                         <X size={20} />
                     </button>
                 </div>
@@ -227,6 +229,22 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                         <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl text-sm border border-red-100 dark:border-red-900/30">
                             <AlertCircle className="w-5 h-5 shrink-0" />
                             <p>{error}</p>
+                        </div>
+                    )}
+
+                    {/* CHANGE REQUEST HIGHLIGHT */}
+                    {initialData?.changeRequested && (
+                        <div className="flex flex-col gap-2 p-4 bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-400 rounded-xl text-sm border-2 border-amber-200 dark:border-amber-900/50 shadow-sm animate-in zoom-in-95 duration-300">
+                            <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-[10px]">
+                                <AlertCircle className="w-4 h-4" />
+                                Solicitud de Cambio del Rider
+                            </div>
+                            <p className="font-medium italic bg-white/50 dark:bg-slate-800/50 p-2 rounded-lg border border-amber-100 dark:border-amber-900/30">
+                                "{initialData.changeReason || 'Sin motivo especificado'}"
+                            </p>
+                            <p className="text-[9px] opacity-70">
+                                * Guardar cambios en este turno marcará el conflicto como resuelto.
+                            </p>
                         </div>
                     )}
 

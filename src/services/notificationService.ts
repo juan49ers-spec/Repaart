@@ -1,7 +1,7 @@
 import { db } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 
-export type NotificationType = 'FINANCE_CLOSING' | 'RATE_CHANGE' | 'SUPPORT_TICKET' | 'UNLOCK_REQUEST' | 'MONTH_UNLOCKED' | 'UNLOCK_REJECTED' | 'ALERT' | 'PREMIUM_SERVICE_REQUEST';
+export type NotificationType = 'FINANCE_CLOSING' | 'RATE_CHANGE' | 'SUPPORT_TICKET' | 'UNLOCK_REQUEST' | 'MONTH_UNLOCKED' | 'UNLOCK_REJECTED' | 'ALERT' | 'PREMIUM_SERVICE_REQUEST' | 'shift_confirmed' | 'shift_change_request' | 'incident';
 export type NotificationPriority = 'low' | 'normal' | 'high';
 
 export interface NotificationPayload {
@@ -14,6 +14,8 @@ export interface NotificationPayload {
     metadata?: Record<string, any>;
     read: boolean;
     createdAt?: any;
+    riderId?: string;
+    relatedShiftId?: string;
 }
 
 export const notificationService = {
@@ -93,6 +95,38 @@ export const notificationService = {
             await addDoc(collection(db, 'notifications'), payload);
         } catch (error) {
             console.error('[NotificationService] Failed to notify franchise:', error);
+        }
+    },
+
+    /**
+     * Notify about Rider Actions (Shift changes/incidents)
+     */
+    notifyRiderAction: async (
+        franchiseId: string,
+        riderId: string,
+        data: {
+            type: 'shift_confirmed' | 'shift_change_request' | 'incident';
+            title: string;
+            message: string;
+            relatedShiftId?: string;
+        }
+    ) => {
+        try {
+            const payload = {
+                userId: franchiseId, // Mapping franchiseId to userId for UI visibility
+                franchiseId,
+                riderId,
+                type: data.type,
+                title: data.title,
+                message: data.message,
+                relatedShiftId: data.relatedShiftId || null,
+                read: false,
+                createdAt: serverTimestamp()
+            };
+            // According to schema, this goes to 'notifications' collection
+            await addDoc(collection(db, 'notifications'), payload);
+        } catch (error) {
+            console.error('[NotificationService] Failed to notify rider action:', error);
         }
     }
 };

@@ -136,8 +136,10 @@ const Notifications: React.FC<NotificationsProps> = ({ isAdmin = false }) => {
                 navigate('/admin/support');
             }
         } else {
-            // Legacy link support
-            if (notification.link) {
+            if (notification.type === 'shift_change_request' || notification.type === 'incident') {
+                // Navigate to scheduler
+                navigate('/operations'); // Or a more specific path if available
+            } else if (notification.link) {
                 window.location.href = notification.link;
             }
         }
@@ -153,6 +155,9 @@ const Notifications: React.FC<NotificationsProps> = ({ isAdmin = false }) => {
             case 'MONTH_UNLOCKED': return <div className={`${baseClass} bg-emerald-50 text-emerald-600 border-emerald-100`}><Check className="w-4 h-4" /></div>;
             case 'UNLOCK_REJECTED': return <div className={`${baseClass} bg-rose-50 text-rose-600 border-rose-100`}><ShieldAlert className="w-4 h-4" /></div>;
             case 'GUIDE_TIP': return <div className={`${baseClass} bg-indigo-50 text-indigo-600 border-indigo-100`}><BookOpen className="w-4 h-4" /></div>;
+            case 'shift_change_request': return <div className={`${baseClass} bg-amber-50 text-amber-600 border-amber-100 shadow-sm animate-pulse`}><AlertTriangle className="w-4 h-4" /></div>;
+            case 'shift_confirmed': return <div className={`${baseClass} bg-emerald-50 text-emerald-600 border-emerald-100`}><Check className="w-4 h-4" /></div>;
+            case 'incident': return <div className={`${baseClass} bg-rose-50 text-rose-600 border-rose-100 animate-bounce`}><ShieldAlert className="w-4 h-4" /></div>;
             default: return <div className={`${baseClass} ${read ? 'bg-slate-50 text-slate-400 border-slate-100' : 'bg-indigo-50 text-indigo-500 border-indigo-100'}`}><Bell className="w-4 h-4" /></div>;
         }
     };
@@ -227,6 +232,12 @@ const Notifications: React.FC<NotificationsProps> = ({ isAdmin = false }) => {
                                             {item.type === 'MONTH_UNLOCKED' && (
                                                 <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded inline-block">
                                                     <span>Ir al Histórico</span>
+                                                    <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                                                </div>
+                                            )}
+                                            {(item.type === 'shift_change_request' || item.type === 'incident') && (
+                                                <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded inline-block">
+                                                    <span>Ver en Horario</span>
                                                     <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                                                 </div>
                                             )}
