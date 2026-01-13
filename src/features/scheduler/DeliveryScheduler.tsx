@@ -1,13 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Zap, Shield, Save, Loader2, Clock, Sparkles, Filter, BadgeCheck, AlertTriangle, ShieldCheck, Wand2, XCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Zap, Save, Loader2, Clock, BadgeCheck, AlertTriangle, ShieldCheck, Wand2, XCircle } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { getRiderInitials } from '../../utils/colorPalette';
-import { toLocalDateString, toLocalISOString, toLocalISOStringWithOffset, getStartOfWeek } from '../../utils/dateUtils';
+import { toLocalDateString, toLocalISOString, toLocalISOStringWithOffset } from '../../utils/dateUtils';
 import ShiftModal from '../../features/operations/ShiftModal';
 import QuickFillModal from '../../features/operations/QuickFillModal';
 import MobileAgendaView from '../../features/operations/MobileAgendaView';
 
-import { useWeeklySchedule, WeekData, Shift } from '../../hooks/useWeeklySchedule';
+import { useWeeklySchedule } from '../../hooks/useWeeklySchedule';
 import { useAuth } from '../../context/AuthContext';
 import { getRiderColor } from '../../utils/riderColors';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
@@ -16,11 +16,8 @@ import { es } from 'date-fns/locale';
 import { useFleetStore } from '../../store/useFleetStore';
 import { useVehicleStore } from '../../store/useVehicleStore';
 import { shiftService } from '../../services/shiftService';
-import { migrationService } from '../../services/migrationService';
 import { notificationService } from '../../services/notificationService';
-import { validateWeeklySchedule, generateScheduleFix, generateFullSchedule } from '../../lib/gemini';
-import { WeekService } from '../../services/scheduler/weekService';
-import { toFranchiseId, toWeekId } from '../../schemas/scheduler';
+import { validateWeeklySchedule, generateScheduleFix } from '../../lib/gemini';
 
 console.log('📦 ARCHIVO DeliveryScheduler.tsx CARGADO EN EL NAVEGADOR');
 
@@ -51,9 +48,6 @@ const DeliveryScheduler: React.FC<{
     } | null>(null);
     const [isAuditing, setIsAuditing] = useState(false);
     const [isFixing, setIsFixing] = useState(false);
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [showGenModal, setShowGenModal] = useState(false);
-    const [genPrompt, setGenPrompt] = useState('');
 
     // Update time every minute for the Red Line
     useEffect(() => {
@@ -270,57 +264,6 @@ const DeliveryScheduler: React.FC<{
         }
     };
 
-    const handleGeneration = async () => {
-        if (!genPrompt.trim()) return;
-        setIsGenerating(true);
-        try {
-            const startDate = toLocalDateString(getStartOfWeek(selectedDate));
-            const endDate = toLocalDateString(addDays(getStartOfWeek(selectedDate), 6));
-
-            const result = await generateFullSchedule(
-                genPrompt,
-                rosterRiders || [],
-                startDate,
-                endDate
-            );
-
-            if (result && result.shifts.length > 0) {
-                const apply = window.confirm(`He generado ${result.shifts.length} turnos:\n\n${result.explanation}\n\n¿Aplicar al cuadrante?`);
-
-                if (apply) {
-                    const newDrafts = result.shifts.map(s => {
-                        const startD = new Date(s.startDay);
-                        startD.setHours(s.startHour, 0, 0, 0);
-                        const endD = new Date(startD);
-                        endD.setHours(s.startHour + s.duration, 0, 0, 0);
-
-                        return {
-                            id: `draft-gen-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-                            shiftId: `draft-gen-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-                            riderId: s.riderId,
-                            riderName: rosterRiders.find(r => r.id === s.riderId)?.fullName || 'Rider',
-                            motoId: null,
-                            motoPlate: null,
-                            startAt: toLocalISOStringWithOffset(startD),
-                            endAt: toLocalISOStringWithOffset(endD),
-                            isDraft: true,
-                            isNew: true
-                        };
-                    });
-
-                    setLocalShifts(prev => [...prev, ...newDrafts]);
-                    setShowGenModal(false);
-                    setGenPrompt('');
-                }
-            }
-        } catch (e) {
-            console.error(e);
-            alert("Error generando horario");
-        } finally {
-            setIsGenerating(false);
-        }
-    };
-
     // --- EVENT SIMULATION ---
     const days = useMemo(() => {
         const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
@@ -512,10 +455,6 @@ const DeliveryScheduler: React.FC<{
                             <div className="flex items-center gap-1 p-0.5 bg-slate-100/50 rounded-full border border-slate-200">
                                 <button onClick={() => setIsQuickFillOpen(true)} className="px-3 py-1.5 text-slate-600 hover:text-indigo-600 hover:bg-white rounded-full transition-all text-xs font-medium flex items-center gap-2">
                                     <Zap size={14} className="fill-slate-300" /> Relleno
-                                </button>
-                                <div className="w-px h-4 bg-slate-300/50" />
-                                <button onClick={() => setShowGenModal(true)} className="px-3 py-1.5 text-slate-600 hover:text-violet-600 hover:bg-white rounded-full transition-all text-xs font-medium flex items-center gap-2">
-                                    <Sparkles size={14} className="text-amber-400" /> IA Mágica
                                 </button>
                             </div>
                         </div>

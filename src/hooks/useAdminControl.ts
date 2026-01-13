@@ -12,7 +12,7 @@ export interface PendingAction {
     type: 'ticket' | 'premium' | 'record' | 'alert';
     title: string;
     subtitle: string;
-    priority: string;
+    priority: 'critical' | 'low' | 'normal' | 'high';
 }
 
 export interface Franchise {
@@ -208,14 +208,20 @@ export const useAdminControl = (monthKey?: string) => {
                             records: pendingRecords.length,
                             alerts: unreadAlerts,
                             list: [
-                                ...standardTickets.map(t => ({ id: t.id as string, type: 'ticket' as const, title: t.subject, subtitle: t.email || 'Sin email', priority: t.urgency || 'low' })),
-                                ...premiumTickets.map(t => ({ id: t.id as string, type: 'premium' as const, title: t.subject, subtitle: 'Solicitud Premium', priority: 'high' })),
-                                ...pendingRecords.map(r => ({
+                                ...standardTickets.map((t): PendingAction => ({
+                                    id: t.id as string,
+                                    type: 'ticket' as const,
+                                    title: t.subject,
+                                    subtitle: t.email || 'Sin email',
+                                    priority: (t.urgency === 'medium' ? 'normal' : (t.urgency || 'low')) as 'critical' | 'low' | 'normal' | 'high'
+                                })),
+                                ...premiumTickets.map((t): PendingAction => ({ id: t.id as string, type: 'premium' as const, title: t.subject, subtitle: 'Solicitud Premium', priority: 'high' as const })),
+                                ...pendingRecords.map((r): PendingAction => ({
                                     id: r.id,
                                     type: 'record' as const,
                                     title: 'Cierre Mensual',
                                     subtitle: `Sede: ${franchiseMap.get(r.franchise_id) || r.franchise_id}`,
-                                    priority: 'normal'
+                                    priority: 'normal' as const
                                 }))
                             ].slice(0, 10)
                         },

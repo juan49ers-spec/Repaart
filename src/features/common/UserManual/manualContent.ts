@@ -3,18 +3,9 @@ import {
     LayoutDashboard,
     DollarSign,
     Calendar,
-    Truck,
-    LifeBuoy,
-    GraduationCap,
     Users,
     Settings,
-    FolderOpen,
-    Activity,
-    Shield,
-    Search,
-    FileText,
-    AlertTriangle,
-    CheckCircle
+    FolderOpen
 } from 'lucide-react';
 
 export interface ManualTopic {

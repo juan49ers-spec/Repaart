@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import { ToastContext } from '../../../context/contexts';
 // import { useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray, SubmitHandler } from 'react-hook-form';
@@ -58,7 +58,7 @@ interface FranchiseProfileProps {
 
 const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
     const { user, isAdmin } = useAuth();
-    const toastCtx = useContext(ToastContext);
+    const { addToast } = useContext(ToastContext) || { addToast: () => { } };
     // const navigate = useNavigate(); // Removed unused
 
     // If no franchiseId provided, we assume we are editing the current user's franchise profile

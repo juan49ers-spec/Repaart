@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { doc, onSnapshot, collection, query, where, getDocs } from 'firebase/firestore';
+import { onSnapshot, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase'; // Correct path for this project
 
 export interface FinancialData {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, ArrowRight } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import DashboardSkeleton from '../../../ui/layout/DashboardSkeleton';
 import EmptyState from '../../../ui/feedback/EmptyState';
 import { useAdminControl } from '../../../hooks/useAdminControl';

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { AlertOctagon, TrendingDown, EyeOff, CheckCircle } from 'lucide-react';
+import { AlertOctagon, CheckCircle } from 'lucide-react';
 
 interface Franchise {
     id: string;
@@ -44,7 +44,7 @@ const IntelligenceWidget: React.FC<IntelligenceWidgetProps> = ({ franchises, loa
         franchises.forEach(f => {
             const revenue = f.metrics?.revenue || 0;
             const margin = f.metrics?.margin || 0;
-            const expenses = 0; // In a real scenario, we'd pull expenses from the report object if available
+            // const expenses = 0; // In a real scenario, we'd pull expenses from the report object if available
             // Note: metrics.margin is already (Profit/Revenue)*100. So Profit = Revenue * (Margin/100). 
             // Expenses = Revenue - Profit. 
             // Simplified check: Low margin = High expense relative to revenue.
@@ -86,7 +86,7 @@ const IntelligenceWidget: React.FC<IntelligenceWidgetProps> = ({ franchises, loa
         });
 
         // Sort by severity (Critical operations first)
-        return detected.sort((a, b) => a.type === 'inactive' ? -1 : 1).slice(0, 4); // Show max 4
+        return detected.sort((a, _) => a.type === 'inactive' ? -1 : 1).slice(0, 4); // Show max 4
     }, [franchises]);
 
     if (loading) {

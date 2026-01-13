@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Zap, MapPin, Server, Users, AlertCircle } from 'lucide-react';
+import { Calendar, Zap } from 'lucide-react';
 import { IntellectualEvent } from '../../../../services/intelService';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -53,8 +53,8 @@ const ControlEventsWidget: React.FC<ControlEventsWidgetProps> = ({ events, loadi
                                     } transition-colors`} />
 
                                 <div className={`flex gap-3 p-3 rounded-xl transition-all ${event.severity === 'critical'
-                                        ? 'bg-rose-50 dark:bg-rose-900/10 border-l-2 border-l-rose-500'
-                                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                                    ? 'bg-rose-50 dark:bg-rose-900/10 border-l-2 border-l-rose-500'
+                                    : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
                                     }`}>
 
                                     <div className="min-w-0 flex-1">

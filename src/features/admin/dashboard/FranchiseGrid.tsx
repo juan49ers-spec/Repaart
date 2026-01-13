@@ -1,4 +1,4 @@
-import React, { type FC } from 'react';
+import { type FC } from 'react';
 import { Building } from 'lucide-react';
 import FranchiseCard, { Franchise as FranchiseCardType } from './FranchiseCard';
 
