@@ -15,6 +15,21 @@ interface MetricCardProps {
     description?: string;
 }
 
+const MetricCard = ({ icon: Icon, label, value, color, description }: MetricCardProps) => (
+    <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-6 rounded-3xl shadow-sm border border-slate-200/50 dark:border-slate-800/50 group transition-all hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1">
+        <div className="flex items-center justify-between mb-4">
+            <div className={`p-3 rounded-2xl ${color} bg-opacity-10 dark:bg-opacity-20 transition-colors shadow-inner`}>
+                <Icon size={20} className="transition-transform group-hover:scale-110" />
+            </div>
+            {description && (
+                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{description}</span>
+            )}
+        </div>
+        <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">{label}</p>
+        <p className="text-3xl font-semibold text-slate-900 dark:text-white tracking-tight">{value}</p>
+    </div>
+);
+
 const SupportMetrics: React.FC<SupportMetricsProps> = ({ viewMode }) => {
     // Assert usage of SupportManager context structure
     const { metrics } = useSupport() as { metrics: ISupportMetrics };
@@ -63,20 +78,7 @@ const SupportMetrics: React.FC<SupportMetricsProps> = ({ viewMode }) => {
         );
     }
 
-    const MetricCard = ({ icon: Icon, label, value, color, description }: MetricCardProps) => (
-        <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-6 rounded-3xl shadow-sm border border-slate-200/50 dark:border-slate-800/50 group transition-all hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-2xl ${color} bg-opacity-10 dark:bg-opacity-20 transition-colors shadow-inner`}>
-                    <Icon size={20} className="transition-transform group-hover:scale-110" />
-                </div>
-                {description && (
-                    <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{description}</span>
-                )}
-            </div>
-            <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">{label}</p>
-            <p className="text-3xl font-semibold text-slate-900 dark:text-white tracking-tight">{value}</p>
-        </div>
-    );
+
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8 mt-2">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../../lib/firebase';
 
-import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, Timestamp, FieldValue } from 'firebase/firestore';
 import { useAuth } from '../../../context/AuthContext';
 
 import { Kanban, Plus, Loader2, Search, X } from 'lucide-react';
@@ -18,10 +18,14 @@ interface FeatureRequest {
     priority: 'low' | 'medium' | 'high';
     createdBy: string;
     createdByEmail: string;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: Timestamp | FieldValue;
+    updatedAt: Timestamp | FieldValue;
     labels?: string[];
+    votes?: number;
+    votedBy?: string[];
 }
+
+type NewFeatureData = Omit<FeatureRequest, 'id' | 'status' | 'createdBy' | 'createdByEmail' | 'createdAt' | 'updatedAt' | 'votes' | 'votedBy'>;
 
 const COLUMNS = [
     { id: 'proposed', title: '📋 Propuesto', color: 'from-slate-500 to-slate-600' },
@@ -56,8 +60,8 @@ const FeatureBoard: React.FC = () => {
     useEffect(() => {
         // SECURITY: Only fetch if Admin. Double check client-side.
         if (!isAdmin) {
-            setLoading(false);
-            return;
+            const timer = setTimeout(() => setLoading(false), 0);
+            return () => clearTimeout(timer);
         }
 
         const q = query(collection(db, 'feature_requests'), orderBy('createdAt', 'desc'));
@@ -77,7 +81,7 @@ const FeatureBoard: React.FC = () => {
         return () => unsubscribe();
     }, [isAdmin]);
 
-    const handleCreateFeature = async (featureData: any) => {
+    const handleCreateFeature = async (featureData: NewFeatureData) => {
         try {
             await addDoc(collection(db, 'feature_requests'), {
                 ...featureData,
@@ -98,7 +102,7 @@ const FeatureBoard: React.FC = () => {
         }
     };
 
-    const handleUpdateFeature = async (featureId: string, updates: any) => {
+    const handleUpdateFeature = async (featureId: string, updates: Partial<FeatureRequest>) => {
         try {
             await updateDoc(doc(db, 'feature_requests', featureId), {
                 ...updates,
@@ -261,7 +265,7 @@ const FeatureBoard: React.FC = () => {
                 {/* Kanban Board */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {COLUMNS.map(column => {
-                        const columnFeatures = getFeaturesByStatus(column.id as any);
+                        const columnFeatures = getFeaturesByStatus(column.id);
 
                         return (
                             <div key={column.id} className="flex flex-col h-full">

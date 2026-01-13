@@ -25,6 +25,56 @@ const CATEGORY_COLORS = {
     ops: '#f59e0b'      // Amber (Marketing, App, Others)
 };
 
+// Input Helper
+const InputRow = ({ label, icon: Icon, value, onChange, placeholder = "0", suffix = "€" }: any) => (
+    <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg hover:bg-slate-900 transition-colors border border-transparent hover:border-slate-700 group">
+        <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-lg bg-slate-800 text-slate-400 group-hover:text-white transition-colors`}>
+                <Icon className="w-4 h-4" />
+            </div>
+            <span className="text-sm text-slate-300 font-medium">{label}</span>
+        </div>
+        <div className="flex items-center gap-2">
+            <input
+                type="number"
+                min="0"
+                placeholder={placeholder}
+                value={value || ''}
+                onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+                className="w-24 bg-transparent text-right text-white font-bold focus:outline-none focus:border-b border-indigo-500 transition-all font-mono"
+            />
+            <span className="text-xs text-slate-500 font-bold w-4">{suffix}</span>
+        </div>
+    </div>
+);
+
+// Section Toggle Helper
+const SectionHeader = ({ id, title, icon: Icon, color, total: sectionTotal, activeSection, setActiveSection }: any) => (
+    <button
+        onClick={() => setActiveSection(activeSection === id ? null : id)}
+        className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${activeSection === id
+            ? `bg-slate-900 border-${color}-500/50 shadow-lg shadow-${color}-500/10`
+            : 'bg-slate-950/50 border-slate-800 hover:border-slate-700'
+            }`}
+    >
+        <div className="flex items-center gap-4">
+            <div className={`p-2.5 rounded-lg ${activeSection === id ? `bg-${color}-500 text-white` : `bg-slate-900 text-${color}-400`}`}>
+                <Icon className="w-5 h-5" />
+            </div>
+            <div className="text-left">
+                <h4 className={`font-bold ${activeSection === id ? 'text-white' : 'text-slate-300'}`}>{title}</h4>
+                <p className="text-xs text-slate-500">{activeSection === id ? 'Edición activa' : 'Click para editar'}</p>
+            </div>
+        </div>
+        <div className="text-right">
+            <span className={`block font-mono font-bold ${activeSection === id ? 'text-white' : 'text-slate-400'}`}>
+                {formatMoney(sectionTotal)}€
+            </span>
+            {activeSection === id ? <ChevronDown className="w-4 h-4 ml-auto mt-1 text-slate-500" /> : <ChevronRight className="w-4 h-4 ml-auto mt-1 text-slate-500" />}
+        </div>
+    </button>
+);
+
 const ExpenseStep: React.FC<ExpenseStepProps> = ({ data, onChange, total, totalHours, onTotalHoursChange }) => {
 
     const [activeSection, setActiveSection] = useState<string | null>('team');
@@ -55,55 +105,7 @@ const ExpenseStep: React.FC<ExpenseStepProps> = ({ data, onChange, total, totalH
         ].filter(item => item.value > 0);
     }, [data, total]);
 
-    // Input Helper
-    const InputRow = ({ label, icon: Icon, value, onChange, placeholder = "0", suffix = "€" }: any) => (
-        <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg hover:bg-slate-900 transition-colors border border-transparent hover:border-slate-700 group">
-            <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg bg-slate-800 text-slate-400 group-hover:text-white transition-colors`}>
-                    <Icon className="w-4 h-4" />
-                </div>
-                <span className="text-sm text-slate-300 font-medium">{label}</span>
-            </div>
-            <div className="flex items-center gap-2">
-                <input
-                    type="number"
-                    min="0"
-                    placeholder={placeholder}
-                    value={value || ''}
-                    onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-                    className="w-24 bg-transparent text-right text-white font-bold focus:outline-none focus:border-b border-indigo-500 transition-all font-mono"
-                />
-                <span className="text-xs text-slate-500 font-bold w-4">{suffix}</span>
-            </div>
-        </div>
-    );
 
-    // Section Toggle Helper
-    const SectionHeader = ({ id, title, icon: Icon, color, total: sectionTotal }: any) => (
-        <button
-            onClick={() => setActiveSection(activeSection === id ? null : id)}
-            className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${activeSection === id
-                ? `bg-slate-900 border-${color}-500/50 shadow-lg shadow-${color}-500/10`
-                : 'bg-slate-950/50 border-slate-800 hover:border-slate-700'
-                }`}
-        >
-            <div className="flex items-center gap-4">
-                <div className={`p-2.5 rounded-lg ${activeSection === id ? `bg-${color}-500 text-white` : `bg-slate-900 text-${color}-400`}`}>
-                    <Icon className="w-5 h-5" />
-                </div>
-                <div className="text-left">
-                    <h4 className={`font-bold ${activeSection === id ? 'text-white' : 'text-slate-300'}`}>{title}</h4>
-                    <p className="text-xs text-slate-500">{activeSection === id ? 'Edición activa' : 'Click para editar'}</p>
-                </div>
-            </div>
-            <div className="text-right">
-                <span className={`block font-mono font-bold ${activeSection === id ? 'text-white' : 'text-slate-400'}`}>
-                    {formatMoney(sectionTotal)}€
-                </span>
-                {activeSection === id ? <ChevronDown className="w-4 h-4 ml-auto mt-1 text-slate-500" /> : <ChevronRight className="w-4 h-4 ml-auto mt-1 text-slate-500" />}
-            </div>
-        </button>
-    );
 
     return (
         <div className="flex flex-col lg:flex-row gap-6 h-full text-slate-200">
@@ -119,6 +121,8 @@ const ExpenseStep: React.FC<ExpenseStepProps> = ({ data, onChange, total, totalH
                         icon={Users}
                         color="indigo"
                         total={data.payroll + data.insurance}
+                        activeSection={activeSection}
+                        setActiveSection={setActiveSection}
                     />
                     {activeSection === 'team' && (
                         <div className="p-4 bg-slate-950/30 border border-slate-800/50 border-t-0 rounded-b-xl space-y-3 animate-in slide-in-from-top-2">
@@ -142,6 +146,8 @@ const ExpenseStep: React.FC<ExpenseStepProps> = ({ data, onChange, total, totalH
                         icon={Fuel}
                         color="rose"
                         total={(data.renting.count * data.renting.pricePerUnit) + data.fuel + data.repairs}
+                        activeSection={activeSection}
+                        setActiveSection={setActiveSection}
                     />
                     {activeSection === 'fleet' && (
                         <div className="p-4 bg-slate-950/30 border border-slate-800/50 border-t-0 rounded-b-xl space-y-3 animate-in slide-in-from-top-2">
@@ -181,6 +187,8 @@ const ExpenseStep: React.FC<ExpenseStepProps> = ({ data, onChange, total, totalH
                         icon={Briefcase}
                         color="emerald"
                         total={data.professionalServices + data.agencyFee + data.prlFee + data.accountingFee}
+                        activeSection={activeSection}
+                        setActiveSection={setActiveSection}
                     />
                     {activeSection === 'services' && (
                         <div className="p-4 bg-slate-950/30 border border-slate-800/50 border-t-0 rounded-b-xl space-y-3 animate-in slide-in-from-top-2">
@@ -200,6 +208,8 @@ const ExpenseStep: React.FC<ExpenseStepProps> = ({ data, onChange, total, totalH
                         icon={Megaphone}
                         color="amber"
                         total={data.appFlyder + data.marketing + data.incidents + data.other}
+                        activeSection={activeSection}
+                        setActiveSection={setActiveSection}
                     />
                     {activeSection === 'ops' && (
                         <div className="p-4 bg-slate-950/30 border border-slate-800/50 border-t-0 rounded-b-xl space-y-3 animate-in slide-in-from-top-2">

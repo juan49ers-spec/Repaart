@@ -27,9 +27,6 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
     // Try to get context, but don't fail if it's missing (Admin usage)
     const context = useOutletContext<DashboardContextType | null>();
 
-    // If no props and no context, we are lost
-    if (!propId && !context) return <DashboardSkeleton />;
-
     // Derive values
     const selectedMonth = context?.selectedMonth || new Date().toISOString().slice(0, 7);
     const user = context?.user || null;
@@ -48,7 +45,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
         loading,
         updateFinance
     } = useFranchiseFinance({
-        franchiseId: activeFranchiseId,
+        franchiseId: activeFranchiseId || '', // Pass empty string if undefined to be safe, hook should handle it
         month: effectiveMonth
     });
 
@@ -62,6 +59,9 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
     const [drillDown, setDrillDown] = useState<string | null>(null);
     const [isLegendOpen, setIsLegendOpen] = useState(false);
     const [showGuide, setShowGuide] = useState(false);
+
+    // If no props and no context, we are lost (Check AFTER hooks)
+    if (!propId && !context) return <DashboardSkeleton />;
 
     if (loading) return <DashboardSkeleton />;
 

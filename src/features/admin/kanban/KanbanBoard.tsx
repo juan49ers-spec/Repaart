@@ -27,9 +27,13 @@ const KanbanBoard: React.FC = () => {
     const [sortBy, setSortBy] = useState<SortOption>('newest');
 
     // Synchronize local tasks with backend, but only when not dragging
+    // Synchronize local tasks with backend, but only when not dragging
     useEffect(() => {
         if (!dragTask) {
-            setLocalTasks(backendTasks);
+            setLocalTasks(prev => {
+                if (JSON.stringify(prev) === JSON.stringify(backendTasks)) return prev;
+                return backendTasks;
+            });
         }
     }, [backendTasks, dragTask]);
 

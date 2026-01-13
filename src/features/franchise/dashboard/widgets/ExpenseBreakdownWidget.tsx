@@ -15,6 +15,26 @@ interface ExpenseBreakdownWidgetProps {
     breakdown: ExpenseCategory[];
 }
 
+// Custom tooltip for donut
+const CustomTooltip = ({ active, payload, totalExpenses }: any) => {
+    if (active && payload && payload.length) {
+        const data = payload[0];
+        const percent = totalExpenses > 0 ? (data.value / totalExpenses) * 100 : 0;
+        return (
+            <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-lg">
+                <p className="text-xs font-bold text-slate-800 mb-1">{data.name}</p>
+                <p className="text-sm font-black text-indigo-600 tabular-nums">
+                    {formatMoney(data.value)}€
+                </p>
+                <p className="text-[10px] text-slate-500 mt-0.5">
+                    {percent.toFixed(1)}% del total
+                </p>
+            </div>
+        );
+    }
+    return null;
+};
+
 const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdown }) => {
     const [viewMode, setViewMode] = useState<'list' | 'chart'>('list');
 
@@ -34,25 +54,7 @@ const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdo
         color: item.color || COLORS[index % COLORS.length]
     }));
 
-    // Custom tooltip for donut
-    const CustomTooltip = ({ active, payload }: any) => {
-        if (active && payload && payload.length) {
-            const data = payload[0];
-            const percent = totalExpenses > 0 ? (data.value / totalExpenses) * 100 : 0;
-            return (
-                <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-lg">
-                    <p className="text-xs font-bold text-slate-800 mb-1">{data.name}</p>
-                    <p className="text-sm font-black text-indigo-600 tabular-nums">
-                        {formatMoney(data.value)}€
-                    </p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">
-                        {percent.toFixed(1)}% del total
-                    </p>
-                </div>
-            );
-        }
-        return null;
-    };
+
 
     return (
         <Card className="h-full flex flex-col overflow-hidden">
@@ -166,7 +168,7 @@ const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdo
                                             <Cell key={`cell-${index}`} fill={entry.color} />
                                         ))}
                                     </Pie>
-                                    <Tooltip content={<CustomTooltip />} />
+                                    <Tooltip content={<CustomTooltip totalExpenses={totalExpenses} />} />
                                 </PieChart>
                             </ResponsiveContainer>
                         </div>

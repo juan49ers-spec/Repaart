@@ -93,9 +93,9 @@ export const RiderHomeView: React.FC = () => {
             </div>
 
             {/* BENTO GRID */}
-            <div className="grid grid-cols-6 grid-rows-2 gap-4 h-[440px]">
+            <div className="grid grid-cols-2 md:grid-cols-6 md:grid-rows-2 gap-4 h-auto md:h-[440px]">
                 {/* WIDGET 1: MAIN STATUS (Bento 4x2) */}
-                <div className={`col-span-4 row-span-2 glass-premium rounded-[2.5rem] p-8 flex flex-col justify-between relative overflow-hidden group
+                <div className={`col-span-2 md:col-span-4 row-span-2 glass-premium rounded-[2.5rem] p-8 flex flex-col justify-between relative overflow-hidden group min-h-[300px] md:min-h-0
                     ${activeShift ? 'ring-emerald-500/30' : 'ring-white/5'}`}>
 
                     {activeShift && <div className="absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/10 blur-3xl animate-pulse" />}
@@ -136,7 +136,7 @@ export const RiderHomeView: React.FC = () => {
                 </div>
 
                 {/* WIDGET 2: STATUS (Bento 2x1) */}
-                <div className="col-span-2 glass-premium rounded-[2rem] p-5 flex flex-col justify-between group hover:scale-[1.02] transition-transform">
+                <div className="col-span-1 md:col-span-2 glass-premium rounded-[2rem] p-5 flex flex-col justify-between group hover:scale-[1.02] transition-transform h-32 md:h-auto">
                     <Zap className="text-amber-400" size={24} />
                     <div>
                         <span className="text-2xl font-black text-white">{activeShift ? 'ON' : 'OFF'}</span>
@@ -145,7 +145,7 @@ export const RiderHomeView: React.FC = () => {
                 </div>
 
                 {/* WIDGET 3: VEHICLE (Bento 2x1) */}
-                <div className="col-span-2 glass-premium rounded-[2rem] p-5 flex flex-col justify-between group hover:scale-[1.02] transition-transform">
+                <div className="col-span-1 md:col-span-2 glass-premium rounded-[2rem] p-5 flex flex-col justify-between group hover:scale-[1.02] transition-transform h-32 md:h-auto">
                     <Bike className="text-emerald-400" size={24} />
                     <div>
                         <span className="text-[11px] font-black text-white uppercase tracking-tighter">
