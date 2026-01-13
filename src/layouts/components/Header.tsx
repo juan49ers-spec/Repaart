@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLocation, NavLink } from 'react-router-dom';
+import logo from '../../assets/logo.jpg'; // Import logo
 import {
     Menu,
     LogOut,
@@ -94,7 +95,7 @@ const Header: React.FC<HeaderProps> = ({
         if (isAdmin) {
             if (path === '/dashboard' || path === '/') {
                 if (view === 'franchises') return 'Directorio de Sedes';
-                return 'Admin Console';
+                return 'Panel Control Administrador';
             }
             if (path.includes('/admin/finance/')) return targetFranchiseName || 'Detalle Franquicia';
             if (path.includes('support')) return 'Centro de Soporte';
@@ -134,8 +135,8 @@ const Header: React.FC<HeaderProps> = ({
                     </button>
 
                     <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 hidden md:flex">
-                            {isAdmin ? <Activity className="w-6 h-6 text-white" /> : <LayoutGrid className="w-6 h-6 text-white" />}
+                        <div className="w-10 h-10 rounded-xl shadow-lg shadow-blue-500/20 hidden md:flex overflow-hidden border border-slate-200 dark:border-slate-800 bg-white">
+                            <img src={logo} alt="Repaart" className="w-full h-full object-cover" />
                         </div>
                         <div className="hidden md:block">
                             <div className="flex items-center gap-2">

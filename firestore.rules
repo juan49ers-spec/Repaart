@@ -12,11 +12,21 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-      return isAuthed() && getUserData().role == 'admin';
+      return isAuthed() && (
+        getUserData().role == 'admin' || 
+        request.auth.token.role == 'admin' // Support custom claims if used
+      );
     }
     
     function isFranchise() {
-      return isAuthed() && getUserData().role == 'franchise';
+      return isAuthed() && (
+        getUserData().role == 'franchise' || 
+        request.auth.token.role == 'franchise'
+      );
+    }
+
+    function isRider() {
+       return isAuthed(); // Simplified for now, or check role == 'rider'
     }
 
     // --- COLLECTION RULES ---
@@ -25,30 +35,105 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isAuthed() && (request.auth.uid == userId || isAdmin() || isFranchise());
       allow write: if isAuthed() && (request.auth.uid == userId || isAdmin());
+      // Allow list queries for Admins and Franchises
+      allow list: if isAuthed() && (isAdmin() || isFranchise()); 
     }
 
-    // WORK SHIFTS: Franchise/Admin full access. Riders read ONLY their own.
+    // WORK SHIFTS
     match /work_shifts/{shiftId} {
       allow read: if isAuthed() && (isAdmin() || isFranchise() || resource.data.riderId == request.auth.uid);
       allow write: if isAuthed() && (isAdmin() || isFranchise());
     }
     
-    // FINANCIAL DATA: STRICTLY Admin/Franchise.
+    // FINANCIAL DATA & SUMMARIES
+    match /financial_records/{recordId} {
+      allow read, write: if isAuthed() && (isAdmin() || isFranchise());
+    }
     match /financial_data/{docId} {
       allow read, write: if isAuthed() && (isAdmin() || isFranchise());
     }
-
     match /finance_closures/{closureId} {
        allow read, write: if isAuthed() && (isAdmin() || isFranchise());
     }
+    match /financial_summaries/{docId} {
+       allow read, write: if isAuthed() && (isAdmin() || isFranchise());
+    }
+
+    // SUPPORT TICKETS (Incidents & SupportHub)
+    match /tickets/{ticketId} {
+      allow read: if isAuthed() && (isAdmin() || resource.data.createdBy == request.auth.uid || resource.data.franchiseId == request.auth.uid);
+      allow create: if isAuthed();
+      allow update: if isAuthed() && (isAdmin() || resource.data.createdBy == request.auth.uid);
+      
+      // Subcollection: Messages
+      match /messages/{messageId} {
+        allow read, write: if isAuthed();
+      }
+    }
     
-    // AUDIT LOGS: Everyone can create (logging actions), only Admin can read.
+    // RIDER INCIDENTS & CHECKS
+    match /incidents/{incidentId} {
+        allow read: if isAuthed() && (isAdmin() || resource.data.riderId == request.auth.uid || isFranchise());
+        allow create: if isAuthed();
+        allow update: if isAuthed() && (isAdmin() || resource.data.riderId == request.auth.uid);
+    }
+    match /vehicle_checks/{checkId} {
+         allow read: if isAuthed() && (isAdmin() || resource.data.riderId == request.auth.uid || isFranchise());
+         allow create: if isAuthed();
+    }
+
+    // NOTIFICATIONS
+    match /notifications/{notificationId} {
+      allow read: if isAuthed() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow write: if isAuthed(); // Logic usually handled by server, but allowing client writes for now
+    }
+    match /admin_notifications/{notifId} {
+      allow read, write: if isAuthed() && (isAdmin() || isFranchise()); // Franchise might create alerts
+    }
+
+    // FEATURES & ROADMAP
+    match /feature_requests/{featureId} {
+      allow read: if isAuthed();
+      allow write: if isAuthed() && isAdmin(); // Only Admin edits roadmap
+    }
+
+    // PREMIUM SERVICES
+    match /premium_services/{serviceId} {
+      allow read: if isAuthed();
+      allow write: if isAdmin();
+    }
+    
+    // DOCUMENT REQUESTS
+    match /document_requests/{requestId} {
+      allow read: if isAuthed() && (isAdmin() || resource.data.franchiseId == request.auth.uid);
+      allow create: if isAuthed() && isFranchise();
+      allow update: if isAdmin();
+    }
+
+    // OPERATIONS: FRANCHISES & WEEKS (Matrix V3)
+    // FIX: Auth UID might be mixed case while Franchise ID is uppercase. Allowing flexible check.
+    match /franchises/{franchiseId} {
+      allow read: if isAuthed() && (request.auth.uid.lower() == franchiseId.lower() || isAdmin());
+      allow write: if isAuthed() && isAdmin();
+      
+      match /weeks/{weekId} {
+         allow read, write: if isAuthed() && (request.auth.uid.lower() == franchiseId.lower() || isAdmin());
+      }
+    }
+
+    // FLEET ASSETS (Vehicles)
+    match /fleet_assets/{assetId} {
+      allow read: if isAuthed() && (isAdmin() || resource.data.franchiseId.lower() == request.auth.uid.lower());
+      allow write: if isAuthed() && (isAdmin() || resource.data.franchiseId.lower() == request.auth.uid.lower());
+    }
+    
+    // AUDIT LOGS
     match /audit_logs/{logId} {
       allow create: if isAuthed();
       allow read: if isAdmin();
     }
     
-    // DEFAULT DENY: Critical for security.
+    // DEFAULT DENY
     match /{document=**} {
       allow read, write: if false;
     }
