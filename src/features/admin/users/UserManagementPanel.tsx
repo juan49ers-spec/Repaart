@@ -226,57 +226,57 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
     }
 
     return (
-        <div className="p-0 h-full bg-transparent font-sans text-slate-100 animate-in fade-in duration-500 flex flex-col">
+        <div className="h-full bg-transparent font-sans text-slate-900 dark:text-slate-100 animate-in fade-in duration-500 flex flex-col p-8 pt-0">
             {/* Header Removed - Managed by Parent */}
 
 
             {/* --- TABS --- */}
-            <div className="flex gap-2 pb-0 shrink-0 px-6 pt-6 mb-8">
+            {/* --- TABS --- */}
+            <div className="flex gap-2 pb-0 shrink-0 px-0 pt-0 mb-6 border-b border-slate-100 dark:border-slate-800">
                 <button
                     onClick={() => setActiveTab('structure')}
-                    className={`px-5 py-2.5 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all duration-300 flex items-center gap-2 ${activeTab === 'structure' ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}`}
+                    className={`px-4 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${activeTab === 'structure' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}`}
                 >
-                    <Building className="w-3.5 h-3.5" />
+                    <Building className="w-4 h-4" />
                     <span>Estructura de Red</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('riders')}
-                    className={`px-5 py-2.5 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all duration-300 flex items-center gap-2 ${activeTab === 'riders' ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}`}
+                    className={`px-4 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${activeTab === 'riders' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}`}
                 >
-                    <Users className="w-3.5 h-3.5" />
+                    <Users className="w-4 h-4" />
                     <span>Usuarios Finales</span>
                 </button>
             </div>
 
-            {/* Toolbar (Simplified - No Role Filter in UI) */}
-            <div className="flex flex-col lg:flex-row gap-4 mb-8 justify-between items-end lg:items-center px-6 shrink-0">
+            {/* Toolbar (Simplified - Clean Apple Style) */}
+            <div className="flex flex-col lg:flex-row gap-4 mb-6 justify-between items-end lg:items-center px-0 shrink-0">
                 {/* Search */}
-                <div className="relative flex-1 w-full lg:max-w-md">
+                <div className="relative flex-1 w-full lg:max-w-sm">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                     <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Buscar por email, nombre..."
-                        className="pl-9 pr-4 py-2.5 w-full glass-panel-exec text-slate-200 border-0 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all shadow-sm placeholder-slate-500"
+                        placeholder="Buscar..."
+                        className="pl-9 pr-4 py-2 w-full bg-slate-100 dark:bg-slate-800 border-transparent rounded-lg text-sm font-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all placeholder-slate-500"
                     />
                 </div>
 
-                <div className="flex items-center gap-3 w-full lg:w-auto overflow-x-auto pb-1 lg:pb-0">
+                <div className="flex items-center gap-2 w-full lg:w-auto">
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        aria-label="Filtrar por estado"
-                        className="bg-slate-950 border border-white/10 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest text-slate-400 outline-none focus:ring-2 focus:ring-indigo-500/50"
+                        className="bg-slate-100 dark:bg-slate-800 border-transparent px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
                     >
-                        <option value="all" className="bg-slate-900 text-slate-200">Status: All</option>
-                        <option value="active" className="bg-slate-900 text-slate-200">Status: Active</option>
-                        <option value="banned" className="bg-slate-900 text-slate-200">Status: Blocked</option>
+                        <option value="all">Todos</option>
+                        <option value="active">Activos</option>
+                        <option value="banned">Bloqueados</option>
                     </select>
 
                     <button
-                        onClick={() => refetch()} // ✅ Use refetch
-                        className="p-2.5 text-slate-500 hover:bg-white/5 hover:text-white rounded-xl transition-all"
+                        onClick={() => refetch()}
+                        className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
                         title="Refrescar"
                     >
                         <RefreshCw className="w-4 h-4" />
@@ -285,11 +285,11 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
                     {!readOnly && (
                         <button
                             onClick={() => setModalConfig({ isOpen: true, type: 'create', target: null })}
-                            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-[0.15em] shadow-xl shadow-indigo-500/20 transition-all active:scale-95 whitespace-nowrap border border-white/10"
+                            className="flex items-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-2 rounded-lg text-xs font-semibold shadow-sm hover:shadow hover:-translate-y-0.5 transition-all"
                         >
-                            <UserPlus className="w-4 h-4" />
+                            <UserPlus className="w-3.5 h-3.5" />
                             <span className="hidden sm:inline">
-                                {activeTab === 'structure' ? 'Desplegar Nodo' : 'Alta Usuario'}
+                                {activeTab === 'structure' ? 'Crear Franquicia' : 'Alta Usuario'}
                             </span>
                         </button>
                     )}
