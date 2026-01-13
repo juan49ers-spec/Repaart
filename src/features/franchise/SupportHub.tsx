@@ -8,11 +8,18 @@ import UserProfileModal from '../user/UserProfileModal'; // Import modal
 import PremiumServicesPanel from './support/PremiumServicesPanel';
 import { User, LogOut, Activity, HelpCircle, BadgePercent, Ticket } from 'lucide-react'; // Import icons
 
+import { useLocation } from 'react-router-dom';
+
 const SupportHub: React.FC = () => {
     const { user, logout } = useAuth(); // Get logout
+    const location = useLocation();
     const [isProfileOpen, setIsProfileOpen] = useState(false); // Local state for modal
     const [showInfo, setShowInfo] = useState(false); // Toggle for FAQ info
-    const [activeTab, setActiveTab] = useState<'ticket' | 'services'>('ticket');
+
+    // Default to ticket, but check location state for override
+    const [activeTab, setActiveTab] = useState<'ticket' | 'services'>(() => {
+        return (location.state as any)?.activeTab === 'services' ? 'services' : 'ticket';
+    });
 
     // Logic Hook
     const {

@@ -11,6 +11,7 @@ export interface NotificationPayload {
     priority: NotificationPriority;
     title: string;
     message: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadata?: Record<string, any>;
     read: boolean;
     createdAt?: any;
@@ -30,6 +31,7 @@ export const notificationService = {
             title: string;
             message: string;
             priority?: NotificationPriority;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             metadata?: Record<string, any>;
         }
     ) => {

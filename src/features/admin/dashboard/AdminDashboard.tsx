@@ -31,6 +31,7 @@ const AdminNetworkDashboard = React.lazy(() => import('../finance/AdminNetworkDa
 const OverviewTab = React.lazy(() => import('../overview/OverviewTab'));
 const SystemReset = React.lazy(() => import('../components/SystemReset'));
 const AuditPanel = React.lazy(() => import('../AuditPanel'));
+const DashboardGuideModal = React.lazy(() => import('./components/DashboardGuideModal'));
 
 interface AdminDashboardProps {
     onSelectFranchise?: (id: string) => void;
@@ -57,6 +58,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     };
 
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const [isGuideOpen, setIsGuideOpen] = useState(false);
 
     // Hooks
     const { franchises, loading, refresh } = useAdminDashboardData(selectedMonth || '');
@@ -180,6 +182,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <div className="flex justify-end mb-8">
                         <div className="flex items-center gap-3">
                             <button
+                                onClick={() => setIsGuideOpen(true)}
+                                className="px-3 py-1.5 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 border border-slate-200 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+                                title="Ver Guía de Uso"
+                            >
+                                <span>📚</span>
+                                <span className="hidden sm:inline">Guía</span>
+                            </button>
+                            <button
                                 onClick={() => setActiveTab('audit')}
                                 className="px-3 py-1.5 bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
                                 title="Ir a Auditoría y Migración"
@@ -252,6 +262,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     refresh();
                 }}
             />
+
+            {/* Guide Modal */}
+            <Suspense fallback={null}>
+                <DashboardGuideModal
+                    isOpen={isGuideOpen}
+                    onClose={() => setIsGuideOpen(false)}
+                />
+            </Suspense>
         </div>
     );
 };

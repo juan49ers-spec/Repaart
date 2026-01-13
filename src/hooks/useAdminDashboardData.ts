@@ -28,21 +28,48 @@ export const useAdminDashboardData = (selectedMonth: string) => {
             // 1. Cargar Franquicias (Entidades reales, no users)
             const franchiseResult = await franchiseService.getAllFranchises();
 
-
-            if (franchiseResult.success) {
-
-            } else {
+            if (!franchiseResult.success) {
                 console.error('❌ Error cargando franquicias:', franchiseResult.error);
             }
-            const franchiseList = isOk(franchiseResult) ? franchiseResult.data.map(f => ({
-                ...f,
-                uid: f.id, // Map ID to uid for FranchiseSelector compatibility
-                active: f.status === 'active' || f.status === 'warning', // Weak mapping
-            })) : [];
+
+            // 2. Cargar Resúmenes Financieros del Mes (Para obtener revenue real)
+            // Use dynamic import or assume db is available if imported. 
+            // Better to use the service pattern if possible, but for now inlining for fix consistency.
+            const { collection, query, where, getDocs } = await import('firebase/firestore');
+            const { db } = await import('../lib/firebase');
+
+            // Ensure selectedMonth is valid YYYY-MM
+            const targetMonth = selectedMonth || new Date().toISOString().slice(0, 7);
+
+            const q = query(
+                collection(db, 'financial_summaries'),
+                where('month', '==', targetMonth)
+            );
+
+            const summariesSnap = await getDocs(q);
+            const financialMap = new Map();
+
+            summariesSnap.forEach(doc => {
+                const data = doc.data();
+                if (data.franchiseId) {
+                    financialMap.set(String(data.franchiseId).trim(), data);
+                }
+            });
+
+            const franchiseList = isOk(franchiseResult) ? franchiseResult.data.map(f => {
+                const cleanId = String(f.id).trim();
+                const summary = financialMap.get(cleanId);
+                return {
+                    ...f,
+                    uid: f.id,
+                    active: f.status === 'active' || f.status === 'warning',
+                    revenue: summary ? (summary.revenue || summary.totalIncome || 0) : 0 // Populate revenue
+                };
+            }) : [];
 
             setFranchises(franchiseList);
 
-            // 2. Cargar Tendencia REAL (Últimos 6 meses)
+            // 3. Cargar Tendencia REAL (Últimos 6 meses)
             const realTrend = await financeService.getFinancialTrend(null, 6);
             // Map income to revenue for Chart compatibility
             const mappedTrend = realTrend.map(item => ({
@@ -51,7 +78,7 @@ export const useAdminDashboardData = (selectedMonth: string) => {
             }));
             setTrendData(mappedTrend);
 
-            // 3. Calcular KPIs del MES SELECCIONADO (no acumulado)
+            // 4. Calcular KPIs del MES SELECCIONADO (no acumulado)
             // Buscar datos específicos del mes seleccionado con matching robusto
             let selectedMonthData = realTrend.find(item => {
                 try {
@@ -101,7 +128,7 @@ export const useAdminDashboardData = (selectedMonth: string) => {
             setLoading(false);
             setIsFetching(false);
         }
-    }, [selectedMonth]); // Recargar si cambia el mes (si implementamos filtro por mes en getTrend)
+    }, [selectedMonth]); // Recargar si cambia el mes
 
     // Initial Load
     useEffect(() => {

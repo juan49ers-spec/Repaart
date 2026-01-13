@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors, closestCorners, DragOverEvent, KeyboardSensor, DragStartEvent } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { Plus, Loader2 } from 'lucide-react';
@@ -27,11 +27,11 @@ const KanbanBoard: React.FC = () => {
     const [sortBy, setSortBy] = useState<SortOption>('newest');
 
     // Synchronize local tasks with backend, but only when not dragging
-    const [prevBackendTasks, setPrevBackendTasks] = useState<KanbanTask[]>(backendTasks);
-    if (backendTasks !== prevBackendTasks && !dragTask) {
-        setPrevBackendTasks(backendTasks);
-        setLocalTasks(backendTasks);
-    }
+    useEffect(() => {
+        if (!dragTask) {
+            setLocalTasks(backendTasks);
+        }
+    }, [backendTasks, dragTask]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),

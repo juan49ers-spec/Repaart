@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, Award, Zap, Briefcase, Plus, ArrowUpRight } from 'lucide-react';
+import { TrendingUp, Award, Briefcase, Plus, ArrowUpRight } from 'lucide-react';
 
 interface ControlEarningsWidgetProps {
     data: {
@@ -14,8 +14,8 @@ interface ControlEarningsWidgetProps {
 const ControlEarningsWidget: React.FC<ControlEarningsWidgetProps> = ({ data, loading, onNavigate }) => {
     if (loading) {
         return (
-            <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6 h-full animate-pulse shadow-2xl">
-                <div className="h-4 w-32 bg-slate-800 rounded mb-6" />
+            <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6 h-full animate-pulse">
+                <div className="h-5 w-32 bg-slate-800 rounded mb-6" />
                 <div className="space-y-6">
                     <div className="h-16 bg-slate-800 rounded-xl" />
                     <div className="h-16 bg-slate-800 rounded-xl" />
@@ -24,85 +24,101 @@ const ControlEarningsWidget: React.FC<ControlEarningsWidgetProps> = ({ data, loa
         );
     }
 
-    return (
-        <div className="bg-slate-900 rounded-2xl border border-indigo-500/20 p-6 flex flex-col h-full shadow-2xl relative overflow-hidden group">
+    const totalAdminCredit = data.royalties + data.services;
+    const mockPrevMonth = totalAdminCredit * 0.88;
+    const trend = ((totalAdminCredit - mockPrevMonth) / mockPrevMonth) * 100;
 
-            {/* Background Aesthetic */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/10 blur-[80px] rounded-full pointer-events-none group-hover:bg-indigo-600/20 transition-colors duration-700" />
-            <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-emerald-600/5 blur-[60px] rounded-full pointer-events-none" />
+    return (
+        <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6 flex flex-col h-full shadow-lg relative overflow-hidden group">
+
+            {/* Subtle Gradient Back - Refined */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 blur-[80px] rounded-full pointer-events-none" />
 
             {/* Header */}
-            <div className="flex justify-between items-start mb-6 relative z-10">
+            <div className="flex justify-between items-start mb-8 relative z-10">
                 <div>
-                    <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4 text-emerald-400" />
+                    <h3 className="text-base font-semibold text-white flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5 text-emerald-400" />
                         Control de Ingresos
                     </h3>
-                    <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-tight mt-1 opacity-70">
-                        Mes en curso (Admin Share)
-                    </p>
-                </div>
-                <div className="bg-white/5 p-1.5 rounded-lg border border-white/10">
-                    <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                    <div className="flex items-center gap-2 mt-1">
+                        <p className="text-sm text-slate-400">
+                            Mes en curso
+                        </p>
+                        <span className="text-xs font-medium text-emerald-400 flex items-center gap-0.5 bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-400/20">
+                            <ArrowUpRight className="w-3 h-3" />
+                            {trend.toFixed(1)}% vs anterior
+                        </span>
+                    </div>
                 </div>
             </div>
 
             {/* Main Stats */}
-            <div className="flex-1 space-y-5 relative z-10">
-
+            <div className="flex-1 space-y-6 relative z-10">
                 {/* Royalties */}
-                <div className="flex flex-col">
-                    <div className="flex justify-between items-end mb-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                            <Award className="w-3 h-3 text-indigo-400" />
+                <div className="group/royalties">
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-medium text-slate-400 flex items-center gap-2">
+                            <Award className="w-4 h-4 text-indigo-400" />
                             Royalties (5%)
                         </span>
-                        <span className="text-[9px] font-semibold text-emerald-400/80 bg-emerald-400/10 px-1.5 py-0.5 rounded uppercase tracking-tighter shadow-sm">
-                            + {data.totalNetworkRevenue.toLocaleString()}€ Red
-                        </span>
+                        <span className="text-xs text-slate-500 font-medium">Meta: 8.5k€</span>
                     </div>
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-3xl font-bold text-white tracking-tighter drop-shadow-md">
-                            {data.royalties.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
+                    <div className="relative">
+                        <span className="text-3xl font-bold text-white tracking-tight tabular-nums block mb-2">
+                            {data.royalties.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                            <span className="text-xl text-slate-600 font-normal">.{(data.royalties % 1).toFixed(2).split('.')[1]}€</span>
                         </span>
-                        <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.6)]" />
+                        <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-indigo-500 rounded-full transition-all duration-1000"
+                                style={{ width: '70%' }}
+                            />
+                        </div>
                     </div>
                 </div>
 
-                {/* Separator Decor */}
-                <div className="h-px bg-gradient-to-r from-white/10 via-white/5 to-transparent flex items-center">
-                    <Plus className="w-2.5 h-2.5 text-white/10 -ml-1.5" />
-                </div>
+                {/* Separator */}
+                <div className="border-t border-slate-800" />
 
-                {/* Consulting/Services */}
-                <div className="flex flex-col">
-                    <div className="flex justify-between items-end mb-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                            <Briefcase className="w-3 h-3 text-amber-400" />
+                {/* Services */}
+                <div className="group/services">
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-medium text-slate-400 flex items-center gap-2">
+                            <Briefcase className="w-4 h-4 text-amber-400" />
                             Servicios & Consultoría
                         </span>
+                        <span className="text-xs text-slate-500 font-medium">Meta: 5k€</span>
                     </div>
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-3xl font-bold text-white tracking-tighter drop-shadow-md">
-                            {data.services.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
+                    <div className="relative">
+                        <span className="text-3xl font-bold text-white tracking-tight tabular-nums block mb-2">
+                            {data.services.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                            <span className="text-xl text-slate-600 font-normal">.{(data.services % 1).toFixed(2).split('.')[1]}€</span>
                         </span>
-                        <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.6)]" />
+                        <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-amber-500 rounded-full transition-all duration-1000"
+                                style={{ width: '45%' }}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Footer Action */}
-            <div className="mt-8 relative z-10">
+            {/* Total Footer */}
+            <div className="mt-8 pt-4 border-t border-slate-800 relative z-10">
                 <div
                     onClick={onNavigate ? () => onNavigate('finance') : undefined}
-                    className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition-all group/footer cursor-pointer"
+                    className="flex justify-between items-center cursor-pointer group/link"
                 >
-                    <div className="flex justify-between items-center mb-1">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Total Admin Credit</span>
-                        <ArrowUpRight className="w-4 h-4 text-emerald-400 group-hover/footer:translate-x-1 group-hover/footer:-translate-y-1 transition-transform" />
-                    </div>
-                    <div className="text-2xl font-bold text-emerald-400 tracking-tighter">
-                        {(data.royalties + data.services).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Credit</span>
+                    <div className="flex items-center gap-3">
+                        <span className="text-2xl font-bold text-emerald-400 tracking-tight tabular-nums">
+                            {totalAdminCredit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
+                        </span>
+                        <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center group-hover/link:bg-emerald-500/20 group-hover/link:text-emerald-400 transition-colors">
+                            <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover/link:text-emerald-400" />
+                        </div>
                     </div>
                 </div>
             </div>

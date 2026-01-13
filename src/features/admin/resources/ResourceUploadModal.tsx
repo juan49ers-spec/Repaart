@@ -15,7 +15,7 @@ const PREDEFINED_CATEGORIES = [
 interface ResourceUploadModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSuccess: () => void;
+    onSuccess: (resourceId?: string) => void;
 }
 
 const ResourceUploadModal: React.FC<ResourceUploadModalProps> = ({ isOpen, onClose, onSuccess }) => {
@@ -81,7 +81,7 @@ const ResourceUploadModal: React.FC<ResourceUploadModalProps> = ({ isOpen, onClo
                 async () => {
                     const url = await getDownloadURL(uploadTask.snapshot.ref);
 
-                    await addDoc(collection(db, "resources"), {
+                    const docRef = await addDoc(collection(db, "resources"), {
                         title: title,
                         name: file.name,
                         category,
@@ -95,7 +95,7 @@ const ResourceUploadModal: React.FC<ResourceUploadModalProps> = ({ isOpen, onClo
                     });
 
                     setUploading(false);
-                    onSuccess();
+                    onSuccess(docRef.id);
                     onClose();
                     // Reset state
                     setFile(null);

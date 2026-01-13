@@ -9,9 +9,9 @@ import {
     orderBy,
     getDocs,
     serverTimestamp,
-    Timestamp,
     getDoc
 } from 'firebase/firestore';
+import type { Timestamp } from 'firebase/firestore';
 import { notificationService } from './notificationService';
 
 export interface DocumentRequest {

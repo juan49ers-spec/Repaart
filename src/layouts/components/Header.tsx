@@ -178,7 +178,7 @@ const Header: React.FC<HeaderProps> = ({
                             {(
                                 [
                                     { path: '/dashboard', label: 'Finanzas', icon: Activity },
-                                    { path: '/dashboard?view=franchises', label: 'Sedes', icon: LayoutGrid },
+
                                     { path: '/admin/resources', label: 'Recursos', icon: FileText },
                                     { path: '/admin/support', label: 'Soporte', icon: LifeBuoy },
                                     { path: '/academy', label: 'Academia', icon: GraduationCap },

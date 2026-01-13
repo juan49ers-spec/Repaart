@@ -38,18 +38,42 @@ export const useFinancialPulse = (franchiseId: string | null): UseFinancialPulse
         // Loading state initialized in useState, no need to set here
 
         // 1. ESCUCHA EN VIVO DEL MES ACTUAL (Real-time Socket) 🔴
-        // Using 'financial_summaries' collection for monthly snapshots
-        const unsubscribe = onSnapshot(doc(db, 'financial_summaries', docId), (docSnap) => {
-            if (docSnap.exists()) {
-                setCurrentMonthData(docSnap.data() as FinancialData);
+        // Strategy change: Fetch ALL summaries for the month and find OURS in memory.
+        // This bypasses Firestore's strict exact-string and case-sensitive filtering failures
+        // when valid data exists but has casing/whitespace mismatches.
+        const q = query(
+            collection(db, 'financial_summaries'),
+            where('month', '==', currentMonthId)
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            if (!snapshot.empty) {
+                const targetId = franchiseId.trim().toLowerCase();
+
+                // Find the doc that matches our franchise ID (normalized)
+                const docSnap = snapshot.docs.find(d => {
+                    const data = d.data();
+                    const dataId = data.franchiseId ? String(data.franchiseId).trim().toLowerCase() : '';
+                    return dataId === targetId;
+                });
+
+                if (docSnap) {
+                    setCurrentMonthData(docSnap.data() as FinancialData);
+                } else {
+                    // Try fallback: Check if doc.id CONTAINS the franchise ID (normalized)
+                    const fallbackSnap = snapshot.docs.find(d => d.id.toLowerCase().includes(targetId));
+                    if (fallbackSnap) {
+                        setCurrentMonthData(fallbackSnap.data() as FinancialData);
+                    } else {
+                        setCurrentMonthData({ totalOperationalHours: 0, totalShiftsCount: 0 });
+                    }
+                }
             } else {
                 // Mes nuevo o sin datos aún
                 setCurrentMonthData({ totalOperationalHours: 0, totalShiftsCount: 0 });
             }
             setLoading(false);
         }, (_error) => {
-            // Silently fail or minimal warn to avoid console spam on missing docs
-            // console.warn("Waiting for financial data...", error.code);
             setLoading(false);
         });
 

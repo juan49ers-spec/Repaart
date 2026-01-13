@@ -3,6 +3,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { financeService } from '../services/financeService';
 import { userService } from '../services/userService';
+import { franchiseService } from '../services/franchiseService';
 import { intelService, IntellectualEvent } from '../services/intelService';
 import { format } from 'date-fns';
 
@@ -56,7 +57,10 @@ export const useAdminControl = (monthKey?: string) => {
                 setLoading(true);
 
                 // 1. Fetch Franchises & Analyze Network
-                const franchises = await userService.fetchFranchises();
+                // Switch to franchiseService to match IDs with Financial Summaries
+                const result = await franchiseService.getAllFranchises();
+                const franchises = (result.success) ? result.data : [];
+
                 const franchiseMap = new Map(franchises.map(f => [f.id, f.name]));
                 const networkStats = franchises.reduce((acc, f) => {
                     const margin = f.metrics?.margin || 0;
@@ -98,25 +102,78 @@ export const useAdminControl = (monthKey?: string) => {
                     where("month", "==", activeMonthKey)
                 );
                 const summariesSnap = await getDocs(summariesQuery);
-                const summaries = summariesSnap.docs.map(doc => doc.data() as any);
+                const summaries = summariesSnap.docs.map(doc => {
+                    const d = doc.data();
+                    // Robustness: Extract franchiseId from doc.id if missing in body
+                    // DocID convention: {franchiseId}_{yyyy-MM}
+                    let fid = d.franchiseId;
+                    if (!fid && doc.id.includes('_')) {
+                        // Attempt to strip the month suffix
+                        if (doc.id.endsWith(`_${activeMonthKey}`)) {
+                            fid = doc.id.slice(0, -(activeMonthKey.length + 1));
+                        } else {
+                            // Fallback splitting (risky if ID has underscores, but better than nothing)
+                            const parts = doc.id.split('_');
+                            parts.pop(); // remove date
+                            fid = parts.join('_');
+                        }
+                    }
+                    // Normalize ID
+                    return { ...d, franchiseId: fid ? String(fid).trim() : fid, _debugId: doc.id } as any;
+                });
 
+                // --- Calculate Global Financials ---
                 const totalNetworkRevenue = summaries.reduce((acc, s) => acc + (s.revenue || 0), 0);
                 const royalties = totalNetworkRevenue * 0.05;
 
                 // Services revenue: Aggregate from premium tickets or specific records
-                // For now, let's assume services are part of 'income' category 'consultoria' in records
                 const servicesRevenue = summaries.reduce((acc, s) => {
                     const consultoria = s.breakdown?.consultoria || 0;
                     const premium = s.breakdown?.premium || 0;
                     return acc + consultoria + premium;
                 }, 0);
 
+                const financialMap = new Map();
+                summaries.forEach(s => {
+                    if (s.franchiseId) {
+                        financialMap.set(String(s.franchiseId).trim(), s);
+                    }
+                });
+
                 if (isMounted) {
                     setData({
                         network: {
                             total: franchises.length,
                             ...networkStats,
-                            franchises: franchises.sort((a, b) => (a.metrics?.margin || 0) - (b.metrics?.margin || 0))
+                            franchises: franchises.map(f => {
+                                const summary = financialMap.get(f.id);
+                                let margin = f.metrics?.margin || 0; // Fallback to user-stored metric
+
+                                if (summary) {
+                                    const revenue = summary.revenue || summary.totalIncome || 0;
+                                    const expense = summary.expenses || summary.totalExpenses || 0;
+                                    const profit = revenue - expense;
+
+                                    // Calculate real-time margin for the selected month
+                                    if (revenue > 0) {
+                                        margin = (profit / revenue) * 100;
+                                    } else {
+                                        margin = 0;
+                                    }
+                                }
+
+                                const finalRevenue = summary ? (summary.revenue || summary.totalIncome || 0) : 0;
+                                // console.log(`[DEBUG] Franchise ${f.id} Revenue:`, finalRevenue);
+
+                                return {
+                                    ...f,
+                                    metrics: {
+                                        ...f.metrics,
+                                        margin, // Override with calculated margin
+                                        revenue: finalRevenue
+                                    }
+                                };
+                            }).sort((a, b) => (a.metrics?.margin || 0) - (b.metrics?.margin || 0))
                         },
                         pending: {
                             total: standardTickets.length + premiumTickets.length + pendingRecords.length + unreadAlerts,
