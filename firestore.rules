@@ -61,9 +61,9 @@ service cloud.firestore {
 
     // SUPPORT TICKETS (Incidents & SupportHub)
     match /tickets/{ticketId} {
-      allow read: if isAuthed() && (isAdmin() || resource.data.createdBy == request.auth.uid || resource.data.franchiseId == request.auth.uid);
+      allow read: if isAuthed() && (isAdmin() || resource.data.uid == request.auth.uid || resource.data.franchiseId == request.auth.uid || resource.data.createdBy == request.auth.uid);
       allow create: if isAuthed();
-      allow update: if isAuthed() && (isAdmin() || resource.data.createdBy == request.auth.uid);
+      allow update: if isAuthed() && (isAdmin() || resource.data.uid == request.auth.uid || resource.data.createdBy == request.auth.uid);
       
       // Subcollection: Messages
       match /messages/{messageId} {
