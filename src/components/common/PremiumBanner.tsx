@@ -20,24 +20,17 @@ const PremiumBanner: React.FC = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-[#0B1120] via-transparent to-black/20" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#0B1120]/50 via-transparent to-[#0B1120]/50" />
 
-            {/* 📢 Scrolling Ticker (Marquee) */}
-            <div className="absolute top-8 left-0 right-0 overflow-hidden flex items-center h-12 z-20 mask-marquee opacity-90">
-                <div className="flex gap-16 animate-marquee whitespace-nowrap min-w-max">
+            {/* 📢 Scrolling Ticker (Marquee) - High Visibility Mode */}
+            <div className="absolute top-12 left-0 right-0 overflow-hidden flex items-center h-16 z-30 pointer-events-none">
+                <div className="flex gap-24 animate-marquee whitespace-nowrap min-w-max">
                     {[1, 2, 3, 4].map((i) => (
                         <div key={i} className="flex items-center gap-16">
-                            <span className="text-2xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-200 to-white/80 drop-shadow-2xl">
+                            <span className="text-3xl font-black tracking-widest text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">
                                 POTENCIA TU NEGOCIO
                             </span>
-                            <span className="text-xl font-light tracking-[0.2em] text-emerald-300 uppercase flex items-center gap-4">
-                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                            <span className="text-xl font-bold tracking-[0.2em] text-emerald-400 uppercase flex items-center gap-4 bg-black/20 px-4 py-1 rounded-full backdrop-blur-sm border border-emerald-500/30">
+                                <span className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_#34d399]" />
                                 Servicios Premium Disponibles
-                            </span>
-                            <span className="text-2xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 via-white to-indigo-200 drop-shadow-2xl">
-                                DESBLOQUEA HERRAMIENTAS EXCLUSIVAS
-                            </span>
-                            <span className="text-xl font-light tracking-[0.2em] text-rose-300 uppercase flex items-center gap-4">
-                                <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
-                                Soporte VIP 24/7
                             </span>
                         </div>
                     ))}
