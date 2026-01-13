@@ -209,7 +209,7 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
                                     active={activeTab === 'admin'}
                                     onClick={() => setActiveTab('admin')}
                                     icon={LayoutDashboard}
-                                    label="Command Center"
+                                    label="GESTIÓN DE FRANQUICIAS"
                                     variant="admin"
                                 />
                             </>
@@ -217,9 +217,9 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
                     </div>
                 </div>
 
-                {/* --- CONTENT AREA (GLASS CARD) --- */}
+                {/* --- CONTENT AREA (Clean Apple Card) --- */}
                 <div className="relative min-h-[500px]">
-                    <div className="bg-white/60 backdrop-blur-2xl border border-white/60 rounded-3xl shadow-2xl shadow-slate-200/50 p-6 md:p-10 animate-in fade-in slide-in-from-bottom-8 duration-500 ease-out">
+                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 md:p-10 animate-in fade-in slide-in-from-bottom-8 duration-500 ease-out">
 
                         {activeTab === 'profile' && (
                             <ProfileTab
@@ -259,29 +259,21 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
 
 const TabButton = ({ active, onClick, icon: Icon, label, variant = 'default' }: any) => {
     const isAdmin = variant === 'admin';
-    const baseClass = "relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ease-out";
 
-    // Active Styles
-    const activeStyle = isAdmin
-        ? "bg-slate-800 text-white shadow-lg shadow-slate-800/20 scale-[1.02]"
-        : "bg-white text-indigo-600 shadow-md shadow-indigo-100 scale-[1.02]";
-
-    // Inactive Styles
-    const inactiveStyle = "text-slate-500 hover:text-slate-900 hover:bg-white/50";
-
+    // Clean Apple Style Buttons
     return (
         <button
             onClick={onClick}
-            className={`${baseClass} ${active ? activeStyle : inactiveStyle}`}
+            className={`
+                relative flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200
+                ${active
+                    ? 'bg-slate-900 text-white shadow-sm'
+                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                }
+            `}
         >
-            <Icon className={`w-4 h-4 ${active ? (isAdmin ? 'text-indigo-400' : 'text-indigo-500') : 'text-slate-400'}`} />
+            <Icon className={`w-3.5 h-3.5 ${active ? 'text-white' : 'text-slate-400'}`} />
             {label}
-            {active && !isAdmin && (
-                <span className="flex h-1.5 w-1.5 absolute top-2 right-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-indigo-500"></span>
-                </span>
-            )}
         </button>
     );
 };
