@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Clock } from 'lucide-react';
 import { KanbanTask } from '../../../hooks/useKanban';
 import { format, isPast, isToday, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -55,86 +55,65 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ task, onCardClick }) => {
             {...listeners}
             onClick={() => onCardClick?.(task)}
             className={`
-                group relative bg-white/80 dark:bg-slate-900/40 rounded-[1.5rem] border border-slate-200/50 dark:border-white/5 backdrop-blur-md transition-all duration-300 cursor-grab active:cursor-grabbing touch-none
-                ${task.priority === 'high' ? 'hover:border-rose-500/20' :
-                    task.priority === 'medium' ? 'hover:border-amber-500/20' :
-                        'hover:border-emerald-500/20'}
-                shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_15px_45px_rgba(99,102,241,0.07)] hover:-translate-y-1.5 
+                group relative bg-white dark:bg-slate-900/60 rounded-xl border border-slate-200/60 dark:border-white/5 
+                transition-all duration-300 cursor-grab active:cursor-grabbing touch-none
+                hover:border-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/5 hover:-translate-y-1
                 ${isDragging ? 'opacity-20 scale-95' : 'opacity-100'}
             `}
         >
-            {/* Priority Side Bar (Clean Edge) */}
-            <div className={`absolute top-4 left-0 bottom-4 w-1 rounded-r-full ${task.priority === 'high' ? 'bg-rose-500' :
-                task.priority === 'medium' ? 'bg-amber-500' : 'bg-emerald-500'
+            {/* Priority Line (Left Edge - Thinner) */}
+            <div className={`absolute top-3 bottom-3 left-0 w-1 rounded-r-md ${task.priority === 'high' ? 'bg-rose-500' :
+                task.priority === 'medium' ? 'bg-amber-400' : 'bg-emerald-400'
                 }`} />
 
-            <div className="p-5 space-y-4">
-                {/* Header: Tags & Date Status */}
-                <div className="flex items-start justify-between gap-4">
-                    <div className="flex gap-1.5 flex-wrap">
-                        {task.tags?.slice(0, 2).map(tag => (
-                            <span key={tag} className="px-2.5 py-1 bg-slate-50 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 text-[8px] font-black uppercase tracking-widest rounded-lg border border-slate-100 dark:border-white/5">
-                                {tag}
-                            </span>
-                        ))}
-                    </div>
-                    {dateStatus === 'overdue' && (
-                        <div className="flex items-center gap-1 text-rose-500 animate-pulse">
-                            <AlertCircle size={10} />
-                            <span className="text-[8px] font-black uppercase tracking-widest">Fuera plazo</span>
+            <div className="pl-4 pr-3 py-3 space-y-2.5">
+                {/* Header: Title & Tags */}
+                <div className="space-y-1.5">
+                    {/* Tags Row */}
+                    {task.tags && task.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-1.5">
+                            {task.tags.slice(0, 3).map(tag => (
+                                <span key={tag} className="px-1.5 py-0.5 bg-slate-50 dark:bg-slate-800 text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight rounded border border-slate-100 dark:border-white/5">
+                                    {tag}
+                                </span>
+                            ))}
                         </div>
                     )}
-                </div>
 
-                {/* Title */}
-                <div className="space-y-1.5">
-                    <h4 className="text-[14px] font-bold text-slate-800 dark:text-slate-100 leading-tight tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                    <h4 className="text-[13px] font-semibold text-slate-700 dark:text-slate-200 leading-snug tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                         {task.title}
                     </h4>
-                    {task.description && (
-                        <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-snug line-clamp-2 overflow-hidden">
-                            {task.description}
-                        </p>
-                    )}
                 </div>
 
-                {/* Footer Metadata */}
-                <div className="flex items-center justify-between pt-1">
+                {/* Footer Metadata (Compact Row) */}
+                <div className="flex items-center justify-between pt-1 border-t border-slate-50 dark:border-white/5">
                     <div className="flex items-center gap-3">
+                        {/* Date */}
                         {formattedDate && (
-                            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border ${dateStatus === 'overdue' ? 'text-rose-600 bg-rose-500/5 border-rose-500/10' :
-                                dateStatus === 'today' ? 'text-amber-600 bg-amber-500/5 border-amber-500/10' :
-                                    'text-slate-400 bg-slate-50 dark:bg-slate-800/20 border-slate-100 dark:border-white/5'
+                            <div className={`flex items-center gap-1 ${dateStatus === 'overdue' ? 'text-rose-500' :
+                                dateStatus === 'today' ? 'text-amber-500' :
+                                    'text-slate-400'
                                 }`}>
                                 <Clock size={10} strokeWidth={2.5} />
-                                <span className="text-[9px] font-black uppercase tracking-widest leading-none">
+                                <span className="text-[10px] font-medium tracking-tight">
                                     {formattedDate}
                                 </span>
                             </div>
                         )}
 
+                        {/* Checklist */}
                         {task.checklist && task.checklist.length > 0 && (
-                            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-50/50 dark:bg-slate-800/20 text-slate-400 dark:text-slate-500 border border-slate-100 dark:border-white/5">
+                            <div className="flex items-center gap-1 text-slate-400">
                                 <CheckCircle2 size={10} strokeWidth={2.5} className={progress === 100 ? 'text-emerald-500' : ''} />
-                                <span className="text-[9px] font-black tracking-widest">
+                                <span className="text-[10px] font-medium tracking-tight">
                                     {task.checklist.filter(i => i.completed).length}/{task.checklist.length}
                                 </span>
                             </div>
                         )}
                     </div>
-                </div>
 
-                {/* Sub-item Progress Bar */}
-                {task.checklist && task.checklist.length > 0 && progress < 100 && (
-                    <div className="h-1 w-full bg-slate-100 dark:bg-slate-800/40 rounded-full overflow-hidden">
-                        <div
-                            className={`h-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(99,102,241,0.2)] ${task.priority === 'high' ? 'bg-rose-500' :
-                                task.priority === 'medium' ? 'bg-amber-500' : 'bg-emerald-500'
-                                }`}
-                            style={{ width: `${progress}%` }}
-                        />
-                    </div>
-                )}
+                    {/* Avatar/User or Priority Indicator if needed */}
+                </div>
             </div>
         </div>
     );

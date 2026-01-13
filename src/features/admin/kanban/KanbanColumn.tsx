@@ -48,7 +48,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ title, tasks, onCardClick, 
     };
 
     return (
-        <div className={`flex flex-col h-full bg-slate-100/30 dark:bg-slate-900/40 rounded-[2.5rem] border border-slate-200/50 dark:border-white/5 backdrop-blur-xl overflow-hidden shadow-2xl shadow-slate-200/20 dark:shadow-none transition-all duration-500`}>
+        <div className={`flex flex-col bg-slate-100/30 dark:bg-slate-900/40 rounded-[2.5rem] border border-slate-200/50 dark:border-white/5 backdrop-blur-xl shadow-2xl shadow-slate-200/20 dark:shadow-none transition-all duration-500`}>
             {/* Column Header */}
             <div className={`p-6 flex items-center justify-between border-b border-slate-200/50 dark:border-white/5 bg-white/60 dark:bg-slate-800/20`}>
                 <div className="flex items-center gap-3">
@@ -67,7 +67,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ title, tasks, onCardClick, 
             {/* Tasks Area */}
             <div
                 ref={setNodeRef}
-                className={`flex-1 p-4 space-y-4 overflow-y-auto custom-scrollbar transition-all duration-300 ${isOver ? 'bg-indigo-500/5' : ''}`}
+                className={`p-4 space-y-3 transition-all duration-300 ${isOver ? 'bg-indigo-500/5' : ''}`}
             >
                 <div className="flex flex-col gap-4">
                     <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>

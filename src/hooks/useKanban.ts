@@ -8,7 +8,8 @@ import {
     updateDoc,
     deleteDoc,
     doc,
-    serverTimestamp
+    serverTimestamp,
+    Timestamp
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -18,12 +19,19 @@ export interface KanbanTask {
     title: string;
     status: 'todo' | 'in_progress' | 'done';
     priority: 'low' | 'medium' | 'high';
-    createdAt: any;
+    createdAt: Timestamp | null;
     // v2.1 Improvements
     description?: string;
-    dueDate?: any; // Firestore Timestamp
+    dueDate?: Timestamp | null;
     tags?: string[];
     checklist?: { id: string; text: string; completed: boolean }[];
+    comments?: {
+        id: string;
+        text: string;
+        createdAt: Timestamp | null; // Firebase Timestamp
+        userId: string;
+        userName: string;
+    }[];
 }
 
 export const useKanban = () => {

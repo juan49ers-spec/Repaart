@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { X, Calendar, CheckSquare, Tag, AlignLeft, Plus, Trash2, Clock, ArrowRight, Layers, CheckCircle2 } from 'lucide-react';
 import { KanbanTask } from '../../../hooks/useKanban';
-import { format } from 'date-fns';
+import { format, isToday, isYesterday } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { useAuth } from '../../../context/AuthContext';
 
 interface TaskDetailModalProps {
     task: KanbanTask;
@@ -12,6 +14,7 @@ interface TaskDetailModalProps {
 }
 
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, isOpen, onClose, onUpdate, onDelete }) => {
+    const { user } = useAuth();
     const [title, setTitle] = useState(task.title);
     const [description, setDescription] = useState(task.description || '');
     const [newChecklistItem, setNewChecklistItem] = useState('');
@@ -21,6 +24,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, isOpen, onClose
     const [dueDate, setDueDate] = useState<string>(
         task.dueDate?.toDate ? format(task.dueDate.toDate(), 'yyyy-MM-dd') : ''
     );
+
+    // Comments Logic
+    const [newComment, setNewComment] = useState('');
+    const [comments, setComments] = useState(task.comments || []);
+
     const [isSaving, setIsSaving] = useState(false);
 
     const [currentStatus, setCurrentStatus] = useState(task.status);
@@ -81,6 +89,24 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, isOpen, onClose
         wrapUpdate({ tags: updatedTags });
     };
 
+    const handleAddComment = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newComment.trim() || !user) return;
+
+        const comment = {
+            id: crypto.randomUUID(),
+            text: newComment.trim(),
+            createdAt: new Date(), // Local optimistic date
+            userId: user.uid,
+            userName: user.displayName || 'Usuario'
+        };
+
+        const updatedComments = [comment, ...comments];
+        setComments(updatedComments);
+        wrapUpdate({ comments: updatedComments });
+        setNewComment('');
+    };
+
     const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const updatedDate = e.target.value;
         setDueDate(updatedDate);
@@ -124,87 +150,141 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, isOpen, onClose
                         </div>
 
                         {/* Title Block */}
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                             <textarea
                                 rows={1}
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 onBlur={handleTitleBlur}
-                                className="w-full bg-transparent text-4xl font-black text-slate-900 dark:text-white border-none focus:ring-0 p-0 placeholder:text-slate-200 dark:placeholder:text-slate-800 tracking-tight leading-tight resize-none"
+                                className="w-full bg-transparent text-2xl font-bold text-slate-900 dark:text-white border-none focus:ring-0 p-0 placeholder:text-slate-200 dark:placeholder:text-slate-800 tracking-tight leading-tight resize-none"
                                 placeholder="Nombre de la iniciativa..."
                             />
                         </div>
 
                         {/* Description Section */}
-                        <section className="space-y-6">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 rounded-2xl bg-violet-500/5 text-violet-500 border border-violet-500/10">
-                                    <AlignLeft size={18} />
+                        <section className="space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-xl bg-violet-500/5 text-violet-500 border border-violet-500/10">
+                                    <AlignLeft size={16} />
                                 </div>
-                                <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">Documentación Técnica</h3>
+                                <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Documentación Técnica</h3>
                             </div>
                             <textarea
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                                 onBlur={handleDescriptionBlur}
                                 placeholder="Escribe aquí los detalles, objetivos y contexto de la tarea..."
-                                className="w-full bg-slate-50 dark:bg-slate-800/20 border border-slate-200/60 dark:border-white/5 rounded-3xl p-8 text-slate-700 dark:text-slate-300 text-base focus:border-indigo-500/30 focus:ring-8 focus:ring-indigo-500/5 min-h-[220px] resize-none leading-relaxed transition-all outline-none shadow-inner"
+                                className="w-full bg-slate-50 dark:bg-slate-800/20 border border-slate-200/60 dark:border-white/5 rounded-2xl p-5 text-slate-600 dark:text-slate-300 text-sm focus:border-indigo-500/30 focus:ring-4 focus:ring-indigo-500/5 min-h-[120px] resize-none leading-relaxed transition-all outline-none shadow-inner"
                             />
                         </section>
 
                         {/* Action Plan Section */}
-                        <section className="space-y-6">
+                        <section className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-3 rounded-2xl bg-emerald-500/5 text-emerald-500 border border-emerald-500/10">
-                                        <CheckSquare size={18} />
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-xl bg-emerald-500/5 text-emerald-500 border border-emerald-500/10">
+                                        <CheckSquare size={16} />
                                     </div>
-                                    <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">Plan de Ejecución</h3>
+                                    <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Plan de Ejecución</h3>
                                 </div>
                                 {checklist.length > 0 && (
-                                    <div className="px-4 py-2 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
-                                        <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">
+                                    <div className="px-3 py-1.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                                        <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">
                                             {Math.round((checklist.filter(i => i.completed).length / checklist.length) * 100)}% Completado
                                         </span>
                                     </div>
                                 )}
                             </div>
 
-                            <div className="space-y-3">
+                            <div className="space-y-2">
                                 {checklist.map(item => (
-                                    <div key={item.id} className="group flex items-center gap-5 p-5 bg-white dark:bg-slate-800/40 rounded-[1.5rem] border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 transition-all outline outline-2 outline-transparent hover:outline-indigo-500/10 hover:-translate-y-0.5">
+                                    <div key={item.id} className="group flex items-center gap-4 p-3 bg-white dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-lg hover:shadow-indigo-500/5 transition-all outline outline-2 outline-transparent hover:outline-indigo-500/10 hover:-translate-y-0.5">
                                         <input
                                             type="checkbox"
                                             checked={item.completed}
                                             onChange={() => toggleChecklistItem(item.id)}
-                                            className="w-6 h-6 rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-transparent text-indigo-600 focus:ring-indigo-500/20 cursor-pointer transition-all checked:bg-indigo-600"
+                                            className="w-5 h-5 rounded-md border-2 border-slate-200 dark:border-slate-700 bg-transparent text-indigo-600 focus:ring-indigo-500/20 cursor-pointer transition-all checked:bg-indigo-600"
                                             title={`Marcar "${item.text}"`}
                                         />
-                                        <span className={`flex-1 text-sm font-bold tracking-tight transition-all ${item.completed ? 'text-slate-300 dark:text-slate-600 line-through' : 'text-slate-700 dark:text-slate-200'}`}>
+                                        <span className={`flex-1 text-[13px] font-medium tracking-tight transition-all ${item.completed ? 'text-slate-300 dark:text-slate-600 line-through' : 'text-slate-600 dark:text-slate-300'}`}>
                                             {item.text}
                                         </span>
                                         <button
                                             onClick={() => deleteChecklistItem(item.id)}
-                                            className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-rose-500 transition-all active:scale-90"
+                                            className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-300 hover:text-rose-500 transition-all active:scale-90"
                                             title="Eliminar ítem"
                                         >
-                                            <Trash2 size={16} />
+                                            <Trash2 size={14} />
                                         </button>
                                     </div>
                                 ))}
 
                                 <form onSubmit={addChecklistItem}>
-                                    <div className="flex items-center gap-4 p-5 bg-slate-50/50 dark:bg-slate-900/40 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-[1.5rem] focus-within:border-indigo-500/40 focus-within:bg-white dark:focus-within:bg-slate-800 transition-all group">
-                                        <Plus size={18} className="text-indigo-500 group-focus-within:rotate-90 transition-transform" />
+                                    <div className="flex items-center gap-3 p-3 bg-slate-50/50 dark:bg-slate-900/40 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-xl focus-within:border-indigo-500/40 focus-within:bg-white dark:focus-within:bg-slate-800 transition-all group">
+                                        <Plus size={16} className="text-indigo-500 group-focus-within:rotate-90 transition-transform" />
                                         <input
                                             type="text"
                                             value={newChecklistItem}
                                             onChange={(e) => setNewChecklistItem(e.target.value)}
                                             placeholder="¿Cuál es el siguiente paso?"
-                                            className="w-full bg-transparent border-none focus:ring-0 p-0 text-sm font-black text-slate-600 dark:text-slate-400 placeholder:text-slate-300 outline-none"
+                                            className="w-full bg-transparent border-none focus:ring-0 p-0 text-[13px] font-bold text-slate-500 dark:text-slate-400 placeholder:text-slate-300 outline-none"
                                         />
                                     </div>
                                 </form>
+                            </div>
+                        </section>
+
+                        {/* Comments Section */}
+                        <section className="space-y-4 pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-xl bg-slate-500/5 text-slate-500 border border-slate-500/10">
+                                    <AlignLeft size={16} />
+                                </div>
+                                <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Actividad & Comentarios</h3>
+                            </div>
+
+                            {/* Comment Input */}
+                            <form onSubmit={handleAddComment} className="flex gap-3">
+                                <div className="w-7 h-7 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-[10px] ring-4 ring-indigo-500/10">
+                                    {user?.displayName?.charAt(0) || 'U'}
+                                </div>
+                                <div className="flex-1">
+                                    <input
+                                        type="text"
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                        placeholder="Escribe un comentario..."
+                                        className="w-full bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-white/5 rounded-xl px-4 py-2.5 text-[13px] focus:outline-none focus:border-indigo-500/50 transition-all"
+                                    />
+                                </div>
+                            </form>
+
+                            {/* Comments List */}
+                            <div className="space-y-5 relative pl-3.5 border-l border-slate-100 dark:border-slate-800 ml-3.5">
+                                {comments.map((comment) => {
+                                    const date = comment.createdAt.toDate ? comment.createdAt.toDate() : new Date(comment.createdAt);
+
+                                    let dateLabel = format(date, "d MMM yyyy", { locale: es });
+                                    if (isToday(date)) dateLabel = "Hoy";
+                                    if (isYesterday(date)) dateLabel = "Ayer";
+
+                                    return (
+                                        <div key={comment.id} className="relative pl-5 space-y-1.5 group">
+                                            {/* Timestamp Dot */}
+                                            <div className="absolute -left-[18px] top-1.5 w-2.5 h-2.5 rounded-full bg-slate-200 dark:bg-slate-800 group-hover:bg-indigo-500 transition-colors border-2 border-white dark:border-slate-900" />
+
+                                            <div className="flex flex-col gap-1">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[11px] font-bold text-slate-900 dark:text-white">{comment.userName}</span>
+                                                    <span className="text-[9px] text-slate-400 font-medium">{dateLabel}</span>
+                                                </div>
+                                                <p className="text-[13px] text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-r-xl rounded-bl-xl inline-block">
+                                                    {comment.text}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </section>
                     </div>

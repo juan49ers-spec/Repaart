@@ -30,6 +30,8 @@ const KanbanBoard: React.FC = () => {
     // Synchronize local tasks with backend, but only when not dragging
     useEffect(() => {
         if (!dragTask) {
+
+            // eslint-disable-next-line
             setLocalTasks(prev => {
                 if (JSON.stringify(prev) === JSON.stringify(backendTasks)) return prev;
                 return backendTasks;
@@ -63,20 +65,16 @@ const KanbanBoard: React.FC = () => {
 
         result.sort((a, b) => {
             if (sortBy === 'newest') {
-                const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : (a.createdAt ? new Date(a.createdAt) : new Date(0));
-                const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : (b.createdAt ? new Date(b.createdAt) : new Date(0));
-                return dateB.getTime() - dateA.getTime();
+                const getDate = (d: any) => d?.toDate ? d.toDate() : (d ? new Date(d as string | number | Date) : new Date(0));
+                return getDate(b.createdAt).getTime() - getDate(a.createdAt).getTime();
             }
             if (sortBy === 'priority') {
                 const priorityOrder = { high: 0, medium: 1, low: 2 };
                 return priorityOrder[a.priority] - priorityOrder[b.priority];
             }
             if (sortBy === 'due_date') {
-                if (!a.dueDate) return 1;
-                if (!b.dueDate) return -1;
-                const dateA = a.dueDate.toDate ? a.dueDate.toDate() : new Date(a.dueDate);
-                const dateB = b.dueDate.toDate ? b.dueDate.toDate() : new Date(b.dueDate);
-                return dateA.getTime() - dateB.getTime();
+                const getDate = (d: any) => d?.toDate ? d.toDate() : (d ? new Date(d as string | number | Date) : new Date(8640000000000000));
+                return getDate(a.dueDate).getTime() - getDate(b.dueDate).getTime();
             }
             return 0;
         });
@@ -168,7 +166,7 @@ const KanbanBoard: React.FC = () => {
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
         >
-            <div className="p-4 md:p-8 h-full flex flex-col relative overflow-hidden bg-slate-50/50 dark:bg-transparent min-h-[calc(100vh-100px)]">
+            <div className="p-4 md:p-8 min-h-screen flex flex-col relative bg-slate-50/50 dark:bg-transparent">
                 {/* 🌌 Atmospheric Glows */}
                 <div className="absolute top-[-5%] left-[-5%] w-[30%] h-[30%] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
                 <div className="absolute bottom-[-5%] right-[-5%] w-[30%] h-[30%] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none" />
@@ -226,7 +224,7 @@ const KanbanBoard: React.FC = () => {
                     />
 
                     {/* Columns Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0 mt-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
                         {COLUMNS.map(col => (
                             <KanbanColumn
                                 key={col.id}
