@@ -209,6 +209,30 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                 {!isHistoryView ? (
                     <div className="space-y-8 animate-in fade-in duration-700 slide-in-from-bottom-4">
 
+                        {/* --- PREMIUM PROMO STRIP (Small, Animated, Effective) --- */}
+                        <div className="mb-2 group relative overflow-hidden rounded-xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-900/50 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+                            onClick={() => window.location.href = '/support'} // Simple redirect
+                        >
+                            {/* Animated Background Sheen */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-50/30 dark:via-indigo-500/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] z-0" />
+
+                            <div className="relative z-10 flex items-center justify-between px-4 py-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex -space-x-1">
+                                        <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+                                        <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse delay-75" />
+                                        <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse delay-150" />
+                                    </div>
+                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                        <span className="font-bold text-indigo-600 dark:text-indigo-400">Nuevo Marketplace:</span> Accede a servicios exclusivos para maximizar tu rentabilidad.
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 group-hover:translate-x-1 transition-transform">
+                                    Ver Catálogo <ChevronRight className="w-3.5 h-3.5" />
+                                </div>
+                            </div>
+                        </div>
+
                         {/* ROW 1: CORE METRICS & WEALTH */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {/* 1. Ingresos */}

@@ -9,19 +9,26 @@ import {
     Grid,
     List as ListIcon,
     Search,
-    Loader2,
     Trash2,
     Eye,
     Download,
     Plus,
     Pin,
-    FolderOpen
+    FolderOpen,
+    Shield,
+    Briefcase,
+    BookOpen,
+    Layout,
+    Folder
 } from 'lucide-react';
 import DocPreviewModal from '../../ui/overlays/DocPreviewModal';
 import ConfirmationModal from '../../ui/feedback/ConfirmationModal';
 import ResourceUploadModal from './resources/ResourceUploadModal';
 import AdminGuidesPanel from './knowledge/AdminGuidesPanel';
 import UserManual from '../common/UserManual/UserManual';
+import RequestsInbox from './resources/RequestsInbox';
+import ServiceManager from './services/ServiceManager';
+import { resourceRequestService } from '../../services/resourceRequestService';
 
 interface Resource {
     id: string;
@@ -34,6 +41,7 @@ interface Resource {
     storagePath?: string;
     createdAt?: Timestamp;
     isPinned?: boolean;
+    isMock?: boolean;
     [key: string]: any;
 }
 
@@ -46,46 +54,29 @@ interface ConfirmDialogState {
     onConfirm: (() => void) | null;
 }
 
-interface CategoryConfig {
-    label: string;
-    color: string;
-}
+// 🗂️ Unified Folder Structure (Same as Franchise)
+const FOLDERS = [
+    { id: 'contracts', label: 'Marco Legal & Contratos', icon: Shield, color: 'text-indigo-500' },
+    { id: 'manuals', label: 'Manuales Operativos', icon: BookOpen, color: 'text-emerald-500' },
+    { id: 'commercial', label: 'Dossiers Comerciales', icon: Briefcase, color: 'text-amber-500' },
+    { id: 'marketing', label: 'Activos de Marca', icon: Layout, color: 'text-rose-500' },
+    { id: 'general', label: 'Documentación General', icon: Folder, color: 'text-slate-500' },
+];
 
-// --- HELPERS ---
-const formatBytes = (bytes: number | undefined, decimals = 2) => {
-    if (!bytes) return '0 Bytes';
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-};
-
-const getFileIcon = (type?: string) => {
-    if (type?.includes('pdf')) return <FileText className="w-5 h-5 text-rose-400" />;
-    if (type?.includes('image')) return <ImageIcon className="w-5 h-5 text-indigo-400" />;
-    if (type?.includes('sheet') || type?.includes('csv') || type?.includes('excel')) return <FileText className="w-5 h-5 text-emerald-400" />;
-    return <File className="w-5 h-5 text-slate-400" />;
-};
-
-const CATEGORIES: Record<string, CategoryConfig> = {
-    'general': { label: 'General', color: 'text-slate-400 bg-slate-500/10 border-slate-500/20' },
-    'manuals': { label: 'Manuales', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
-    'marketing': { label: 'Marketing', color: 'text-pink-400 bg-pink-500/10 border-pink-500/20' },
-    'legal': { label: 'Legal', color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
-    'hr': { label: 'RR.HH.', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
-};
+// 📄 Mock Data removed for production
+const MOCK_RESOURCES: Resource[] = [];
 
 const AdminResourcesPanel = () => {
-    // Tab State
-    const [activeTab, setActiveTab] = useState<'files' | 'guides' | 'manual'>('files');
+    // Tab State (Global Navigation)
+    const [activeTab, setActiveTab] = useState<'vault' | 'guides' | 'manual' | 'requests' | 'services'>('vault');
+    const [activeCategory, setActiveCategory] = useState<string>('contracts');
 
     // Data State
-    const [resources, setResources] = useState<Resource[]>([]);
+    const [dbResources, setDbResources] = useState<Resource[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('all');
-    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
+    const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
 
     // Modals State
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -101,11 +92,8 @@ const AdminResourcesPanel = () => {
     useEffect(() => {
         const q = query(collection(db, 'resources'), orderBy('createdAt', 'desc'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const fetchedResources: Resource[] = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            })) as Resource[];
-            setResources(fetchedResources);
+            const fetched: Resource[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Resource));
+            setDbResources(fetched);
             setLoading(false);
         }, (error) => {
             console.error("Error fetching resources: ", error);
@@ -115,34 +103,53 @@ const AdminResourcesPanel = () => {
         return () => unsubscribe();
     }, []);
 
-    // Filter and sort resources
-    const filteredResources = useMemo(() => {
-        let filtered = resources;
+    // Fetch Pending Requests Count
+    useEffect(() => {
+        const fetchPending = async () => {
+            const reqs = await resourceRequestService.getPendingRequests();
+            setPendingRequestsCount(reqs.length);
+        };
+        fetchPending();
+    }, []);
 
-        // Filter by category
-        if (selectedCategory !== 'all') {
-            filtered = filtered.filter(resource => resource.category === selectedCategory);
+    // Merge Mock & Real
+    const allResources = useMemo(() => {
+        return [...MOCK_RESOURCES, ...dbResources];
+    }, [dbResources]);
+
+    // Filter Logic
+    const filteredResources = useMemo(() => {
+        let filtered = allResources;
+
+        // 1. Category Filter
+        if (activeCategory) {
+            filtered = filtered.filter(r => (r.category || 'general') === activeCategory);
         }
 
-        // Filter by search term
+        // 2. Search Filter
         if (searchTerm) {
-            const lowerCaseSearchTerm = searchTerm.toLowerCase();
+            const lower = searchTerm.toLowerCase();
             filtered = filtered.filter(resource =>
-                (resource.title && resource.title.toLowerCase().includes(lowerCaseSearchTerm)) ||
-                (resource.name && resource.name.toLowerCase().includes(lowerCaseSearchTerm))
+                (resource.title || resource.name || '').toLowerCase().includes(lower)
             );
         }
 
-        // Sort: Pinned first, then by creation date
+        // 3. Sort (Pinned first)
         return filtered.sort((a, b) => {
             if (a.isPinned && !b.isPinned) return -1;
             if (!a.isPinned && b.isPinned) return 1;
-            return (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0);
+            return 0; // Keep original order (createdAt)
         });
-    }, [resources, selectedCategory, searchTerm]);
+    }, [allResources, activeCategory, searchTerm]);
 
-    // Handle file deletion
+
+    // Actions
     const handleDelete = (file: Resource) => {
+        if (file.isMock) {
+            alert("No puedes eliminar archivos de ejemplo (Mock)");
+            return;
+        }
+
         setConfirmDialog({
             isOpen: true,
             title: 'Eliminar Recurso',
@@ -151,14 +158,11 @@ const AdminResourcesPanel = () => {
             isDestructive: true,
             onConfirm: async () => {
                 try {
-                    // Delete from storage
                     if (file.storagePath) {
                         const fileRef = ref(storage, file.storagePath);
                         await deleteObject(fileRef);
                     }
-                    // Delete from Firestore
                     await deleteDoc(doc(db, 'resources', file.id));
-                    console.log("Resource deleted successfully!");
                     setConfirmDialog(prev => ({ ...prev, isOpen: false }));
                 } catch (error) {
                     console.error("Error deleting resource: ", error);
@@ -168,303 +172,329 @@ const AdminResourcesPanel = () => {
         });
     };
 
-    // Handle pin toggle
     const togglePin = async (file: Resource, event: React.MouseEvent) => {
-        event.stopPropagation(); // Prevent opening preview modal
+        event.stopPropagation();
+        if (file.isMock) return; // Mocks are fixed
         try {
             const fileRef = doc(db, 'resources', file.id);
-            await updateDoc(fileRef, {
-                isPinned: !file.isPinned
-            });
+            await updateDoc(fileRef, { isPinned: !file.isPinned });
         } catch (error) {
             console.error("Error toggling pin: ", error);
         }
     };
 
-    return (
-        <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 min-h-screen font-sans transition-colors duration-300">
+    const formatBytes = (bytes?: number) => {
+        if (!bytes) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    };
 
-            {/* HEADER */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/30 backdrop-blur-md sticky top-0 z-20">
+    const getFileIcon = (type?: string) => {
+        if (type?.includes('pdf')) return <FileText className="w-10 h-10 text-rose-500" />;
+        if (type?.includes('image')) return <ImageIcon className="w-10 h-10 text-indigo-500" />;
+        if (type?.includes('zip')) return <Folder className="w-10 h-10 text-amber-500" />;
+        if (type?.includes('sheet') || type?.includes('excel')) return <FileText className="w-10 h-10 text-emerald-500" />;
+        if (type?.includes('presentation')) return <FileText className="w-10 h-10 text-orange-500" />;
+        return <File className="w-10 h-10 text-slate-400" />;
+    };
+
+
+    return (
+        <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-900 dark:text-slate-200 font-sans transition-colors duration-300">
+
+            {/* HEADER with Global Navigation */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-20">
                 <div className="mb-4 md:mb-0">
-                    <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+                    <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
                         Centro de Conocimiento
-                        <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-bold border border-indigo-500/20 uppercase tracking-wider">Admin</span>
+                        <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 text-[10px] font-bold border border-indigo-500/20 uppercase tracking-widest">Admin</span>
                     </h2>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Gestión integral de documentación y guías.</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">Gestión integral de documentación y guías.</p>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    {/* Tab Switcher */}
-                    <div className="flex bg-slate-100 dark:bg-slate-900 rounded-xl p-1 border border-slate-200 dark:border-slate-800">
-                        <button
-                            onClick={() => setActiveTab('files')}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'files'
-                                ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-white shadow-sm'
-                                : 'text-slate-500 dark:text-slate-400 hover:text-indigo-500'
-                                }`}
-                        >
-                            Archivos
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('guides')}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'guides'
-                                ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-white shadow-sm'
-                                : 'text-slate-500 dark:text-slate-400 hover:text-indigo-500'
-                                }`}
-                        >
-
-                            Guías Interactivas
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('manual')}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'manual'
-                                ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-white shadow-sm'
-                                : 'text-slate-500 dark:text-slate-400 hover:text-indigo-500'
-                                }`}
-                        >
-                            Manual de Uso
-                        </button>
-                    </div>
-
-                    {activeTab === 'files' && (
-                        <div className="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-700">
-                            {/* View Toggles */}
-                            <div className="flex bg-slate-100 dark:bg-slate-900 rounded-lg p-1 border border-slate-200 dark:border-slate-800">
-                                <button onClick={() => setViewMode('list')} title="Vista de lista" aria-label="Vista de lista" className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
-                                    <ListIcon className="w-4 h-4" />
-                                </button>
-                                <button onClick={() => setViewMode('grid')} title="Vista de cuadrícula" aria-label="Vista de cuadrícula" className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
-                                    <Grid className="w-4 h-4" />
-                                </button>
-                            </div>
-
-                            <button
-                                onClick={() => setIsUploadModalOpen(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow-lg shadow-indigo-500/20 transition-all font-medium text-sm"
-                            >
-                                <Plus className="w-4 h-4" />
-                                Nuevo Recurso
-                            </button>
-                        </div>
-                    )}
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                    <button
+                        onClick={() => setActiveTab('vault')}
+                        className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'vault' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                    >
+                        Bóveda Digital
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('guides')}
+                        className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'guides' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                    >
+                        Guías Interactivas
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('manual')}
+                        className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'manual' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                    >
+                        Manual de Uso
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('requests')}
+                        className={`px-5 py-2 rounded-lg text-sm font-bold transition-all relative flex items-center gap-2 ${activeTab === 'requests' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                    >
+                        Solicitudes
+                        {pendingRequestsCount > 0 && (
+                            <span className="flex items-center justify-center bg-rose-500 text-white text-[10px] h-5 min-w-[20px] px-1 rounded-full border-2 border-slate-100 dark:border-slate-800">
+                                {pendingRequestsCount}
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('services')}
+                        className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'services' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                    >
+                        Servicios Premium
+                    </button>
                 </div>
             </div>
 
-            {/* CONTENT */}
-            {
-                activeTab === 'guides' ? (
+            {/* CONTENT AREA */}
+            <div className="flex-1 flex overflow-hidden">
+                {activeTab === 'vault' ? (
+                    <>
+                        {/* 📂 SIDEBAR (Folders) */}
+                        <aside className="w-72 bg-white dark:bg-slate-900/50 border-r border-slate-200 dark:border-slate-800 flex flex-col pt-6 pb-4">
+                            <div className="px-6 mb-2">
+                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Estructura de Archivos</h3>
+                            </div>
+                            <nav className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar">
+                                {FOLDERS.map(folder => {
+                                    const isActive = activeCategory === folder.id;
+                                    return (
+                                        <button
+                                            key={folder.id}
+                                            onClick={() => setActiveCategory(folder.id)}
+                                            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group ${isActive
+                                                ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200 dark:ring-indigo-800'
+                                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <folder.icon className={`w-4 h-4 ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
+                                                {folder.label}
+                                            </div>
+                                            {isActive && <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />}
+                                        </button>
+                                    );
+                                })}
+                            </nav>
+
+                            <div className="p-4 mt-auto border-t border-slate-100 dark:border-slate-800 space-y-4">
+                                {/* Storage Widget */}
+                                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-100 dark:border-slate-700">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Almacenamiento</span>
+                                        <span className="text-[10px] font-bold text-indigo-500">2.4 GB / 10 GB</span>
+                                    </div>
+                                    <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                        <div className="h-full bg-indigo-500 w-[24%] rounded-full" />
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={() => setIsUploadModalOpen(true)}
+                                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-500/20 transition-all font-bold text-sm flex items-center justify-center gap-2 group"
+                                >
+                                    <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" />
+                                    Subir Nuevo Recurso
+                                </button>
+                            </div>
+                        </aside>
+
+                        {/* 📄 MAIN GRID */}
+                        <main className="flex-1 flex flex-col min-w-0 bg-slate-50/50 dark:bg-slate-950/50 relative">
+                            {/* Sub-Header / Search */}
+                            <div className="h-16 px-8 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0 bg-white/50 dark:bg-slate-950/50 backdrop-blur-md sticky top-0 z-10">
+                                <div className="flex items-center gap-4">
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                                        {FOLDERS.find(f => f.id === activeCategory)?.label}
+                                    </h3>
+                                    <span className="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold px-2 py-0.5 rounded-md">
+                                        {filteredResources.length}
+                                    </span>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                    <div className="relative group w-64 transition-all focus-within:w-80">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                        <input
+                                            type="text"
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            placeholder="Filtrar archivos..."
+                                            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm"
+                                        />
+                                    </div>
+                                    <div className="flex bg-white dark:bg-slate-900 rounded-lg p-1 border border-slate-200 dark:border-slate-700 shadow-sm">
+                                        <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                                            <Grid className="w-4 h-4" />
+                                        </button>
+                                        <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                                            <ListIcon className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Scrollable Content */}
+                            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                                {loading ? (
+                                    <div className="grid grid-cols-4 gap-6 animate-pulse">
+                                        {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-48 bg-slate-200 dark:bg-slate-800 rounded-2xl" />)}
+                                    </div>
+                                ) : filteredResources.length === 0 ? (
+                                    <div className="h-full flex flex-col items-center justify-center text-center opacity-80 animate-in fade-in zoom-in-95 duration-500">
+                                        <div className="w-24 h-24 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4 group relative">
+                                            <div className="absolute inset-0 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-full animate-spin-slow pointer-events-none" />
+                                            <FolderOpen className="w-10 h-10 text-slate-300 dark:text-slate-600 group-hover:scale-110 transition-transform" />
+                                        </div>
+                                        <h4 className="text-lg font-black text-slate-700 dark:text-slate-200">Carpeta Vacía</h4>
+                                        <p className="text-sm text-slate-400 dark:text-slate-500 max-w-[200px] mt-2 mb-6 leading-relaxed">
+                                            No hay documentos en esta sección.
+                                        </p>
+                                        <button
+                                            onClick={() => setIsUploadModalOpen(true)}
+                                            className="px-6 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-indigo-600 dark:text-indigo-400 text-xs font-bold uppercase tracking-wider hover:bg-indigo-50 dark:hover:bg-slate-700 transition-colors"
+                                        >
+                                            Subir primer archivo
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {viewMode === 'grid' ? (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                                {filteredResources.map((file) => (
+                                                    <div
+                                                        key={file.id}
+                                                        onClick={() => setPreviewFile(file)}
+                                                        className="group bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2rem] p-5 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col items-center text-center relative overflow-hidden"
+                                                    >
+                                                        {file.isMock && (
+                                                            <div className="absolute top-3 left-3 z-10">
+                                                                <span className="bg-slate-100 dark:bg-slate-800 text-[9px] font-bold text-slate-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">EJEMPLO</span>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Gradient Flash on Hover */}
+                                                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-transparent to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
+                                                        {/* Admin Controls */}
+                                                        <div className="absolute top-2 right-2 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button
+                                                                onClick={(e) => togglePin(file, e)}
+                                                                className={`p-1.5 rounded-lg backdrop-blur-sm ${file.isPinned ? 'text-amber-400 bg-amber-400/10' : 'text-slate-400 hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                                            >
+                                                                <Pin size={14} className={file.isPinned ? 'fill-current' : ''} />
+                                                            </button>
+                                                            {!file.isMock && (
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); handleDelete(file); }}
+                                                                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 backdrop-blur-sm"
+                                                                >
+                                                                    <Trash2 size={14} />
+                                                                </button>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="w-20 h-20 mb-4 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300 mt-2">
+                                                            <div className="absolute inset-0 bg-indigo-50/50 dark:bg-indigo-900/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                            {getFileIcon(file.type)}
+                                                        </div>
+
+                                                        <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-tight mb-2 line-clamp-2 px-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                                            {file.title || file.name}
+                                                        </h4>
+
+                                                        <span className="text-[10px] font-mono text-slate-400 mb-4">{formatBytes(file.size)}</span>
+
+                                                        <div className="mt-auto pt-4 w-full border-t border-slate-50 dark:border-slate-800 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-300">
+                                                            <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">Visualizar</span>
+                                                            <Eye className="w-4 h-4 text-indigo-500" />
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                                                <table className="w-full text-left">
+                                                    <thead className="bg-slate-50 dark:bg-slate-950 text-xs uppercase font-bold text-slate-500 tracking-wider">
+                                                        <tr>
+                                                            <th className="p-4 pl-6">Documento</th>
+                                                            <th className="p-4">Tamaño</th>
+                                                            <th className="p-4">Fecha</th>
+                                                            <th className="p-4 text-right pr-6">Acciones</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                                                        {filteredResources.map(file => (
+                                                            <tr key={file.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer" onClick={() => setPreviewFile(file)}>
+                                                                <td className="p-4 pl-6 font-medium text-slate-900 dark:text-white flex items-center gap-3">
+                                                                    <div className="transform scale-75">{getFileIcon(file.type)}</div>
+                                                                    <div>
+                                                                        {file.title || file.name}
+                                                                        {file.isMock && <span className="ml-2 text-[9px] bg-slate-100 px-1 rounded text-slate-400">EJEMPLO</span>}
+                                                                    </div>
+                                                                </td>
+                                                                <td className="p-4 text-slate-500 font-mono text-xs">{formatBytes(file.size)}</td>
+                                                                <td className="p-4 text-slate-500">{new Date().toLocaleDateString()}</td>
+                                                                <td className="p-4 text-right pr-6">
+                                                                    <div className="flex justify-end gap-2">
+                                                                        <button onClick={(e) => { e.stopPropagation(); /* Download logic */ }} className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-slate-100">
+                                                                            <Download className="w-4 h-4" />
+                                                                        </button>
+                                                                        {!file.isMock && (
+                                                                            <button onClick={(e) => { e.stopPropagation(); handleDelete(file); }} className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50">
+                                                                                <Trash2 className="w-4 h-4" />
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </main>
+                    </>
+                ) : activeTab === 'guides' ? (
                     <div className="flex-1 overflow-hidden bg-slate-50 dark:bg-slate-950">
                         <AdminGuidesPanel />
                     </div>
-                ) : activeTab === 'manual' ? (
-                    <div className="flex-1 overflow-hidden p-6">
-                        <UserManual role="admin" />
+                ) : activeTab === 'requests' ? (
+                    <div className="flex-1 overflow-hidden bg-slate-50 dark:bg-slate-950">
+                        <RequestsInbox />
+                    </div>
+                ) : activeTab === 'services' ? (
+                    <div className="flex-1 overflow-hidden bg-slate-50 dark:bg-slate-950">
+                        <ServiceManager />
                     </div>
                 ) : (
-                    <div className="flex-1 overflow-auto p-6">
-                        {/* FILTERS */}
-                        <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between">
-                            {/* Tabs */}
-                            <div className="flex flex-wrap gap-2">
-                                {['all', 'manuals', 'marketing', 'legal', 'hr', 'general'].map(cat => (
-                                    <button
-                                        key={cat}
-                                        onClick={() => setSelectedCategory(cat)}
-                                        className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all border ${selectedCategory === cat
-                                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200 dark:shadow-none'
-                                            : 'bg-white dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-slate-600 hover:text-indigo-600 dark:hover:text-slate-200'
-                                            }`}
-                                    >
-                                        {cat === 'all' ? 'Todos' : CATEGORIES[cat]?.label || cat}
-                                    </button>
-                                ))}
-                            </div>
-
-                            {/* Search */}
-                            <div className="relative w-full max-w-xs">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                                <input
-                                    type="text"
-                                    placeholder="Buscar..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-                                />
-                            </div>
-                        </div>
-
-                        {loading ? (
-                            <div className="flex justify-center py-20">
-                                <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
-                            </div>
-                        ) : (
-                            <>
-                                {/* LIST VIEW */}
-                                {viewMode === 'list' && (
-                                    <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/60 rounded-xl shadow-sm overflow-hidden">
-                                        <table className="w-full text-left border-collapse">
-                                            <thead>
-                                                <tr className="border-b border-slate-100 dark:border-slate-800/60 bg-slate-50 dark:bg-slate-900/60 text-xs uppercase tracking-wider text-slate-500 font-semibold">
-                                                    <th className="p-4 pl-6 w-8" />
-                                                    <th className="p-4">Nombre</th>
-                                                    <th className="p-4">Categoría</th>
-                                                    <th className="p-4">Tamaño</th>
-                                                    <th className="p-4">Fecha</th>
-                                                    <th className="p-4 text-right pr-6">Acciones</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40">
-                                                {filteredResources.map((file) => {
-                                                    const catStyle = CATEGORIES[file.category || 'general'] || CATEGORIES['general'];
-                                                    return (
-                                                        <tr key={file.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                                            <td className="p-4 pl-6">
-                                                                <button
-                                                                    onClick={(e) => togglePin(file, e)}
-                                                                    title={file.isPinned ? "Desanclar" : "Anclar"}
-                                                                    aria-label={file.isPinned ? "Desanclar recurso" : "Anclar recurso"}
-                                                                    className={`p-1.5 rounded-md transition-all ${file.isPinned ? 'text-amber-400 bg-amber-400/10' : 'text-slate-600 hover:text-slate-400'}`}
-                                                                >
-                                                                    <Pin size={14} className={file.isPinned ? "fill-current" : ""} />
-                                                                </button>
-                                                            </td>
-                                                            <td className="p-4">
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50">
-                                                                        {getFileIcon(file.type)}
-                                                                    </div>
-                                                                    <div>
-                                                                        <p className="text-sm font-medium text-slate-900 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-white transition-colors">
-                                                                            {file.title || file.name}
-                                                                        </p>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td className="p-4">
-                                                                <span className={`text-[10px] font-bold px-2 py-1 rounded-md border uppercase tracking-wider ${catStyle.color}`}>
-                                                                    {catStyle.label}
-                                                                </span>
-                                                            </td>
-                                                            <td className="p-4 text-sm text-slate-500 font-bold uppercase tracking-wider">
-                                                                {formatBytes(file.size)}
-                                                            </td>
-                                                            <td className="p-4 text-sm text-slate-500">
-                                                                {file.createdAt ? file.createdAt.toDate().toLocaleDateString() : '-'}
-                                                            </td>
-                                                            <td className="p-4 text-right pr-6">
-                                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                    <button
-                                                                        onClick={() => setPreviewFile(file)}
-                                                                        title="Vista previa"
-                                                                        aria-label="Vista previa"
-                                                                        className="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors"
-                                                                    >
-                                                                        <Eye size={16} />
-                                                                    </button>
-                                                                    <a
-                                                                        href={file.url}
-                                                                        target="_blank"
-                                                                        rel="noreferrer"
-                                                                        title="Descargar"
-                                                                        aria-label="Descargar archivo"
-                                                                        className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
-                                                                    >
-                                                                        <Download size={16} />
-                                                                    </a>
-                                                                    <button
-                                                                        onClick={() => handleDelete(file)}
-                                                                        title="Eliminar"
-                                                                        aria-label="Eliminar recurso"
-                                                                        className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
-                                                                    >
-                                                                        <Trash2 size={16} />
-                                                                    </button>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                                {filteredResources.length === 0 && (
-                                                    <tr>
-                                                        <td colSpan={6} className="p-12 text-center text-slate-500">
-                                                            <FolderOpen className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                                                            No se encontraron recursos.
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-
-                                {/* GRID VIEW */}
-                                {viewMode === 'grid' && (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        {filteredResources.map((file) => {
-                                            const catStyle = CATEGORIES[file.category || 'general'] || CATEGORIES['general'];
-                                            return (
-                                                <div key={file.id} className="group bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/60 rounded-xl p-4 hover:border-indigo-300 dark:hover:border-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/5 dark:hover:shadow-black/20 hover:-translate-y-1 transition-all relative">
-
-                                                    {/* Pin Badge */}
-                                                    {file.isPinned && (
-                                                        <div className="absolute top-3 right-3 text-amber-400">
-                                                            <Pin size={14} className="fill-current" />
-                                                        </div>
-                                                    )}
-
-                                                    <div className="flex justify-between items-start mb-4">
-                                                        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/30 shadow-inner group-hover:scale-110 transition-transform">
-                                                            {getFileIcon(file.type)}
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="mb-3">
-                                                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200 truncate mb-1.5" title={file.title}>
-                                                            {file.title || file.name}
-                                                        </h4>
-                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${catStyle.color}`}>
-                                                            {catStyle.label}
-                                                        </span>
-                                                    </div>
-
-                                                    <div className="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-slate-800/50">
-                                                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">{formatBytes(file.size)}</span>
-                                                        <div className="flex gap-1">
-                                                            <button onClick={() => setPreviewFile(file)} title="Vista previa" aria-label="Vista previa" className="p-1.5 text-slate-500 hover:text-white transition-colors">
-                                                                <Eye size={14} />
-                                                            </button>
-                                                            <button onClick={() => handleDelete(file)} title="Eliminar" aria-label="Eliminar" className="p-1.5 text-slate-500 hover:text-rose-400 transition-colors">
-                                                                <Trash2 size={14} />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </>
-                        )}
+                    <div className="flex-1 overflow-hidden p-6 bg-slate-50 dark:bg-slate-950">
+                        <UserManual role="admin" />
                     </div>
-                )
-            }
+                )}
+            </div>
 
             {/* MODALS */}
             <ResourceUploadModal
                 isOpen={isUploadModalOpen}
                 onClose={() => setIsUploadModalOpen(false)}
-                onSuccess={() => {/* Toast success could go here */ }}
+                onSuccess={() => { /* Reload trigger? */ }}
             />
 
             <DocPreviewModal
                 isOpen={!!previewFile}
                 onClose={() => setPreviewFile(null)}
-                file={previewFile ? {
-                    name: previewFile.title || previewFile.name || '',
-                    url: previewFile.url || '',
-                    type: previewFile.type
-                } : null}
+                file={previewFile ? { ...previewFile, name: previewFile.title || previewFile.name || '', url: previewFile.url || '' } : null}
             />
 
             <ConfirmationModal
@@ -476,7 +506,7 @@ const AdminResourcesPanel = () => {
                 isDestructive={confirmDialog.isDestructive}
                 confirmText={confirmDialog.confirmText}
             />
-        </div >
+        </div>
     );
 };
 

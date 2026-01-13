@@ -1,9 +1,10 @@
 import React, { useState, useContext, useEffect, useMemo, useRef } from 'react';
 import { ToastContext } from '../../../context/contexts';
+import { useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray, SubmitHandler } from 'react-hook-form';
 import {
     Building, MapPin, Save, User, Camera,
-    Mail, Phone, Shield, Trash2, Plus, DollarSign, Lock
+    Mail, Phone, Shield, Trash2, Plus, DollarSign, Lock, Star, ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { userService, UserProfile } from '../../../services/userService';
@@ -58,6 +59,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
     const { user, isAdmin } = useAuth();
     const toastCtx = useContext(ToastContext);
     const addToast = useMemo(() => toastCtx?.addToast || (() => { }), [toastCtx]);
+    const navigate = useNavigate();
 
     // If no franchiseId provided, we assume we are editing the current user's franchise profile
     // But if we are an admin editing another franchise, we might not want to edit *that user's personal profile* 
@@ -304,6 +306,8 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
             </div>
 
             <div className="max-w-[1600px] mx-auto w-full px-6 md:px-10 -mt-20 relative z-10 flex flex-col gap-10">
+
+
 
                 {/* --- HEADER IDENTITY SECTION --- */}
                 <div className="flex flex-col md:flex-row items-end gap-6 pb-6 border-b border-slate-200/60">
