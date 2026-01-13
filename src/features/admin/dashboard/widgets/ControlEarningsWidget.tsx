@@ -35,17 +35,17 @@ const ControlEarningsWidget: React.FC<ControlEarningsWidgetProps> = ({ data, loa
             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 blur-[80px] rounded-full pointer-events-none" />
 
             {/* Header */}
-            <div className="flex justify-between items-start mb-8 relative z-10">
+            <div className="flex justify-between items-center mb-8 relative z-10">
                 <div>
-                    <h3 className="text-base font-semibold text-white flex items-center gap-2">
+                    <h3 className="text-base font-semibold tracking-tight text-white flex items-center gap-2">
                         <TrendingUp className="w-5 h-5 text-emerald-400" />
                         Control de Ingresos
                     </h3>
                     <div className="flex items-center gap-2 mt-1">
-                        <p className="text-sm text-slate-400">
+                        <p className="text-sm text-slate-400 font-medium">
                             Mes en curso
                         </p>
-                        <span className="text-xs font-medium text-emerald-400 flex items-center gap-0.5 bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-400/20">
+                        <span className="text-xs font-medium tracking-tight text-emerald-400 flex items-center gap-0.5 bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-400/20">
                             <ArrowUpRight className="w-3 h-3" />
                             {trend.toFixed(1)}% vs anterior
                         </span>
@@ -58,11 +58,11 @@ const ControlEarningsWidget: React.FC<ControlEarningsWidgetProps> = ({ data, loa
                 {/* Royalties */}
                 <div className="group/royalties">
                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs font-medium text-slate-400 flex items-center gap-2">
+                        <span className="text-xs font-medium tracking-tight text-slate-400 flex items-center gap-2">
                             <Award className="w-4 h-4 text-indigo-400" />
                             Royalties (5%)
                         </span>
-                        <span className="text-xs text-slate-500 font-medium">Meta: 8.5k€</span>
+                        <span className="text-xs text-slate-500 font-medium tracking-tight">Meta: 8.5k€</span>
                     </div>
                     <div className="relative">
                         <span className="text-3xl font-bold text-white tracking-tight tabular-nums block mb-2">
@@ -84,11 +84,11 @@ const ControlEarningsWidget: React.FC<ControlEarningsWidgetProps> = ({ data, loa
                 {/* Services */}
                 <div className="group/services">
                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs font-medium text-slate-400 flex items-center gap-2">
+                        <span className="text-xs font-medium tracking-tight text-slate-400 flex items-center gap-2">
                             <Briefcase className="w-4 h-4 text-amber-400" />
                             Servicios & Consultoría
                         </span>
-                        <span className="text-xs text-slate-500 font-medium">Meta: 5k€</span>
+                        <span className="text-xs text-slate-500 font-medium tracking-tight">Meta: 5k€</span>
                     </div>
                     <div className="relative">
                         <span className="text-3xl font-bold text-white tracking-tight tabular-nums block mb-2">
@@ -111,7 +111,7 @@ const ControlEarningsWidget: React.FC<ControlEarningsWidgetProps> = ({ data, loa
                     onClick={onNavigate ? () => onNavigate('finance') : undefined}
                     className="flex justify-between items-center cursor-pointer group/link"
                 >
-                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Credit</span>
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-widest">Total Credit</span>
                     <div className="flex items-center gap-3">
                         <span className="text-2xl font-bold text-emerald-400 tracking-tight tabular-nums">
                             {totalAdminCredit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€

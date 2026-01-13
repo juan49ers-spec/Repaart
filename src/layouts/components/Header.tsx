@@ -140,7 +140,7 @@ const Header: React.FC<HeaderProps> = ({
                         </div>
                         <div className="hidden md:block">
                             <div className="flex items-center gap-2">
-                                <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight leading-tight transition-colors">{getTitle()}</h1>
+                                <h1 className="text-base font-bold text-slate-900 dark:text-white tracking-tight leading-none transition-colors whitespace-nowrap">{getTitle()}</h1>
                                 <button
                                     onClick={() => {
                                         const path = location.pathname;

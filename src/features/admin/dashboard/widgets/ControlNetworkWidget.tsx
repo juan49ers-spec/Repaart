@@ -70,14 +70,14 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
 
             {/* Header */}
             <div className="p-6 pb-2">
-                <div className="flex justify-between items-start mb-4">
+                <div className="flex justify-between items-center mb-4">
                     <div>
-                        <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                        <h3 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
                             <Activity className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                             Monitoreo de Red
                         </h3>
-                        <p className="text-sm text-slate-500 mt-1">
-                            {data.total} sedes activas &bull; <span className="font-medium text-slate-600 dark:text-slate-400">
+                        <p className="text-sm text-slate-500 mt-1 font-medium">
+                            {data.total} sedes activas &bull; <span className="text-slate-600 dark:text-slate-400">
                                 {viewMode === 'top3' ? 'Top Performers' : 'Análisis de Riesgo'}
                             </span>
                         </p>
@@ -87,7 +87,7 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
                     <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
                         <button
                             onClick={() => setViewMode('list')}
-                            className={`px-3 py-1 rounded-md text-xs font-semibold transition-all ${viewMode === 'list'
+                            className={`px-3 py-1 rounded-md text-xs font-semibold tracking-tight transition-all ${viewMode === 'list'
                                 ? 'bg-white dark:bg-slate-700 data-[state=active]:shadow-sm text-slate-900 dark:text-white'
                                 : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                                 }`}
@@ -96,7 +96,7 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
                         </button>
                         <button
                             onClick={() => setViewMode('top3')}
-                            className={`px-3 py-1 rounded-md text-xs font-semibold transition-all flex items-center gap-1 ${viewMode === 'top3'
+                            className={`px-3 py-1 rounded-md text-xs font-semibold tracking-tight transition-all flex items-center gap-1 ${viewMode === 'top3'
                                 ? 'bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400'
                                 : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                                 }`}
@@ -116,13 +116,13 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
                                 placeholder="Buscar..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
+                                className="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium tracking-tight focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
                             />
                         </div>
                         <button
                             onClick={() => setFilter(filter === 'critical' ? 'all' : 'critical')}
                             title="Filtrar Críticos"
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all flex items-center gap-1.5 ${filter === 'critical'
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold tracking-tight border transition-all flex items-center gap-1.5 ${filter === 'critical'
                                 ? 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400'
                                 : 'bg-slate-50 border-transparent text-slate-500 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400'
                                 }`}
@@ -135,9 +135,9 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
             </div>
 
             {/* Table Header */}
-            <div className="grid grid-cols-12 gap-4 px-6 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                <div className="col-span-1 text-center">#</div>
-                <div className="col-span-5">Sede</div>
+            <div className="grid grid-cols-12 gap-4 px-6 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">
+                <div className="col-span-1 flex items-center justify-center">#</div>
+                <div className="col-span-5 text-left pl-2">Sede</div>
                 <div className="col-span-3 text-right">Revenue</div>
                 <div className="col-span-3 text-right">Margen</div>
             </div>
@@ -146,7 +146,7 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
             <div className="flex-1 overflow-y-auto custom-scrollbar relative">
                 {displayList.length === 0 ? (
                     <div className="h-32 flex flex-col items-center justify-center text-slate-400">
-                        <p className="text-xs">No hay datos disponibles</p>
+                        <p className="text-xs font-medium tracking-tight">No hay datos disponibles</p>
                     </div>
                 ) : (
                     <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -177,27 +177,27 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
                                         }`}
                                 >
                                     {/* Rank / Status */}
-                                    <div className="col-span-1 flex justify-center">
+                                    <div className="col-span-1 flex justify-center items-center h-full">
                                         {isTop3 ? (
                                             <span className="text-sm scale-110 drop-shadow-sm filter">{rankIcons[index]}</span>
                                         ) : (
-                                            <div className={`w-2 h-2 rounded-full mt-1 ${colors[status].split(' ')[1]} ${status === 'critical' ? 'animate-pulse' : ''}`} />
+                                            <div className={`w-2 h-2 rounded-full ${colors[status].split(' ')[1]} ${status === 'critical' ? 'animate-pulse' : ''}`} />
                                         )}
                                     </div>
 
                                     {/* Name & ID */}
-                                    <div className="col-span-5">
-                                        <p className={`text-sm font-bold truncate ${isTop3 && index === 0 ? 'text-amber-900 dark:text-amber-400' : 'text-slate-900 dark:text-white'}`}>
+                                    <div className="col-span-5 pl-2">
+                                        <p className={`text-sm font-bold tracking-tight truncate ${isTop3 && index === 0 ? 'text-amber-900 dark:text-amber-400' : 'text-slate-900 dark:text-white'}`}>
                                             {f.name}
                                         </p>
-                                        <p className="text-[10px] text-slate-400 font-mono hidden group-hover:block transition-all">
+                                        <p className="text-[10px] text-slate-400 font-mono hidden group-hover:block transition-all pt-0.5">
                                             {f.id.substring(0, 8)}...
                                         </p>
                                     </div>
 
                                     {/* Revenue */}
                                     <div className="col-span-3 text-right">
-                                        <span className={`text-xs font-mono font-bold ${isTop3 ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
+                                        <span className={`text-xs font-mono font-bold tracking-tight ${isTop3 ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
                                             {revenue.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
                                         </span>
                                         {isTop3 && (
@@ -209,7 +209,7 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
 
                                     {/* Margin */}
                                     <div className="col-span-3 text-right">
-                                        <span className={`text-xs font-mono font-bold ${colors[status].split(' ')[0]}`}>
+                                        <span className={`text-xs font-mono font-bold tracking-tight ${colors[status].split(' ')[0]}`}>
                                             {margin.toFixed(1)}%
                                         </span>
                                     </div>
@@ -224,7 +224,7 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
             <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
                 <button
                     onClick={() => navigate('/admin/network')}
-                    className="w-full flex items-center justify-center gap-2 py-2 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors group"
+                    className="w-full flex items-center justify-center gap-2 py-2 text-xs font-medium tracking-tight text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors group"
                 >
                     Expandir Red Completa <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                 </button>

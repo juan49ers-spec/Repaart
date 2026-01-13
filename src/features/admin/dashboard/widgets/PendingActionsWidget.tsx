@@ -24,7 +24,7 @@ interface ControlPendingActionsWidgetProps {
     onNavigate?: (tab: string) => void;
 }
 
-const ControlPendingActionsWidget: React.FC<ControlPendingActionsWidgetProps> = ({ data, loading, onNavigate }) => {
+const PendingActionsWidget: React.FC<ControlPendingActionsWidgetProps> = ({ data, loading, onNavigate }) => {
     const navigate = useNavigate();
 
     if (loading) {
@@ -49,13 +49,13 @@ const ControlPendingActionsWidget: React.FC<ControlPendingActionsWidgetProps> = 
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col h-full shadow-sm">
 
             {/* Header */}
-            <div className="flex justify-between items-start mb-6">
+            <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                    <h3 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
                         <Inbox className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                         Acciones Pendientes
                     </h3>
-                    <p className="text-sm text-slate-500 mt-1">
+                    <p className="text-sm text-slate-500 mt-1 font-medium">
                         {data.total} tareas requieren atención
                     </p>
                 </div>
@@ -85,26 +85,26 @@ const ControlPendingActionsWidget: React.FC<ControlPendingActionsWidgetProps> = 
                                 }
                             }}
                             className={`group relative flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${action.priority === 'critical'
-                                    ? 'bg-rose-50 dark:bg-rose-900/10 border-rose-100 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/20'
-                                    : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 hover:border-indigo-200 dark:hover:border-indigo-900'
+                                ? 'bg-rose-50 dark:bg-rose-900/10 border-rose-100 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/20'
+                                : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 hover:border-indigo-200 dark:hover:border-indigo-900'
                                 }`}
                         >
                             <div className="flex items-center gap-4 w-full">
                                 <div className={`p-2 rounded-lg shrink-0 ${action.priority === 'critical' ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400' :
-                                        action.type === 'ticket' ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' :
-                                            action.type === 'premium' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' :
-                                                action.type === 'record' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' :
-                                                    'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                                    action.type === 'ticket' ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' :
+                                        action.type === 'premium' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' :
+                                            action.type === 'record' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' :
+                                                'bg-slate-100 dark:bg-slate-800 text-slate-500'
                                     }`}>
                                     <IconForType type={action.type} priority={action.priority} />
                                 </div>
                                 <div className="min-w-0 flex-1">
                                     <div className="flex justify-between items-center mb-0.5">
-                                        <p className={`text-sm font-medium truncate ${action.priority === 'critical' ? 'text-rose-700 dark:text-rose-300' : 'text-slate-900 dark:text-white'
+                                        <p className={`text-sm font-medium tracking-tight truncate ${action.priority === 'critical' ? 'text-rose-700 dark:text-rose-300' : 'text-slate-900 dark:text-white'
                                             }`}>
                                             {action.title}
                                         </p>
-                                        <span className="text-xs text-slate-400 flex items-center gap-1">
+                                        <span className="text-xs text-slate-400 flex items-center gap-1 font-medium">
                                             <Clock className="w-3 h-3" />
                                             {getRelativeTime(action.timestamp)}
                                         </span>
@@ -145,10 +145,10 @@ const IconForType = ({ type, priority }: { type: string, priority?: string }) =>
     }
 }
 
-const CountLabel = ({ count, icon: Icon, color }: { count: number, icon: any, color: string }) => (
+const CountLabel = ({ count, icon: _Icon, color }: { count: number, icon: any, color: string }) => (
     <div className={`flex items-center justify-center w-7 h-7 rounded-full ${color} text-white ring-2 ring-white dark:ring-slate-900 shadow-sm`} title={`${count} ítems`}>
-        <span className="text-xs font-bold">{count}</span>
+        <span className="text-xs font-bold tracking-tight">{count}</span>
     </div>
 );
 
-export default ControlPendingActionsWidget;
+export default PendingActionsWidget;

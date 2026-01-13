@@ -6,7 +6,7 @@ import { useAdminControl } from '../../../hooks/useAdminControl';
 
 // Control Widgets
 import ControlNetworkWidget from '../dashboard/widgets/ControlNetworkWidget';
-import ControlPendingActionsWidget from '../dashboard/widgets/ControlPendingActionsWidget';
+import PendingActionsWidget from '../dashboard/widgets/PendingActionsWidget';
 import ControlEventsWidget from '../dashboard/widgets/ControlEventsWidget';
 import ControlEarningsWidget from '../dashboard/widgets/ControlEarningsWidget';
 import IntelligenceWidget from '../dashboard/widgets/IntelligenceWidget';
@@ -31,7 +31,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onNavigate, selectedMonth }) 
             <section>
                 <div className="flex items-center gap-3 mb-6">
                     <div className="h-6 w-1 bg-indigo-600 rounded-full" />
-                    <h2 className="text-xl font-semibold text-slate-900 dark:text-white tracking-tight">Control Hub</h2>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Control Hub</h2>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -42,7 +42,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onNavigate, selectedMonth }) 
 
                     {/* Widget 2: Pending Actions */}
                     <div className="h-[420px]">
-                        <ControlPendingActionsWidget
+                        <PendingActionsWidget
                             data={data.pending}
                             loading={loading}
                             onNavigate={onNavigate}

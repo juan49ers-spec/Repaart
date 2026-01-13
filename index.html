@@ -17,19 +17,7 @@
   <meta name="description" content="Dashboard de gestión financiera y operativa para franquicias de reparto." />
   <link rel="apple-touch-icon" href="/icon.jpg" />
   <link rel="manifest" href="/manifest.webmanifest" />
-  <script>
-    // SW KILLER: Force unregister any existing Service Worker immediately
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function (registrations) {
-        for (let registration of registrations) {
-          registration.unregister().then(function () {
-            console.warn('Service Worker unregistered via Killer Script');
-            window.location.reload(); // Reload immediately after killing
-          });
-        }
-      });
-    }
-  </script>
+
 </head>
 
 <body>
