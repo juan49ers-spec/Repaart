@@ -9,54 +9,120 @@ admin.initializeApp();
  * sincronizamos su rol hacia Firebase Auth (Custom Claims).
  */
 exports.syncUserRole = functions.firestore
-    .document("users_config/{userId}")
+    .document('users/{userId}')
     .onWrite(async (change, context) => {
         const userId = context.params.userId;
 
-        // Si el documento fue borrado, revocamos permisos
-        if (!change.after.exists) {
-            console.log(`Revocando claims para usuario ${userId} (doc eliminado)`);
-            return admin.auth().setCustomUserClaims(userId, null);
-        }
+        // Si el documento fue borrado, no hacemos nada (deleteUserSync ya se encarga de limpiar Auth)
+        if (!change.after.exists) return null;
 
         const newData = change.after.data();
-        const oldData = change.before.exists ? change.before.data() : {};
-
-        // Si el rol no ha cambiado, no hacemos nada (ahorramos cómputo)
-        if (newData.role === oldData.role) {
-            return null;
-        }
-
         const role = newData.role;
+        const franchiseId = newData.franchiseId;
 
-        // Validación de seguridad: Solo permitimos roles conocidos
-        const validRoles = ["admin", "franchise", "user"];
-
-        if (!validRoles.includes(role)) {
-            console.warn(`Rol inválido detectado: ${role} para usuario ${userId}`);
+        // Solo sincronizamos si hay rol
+        if (!role) {
+            console.log(`⚠️ Usuario ${userId} sin rol. Claims no actualizados.`);
             return null;
         }
 
         try {
-            // ESTA ES LA MAGIA: Asignamos el claim al token
-            // También añadimos franchiseId si existe, para las reglas de tenencia
-            const claims = {
-                role: role,
-                franchiseId: newData.franchiseId || null
-            };
-
+            // Sincronizar Custom Claims
+            const claims = { role, franchiseId: franchiseId || null };
             await admin.auth().setCustomUserClaims(userId, claims);
-
-            console.log(`Claims actualizados para ${userId}:`, claims);
-
-            // Opcional: Forzar refresh de metadatos en Firestore para que el cliente sepa que ya ocurrió
-            // await change.after.ref.set({ claimsSyncedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
-
-
+            console.log(`✅ Claims sincronizados para ${userId}:`, claims);
         } catch (error) {
-            console.error("Error sincronizando claims:", error);
+            console.error(`❌ Error sincronizando claims para ${userId}:`, error);
         }
+
+        return null;
     });
+
+
+/**
+ * CREACIÓN SEGURA DE USUARIOS (BACKEND AUTHORITY) 🛡️
+ * Reemplaza la creación insegura desde el cliente via Auth secundario.
+ * Valida roles y asigna claims desde el nacimiento.
+ */
+exports.createUserManaged = functions.https.onCall(async (data, context) => {
+    // 1. Verificación de Autenticación
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'Debe estar autenticado para crear usuarios.');
+    }
+
+    const callerUid = context.auth.uid;
+    const callerRole = context.auth.token.role || 'user';
+    const callerFranchiseId = context.auth.token.franchiseId;
+
+    const { email, password, role, franchiseId, ...profileData } = data;
+
+    // 2. Validación de Permisos (Security Gate)
+    if (callerRole === 'admin') {
+        // Admin puede crear cualquier cosa
+    } else if (callerRole === 'franchise') {
+        // Franquicia SOLO puede crear 'rider' y SOLO para su propia franquicia
+        if (role !== 'rider') {
+            throw new functions.https.HttpsError('permission-denied', 'Las franquicias solo pueden crear Riders.');
+        }
+        if (franchiseId !== callerFranchiseId) {
+            throw new functions.https.HttpsError('permission-denied', 'No puede crear usuarios para otra franquicia.');
+        }
+    } else {
+        throw new functions.https.HttpsError('permission-denied', 'No tiene permisos para crear usuarios.');
+    }
+
+    // 3. Validación de Datos Mínimos
+    if (!email || !password || !role) {
+        throw new functions.https.HttpsError('invalid-argument', 'Faltan datos requeridos (email, password, role).');
+    }
+
+    try {
+        // 4. Crear Usuario en Firebase Auth
+        const userRecord = await admin.auth().createUser({
+            email,
+            password,
+            displayName: profileData.displayName || '',
+            phoneNumber: profileData.phoneNumber || undefined,
+            disabled: false
+        });
+
+        const newUid = userRecord.uid;
+
+        // 5. Asignar Custom Claims INMEDIATAMENTE (Sin esperar al sync)
+        const claims = { role, franchiseId: franchiseId || null };
+        await admin.auth().setCustomUserClaims(newUid, claims);
+
+        // 6. Crear Perfil en Firestore (Single Source of Truth)
+        const userProfile = {
+            uid: newUid,
+            email,
+            role,
+            franchiseId: franchiseId || null,
+            status: profileData.status || 'active',
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            // Copiar resto de datos (name, cif, etc. si vienen)
+            ...profileData
+        };
+
+        // Limpiar undefineds
+        Object.keys(userProfile).forEach(key => userProfile[key] === undefined && delete userProfile[key]);
+
+        await admin.firestore().collection('users').doc(newUid).set(userProfile);
+
+        console.log(`✅ Usuario creado exitosamente: ${email} (${role}) por ${callerUid}`);
+
+        return { uid: newUid, message: 'Usuario creado correctamente' };
+
+    } catch (error) {
+        console.error("❌ Error creando usuario gestionado:", error);
+        // Mapear errores de Auth a HttpsError
+        if (error.code === 'auth/email-already-exists') {
+            throw new functions.https.HttpsError('already-exists', 'El email ya está en uso.');
+        }
+        throw new functions.https.HttpsError('internal', error.message || 'Error interno al crear usuario.');
+    }
+});
 
 /**
  * EL VERDUGO AUTOMÁTICO Y LIMPIADOR 🪓🧹

@@ -31,10 +31,17 @@ service cloud.firestore {
 
     // --- COLLECTION RULES ---
 
-    // USERS: Owner can read/write own profile. Admin can read/write all. Franchise can read riders.
+    // USERS: Owner can read/write own profile. Admin can read/write all. Franchise can read/list/update their riders.
     match /users/{userId} {
       allow read: if isAuthed() && (request.auth.uid == userId || isAdmin() || isFranchise());
-      allow write: if isAuthed() && (request.auth.uid == userId || isAdmin());
+      // CREATE: DENIED. Handled by Cloud Function 'createUserManaged' (Admin SDK)
+      allow create: if false; 
+      // UPDATE: Admin OR Own Profile OR Franchise updating their own riders
+      allow update: if isAuthed() && (
+        isAdmin() || 
+        request.auth.uid == userId ||
+        (isFranchise() && resource.data.franchiseId == request.auth.uid)
+      );
       // Allow list queries for Admins and Franchises
       allow list: if isAuthed() && (isAdmin() || isFranchise()); 
     }

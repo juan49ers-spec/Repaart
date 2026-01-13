@@ -139,7 +139,7 @@ function App() {
                 {/* PUBLIC */}
                 <Route path="/login" element={
                     !user ? <Login /> : (
-                        ['rider', 'driver'].includes(user.role || '')
+                        ['rider'].includes(user.role || '')
                             ? <Navigate to="/rider/dashboard" replace />
                             : <Navigate to="/dashboard" replace />
                     )
@@ -148,7 +148,7 @@ function App() {
                 {/* PROTECTED LAYOUT */}
                 <Route path="/" element={
                     <ProtectedRoute>
-                        {['rider', 'driver'].includes(user?.role || '') ? (
+                        {['rider'].includes(user?.role || '') ? (
                             <Navigate to="/rider/dashboard" replace />
                         ) : (
                             <DashboardLayout {...layoutProps} outletContext={outletContext} />
@@ -156,7 +156,7 @@ function App() {
                     </ProtectedRoute>
                 }>
                     <Route index element={
-                        ['rider', 'driver'].includes(user?.role || '')
+                        ['rider'].includes(user?.role || '')
                             ? <Navigate to="/rider/dashboard" replace />
                             : (user?.role === 'admin' || user?.role === 'franchise'
                                 ? <Navigate to="/dashboard" replace />
@@ -275,7 +275,7 @@ function App() {
                 {/* RIDER SPECIFIC APP (Independent from Admin Layout) */}
                 <Route path="/rider" element={
                     <ProtectedRoute>
-                        <RequireRole allowedRoles={['rider', 'driver', 'admin']}>
+                        <RequireRole allowedRoles={['rider', 'admin']}>
                             <RiderLayout />
                         </RequireRole>
                     </ProtectedRoute>
