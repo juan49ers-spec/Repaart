@@ -3,8 +3,26 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { visualizer } from 'rollup-plugin-visualizer'
 
+import fs from 'fs';
+import path from 'path';
+
+// Read version from public/version.json to ensure consistency with generate-version.js
+let appVersion = new Date().getTime().toString();
+try {
+  const versionPath = path.resolve(__dirname, 'public/version.json');
+  if (fs.existsSync(versionPath)) {
+    const versionData = JSON.parse(fs.readFileSync(versionPath, 'utf-8'));
+    appVersion = versionData.version;
+  }
+} catch (e) {
+  console.warn('Could not read version.json, falling back to timestamp');
+}
+
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    '__APP_VERSION__': JSON.stringify(appVersion)
+  },
   plugins: [
     react(),
     VitePWA({

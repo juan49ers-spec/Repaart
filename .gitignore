@@ -39,3 +39,6 @@ firebase-debug.log*
 *.njsproj
 *.sln
 *.sw?
+*.tsbuildinfo
+vite.config.d.ts
+build_log.txt
