@@ -210,10 +210,21 @@ body {
 
 /* Aurora Animation */
 @keyframes aurora {
-  0% { transform: translate(0, 0) rotate(0deg) scale(1); }
-  33% { transform: translate(2%, 5%) rotate(5deg) scale(1.1); }
-  66% { transform: translate(-2%, 2%) rotate(-5deg) scale(0.9); }
-  100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+
+  33% {
+    transform: translate(2%, 5%) rotate(5deg) scale(1.1);
+  }
+
+  66% {
+    transform: translate(-2%, 2%) rotate(-5deg) scale(0.9);
+  }
+
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
 }
 
 .animate-aurora-slow {
@@ -236,11 +247,64 @@ body {
 
 /* Smooth Marquee */
 @keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 .animate-marquee {
   animation: marquee 30s linear infinite;
   will-change: transform;
+}
+
+/* Responsive Apple-style Typography */
+h1,
+.text-apple-h1 {
+  font-size: clamp(2rem, 5vw, 2.5rem);
+  letter-spacing: -0.02em;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+h2,
+.text-apple-h2 {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  letter-spacing: -0.015em;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* Glassmorphism Refinements */
+.glass-premium {
+  @apply bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-2xl;
+  /* Better contrast on mobile */
+}
+
+/* Mobile Safe Area Handling - Enhanced */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* iOS-style Dock Blur */
+.ios-dock {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Smooth Scrolling for Layouts */
+html,
+body {
+  scroll-behavior: smooth;
+  overscroll-behavior-y: none;
+  /* Prevent bounce on pull-to-refresh if native app feel is desired */
 }

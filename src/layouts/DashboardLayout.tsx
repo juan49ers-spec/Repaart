@@ -138,10 +138,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 <ImpersonationBanner />
                 <Header {...headerProps} />
 
-                {/* Content Injection with bottom padding for tab bar */}
-                <main className="flex-1 overflow-y-auto w-full" style={{ paddingBottom: 'max(8rem, calc(env(safe-area-inset-bottom) + 6rem))' }}>
-                    {/* Pass context to Outlet so child routes can access data AND layout controls */}
-                    {outletContext ? <Outlet context={{ ...outletContext }} /> : children}
+                {/* Content Injection with correct mobile padding */}
+                <main className="flex-1 overflow-y-auto w-full relative z-0" style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom))' }}>
+                    <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+                        {/* Pass context to Outlet */}
+                        {outletContext ? <Outlet context={{ ...outletContext }} /> : children}
+                    </div>
                 </main>
             </div>
 

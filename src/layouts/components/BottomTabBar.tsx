@@ -60,10 +60,10 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({ isAdmin, isFranchise: _isFr
     }, [isAdmin, adminTabs, franchiseTabs, hasAccess]);
 
     return (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 safe-bottom">
-            {/* Glassmorphism Tab Bar */}
-            <div className="ios-blur-dark border-t border-slate-200/50 ios-shadow-lg">
-                <div className="flex justify-around items-center px-2 py-2">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50">
+            {/* Apple-style Floating Dock */}
+            <div className="ios-dock pb-[env(safe-area-inset-bottom)]">
+                <div className="flex justify-around items-end px-2 pt-2 pb-1">
                     {tabs.map((tab) => {
                         const Icon = tab.icon;
 
@@ -71,35 +71,27 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({ isAdmin, isFranchise: _isFr
                             <NavLink
                                 key={tab.path}
                                 to={tab.path}
-                                className={({ isActive }: { isActive: boolean }) => `flex flex-col items-center justify-center flex-1 py-3 px-2 rounded-xl transition-all duration-200 active:scale-95 min-h-[56px] ${isActive
-                                    ? 'text-blue-600'
-                                    : 'text-slate-400'
+                                className={({ isActive }: { isActive: boolean }) => `flex flex-col items-center justify-center w-full py-1 transition-all duration-300 active:scale-95 ${isActive
+                                    ? 'text-blue-500'
+                                    : 'text-slate-500'
                                     }`}
                             >
                                 {({ isActive }: { isActive: boolean }) => (
                                     <>
-                                        {/* Icon with background circle when active */}
-                                        <div className={`relative mb-1 transition-all duration-300 ${isActive ? 'transform scale-110' : ''
+                                        {/* Icon Container with Glow */}
+                                        <div className={`relative mb-1 transition-all duration-300 rounded-2xl px-4 py-1.5 ${isActive ? 'bg-blue-500/15' : 'bg-transparent'
                                             }`}>
-                                            {isActive && (
-                                                <div className="absolute inset-0 bg-blue-100 rounded-full scale-150 -z-10 animate-bounce-in" />
-                                            )}
                                             <Icon
-                                                className={`w-6 h-6 transition-all duration-200 ${isActive ? 'stroke-[2.5]' : 'stroke-[2]'
+                                                className={`w-6 h-6 transition-all duration-300 ${isActive ? 'stroke-[2.5] drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'stroke-[1.5]'
                                                     }`}
                                             />
                                         </div>
 
                                         {/* Label */}
-                                        <span className={`text-[10px] font-semibold transition-all duration-200 ${isActive ? 'opacity-100' : 'opacity-70'
+                                        <span className={`text-[10px] font-medium tracking-tight transition-all duration-300 ${isActive ? 'opacity-100 font-semibold' : 'opacity-60'
                                             }`}>
                                             {tab.label}
                                         </span>
-
-                                        {/* Active indicator dot */}
-                                        {isActive && (
-                                            <div className="absolute bottom-0 w-1 h-1 bg-blue-600 rounded-full animate-bounce-in" />
-                                        )}
                                     </>
                                 )}
                             </NavLink>
