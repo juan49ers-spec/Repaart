@@ -126,7 +126,7 @@ const InputSidebar: React.FC<InputSidebarProps> = ({
                 {/* AI Assistant Button (Mobile/Sidebar Access) */}
                 <button
                     onClick={() => {
-                        onToggleChat && onToggleChat();
+                        onToggleChat();
                         onClose(); // Close sidebar on mobile when opening chat
                     }}
                     className="w-full mb-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white p-3.5 rounded-xl shadow-lg shadow-blue-500/20 flex items-center justify-center font-bold transition-all active:scale-95 group"
@@ -203,8 +203,8 @@ const InputSidebar: React.FC<InputSidebarProps> = ({
                                 <div className="grid grid-cols-2 gap-3">
                                     {[['0-4km', 'ordersNew0To4'], ['4-5km', 'ordersNew4To5'], ['5-6km', 'ordersNew5To6'], ['6-7km', 'ordersNew6To7'], ['>7km', 'ordersNewGt7']].map(([label, name]) => (
                                         <div key={name}>
-                                            <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">{label}</label>
-                                            <input disabled={readOnly} type="number" name={name} value={formData?.[name] || ''} onChange={handleChange} className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-slate-700 dark:text-slate-200 text-sm font-medium focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 dark:focus:ring-indigo-900 focus:outline-none disabled:bg-slate-50 dark:disabled:bg-slate-900 transition-all shadow-sm" min="0" onFocus={(e) => e.target.select()} />
+                                            <label htmlFor={name} className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">{label}</label>
+                                            <input id={name} disabled={readOnly} type="number" name={name} value={formData?.[name] || ''} onChange={handleChange} className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-slate-700 dark:text-slate-200 text-sm font-medium focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 dark:focus:ring-indigo-900 focus:outline-none disabled:bg-slate-50 dark:disabled:bg-slate-900 transition-all shadow-sm" min="0" onFocus={(e) => e.target.select()} />
                                         </div>
                                     ))}
                                 </div>
@@ -215,8 +215,8 @@ const InputSidebar: React.FC<InputSidebarProps> = ({
                                 <div className="grid grid-cols-2 gap-3">
                                     {[['0-3.5km', 'ordersOld0To35'], ['>3.5km', 'ordersOldGt35']].map(([label, name]) => (
                                         <div key={name}>
-                                            <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">{label}</label>
-                                            <input disabled={readOnly} type="number" name={name} value={formData?.[name] || ''} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-slate-600 dark:text-slate-300 text-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 dark:disabled:bg-slate-900 transition-all" min="0" onFocus={(e) => e.target.select()} />
+                                            <label htmlFor={name} className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">{label}</label>
+                                            <input id={name} disabled={readOnly} type="number" name={name} value={formData?.[name] || ''} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-slate-600 dark:text-slate-300 text-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 dark:disabled:bg-slate-900 transition-all" min="0" onFocus={(e) => e.target.select()} />
                                         </div>
                                     ))}
                                 </div>
@@ -303,21 +303,21 @@ const InputSidebar: React.FC<InputSidebarProps> = ({
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="col-span-2">
-                                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">Salarios</label>
-                                    <input disabled={readOnly} type="number" name="salaries" value={formData.salaries || ''} onChange={handleChange} aria-label="Salarios mensuales" className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 text-sm font-medium focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 dark:focus:ring-indigo-900 focus:outline-none transition-all shadow-sm" min="0" onFocus={(e) => e.target.select()} />
+                                    <label htmlFor="salaries" className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">Salarios</label>
+                                    <input id="salaries" disabled={readOnly} type="number" name="salaries" value={formData.salaries || ''} onChange={handleChange} aria-label="Salarios mensuales" className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 text-sm font-medium focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 dark:focus:ring-indigo-900 focus:outline-none transition-all shadow-sm" min="0" onFocus={(e) => e.target.select()} />
                                 </div>
 
                                 {[['Seguros', 'insurance'], ['Gestoría', 'agencyFee'], ['PRL', 'prlFee'], ['S. Financieros', 'accountingFee'], ['S. Profesionales', 'services'], ['Cuota Autónomo', 'quota']].map(([label, name]) => (
                                     <div key={name}>
-                                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">{label}</label>
-                                        <input disabled={readOnly} type="number" name={name} value={formData?.[name] || ''} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-slate-600 dark:text-slate-300 text-sm font-medium focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 dark:focus:ring-indigo-900 focus:outline-none transition-all" min="0" onFocus={(e) => e.target.select()} />
+                                        <label htmlFor={name} className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">{label}</label>
+                                        <input id={name} disabled={readOnly} type="number" name={name} value={formData?.[name] || ''} onChange={handleChange} placeholder={label} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-slate-600 dark:text-slate-300 text-sm font-medium focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 dark:focus:ring-indigo-900 focus:outline-none transition-all" min="0" onFocus={(e) => e.target.select()} />
                                     </div>
                                 ))}
 
                                 <div className="col-span-2 border-t border-slate-100 dark:border-slate-700 pt-3 mt-1">
-                                    <label className="text-[10px] font-bold text-purple-600 dark:text-purple-400 block mb-1 uppercase tracking-tight">Marketing & Ads</label>
+                                    <label htmlFor="marketing" className="text-[10px] font-bold text-purple-600 dark:text-purple-400 block mb-1 uppercase tracking-tight">Marketing & Ads</label>
                                     <div className="relative">
-                                        <input disabled={readOnly} type="number" name="marketing" value={formData.marketing || ''} onChange={handleChange} placeholder="Gasto en fb/ig/google" className="w-full bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800 rounded-lg px-3 py-2 text-purple-900 dark:text-purple-200 text-sm font-bold focus:border-purple-500 focus:ring-2 focus:ring-purple-100 dark:focus:ring-purple-900 focus:outline-none transition-all placeholder:text-purple-300" min="0" onFocus={(e) => e.target.select()} />
+                                        <input id="marketing" disabled={readOnly} type="number" name="marketing" value={formData.marketing || ''} onChange={handleChange} placeholder="Gasto en fb/ig/google" className="w-full bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800 rounded-lg px-3 py-2 text-purple-900 dark:text-purple-200 text-sm font-bold focus:border-purple-500 focus:ring-2 focus:ring-purple-100 dark:focus:ring-purple-900 focus:outline-none transition-all placeholder:text-purple-300" min="0" onFocus={(e) => e.target.select()} />
                                     </div>
                                 </div>
                             </div>
@@ -333,24 +333,24 @@ const InputSidebar: React.FC<InputSidebarProps> = ({
                         <div className="bg-white dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 shadow-sm rounded-2xl p-5 space-y-4">
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">Gasolina (Base)</label>
-                                    <input disabled={readOnly} type="number" name="gasoline" value={formData.gasoline || ''} onChange={handleChange} className="w-full bg-orange-50/50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-800 rounded-lg px-2 py-2 text-slate-700 dark:text-slate-200 text-sm font-bold focus:border-orange-500 focus:outline-none" min="0" onFocus={(e) => e.target.select()} />
+                                    <label htmlFor="gasoline" className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">Gasolina (Base)</label>
+                                    <input id="gasoline" disabled={readOnly} type="number" name="gasoline" value={formData.gasoline || ''} onChange={handleChange} className="w-full bg-orange-50/50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-800 rounded-lg px-2 py-2 text-slate-700 dark:text-slate-200 text-sm font-bold focus:border-orange-500 focus:outline-none" min="0" onFocus={(e) => e.target.select()} />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">Precio/L (Base)</label>
-                                    <input disabled={readOnly} type="number" name="gasolinePrice" value={formData.gasolinePrice || ''} onChange={handleChange} placeholder="1.50" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-2 text-slate-600 dark:text-slate-300 text-sm focus:border-orange-500 focus:outline-none" min="0" step="0.01" onFocus={(e) => e.target.select()} />
+                                    <label htmlFor="gasolinePrice" className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">Precio/L (Base)</label>
+                                    <input id="gasolinePrice" disabled={readOnly} type="number" name="gasolinePrice" value={formData.gasolinePrice || ''} onChange={handleChange} placeholder="1.50" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-2 text-slate-600 dark:text-slate-300 text-sm focus:border-orange-500 focus:outline-none" min="0" step="0.01" onFocus={(e) => e.target.select()} />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">Reparaciones</label>
-                                    <input disabled={readOnly} type="number" name="repairs" value={formData.repairs || ''} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-slate-600 dark:text-slate-300 text-sm focus:border-orange-500 focus:outline-none" min="0" onFocus={(e) => e.target.select()} />
+                                    <label htmlFor="repairs" className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">Reparaciones</label>
+                                    <input id="repairs" disabled={readOnly} type="number" name="repairs" value={formData.repairs || ''} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-slate-600 dark:text-slate-300 text-sm focus:border-orange-500 focus:outline-none" min="0" onFocus={(e) => e.target.select()} />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">Otros Costes</label>
-                                    <input disabled={readOnly} type="number" name="otherExpenses" value={formData.otherExpenses || ''} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-slate-600 dark:text-slate-300 text-sm focus:border-orange-500 focus:outline-none" min="0" onFocus={(e) => e.target.select()} />
+                                    <label htmlFor="otherExpenses" className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">Otros Costes</label>
+                                    <input id="otherExpenses" disabled={readOnly} type="number" name="otherExpenses" value={formData.otherExpenses || ''} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-slate-600 dark:text-slate-300 text-sm focus:border-orange-500 focus:outline-none" min="0" onFocus={(e) => e.target.select()} />
                                 </div>
                                 <div className="col-span-2 border-t border-slate-100 dark:border-slate-700 pt-3 mt-1">
-                                    <label className="text-[10px] font-bold text-rose-600 dark:text-rose-400 block mb-1 uppercase tracking-tight">Mermas e Incidencias</label>
-                                    <input disabled={readOnly} type="number" name="incidents" value={formData.incidents || ''} onChange={handleChange} placeholder="Coste de errores/devoluciones" className="w-full bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-800 rounded-lg px-3 py-2 text-rose-900 dark:text-rose-200 text-sm font-bold focus:border-rose-500 focus:ring-2 focus:ring-rose-100 dark:focus:ring-rose-900 focus:outline-none placeholder:text-rose-300" min="0" onFocus={(e) => e.target.select()} />
+                                    <label htmlFor="incidents" className="text-[10px] font-bold text-rose-600 dark:text-rose-400 block mb-1 uppercase tracking-tight">Mermas e Incidencias</label>
+                                    <input id="incidents" disabled={readOnly} type="number" name="incidents" value={formData.incidents || ''} onChange={handleChange} placeholder="Coste de errores/devoluciones" className="w-full bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-800 rounded-lg px-3 py-2 text-rose-900 dark:text-rose-200 text-sm font-bold focus:border-rose-500 focus:ring-2 focus:ring-rose-100 dark:focus:ring-rose-900 focus:outline-none placeholder:text-rose-300" min="0" onFocus={(e) => e.target.select()} />
                                 </div>
                             </div>
                         </div>
@@ -363,9 +363,9 @@ const InputSidebar: React.FC<InputSidebarProps> = ({
                         </h3>
                         <div className="bg-white dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 shadow-sm rounded-2xl p-5">
                             <div>
-                                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">IRPF Estimado (%)</label>
+                                <label htmlFor="irpfPercent" className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">IRPF Estimado (%)</label>
                                 <div className="relative">
-                                    <input disabled={readOnly} type="number" name="irpfPercent" value={formData.irpfPercent || ''} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-900 dark:text-slate-100 text-sm font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 dark:focus:ring-indigo-900 focus:outline-none" min="0" onFocus={(e) => e.target.select()} />
+                                    <input id="irpfPercent" disabled={readOnly} type="number" name="irpfPercent" value={formData.irpfPercent || ''} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-900 dark:text-slate-100 text-sm font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 dark:focus:ring-indigo-900 focus:outline-none" min="0" onFocus={(e) => e.target.select()} />
                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">%</span>
                                 </div>
                             </div>

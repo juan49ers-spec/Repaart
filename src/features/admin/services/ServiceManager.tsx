@@ -302,6 +302,7 @@ const ServiceManager = () => {
                                     <button
                                         onClick={() => setIsEditing(false)}
                                         className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                                        title="Cancelar"
                                     >
                                         <X className="w-5 h-5" />
                                     </button>
