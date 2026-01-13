@@ -207,3 +207,23 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Aurora Animation */
+@keyframes aurora {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  33% { transform: translate(2%, 5%) rotate(5deg) scale(1.1); }
+  66% { transform: translate(-2%, 2%) rotate(-5deg) scale(0.9); }
+  100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+}
+
+.animate-aurora-slow {
+  animation: aurora 20s infinite ease-in-out alternate;
+}
+
+.animate-aurora-slower {
+  animation: aurora 30s infinite ease-in-out alternate-reverse;
+}
+
+.animate-aurora-reverse {
+  animation: aurora 25s infinite ease-in-out reverse;
+}

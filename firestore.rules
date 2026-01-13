@@ -84,7 +84,11 @@ service cloud.firestore {
 
     // NOTIFICATIONS
     match /notifications/{notificationId} {
-      allow read: if isAuthed() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow read: if isAuthed() && (
+        resource.data.userId == request.auth.uid || 
+        isAdmin() ||
+        (isFranchise() && resource.data.userId == getUserData().franchiseId)
+      );
       allow write: if isAuthed(); // Logic usually handled by server, but allowing client writes for now
     }
     match /admin_notifications/{notifId} {
@@ -131,6 +135,11 @@ service cloud.firestore {
     match /audit_logs/{logId} {
       allow create: if isAuthed();
       allow read: if isAdmin();
+    }
+    
+    // KANBAN TASKS
+    match /project_tasks/{taskId} {
+      allow read, write: if isAuthed() && isAdmin();
     }
     
     // DEFAULT DENY

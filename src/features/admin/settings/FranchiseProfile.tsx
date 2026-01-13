@@ -1,10 +1,10 @@
 import React, { useState, useContext, useEffect, useMemo, useRef } from 'react';
 import { ToastContext } from '../../../context/contexts';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray, SubmitHandler } from 'react-hook-form';
 import {
     Building, MapPin, Save, User, Camera,
-    Mail, Phone, Shield, Trash2, Plus, DollarSign, Lock, Star, ArrowRight
+    Mail, Phone, Shield, Trash2, Plus, DollarSign, Lock
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { userService, UserProfile } from '../../../services/userService';
@@ -13,6 +13,7 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../../lib/firebase';
 import { notificationService } from '../../../services/notificationService';
+import PremiumBanner from '../../../components/common/PremiumBanner';
 
 // --- INTERFACES ---
 
@@ -58,8 +59,7 @@ interface FranchiseProfileProps {
 const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
     const { user, isAdmin } = useAuth();
     const toastCtx = useContext(ToastContext);
-    const addToast = useMemo(() => toastCtx?.addToast || (() => { }), [toastCtx]);
-    const navigate = useNavigate();
+    // const navigate = useNavigate(); // Removed unused
 
     // If no franchiseId provided, we assume we are editing the current user's franchise profile
     // But if we are an admin editing another franchise, we might not want to edit *that user's personal profile* 
@@ -96,7 +96,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
 
     const { fields: rateFields, append: appendRate, remove: removeRate } = useFieldArray({
         control,
-        name: "logisticsRates" as "logisticsRates"
+        name: "logisticsRates" as const
     });
 
     const watchedUserPhoto = watch('userPhotoURL');
@@ -299,11 +299,8 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
     return (
         <div className="flex flex-col h-full bg-slate-50 overflow-y-auto pb-20">
 
-            {/* Banner Superior - Light Theme Gradient */}
-            <div className="h-48 w-full bg-gradient-to-r from-slate-200 to-slate-100 relative border-b border-slate-200">
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20" />
-                <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-slate-50 to-transparent" />
-            </div>
+            {/* Banner Superior - Premium Aurora */}
+            <PremiumBanner />
 
             <div className="max-w-[1600px] mx-auto w-full px-6 md:px-10 -mt-20 relative z-10 flex flex-col gap-10">
 
