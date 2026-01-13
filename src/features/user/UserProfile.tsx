@@ -138,6 +138,7 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
                                 ref={fileInputRef}
                                 className="hidden"
                                 accept="image/*"
+                                title="Subir avatar"
                                 onChange={handleFileChange}
                             />
                             {/* Status Indicator */}
@@ -210,7 +211,6 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
                                     onClick={() => setActiveTab('admin')}
                                     icon={LayoutDashboard}
                                     label="GESTIÓN DE FRANQUICIAS"
-                                    variant="admin"
                                 />
                             </>
                         )}
@@ -257,8 +257,15 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
 
 // --- HELPER COMPONENTS ---
 
-const TabButton = ({ active, onClick, icon: Icon, label, variant = 'default' }: any) => {
-    const isAdmin = variant === 'admin';
+interface TabButtonProps {
+    active: boolean;
+    onClick: () => void;
+    icon: React.ElementType;
+    label: string;
+}
+
+const TabButton = ({ active, onClick, icon: Icon, label }: TabButtonProps) => {
+
 
     // Clean Apple Style Buttons
     return (

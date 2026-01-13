@@ -331,10 +331,10 @@ const AdminResourcesPanel = () => {
                                         />
                                     </div>
                                     <div className="flex bg-white dark:bg-slate-900 rounded-lg p-1 border border-slate-200 dark:border-slate-700 shadow-sm">
-                                        <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                                        <button onClick={() => setViewMode('grid')} title="Vista Cuadrícula" className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
                                             <Grid className="w-4 h-4" />
                                         </button>
-                                        <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                                        <button onClick={() => setViewMode('list')} title="Vista Lista" className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
                                             <ListIcon className="w-4 h-4" />
                                         </button>
                                     </div>
@@ -387,6 +387,7 @@ const AdminResourcesPanel = () => {
                                                         <div className="absolute top-2 right-2 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                                                             <button
                                                                 onClick={(e) => togglePin(file, e)}
+                                                                title={file.isPinned ? "Desfijar" : "Fijar"}
                                                                 className={`p-1.5 rounded-lg backdrop-blur-sm ${file.isPinned ? 'text-amber-400 bg-amber-400/10' : 'text-slate-400 hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                                                             >
                                                                 <Pin size={14} className={file.isPinned ? 'fill-current' : ''} />
@@ -394,6 +395,7 @@ const AdminResourcesPanel = () => {
                                                             {!file.isMock && (
                                                                 <button
                                                                     onClick={(e) => { e.stopPropagation(); handleDelete(file); }}
+                                                                    title="Eliminar recurso"
                                                                     className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 backdrop-blur-sm"
                                                                 >
                                                                     <Trash2 size={14} />
@@ -444,11 +446,11 @@ const AdminResourcesPanel = () => {
                                                                 <td className="p-4 text-slate-500">{new Date().toLocaleDateString()}</td>
                                                                 <td className="p-4 text-right pr-6">
                                                                     <div className="flex justify-end gap-2">
-                                                                        <button onClick={(e) => { e.stopPropagation(); /* Download logic */ }} className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-slate-100">
+                                                                        <button onClick={(e) => { e.stopPropagation(); /* Download logic */ }} title="Descargar" className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-slate-100">
                                                                             <Download className="w-4 h-4" />
                                                                         </button>
                                                                         {!file.isMock && (
-                                                                            <button onClick={(e) => { e.stopPropagation(); handleDelete(file); }} className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50">
+                                                                            <button onClick={(e) => { e.stopPropagation(); handleDelete(file); }} title="Eliminar" className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50">
                                                                                 <Trash2 className="w-4 h-4" />
                                                                             </button>
                                                                         )}

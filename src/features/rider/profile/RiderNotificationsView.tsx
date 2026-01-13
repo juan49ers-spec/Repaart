@@ -10,7 +10,7 @@ export const RiderNotificationsView: React.FC = () => {
         <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-900">
             {/* Header */}
             <div className="bg-white dark:bg-slate-800 p-4 shadow-sm sticky top-0 z-10 flex items-center gap-4">
-                <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-slate-600 dark:text-slate-300">
+                <button onClick={() => navigate(-1)} title="Volver" className="p-2 -ml-2 text-slate-600 dark:text-slate-300">
                     <ArrowLeft size={20} />
                 </button>
                 <h1 className="text-lg font-bold text-slate-800 dark:text-white">Notificaciones</h1>

@@ -204,10 +204,10 @@ const ResourcesPanel: React.FC = () => {
                             />
                         </div>
                         <div className="flex bg-white dark:bg-slate-900 rounded-lg p-1 border border-slate-200 dark:border-slate-700 shadow-sm">
-                            <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                            <button onClick={() => setViewMode('grid')} title="Vista Cuadrícula" className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
                                 <Grid className="w-4 h-4" />
                             </button>
-                            <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                            <button onClick={() => setViewMode('list')} title="Vista Lista" className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
                                 <ListIcon className="w-4 h-4" />
                             </button>
                         </div>
@@ -289,7 +289,7 @@ const ResourcesPanel: React.FC = () => {
                                                     <td className="p-4 text-slate-500 font-mono text-xs">{formatBytes(file.size)}</td>
                                                     <td className="p-4 text-slate-500">{new Date().toLocaleDateString()}</td>
                                                     <td className="p-4 text-right pr-6">
-                                                        <button className="text-slate-400 hover:text-indigo-600 transition-colors">
+                                                        <button title="Descargar" className="text-slate-400 hover:text-indigo-600 transition-colors">
                                                             <Download className="w-4 h-4" />
                                                         </button>
                                                     </td>
@@ -308,7 +308,7 @@ const ResourcesPanel: React.FC = () => {
             <DocPreviewModal
                 isOpen={!!previewFile}
                 onClose={() => setPreviewFile(null)}
-                file={previewFile ? { ...previewFile, name: previewFile.title || previewFile.name || '' } : null}
+                file={previewFile ? { ...previewFile, name: previewFile.title || previewFile.name || '', url: previewFile.url || '' } : null}
             />
 
             <DocumentRequestModal

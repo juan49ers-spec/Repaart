@@ -71,6 +71,7 @@ const TaxVaultWidget: FC<TaxVaultWidgetProps> = ({ taxes }) => {
                         <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
                             <div
                                 className="h-full bg-indigo-500 dark:bg-indigo-400 rounded-full transition-all duration-1000 ease-out"
+                                 
                                 style={{ width: `${Math.min((ivaAPagar / totalTax) * 100, 100)}%` } as CSSProperties}
                             />
                         </div>
@@ -87,6 +88,7 @@ const TaxVaultWidget: FC<TaxVaultWidgetProps> = ({ taxes }) => {
                         <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
                             <div
                                 className="h-full bg-amber-500 dark:bg-amber-400 rounded-full transition-all duration-1000 ease-out"
+                                 
                                 style={{ width: `${Math.min((irpfPago / totalTax) * 100, 100)}%` } as CSSProperties}
                             />
                         </div>

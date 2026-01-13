@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, CheckCircle2, AlertOctagon, XCircle, ArrowRight, Search, Activity, Filter, ArrowUpRight } from 'lucide-react';
+import { ArrowRight, Search, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Franchise {
@@ -165,7 +165,7 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
                             // Rank Indicators
                             const isTop3 = viewMode === 'top3';
                             const rankIcons = ['👑', '🥈', '🥉'];
-                            const rankColor = index === 0 ? 'bg-amber-100 text-amber-700 border-amber-200' : index === 1 ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-orange-50 text-orange-700 border-orange-200';
+
 
                             return (
                                 <div

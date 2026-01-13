@@ -68,7 +68,7 @@ const AcademyPanel: React.FC<AcademyPanelProps> = ({ phase }) => {
                         <span>Consejo Experto</span>
                     </h4>
                     <p className={`${content.tipTextColor} text-sm leading-relaxed italic relative z-10 font-medium`}>
-                        "{content.tip}"
+                        &quot;{content.tip}&quot;
                     </p>
                 </div>
 

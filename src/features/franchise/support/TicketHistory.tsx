@@ -18,6 +18,33 @@ export interface TicketHistoryProps {
     filteredCount?: number;
 }
 
+const SkeletonTicket = () => (
+    <div className="bg-white/40 dark:bg-slate-900/40 border border-white/20 dark:border-slate-800 rounded-2xl p-5 space-y-3 animate-pulse">
+        <div className="flex justify-between items-start">
+            <div className="h-5 w-20 bg-slate-200 dark:bg-slate-800 rounded-full" />
+            <div className="h-4 w-16 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+        </div>
+        <div className="space-y-2">
+            <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-md" />
+            <div className="h-3 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-md" />
+        </div>
+    </div>
+);
+
+const EmptyState = () => (
+    <div className="flex flex-col items-center justify-center py-12 text-center opacity-60">
+        <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+            <Clock className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+        </div>
+        <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-1">
+            Sin Tickets Recientes
+        </h4>
+        <p className="text-xs text-slate-400 dark:text-slate-500 max-w-[200px]">
+            No hay historial de consultas abierto en este momento.
+        </p>
+    </div>
+);
+
 const TicketHistory: React.FC<TicketHistoryProps> = ({
     onSelectTicket,
     tickets: propTickets,
@@ -72,36 +99,6 @@ const TicketHistory: React.FC<TicketHistoryProps> = ({
             </span>
         );
     };
-
-
-
-    // --- Sub-components (Inline for simplicity) ---
-    const SkeletonTicket = () => (
-        <div className="bg-white/40 dark:bg-slate-900/40 border border-white/20 dark:border-slate-800 rounded-2xl p-5 space-y-3 animate-pulse">
-            <div className="flex justify-between items-start">
-                <div className="h-5 w-20 bg-slate-200 dark:bg-slate-800 rounded-full" />
-                <div className="h-4 w-16 bg-slate-200 dark:bg-slate-800 rounded-lg" />
-            </div>
-            <div className="space-y-2">
-                <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-md" />
-                <div className="h-3 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-md" />
-            </div>
-        </div>
-    );
-
-    const EmptyState = () => (
-        <div className="flex flex-col items-center justify-center py-12 text-center opacity-60">
-            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-                <Clock className="w-8 h-8 text-slate-300 dark:text-slate-600" />
-            </div>
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-1">
-                Sin Tickets Recientes
-            </h4>
-            <p className="text-xs text-slate-400 dark:text-slate-500 max-w-[200px]">
-                No hay historial de consultas abierto en este momento.
-            </p>
-        </div>
-    );
 
     // --- Loading State ---
     if (isLoading) {

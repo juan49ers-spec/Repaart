@@ -226,7 +226,7 @@ export default function BrutalLearningView({
                             </span>
 
                             <p className="text-3xl md:text-5xl lg:text-6xl font-black text-slate-900 leading-tight md:leading-tight tracking-tight">
-                                "{currentModuleExtended.action || 'Completar Lecciones'}"
+                                &quot;{currentModuleExtended.action || 'Completar Lecciones'}&quot;
                             </p>
                         </div>
                     </div>

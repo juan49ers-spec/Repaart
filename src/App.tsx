@@ -49,7 +49,7 @@ const RiderProfileView = lazyWithRetry(() => import('./features/rider/profile/Ri
 const RiderHomeView = lazyWithRetry(() => import('./features/rider/home/RiderHomeView').then(module => ({ default: module.RiderHomeView })));
 
 function App() {
-    const { user, loading: authLoading, roleConfig, logout, isAdmin, impersonatedFranchiseId, stopImpersonation } = useAuth();
+    const { user, loading: authLoading, roleConfig, logout, isAdmin, impersonatedFranchiseId } = useAuth();
 
     // Global UI State from Store
     const {

@@ -150,7 +150,7 @@ const IncomeStep: React.FC<IncomeStepProps> = ({
                         <p className="text-sm text-blue-400 leading-relaxed">
                             <strong>¿Cómo configurar tarifas?</strong><br />
                             1. Ve a <strong>Configuración → Configuración Sede</strong><br />
-                            2. Selecciona la pestaña <strong>"Logística y Zonas"</strong><br />
+                            2. Selecciona la pestaña <strong>&quot;Logística y Zonas&quot;</strong><br />
                             3. Añade tus tarifas por distancia (ej: 0-4 km = 15€)<br />
                             4. Guarda y vuelve aquí
                         </p>

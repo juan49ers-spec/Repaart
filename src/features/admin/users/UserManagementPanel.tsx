@@ -259,6 +259,7 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Buscar..."
+                        aria-label="Buscar usuarios"
                         className="pl-9 pr-4 py-2 w-full bg-slate-100 dark:bg-slate-800 border-transparent rounded-lg text-sm font-medium focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all placeholder-slate-500"
                     />
                 </div>
@@ -267,6 +268,7 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
+                        aria-label="Filtrar por estado"
                         className="bg-slate-100 dark:bg-slate-800 border-transparent px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
                     >
                         <option value="all">Todos</option>

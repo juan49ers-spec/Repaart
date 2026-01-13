@@ -19,7 +19,7 @@ const OperationsTutorialModal: React.FC<OperationsTutorialModalProps> = ({ isOpe
                         <h2 className="text-2xl font-bold text-slate-900">¿Cómo funciona el Centro de Operaciones?</h2>
                         <p className="text-slate-500">Guía rápida de 3 pasos para organizar tu flota.</p>
                     </div>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-700 transition-colors">
+                    <button onClick={onClose} title="Cerrar tutorial" className="text-slate-400 hover:text-slate-700 transition-colors">
                         <X size={32} />
                     </button>
                 </div>
@@ -37,7 +37,7 @@ const OperationsTutorialModal: React.FC<OperationsTutorialModalProps> = ({ isOpe
                                 <Users size={20} /> Registra tu Equipo
                             </h3>
                             <p className="text-slate-600">
-                                Primero, ve a las pestañas <b>"Gestión Riders"</b> y <b>"Gestión Motos"</b>.
+                                Primero, ve a las pestañas <b>&quot;Gestión Riders&quot;</b> y <b>&quot;Gestión Motos&quot;</b>.
                                 Crea tus perfiles. Si no tienes riders ni motos, ¡no puedes asignarlos!
                             </p>
                         </div>
@@ -64,8 +64,8 @@ const OperationsTutorialModal: React.FC<OperationsTutorialModalProps> = ({ isOpe
                                 <Calendar size={20} /> Ve al Planificador
                             </h3>
                             <p className="text-slate-600">
-                                Abre la pestaña <b>"Planificador"</b>. Aquí verás tu semana.
-                                Haz <b>Click en cualquier columna (día)</b> o usa el botón "Añadir Turno".
+                                Abre la pestaña <b>&quot;Planificador&quot;</b>. Aquí verás tu semana.
+                                Haz <b>Click en cualquier columna (día)</b> o usa el botón &quot;Añadir Turno&quot;.
                             </p>
                         </div>
                         <div className="w-full md:w-1/3 bg-white p-4 rounded-lg border border-slate-200 shadow-sm opacity-90 grid grid-cols-3 gap-1">

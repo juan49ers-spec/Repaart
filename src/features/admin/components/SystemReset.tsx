@@ -31,7 +31,7 @@ const SystemReset: React.FC = () => {
                 <div className="max-w-xs mx-auto space-y-4">
                     <div className="text-left">
                         <label className="text-xs font-bold uppercase tracking-wider text-rose-800 ml-1 mb-1 block">
-                            Escribe "RESET-SYSTEM-2026" para confirmar
+                            Escribe &quot;RESET-SYSTEM-2026&quot; para confirmar
                         </label>
                         <input
                             type="text"

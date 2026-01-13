@@ -174,6 +174,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                     </div>
                     <button
                         onClick={onClose}
+                        title="Cerrar modal"
                         className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition-colors"
                     >
                         <X className="w-5 h-5" />
@@ -253,6 +254,8 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                                         <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Rol de Sistema</label>
                                         <select
                                             {...register('role')}
+                                            title="Seleccionar rol"
+                                            aria-label="Seleccionar rol"
                                             disabled={!!initialFranchiseId}
                                             className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                                         >
@@ -267,6 +270,8 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                                         <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Estado</label>
                                         <select
                                             {...register('status')}
+                                            title="Seleccionar estado"
+                                            aria-label="Seleccionar estado"
                                             className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                                         >
                                             <option value="active">Activo</option>

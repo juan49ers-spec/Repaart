@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, BookOpen, ChevronRight, Activity, Zap, Search } from 'lucide-react';
+import { X, BookOpen, ChevronRight, Activity } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { MANUAL_TOPICS } from '../../../common/UserManual/manualContent';
 
@@ -80,7 +80,7 @@ const DashboardGuideModal: React.FC<DashboardGuideModalProps> = ({ isOpen, onClo
                                 Documentación Viva • Actualizado
                             </p>
                         </div>
-                        <button onClick={onClose} className="p-2.5 bg-slate-50 dark:bg-slate-900 rounded-full text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all">
+                        <button onClick={onClose} title="Cerrar" className="p-2.5 bg-slate-50 dark:bg-slate-900 rounded-full text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all">
                             <X className="w-5 h-5" />
                         </button>
                     </div>
@@ -96,11 +96,13 @@ const DashboardGuideModal: React.FC<DashboardGuideModalProps> = ({ isOpen, onClo
                                     </h3>
                                     <div className="prose prose-slate dark:prose-invert prose-sm max-w-none text-slate-600 dark:text-slate-400">
                                         <ReactMarkdown components={{
-                                            strong: ({ node, ...props }) => <span className="font-bold text-slate-900 dark:text-white" {...props} />,
-                                            ul: ({ node, ...props }) => <ul className="list-disc pl-4 space-y-2 mt-2 marker:text-indigo-400" {...props} />,
-                                            ol: ({ node, ...props }) => <ol className="list-decimal pl-4 space-y-2 mt-2 marker:text-indigo-400" {...props} />,
-                                            li: ({ node, ...props }) => <li className="pl-1 leading-relaxed" {...props} />,
-                                            p: ({ node, ...props }) => <p className="leading-relaxed mb-4" {...props} />
+                                            strong: ({ node: _, ...props }) => <span className="font-bold text-slate-900 dark:text-white" {...props} />,
+                                            ul: ({ node: _, ...props }) => <ul className="list-disc pl-4 space-y-2 mt-2 marker:text-indigo-400" {...props} />,
+                                            ol: ({ node: _, ...props }) => <ol className="list-decimal pl-4 space-y-2 mt-2 marker:text-indigo-400" {...props} />,
+                                            li: ({ node: _node, ...props }) => (
+                                                <li className="pl-1 leading-relaxed" {...props} />
+                                            ),
+                                            p: ({ node: _, ...props }) => <p className="leading-relaxed mb-4" {...props} />
                                         }}>
                                             {block.body}
                                         </ReactMarkdown>

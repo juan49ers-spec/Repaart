@@ -38,7 +38,7 @@ export default tseslint.config(
     extends: [js.configs.recommended],
     languageOptions: {
       ecmaVersion: 'latest',
-      globals: globals.browser,
+      globals: { ...globals.browser, ...globals.node },
       parserOptions: {
         ecmaFeatures: { jsx: true },
         sourceType: 'module',

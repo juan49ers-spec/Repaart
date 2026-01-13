@@ -39,6 +39,7 @@ const FinancialWorkflowGuide: React.FC<FinancialWorkflowGuideProps> = ({ isOpen,
                         </div>
                         <button
                             onClick={onClose}
+                            title="Cerrar guía"
                             className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors z-10"
                         >
                             <X className="w-6 h-6" />
@@ -144,7 +145,7 @@ const FinancialWorkflowGuide: React.FC<FinancialWorkflowGuideProps> = ({ isOpen,
                                                 <div className="flex gap-3">
                                                     <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold shrink-0">2</div>
                                                     <p className="text-sm text-slate-600">
-                                                        Explica el motivo (ej: "Olvidé subir la factura de la luz").
+                                                        Explica el motivo (ej: &quot;Olvidé subir la factura de la luz&quot;).
                                                     </p>
                                                 </div>
                                                 <div className="flex gap-3">

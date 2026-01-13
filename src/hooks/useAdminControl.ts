@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { financeService } from '../services/financeService';
-import { userService } from '../services/userService';
 import { franchiseService } from '../services/franchiseService';
 import { intelService, IntellectualEvent } from '../services/intelService';
 import { format } from 'date-fns';
+import { Ticket } from '../types/support';
 
 export interface PendingAction {
     id: string;
@@ -15,13 +15,39 @@ export interface PendingAction {
     priority: string;
 }
 
+export interface Franchise {
+    id: string;
+    name: string;
+    metrics?: {
+        margin: number;
+        revenue?: number;
+    };
+    [key: string]: any;
+}
+
+export interface FinancialSummary {
+    id?: string;
+    franchiseId?: string;
+    month?: string;
+    revenue?: number;
+    totalIncome?: number;
+    expenses?: number | any; // Could be object or number depending on legacy
+    totalExpenses?: number;
+    breakdown?: {
+        consultoria?: number;
+        premium?: number;
+        [key: string]: number | undefined;
+    };
+    [key: string]: any;
+}
+
 export interface AdminControlData {
     network: {
         total: number;
         excellent: number;
         acceptable: number;
         critical: number;
-        franchises: any[];
+        franchises: Franchise[];
     };
     pending: {
         total: number;
@@ -59,7 +85,7 @@ export const useAdminControl = (monthKey?: string) => {
                 // 1. Fetch Franchises & Analyze Network
                 // Switch to franchiseService to match IDs with Financial Summaries
                 const result = await franchiseService.getAllFranchises();
-                const franchises = (result.success) ? result.data : [];
+                const franchises: Franchise[] = (result.success) ? result.data : [];
 
                 const franchiseMap = new Map(franchises.map(f => [f.id, f.name]));
                 const networkStats = franchises.reduce((acc, f) => {
@@ -79,10 +105,10 @@ export const useAdminControl = (monthKey?: string) => {
                     where("status", "in", ["open", "investigating", "pending_admin"])
                 );
                 const ticketsSnap = await getDocs(ticketsQuery);
-                const allTickets = ticketsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+                const allTickets = ticketsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ticket));
 
-                const premiumTickets = allTickets.filter(t => t.category === 'premium');
-                const standardTickets = allTickets.filter(t => t.category !== 'premium');
+                const premiumTickets = allTickets.filter((t: Ticket) => t.category === 'premium');
+                const standardTickets = allTickets.filter((t: Ticket) => t.category !== 'premium');
 
                 // 4. Fetch Unread System Alerts
                 const alertsQuery = query(
@@ -102,7 +128,7 @@ export const useAdminControl = (monthKey?: string) => {
                     where("month", "==", activeMonthKey)
                 );
                 const summariesSnap = await getDocs(summariesQuery);
-                const summaries = summariesSnap.docs.map(doc => {
+                const summaries: FinancialSummary[] = summariesSnap.docs.map(doc => {
                     const d = doc.data();
                     // Robustness: Extract franchiseId from doc.id if missing in body
                     // DocID convention: {franchiseId}_{yyyy-MM}
@@ -119,11 +145,11 @@ export const useAdminControl = (monthKey?: string) => {
                         }
                     }
                     // Normalize ID
-                    return { ...d, franchiseId: fid ? String(fid).trim() : fid, _debugId: doc.id } as any;
+                    return { ...d, franchiseId: fid ? String(fid).trim() : fid, _debugId: doc.id } as FinancialSummary;
                 });
 
                 // --- Calculate Global Financials ---
-                const totalNetworkRevenue = summaries.reduce((acc, s) => acc + (s.revenue || 0), 0);
+                const totalNetworkRevenue = summaries.reduce((acc, s) => acc + (s.revenue || s.totalIncome || 0), 0);
                 const royalties = totalNetworkRevenue * 0.05;
 
                 // Services revenue: Aggregate from premium tickets or specific records
@@ -133,7 +159,7 @@ export const useAdminControl = (monthKey?: string) => {
                     return acc + consultoria + premium;
                 }, 0);
 
-                const financialMap = new Map();
+                const financialMap = new Map<string, FinancialSummary>();
                 summaries.forEach(s => {
                     if (s.franchiseId) {
                         financialMap.set(String(s.franchiseId).trim(), s);
@@ -151,7 +177,7 @@ export const useAdminControl = (monthKey?: string) => {
 
                                 if (summary) {
                                     const revenue = summary.revenue || summary.totalIncome || 0;
-                                    const expense = summary.expenses || summary.totalExpenses || 0;
+                                    const expense = (typeof summary.expenses === 'number' ? summary.expenses : summary.totalExpenses) || 0;
                                     const profit = revenue - expense;
 
                                     // Calculate real-time margin for the selected month
@@ -182,8 +208,8 @@ export const useAdminControl = (monthKey?: string) => {
                             records: pendingRecords.length,
                             alerts: unreadAlerts,
                             list: [
-                                ...standardTickets.map(t => ({ id: t.id as string, type: 'ticket' as const, title: t.subject as string, subtitle: t.email as string, priority: t.urgency as string })),
-                                ...premiumTickets.map(t => ({ id: t.id as string, type: 'premium' as const, title: t.subject as string, subtitle: 'Solicitud Premium', priority: 'high' })),
+                                ...standardTickets.map(t => ({ id: t.id as string, type: 'ticket' as const, title: t.subject, subtitle: t.email || 'Sin email', priority: t.urgency || 'low' })),
+                                ...premiumTickets.map(t => ({ id: t.id as string, type: 'premium' as const, title: t.subject, subtitle: 'Solicitud Premium', priority: 'high' })),
                                 ...pendingRecords.map(r => ({
                                     id: r.id,
                                     type: 'record' as const,

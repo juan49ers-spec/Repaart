@@ -106,6 +106,7 @@ const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdo
                                     <div className="flex items-center gap-2 flex-1 min-w-0">
                                         <div
                                             className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                             
                                             style={{ backgroundColor: color }}
                                         />
                                         <span className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
@@ -125,6 +126,7 @@ const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdo
                                         <div className="w-16 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                                             <div
                                                 className="h-full rounded-full"
+                                                 
                                                 style={{
                                                     width: `${Math.max(percent, 2)}%`,
                                                     backgroundColor: color
@@ -190,6 +192,7 @@ const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdo
                                         <div className="flex items-center gap-2 flex-1 min-w-0">
                                             <div
                                                 className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                                 
                                                 style={{ backgroundColor: item.color }}
                                             />
                                             <span className="font-medium text-slate-600 dark:text-slate-400 truncate">

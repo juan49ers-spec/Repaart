@@ -119,7 +119,7 @@ const ResourceUploadModal: React.FC<ResourceUploadModalProps> = ({ isOpen, onClo
                         <UploadCloud className="w-5 h-5 text-indigo-400" />
                         Subir Nuevo Recurso
                     </h3>
-                    <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+                    <button onClick={onClose} title="Cerrar" className="text-slate-400 hover:text-white transition-colors">
                         <X size={20} />
                     </button>
                 </div>
@@ -144,6 +144,7 @@ const ResourceUploadModal: React.FC<ResourceUploadModalProps> = ({ isOpen, onClo
                                 ref={fileInputRef}
                                 type="file"
                                 className="hidden"
+                                title="Seleccionar archivo"
                                 onChange={(e) => e.target.files && handleFileSelect(e.target.files[0])}
                             />
                             <div className="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
@@ -165,6 +166,7 @@ const ResourceUploadModal: React.FC<ResourceUploadModalProps> = ({ isOpen, onClo
                             </div>
                             <button
                                 onClick={() => setFile(null)}
+                                title="Eliminar archivo"
                                 className="p-2 hover:bg-slate-700 rounded-full text-slate-400 hover:text-rose-400 transition-colors"
                             >
                                 <X size={16} />
@@ -176,8 +178,9 @@ const ResourceUploadModal: React.FC<ResourceUploadModalProps> = ({ isOpen, onClo
                     {file && (
                         <div className="space-y-4 animate-in slide-in-from-bottom-2 fade-in">
                             <div>
-                                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Nombre Visible</label>
+                                <label htmlFor="resource-title" className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Nombre Visible</label>
                                 <input
+                                    id="resource-title"
                                     type="text"
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
@@ -188,8 +191,9 @@ const ResourceUploadModal: React.FC<ResourceUploadModalProps> = ({ isOpen, onClo
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Categoría</label>
+                                    <label htmlFor="resource-category" className="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Categoría</label>
                                     <select
+                                        id="resource-category"
                                         value={category}
                                         onChange={(e) => setCategory(e.target.value)}
                                         className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500/50"

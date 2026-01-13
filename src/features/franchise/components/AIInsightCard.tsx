@@ -7,8 +7,16 @@ interface AIInsightCardProps {
     data: SimpleFinanceData & { orders: number };
 }
 
+interface AIAnalysisResult {
+    summary: string;
+    strengths: string[];
+    weaknesses: string[];
+    recommendation: string;
+    sentiment: 'positive' | 'neutral' | 'negative' | 'critical';
+}
+
 export const AIInsightCard: React.FC<AIInsightCardProps> = ({ data }) => {
-    const [analysis, setAnalysis] = useState<any>(null);
+    const [analysis, setAnalysis] = useState<AIAnalysisResult | null>(null);
     const [loading, setLoading] = useState(false);
 
     const handleAnalyze = async () => {
@@ -61,20 +69,20 @@ export const AIInsightCard: React.FC<AIInsightCardProps> = ({ data }) => {
     return (
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm ring-4 ring-indigo-50/50">
             {/* Header */}
-            <div className={`px-6 py-4 border-b flex items-center justify-between ${analysis.sentiment === 'positive' ? 'bg-emerald-50 border-emerald-100' :
-                analysis.sentiment === 'critical' || analysis.sentiment === 'negative' ? 'bg-rose-50 border-rose-100' :
+            <div className={`px-6 py-4 border-b flex items-center justify-between ${analysis?.sentiment === 'positive' ? 'bg-emerald-50 border-emerald-100' :
+                analysis?.sentiment === 'critical' || analysis?.sentiment === 'negative' ? 'bg-rose-50 border-rose-100' :
                     'bg-gray-50 border-gray-100'
                 }`}>
                 <div className="flex items-center gap-3">
-                    <BrainCircuit className={`w-5 h-5 ${analysis.sentiment === 'positive' ? 'text-emerald-600' : 'text-gray-600'
+                    <BrainCircuit className={`w-5 h-5 ${analysis?.sentiment === 'positive' ? 'text-emerald-600' : 'text-gray-600'
                         }`} />
                     <h3 className="font-bold text-gray-900">Informe del Auditor IA</h3>
                 </div>
-                <span className={`text-[10px] font-bold uppercase px-3 py-1 rounded-full ${analysis.sentiment === 'positive' ? 'bg-emerald-100 text-emerald-700' :
-                    analysis.sentiment === 'negative' ? 'bg-rose-100 text-rose-700' :
+                <span className={`text-[10px] font-bold uppercase px-3 py-1 rounded-full ${analysis?.sentiment === 'positive' ? 'bg-emerald-100 text-emerald-700' :
+                    analysis?.sentiment === 'negative' ? 'bg-rose-100 text-rose-700' :
                         'bg-gray-200 text-gray-700'
                     }`}>
-                    {analysis.sentiment === 'positive' ? 'Mes Excelente' : 'Requiere Atención'}
+                    {analysis?.sentiment === 'positive' ? 'Mes Excelente' : 'Requiere Atención'}
                 </span>
             </div>
 
@@ -83,13 +91,13 @@ export const AIInsightCard: React.FC<AIInsightCardProps> = ({ data }) => {
                 <div>
                     <h4 className="text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">Resumen Ejecutivo</h4>
                     <p className="text-lg font-medium text-gray-800 leading-relaxed italic">
-                        "{analysis.summary}"
+                        &quot;{analysis?.summary}&quot;
                     </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Strengths */}
-                    {analysis.strengths?.length > 0 && (
+                    {analysis?.strengths && analysis.strengths.length > 0 && (
                         <div className="bg-emerald-50/50 rounded-xl p-4 border border-emerald-100/50">
                             <h4 className="flex items-center gap-2 text-sm font-bold text-emerald-800 mb-3">
                                 <TrendingUp className="w-4 h-4" /> Puntos Fuertes
@@ -106,7 +114,7 @@ export const AIInsightCard: React.FC<AIInsightCardProps> = ({ data }) => {
                     )}
 
                     {/* Weaknesses */}
-                    {analysis.weaknesses?.length > 0 && (
+                    {analysis?.weaknesses && analysis.weaknesses.length > 0 && (
                         <div className="bg-rose-50/50 rounded-xl p-4 border border-rose-100/50">
                             <h4 className="flex items-center gap-2 text-sm font-bold text-rose-800 mb-3">
                                 <TrendingDown className="w-4 h-4" /> Áreas de Mejora
@@ -131,7 +139,7 @@ export const AIInsightCard: React.FC<AIInsightCardProps> = ({ data }) => {
                     <div>
                         <h4 className="font-bold text-indigo-900 text-sm mb-1">Recomendación Estratégica</h4>
                         <p className="text-sm text-indigo-800 leading-relaxed">
-                            {analysis.recommendation}
+                            {analysis?.recommendation}
                         </p>
                     </div>
                 </div>

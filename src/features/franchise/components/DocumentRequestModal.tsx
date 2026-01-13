@@ -41,7 +41,7 @@ const DocumentRequestModal: React.FC<DocumentRequestModalProps> = ({
         if (activeTab === 'history' && user?.franchiseId) {
             loadHistory();
         }
-    }, [activeTab, user?.franchiseId]);
+    }, [activeTab, user?.franchiseId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const loadHistory = async () => {
         if (!user?.franchiseId) return;
@@ -111,7 +111,7 @@ const DocumentRequestModal: React.FC<DocumentRequestModalProps> = ({
                         <FileText className="w-5 h-5 text-indigo-500" />
                         Solicitar Documentación
                     </h3>
-                    <button onClick={onClose} className="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                    <button onClick={onClose} title="Cerrar" className="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors">
                         <X className="w-5 h-5 text-slate-400" />
                     </button>
                 </div>
@@ -147,8 +147,9 @@ const DocumentRequestModal: React.FC<DocumentRequestModalProps> = ({
 
                             {/* Category Select */}
                             <div className="space-y-1">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Categoría</label>
+                                <label htmlFor="request-category" className="text-xs font-bold text-slate-500 uppercase tracking-wide">Categoría</label>
                                 <select
+                                    id="request-category"
                                     value={category}
                                     onChange={(e) => setCategory(e.target.value)}
                                     className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"

@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, Award, Briefcase, Plus, ArrowUpRight } from 'lucide-react';
+import { TrendingUp, Award, Briefcase, ArrowUpRight } from 'lucide-react';
 
 interface ControlEarningsWidgetProps {
     data: {
@@ -71,8 +71,8 @@ const ControlEarningsWidget: React.FC<ControlEarningsWidgetProps> = ({ data, loa
                         </span>
                         <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
                             <div
-                                className="h-full bg-indigo-500 rounded-full transition-all duration-1000"
-                                style={{ width: '70%' }}
+                                className="h-full bg-indigo-500 rounded-full transition-all duration-1000 w-[70%]"
+                            // style={{ width: '70%' }}
                             />
                         </div>
                     </div>
@@ -97,8 +97,8 @@ const ControlEarningsWidget: React.FC<ControlEarningsWidgetProps> = ({ data, loa
                         </span>
                         <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
                             <div
-                                className="h-full bg-amber-500 rounded-full transition-all duration-1000"
-                                style={{ width: '45%' }}
+                                className="h-full bg-amber-500 rounded-full transition-all duration-1000 w-[45%]"
+                            // style={{ width: '45%' }}
                             />
                         </div>
                     </div>

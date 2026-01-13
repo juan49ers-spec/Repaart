@@ -224,6 +224,10 @@ const ServiceManager = () => {
                                         }
                                     `}
                                     onClick={() => handleEdit(service)}
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label={`Editar servicio ${service.title}`}
+                                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleEdit(service)}
                                 >
                                     {/* Status Badge */}
                                     <div className="absolute top-4 right-4">
@@ -307,8 +311,9 @@ const ServiceManager = () => {
                             <form onSubmit={handleSubmit} className="space-y-5">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1">
-                                        <label className="text-xs font-bold text-slate-500 uppercase">Título</label>
+                                        <label htmlFor="service-title" className="text-xs font-bold text-slate-500 uppercase">Título</label>
                                         <input
+                                            id="service-title"
                                             type="text"
                                             value={formData.title}
                                             onChange={e => setFormData({ ...formData, title: e.target.value })}
@@ -317,10 +322,12 @@ const ServiceManager = () => {
                                         />
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-xs font-bold text-slate-500 uppercase">Tipo</label>
+                                        <label htmlFor="service-type" className="text-xs font-bold text-slate-500 uppercase">Tipo</label>
                                         <select
+                                            id="service-type"
+                                            title="Tipo de servicio"
                                             value={formData.type}
-                                            onChange={e => setFormData({ ...formData, type: e.target.value as any })}
+                                            onChange={e => setFormData({ ...formData, type: e.target.value as CreateServiceData['type'] })}
                                             className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20"
                                         >
                                             <option value="consultancy">Consultoría</option>
@@ -332,8 +339,9 @@ const ServiceManager = () => {
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-slate-500 uppercase">Descripción</label>
+                                    <label htmlFor="service-description" className="text-xs font-bold text-slate-500 uppercase">Descripción</label>
                                     <textarea
+                                        id="service-description"
                                         value={formData.description}
                                         onChange={e => setFormData({ ...formData, description: e.target.value })}
                                         className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none h-20"
@@ -343,8 +351,9 @@ const ServiceManager = () => {
 
                                 <div className="grid grid-cols-3 gap-4">
                                     <div className="space-y-1">
-                                        <label className="text-xs font-bold text-slate-500 uppercase">Precio (€)</label>
+                                        <label htmlFor="service-price" className="text-xs font-bold text-slate-500 uppercase">Precio (€)</label>
                                         <input
+                                            id="service-price"
                                             type="number"
                                             value={formData.price}
                                             onChange={e => setFormData({ ...formData, price: Number(e.target.value) })}
@@ -354,8 +363,9 @@ const ServiceManager = () => {
                                         />
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-xs font-bold text-slate-500 uppercase">Duración (texto)</label>
+                                        <label htmlFor="service-duration" className="text-xs font-bold text-slate-500 uppercase">Duración (texto)</label>
                                         <input
+                                            id="service-duration"
                                             type="text"
                                             value={formData.duration}
                                             onChange={e => setFormData({ ...formData, duration: e.target.value })}
@@ -378,11 +388,12 @@ const ServiceManager = () => {
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                                    <label htmlFor="stripe-link" className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
                                         <Globe className="w-3 h-3" />
                                         Stripe Payment Link (Opcional)
                                     </label>
                                     <input
+                                        id="stripe-link"
                                         type="url"
                                         value={formData.stripePaymentLink}
                                         onChange={e => setFormData({ ...formData, stripePaymentLink: e.target.value })}
@@ -392,9 +403,10 @@ const ServiceManager = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase">Características (Bullet Points)</label>
+                                    <label htmlFor="feature-input" className="text-xs font-bold text-slate-500 uppercase">Características (Bullet Points)</label>
                                     <div className="flex gap-2">
                                         <input
+                                            id="feature-input"
                                             type="text"
                                             value={featureInput}
                                             onChange={e => setFeatureInput(e.target.value)}
@@ -405,6 +417,7 @@ const ServiceManager = () => {
                                         <button
                                             type="button"
                                             onClick={addFeature}
+                                            title="Añadir característica"
                                             className="bg-indigo-100 text-indigo-600 px-3 py-2 rounded-lg hover:bg-indigo-200 transition-colors"
                                         >
                                             <Plus className="w-4 h-4" />
@@ -417,6 +430,7 @@ const ServiceManager = () => {
                                                 <button
                                                     type="button"
                                                     onClick={() => removeFeature(idx)}
+                                                    title="Eliminar característica"
                                                     className="w-4 h-4 hover:bg-rose-100 hover:text-rose-500 rounded-full flex items-center justify-center transition-colors"
                                                 >
                                                     <X className="w-3 h-3" />

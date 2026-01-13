@@ -115,11 +115,12 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ user, showMessage, roleConfig }
                         <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Identidad Corporativa</h3>
                         <div className="space-y-4">
                             <div className="group">
-                                <label className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">Nombre Público</label>
+                                <label htmlFor="displayName" className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">Nombre Público</label>
                                 <div className="relative">
                                     <User className="absolute left-3 top-3 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                                     <input
                                         type="text"
+                                        id="displayName"
                                         title="Nombre Público"
                                         aria-label="Nombre Público"
                                         placeholder="Tu nombre completo"
@@ -208,11 +209,12 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ user, showMessage, roleConfig }
                             </div>
 
                             <div className="group">
-                                <label className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">Teléfono Móvil</label>
+                                <label htmlFor="phone" className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">Teléfono Móvil</label>
                                 <div className="relative">
                                     <Phone className="absolute left-3 top-3 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                                     <input
                                         type="tel"
+                                        id="phone"
                                         title="Teléfono Móvil"
                                         aria-label="Teléfono Móvil"
                                         value={formData.phone}

@@ -17,6 +17,14 @@ import { useAuth } from '../../../context/AuthContext';
 
 import ResourceUploadModal from './ResourceUploadModal';
 
+interface Resource {
+    id: string;
+    title?: string;
+    name?: string;
+    category?: string;
+    [key: string]: any;
+}
+
 const RequestsInbox = () => {
     const { user } = useAuth();
     const [requests, setRequests] = useState<DocumentRequest[]>([]);
@@ -27,7 +35,7 @@ const RequestsInbox = () => {
     const [isResponseModalOpen, setIsResponseModalOpen] = useState(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [responseType, setResponseType] = useState<'fulfill' | 'reject'>('fulfill');
-    const [resources, setResources] = useState<any[]>([]);
+    const [resources, setResources] = useState<Resource[]>([]);
     const [selectedResourceId, setSelectedResourceId] = useState('');
     const [rejectionReason, setRejectionReason] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,7 +55,7 @@ const RequestsInbox = () => {
     const loadResources = async () => {
         const q = query(collection(db, 'resources'), orderBy('createdAt', 'desc'));
         const snapshot = await getDocs(q);
-        setResources(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        setResources(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Resource)));
     };
 
     const handleOpenResponse = (req: DocumentRequest) => {
@@ -118,7 +126,7 @@ const RequestsInbox = () => {
                         </h2>
                         <p className="text-sm text-slate-500 dark:text-slate-400">Gestiona las peticiones de documentación de las franquicias.</p>
                     </div>
-                    <button onClick={() => { setLoading(true); loadRequests(); }} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors">
+                    <button title="Recargar solicitudes" onClick={() => { setLoading(true); loadRequests(); }} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors">
                         <Clock className="w-4 h-4 text-slate-400" />
                     </button>
                 </div>
@@ -205,9 +213,11 @@ const RequestsInbox = () => {
                             {responseType === 'fulfill' ? (
                                 <div className="space-y-4">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Seleccionar Documento</label>
+                                        <label htmlFor="resource-select" className="text-xs font-bold text-slate-500 uppercase tracking-wide">Seleccionar Documento</label>
                                         <div className="flex gap-2">
                                             <select
+                                                id="resource-select"
+                                                title="Seleccionar documento"
                                                 value={selectedResourceId}
                                                 onChange={(e) => setSelectedResourceId(e.target.value)}
                                                 className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"
@@ -235,7 +245,7 @@ const RequestsInbox = () => {
                                     <div className="p-3 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800 rounded-lg">
                                         <p className="text-xs text-indigo-700 dark:text-indigo-300">
                                             <strong className="block mb-1">Nota:</strong>
-                                            Al enviar, el franquiciado recibirá una notificación y podrá acceder al documento desde su sección de "Recursos".
+                                            Al enviar, el franquiciado recibirá una notificación y podrá acceder al documento desde su sección de &quot;Recursos&quot;.
                                         </p>
                                     </div>
                                 </div>

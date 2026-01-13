@@ -660,7 +660,7 @@ const MonthlyHistoryTable: React.FC<MonthlyHistoryTableProps> = ({ franchiseId, 
                                 Motivo de la Franquicia
                             </p>
                             <div className="text-sm text-gray-700 bg-white p-3 rounded-lg border border-slate-200 italic">
-                                "{pendingUnlock.unlockReason || 'Sin motivo especificado'}"
+                                &quot;{pendingUnlock.unlockReason || 'Sin motivo especificado'}&quot;
                             </div>
                         </div>
 

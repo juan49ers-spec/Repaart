@@ -226,7 +226,7 @@ const MigrationPanel: React.FC = () => {
                         {isDryRun && result.success && (
                             <div className="mt-4 p-3 bg-amber-500/10 rounded-lg">
                                 <p className="text-xs text-amber-200">
-                                    💡 This was a dry run. No data was modified. Toggle off "Dry Run Mode" to execute.
+                                    💡 This was a dry run. No data was modified. Toggle off &quot;Dry Run Mode&quot; to execute.
                                 </p>
                             </div>
                         )}
