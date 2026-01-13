@@ -10,15 +10,8 @@ import ErrorBoundary from './ui/feedback/ErrorBoundary';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
-// --- SERVICE WORKER CLEANUP ---
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(function (registrations) {
-        for (const registration of registrations) {
-            registration.unregister();
-            console.log('Service Worker Unregistered');
-        }
-    });
-}
+// --- SERVICE WORKER CLEANUP REMOVED ---
+
 
 const queryClient = new QueryClient({
     defaultOptions: {

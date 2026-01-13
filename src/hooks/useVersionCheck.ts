@@ -1,23 +1,9 @@
-import { useEffect, useState } from 'react';
-import { useToast } from './useToast';
+import { useEffect } from 'react';
 
-interface RemoteVersionData {
-    version: string;
-    buildTime: number;
-}
+// Defined in vite.config.js
+declare const __APP_VERSION__: string;
 
-// Extend Window interface to include __BUILD_TIME__
-declare global {
-    interface Window {
-        __BUILD_TIME__?: number;
-    }
-}
-
-export const useVersionCheck = (checkInterval: number = 60000 * 5) => { // Check every 5 minutes
-    const [updateAvailable, setUpdateAvailable] = useState<boolean>(false);
-    const toastReturn = useToast();
-    const toast = toastReturn?.toast;
-
+export const useVersionCheck = (checkInterval: number = 60000) => { // Check every 1 minute
     useEffect(() => {
         const checkVersion = async () => {
             try {
@@ -25,26 +11,26 @@ export const useVersionCheck = (checkInterval: number = 60000 * 5) => { // Check
                 const response = await fetch(`/version.json?t=${Date.now()}`);
                 if (!response.ok) return;
 
-                const remoteVersionData: RemoteVersionData = await response.json();
+                const data = await response.json();
+                const remoteVersion = data.version;
 
-                // Read local version from meta tag or just compare with what we loaded initially
-                // For simplicity, we'll store the initial load time version in a var
-                const localBuildTime = window.__BUILD_TIME__;
+                // __APP_VERSION__ is injected by Vite at build time
+                if (remoteVersion && remoteVersion !== __APP_VERSION__) {
+                    console.info(`[AutoUpdate] New version detected (Server: ${remoteVersion}, Local: ${__APP_VERSION__}). Updating...`);
 
-                // If we don't have a local build time (first load), set it
-                if (!localBuildTime) {
-                    window.__BUILD_TIME__ = remoteVersionData.buildTime;
-                    return;
-                }
+                    // Clear any potential service worker caches to be safe
+                    if ('serviceWorker' in navigator) {
+                        const registrations = await navigator.serviceWorker.getRegistrations();
+                        for (const registration of registrations) {
+                            await registration.unregister();
+                        }
+                    }
 
-                if (remoteVersionData.buildTime > localBuildTime) {
-                    console.log("🚀 New version detected:", remoteVersionData.version);
-                    setUpdateAvailable(true);
-
-                    toast?.info("Nueva versión disponible. Recarga para actualizar.");
+                    // Force reload ignoring cache
+                    window.location.reload();
                 }
             } catch (error) {
-                console.error("Error checking version:", error);
+                console.warn('[AutoUpdate] Failed to check version', error);
             }
         };
 
@@ -54,7 +40,7 @@ export const useVersionCheck = (checkInterval: number = 60000 * 5) => { // Check
         // Periodic check
         const interval = setInterval(checkVersion, checkInterval);
 
-        // Check on window focus (user comes back to tab)
+        // Check on window focus
         const onFocus = () => checkVersion();
         window.addEventListener('focus', onFocus);
 
@@ -62,7 +48,7 @@ export const useVersionCheck = (checkInterval: number = 60000 * 5) => { // Check
             clearInterval(interval);
             window.removeEventListener('focus', onFocus);
         };
-    }, [checkInterval, toast]);
+    }, [checkInterval]);
 
-    return { updateAvailable };
+    return {};
 };
