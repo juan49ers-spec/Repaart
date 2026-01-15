@@ -1,8 +1,4 @@
 
-> synthetic-sagan@4.1.0 lint
-> eslint .
-
-
 C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\components\dev\Seeder.tsx
   41:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
@@ -187,44 +183,22 @@ C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\adm
   392:71  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\admin\support\AdminSupportInbox.tsx
-  17:9  error    Error: Cannot access variable before it is declared
+  27:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
 
-`loadData` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
 
-C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\admin\support\AdminSupportInbox.tsx:17:9
-  15 |
-  16 |     useEffect(() => {
-> 17 |         loadData();
-     |         ^^^^^^^^ `loadData` accessed before it is declared
-  18 |     }, [activeTab]);
-  19 |
-  20 |     const loadData = async () => {
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
 
-C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\admin\support\AdminSupportInbox.tsx:20:5
-  18 |     }, [activeTab]);
-  19 |
-> 20 |     const loadData = async () => {
-     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 21 |         if (activeTab === 'tickets') {
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 22 |             const data = await supportService.getAllTicketsForAdmin();
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 23 |             setTickets(data);
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 24 |         } else {
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 25 |             const data = await supportService.getAllPremiumRequests();
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 26 |             setPremiumRequests(data);
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 27 |         }
-     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 28 |     };
-     | ^^^^^^^ `loadData` is declared here
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\admin\support\AdminSupportInbox.tsx:27:9
+  25 |
+  26 |     useEffect(() => {
+> 27 |         loadData();
+     |         ^^^^^^^^ Avoid calling setState() directly within an effect
+  28 |     }, [loadData]);
   29 |
-  30 |     const handleReply = async (ticketId: string) => {
-  31 |         if (!replyMesssage.trim()) return;  react-hooks/immutability
-  18:8  warning  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     react-hooks/exhaustive-deps
+  30 |     const handleReply = async (ticketId: string) => {  react-hooks/set-state-in-effect
 
 C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\admin\support\TicketDetail.tsx
   229:34  error  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
@@ -274,29 +248,6 @@ C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\fle
 C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\fleet\vehicles\components\VehicleForm.tsx
   41:61  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
   43:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-
-C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\franchise\FinancialControlCenter.tsx
-    44:13   error    Unexpected lexical declaration in case block                                                                                    no-case-declarations
-    45:13   error    Unexpected lexical declaration in case block                                                                                    no-case-declarations
-    46:13   error    Unexpected lexical declaration in case block                                                                                    no-case-declarations
-    71:13   error    Unexpected lexical declaration in case block                                                                                    no-case-declarations
-    88:13   error    Unexpected lexical declaration in case block                                                                                    no-case-declarations
-    89:13   error    Unexpected lexical declaration in case block                                                                                    no-case-declarations
-   107:13   error    Unexpected lexical declaration in case block                                                                                    no-case-declarations
-   124:13   error    Unexpected lexical declaration in case block                                                                                    no-case-declarations
-   140:13   error    Unexpected lexical declaration in case block                                                                                    no-case-declarations
-   286:19   warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
-   326:58   warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
-   359:106  warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
-   383:8    warning  React Hook useEffect has missing dependencies: 'user?.role' and 'user.uid'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
-   385:35   warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
-   421:62   warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
-   422:32   warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
-   526:40   warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
-   584:40   warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
-   618:45   warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
-  1124:73   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                 react/no-unescaped-entities
-  1124:95   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                 react/no-unescaped-entities
 
 C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\franchise\FranchiseDashboard.tsx
    83:9   error    'breakdownList' is never reassigned. Use 'const' instead  prefer-const
@@ -407,50 +358,6 @@ C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\fra
    15:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
   254:53  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
-C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\franchise\support\PremiumServicesPanel.tsx
-  451:22  error  Error: Cannot create components during render
-
-Components created during render will reset their state each time they are created. Declare components outside of render.
-
-C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\franchise\support\PremiumServicesPanel.tsx:451:22
-  449 |                     ${selected ? 'bg-indigo-500 text-white shadow-indigo-500/40' : 'bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white'}
-  450 |                 `}>
-> 451 |                     <Icon className="w-8 h-8" />
-      |                      ^^^^ This component is created during render
-  452 |                 </div>
-  453 |
-  454 |                 {/* Middle: Info */}
-
-C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\franchise\support\PremiumServicesPanel.tsx:419:18
-  417 |
-  418 | const ServiceCard: React.FC<{ service: PremiumService, selected: boolean, onClick: () => void, isBundle?: boolean }> = ({ service, selected, onClick, isBundle }) => {
-> 419 |     const Icon = getIconForService(service);
-      |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ The component is created during render here
-  420 |     const color = getColorForService(service);
-  421 |
-  422 |     if (isBundle) {  react-hooks/static-components
-  512:18  error  Error: Cannot create components during render
-
-Components created during render will reset their state each time they are created. Declare components outside of render.
-
-C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\franchise\support\PremiumServicesPanel.tsx:512:18
-  510 |                 }
-  511 |             `}>
-> 512 |                 <Icon className="w-6 h-6" />
-      |                  ^^^^ This component is created during render
-  513 |             </div>
-  514 |
-  515 |             <div className="mb-4 flex-1 relative z-10 w-full">
-
-C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\franchise\support\PremiumServicesPanel.tsx:419:18
-  417 |
-  418 | const ServiceCard: React.FC<{ service: PremiumService, selected: boolean, onClick: () => void, isBundle?: boolean }> = ({ service, selected, onClick, isBundle }) => {
-> 419 |     const Icon = getIconForService(service);
-      |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ The component is created during render here
-  420 |     const color = getColorForService(service);
-  421 |
-  422 |     if (isBundle) {                                                                                                                                                                                 react-hooks/static-components
-
 C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\franchise\support\ResourceLibrary.tsx
   4:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
 
@@ -540,23 +447,27 @@ C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\ope
   243:89  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              react/no-unescaped-entities
 
 C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\operations\ShiftPlanner.tsx
-   32:20  warning  Unexpected any. Specify a different type                                                                                                                                                     @typescript-eslint/no-explicit-any
-   70:29  warning  Unexpected any. Specify a different type                                                                                                                                                     @typescript-eslint/no-explicit-any
-  113:19  error    Component definition is missing display name                                                                                                                                                 react/display-name
-  138:18  error    Component definition is missing display name                                                                                                                                                 react/display-name
-  207:37  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render                                                                  react-hooks/rules-of-hooks
-  208:26  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render                                                                  react-hooks/rules-of-hooks
-  209:51  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render                                                                  react-hooks/rules-of-hooks
-  210:45  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?   react-hooks/rules-of-hooks
-  211:33  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?   react-hooks/rules-of-hooks
-  212:45  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?   react-hooks/rules-of-hooks
-  213:45  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?   react-hooks/rules-of-hooks
-  215:5   error    React Hook "useEffect" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?  react-hooks/rules-of-hooks
-  221:31  error    React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?    react-hooks/rules-of-hooks
-  243:40  warning  Unexpected any. Specify a different type                                                                                                                                                     @typescript-eslint/no-explicit-any
-  264:45  warning  Unexpected any. Specify a different type                                                                                                                                                     @typescript-eslint/no-explicit-any
-  270:22  error    React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?    react-hooks/rules-of-hooks
-  284:23  error    React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?    react-hooks/rules-of-hooks
+   32:20  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+   70:29  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+  140:18  error    Component definition is missing display name                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           react/display-name
+  213:41  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\operations\ShiftPlanner.tsx:213:41
+  211 |     const [newShiftHour, setNewShiftHour] = useState<number | null>(null);
+  212 |
+> 213 |     useEffect(() => { if (selectedDate) setSelectedDateObj(selectedDate); }, [selectedDate]);
+      |                                         ^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  214 |
+  215 |     const notify = (msg: string, type: 'success' | 'error' = 'success') => setNotification({ message: msg, type });
+  216 |  react-hooks/set-state-in-effect
+  266:55  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+  287:60  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
 
 C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\operations\SmartSuggestionsPanel.tsx
    6:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
@@ -1229,6 +1140,6 @@ C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\utils\schedu
 C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\utils\seedEncyclopedia.ts
   1214:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
-Ô£û 523 problems (57 errors, 466 warnings)
+Ô£û 488 problems (33 errors, 455 warnings)
   6 errors and 1 warning potentially fixable with the `--fix` option.
 

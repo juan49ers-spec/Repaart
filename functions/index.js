@@ -116,6 +116,18 @@ exports.createUserManaged = functions.https.onCall(async (data, context) => {
 
     } catch (error) {
         console.error("❌ Error creando usuario gestionado:", error);
+
+        // ROLLBACK: If Auth was created but Firestore failed, delete the Orphan Auth User
+        try {
+            const userCheck = await admin.auth().getUserByEmail(email);
+            if (userCheck) {
+                await admin.auth().deleteUser(userCheck.uid);
+                console.log(`↩️ Rollback exitoso: Usuario Auth eliminado tras fallo en BD.`);
+            }
+        } catch (rollbackError) {
+            console.error("💀 FALLO CRÍTICO EN ROLLBACK: Usuario Auth huérfano posible.", rollbackError);
+        }
+
         // Mapear errores de Auth a HttpsError
         if (error.code === 'auth/email-already-exists') {
             throw new functions.https.HttpsError('already-exists', 'El email ya está en uso.');
@@ -264,6 +276,124 @@ exports.calculateWeekStats = functions.firestore
 
         } catch (err) {
             console.error(`❌ Error sincronizando finanzas:`, err);
+        }
+
+        return null;
+    });
+
+/**
+ * 🚨 INCIDENT ALERT TRIGGER 🚨
+ * Notifies admin/franchise immediately when a rider reports an issue.
+ */
+exports.onIncidentCreated = functions.firestore
+    .document('incidents/{incidentId}')
+    .onCreate(async (snap, context) => {
+        const data = snap.data();
+        const incidentId = context.params.incidentId;
+
+        console.log(`🚨 Nuevo Incidente Reportado [${incidentId}]`);
+        console.log(`👤 Rider ID: ${data.riderId}`);
+        console.log(`🏢 Franquicia: ${data.franchiseId || 'N/A'}`);
+        console.log(`⚠️ Tipo: ${data.type} (${data.isUrgent ? 'URGENTE' : 'Normal'})`);
+        console.log(`📝 Descripción: ${data.description}`);
+
+        // Create In-App Notification for Franchise
+        if (data.franchiseId) {
+            // 🔍 Recuperar nombre del Rider para personalizar mensaje
+            let riderName = 'Rider';
+            try {
+                if (data.riderId) {
+                    const riderSnap = await admin.firestore().collection('users').doc(data.riderId).get();
+                    if (riderSnap.exists) {
+                        const rData = riderSnap.data();
+                        riderName = rData.displayName || rData.email || 'Rider';
+                    }
+                }
+            } catch (err) {
+                console.error("⚠️ Error recuperando nombre rider:", err);
+            }
+
+            const notificationPayload = {
+                userId: data.franchiseId, // Target the franchise user
+                type: 'incident',
+                priority: data.isUrgent ? 'high' : 'normal',
+                title: `Nuevo Incidente: ${data.isUrgent ? '🚨 URGENTE' : 'Reporte'}`,
+                message: `${riderName} reportó: ${data.description.substring(0, 50)}${data.description.length > 50 ? '...' : ''}`,
+                link: '/franchise/incidents', // Deeplink (conceptual)
+                read: false,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                metadata: {
+                    incidentId: incidentId,
+                    riderId: data.riderId,
+                    vehicleId: data.vehicleId || null
+                }
+            };
+
+            await admin.firestore().collection('notifications').add(notificationPayload);
+            console.log(`🔔 Notificación enviada a Franquicia: ${data.franchiseId}`);
+        } else {
+            // Notify Global Admin if no franchise (or fallback)
+            const adminNotification = {
+                type: 'ALERT',
+                franchiseId: 'GLOBAL',
+                franchiseName: 'System',
+                priority: 'high',
+                title: 'Incidente sin Franquicia',
+                message: `Incidente ${incidentId} sin franchiseId asignado. Revisar inmediatamente.`,
+                read: false,
+                createdAt: admin.firestore.FieldValue.serverTimestamp()
+            };
+            await admin.firestore().collection('admin_notifications').add(adminNotification);
+        }
+
+        // 📧 EMAIL NOTIFICATION (Only for Urgent)
+        if (data.isUrgent) {
+            try {
+                // Configurar transporter (Usar Variables de Entorno en Prod)
+                const nodemailer = require('nodemailer');
+                const transporter = nodemailer.createTransport({
+                    service: 'gmail',
+                    auth: {
+                        user: process.env.EMAIL_USER || 'alertas@repaart.es',
+                        pass: process.env.EMAIL_PASS || 'tu_password_app'
+                    }
+                });
+
+                // Buscar email de la Franquicia
+                let franchiseEmail = 'admin@repaart.es'; // Fallback
+                if (data.franchiseId) {
+                    const franchiseSnap = await admin.firestore().collection('users').doc(data.franchiseId).get();
+                    if (franchiseSnap.exists) {
+                        franchiseEmail = franchiseSnap.data().email;
+                    }
+                }
+
+                const mailOptions = {
+                    from: '"Repaart Ops 🚨" <alertas@repaart.es>',
+                    to: franchiseEmail,
+                    subject: `🚨 INCIDENTE URGENTE: ${data.vehicleId || 'Vehículo'}`,
+                    html: `
+                        <h3>Nuevo Incidente Urgente</h3>
+                        <p><strong>Rider:</strong> ${riderName} (ID: ${data.riderId})</p>
+                        <p><strong>Vehículo:</strong> ${data.vehicleId || 'N/A'}</p>
+                        <p><strong>Descripción:</strong> ${data.description}</p>
+                        <p><strong>Hora:</strong> ${new Date().toLocaleString()}</p>
+                        <br>
+                        <a href="https://repaartfinanzas.firebaseapp.com/franchise/incidents">Ver en Panel</a>
+                    `
+                };
+
+                // Enviar (Solo si tenemos credenciales reales, envuelto en try para no romper la función)
+                if (process.env.EMAIL_USER) {
+                    await transporter.sendMail(mailOptions);
+                    console.log(`📧 Email urgente enviado a: ${franchiseEmail}`);
+                } else {
+                    console.log(`ℹ️ Email skipped (Missing EMAIL_USER env var). Would send to: ${franchiseEmail}`);
+                }
+
+            } catch (emailError) {
+                console.error("❌ Error enviando email:", emailError);
+            }
         }
 
         return null;

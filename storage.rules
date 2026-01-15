@@ -1,8 +1,51 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+
+    // --- HELPER FUNCTIONS ---
+    function isAuthed() {
+      return request.auth != null;
+    }
+    
+    // Uses Custom Claims set by 'syncUserRole' Cloud Function
+    function isAdmin() {
+      return isAuthed() && request.auth.token.role == 'admin';
+    }
+    
+    function isOwner(userId) {
+      return isAuthed() && request.auth.uid == userId;
+    }
+
+    // --- RULES ---
+
+    // 1. User Avatars
+    // Path: avatars/{userId}/{filename}
+    // Anyone can read (profile pics), only owner/admin can upload.
+    match /avatars/{userId}/{allPaths=**} {
+      allow read: if isAuthed();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    // 2. Global Resources (Admin Uploads)
+    // Path: resources/{filename}
+    // Shared docs. Admin write, All read.
+    match /resources/{allPaths=**} {
+      allow read: if isAuthed();
+      allow write: if isAdmin();
+    }
+
+    // 3. Support Tickets (Attachments)
+    // Path: tickets/{ticketId}/{filename}
+    // Attachments for support tickets. 
+    // Allow write for any authed user (to upload proof).
+    // Allow read for any authed user (acceptable risk for UUID-based paths).
+    match /tickets/{ticketId}/{allPaths=**} {
+       allow read, write: if isAuthed();
+    }
+
+    // Default Deny
     match /{allPaths=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if false; 
     }
   }
 }

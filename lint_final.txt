@@ -3,6 +3,9 @@
 > eslint .
 
 
+C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\App.tsx
+  111:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
 C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\components\dev\Seeder.tsx
   41:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
@@ -17,22 +20,7 @@ C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\context\Them
   6:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
 
 C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\academy\Academy.tsx
-  37:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
-
-Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
-* Update external systems with the latest state from React.
-* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
-
-Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
-
-C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\academy\Academy.tsx:37:13
-  35 |         const tab = searchParams.get('tab');
-  36 |         if (tab === 'encyclopedia') {
-> 37 |             setSubView('encyclopedia');
-     |             ^^^^^^^^^^ Avoid calling setState() directly within an effect
-  38 |         } else if (tab === 'courses') {
-  39 |             setSubView('courses');
-  40 |         }  react-hooks/set-state-in-effect
+  24:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\academy\AcademyDashboard.tsx
   80:8  warning  React Hook useMemo has an unnecessary dependency: 'progress'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
@@ -41,7 +29,7 @@ C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\aca
   282:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\academy\EncyclopediaView.tsx
-  180:8  warning  React Hook useMemo has an unnecessary dependency: 'readModules'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+  25:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\academy\LessonEditor.tsx
   15:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
@@ -184,7 +172,7 @@ C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\adm
   158:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
   184:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
   292:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  392:71  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  381:71  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\admin\support\AdminSupportInbox.tsx
   17:9  error    Error: Cannot access variable before it is declared
@@ -247,11 +235,7 @@ C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\adm
   142:23  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-explicit-any
 
 C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\admin\users\UserTable.tsx
-  121:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-
-C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\auth\Login.tsx
-  220:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  222:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  109:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\common\UserManual\UserManual.tsx
   93:52  warning  'node' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
@@ -1226,9 +1210,6 @@ C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\utils\riderC
 C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\utils\schedulerValidation.ts
   23:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
-C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\utils\seedEncyclopedia.ts
-  1214:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-
-Ô£û 523 problems (57 errors, 466 warnings)
+Ô£û 521 problems (56 errors, 465 warnings)
   6 errors and 1 warning potentially fixable with the `--fix` option.
 
