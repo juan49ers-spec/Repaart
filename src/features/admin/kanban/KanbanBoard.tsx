@@ -166,51 +166,47 @@ const KanbanBoard: React.FC = () => {
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
         >
-            <div className="p-3 md:p-8 min-h-screen flex flex-col relative bg-slate-50/50 dark:bg-transparent transition-all duration-300">
-                {/* 🌌 Atmospheric Glows */}
-                <div className="absolute top-[-5%] left-[-5%] w-[30%] h-[30%] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
-                <div className="absolute bottom-[-5%] right-[-5%] w-[30%] h-[30%] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none" />
+            <div className="p-2 lg:p-4 h-[calc(100vh-4rem)] flex flex-col relative bg-slate-50/50 dark:bg-transparent transition-all duration-300 overflow-hidden">
+                {/* Atmospheric Glows Removed for cleaner professional look on laptops */}
 
                 <div className="relative z-10 flex flex-col h-full">
-                    {/* Header section */}
-                    <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-6 md:mb-10">
+                    {/* Header section - Compact on laptops */}
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4 shrink-0">
                         <div className="space-y-2">
                             <div className="flex flex-col space-y-1">
                                 <span className="inline-flex w-fit px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-wider border border-indigo-500/20">
                                     Productivity Suite
                                 </span>
-                                <h1 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white tracking-tight">
+                                <h1 className="text-lg lg:text-xl font-medium text-slate-800 dark:text-white tracking-tight">
                                     Project <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-indigo-400">Flow</span>
                                 </h1>
                             </div>
-                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 max-w-lg leading-relaxed">
+                            <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 max-w-lg leading-relaxed hidden xl:block">
                                 Orquestación de objetivos estratégicos y tareas operativas.
                             </p>
                         </div>
 
-                        {/* Stats Dashboard */}
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mt-4 md:mt-8 pb-20 md:pb-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md p-4 rounded-[2rem] border border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-200/20 dark:shadow-none">
-                            <div className="space-y-0.5">
-                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Total</p>
-                                <p className="text-xl font-bold text-slate-800 dark:text-white">{stats.total}</p>
+                        {/* Stats Dashboard - Compact */}
+                        <div className="flex gap-4 md:gap-6 items-center bg-white/40 dark:bg-slate-900/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-200/20 dark:shadow-none">
+                            <div className="space-y-0">
+                                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">Total</p>
+                                <p className="text-lg font-bold text-slate-800 dark:text-white">{stats.total}</p>
                             </div>
-                            <div className="space-y-0.5">
-                                <p className="text-[10px] font-semibold text-indigo-500 uppercase tracking-widest">Activas</p>
-                                <p className="text-xl font-bold text-slate-800 dark:text-white">{stats.inProgress}</p>
+                            <div className="space-y-0">
+                                <p className="text-[9px] font-semibold text-indigo-500 uppercase tracking-widest">Activas</p>
+                                <p className="text-lg font-bold text-slate-800 dark:text-white">{stats.inProgress}</p>
                             </div>
-                            <div className="space-y-0.5">
-                                <p className="text-[10px] font-semibold text-emerald-500 uppercase tracking-widest">Éxito</p>
-                                <p className="text-xl font-bold text-slate-800 dark:text-white">{stats.completionRate}%</p>
+                            <div className="space-y-0">
+                                <p className="text-[9px] font-semibold text-emerald-500 uppercase tracking-widest">Éxito</p>
+                                <p className="text-lg font-bold text-slate-800 dark:text-white">{stats.completionRate}%</p>
                             </div>
-                            <div className="flex items-center justify-end">
-                                <button
-                                    onClick={() => handleAddTask('todo')}
-                                    className="p-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95 group"
-                                    title="Añadir nueva tarea general"
-                                >
-                                    <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
-                                </button>
-                            </div>
+                            <button
+                                onClick={() => handleAddTask('todo')}
+                                className="p-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95 group ml-2"
+                                title="Añadir nueva tarea general"
+                            >
+                                <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
+                            </button>
                         </div>
                     </div>
 
@@ -223,12 +219,12 @@ const KanbanBoard: React.FC = () => {
                         onSortChange={setSortBy}
                     />
 
-                    {/* Columns Area - Horizontal Scroll on Mobile */}
-                    <div className="flex-1 overflow-hidden">
-                        <div className="h-full overflow-x-auto pb-6 px-4 md:px-0 scrollbar-hide snap-x snap-mandatory">
-                            <div className="flex gap-4 md:gap-6 min-h-full">
+                    {/* Columns Area - Full Height with Scroll */}
+                    <div className="flex-1 overflow-hidden min-h-0">
+                        <div className="h-full overflow-x-auto overflow-y-hidden pb-2">
+                            <div className="flex gap-4 h-full">
                                 {COLUMNS.map((col) => (
-                                    <div key={col.id} className="flex-shrink-0 w-[85vw] md:w-80 snap-center first:pl-2 last:pr-2 md:first:pl-0 md:last:pr-0">
+                                    <div key={col.id} className="flex-1 min-w-[240px] lg:min-w-[260px] max-w-[380px] h-full">
                                         <KanbanColumn
                                             title={col.title}
                                             colorConfig={col}

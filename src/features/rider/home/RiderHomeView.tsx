@@ -4,10 +4,8 @@ import { useRiderStore } from '../../../store/useRiderStore';
 import { format, startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
 import { SlideToWork } from './components/SlideToWork';
 import {
-    Bike,
     Zap,
     Trophy,
-    TrendingUp,
     MapPin,
     AlertCircle,
     Clock,
@@ -23,6 +21,8 @@ export const RiderHomeView: React.FC = () => {
     const { myShifts, fetchMyShifts } = useRiderStore();
     const [currentTime, setCurrentTime] = useState(new Date());
     const [isShaking, setIsShaking] = useState(false);
+    const [isIncidentModalOpen, setIsIncidentModalOpen] = useState(false);
+    const [isChecklistModalOpen, setIsChecklistModalOpen] = useState(false);
 
     useEffect(() => {
         if (user?.uid) fetchMyShifts(user.uid);

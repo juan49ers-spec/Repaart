@@ -1,6 +1,6 @@
+
 import React from 'react';
 import { X, Calendar, Zap, MousePointer2 } from 'lucide-react';
-import { cn } from '../../lib/utils';
 
 interface SchedulerGuideModalProps {
     isOpen: boolean;

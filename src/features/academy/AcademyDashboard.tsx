@@ -1,22 +1,13 @@
-import { type FC, type ReactNode, useState, useMemo, useCallback } from 'react';
+import { type FC, type ReactNode, useState, useCallback, useMemo } from 'react';
 import { BookOpen, Lock, CheckCircle, Clock, PlayCircle, Award, Search } from 'lucide-react';
-import { useAcademyModules, useAcademyProgress } from '../../hooks/useAcademy';
+import { useAcademyModules, useAcademyProgress, AcademyModule } from '../../hooks/useAcademy';
 import { useAuth } from '../../context/AuthContext';
 import { AcademySeeder } from './AcademySeeder';
 
 type ModuleStatus = 'available' | 'locked' | 'in_progress' | 'completed';
 
-interface Module {
-    id: string;
-    order: number;
-    title: string;
-    description: string;
-    duration?: string;
-    lessonCount?: number;
-}
-
 interface AcademyDashboardProps {
-    onModuleClick: (module: Module) => void;
+    onModuleClick: (module: AcademyModule) => void;
 }
 
 /**
@@ -32,25 +23,25 @@ const AcademyDashboard: FC<AcademyDashboardProps> = ({ onModuleClick }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<ModuleStatus | 'all'>('all');
 
-    const getModuleStatus = useCallback((module: Module): ModuleStatus => {
-        const moduleProgress = progress[module.id];
+    const getModuleStatus = useCallback((module: AcademyModule): ModuleStatus => {
+        const moduleProgress = progress[module.id || ''];
 
         if (!moduleProgress) {
             // Verificar si está desbloqueado
-            if (module.order === 1) return 'available';
+            if ((module.order || 0) === 1) return 'available';
 
             // Verificar si el módulo anterior está completado
-            const prevModule = modules.find(m => m.order === module.order - 1);
+            const prevModule = modules.find(m => (m.order || 0) === (module.order || 0) - 1);
             const prevProgress = progress[prevModule?.id || ''];
 
-            if (prevProgress && prevProgress.score && prevProgress.score >= 80) {
+            if (prevProgress && prevProgress.quizScore && prevProgress.quizScore >= 80) {
                 return 'available';
             }
 
             return 'locked';
         }
 
-        if (moduleProgress.completed) return 'completed';
+        if (moduleProgress.status === 'completed') return 'completed';
         return 'in_progress';
     }, [modules, progress]);
 
@@ -62,6 +53,7 @@ const AcademyDashboard: FC<AcademyDashboardProps> = ({ onModuleClick }) => {
                 return <PlayCircle className="w-6 h-6 text-blue-500" />;
             case 'locked':
                 return <Lock className="w-6 h-6 text-slate-400" />;
+            case 'available':
             default:
                 return <BookOpen className="w-6 h-6 text-blue-500" />;
         }
@@ -81,8 +73,8 @@ const AcademyDashboard: FC<AcademyDashboardProps> = ({ onModuleClick }) => {
     }, [modules, progress, searchQuery, statusFilter, getModuleStatus]);
 
     // Statistics
-    const completedCount = modules.filter(m => getModuleStatus(m) === 'completed').length;
-    const inProgressCount = modules.filter(m => getModuleStatus(m) === 'in_progress').length;
+    const completedCount = modules.filter((m: AcademyModule) => getModuleStatus(m) === 'completed').length;
+    const inProgressCount = modules.filter((m: AcademyModule) => getModuleStatus(m) === 'in_progress').length;
 
 
     if (loading) {
@@ -107,19 +99,19 @@ const AcademyDashboard: FC<AcademyDashboardProps> = ({ onModuleClick }) => {
                     {/* Title and Stats */}
                     <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                         <div>
-                            <h1 className="text-3xl md:text-4xl font-black mb-2 text-slate-900 dark:text-white">🎓 Academia Repaart</h1>
-                            <p className="text-slate-500 dark:text-slate-400 text-base md:text-lg">
+                            <h1 className="text-3xl font-bold mb-2 text-slate-900 dark:text-white tracking-tight">🎓 Academia Repaart</h1>
+                            <p className="text-slate-500 dark:text-slate-400 text-base md:text-lg font-medium">
                                 Tu camino hacia la excelencia operativa
                             </p>
                         </div>
                         <div className="flex gap-4">
-                            <div className="text-center bg-indigo-50 dark:bg-indigo-950/30 p-4 rounded-xl border border-indigo-100 dark:border-indigo-900">
-                                <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-1 font-bold uppercase tracking-wider">Progreso</p>
-                                <p className="text-3xl font-black text-indigo-900 dark:text-indigo-100">{Math.round(totalProgress)}%</p>
+                            <div className="text-center bg-indigo-50/50 dark:bg-indigo-950/30 p-4 rounded-xl border border-indigo-100 dark:border-indigo-900/50">
+                                <p className="text-[10px] text-indigo-600 dark:text-indigo-400 mb-1 font-bold uppercase tracking-wider">Progreso</p>
+                                <p className="text-2xl font-bold text-indigo-900 dark:text-indigo-100">{Math.round(totalProgress)}%</p>
                             </div>
-                            <div className="text-center bg-emerald-50 dark:bg-emerald-950/30 p-4 rounded-xl border border-emerald-100 dark:border-emerald-900">
-                                <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-1 font-bold uppercase tracking-wider">Completados</p>
-                                <p className="text-3xl font-black text-emerald-900 dark:text-emerald-100">{completedCount}/{modules.length}</p>
+                            <div className="text-center bg-emerald-50/50 dark:bg-emerald-950/30 p-4 rounded-xl border border-emerald-100 dark:border-emerald-900/50">
+                                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mb-1 font-bold uppercase tracking-wider">Completados</p>
+                                <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">{completedCount}/{modules.length}</p>
                             </div>
                         </div>
                     </div>
@@ -184,7 +176,7 @@ const AcademyDashboard: FC<AcademyDashboardProps> = ({ onModuleClick }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {filteredModules.map((module) => {
                     const status = getModuleStatus(module);
-                    const moduleProgress = progress[module.id];
+                    const moduleProgress = module.id ? progress[module.id] : undefined;
                     const isLocked = status === 'locked';
                     // Dynamic border color based on status
                     const borderColor = status === 'completed' ? 'border-emerald-200' : status === 'in_progress' ? 'border-indigo-200' : 'border-slate-200';
@@ -195,32 +187,32 @@ const AcademyDashboard: FC<AcademyDashboardProps> = ({ onModuleClick }) => {
                             key={module.id}
                             onClick={() => !isLocked && onModuleClick(module)}
                             className={`
-                                relative rounded-2xl border ${borderColor} ${bgColor} p-6 transition-all duration-300
+                                relative rounded-2xl border ${borderColor} ${bgColor} p-4 transition-all duration-300
                                 ${!isLocked ? 'cursor-pointer hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 hover:border-indigo-300' : 'cursor-not-allowed opacity-80'}
                             `}
                         >
                             {/* Status Badge */}
-                            <div className="absolute top-4 right-4">
+                            <div className="absolute top-3 right-3 drop-shadow-sm">
                                 {getStatusIcon(status)}
                             </div>
 
                             {/* Module Info */}
-                            <div className="mb-4">
+                            <div className="mb-3">
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-1 rounded-md">
+                                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100/80 px-2 py-0.5 rounded border border-slate-200">
                                         Módulo {module.order}
                                     </span>
                                     {module.duration && (
-                                        <span className="flex items-center text-xs text-slate-500 font-medium">
-                                            <Clock className="w-3 h-3 mr-1" />
+                                        <span className="flex items-center text-[9px] text-slate-400 font-medium">
+                                            <Clock className="w-2.5 h-2.5 mr-1" />
                                             {module.duration}
                                         </span>
                                     )}
                                 </div>
-                                <h3 className={`text-xl font-black mb-2 line-clamp-2 ${isLocked ? 'text-slate-400' : 'text-slate-900'}`}>
+                                <h3 className={`text-base font-bold mb-1.5 line-clamp-2 leading-tight ${isLocked ? 'text-slate-400' : 'text-slate-800 dark:text-slate-100'}`}>
                                     {module.title}
                                 </h3>
-                                <p className="text-sm text-slate-600 line-clamp-3 leading-relaxed">
+                                <p className="text-[11px] text-slate-500 line-clamp-3 leading-relaxed font-medium">
                                     {module.description}
                                 </p>
                             </div>
@@ -228,15 +220,15 @@ const AcademyDashboard: FC<AcademyDashboardProps> = ({ onModuleClick }) => {
                             {/* Progress */}
                             {moduleProgress && (
                                 <div className="space-y-2 mt-6">
-                                    <div className="flex justify-between items-center text-xs font-bold">
-                                        <span className="text-slate-500">
+                                    <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+                                        <span className="text-slate-400">
                                             {moduleProgress.completedLessons || 0}/{module.lessonCount || 0} lecciones
                                         </span>
                                         <span className="text-indigo-600">
                                             {Math.round(moduleProgress.progress || 0)}%
                                         </span>
                                     </div>
-                                    <div className="bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
+                                    <div className="bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200">
                                         <div
                                             className="bg-indigo-500 h-full transition-all duration-500"
                                             style={{ width: `${moduleProgress.progress || 0}%` }}
@@ -246,16 +238,16 @@ const AcademyDashboard: FC<AcademyDashboardProps> = ({ onModuleClick }) => {
                             )}
 
                             {/* Certificate Badge */}
-                            {status === 'completed' && moduleProgress?.score && moduleProgress.score >= 80 && (
-                                <div className="mt-4 flex items-center gap-2 text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg text-xs font-bold border border-emerald-100">
+                            {status === 'completed' && moduleProgress?.quizScore && moduleProgress.quizScore >= 80 && (
+                                <div className="mt-4 flex items-center gap-2 text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg text-xs font-bold border border-emerald-100 shadow-sm">
                                     <Award className="w-4 h-4" />
-                                    Certificado: {moduleProgress.score}%
+                                    Certificado: {moduleProgress.quizScore}%
                                 </div>
                             )}
 
                             {/* Locked Message */}
                             {isLocked && (
-                                <div className="mt-4 text-xs text-slate-400 italic flex items-center gap-1 bg-slate-100 px-3 py-2 rounded-lg">
+                                <div className="mt-4 text-xs text-slate-400 italic flex items-center gap-1 bg-slate-100/50 px-3 py-2 rounded-lg border border-slate-200/50">
                                     <Lock className="w-3 h-3" />
                                     Módulo bloqueado
                                 </div>

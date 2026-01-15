@@ -30,8 +30,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onNavigate, selectedMonth }) 
             {/* CONTROL CENTER AREA */}
             <section>
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="h-6 w-1 bg-indigo-600 rounded-full" />
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Control Hub</h2>
+                    <div className="h-6 w-1 bg-gradient-to-b from-indigo-500 to-violet-500 rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
+                    <h2 className="text-xl font-medium text-slate-800 dark:text-white tracking-tight">Control Hub</h2>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

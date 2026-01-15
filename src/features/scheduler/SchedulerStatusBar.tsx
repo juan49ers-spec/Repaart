@@ -1,5 +1,5 @@
 import React from 'react';
-import { Euro, TrendingUp, AlertCircle, CheckCircle2, HelpCircle, Zap } from 'lucide-react';
+import { AlertCircle, CheckCircle2, HelpCircle, Zap } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface SchedulerStatusBarProps {

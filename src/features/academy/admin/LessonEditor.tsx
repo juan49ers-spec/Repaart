@@ -1,13 +1,19 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useModuleLessons, useCreateLesson, useUpdateLesson, useDeleteLesson } from '../../../hooks/useAcademy';
 import { Lesson } from '../../../services/academyService';
 import { ArrowLeft, Plus, Save, Trash2, Video, FileText, Link as LinkIcon, PlayCircle } from 'lucide-react';
-import { useAuth } from '../../../context/AuthContext';
 
-export const LessonEditor = () => {
-    const { moduleId } = useParams<{ moduleId: string }>();
+
+interface LessonEditorProps {
+    moduleId?: string;
+    onBack?: () => void;
+}
+
+export const LessonEditor = ({ moduleId: propModuleId, onBack }: LessonEditorProps) => {
+    const { moduleId: paramModuleId } = useParams<{ moduleId: string }>();
     const navigate = useNavigate();
+    const moduleId = propModuleId || paramModuleId;
     const { lessons, loading } = useModuleLessons(moduleId || '');
     const createLesson = useCreateLesson();
     const updateLesson = useUpdateLesson();
@@ -111,7 +117,7 @@ export const LessonEditor = () => {
             <div className="w-full md:w-80 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 h-screen overflow-y-auto flex flex-col">
                 <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-800 z-10">
                     <button
-                        onClick={() => navigate('/admin/academy')}
+                        onClick={() => onBack ? onBack() : navigate('/admin/academy')}
                         className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-500"
                         title="Volver a módulos"
                     >

@@ -55,7 +55,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({ quiz, answers, score, onRetry
 
     // Calculate breakdown and stats
     const breakdown = useMemo<BreakdownItem[]>(() => {
-        return quiz.questions.map((q, index) => {
+        return quiz.questions.map((q: any, index: number) => {
             const userAnswer = answers[index];
             let isCorrect = false;
             let userAnswerText = '';

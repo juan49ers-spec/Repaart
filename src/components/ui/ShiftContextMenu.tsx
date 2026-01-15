@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import { Check, Copy, Trash2, Edit, X } from 'lucide-react';
-import { cn } from '../../lib/utils';
 
 interface ShiftContextMenuProps {
     x: number;

@@ -11,7 +11,7 @@ import { academyService, AcademyCourse, Lesson, Quiz, UserProgress, QuizQuestion
 
 // Re-export or Alias for UI consistency if needed
 export type AcademyModule = AcademyCourse & { lessonCount?: number };
-// Lesson, Quiz, Question are now imported
+export type { Lesson, Quiz, QuizQuestion as Question };
 
 
 // COLLECTION NAMES CONSTANTS (Aligned with Master Schema)
@@ -148,11 +148,17 @@ export const useDeleteLesson = () => {
     }, []);
 };
 
+export interface ExtendedUserProgress extends UserProgress {
+    progress: number;
+    score?: number;
+    completed: boolean;
+}
+
 /**
  * Hook para obtener el progreso del usuario
  */
 export const useAcademyProgress = (userId: string | null) => {
-    const [progress, setProgress] = useState<Record<string, UserProgress>>({});
+    const [progress, setProgress] = useState<Record<string, ExtendedUserProgress>>({});
     const [totalProgress, setTotalProgress] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(true);
 
@@ -170,7 +176,7 @@ export const useAcademyProgress = (userId: string | null) => {
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const progressData: Record<string, UserProgress & { progress?: number, score?: number, completed?: boolean, completedLessons?: string[] }> = {};
+            const progressData: Record<string, ExtendedUserProgress> = {};
             let completedModules = 0;
             let totalModules = 0;
 
@@ -191,8 +197,8 @@ export const useAcademyProgress = (userId: string | null) => {
                         id: doc.id,
                         score: data.quizScore,
                         completed: data.status === 'completed',
-                        progress: data.status === 'completed' ? 100 : ((data.completedLessons?.length || 0) * 10) // Mocking 10% per lesson if count unknown, or should be handled better.
-                    };
+                        progress: data.status === 'completed' ? 100 : ((data.completedLessons?.length || 0) * 10) // Mocking 10% per lesson if count unknown
+                    } as ExtendedUserProgress;
                     if (data.status === 'completed') completedModules++;
                     totalModules++;
                 }

@@ -66,17 +66,17 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
     const displayList = viewMode === 'top3' ? topPerformers : filteredFranchises.slice(0, 6);
 
     return (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col h-full shadow-sm overflow-hidden transition-all duration-300">
+        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-slate-800/50 flex flex-col h-full shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20 overflow-hidden transition-all duration-300">
 
             {/* Header */}
             <div className="p-6 pb-2">
                 <div className="flex justify-between items-center mb-4">
                     <div>
-                        <h3 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                        <h3 className="text-base font-medium tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
                             <Activity className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                             Monitoreo de Red
                         </h3>
-                        <p className="text-sm text-slate-500 mt-1 font-medium">
+                        <p className="text-sm text-slate-500 mt-1 font-normal">
                             {data.total} centros activos &bull; <span className="text-slate-600 dark:text-slate-400">
                                 {viewMode === 'top3' ? 'Top Performers' : 'Análisis de Riesgo'}
                             </span>
@@ -84,11 +84,11 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
                     </div>
 
                     {/* View Switcher */}
-                    <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                    <div className="flex bg-slate-100/50 dark:bg-slate-800/50 p-1 rounded-lg">
                         <button
                             onClick={() => setViewMode('list')}
-                            className={`px-3 py-1 rounded-md text-xs font-semibold tracking-tight transition-all ${viewMode === 'list'
-                                ? 'bg-white dark:bg-slate-700 data-[state=active]:shadow-sm text-slate-900 dark:text-white'
+                            className={`px-3 py-1 rounded-md text-xs font-medium tracking-tight transition-all ${viewMode === 'list'
+                                ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
                                 : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                                 }`}
                         >
@@ -96,7 +96,7 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
                         </button>
                         <button
                             onClick={() => setViewMode('top3')}
-                            className={`px-3 py-1 rounded-md text-xs font-semibold tracking-tight transition-all flex items-center gap-1 ${viewMode === 'top3'
+                            className={`px-3 py-1 rounded-md text-xs font-medium tracking-tight transition-all flex items-center gap-1 ${viewMode === 'top3'
                                 ? 'bg-white dark:bg-slate-700 shadow-sm text-amber-600 dark:text-amber-400'
                                 : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                                 }`}
@@ -116,15 +116,15 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
                                 placeholder="Buscar..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium tracking-tight focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
+                                className="w-full pl-8 pr-3 py-1.5 bg-slate-50/50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium tracking-tight focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
                             />
                         </div>
                         <button
                             onClick={() => setFilter(filter === 'critical' ? 'all' : 'critical')}
                             title="Filtrar Críticos"
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold tracking-tight border transition-all flex items-center gap-1.5 ${filter === 'critical'
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium tracking-tight border transition-all flex items-center gap-1.5 ${filter === 'critical'
                                 ? 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400'
-                                : 'bg-slate-50 border-transparent text-slate-500 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400'
+                                : 'bg-slate-50/50 border-transparent text-slate-500 hover:bg-slate-100 dark:bg-slate-800/30 dark:text-slate-400'
                                 }`}
                         >
                             <div className={`w-1.5 h-1.5 rounded-full ${filter === 'critical' ? 'bg-rose-600' : 'bg-rose-400/50'}`} />
@@ -135,7 +135,7 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
             </div>
 
             {/* Table Header */}
-            <div className="grid grid-cols-12 gap-4 px-6 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">
+            <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-xs font-medium text-slate-500 uppercase tracking-wider text-center">
                 <div className="col-span-1 flex items-center justify-center">#</div>
                 <div className="col-span-5 text-left pl-2">Franquicia</div>
                 <div className="col-span-3 text-right">Revenue</div>
@@ -173,7 +173,7 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
                                     onClick={() => navigate(`/admin/franchise/${f.id}`)}
                                     className={`grid grid-cols-12 gap-4 px-6 py-3 items-center cursor-pointer group transition-all ${isTop3 && index === 0
                                         ? 'bg-gradient-to-r from-amber-50/50 to-transparent dark:from-amber-900/10'
-                                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                                        : 'hover:bg-slate-50/50 dark:hover:bg-slate-800/40'
                                         }`}
                                 >
                                     {/* Rank / Status */}
@@ -187,7 +187,7 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
 
                                     {/* Name & ID */}
                                     <div className="col-span-5 pl-2">
-                                        <p className={`text-sm font-bold tracking-tight truncate ${isTop3 && index === 0 ? 'text-amber-900 dark:text-amber-400' : 'text-slate-900 dark:text-white'}`}>
+                                        <p className={`text-sm font-medium tracking-tight truncate ${isTop3 && index === 0 ? 'text-amber-900 dark:text-amber-400' : 'text-slate-900 dark:text-white'}`}>
                                             {f.name}
                                         </p>
                                         <p className="text-[10px] text-slate-400 font-mono hidden group-hover:block transition-all pt-0.5">
@@ -197,7 +197,7 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
 
                                     {/* Revenue */}
                                     <div className="col-span-3 text-right">
-                                        <span className={`text-xs font-mono font-bold tracking-tight ${isTop3 ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
+                                        <span className={`text-xs font-mono font-medium tracking-tight ${isTop3 ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
                                             {revenue.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
                                         </span>
                                         {isTop3 && (
@@ -209,7 +209,7 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
 
                                     {/* Margin */}
                                     <div className="col-span-3 text-right">
-                                        <span className={`text-xs font-mono font-bold tracking-tight ${colors[status].split(' ')[0]}`}>
+                                        <span className={`text-xs font-mono font-medium tracking-tight ${colors[status].split(' ')[0]}`}>
                                             {margin.toFixed(1)}%
                                         </span>
                                     </div>
@@ -221,7 +221,7 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
             </div>
 
             {/* Footer Action */}
-            <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+            <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/30">
                 <button
                     onClick={() => navigate('/admin/network')}
                     className="w-full flex items-center justify-center gap-2 py-2 text-xs font-medium tracking-tight text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors group"

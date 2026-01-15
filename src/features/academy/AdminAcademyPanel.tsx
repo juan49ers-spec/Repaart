@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Plus, Edit2, Trash2, Save, X, BookOpen, FileText, ClipboardCheck } from 'lucide-react';
 import { useAcademyModules, useCreateModule, useUpdateModule, useDeleteModule, AcademyModule } from '../../hooks/useAcademy';
 import { formatDate } from '../../utils/formatDate';
+import { serverTimestamp } from 'firebase/firestore';
 
-import LessonEditor from './LessonEditor';
-import QuizEditor from './QuizEditor';
+import { LessonEditor } from './admin/LessonEditor';
+import { QuizEditor } from './admin/QuizEditor';
 import AcademyAnalytics from './AcademyAnalytics';
 import EncyclopediaView from './EncyclopediaView';
 
@@ -53,7 +54,9 @@ const AdminAcademyPanel: React.FC = () => {
                 ...formData,
                 order: modules.length + 1,
                 lessonCount: 0,
-                createdAt: new Date().toISOString()
+                created_at: serverTimestamp(),
+                category: 'general',
+                status: 'draft'
             });
 
             setFormData({ title: '', description: '', duration: '', order: modules.length + 2 });
@@ -99,11 +102,11 @@ const AdminAcademyPanel: React.FC = () => {
         );
     }
 
-    // Si hay un módulo seleccionado, mostrar el editor de lecciones (se mantiene fuera del sistema de tabs para máxima visibilidad)
+    // If a module is selected, show the lesson editor
     if (selectedModule) {
         return (
             <LessonEditor
-                module={selectedModule}
+                moduleId={selectedModule.id}
                 onBack={() => setSelectedModule(null)}
             />
         );
@@ -112,7 +115,7 @@ const AdminAcademyPanel: React.FC = () => {
     if (selectedQuizModule) {
         return (
             <QuizEditor
-                module={selectedQuizModule}
+                moduleId={selectedQuizModule.id}
                 onBack={() => setSelectedQuizModule(null)}
             />
         );
@@ -333,7 +336,7 @@ const AdminAcademyPanel: React.FC = () => {
                                                         </div>
                                                         <div className="flex gap-3">
                                                             <button
-                                                                onClick={() => handleUpdate(module.id)}
+                                                                onClick={() => module.id && handleUpdate(module.id)}
                                                                 className="px-6 py-2.5 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/20 flex items-center gap-2"
                                                             >
                                                                 <Save className="w-4 h-4" /> Guardar
@@ -357,7 +360,7 @@ const AdminAcademyPanel: React.FC = () => {
                                                             {module.duration && (
                                                                 <span className="text-xs font-medium text-slate-500">{module.duration}</span>
                                                             )}
-                                                            {module.published ? (
+                                                            {module.status === 'active' ? (
                                                                 <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
                                                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                                                                     Publicado
@@ -383,7 +386,7 @@ const AdminAcademyPanel: React.FC = () => {
                                                             </div>
                                                             <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
                                                             <div className="text-xs text-slate-500 font-medium">
-                                                                Actualizado: {formatDate(module.updatedAt || module.createdAt)}
+                                                                Actualizado: {formatDate((module.updated_at || module.created_at) as any)}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -413,7 +416,7 @@ const AdminAcademyPanel: React.FC = () => {
                                                             <Edit2 className="w-4 h-4" />
                                                         </button>
                                                         <button
-                                                            onClick={() => handleDelete(module.id, module.title)}
+                                                            onClick={() => module.id && handleDelete(module.id, module.title)}
                                                             className="p-3 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-all"
                                                             title="Eliminar Módulo"
                                                         >

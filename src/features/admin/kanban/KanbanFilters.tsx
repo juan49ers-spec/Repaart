@@ -21,10 +21,10 @@ const KanbanFilters: React.FC<KanbanFiltersProps> = ({
     onSortChange
 }) => {
     return (
-        <div className="flex flex-col space-y-4 animate-in fade-in slide-in-from-top-4 duration-700 delay-150">
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+        <div className="flex flex-col space-y-2 mb-3 shrink-0 animate-in fade-in slide-in-from-top-4 duration-700 delay-150">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
                 {/* 1. Search Glass Container */}
-                <div className="relative w-full lg:flex-1 max-w-[500px] group">
+                <div className="relative w-full md:flex-1 md:max-w-[400px] group">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 group-focus-within:text-indigo-500 transition-colors" />
                     <input
                         type="text"
@@ -35,19 +35,19 @@ const KanbanFilters: React.FC<KanbanFiltersProps> = ({
                     />
                 </div>
 
-                {/* 2. Controls Group */}
-                <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
+                {/* 2. Controls Group - Allow wrap on smaller screens */}
+                <div className="flex flex-wrap items-center gap-2 lg:gap-4 w-full lg:w-auto">
                     {/* Sort Selector */}
-                    <div className="flex items-center gap-2 p-1.5 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-200/50 dark:border-white/5 shadow-sm">
-                        <div className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-200/50 dark:border-white/10 mr-1">
-                            <SortAsc size={14} />
-                            <span>Orden</span>
+                    <div className="flex items-center gap-1.5 p-1 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md rounded-xl border border-slate-200/50 dark:border-white/5 shadow-sm">
+                        <div className="flex items-center gap-1 px-2 py-1 text-[9px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-200/50 dark:border-white/10 mr-0.5">
+                            <SortAsc size={12} />
+                            <span className="hidden sm:inline">Orden</span>
                         </div>
                         {(['newest', 'priority', 'due_date'] as const).map((option) => (
                             <button
                                 key={option}
                                 onClick={() => onSortChange(option)}
-                                className={`px-3 py-1.5 rounded-xl text-[9px] uppercase tracking-wider font-bold transition-all ${sortBy === option
+                                className={`px-2 lg:px-3 py-1 rounded-lg text-[9px] uppercase tracking-wider font-bold transition-all ${sortBy === option
                                     ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
                                     : 'text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400'
                                     }`}
@@ -59,16 +59,16 @@ const KanbanFilters: React.FC<KanbanFiltersProps> = ({
                     </div>
 
                     {/* Priority Filters */}
-                    <div className="flex items-center gap-2 p-1.5 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-200/50 dark:border-white/5 shadow-sm">
-                        <div className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-200/50 dark:border-white/10 mr-1">
-                            <Filter size={14} />
-                            <span>Filtro</span>
+                    <div className="flex items-center gap-1.5 p-1 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md rounded-xl border border-slate-200/50 dark:border-white/5 shadow-sm">
+                        <div className="flex items-center gap-1 px-2 py-1 text-[9px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-200/50 dark:border-white/10 mr-0.5">
+                            <Filter size={12} />
+                            <span className="hidden sm:inline">Filtro</span>
                         </div>
                         {(['all', 'high', 'medium', 'low'] as const).map((priority) => (
                             <button
                                 key={priority}
                                 onClick={() => onPriorityChange(priority)}
-                                className={`px-3 py-1.5 rounded-xl text-[9px] uppercase tracking-wider font-bold transition-all ${priorityFilter === (priority === 'all' ? null : priority)
+                                className={`px-2 lg:px-3 py-1 rounded-lg text-[9px] uppercase tracking-wider font-bold transition-all ${priorityFilter === (priority === 'all' ? null : priority)
                                     ? 'bg-slate-800 dark:bg-white text-white dark:text-slate-900 shadow-lg'
                                     : 'text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400'
                                     }`}

@@ -19,7 +19,7 @@ export const AcademyAdminView = () => {
     const handleCreate = async () => {
         setIsCreating(true);
         try {
-            const newOrder = modules.length > 0 ? Math.max(...modules.map(m => m.order)) + 1 : 1;
+            const newOrder = modules.length > 0 ? Math.max(...modules.map(m => m.order || 0)) + 1 : 1;
             await createModule({
                 id: '',
                 title: 'Nuevo Módulo',

@@ -48,28 +48,28 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ title, tasks, onCardClick, 
     };
 
     return (
-        <div className={`flex flex-col bg-slate-100/30 dark:bg-slate-900/40 rounded-[2.5rem] border border-slate-200/50 dark:border-white/5 backdrop-blur-xl shadow-2xl shadow-slate-200/20 dark:shadow-none transition-all duration-500 h-full`}>
-            {/* Column Header */}
-            <div className={`p-6 flex items-center justify-between border-b border-slate-200/50 dark:border-white/5 bg-white/60 dark:bg-slate-800/20`}>
-                <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-xl ${colorConfig.tint} border ${colorConfig.border}`}>
+        <div className={`flex flex-col bg-slate-100/30 dark:bg-slate-900/40 rounded-2xl border border-slate-200/50 dark:border-white/5 backdrop-blur-xl shadow-lg shadow-slate-200/20 dark:shadow-none transition-all duration-500 h-full overflow-hidden`}>
+            {/* Column Header - Compact */}
+            <div className={`shrink-0 px-3 py-2 flex items-center justify-between border-b border-slate-200/50 dark:border-white/5 bg-white/60 dark:bg-slate-800/20`}>
+                <div className="flex items-center gap-2">
+                    <div className={`p-1.5 rounded-lg ${colorConfig.tint} border ${colorConfig.border}`}>
                         {getIcon()}
                     </div>
-                    <div className="flex flex-col">
-                        <h3 className={`text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-[0.2em]`}>
+                    <div className="flex items-center gap-2">
+                        <h3 className={`text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-widest truncate max-w-[120px]`}>
                             {title}
                         </h3>
-                        <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{tasks.length} {tasks.length === 1 ? 'Tarea' : 'Tareas'}</span>
+                        <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">{tasks.length}</span>
                     </div>
                 </div>
             </div>
 
-            {/* Tasks Area */}
+            {/* Tasks Area - No Scroll */}
             <div
                 ref={setNodeRef}
-                className={`p-4 space-y-3 transition-all duration-300 ${isOver ? 'bg-indigo-500/5' : ''}`}
+                className={`flex-1 overflow-hidden p-2 transition-all duration-300 ${isOver ? 'bg-indigo-500/5' : ''}`}
             >
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
                     <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
                         {tasks.map((task) => (
                             <KanbanCard key={task.id} task={task} onCardClick={onCardClick} />
@@ -78,54 +78,50 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ title, tasks, onCardClick, 
                 </div>
 
                 {tasks.length === 0 && !isOver && (
-                    <div className="h-48 flex flex-col items-center justify-center text-slate-400 dark:text-slate-700 space-y-4 opacity-40">
-                        <div className="p-4 rounded-3xl bg-slate-200/50 dark:bg-slate-800/50">
-                            <Layers size={32} strokeWidth={1.5} />
-                        </div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-center">Buzón Vacío</p>
+                    <div className="h-20 flex flex-col items-center justify-center text-slate-400 dark:text-slate-700 space-y-2 opacity-40">
+                        <Layers size={20} strokeWidth={1.5} />
+                        <p className="text-[8px] font-black uppercase tracking-widest">Vacío</p>
                     </div>
                 )}
             </div>
 
-            {/* Bottom Section */}
-            <div className="p-4 bg-white/20 dark:bg-slate-800/10 border-t border-slate-200/50 dark:border-white/5">
+            {/* Bottom Section - Compact */}
+            <div className="shrink-0 px-2 py-1.5 bg-white/20 dark:bg-slate-800/10 border-t border-slate-200/50 dark:border-white/5">
                 {isAdding ? (
                     <form onSubmit={handleSubmit} className="animate-in fade-in zoom-in-95 duration-200">
-                        <div className="flex flex-col gap-2 p-3 bg-white dark:bg-slate-800 rounded-2xl border-2 border-indigo-500/30 shadow-xl">
+                        <div className="flex gap-2 p-2 bg-white dark:bg-slate-800 rounded-xl border border-indigo-500/30 shadow-lg">
                             <input
                                 autoFocus
                                 type="text"
                                 value={newTitle}
                                 onChange={(e) => setNewTitle(e.target.value)}
-                                placeholder="¿Qué hay que hacer?"
-                                className="w-full bg-transparent border-none text-sm font-medium text-slate-700 dark:text-white placeholder:text-slate-400 focus:ring-0 p-1"
+                                placeholder="Nueva tarea..."
+                                className="flex-1 bg-transparent border-none text-xs font-medium text-slate-700 dark:text-white placeholder:text-slate-400 focus:ring-0 p-1"
                             />
-                            <div className="flex items-center justify-end gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsAdding(false)}
-                                    className="p-2 text-slate-400 hover:text-rose-500 transition-colors"
-                                    title="Cancelar"
-                                >
-                                    <X size={16} />
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="px-4 py-1.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20"
-                                    title="Añadir tarea"
-                                >
-                                    Añadir
-                                </button>
-                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsAdding(false)}
+                                className="p-1 text-slate-400 hover:text-rose-500 transition-colors"
+                                title="Cancelar"
+                            >
+                                <X size={14} />
+                            </button>
+                            <button
+                                type="submit"
+                                className="px-2 py-1 bg-indigo-600 text-white text-[9px] font-bold rounded-lg hover:bg-indigo-700 transition-all"
+                                title="Añadir tarea"
+                            >
+                                +
+                            </button>
                         </div>
                     </form>
                 ) : (
                     <button
                         onClick={() => setIsAdding(true)}
-                        className="w-full py-3 flex items-center justify-center gap-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white/80 dark:hover:bg-indigo-500/10 rounded-2xl transition-all border-2 border-dashed border-slate-200/50 dark:border-white/5 mb-2"
+                        className="w-full py-1.5 flex items-center justify-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white/80 dark:hover:bg-indigo-500/10 rounded-lg transition-all border border-dashed border-slate-200/50 dark:border-white/10"
                     >
-                        <Plus size={16} />
-                        Crear Tarea
+                        <Plus size={12} />
+                        Nueva
                     </button>
                 )}
             </div>

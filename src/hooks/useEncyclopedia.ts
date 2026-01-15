@@ -41,10 +41,9 @@ export const useEncyclopedia = () => {
     const [categories, setCategories] = useState<EncyclopediaCategory[]>([]);
     const [articles, setArticles] = useState<EncyclopediaArticle[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<Error | null>(null);
+    const [error] = useState<Error | null>(null);
 
     useEffect(() => {
-        setLoading(true);
         // 1. Listen to Categories
         const catQuery = query(collection(db, 'academy_encyclopedia_categories'), orderBy('order', 'asc'));
         const unsubCat = onSnapshot(catQuery, (snap) => {

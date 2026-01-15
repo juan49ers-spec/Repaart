@@ -56,7 +56,7 @@ export default function BrutalLearningView({
     // Derived state for initial index
     const [activeIndex, setActiveIndex] = useState(() => {
         if (!modules || modules.length === 0) return 0;
-        const idx = modules.findIndex(m => !alreadyViewedIds.includes(m.id));
+        const idx = modules.findIndex(m => !alreadyViewedIds.includes(m.id || ''));
         return idx === -1 ? 0 : idx;
     });
 
@@ -71,7 +71,7 @@ export default function BrutalLearningView({
     const theme = category ? (BASE_COLORS[category.color] || BASE_COLORS.indigo) : BASE_COLORS.indigo;
     const safeModules = modules || [];
     const currentModule = safeModules[activeIndex];
-    const isModuleViewed = currentModule ? alreadyViewedIds.includes(currentModule.id) : false;
+    const isModuleViewed = currentModule ? alreadyViewedIds.includes(currentModule.id || '') : false;
     const isLastModule = activeIndex === safeModules.length - 1;
 
     const handleNext = React.useCallback(async () => {
@@ -79,7 +79,9 @@ export default function BrutalLearningView({
         try {
             if (!isModuleViewed) {
                 setIsCompleting(true);
-                await onCompleteModule(currentModule.id);
+                if (currentModule.id) {
+                    await onCompleteModule(currentModule.id);
+                }
             }
             if (isLastModule) {
                 if (onViewQuiz) onViewQuiz();
@@ -174,7 +176,7 @@ export default function BrutalLearningView({
                 {/* Segmented Progress Bar */}
                 <div className="flex gap-1.5 h-1.5 w-full max-w-3xl mx-auto">
                     {safeModules.map((m, idx) => {
-                        const isViewed = alreadyViewedIds.includes(m.id);
+                        const isViewed = alreadyViewedIds.includes(m.id || '');
                         const isActive = idx === activeIndex;
                         const isPast = idx < activeIndex;
 
@@ -281,7 +283,7 @@ export default function BrutalLearningView({
                         <ChevronLeft size={24} />
                     </button>
 
-                    {isLastModule && (safeModules.every(m => alreadyViewedIds.includes(m.id))) ? (
+                    {isLastModule && (safeModules.every(m => alreadyViewedIds.includes(m.id || ''))) ? (
                         <button
                             onClick={onViewQuiz}
                             className={`flex-1 group relative overflow-hidden rounded-2xl p-1 shadow-xl shadow-${category.color}-500/20 transition-transform active:scale-[0.99] hover:shadow-${category.color}-500/30`}

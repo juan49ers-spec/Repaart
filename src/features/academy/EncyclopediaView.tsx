@@ -14,9 +14,9 @@ import EncyclopediaCardItem from './EncyclopediaCardItem';
 import EditEncyclopediaModal from './EditEncyclopediaModal';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
-import { encyclopediaData } from './encyclopediaData';
+
 import { db } from '../../lib/firebase';
-import { collection, writeBatch, doc, getDocs, addDoc } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 
 const PAGE_SIZE = 200;
 
@@ -502,11 +502,15 @@ const EncyclopediaView: React.FC = () => {
                             e.preventDefault();
                             const form = e.target as HTMLFormElement;
                             const formData = new FormData(form);
+                            const categoryId = formData.get('category') as string;
+                            const selectedCategory = categories.find(c => c.id === categoryId);
+
                             handleCreateModule({
                                 title: formData.get('title') as string,
                                 content: formData.get('content') as string,
-                                category: formData.get('category') as string,
-                                action: formData.get('action') as string,
+                                categoryId: categoryId,
+                                category: selectedCategory?.title || 'General',
+                                action: formData.get('action') as string || '',
                                 isFeatured: false
                             });
                         }} className="space-y-4">

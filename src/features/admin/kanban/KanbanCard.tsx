@@ -66,7 +66,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ task, onCardClick }) => {
                 task.priority === 'medium' ? 'bg-amber-400' : 'bg-emerald-400'
                 }`} />
 
-            <div className="pl-4 pr-3 py-3 space-y-2.5">
+            <div className="pl-3 pr-2 py-2 space-y-1">
                 {/* Header: Title & Tags */}
                 <div className="space-y-1.5">
                     {/* Tags Row */}
@@ -80,7 +80,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ task, onCardClick }) => {
                         </div>
                     )}
 
-                    <h4 className="text-[13px] font-semibold text-slate-700 dark:text-slate-200 leading-snug tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                    <h4 className="text-[12px] font-semibold text-slate-700 dark:text-slate-200 leading-tight tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">
                         {task.title}
                     </h4>
                 </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle, Award, ArrowRight, ArrowLeft, HelpCircle } from 'lucide-react';
+import { CheckCircle, Award, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useSaveQuizResult, Quiz, AcademyModule } from '../../hooks/useAcademy';
 import { useAuth } from '../../context/AuthContext';
 import QuizResults from './QuizResults';
@@ -7,7 +7,7 @@ import QuizResults from './QuizResults';
 interface QuizEngineProps {
     quiz: Quiz;
     module: AcademyModule;
-    onComplete?: (score: number) => void;
+    onComplete?: (score: number, moduleId?: string) => void;
 }
 
 /**
@@ -31,46 +31,14 @@ const QuizEngine: React.FC<QuizEngineProps> = ({ quiz, module, onComplete }) => 
         });
     };
 
-    // Handle para respuesta múltiple (multi-select)
-    const handleMultiAnswer = (questionIndex: number, answerIndex: number) => {
-        const currentAnswers: number[] = answers[questionIndex] || [];
-        let newAnswers;
-
-        if (currentAnswers.includes(answerIndex)) {
-            newAnswers = currentAnswers.filter(a => a !== answerIndex);
-        } else {
-            newAnswers = [...currentAnswers, answerIndex];
-        }
-
-        setAnswers({
-            ...answers,
-            [questionIndex]: newAnswers
-        });
-    };
-
     const handleSubmit = async () => {
         // Calcular puntuación
         let correct = 0;
         quiz.questions.forEach((q, index) => {
             const userAnswer = answers[index];
-
-            if (q.type === 'multi-select') {
-                // Para multi-select, comparar arrays
-                const correctAnswers = q.correctAnswers || [];
-                const userAnswers = (userAnswer as number[]) || [];
-
-                // Correcta si tiene todas las correctas y ninguna incorrecta
-                const hasAllCorrect = correctAnswers.every((a: number) => userAnswers.includes(a));
-                const hasNoIncorrect = userAnswers.every((a: number) => (correctAnswers as number[]).includes(a));
-
-                if (hasAllCorrect && hasNoIncorrect && userAnswers.length > 0) {
-                    correct++;
-                }
-            } else {
-                // Para single-choice y true-false
-                if (userAnswer === q.correctAnswer) {
-                    correct++;
-                }
+            // Para single-choice y true-false
+            if (userAnswer === q.correctAnswer) {
+                correct++;
             }
         });
 
@@ -81,12 +49,12 @@ const QuizEngine: React.FC<QuizEngineProps> = ({ quiz, module, onComplete }) => 
         // Guardar resultado
         try {
             if (user?.uid) {
-                await saveQuizResult(user.uid, module.id, finalScore, answers);
+                await saveQuizResult(user.uid, module?.id || '', finalScore, answers);
             }
 
             if (finalScore >= 80) {
                 setTimeout(() => {
-                    if (onComplete) onComplete(finalScore);
+                    if (onComplete) onComplete(finalScore, module.id);
                 }, 3000);
             }
         } catch (error) {
@@ -101,13 +69,8 @@ const QuizEngine: React.FC<QuizEngineProps> = ({ quiz, module, onComplete }) => 
         setScore(0);
     };
 
-    const allAnswered = quiz.questions.every((q, index) => {
+    const allAnswered = quiz.questions.every((_, index) => {
         const answer = answers[index];
-        if (q.type === 'multi-select') {
-            // Para multi-select, verificar que hay al menos una respuesta
-            return Array.isArray(answer) && answer.length > 0;
-        }
-        // Para single-choice y true-false
         return answer !== undefined;
     });
 
@@ -118,7 +81,7 @@ const QuizEngine: React.FC<QuizEngineProps> = ({ quiz, module, onComplete }) => 
                 answers={answers}
                 score={score}
                 onRetry={handleRetry}
-                onComplete={() => onComplete && onComplete(score)}
+                onComplete={() => onComplete && onComplete(score, module?.id)}
             />
         );
     }
@@ -149,97 +112,49 @@ const QuizEngine: React.FC<QuizEngineProps> = ({ quiz, module, onComplete }) => 
             <div className="bg-white rounded-3xl border border-slate-200 p-6 md:p-10 shadow-xl shadow-slate-200/50 mb-8 min-h-[400px] flex flex-col">
                 {/* Question Type Badge */}
                 <div className="flex items-center gap-3 mb-6">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${question.type === 'true-false' ? 'bg-purple-50 text-purple-700 border border-purple-100' :
-                        question.type === 'multi-select' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
-                            'bg-indigo-50 text-indigo-700 border border-indigo-100'
-                        }`}>
-                        {question.type === 'true-false' ? 'Verdadero/Falso' :
-                            question.type === 'multi-select' ? 'Selección Múltiple' :
-                                'Opción Múltiple'}
+                    <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100">
+                        Opción Múltiple
                     </span>
-                    {question.type === 'multi-select' && (
-                        <span className="text-xs text-slate-400 flex items-center gap-1 font-medium">
-                            <HelpCircle className="w-3 h-3" />
-                            Selecciona todas las correctas
-                        </span>
-                    )}
                 </div>
 
                 <h2 className="text-2xl md:text-3xl font-black text-slate-900 mb-8 leading-tight">
-                    {question.question}
+                    {question.text}
                 </h2>
 
                 <div className="space-y-4 flex-1">
-                    {question.type === 'multi-select' ? (
-                        // Multi-Select - Checkboxes
-                        question.options.map((option, index) => {
-                            const userAnswers = (answers[currentQuestion] as number[]) || [];
-                            const isSelected = userAnswers.includes(index);
+                    {/* Single-Choice - Radio buttons */}
+                    {question.options.map((option: string, index: number) => {
+                        const isSelected: boolean = answers[currentQuestion] === index;
 
-                            return (
-                                <button
-                                    key={index}
-                                    onClick={() => handleMultiAnswer(currentQuestion, index)}
-                                    className={`w-full text-left px-6 py-5 rounded-2xl border-2 font-medium transition-all group flex items-center justify-between ${isSelected
-                                        ? 'border-indigo-600 bg-indigo-50/50 shadow-sm'
-                                        : 'border-slate-200 hover:border-indigo-200 hover:bg-slate-50'
+                        return (
+                            <button
+                                key={index}
+                                onClick={() => handleSingleAnswer(currentQuestion, index)}
+                                className={`w-full text-left px-6 py-5 rounded-2xl border-2 font-medium transition-all group flex items-center justify-between ${isSelected
+                                    ? 'border-indigo-600 bg-indigo-50/50 shadow-sm'
+                                    : 'border-slate-200 hover:border-indigo-200 hover:bg-slate-50'
+                                    }`}
+                                aria-pressed={isSelected ? 'true' : 'false'}
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${isSelected
+                                        ? 'border-[6px] border-indigo-600 bg-white'
+                                        : 'border-2 border-slate-300 group-hover:border-indigo-300'
                                         }`}
-                                    aria-pressed={isSelected ? 'true' : 'false'}
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${isSelected
-                                            ? 'bg-indigo-600 text-white shadow-sm'
-                                            : 'bg-slate-100 text-transparent border border-slate-200 group-hover:border-indigo-300'
-                                            }`}>
-                                            <CheckCircle className="w-4 h-4" />
-                                        </div>
-                                        <div>
-                                            <span className={`font-bold mr-3 ${isSelected ? 'text-indigo-700' : 'text-slate-400 group-hover:text-indigo-400'}`}>
-                                                {String.fromCharCode(65 + index)}.
-                                            </span>
-                                            <span className={`text-lg ${isSelected ? 'text-indigo-900 font-semibold' : 'text-slate-600'}`}>
-                                                {option}
-                                            </span>
-                                        </div>
+                                    />
+                                    <div>
+                                        <span className={`font-bold mr-3 ${isSelected ? 'text-indigo-700' : 'text-slate-400 group-hover:text-indigo-400'}`}>
+                                            {String.fromCharCode(65 + index)}.
+                                        </span>
+                                        <span className={`text-lg ${isSelected ? 'text-indigo-900 font-semibold' : 'text-slate-600'}`}>
+                                            {option}
+                                        </span>
                                     </div>
-                                </button>
-                            );
-                        })
-                    ) : (
-                        // Single-Choice - Radio buttons
-                        question.options.map((option, index) => {
-                            const isSelected = answers[currentQuestion] === index;
-
-                            return (
-                                <button
-                                    key={index}
-                                    onClick={() => handleSingleAnswer(currentQuestion, index)}
-                                    className={`w-full text-left px-6 py-5 rounded-2xl border-2 font-medium transition-all group flex items-center justify-between ${isSelected
-                                        ? 'border-indigo-600 bg-indigo-50/50 shadow-sm'
-                                        : 'border-slate-200 hover:border-indigo-200 hover:bg-slate-50'
-                                        }`}
-                                    aria-pressed={isSelected ? 'true' : 'false'}
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${isSelected
-                                            ? 'border-[6px] border-indigo-600 bg-white'
-                                            : 'border-2 border-slate-300 group-hover:border-indigo-300'
-                                            }`}
-                                        />
-                                        <div>
-                                            <span className={`font-bold mr-3 ${isSelected ? 'text-indigo-700' : 'text-slate-400 group-hover:text-indigo-400'}`}>
-                                                {String.fromCharCode(65 + index)}.
-                                            </span>
-                                            <span className={`text-lg ${isSelected ? 'text-indigo-900 font-semibold' : 'text-slate-600'}`}>
-                                                {option}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    {isSelected && <CheckCircle className="w-5 h-5 text-indigo-600" />}
-                                </button>
-                            );
-                        })
-                    )}
+                                </div>
+                                {isSelected && <CheckCircle className="w-5 h-5 text-indigo-600" />}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 

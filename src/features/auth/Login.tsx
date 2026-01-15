@@ -77,27 +77,36 @@ const Login: FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-            <div className="max-w-md w-full space-y-8">
-                {/* LOGO SECTION */}
-                <div className="text-center">
-                    <img
-                        src={logo}
-                        alt="Logo"
-                        className="mx-auto h-24 w-24 rounded-full shadow-2xl ring-4 ring-indigo-500 ring-offset-4 ring-offset-slate-900"
-                    />
-                    <h2 className="mt-6 text-4xl font-black text-white tracking-tight">
-                        {isLogin ? 'Iniciar Sesión' : 'Alta Franquicia'}
-                    </h2>
-                    <p className="mt-2 text-sm text-slate-400">
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex flex-col justify-center safe-top safe-bottom">
+            {/* Atmospheric Orbs */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute -top-32 -left-32 w-96 h-96 bg-indigo-500/20 rounded-full blur-[100px] animate-orb" />
+                <div className="absolute bottom-0 right-0 w-80 h-80 bg-purple-500/15 rounded-full blur-[80px] animate-orb [animation-delay:2s]" />
+            </div>
+
+            <div className="relative z-10 px-6 py-8 max-w-md mx-auto w-full animate-slide-up">
+                {/* LOGO SECTION - Larger and more prominent */}
+                <div className="text-center mb-10">
+                    <div className="relative inline-block">
+                        <div className="absolute inset-0 bg-indigo-500/30 rounded-full blur-2xl scale-150" />
+                        <img
+                            src={logo}
+                            alt="Logo"
+                            className="relative h-28 w-28 mx-auto rounded-full shadow-2xl ring-4 ring-white/20"
+                        />
+                    </div>
+                    <h1 className="mt-8 text-mobile-title text-white">
+                        {isLogin ? 'Bienvenido' : 'Únete a nosotros'}
+                    </h1>
+                    <p className="mt-3 text-mobile-body text-slate-400">
                         {isLogin
-                            ? 'Ingresa tus credenciales para continuar'
-                            : 'Solicita tu acceso al panel de control'}
+                            ? 'Ingresa para acceder a tu panel'
+                            : 'Solicita acceso a la plataforma'}
                     </p>
                 </div>
 
-                {/* FORM CARD */}
-                <div className="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 p-8">
+                {/* FORM CARD - Glassmorphism style */}
+                <div className="card-mobile bg-white/5 backdrop-blur-xl border border-white/10">
                     <form onSubmit={handleSubmit} className="space-y-6">
 
                         {!isLogin && (

@@ -87,10 +87,10 @@ const Academy: React.FC = () => {
                     </div>
                 </div>
             )}
-            <div className={isAdmin ? "pt-8" : ""}>
+            <div className={isAdmin ? "pt-4" : ""}>
                 {/* Sub-Navigation Toggle */}
-                <div className="flex justify-center mb-8 px-4 md:px-8">
-                    <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md p-1.5 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 flex gap-2 shadow-sm">
+                <div className="flex justify-center mb-5 px-4 md:px-8">
+                    <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md p-1 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 flex gap-1 shadow-sm">
                         <button
                             onClick={() => handleTabChange('courses')}
                             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-xs transition-all ${currentTab === 'courses' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}

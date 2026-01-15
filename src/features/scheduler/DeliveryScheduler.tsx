@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Zap, Save, Loader2, BadgeCheck, XCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Save, Loader2, BadgeCheck, XCircle, Sun, Moon } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { getRiderInitials } from '../../utils/colorPalette';
 import { toLocalDateString, toLocalISOString, toLocalISOStringWithOffset } from '../../utils/dateUtils';
@@ -36,12 +36,15 @@ const DeliveryScheduler: React.FC<{
 
 
     const { user } = useAuth();
-    const safeFranchiseId = franchiseId || user?.uid || '';
+    // FIX: Prioritize explicit franchiseId -> user.franchiseId -> user.uid
+    // This solves the bug where 'uid' was used instead of the 'franchiseId' stored in the user profile
+    const safeFranchiseId = franchiseId || user?.franchiseId || user?.uid || '';
     const isMobile = useMediaQuery('(max-width: 768px)');
 
     // --- UI STATE ---
     const [viewMode, setViewMode] = useState<'day' | 'week'>('week');
-    const [showPrime, setShowPrime] = useState(false);
+    const [showLunch, setShowLunch] = useState(false);
+    const [showDinner, setShowDinner] = useState(false);
     const [isPublishing, setIsPublishing] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -52,8 +55,7 @@ const DeliveryScheduler: React.FC<{
         feedback: string;
         missingCoverage: string[];
     } | null>(null);
-    const [isAuditing, setIsAuditing] = useState(false);
-    const [isFixing, setIsFixing] = useState(false);
+
     const [isGuideOpen, setIsGuideOpen] = useState(false);
 
     // Update time every minute for the Red Line
@@ -276,7 +278,7 @@ const DeliveryScheduler: React.FC<{
             alert("El cuadrante está vacío. Añade turnos antes de auditar.");
             return;
         }
-        setIsAuditing(true);
+        // setIsAuditing(true); // Removed
         setSheriffResult(null);
         try {
             const result = await validateWeeklySchedule(mergedShifts);
@@ -289,14 +291,14 @@ const DeliveryScheduler: React.FC<{
             console.error("Error en auditoría:", error);
             alert("Error de conexión con el Sheriff.");
         } finally {
-            setIsAuditing(false);
+            // setIsAuditing(false); // Removed
         }
     };
 
     const handleAutoFix = async () => {
         if (!sheriffResult || !weekData) return;
 
-        setIsFixing(true);
+        // setIsFixing(true); // Removed
         try {
             const fixResult = await generateScheduleFix(
                 mergedShifts || [],
@@ -344,7 +346,7 @@ const DeliveryScheduler: React.FC<{
             console.error("Auto-Fix Error:", error);
             alert("Error al aplicar la corrección automática.");
         } finally {
-            setIsFixing(false);
+            // setIsFixing(false); // Removed
         }
     };
 
@@ -370,33 +372,7 @@ const DeliveryScheduler: React.FC<{
         return [...liveRemote, ...localShifts];
     }, [weekData?.shifts, localShifts, deletedIds]);
 
-    const ridersGrid = useMemo(() => {
-        const ridersMap = new Map();
-        rosterRiders.forEach(r => {
-            if (r.status === 'active' || r.status === 'on_route') {
-                ridersMap.set(r.id, {
-                    id: r.id,
-                    fullName: r.fullName,
-                    shifts: [],
-                    contractHours: r.contractHours || 40
-                });
-            }
-        });
 
-        mergedShifts.forEach(s => {
-            const rid = s.riderId;
-            if (ridersMap.has(rid)) {
-                ridersMap.get(rid).shifts.push(s);
-            }
-        });
-
-        return Array.from(ridersMap.values()).map(rider => {
-            const totalHours = rider.shifts.reduce((acc: number, s: any) => {
-                return acc + (differenceInMinutes(new Date(s.endAt), new Date(s.startAt))) / 60;
-            }, 0);
-            return { ...rider, totalWeeklyHours: totalHours };
-        }).sort((a, b) => a.fullName.localeCompare(b.fullName));
-    }, [mergedShifts, rosterRiders]);
 
     // --- LIQUID FLOW & DRAG AND DROP ---
     // In a full implementation, we would import DndContext here.
@@ -413,7 +389,7 @@ const DeliveryScheduler: React.FC<{
 
         sorted.forEach((s) => {
             const sStart = new Date(s.startAt);
-            const sEnd = new Date(s.endAt);
+            new Date(s.endAt);
 
             // Check adjacency (gap < 15 mins counts as continuous)
             if (currentBlock &&
@@ -438,6 +414,71 @@ const DeliveryScheduler: React.FC<{
         return visualBlocks;
     };
 
+    // --- PRIME HELPERS ---
+    const isFiltered = (startAt: string, endAt: string) => {
+        if (!showLunch && !showDinner) return true; // Show all
+
+        const start = new Date(startAt);
+        const end = new Date(endAt);
+        const startMin = start.getHours() * 60 + start.getMinutes();
+        const endMin = end.getHours() * 60 + end.getMinutes();
+        // Handle midnight wrapping for end time if needed (usually date objects handle it, but here we check time of day?)
+        // Assuming shifts fit within the day or we check simple hours. 
+        // For accurate overlap, we should compare full timestamps.
+        // But the previous logic used simple hours. Let's stick to simple Hours for "Turno".
+
+        // Lunch: 12:00 - 16:30 (720 - 990)
+        // Dinner: 20:00 - 24:00 (1200 - 1440)
+
+        // Note: endMin 0 (midnight) should be treated as 1440 if it's the end of shift
+        const adjustedEndMin = endMin === 0 ? 1440 : endMin;
+
+        let visible = false;
+
+        if (showLunch) {
+            const lStart = 720;
+            const lEnd = 990;
+            // Overlap: Start < RangeEnd && End > RangeStart
+            if (startMin < lEnd && adjustedEndMin > lStart) visible = true;
+        }
+
+        if (showDinner && !visible) {
+            const dStart = 1200;
+            const dEnd = 1440;
+            // Special case: If shift goes past midnight, endMin might be small, but here we assume day view context logic or shifts split at midnight.
+            // If split at midnight, adjustedEndMin handle 24:00.
+            if (startMin < dEnd && adjustedEndMin > dStart) visible = true;
+        }
+
+        return visible;
+    };
+
+    const ridersGrid = useMemo(() => {
+        const activeRiders = rosterRiders.filter(r => r.status === 'active' || r.status === 'on_route');
+        return activeRiders.map(rider => {
+            const allRiderShifts = mergedShifts.filter(s => s.riderId === rider.id);
+
+            // APPLY FILTERS
+            const displayedShifts = allRiderShifts.filter(s => isFiltered(s.startAt, s.endAt));
+
+            const visualBlocks = processRiderShifts(displayedShifts);
+
+            const totalHours = displayedShifts.reduce((acc, s) => {
+                const start = new Date(s.startAt);
+                const end = new Date(s.endAt);
+                const duration = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+                return acc + duration;
+            }, 0);
+
+            return {
+                ...rider,
+                totalWeeklyHours: totalHours,
+                visualBlocks,
+                shifts: displayedShifts
+            };
+        }).sort((a, b) => a.fullName.localeCompare(b.fullName));
+    }, [rosterRiders, mergedShifts, showLunch, showDinner]);
+
     // 2. Real-time Cost Calculation (Simulation)
     const totalWeeklyCost = useMemo(() => {
         return ridersGrid.reduce((total, rider) => {
@@ -458,8 +499,7 @@ const DeliveryScheduler: React.FC<{
                 const sEnd = new Date(s.endAt);
                 const start = sStart.getHours();
                 const end = sEnd.getHours();
-                const endM = sEnd.getMinutes();
-                const realEnd = (end === 0 && endM === 0) ? 24 : end;
+                const realEnd = (end === 0 && sEnd.getMinutes() === 0) ? 24 : end;
                 for (let h = start; h < realEnd; h++) {
                     if (h >= 0 && h < 24) res[date][h]++;
                 }
@@ -571,11 +611,7 @@ const DeliveryScheduler: React.FC<{
     const [isQuickFillOpen, setIsQuickFillOpen] = useState(false);
 
     // PRIME Filter Logic
-    const hours = useMemo(() => {
-        const fullDay = Array.from({ length: 24 }, (_, i) => i);
-        if (!showPrime) return fullDay;
-        return fullDay.filter(h => (h >= 13 && h < 16) || (h >= 20 && h < 24));
-    }, [showPrime]);
+
 
     const handleQuickAdd = (dateIso: string, riderId: string, hour?: number) => {
         if (readOnly) return;
@@ -616,6 +652,9 @@ const DeliveryScheduler: React.FC<{
         return <MobileAgendaView
             days={days}
             visualEvents={mergedShifts.reduce((acc: any, s: any) => {
+                // Apply Filters to Mobile View as well
+                if (!isFiltered(s.startAt, s.endAt)) return acc;
+
                 const d = toLocalDateString(new Date(s.startAt));
                 if (!acc[d]) acc[d] = [];
                 acc[d].push({ ...s, visualStart: s.startAt, visualEnd: s.endAt, shiftId: s.id || s.shiftId });
@@ -671,10 +710,32 @@ const DeliveryScheduler: React.FC<{
                         </div>
 
                         {/* Right: Actions */}
-                        <div className="flex items-center gap-3">
-                            <button onClick={() => setShowPrime(!showPrime)} className={cn("px-3 py-1.5 text-xs font-bold rounded-lg border flex items-center gap-2 transition-all", showPrime ? "bg-amber-50 border-amber-200 text-amber-600" : "bg-white border-slate-200 text-slate-500")}>
-                                <Zap size={14} className={showPrime ? "fill-amber-500" : ""} /> PRIME
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setShowLunch(!showLunch)}
+                                title="Filtrar Turno Mediodía (12:00 - 16:30)"
+                                className={cn(
+                                    "px-3 py-1.5 text-xs font-bold rounded-lg border flex items-center gap-2 transition-all",
+                                    showLunch ? "bg-amber-100 border-amber-300 text-amber-700 shadow-sm" : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
+                                )}
+                            >
+                                <Sun size={14} className={showLunch ? "fill-amber-500 text-amber-600" : ""} />
+                                <span className="hidden sm:inline">Mediodía</span>
                             </button>
+
+                            <button
+                                onClick={() => setShowDinner(!showDinner)}
+                                title="Filtrar Turno Noche (20:00 - 24:00)"
+                                className={cn(
+                                    "px-3 py-1.5 text-xs font-bold rounded-lg border flex items-center gap-2 transition-all",
+                                    showDinner ? "bg-indigo-100 border-indigo-300 text-indigo-700 shadow-sm" : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
+                                )}
+                            >
+                                <Moon size={14} className={showDinner ? "fill-indigo-500 text-indigo-600" : ""} />
+                                <span className="hidden sm:inline">Noche</span>
+                            </button>
+
+                            <div className="h-6 w-px bg-slate-200 mx-1" />
 
                             <button
                                 onClick={handleAuditoria}

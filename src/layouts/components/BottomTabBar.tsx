@@ -73,10 +73,10 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({ isAdmin, isFranchise: _isFr
     }, [isAdmin, adminMoreItems, franchiseMoreItems, hasAccess]);
 
     return (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50">
-            {/* Apple-style Floating Dock */}
-            <div className="ios-dock pb-[env(safe-area-inset-bottom)]">
-                <div className="flex justify-around items-end px-2 pt-2 pb-1">
+        <>
+            {/* Floating Dock Navigation - Glovo/Apple Style */}
+            <nav className="md:hidden tab-dock" aria-label="Navegación principal">
+                <div className="flex justify-around items-center py-2 px-1">
                     {tabs.map((tab) => {
                         const Icon = tab.icon;
 
@@ -84,26 +84,18 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({ isAdmin, isFranchise: _isFr
                             <NavLink
                                 key={tab.path}
                                 to={tab.path}
-                                className={({ isActive }: { isActive: boolean }) => `flex flex-col items-center justify-center w-full py-1 transition-all duration-300 active:scale-95 ${isActive
-                                    ? 'text-blue-500'
-                                    : 'text-slate-500'
-                                    }`}
+                                className="tab-item touch-feedback"
+                                aria-label={tab.label}
                             >
                                 {({ isActive }: { isActive: boolean }) => (
-                                    <>
-                                        <div className={`relative mb-1 transition-all duration-300 rounded-2xl px-4 py-1.5 ${isActive ? 'bg-blue-500/15' : 'bg-transparent'
-                                            }`}>
-                                            <Icon
-                                                className={`w-6 h-6 transition-all duration-300 ${isActive ? 'stroke-[2.5] drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'stroke-[1.5]'
-                                                    }`}
-                                            />
-                                        </div>
-
-                                        <span className={`text-[10px] font-medium tracking-tight transition-all duration-300 ${isActive ? 'opacity-100 font-semibold' : 'opacity-60'
-                                            }`}>
-                                            {tab.label}
-                                        </span>
-                                    </>
+                                    <div className={`tab-pill ${isActive ? 'tab-pill-active' : ''}`}>
+                                        <Icon
+                                            className={`w-6 h-6 transition-all duration-200 ${isActive
+                                                    ? 'text-blue-600 dark:text-blue-400 stroke-[2.5]'
+                                                    : 'text-slate-400 dark:text-slate-500 stroke-[1.5]'
+                                                }`}
+                                        />
+                                    </div>
                                 )}
                             </NavLink>
                         );
@@ -112,24 +104,28 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({ isAdmin, isFranchise: _isFr
                     {/* "Más" Button */}
                     <button
                         onClick={() => setIsMoreOpen(true)}
-                        className={`flex flex-col items-center justify-center w-full py-1 transition-all duration-300 active:scale-95 ${isMoreOpen ? 'text-blue-500' : 'text-slate-500'}`}
+                        className="tab-item touch-feedback"
+                        aria-label="Más opciones"
+                        title="Más opciones"
                     >
-                        <div className={`relative mb-1 transition-all duration-300 rounded-2xl px-4 py-1.5 ${isMoreOpen ? 'bg-blue-500/15' : 'bg-transparent'}`}>
-                            <MoreHorizontal className={`w-6 h-6 transition-all duration-300 ${isMoreOpen ? 'stroke-[2.5] drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'stroke-[1.5]'}`} />
+                        <div className={`tab-pill ${isMoreOpen ? 'tab-pill-active' : ''}`}>
+                            <MoreHorizontal
+                                className={`w-6 h-6 transition-all duration-200 ${isMoreOpen
+                                        ? 'text-blue-600 dark:text-blue-400 stroke-[2.5]'
+                                        : 'text-slate-400 dark:text-slate-500 stroke-[1.5]'
+                                    }`}
+                            />
                         </div>
-                        <span className={`text-[10px] font-medium tracking-tight transition-all duration-300 ${isMoreOpen ? 'opacity-100 font-semibold' : 'opacity-60'}`}>
-                            Más
-                        </span>
                     </button>
                 </div>
-            </div>
+            </nav>
 
             <MobileMoreMenu
                 isOpen={isMoreOpen}
                 onClose={() => setIsMoreOpen(false)}
                 items={moreItems}
             />
-        </div>
+        </>
     );
 };
 

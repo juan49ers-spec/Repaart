@@ -4,9 +4,15 @@ import { useModuleQuiz, useSaveQuiz } from '../../../hooks/useAcademy';
 import { QuizQuestion } from '../../../services/academyService';
 import { ArrowLeft, Plus, Save, Trash2, CheckCircle, HelpCircle, AlertCircle } from 'lucide-react';
 
-export const QuizEditor = () => {
-    const { moduleId } = useParams<{ moduleId: string }>();
+interface QuizEditorProps {
+    moduleId?: string;
+    onBack?: () => void;
+}
+
+export const QuizEditor = ({ moduleId: propModuleId, onBack }: QuizEditorProps) => {
+    const { moduleId: paramModuleId } = useParams<{ moduleId: string }>();
     const navigate = useNavigate();
+    const moduleId = propModuleId || paramModuleId;
     const { quiz, loading } = useModuleQuiz(moduleId || '');
     const saveQuiz = useSaveQuiz();
 
@@ -79,7 +85,7 @@ export const QuizEditor = () => {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="flex items-center gap-3">
-                        <button onClick={() => navigate('/admin/academy')} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition" title="Volver">
+                        <button onClick={() => onBack ? onBack() : navigate('/admin/academy')} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition" title="Volver">
                             <ArrowLeft className="w-6 h-6" />
                         </button>
                         <div>
@@ -150,25 +156,25 @@ export const QuizEditor = () => {
                                     />
 
                                     <div className="grid gap-3 pl-2">
-                                        {q.options.map((opt, optIdx) => (
-                                            <div key={optIdx} className="flex items-center gap-3">
+                                        {q.options.map((option: string, optIndex: number) => (
+                                            <div key={optIndex} className="flex items-center gap-3">
                                                 <button
-                                                    onClick={() => updateQuestion(idx, 'correctAnswer', optIdx)}
-                                                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition ${q.correctAnswer === optIdx
+                                                    onClick={() => updateQuestion(idx, 'correctAnswer', optIndex)}
+                                                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition ${q.correctAnswer === optIndex
                                                         ? 'border-emerald-500 bg-emerald-500 text-white'
                                                         : 'border-slate-300 hover:border-emerald-300'
                                                         }`}
                                                     title="Marcar como correcta"
                                                 >
-                                                    {q.correctAnswer === optIdx && <CheckCircle className="w-3 h-3" />}
+                                                    {q.correctAnswer === optIndex && <CheckCircle className="w-3 h-3" />}
                                                 </button>
                                                 <input
                                                     type="text"
-                                                    value={opt}
-                                                    onChange={(e) => updateOption(idx, optIdx, e.target.value)}
-                                                    className={`flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none ${q.correctAnswer === optIdx ? 'ring-1 ring-emerald-500 border-emerald-500' : ''
+                                                    value={option}
+                                                    onChange={(e) => updateOption(idx, optIndex, e.target.value)}
+                                                    className={`flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none ${q.correctAnswer === optIndex ? 'ring-1 ring-emerald-500 border-emerald-500' : ''
                                                         }`}
-                                                    placeholder={`Opción ${optIdx + 1}`}
+                                                    placeholder={`Opción ${optIndex + 1}`}
                                                 />
                                             </div>
                                         ))}

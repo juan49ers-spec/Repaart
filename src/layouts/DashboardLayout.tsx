@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './components/Header';
-import InputSidebar from './components/InputSidebar';
+import NavigationSidebar from './components/NavigationSidebar';
 import BottomTabBar from './components/BottomTabBar';
 import ChatAssistant from './components/ChatAssistant';
 import PageHelpModal from '../ui/modals/PageHelpModal';
@@ -29,14 +29,10 @@ interface DashboardLayoutProps {
     onLogout: () => void;
     onExport: () => void;
     onPrint?: () => void;
-    onCalculate?: (values: any) => void;
-
-    sidebarData?: any;
-    readOnly?: boolean;
     saving?: boolean;
 
-    chatData?: { report: any };
-    outletContext?: any;
+    chatData?: { report: unknown };
+    outletContext?: unknown;
 }
 
 import ImpersonationBanner from '../components/ImpersonationBanner';
@@ -67,11 +63,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     onLogout,
     onExport,
     onPrint,
-    onCalculate,
-
-    // Sidebar Data
-    sidebarData,
-    readOnly = false,
     saving = false,
 
     // Chat Props
@@ -112,26 +103,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
     return (
         <div className="print:hidden min-h-screen bg-slate-50 dark:bg-slate-950 flex overflow-hidden font-sans relative transition-colors duration-300">
-            {/* Mobile Overlay */}
+            {/* Sidebar Overlay (All Screens) */}
             {isSidebarOpen && (
                 <div
-                    className="fixed inset-0 bg-slate-900/20 z-40 md:hidden backdrop-blur-sm transition-opacity duration-300"
+                    className="fixed inset-0 bg-slate-900/20 z-40 backdrop-blur-sm transition-opacity duration-300"
                     onClick={() => setIsSidebarOpen(false)}
                 />
             )}
 
-            {/* Sidebar (Input Panel) */}
-            <InputSidebar
-                // isOpen={isSidebarOpen} -> REMOVED
-                // onClose={() => setIsSidebarOpen(false)} -> REMOVED
-                initialData={sidebarData}
-                // selectedMonth={selectedMonth} -> REMOVED
-                // onMonthChange={onMonthChange} -> REMOVED
-                onCalculate={onCalculate || (() => { })}
-                readOnly={readOnly}
-                // onToggleChat={handleToggleChat} -> REMOVED
-                onOpenHelp={openHelp}
-            />
+            {/* Navigation Sidebar */}
+            <NavigationSidebar isAdmin={isAdmin} isFranchise={isFranchise} />
 
             {/* Main Content Area */}
             <div className={`flex-1 flex flex-col transition-all duration-300 w-full ${isSidebarOpen ? 'md:ml-96' : 'ml-0'}`}>
@@ -139,8 +120,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 <Header {...headerProps} />
 
                 {/* Content Injection with correct mobile padding */}
-                <main className="flex-1 overflow-y-auto w-full relative z-0" style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom))' }}>
-                    <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+                <main className="flex-1 overflow-y-auto w-full relative z-0 content-safe-bottom">
+                    <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-4 md:py-5 animate-slide-up">
                         {/* Pass context to Outlet */}
                         {outletContext ? <Outlet context={{ ...outletContext }} /> : children}
                     </div>

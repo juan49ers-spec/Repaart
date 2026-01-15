@@ -178,11 +178,27 @@ body {
 }
 
 @keyframes zigzag {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  20% { transform: translate(2px, -2px) rotate(1deg); }
-  40% { transform: translate(-2px, 2px) rotate(-1deg); }
-  60% { transform: translate(2px, 2px) rotate(1deg); }
-  80% { transform: translate(-2px, -2px) rotate(-1deg); }
+
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+
+  20% {
+    transform: translate(2px, -2px) rotate(1deg);
+  }
+
+  40% {
+    transform: translate(-2px, 2px) rotate(-1deg);
+  }
+
+  60% {
+    transform: translate(2px, 2px) rotate(1deg);
+  }
+
+  80% {
+    transform: translate(-2px, -2px) rotate(-1deg);
+  }
 }
 
 .animate-zigzag {
@@ -319,4 +335,162 @@ body {
   scroll-behavior: smooth;
   overscroll-behavior-y: none;
   /* Prevent bounce on pull-to-refresh if native app feel is desired */
+}
+
+/* ============================================== */
+/* MOBILE-FIRST APP UTILITIES (Glovo/Apple Style) */
+/* ============================================== */
+
+/* Native Touch Behavior */
+* {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+[role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Floating Dock Navigation (Glovo Style) */
+.tab-dock {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  right: 1rem;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 28px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.dark .tab-dock {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Tab Item Pill */
+.tab-item {
+  @apply flex flex-col items-center justify-center py-3 px-4 transition-all duration-200;
+}
+
+.tab-item-active {
+  @apply text-blue-600 dark:text-blue-400;
+}
+
+.tab-item-inactive {
+  @apply text-slate-400 dark:text-slate-500;
+}
+
+.tab-pill {
+  @apply px-4 py-2 rounded-2xl transition-all duration-200;
+}
+
+.tab-pill-active {
+  @apply bg-blue-100 dark:bg-blue-500/20;
+}
+
+/* Mobile Card System */
+.card-mobile {
+  @apply bg-white dark:bg-slate-900 rounded-3xl p-5;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.dark .card-mobile {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Touch Feedback */
+.touch-feedback {
+  @apply transition-transform duration-150 active:scale-95;
+}
+
+.touch-feedback-subtle {
+  @apply transition-transform duration-150 active:scale-[0.98];
+}
+
+/* Mobile Typography */
+.text-mobile-title {
+  @apply text-2xl font-bold tracking-tight text-slate-900 dark:text-white;
+}
+
+.text-mobile-subtitle {
+  @apply text-lg font-semibold text-slate-700 dark:text-slate-200;
+}
+
+.text-mobile-body {
+  @apply text-base text-slate-600 dark:text-slate-400;
+}
+
+.text-mobile-caption {
+  @apply text-xs uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500;
+}
+
+/* Big Numbers (Apple Finance Style) */
+.text-stat-large {
+  @apply text-4xl font-black tracking-tight tabular-nums;
+}
+
+.text-stat-medium {
+  @apply text-2xl font-bold tracking-tight tabular-nums;
+}
+
+/* Mobile Layout Helpers */
+.mobile-container {
+  @apply max-w-lg mx-auto w-full px-4;
+}
+
+.mobile-section {
+  @apply py-6 space-y-4;
+}
+
+/* Content Safe Padding (for floating nav) */
+.content-safe-bottom {
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+}
+
+/* Animated Page Transitions */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+/* Pull Indicator (for refreshes) */
+.pull-indicator {
+  @apply w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mb-2;
+}
+
+/* Category Bubbles (Glovo Style) */
+.category-bubble {
+  @apply flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-200;
+  @apply bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700;
+  @apply transition-transform duration-150 active:scale-95;
+}
+
+.category-bubble-icon {
+  @apply w-12 h-12 rounded-full flex items-center justify-center;
+  @apply bg-gradient-to-br from-blue-500 to-indigo-600 text-white;
+}
+
+.category-bubble-label {
+  @apply text-xs font-bold text-slate-600 dark:text-slate-300 text-center;
 }

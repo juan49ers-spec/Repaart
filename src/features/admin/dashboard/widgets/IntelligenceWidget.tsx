@@ -102,14 +102,14 @@ const IntelligenceWidget: React.FC<IntelligenceWidgetProps> = ({ franchises, loa
     }
 
     return (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 h-full flex flex-col shadow-sm">
+        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-slate-800/50 p-6 h-full flex flex-col shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20 transition-all duration-300">
             <div className="flex justify-between items-start mb-6">
                 <div>
-                    <h3 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                    <h3 className="text-base font-medium text-slate-900 dark:text-white flex items-center gap-2">
                         <AlertOctagon className="w-5 h-5 text-rose-500" />
                         Detector de Anomalías
                     </h3>
-                    <p className="text-sm text-slate-500 mt-1">
+                    <p className="text-sm text-slate-500 mt-1 font-normal">
                         IA Monitor: {anomalies.length > 0 ? `${anomalies.length} problemas detectados` : 'Sistema nominal'}
                     </p>
                 </div>

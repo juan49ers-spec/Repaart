@@ -45,21 +45,21 @@ const SupportHub: React.FC = () => {
 
 
     return (
-        <div className="p-6 h-screen max-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden relative">
+        <div className="p-4 lg:p-6 min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col gap-6">
 
             {/* Top Bar Actions */}
-            <div className="flex flex-col sm:flex-row justify-between items-end sm:items-center mb-6 shrink-0 gap-4 sm:gap-0">
+            <div className="flex flex-col sm:flex-row justify-between items-end sm:items-center shrink-0 gap-4 sm:gap-0">
                 <div>
-                    <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter leading-none mb-1">Soporte & Ayuda</h1>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest pl-0.5">Centro de Control de Incidencias</p>
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight leading-none mb-1">Soporte & Ayuda</h1>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-widest pl-0.5">Centro de Control de Incidencias</p>
                 </div>
             </div>
 
             {/* Main Split Layout */}
-            <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
                 {/* LEFT PANEL: History (4 cols) */}
-                <div className="lg:col-span-4 flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div className="lg:col-span-4 flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden min-h-[400px]">
                     {/* Mini-Dashboard Header */}
                     <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-sm z-10">
                         <div className="flex items-center gap-3 mb-4">
@@ -67,8 +67,8 @@ const SupportHub: React.FC = () => {
                                 <Activity className="w-5 h-5" />
                             </div>
                             <div>
-                                <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Actividad Reciente</h2>
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Resumen de Soporte</p>
+                                <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Actividad Reciente</h2>
+                                <p className="text-[10px] text-slate-500 font-medium uppercase tracking-widest">Resumen de Soporte</p>
                             </div>
                         </div>
 
@@ -76,22 +76,22 @@ const SupportHub: React.FC = () => {
                         <div className="grid grid-cols-2 gap-3">
                             <div className="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700/50 shadow-sm">
                                 <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Abiertos</div>
-                                <div className="text-xl font-black text-slate-800 dark:text-white flex items-end gap-1">
+                                <div className="text-xl font-bold text-slate-800 dark:text-white flex items-end gap-1">
                                     {tickets.filter(t => t.status === 'open' || t.status === 'investigating').length}
-                                    <span className="text-[10px] text-indigo-500 mb-1 font-bold">Activos</span>
+                                    <span className="text-[10px] text-indigo-500 mb-1 font-medium">Activos</span>
                                 </div>
                             </div>
                             <div className="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700/50 shadow-sm">
                                 <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Total</div>
-                                <div className="text-xl font-black text-slate-800 dark:text-white flex items-end gap-1">
+                                <div className="text-xl font-bold text-slate-800 dark:text-white flex items-end gap-1">
                                     {allTicketsCount}
-                                    <span className="text-[10px] text-slate-400 mb-1 font-bold">Histórico</span>
+                                    <span className="text-[10px] text-slate-400 mb-1 font-medium">Histórico</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto max-h-[500px] p-4 space-y-3 custom-scrollbar">
                         <TicketHistory
                             tickets={tickets}
                             loading={loading}
@@ -104,7 +104,7 @@ const SupportHub: React.FC = () => {
                 </div>
 
                 {/* RIGHT PANEL: New Ticket Form (8 cols) */}
-                <div className="lg:col-span-8 flex flex-col overflow-hidden relative rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900">
+                <div className="lg:col-span-8 flex flex-col relative rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 min-h-[600px] overflow-visible">
 
                     {/* Quick Actions Header */}
                     <div className="absolute top-5 right-6 z-30 flex flex-col items-end gap-2">
@@ -113,7 +113,7 @@ const SupportHub: React.FC = () => {
                             <button
                                 onClick={() => setShowInfo(!showInfo)}
                                 className={`
-                                    flex items-center gap-2 px-3 py-1.5 backdrop-blur-md border rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shadow-sm
+                                    flex items-center gap-2 px-3 py-1.5 backdrop-blur-md border rounded-lg text-xs font-medium uppercase tracking-wider transition-all shadow-sm
                                     ${showInfo
                                         ? 'bg-indigo-100 dark:bg-indigo-900/40 border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300'
                                         : 'bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -127,8 +127,8 @@ const SupportHub: React.FC = () => {
 
                         {/* Info Card Popover */}
                         {showInfo && (
-                            <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700 p-4 rounded-xl shadow-xl w-64 animate-in fade-in slide-in-from-top-2 duration-200 text-right sm:text-left">
-                                <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider mb-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                            <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700 p-4 rounded-xl shadow-xl w-64 animate-in fade-in slide-in-from-top-2 duration-200 text-right sm:text-left z-50">
+                                <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-2 border-b border-slate-100 dark:border-slate-800 pb-2">
                                     Información Importante
                                 </h4>
                                 <ul className="space-y-2">
@@ -149,12 +149,12 @@ const SupportHub: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Tab Switcher - Absolute positioned in header */}
+                    {/* Tab Switcher */}
                     <div className="absolute top-5 left-6 z-30 flex gap-1 bg-slate-100/80 dark:bg-slate-800/80 p-1 rounded-xl backdrop-blur-md border border-slate-200 dark:border-slate-700">
                         <button
                             onClick={() => setActiveTab('ticket')}
                             className={`
-                                    px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 transition-all
+                                    px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all
                                     ${activeTab === 'ticket'
                                     ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
                                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
@@ -167,7 +167,7 @@ const SupportHub: React.FC = () => {
                         <button
                             onClick={() => setActiveTab('services')}
                             className={`
-                                    px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 transition-all
+                                    px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all
                                     ${activeTab === 'services'
                                     ? 'bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-400 shadow-sm'
                                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
@@ -181,7 +181,7 @@ const SupportHub: React.FC = () => {
 
 
                     {/* Content Area */}
-                    <div className="flex-1 overflow-hidden mt-16"> {/* Add top margin to clear absolute headers if needed, or use flex w/ padding */}
+                    <div className="flex-1 mt-16 overflow-y-auto custom-scrollbar rounded-b-2xl">
                         {activeTab === 'ticket' ? (
                             <NewTicketForm
                                 onSubmit={createTicket}

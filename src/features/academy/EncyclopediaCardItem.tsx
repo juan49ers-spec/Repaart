@@ -72,8 +72,8 @@ const EncyclopediaCardItem = memo(({
     onEdit,
     onToggleRead
 }: EncyclopediaCardItemProps) => {
-    const Icon = categoryIcons[card.category] || Target;
-    const gradient = categoryGradients[card.category] || "from-slate-500 to-slate-700";
+    const Icon = categoryIcons[card.category || 'General'] || Target;
+    const gradient = categoryGradients[card.category || 'General'] || "from-slate-500 to-slate-700";
     const [copied, setCopied] = useState(false);
 
     const handleCopy = (e: React.MouseEvent) => {
