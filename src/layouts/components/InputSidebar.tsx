@@ -1,5 +1,6 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
-import { Settings, Truck, Users, Landmark, Calendar, MapPin, Lock, Activity, Sparkles, Wrench, HelpCircle } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import { Settings, Truck, Users, Landmark, Calendar, MapPin, Lock, Activity, Sparkles, Wrench, HelpCircle, Video } from 'lucide-react';
 import DevToolsPanel from './dev/DevToolsPanel';
 
 import { useAppStore } from '../../store/useAppStore';
@@ -129,30 +130,39 @@ const InputSidebar: React.FC<InputSidebarProps> = ({
                         onToggleChat();
                         onClose(); // Close sidebar on mobile when opening chat
                     }}
-                    className="w-full mb-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white p-3.5 rounded-xl shadow-lg shadow-blue-500/20 flex items-center justify-center font-bold transition-all active:scale-95 group"
+                    className="w-full mb-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white p-3.5 rounded-2xl shadow-lg shadow-blue-500/20 flex items-center justify-center font-bold transition-all active:scale-95 group"
                 >
                     <div className="bg-white/20 p-1.5 rounded-lg mr-3 group-hover:rotate-12 transition-transform">
                         <Sparkles className="w-5 h-5 text-white" />
                     </div>
                     <span>Asistente IA</span>
-                    <span className="ml-2 flex h-2 w-2 relative">
+                    <span className="ml-2 flex h-1.5 w-1.5 relative">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
                     </span>
                 </button>
 
                 {/* Developer Tools Button */}
                 <button
                     onClick={() => setIsDevToolsOpen(true)}
-                    className="w-full mb-6 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 p-3 rounded-xl flex items-center justify-center font-semibold text-sm transition-all active:scale-95 group"
+                    className="w-full mb-6 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 p-2.5 rounded-2xl flex items-center justify-center font-bold text-xs uppercase tracking-widest transition-all active:scale-95 group"
                 >
                     <div className="bg-white dark:bg-slate-700 p-1 rounded-md mr-2.5 shadow-sm border border-slate-100 dark:border-slate-600 group-hover:bg-white/80 transition-colors">
-                        <Wrench className="w-4 h-4 text-purple-600" />
+                        <Wrench className="w-3.5 h-3.5 text-purple-600" />
                     </div>
                     <span>Developer Tools</span>
                 </button>
-
-                {/* Dev Tools Panel Modal */}
+                {/* ADMIN ONLY LINKS */}
+                <div className="mt-6 pt-6 border-t border-slate-700/50">
+                    <p className="px-4 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Administración</p>
+                    <NavLink
+                        to="/admin/academy"
+                        className={({ isActive }) => `flex items-center gap-3 px-4 py-2 text-sm font-medium rounded-xl transition-all ${isActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                    >
+                        <Video className="w-5 h-5" />
+                        <span>Academy Studio</span>
+                    </NavLink>
+                </div>
                 <DevToolsPanel isOpen={isDevToolsOpen} onClose={() => setIsDevToolsOpen(false)} />
 
                 {readOnly && (
@@ -257,14 +267,14 @@ const InputSidebar: React.FC<InputSidebarProps> = ({
                             <div>
                                 <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">Riders Contratados</label>
                                 <div className="flex items-center">
-                                    <input disabled={readOnly} type="number" name="contractedRiders" value={formData.contractedRiders || ''} onChange={handleChange} aria-label="Riders contratados" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-900 dark:text-slate-100 text-sm font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 dark:focus:ring-indigo-900 focus:outline-none transition-all" min="0" onFocus={(e) => e.target.select()} />
+                                    <input id="contractedRiders" disabled={readOnly} type="number" name="contractedRiders" value={formData.contractedRiders || ''} onChange={handleChange} aria-label="Riders contratados" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-900 dark:text-slate-100 text-sm font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 dark:focus:ring-indigo-900 focus:outline-none transition-all" min="0" onFocus={(e) => e.target.select()} />
                                     <span className="ml-3 text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-1 rounded-md border border-indigo-100 dark:border-indigo-800 whitespace-nowrap">+1 Gerente</span>
                                 </div>
                             </div>
                             <div>
                                 <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">Horas Totales Servicio</label>
                                 <div className="relative">
-                                    <input disabled={readOnly} type="number" name="totalHours" value={formData.totalHours || ''} onChange={handleChange} aria-label="Horas totales de servicio" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-900 dark:text-slate-100 text-sm font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 dark:focus:ring-indigo-900 focus:outline-none transition-all pl-9" min="0" onFocus={(e) => e.target.select()} />
+                                    <input id="totalHours" disabled={readOnly} type="number" name="totalHours" value={formData.totalHours || ''} onChange={handleChange} aria-label="Horas totales de servicio" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-900 dark:text-slate-100 text-sm font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 dark:focus:ring-indigo-900 focus:outline-none transition-all pl-9" min="0" onFocus={(e) => e.target.select()} />
                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                                         <Activity className="w-4 h-4" />
                                     </span>
@@ -373,17 +383,27 @@ const InputSidebar: React.FC<InputSidebarProps> = ({
                     </div>
 
                     {!readOnly && (
-                        <button onClick={handleApply} className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl mt-4 active:scale-95 border border-slate-700">
-                            Guardar Configuración
-                        </button>
+                        <div className="sticky bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md pt-4 pb-8 md:pb-4 px-2 border-t border-slate-100 dark:border-slate-800 z-10 transition-colors">
+                            <button
+                                onClick={handleApply}
+                                className="w-full py-4 bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white font-black uppercase tracking-widest text-xs rounded-2xl transition-all shadow-xl shadow-blue-500/10 active:scale-95 border border-slate-700 dark:border-blue-400/30"
+                            >
+                                Guardar Cambios
+                            </button>
+                        </div>
                     )}
                 </div>
 
 
 
                 {/* Version Indicator */}
-                <div className="mt-8 text-center pb-8 opacity-40 text-[10px] text-slate-400 font-mono">
-                    REPAART v2.0 (Executive White)
+                <div className="mt-8 text-center pb-8 opacity-60">
+                    <span className="inline-flex items-center px-2 py-1 rounded-md bg-indigo-500/10 text-indigo-500 text-[10px] font-bold tracking-widest border border-indigo-500/20 animate-pulse-subtle">
+                        SYSTEM v4.1.0 REV-STABLE
+                    </span>
+                    <p className="mt-1.5 text-[8px] text-slate-400 font-mono tracking-tighter uppercase opacity-50">
+                        Executive Glass Design System
+                    </p>
                 </div>
             </div>
         </div>

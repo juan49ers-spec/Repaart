@@ -51,7 +51,7 @@ const PageHelpModal: React.FC<PageHelpModalProps> = ({ isOpen, onClose, content 
                     {/* Intro */}
                     <div className={`p-4 rounded-2xl border-2 ${theme.border} ${theme.bg}`}>
                         <p className="text-sm font-bold text-slate-800 dark:text-slate-200 leading-relaxed italic">
-                            "{content.intro}"
+                            &quot;{content.intro}&quot;
                         </p>
                     </div>
 

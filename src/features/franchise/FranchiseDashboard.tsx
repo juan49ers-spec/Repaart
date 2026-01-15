@@ -30,7 +30,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
     // Derive values
     const selectedMonth = context?.selectedMonth || new Date().toISOString().slice(0, 7);
     const user = context?.user || null;
-    const activeFranchiseId = propId || context?.franchiseId || user?.uid;
+    const activeFranchiseId = propId || context?.franchiseId || user?.franchiseId || user?.uid;
 
     // Helper for Admin Date Switch
     const [localMonth, setLocalMonth] = useState(selectedMonth);

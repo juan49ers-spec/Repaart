@@ -63,22 +63,22 @@ const ModuleViewer: FC<ModuleViewerProps> = ({ module, onBack }) => {
             return <div key={index} className="prose prose-slate max-w-none mb-6">
                 <ReactMarkdown
                     components={{
-                        h1: ({ ...props }) => <h1 className="text-3xl font-black text-slate-800 mb-4" {...props} />,
-                        h2: ({ ...props }) => <h2 className="text-2xl font-black text-slate-800 mb-3 mt-8" {...props} />,
-                        h3: ({ ...props }) => <h3 className="text-xl font-bold text-slate-800 mb-2 mt-6" {...props} />,
-                        p: ({ ...props }) => <p className="text-slate-700 leading-relaxed mb-4" {...props} />,
-                        ul: ({ ...props }) => <ul className="list-disc pl-6 mb-4 space-y-2" {...props} />,
-                        ol: ({ ...props }) => <ol className="list-decimal pl-6 mb-4 space-y-2" {...props} />,
-                        li: ({ ...props }) => <li className="text-slate-700" {...props} />,
+                        h1: ({ ...props }) => <h1 className="text-2xl font-bold text-slate-900 mb-4 mt-8" {...props} />,
+                        h2: ({ ...props }) => <h2 className="text-xl font-bold text-slate-800 mb-3 mt-8" {...props} />,
+                        h3: ({ ...props }) => <h3 className="text-lg font-semibold text-slate-800 mb-2 mt-6" {...props} />,
+                        p: ({ ...props }) => <p className="text-slate-600 leading-relaxed mb-4 text-base" {...props} />,
+                        ul: ({ ...props }) => <ul className="list-disc pl-6 mb-4 space-y-2 text-slate-600" {...props} />,
+                        ol: ({ ...props }) => <ol className="list-decimal pl-6 mb-4 space-y-2 text-slate-600" {...props} />,
+                        li: ({ ...props }) => <li className="text-slate-600 pl-1" {...props} />,
                         blockquote: ({ ...props }) => (
-                            <blockquote className="border-l-4 border-blue-500 bg-blue-50 pl-4 py-2 my-4 italic text-slate-700" {...props} />
+                            <blockquote className="border-l-4 border-indigo-500/50 bg-slate-50 pl-4 py-3 my-6 italic text-slate-600 rounded-r-lg" {...props} />
                         ),
                         code: ({ inline, ...props }: any) =>
                             inline
-                                ? <code className="bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded font-mono text-sm" {...props} />
-                                : <code className="block bg-slate-900 text-slate-100 p-4 rounded-lg font-mono text-sm overflow-x-auto" {...props} />,
-                        strong: ({ ...props }) => <strong className="font-bold text-slate-900" {...props} />,
-                        a: ({ ...props }) => <a className="text-blue-600 hover:text-blue-700 underline font-medium" {...props} />
+                                ? <code className="bg-slate-100 text-indigo-700 px-1.5 py-0.5 rounded font-mono text-sm font-medium" {...props} />
+                                : <code className="block bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-sm overflow-x-auto my-6 shadow-sm" {...props} />,
+                        strong: ({ ...props }) => <strong className="font-bold text-slate-800" {...props} />,
+                        a: ({ ...props }) => <a className="text-indigo-600 hover:text-indigo-700 underline decoration-indigo-200 hover:decoration-indigo-500 transition-all font-medium" {...props} />
                     }}
                 >
                     {part}
@@ -228,11 +228,11 @@ const ModuleViewer: FC<ModuleViewerProps> = ({ module, onBack }) => {
             </div>
 
             {/* Content */}
-            <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 animate-fade-in">
+            <div className="max-w-3xl mx-auto px-4 md:px-8 py-8 animate-fade-in">
                 {/* Lesson Header */}
                 <div className="mb-8">
                     <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm font-bold text-slate-500">
+                        <span className="text-sm font-semibold text-slate-500">
                             Lección {currentLessonIndex + 1} de {lessons.length}
                         </span>
                         {completedLessons.has(currentLesson?.id) && (
@@ -242,7 +242,7 @@ const ModuleViewer: FC<ModuleViewerProps> = ({ module, onBack }) => {
                             </span>
                         )}
                     </div>
-                    <h2 className="text-3xl font-black text-slate-900 leading-tight">
+                    <h2 className="text-2xl font-bold text-slate-900 leading-tight tracking-tight">
                         {currentLesson?.title}
                     </h2>
                 </div>

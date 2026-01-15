@@ -7,7 +7,7 @@ interface ReportItem {
     value: number;
 }
 
-interface ReportData {
+export interface ReportData {
     revenue: number;
     taxes?: {
         netProfitPostTax?: number;
@@ -39,7 +39,7 @@ export const useExport = () => {
             ...(report.breakdown || []).map((item: ReportItem) => [item.name, item.type, formatMoney(item.value)])
         ];
 
-        let csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+        const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
         const encodedUri = encodeURI(csvContent);
 
         // Create temporal link element

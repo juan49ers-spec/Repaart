@@ -60,13 +60,13 @@ export const UserService = {
     },
 
     /**
-     * Fetch available riders (role=driver) for a franchise.
+     * Fetch available riders (role=rider) for a franchise.
      */
     async getAvailableRiders(franchiseId: FranchiseId): Promise<User[]> {
         const q = query(
             collection(db, COLLECTION_NAME),
             where('franchiseId', '==', franchiseId),
-            where('role', '==', 'driver'),
+            where('role', '==', 'rider'),
             where('status', '==', 'active')
         );
 

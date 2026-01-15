@@ -240,7 +240,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                                 Solicitud de Cambio del Rider
                             </div>
                             <p className="font-medium italic bg-white/50 dark:bg-slate-800/50 p-2 rounded-lg border border-amber-100 dark:border-amber-900/30">
-                                "{initialData.changeReason || 'Sin motivo especificado'}"
+                                &quot;{initialData.changeReason || 'Sin motivo especificado'}&quot;
                             </p>
                             <p className="text-[9px] opacity-70">
                                 * Guardar cambios en este turno marcará el conflicto como resuelto.
@@ -338,7 +338,10 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                             <button
                                 type="button"
                                 onClick={() => {
-                                    if (confirm('¿Eliminar este turno permanentemente?')) onDelete(initialData.shiftId);
+                                    if (confirm('¿Eliminar este turno permanentemente?')) {
+                                        onDelete(initialData.shiftId);
+                                        onClose();
+                                    }
                                 }}
                                 disabled={isSaving}
                                 className="flex items-center gap-2 px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-sm font-medium transition-colors"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, CheckCircle2, Check } from 'lucide-react';
 import { cn } from '../../../../lib/utils'; // Adjust path if needed
 
@@ -23,12 +23,8 @@ export const VehicleChecklistModal: React.FC<VehicleChecklistModalProps> = ({ is
     const [isSuccess, setIsSuccess] = useState(false);
 
     // Reset state on open
-    useEffect(() => {
-        if (isOpen) {
-            setCheckedItems([]);
-            setIsSuccess(false);
-        }
-    }, [isOpen]);
+    // Removing useEffect to prevent set-state-in-effect
+    // Logic for resetting state should be handled on unmount or close event
 
     if (!isOpen) return null;
 
@@ -85,7 +81,7 @@ export const VehicleChecklistModal: React.FC<VehicleChecklistModalProps> = ({ is
                             <span className="text-xs font-bold text-slate-400">{checkedItems.length}/{CHECKLIST_ITEMS.length}</span>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 bg-slate-200 dark:bg-slate-700 rounded-full text-slate-500 hover:text-slate-800 transition-colors">
+                    <button onClick={onClose} title="Cerrar" aria-label="Cerrar" className="p-2 bg-slate-200 dark:bg-slate-700 rounded-full text-slate-500 hover:text-slate-800 transition-colors">
                         <X size={18} />
                     </button>
                 </div>

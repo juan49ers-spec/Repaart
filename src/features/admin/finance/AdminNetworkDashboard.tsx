@@ -81,7 +81,7 @@ const AdminNetworkDashboard: React.FC<AdminNetworkDashboardProps> = ({ selectedM
                     <div className="relative group">
                         <input
                             type="text"
-                            placeholder="Filtrar sede..."
+                            placeholder="Filtrar franquicia..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-64 pl-4 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 text-slate-900 dark:text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent outline-none transition-all shadow-sm dark:shadow-none"
@@ -206,7 +206,88 @@ const AdminNetworkDashboard: React.FC<AdminNetworkDashboardProps> = ({ selectedM
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
+                {/* MOBILE CARD VIEW (Visible < md) */}
+                <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+                    {filteredData.length === 0 && (
+                        <div className="p-8 text-center text-slate-500">
+                            No se encontraron resultados.
+                        </div>
+                    )}
+                    {filteredData.map((item) => {
+                        const rev = item.report ? (item.report.totalIncome || item.report.revenue || 0) : 0;
+                        const prof = item.report ? ((item.report.totalIncome || 0) - (item.report.totalExpenses || 0)) : 0;
+                        const margin = rev > 0 ? (prof / rev) * 100 : 0;
+
+
+                        return (
+                            <div key={item.franchiseId} className="p-4 bg-white dark:bg-slate-900/40 relative active:bg-slate-50 transition-colors">
+                                {/* Header: Name + Status */}
+                                <div className="flex justify-between items-start mb-3">
+                                    <div>
+                                        <div className="font-bold text-slate-900 dark:text-white">{item.franchiseName}</div>
+                                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{item.franchiseId}</div>
+                                    </div>
+                                    {item.status === 'submitted' ? (
+                                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-600">
+                                            <CheckCircle className="w-4 h-4" />
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-500">
+                                            <AlertCircle className="w-4 h-4" />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Metrics Grid */}
+                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                    <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                                        <p className="text-[10px] uppercase text-slate-400 font-bold">Facturación</p>
+                                        <p className="text-lg font-bold text-slate-700 dark:text-slate-200">{formatMoney(rev)}</p>
+                                        <div className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-full mt-1.5 overflow-hidden">
+                                            <div className="h-full bg-indigo-500" style={{ width: `${Math.min((rev / (aggregates.totalRevenue || 1)) * 100 * 5, 100)}%` }} />
+                                        </div>
+                                    </div>
+                                    <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                                        <p className="text-[10px] uppercase text-slate-400 font-bold">Margen</p>
+                                        <p className={`text-lg font-bold ${margin > 15 ? 'text-emerald-600' : margin > 5 ? 'text-amber-600' : 'text-rose-600'}`}>
+                                            {margin.toFixed(1)}%
+                                        </p>
+                                        <p className="text-[10px] text-slate-500 font-medium">{formatMoney(prof)} net</p>
+                                    </div>
+                                </div>
+
+                                {/* Bottom: Risk + Action */}
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        {item.riskScore > 50 ? (
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-600 border border-rose-500/20 text-xs font-bold">
+                                                <AlertTriangle className="w-3.5 h-3.5" /> High Risk
+                                            </span>
+                                        ) : item.riskScore > 20 ? (
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 text-xs font-bold">
+                                                <AlertTriangle className="w-3.5 h-3.5" /> Warning
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-xs font-bold">
+                                                <ShieldCheck className="w-3.5 h-3.5" /> Healthy
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <button
+                                        onClick={() => navigate(`/admin/finance/${item.franchiseId}`)}
+                                        className="text-xs font-bold text-indigo-500 flex items-center gap-1 active:opacity-70"
+                                    >
+                                        Detalles <ArrowRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* DESKTOP TABLE VIEW (Visible >= md) */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-500 uppercase tracking-wider">

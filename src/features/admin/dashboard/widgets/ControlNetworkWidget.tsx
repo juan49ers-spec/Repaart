@@ -77,7 +77,7 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
                             Monitoreo de Red
                         </h3>
                         <p className="text-sm text-slate-500 mt-1 font-medium">
-                            {data.total} sedes activas &bull; <span className="text-slate-600 dark:text-slate-400">
+                            {data.total} centros activos &bull; <span className="text-slate-600 dark:text-slate-400">
                                 {viewMode === 'top3' ? 'Top Performers' : 'Análisis de Riesgo'}
                             </span>
                         </p>
@@ -137,7 +137,7 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
             {/* Table Header */}
             <div className="grid grid-cols-12 gap-4 px-6 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">
                 <div className="col-span-1 flex items-center justify-center">#</div>
-                <div className="col-span-5 text-left pl-2">Sede</div>
+                <div className="col-span-5 text-left pl-2">Franquicia</div>
                 <div className="col-span-3 text-right">Revenue</div>
                 <div className="col-span-3 text-right">Margen</div>
             </div>

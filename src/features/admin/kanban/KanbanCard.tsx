@@ -28,7 +28,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ task, onCardClick }) => {
 
     const dateStatus = useMemo(() => {
         if (!task.dueDate) return null;
-        const date = task.dueDate.toDate ? task.dueDate.toDate() : new Date(task.dueDate);
+        const date = (task.dueDate as any)?.toDate ? (task.dueDate as any).toDate() : new Date(task.dueDate as any);
         if (isPast(date) && !isToday(date)) return 'overdue';
         if (isToday(date)) return 'today';
         if (date <= addDays(new Date(), 3)) return 'upcoming';
@@ -37,7 +37,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ task, onCardClick }) => {
 
     const formattedDate = useMemo(() => {
         if (!task.dueDate) return null;
-        const date = task.dueDate.toDate ? task.dueDate.toDate() : new Date(task.dueDate);
+        const date = (task.dueDate as any)?.toDate ? (task.dueDate as any).toDate() : new Date(task.dueDate as any);
         return format(date, 'd MMM', { locale: es });
     }, [task.dueDate]);
 

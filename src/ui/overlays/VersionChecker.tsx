@@ -13,41 +13,39 @@ export const VersionChecker: React.FC = () => {
     const [hasUpdate, setHasUpdate] = useState(false);
     const [remoteVersion, setRemoteVersion] = useState<string | null>(null);
 
-    const checkVersion = async () => {
-        try {
-            // Add timestamp to bypass cache (Aggressive)
-            const res = await fetch(`${VERSION_URL}?t=${Date.now()}&r=${Math.random()}`, {
-                cache: 'no-store',
-                headers: {
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache'
-                }
-            });
-            if (!res.ok) return;
-
-            const data = await res.json();
-            const localVersion = currentVersionData.version;
-
-            console.log(`[VersionChecker] Checking: Local=${localVersion} vs Remote=${data.version}`);
-
-            if (data.version !== localVersion) {
-                console.warn(`[VersionChecker] MISMATCH DETECTED! Initiating emergency update.`);
-                setRemoteVersion(data.version);
-                setHasUpdate(true);
-
-                // FORCE RELOAD IMMEDIATELY
-                // We use a small delay to allow the React state to render the "Updating..." banner if possible
-                setTimeout(() => {
-                    // Cache busting reload
-                    window.location.reload();
-                }, 1500);
-            }
-        } catch (err) {
-            console.error("[VersionChecker] Failed to check version", err);
-        }
-    };
-
     useEffect(() => {
+        const checkVersion = async () => {
+            try {
+                // Add timestamp to bypass cache (Aggressive)
+                const res = await fetch(`${VERSION_URL}?t=${Date.now()}&r=${Math.random()}`, {
+                    cache: 'no-store',
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                if (!res.ok) return;
+
+                const data = await res.json();
+                const localVersion = currentVersionData.version;
+
+                console.log(`[VersionChecker] Checking: Local=${localVersion} vs Remote=${data.version}`);
+
+                if (data.version !== localVersion) {
+                    console.warn(`[VersionChecker] MISMATCH DETECTED! Initiating emergency update.`);
+                    setRemoteVersion(data.version);
+                    setHasUpdate(true);
+
+                    // FORCE RELOAD IMMEDIATELY
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                }
+            } catch (err) {
+                console.error("[VersionChecker] Failed to check version", err);
+            }
+        };
+
         // Initial check
         checkVersion();
 

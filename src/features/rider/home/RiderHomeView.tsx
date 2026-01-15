@@ -10,6 +10,7 @@ import {
     TrendingUp,
     MapPin,
     AlertCircle,
+    Clock,
     CheckCircle2
 } from 'lucide-react';
 
@@ -21,8 +22,6 @@ export const RiderHomeView: React.FC = () => {
     const { user } = useAuth() as { user: AuthUser | null };
     const { myShifts, fetchMyShifts } = useRiderStore();
     const [currentTime, setCurrentTime] = useState(new Date());
-    const [isIncidentModalOpen, setIsIncidentModalOpen] = useState(false);
-    const [isChecklistModalOpen, setIsChecklistModalOpen] = useState(false);
     const [isShaking, setIsShaking] = useState(false);
 
     useEffect(() => {
@@ -31,6 +30,11 @@ export const RiderHomeView: React.FC = () => {
         return () => clearInterval(timer);
     }, [user, fetchMyShifts]);
 
+    // Helpers & Derived State
+    const formatTime = (d: Date) => format(d, 'HH:mm');
+    const formatSeconds = (d: Date) => format(d, 'ss');
+
+    // Derived state for UI
     const activeShift = useMemo(() => {
         return myShifts.find(s => {
             const start = new Date(s.startAt).getTime();
@@ -39,6 +43,9 @@ export const RiderHomeView: React.FC = () => {
             return now >= start && now <= end;
         });
     }, [myShifts, currentTime]);
+
+    const isOnline = !!activeShift;
+    const platformLevel = { level: 'PRO' }; // Placeholder until gamification module is connected
 
     const nextShift = useMemo(() => {
         return myShifts
@@ -109,17 +116,28 @@ export const RiderHomeView: React.FC = () => {
                         <div className="mt-6">
                             {activeShift ? (
                                 <>
-                                    <span className="text-6xl font-black text-white font-mono tracking-tighter leading-none">
+                                    <span className="text-4xl font-bold text-white font-mono tracking-tighter leading-none">
                                         {format(new Date(activeShift.endAt), 'HH:mm')}
                                     </span>
                                     <p className="text-slate-500 font-bold text-xs mt-4 uppercase tracking-widest">Fin de jornada</p>
                                 </>
                             ) : (
                                 <>
-                                    <span className="text-5xl font-black text-slate-700 font-mono tracking-tighter leading-none">
-                                        00:00
-                                    </span>
-                                    <p className="text-slate-600 font-bold text-xs mt-4 uppercase tracking-widest italic">Standby Mode</p>
+                                    <div className="flex items-baseline">
+                                        <span className="text-4xl font-bold text-white font-mono tracking-tight leading-none">
+                                            {formatTime(currentTime)}
+                                        </span>
+                                        <span className="text-2xl font-bold text-slate-400 font-mono mb-2">:</span>
+                                        <span className="text-3xl font-bold text-slate-700 font-mono tracking-tight leading-none">
+                                            {formatSeconds(currentTime)}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`} />
+                                        <span className="text-xs font-medium text-slate-400 uppercase tracking-widest">
+                                            {currentTime.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                        </span>
+                                    </div>
                                 </>
                             )}
                         </div>
@@ -139,46 +157,39 @@ export const RiderHomeView: React.FC = () => {
                 <div className="col-span-1 md:col-span-2 glass-premium rounded-[2rem] p-5 flex flex-col justify-between group hover:scale-[1.02] transition-transform h-32 md:h-auto">
                     <Zap className="text-amber-400" size={24} />
                     <div>
-                        <span className="text-2xl font-black text-white">{activeShift ? 'ON' : 'OFF'}</span>
-                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-1">Status</p>
+                        <span className="text-2xl font-bold text-white">{activeShift ? 'ON' : 'OFF'}</span>
+                        <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1">Status</p>
                     </div>
                 </div>
 
                 {/* WIDGET 3: VEHICLE (Bento 2x1) */}
                 <div className="col-span-1 md:col-span-2 glass-premium rounded-[2rem] p-5 flex flex-col justify-between group hover:scale-[1.02] transition-transform h-32 md:h-auto">
-                    <Bike className="text-emerald-400" size={24} />
-                    <div>
-                        <span className="text-[11px] font-black text-white uppercase tracking-tighter">
-                            {activeShift?.motoPlate || 'EV-402'}
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center min-w-[100px]">
+                        <span className="text-[11px] font-bold text-white uppercase tracking-tight">
+                            {platformLevel?.level || 'N/A'}
                         </span>
-                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-1">BAT 92%</p>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">BAT 92%</p>
                     </div>
                 </div>
             </div>
 
-            {/* SECONDARY STATS (Score & Hours) */}
-            <div className="grid grid-cols-2 gap-4">
-                <div className="glass-premium rounded-[2rem] p-6 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                        <Trophy size={20} />
-                    </div>
+            {/* Quick Stats Row */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 flex items-center justify-between">
                     <div>
-                        <span className="text-lg font-black text-white leading-none">98</span>
-                        <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mt-1">Score</p>
+                        <span className="text-xl font-bold text-white leading-none">98</span>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Score</p>
                     </div>
+                    <Trophy className="w-5 h-5 text-amber-500" />
                 </div>
-                <div className="glass-premium rounded-[2rem] p-6 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400">
-                        <TrendingUp size={20} />
-                    </div>
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 flex items-center justify-between">
                     <div>
-                        <span className="text-lg font-black text-white leading-none">{weeklyStats.hours.toFixed(0)}h</span>
-                        <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mt-1">Semana</p>
+                        <span className="text-xl font-bold text-white leading-none">{weeklyStats.hours.toFixed(0)}h</span>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Semana</p>
                     </div>
+                    <Clock className="w-5 h-5 text-indigo-500" />
                 </div>
-            </div>
-
-            {/* INTERACTION AREA */}
+            </div>{/* INTERACTION AREA */}
             <div className="mt-4 px-2">
                 {activeShift ? (
                     <button
@@ -237,7 +248,8 @@ export const RiderHomeView: React.FC = () => {
                     if (!user?.uid) return;
                     await riderService.submitChecklist(user.uid, {
                         items: data.items,
-                        vehicleId: nextShift?.motoPlate || activeShift?.motoPlate || ''
+                        vehicleId: nextShift?.motoPlate || activeShift?.motoPlate || '',
+                        franchiseId: user.franchiseId || '' // Added for security rules
                     });
                 }}
             />

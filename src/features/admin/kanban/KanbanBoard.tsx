@@ -166,49 +166,49 @@ const KanbanBoard: React.FC = () => {
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
         >
-            <div className="p-4 md:p-8 min-h-screen flex flex-col relative bg-slate-50/50 dark:bg-transparent">
+            <div className="p-3 md:p-8 min-h-screen flex flex-col relative bg-slate-50/50 dark:bg-transparent transition-all duration-300">
                 {/* 🌌 Atmospheric Glows */}
                 <div className="absolute top-[-5%] left-[-5%] w-[30%] h-[30%] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
                 <div className="absolute bottom-[-5%] right-[-5%] w-[30%] h-[30%] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none" />
 
                 <div className="relative z-10 flex flex-col h-full">
                     {/* Header section */}
-                    <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-8 mb-10">
-                        <div className="space-y-4">
-                            <div className="flex flex-col space-y-2">
-                                <span className="inline-flex w-fit px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase tracking-[0.2em] border border-indigo-500/20">
+                    <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-6 md:mb-10">
+                        <div className="space-y-2">
+                            <div className="flex flex-col space-y-1">
+                                <span className="inline-flex w-fit px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-wider border border-indigo-500/20">
                                     Productivity Suite
                                 </span>
-                                <h1 className="text-4xl md:text-5xl font-black text-slate-800 dark:text-white tracking-tighter">
-                                    Project <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-indigo-400">Flow</span>
+                                <h1 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white tracking-tight">
+                                    Project <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-indigo-400">Flow</span>
                                 </h1>
                             </div>
-                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 max-w-xl leading-relaxed">
-                                Orquestación de objetivos estratégicos y tareas operativas con trazabilidad en tiempo real.
+                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 max-w-lg leading-relaxed">
+                                Orquestación de objetivos estratégicos y tareas operativas.
                             </p>
                         </div>
 
                         {/* Stats Dashboard */}
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-200/20 dark:shadow-none">
-                            <div className="space-y-1">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total</p>
-                                <p className="text-2xl font-black text-slate-800 dark:text-white">{stats.total}</p>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mt-4 md:mt-8 pb-20 md:pb-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md p-4 rounded-[2rem] border border-slate-200/50 dark:border-white/5 shadow-xl shadow-slate-200/20 dark:shadow-none">
+                            <div className="space-y-0.5">
+                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Total</p>
+                                <p className="text-xl font-bold text-slate-800 dark:text-white">{stats.total}</p>
                             </div>
-                            <div className="space-y-1">
-                                <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Activas</p>
-                                <p className="text-2xl font-black text-slate-800 dark:text-white">{stats.inProgress}</p>
+                            <div className="space-y-0.5">
+                                <p className="text-[10px] font-semibold text-indigo-500 uppercase tracking-widest">Activas</p>
+                                <p className="text-xl font-bold text-slate-800 dark:text-white">{stats.inProgress}</p>
                             </div>
-                            <div className="space-y-1">
-                                <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Éxito</p>
-                                <p className="text-2xl font-black text-slate-800 dark:text-white">{stats.completionRate}%</p>
+                            <div className="space-y-0.5">
+                                <p className="text-[10px] font-semibold text-emerald-500 uppercase tracking-widest">Éxito</p>
+                                <p className="text-xl font-bold text-slate-800 dark:text-white">{stats.completionRate}%</p>
                             </div>
                             <div className="flex items-center justify-end">
                                 <button
                                     onClick={() => handleAddTask('todo')}
-                                    className="p-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95 group"
+                                    className="p-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95 group"
                                     title="Añadir nueva tarea general"
                                 >
-                                    <Plus size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+                                    <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
                                 </button>
                             </div>
                         </div>
@@ -223,18 +223,23 @@ const KanbanBoard: React.FC = () => {
                         onSortChange={setSortBy}
                     />
 
-                    {/* Columns Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-                        {COLUMNS.map(col => (
-                            <KanbanColumn
-                                key={col.id}
-                                title={col.title}
-                                tasks={filteredTasks.filter(t => t.status === col.id)}
-                                onCardClick={(task) => setEditingTask(task)}
-                                onQuickAdd={(title) => addTask({ title, status: col.id, priority: 'medium' })}
-                                colorConfig={col}
-                            />
-                        ))}
+                    {/* Columns Area - Horizontal Scroll on Mobile */}
+                    <div className="flex-1 overflow-hidden">
+                        <div className="h-full overflow-x-auto pb-6 px-4 md:px-0 scrollbar-hide snap-x snap-mandatory">
+                            <div className="flex gap-4 md:gap-6 min-h-full">
+                                {COLUMNS.map((col) => (
+                                    <div key={col.id} className="flex-shrink-0 w-[85vw] md:w-80 snap-center first:pl-2 last:pr-2 md:first:pl-0 md:last:pr-0">
+                                        <KanbanColumn
+                                            title={col.title}
+                                            colorConfig={col}
+                                            tasks={filteredTasks.filter(t => t.status === col.id)}
+                                            onCardClick={(task) => setEditingTask(task)}
+                                            onQuickAdd={(title) => addTask({ title, status: col.id, priority: 'medium' })}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
 
                     <DragOverlay dropAnimation={{

@@ -1,4 +1,4 @@
-import { useState, useEffect, type FC } from 'react';
+import React, { useState, type FC } from 'react';
 import { Plus, Trash2, Save, CheckCircle, ArrowLeft, HelpCircle } from 'lucide-react';
 import { useModuleQuiz, useSaveQuiz, useDeleteQuiz, AcademyModule, Question } from '../../hooks/useAcademy';
 
@@ -36,11 +36,15 @@ const QuizEditor: FC<QuizEditorProps> = ({ module, onBack }) => {
     });
 
     // Sync quiz data when it loads from Firestore
-    useEffect(() => {
+    // Sync quiz data when it loads from Firestore
+    // Pattern: Update state during render if props change (avoids double render commit)
+    const [prevQuizId, setPrevQuizId] = useState<string | undefined>(undefined);
+    if (quiz?.id !== prevQuizId) {
+        setPrevQuizId(quiz?.id);
         if (quiz?.questions) {
             setQuestions(quiz.questions);
         }
-    }, [quiz]);
+    }
 
     const handleAddQuestion = () => {
         if (!currentQuestion.question.trim()) {
@@ -96,7 +100,7 @@ const QuizEditor: FC<QuizEditorProps> = ({ module, onBack }) => {
             await saveQuiz(module.id, {
                 questions,
                 passingScore: 80,
-                title: `Evaluación: ${module.title}`
+                title: `Evaluación: ${module.title} `
             });
             alert('✅ Quiz guardado con éxito');
         } catch (error) {
@@ -235,16 +239,16 @@ const QuizEditor: FC<QuizEditorProps> = ({ module, onBack }) => {
                                             {currentQuestion.options.map((option, index) => (
                                                 <div
                                                     key={index}
-                                                    className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all ${currentQuestion.correctAnswer === index
-                                                        ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 ring-1 ring-emerald-200 dark:ring-emerald-800'
-                                                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/30'
-                                                        }`}
+                                                    className={`flex items - center gap - 3 p - 3 border rounded - xl cursor - pointer transition - all ${currentQuestion.correctAnswer === index
+                                                            ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 ring-1 ring-emerald-200 dark:ring-emerald-800'
+                                                            : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/30'
+                                                        } `}
                                                     onClick={() => setCurrentQuestion({ ...currentQuestion, correctAnswer: index })}
                                                 >
-                                                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${currentQuestion.correctAnswer === index ? 'border-emerald-500 bg-emerald-500' : 'border-slate-300 dark:border-slate-600'}`}>
+                                                    <div className={`w - 5 h - 5 rounded - full border flex items - center justify - center ${currentQuestion.correctAnswer === index ? 'border-emerald-500 bg-emerald-500' : 'border-slate-300 dark:border-slate-600'} `}>
                                                         {currentQuestion.correctAnswer === index && <CheckCircle className="w-3 h-3 text-white" />}
                                                     </div>
-                                                    <span className={`font-medium ${currentQuestion.correctAnswer === index ? 'text-emerald-900 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                                                    <span className={`font - medium ${currentQuestion.correctAnswer === index ? 'text-emerald-900 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'} `}>
                                                         {option}
                                                     </span>
                                                 </div>
@@ -280,9 +284,9 @@ const QuizEditor: FC<QuizEditorProps> = ({ module, onBack }) => {
                                                             newOptions[index] = e.target.value;
                                                             setCurrentQuestion({ ...currentQuestion, options: newOptions });
                                                         }}
-                                                        placeholder={`Opción ${index + 1}`}
+                                                        placeholder={`Opción ${index + 1} `}
                                                         className="flex-1 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-900 transition-colors text-sm"
-                                                        aria-label={`Texto de la opción ${index + 1}`}
+                                                        aria-label={`Texto de la opción ${index + 1} `}
                                                     />
                                                 </div>
                                             ))}
@@ -347,12 +351,12 @@ const QuizEditor: FC<QuizEditorProps> = ({ module, onBack }) => {
                                                         return (
                                                             <div
                                                                 key={optIndex}
-                                                                className={`p-2 rounded-lg text-sm flex items-center gap-2 ${isCorrect
-                                                                    ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 font-medium border border-emerald-100 dark:border-emerald-900/30'
-                                                                    : 'text-slate-600 dark:text-slate-400'
-                                                                    }`}
+                                                                className={`p - 2 rounded - lg text - sm flex items - center gap - 2 ${isCorrect
+                                                                        ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 font-medium border border-emerald-100 dark:border-emerald-900/30'
+                                                                        : 'text-slate-600 dark:text-slate-400'
+                                                                    } `}
                                                             >
-                                                                <span className={`w-5 h-5 flex items-center justify-center rounded border text-xs ${isCorrect ? 'border-emerald-300 dark:border-emerald-600 bg-emerald-200/50 dark:bg-emerald-800/20' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800'}`}>
+                                                                <span className={`w - 5 h - 5 flex items - center justify - center rounded border text - xs ${isCorrect ? 'border-emerald-300 dark:border-emerald-600 bg-emerald-200/50 dark:bg-emerald-800/20' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800'} `}>
                                                                     {String.fromCharCode(65 + optIndex)}
                                                                 </span>
                                                                 {option}
@@ -366,7 +370,7 @@ const QuizEditor: FC<QuizEditorProps> = ({ module, onBack }) => {
                                                 onClick={() => handleRemoveQuestion(index)}
                                                 className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition opacity-0 group-hover:opacity-100"
                                                 title="Eliminar pregunta"
-                                                aria-label={`Eliminar pregunta ${index + 1}`}
+                                                aria-label={`Eliminar pregunta ${index + 1} `}
                                             >
                                                 <Trash2 className="w-5 h-5" />
                                             </button>

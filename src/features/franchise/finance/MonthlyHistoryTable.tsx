@@ -353,7 +353,7 @@ const MonthlyHistoryTable: React.FC<MonthlyHistoryTableProps> = ({ franchiseId, 
                                                         case 'draft': return {
                                                             label: 'Borrador',
                                                             icon: <FileText className="w-3 h-3" />,
-                                                            className: 'bg-white text-slate-500 border-slate-200 border-dashed'
+                                                            className: 'bg-yellow-50 text-yellow-700 border-yellow-200 border-dashed'
                                                         };
                                                         case 'open': return {
                                                             label: 'Abierto',

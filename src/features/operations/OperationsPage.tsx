@@ -35,7 +35,14 @@ const OperationsPage = () => {
                     // Fetch franchises (users with role 'franchise')
                     const q = query(collection(db, 'users'), where('role', '==', 'franchise'));
                     const snap = await getDocs(q);
-                    const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    const list = snap.docs.map(d => {
+                        const data = d.data();
+                        return {
+                            id: data.franchiseId || d.id,
+                            uid: d.id,
+                            ...data
+                        };
+                    });
                     setFranchises(list);
                     if (list.length > 0 && !selectedFranchiseId) {
                         setSelectedFranchiseId(list[0].id);

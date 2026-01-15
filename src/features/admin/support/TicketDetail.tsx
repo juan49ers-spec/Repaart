@@ -226,8 +226,7 @@ const TicketDetailInner = memo(({
                             </div>
                             <div>
                                 <p className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-widest mb-1">Descripción del Problema</p>
-                                {/* @ts-ignore - Firestore timestamp handling */}
-                                <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-tighter">Iniciado {selectedTicket.createdAt?.toDate ? formatDate(selectedTicket.createdAt) : 'hace poco'}</p>
+                                <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-tighter">Iniciado {(selectedTicket.createdAt as any)?.toDate ? formatDate(selectedTicket.createdAt) : 'hace poco'}</p>
                             </div>
                         </div>
                         <div className="pl-16">

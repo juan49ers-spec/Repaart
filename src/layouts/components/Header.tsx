@@ -94,8 +94,9 @@ const Header: React.FC<HeaderProps> = ({
 
         if (isAdmin) {
             if (path === '/dashboard' || path === '/') {
-                if (view === 'franchises') return 'Directorio de Sedes';
-                return 'Panel Control Administrador';
+                if (view === 'franchises') return 'Red de Operaciones';
+                if (view === 'kanban') return 'Planeador de Tareas';
+                return 'Hub de Control';
             }
             if (path.includes('/admin/finance/')) return targetFranchiseName || 'Detalle Franquicia';
             if (path.includes('support')) return 'Centro de Soporte';

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supportService, SupportTicket, PremiumRequest } from '../../support/SupportService';
 import { notificationService } from '../../../services/notificationService';
 import { MessageSquare, Star, Reply, CheckCircle2, XCircle } from 'lucide-react';
@@ -13,11 +13,7 @@ const AdminSupportInbox = () => {
     const [replyingTo, setReplyingTo] = useState<string | null>(null);
     const [replyMesssage, setReplyMessage] = useState('');
 
-    useEffect(() => {
-        loadData();
-    }, [activeTab]);
-
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         if (activeTab === 'tickets') {
             const data = await supportService.getAllTicketsForAdmin();
             setTickets(data);
@@ -25,7 +21,11 @@ const AdminSupportInbox = () => {
             const data = await supportService.getAllPremiumRequests();
             setPremiumRequests(data);
         }
-    };
+    }, [activeTab]);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     const handleReply = async (ticketId: string) => {
         if (!replyMesssage.trim()) return;

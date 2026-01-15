@@ -68,18 +68,16 @@ export const useUserManager = (currentUser: { uid: string; role?: string; email?
             if (!isAdmin && !isFranchise) throw new SecurityError("Acceso Denegado"); // Allow Franchise read
 
             // If franchiseId is provided (God Mode limit), we might need a specific fetch
-            const allUsers = await userService.fetchUsers(roleFilter !== 'all' ? roleFilter : null);
-
             // Filter by franchise if in "God Mode" context or Franchise User
             const effectiveFranchiseId = franchiseId || (isFranchise ? currentUser?.uid : null);
 
-            if (effectiveFranchiseId) {
-                // Franchise can only see their own riders? Or userService handles it?
-                // Assuming client side filter for now as per previous logic
-                return allUsers.filter(u => u.franchiseId === effectiveFranchiseId);
-            }
+            // Server-side filtering now supported:
+            const users = await userService.fetchUsers(
+                roleFilter !== 'all' ? roleFilter : null,
+                effectiveFranchiseId || null
+            );
 
-            return allUsers;
+            return users;
         },
         enabled: !!(isAdmin || isFranchise), // Enable for Franchise too
         staleTime: 2 * 60 * 1000

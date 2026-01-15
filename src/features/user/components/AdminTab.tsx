@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import UserManagementPanel from '../../admin/users/UserManagementPanel';
-import { Users, Activity, Server, Database } from 'lucide-react';
+import BannerManager from '../../admin/BannerManager';
+import { Activity, Server, Database } from 'lucide-react';
 
 interface AdminTabProps {
     setViewMode: (mode: string) => void;
@@ -41,7 +42,7 @@ const AdminTab: React.FC<AdminTabProps> = () => {
                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                             }`}
                     >
-                        Infraestructura
+                        Marketing
                     </button>
                     <button
                         onClick={() => setActiveSection('audit')}
@@ -50,7 +51,7 @@ const AdminTab: React.FC<AdminTabProps> = () => {
                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                             }`}
                     >
-                        Seguridad
+                        Sistema
                     </button>
                 </div>
             </div>
@@ -66,6 +67,11 @@ const AdminTab: React.FC<AdminTabProps> = () => {
                         </div>
                     ) : activeSection === 'system' ? (
                         <div className="flex-1 overflow-auto p-8">
+                            {/* Banner Manager */}
+                            <BannerManager className="mb-8" />
+
+                            {/* System Status Cards */}
+                            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Estado del Sistema</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {/* Simple Clean Cards */}
                                 <StatusCard

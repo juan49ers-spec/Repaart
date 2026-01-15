@@ -7,47 +7,12 @@ import {
     onSnapshot,
     where
 } from 'firebase/firestore';
-import { academyService } from '../services/academyService';
+import { academyService, AcademyCourse, Lesson, Quiz, UserProgress, QuizQuestion } from '../services/academyService';
 
-// Import Types from service or define here if not exported
+// Re-export or Alias for UI consistency if needed
+export type AcademyModule = AcademyCourse & { lessonCount?: number };
+// Lesson, Quiz, Question are now imported
 
-export interface AcademyModule {
-    id: string;
-    title: string;
-    description?: string;
-    duration?: string;
-    order: number;
-    lessonCount?: number;
-    published?: boolean;
-    createdAt?: any;
-    updatedAt?: any;
-}
-
-export interface Lesson {
-    id: string;
-    moduleId: string;
-    title: string;
-    content: string;
-    order: number;
-    resources?: { title: string; url: string }[];
-}
-
-export interface Question {
-    type: 'single-choice' | 'multi-select' | 'true-false';
-    question: string;
-    options: string[];
-    correctAnswer?: number | boolean;
-    correctAnswers?: number[];
-}
-
-export interface Quiz {
-    id: string;
-    moduleId: string;
-    questions: Question[];
-    passingScore?: number;
-}
-
-// Ideally we should import from academyService.ts
 
 // COLLECTION NAMES CONSTANTS (Aligned with Master Schema)
 const COLLECTIONS = {
@@ -62,7 +27,7 @@ const COLLECTIONS = {
  * Hook para obtener todos los cursos (modules renamed to courses in UI context)
  */
 export const useAcademyModules = () => {
-    const [modules, setModules] = useState<any[]>([]); // TODO: Define Module Type
+    const [modules, setModules] = useState<AcademyModule[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
@@ -75,11 +40,10 @@ export const useAcademyModules = () => {
             const modulesData = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
-            }));
+            } as AcademyModule));
             setModules(modulesData);
             setLoading(false);
         }, () => {
-            // console.warn("Error fetching courses:", error);
             setLoading(false);
         });
 
@@ -93,8 +57,8 @@ export const useAcademyModules = () => {
  * Hook para crear un nuevo módulo (Curso)
  */
 export const useCreateModule = () => {
-    return useCallback(async (moduleData: any) => {
-        return await academyService.saveCourse(moduleData);
+    return useCallback(async (moduleData: AcademyModule) => {
+        return await academyService.saveCourse(moduleData as unknown as AcademyCourse);
     }, []);
 };
 
@@ -102,8 +66,8 @@ export const useCreateModule = () => {
  * Hook para actualizar un módulo
  */
 export const useUpdateModule = () => {
-    return useCallback(async (moduleId: string, updates: any) => {
-        return await academyService.saveCourse({ id: moduleId, ...updates });
+    return useCallback(async (moduleId: string, updates: Partial<AcademyModule>) => {
+        return await academyService.saveCourse({ id: moduleId, ...updates } as unknown as AcademyCourse);
     }, []);
 };
 
@@ -120,14 +84,18 @@ export const useDeleteModule = () => {
  * Hook para obtener las lecciones de un módulo
  */
 export const useModuleLessons = (moduleId: string | null) => {
-    const [lessons, setLessons] = useState<any[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
+    const [lessons, setLessons] = useState<Lesson[]>([]);
+    const [loading, setLoading] = useState<boolean>(!!moduleId);
+
+    // Sync loading state during render
+    const [prevModuleId, setPrevModuleId] = useState(moduleId);
+    if (moduleId !== prevModuleId) {
+        setPrevModuleId(moduleId);
+        setLoading(!!moduleId);
+    }
 
     useEffect(() => {
-        if (!moduleId) {
-            setLoading(false);
-            return;
-        }
+        if (!moduleId) return;
 
         const q = query(
             collection(db, COLLECTIONS.LESSONS),
@@ -139,11 +107,11 @@ export const useModuleLessons = (moduleId: string | null) => {
             const lessonsData = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
-            }));
+            } as Lesson));
             setLessons(lessonsData);
             setLoading(false);
-        }, () => {
-            // console.warn("Error fetching lessons:", error);
+        }, (error) => {
+            console.error("Error fetching module lessons:", error);
             setLoading(false);
         });
 
@@ -157,9 +125,8 @@ export const useModuleLessons = (moduleId: string | null) => {
  * Hook para crear una nueva lección
  */
 export const useCreateLesson = () => {
-    return useCallback(async (lessonData: any) => {
-        // WARN: I need to update this to use the defined COLLECTIONS.
-        return await academyService.saveLesson(lessonData);
+    return useCallback(async (lessonData: Omit<Lesson, 'id'> & { id?: string }) => {
+        return await academyService.saveLesson(lessonData as unknown as any);
     }, []);
 };
 
@@ -167,8 +134,8 @@ export const useCreateLesson = () => {
  * Hook para actualizar una lección
  */
 export const useUpdateLesson = () => {
-    return useCallback(async (lessonId: string, updates: any) => {
-        return await academyService.saveLesson({ id: lessonId, ...updates });
+    return useCallback(async (lessonId: string, updates: Partial<Lesson>) => {
+        return await academyService.saveLesson({ id: lessonId, ...updates } as unknown as any);
     }, []);
 };
 
@@ -185,15 +152,17 @@ export const useDeleteLesson = () => {
  * Hook para obtener el progreso del usuario
  */
 export const useAcademyProgress = (userId: string | null) => {
-    const [progress, setProgress] = useState<Record<string, any>>({});
+    const [progress, setProgress] = useState<Record<string, UserProgress>>({});
     const [totalProgress, setTotalProgress] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(true);
 
+    // Sync loading during render
+    if (!userId && loading) {
+        setLoading(false);
+    }
+
     useEffect(() => {
-        if (!userId) {
-            setLoading(false);
-            return;
-        }
+        if (!userId) return;
 
         const q = query(
             collection(db, COLLECTIONS.PROGRESS),
@@ -201,25 +170,39 @@ export const useAcademyProgress = (userId: string | null) => {
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const progressData: Record<string, any> = {};
+            const progressData: Record<string, UserProgress & { progress?: number, score?: number, completed?: boolean, completedLessons?: string[] }> = {};
             let completedModules = 0;
             let totalModules = 0;
 
             snapshot.docs.forEach(doc => {
-                const data = doc.data();
-                progressData[data.moduleId] = {
-                    ...data,
-                    id: doc.id
-                };
-                if (data.completed) completedModules++;
-                totalModules++;
+                const data = doc.data() as UserProgress;
+                if (data.moduleId) {
+                    // Calculate basic progress if lesson count not available directly, 
+                    // we might need to update this logic later or fetch modules. 
+                    // For now, let's map what we have.
+                    // The UI expects 'progress' as a number (0-100).
+                    // We can default to 100 if completed, else 0 or partial if we knew totals.
+                    // Let's assume data has a 'progress' field or we calculate it? 
+                    // The service schema doesn't have 'progress' number.
+                    // We will map fields to satisfy UI.
+
+                    progressData[data.moduleId] = {
+                        ...data,
+                        id: doc.id,
+                        score: data.quizScore,
+                        completed: data.status === 'completed',
+                        progress: data.status === 'completed' ? 100 : ((data.completedLessons?.length || 0) * 10) // Mocking 10% per lesson if count unknown, or should be handled better.
+                    };
+                    if (data.status === 'completed') completedModules++;
+                    totalModules++;
+                }
             });
 
             setProgress(progressData);
             setTotalProgress(totalModules > 0 ? (completedModules / totalModules) * 100 : 0);
             setLoading(false);
-        }, () => {
-            // console.warn("Error fetching academy progress:", error);
+        }, (error) => {
+            console.warn("Error fetching academy progress:", error);
             setLoading(false);
         });
 
@@ -233,7 +216,7 @@ export const useAcademyProgress = (userId: string | null) => {
  * Hook para actualizar progreso
  */
 export const useUpdateProgress = () => {
-    return useCallback(async (userId: string, moduleId: string, progressData: any) => {
+    return useCallback(async (userId: string, moduleId: string, progressData: Partial<UserProgress>) => {
         return await academyService.updateProgress(userId, moduleId, progressData);
     }, []);
 };
@@ -249,35 +232,48 @@ export const useMarkLessonComplete = () => {
 
 // ... Quizzes hooks
 export const useModuleQuiz = (moduleId: string | null) => {
-    const [quiz, setQuiz] = useState<any | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
+    const [quiz, setQuiz] = useState<Quiz | null>(null);
+    const [loading, setLoading] = useState<boolean>(!!moduleId);
+    const [prevModuleId, setPrevModuleId] = useState(moduleId);
+
+    if (moduleId !== prevModuleId) {
+        setPrevModuleId(moduleId);
+        setLoading(!!moduleId);
+        setQuiz(null);
+    }
+
     useEffect(() => {
-        if (!moduleId) { setLoading(false); return; }
+        if (!moduleId) return;
+
         const q = query(collection(db, COLLECTIONS.QUIZZES), where('moduleId', '==', moduleId));
         const unsub = onSnapshot(q, snap => {
-            if (!snap.empty) setQuiz({ id: snap.docs[0].id, ...snap.docs[0].data() });
+            if (!snap.empty) setQuiz({ id: snap.docs[0].id, ...snap.docs[0].data() } as unknown as Quiz);
             else setQuiz(null);
+            setLoading(false);
+        }, (error) => {
+            console.warn("Error fetching quiz:", error);
             setLoading(false);
         });
         return () => unsub();
     }, [moduleId]);
+
     return { quiz, loading };
 };
 
 export const useSaveQuiz = () => {
-    return useCallback(async (moduleId: string, quizData: any) => {
-        return await academyService.saveQuiz(moduleId, quizData);
+    return useCallback(async (moduleId: string, quizData: Partial<Quiz>) => {
+        return await academyService.saveQuiz(moduleId, quizData as any);
+    }, []);
+};
+
+export const useSaveQuizResult = () => {
+    return useCallback(async (userId: string, moduleId: string, score: number, answers: Record<string, unknown>) => {
+        return await academyService.saveQuizResult(userId, moduleId, score, answers);
     }, []);
 };
 
 export const useDeleteQuiz = () => {
     return useCallback(async (quizId: string) => {
         return await academyService.deleteQuiz(quizId);
-    }, []);
-};
-
-export const useSaveQuizResult = () => {
-    return useCallback(async (userId: string, moduleId: string, score: number, answers: any) => {
-        return await academyService.saveQuizResult(userId, moduleId, score, answers);
     }, []);
 };

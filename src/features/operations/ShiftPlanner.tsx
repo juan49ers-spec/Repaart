@@ -135,6 +135,8 @@ const ShiftCard = memo<ShiftCardProps>(({ shift, onClick }) => (
     </div>
 ));
 
+ShiftCard.displayName = 'ShiftCard';
+
 const TimeSlot = memo<TimeSlotProps>(({ hour, isCurrentHour, assignments, canEdit, onAssign, onEdit }) => {
     const isNight = hour >= 20 || hour <= 5;
     const config = hour >= 20 ? SHIFT_CONFIG.DINNER : (hour >= 12 && hour <= 16 ? SHIFT_CONFIG.LUNCH : null);
@@ -179,6 +181,8 @@ const TimeSlot = memo<TimeSlotProps>(({ hour, isCurrentHour, assignments, canEdi
     );
 });
 
+TimeSlot.displayName = 'TimeSlot';
+
 // =====================================================
 // MAIN COMPONENT
 // =====================================================
@@ -200,10 +204,6 @@ const ShiftPlanner: FC<ShiftPlannerProps> = ({
 
     const { isSaving, addOrUpdateShift, removeShift, quickFillShifts } = useShiftOperations(activeFranchiseId || null, weekData, updateWeekData, motos);
 
-    if (!activeFranchiseId) {
-        return <div className="p-8 text-center text-red-500">Error: No se ha identificado la franquicia operativa.</div>;
-    }
-
     const [viewMode, setViewMode] = useState<'focus' | 'full'>('focus');
     const [searchTerm] = useState('');
     const [selectedDateObj, setSelectedDateObj] = useState(selectedDate || new Date());
@@ -212,6 +212,7 @@ const ShiftPlanner: FC<ShiftPlannerProps> = ({
     const [editingShift, setEditingShift] = useState<Shift | null>(null);
     const [newShiftHour, setNewShiftHour] = useState<number | null>(null);
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => { if (selectedDate) setSelectedDateObj(selectedDate); }, [selectedDate]);
 
     const notify = (msg: string, type: 'success' | 'error' = 'success') => setNotification({ message: msg, type });
@@ -240,33 +241,6 @@ const ShiftPlanner: FC<ShiftPlannerProps> = ({
         return map;
     }, [weekData, selectedIsoDate, searchTerm]);
 
-    const onSaveWrapper = async (data: any) => {
-        const res = await addOrUpdateShift(data, !!editingShift);
-        if (res.success) {
-            notify(editingShift ? 'Turno actualizado' : 'Turno creado');
-            setModals(prev => ({ ...prev, shift: false }));
-        } else {
-            notify(res.error || 'Error al guardar', 'error');
-        }
-    };
-
-    const onDeleteWrapper = async (id: string) => {
-        if (!confirm('¿Eliminar turno?')) return;
-        const res = await removeShift(id);
-        if (res.success) {
-            notify('Turno eliminado');
-            setModals(prev => ({ ...prev, shift: false }));
-        } else {
-            notify('Error al eliminar', 'error');
-        }
-    };
-
-    const onQuickFillWrapper = async (data: any) => {
-        const res = await quickFillShifts(data);
-        if (res.success) notify(`${res.count || 0} turnos generados`);
-        else notify(res.error || 'Error en Auto-Fill', 'error');
-    };
-
     const weekDays = useMemo<WeekDay[]>(() => {
         const start = weekData ? new Date(weekData.startDate) : new Date();
         return Array.from({ length: 7 }, (_, i) => {
@@ -287,6 +261,37 @@ const ShiftPlanner: FC<ShiftPlannerProps> = ({
             ? hours.filter(h => (h >= 12 && h <= 16) || (h >= 20 && h <= 23))
             : hours;
     }, [viewMode]);
+
+    if (!activeFranchiseId) {
+        return <div className="p-8 text-center text-red-500">Error: No se ha identificado la franquicia operativa.</div>;
+    }
+
+    const onSaveWrapper = async (data: Record<string, any>) => {
+        const res = await addOrUpdateShift(data, !!editingShift);
+        if (res.success) {
+            notify(editingShift ? 'Turno actualizado' : 'Turno creado');
+            setModals(prev => ({ ...prev, shift: false }));
+        } else {
+            notify(res.error || 'Error al guardar', 'error');
+        }
+    };
+
+    const onDeleteWrapper = async (id: string) => {
+        if (!confirm('¿Eliminar turno?')) return;
+        const res = await removeShift(id);
+        if (res.success) {
+            notify('Turno eliminado');
+            setModals(prev => ({ ...prev, shift: false }));
+        } else {
+            notify('Error al eliminar', 'error');
+        }
+    };
+
+    const onQuickFillWrapper = async (data: Record<string, any>) => {
+        const res = await quickFillShifts(data);
+        if (res.success) notify(`${res.count || 0} turnos generados`);
+        else notify(res.error || 'Error en Auto-Fill', 'error');
+    };
 
     const currentHour = new Date().getHours();
     const isToday = selectedIsoDate === toLocalDateString(new Date());

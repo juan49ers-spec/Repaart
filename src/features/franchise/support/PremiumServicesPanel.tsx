@@ -448,7 +448,7 @@ const ServiceCard: React.FC<{ service: PremiumService, selected: boolean, onClic
                     w-16 h-16 shrink-0 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-lg relative z-10
                     ${selected ? 'bg-indigo-500 text-white shadow-indigo-500/40' : 'bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white'}
                 `}>
-                    <Icon className="w-8 h-8" />
+                    {React.createElement(Icon, { className: "w-8 h-8" })}
                 </div>
 
                 {/* Middle: Info */}
@@ -509,7 +509,7 @@ const ServiceCard: React.FC<{ service: PremiumService, selected: boolean, onClic
                     : `bg-${color}-50 dark:bg-${color}-900/10 text-${color}-600 dark:text-${color}-400 group-hover:bg-${color}-500 group-hover:text-white group-hover:scale-110`
                 }
             `}>
-                <Icon className="w-6 h-6" />
+                {React.createElement(Icon, { className: "w-6 h-6" })}
             </div>
 
             <div className="mb-4 flex-1 relative z-10 w-full">

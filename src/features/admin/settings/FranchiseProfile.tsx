@@ -1,10 +1,10 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
 import { ToastContext } from '../../../context/contexts';
-// import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray, SubmitHandler } from 'react-hook-form';
 import {
     Building, MapPin, Save, User, Camera,
-    Mail, Phone, Shield, Trash2, Plus, DollarSign, Lock
+    Mail, Phone, Shield, Trash2, Plus, DollarSign, Lock, ArrowLeft
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { userService, UserProfile } from '../../../services/userService';
@@ -13,7 +13,6 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../../lib/firebase';
 import { notificationService } from '../../../services/notificationService';
-import PremiumBanner from '../../../components/common/PremiumBanner';
 
 // --- INTERFACES ---
 
@@ -59,7 +58,7 @@ interface FranchiseProfileProps {
 const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
     const { user, isAdmin } = useAuth();
     const { addToast } = useContext(ToastContext) || { addToast: () => { } };
-    // const navigate = useNavigate(); // Removed unused
+    const navigate = useNavigate();
 
     // If no franchiseId provided, we assume we are editing the current user's franchise profile
     // But if we are an admin editing another franchise, we might not want to edit *that user's personal profile* 
@@ -299,12 +298,20 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
     return (
         <div className="flex flex-col h-full bg-slate-50 overflow-y-auto pb-20">
 
-            {/* Banner Superior - Premium Aurora */}
-            <PremiumBanner />
-
-            <div className="max-w-[1600px] mx-auto w-full px-6 md:px-10 -mt-20 relative z-10 flex flex-col gap-10">
+            <div className="max-w-[1600px] mx-auto w-full px-6 md:px-10 pt-10 relative z-10 flex flex-col gap-10">
 
 
+
+                {/* --- BACK BUTTON (Admin View) --- */}
+                {!isSelfProfile && (
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="self-start flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-lg text-white font-bold text-sm transition-all border border-white/20 shadow-lg"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                        Volver
+                    </button>
+                )}
 
                 {/* --- HEADER IDENTITY SECTION --- */}
                 <div className="flex flex-col md:flex-row items-end gap-6 pb-6 border-b border-slate-200/60">
@@ -431,7 +438,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                 {/* NOMBRE COMERCIAL */}
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nombre Comercial (Sede)</label>
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nombre Comercial</label>
                                     <div className="relative group">
                                         <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
                                         <input {...register('name')} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="Ej: Burger King Centro" />

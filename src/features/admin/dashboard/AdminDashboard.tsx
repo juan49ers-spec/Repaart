@@ -114,8 +114,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="space-y-6">
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Directorio de Franquicias</h2>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Gestión y acceso rápido a sedes activas.</p>
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Red de Operaciones</h2>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Gestión y acceso rápido a franquicias gestionadas.</p>
                     </div>
 
                     <button
@@ -128,7 +128,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <div className="relative group">
                         <input
                             type="text"
-                            placeholder="Buscar sede..."
+                            placeholder="Buscar franquicia..."
                             className="w-64 pl-4 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 text-slate-900 dark:text-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-slate-400"
                         />
                         <div className="absolute right-3 top-2.5 text-slate-400 dark:text-slate-500 group-focus-within:text-blue-500 transition-colors">

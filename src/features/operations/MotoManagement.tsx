@@ -8,7 +8,8 @@ import { FleetService } from '../../services/fleetService';
 import { Moto, CreateMotoInput } from '../../schemas/fleet';
 import { toFranchiseId } from '../../schemas/scheduler';
 
-interface MotoFormData extends CreateMotoInput { }
+// interface MotoFormData extends CreateMotoInput { } replaced by CreateMotoInput directly
+
 
 interface MotoManagementProps {
     franchiseId: string;
@@ -22,26 +23,26 @@ const MotoManagement: React.FC<MotoManagementProps> = ({ franchiseId, readOnly =
     const [editingMoto, setEditingMoto] = useState<Moto | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
 
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<MotoFormData>();
+    const { register, handleSubmit, reset, formState: { errors } } = useForm<CreateMotoInput>({
+        defaultValues: { status: 'active' }
+    });
 
-    const loadMotos = React.useCallback(() => {
+    useEffect(() => {
         if (!franchiseId) return;
-        setLoading(true);
+
+        // Removed setLoading(true) to prevent cascading render loop (stale-while-revalidate pattern)
         // Using Realtime subscription from FleetService
-        return FleetService.subscribeToMotos(toFranchiseId(franchiseId), (data) => {
+        const unsubscribe = FleetService.subscribeToMotos(toFranchiseId(franchiseId), (data) => {
             setMotos(data);
             setLoading(false);
         });
-    }, [franchiseId]);
 
-    useEffect(() => {
-        const unsubscribe = loadMotos();
         return () => {
             if (unsubscribe) unsubscribe();
         };
-    }, [loadMotos]);
+    }, [franchiseId]);
 
-    const onSubmit = async (data: MotoFormData) => {
+    const onSubmit = async (data: CreateMotoInput) => {
         if (!franchiseId) {
             alert("Error: No hay ID de franquicia asignado. Recarga la página.");
             return;
@@ -67,9 +68,10 @@ const MotoManagement: React.FC<MotoManagementProps> = ({ franchiseId, readOnly =
             setEditingMoto(null);
             // Auto-refresh via subscription
 
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             console.error("Error saving moto:", error);
-            alert("Error al guardar: " + error.message);
+            alert("Error al guardar: " + errorMessage);
         }
     };
 

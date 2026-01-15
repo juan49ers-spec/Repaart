@@ -177,6 +177,18 @@ body {
   animation: haptic-shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
 }
 
+@keyframes zigzag {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  20% { transform: translate(2px, -2px) rotate(1deg); }
+  40% { transform: translate(-2px, 2px) rotate(-1deg); }
+  60% { transform: translate(2px, 2px) rotate(1deg); }
+  80% { transform: translate(-2px, -2px) rotate(-1deg); }
+}
+
+.animate-zigzag {
+  animation: zigzag 1.2s ease-in-out infinite;
+}
+
 .glass-premium {
   @apply bg-slate-900/40 backdrop-blur-2xl border border-white/10 ring-1 ring-white/5 shadow-2xl;
 }

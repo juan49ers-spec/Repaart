@@ -1,8 +1,6 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import {
     collection,
-    setDoc,
     updateDoc,
     doc,
     getDocs,
@@ -11,7 +9,8 @@ import {
     query,
     where,
     onSnapshot,
-    deleteDoc
+    deleteDoc,
+    setDoc
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Rider } from '../store/useFleetStore';
@@ -24,11 +23,6 @@ import {
 
 const RIDERS_COLLECTION = 'users'; // UNIFIED DATA SOURCE
 const ASSETS_COLLECTION = 'fleet_assets';
-
-// SECONDARY APP INITIALIZATION (For Admin-Side Rider Creation)
-// This avoids logging out the current admin when creating a new auth user
-const secondaryApp = initializeApp(db.app.options, 'SecondaryFleet');
-const secondaryAuth = getAuth(secondaryApp);
 
 /**
  * Mappers to ensure data consistency between Firestore and UI
@@ -125,67 +119,38 @@ export const fleetService = {
     /**
      * Create a new rider (Auth + Firestore)
      */
+    /**
+     * Create a new rider (Auth + Firestore) via Secure Backend
+     */
     createRider: async (riderData: Omit<Rider, 'id' | 'metrics'> & { password?: string }): Promise<Rider> => {
         try {
-            // Check for existing profile in Firestore
-            const q = query(
-                collection(db, RIDERS_COLLECTION),
-                where('email', '==', riderData.email)
-            );
-            const existing = await getDocs(q);
-
-            if (!existing.empty) {
-                const docSnap = existing.docs[0];
-                const data = docSnap.data();
-
-                if (data.status === 'inactive' || data.status === 'deleted') {
-                    console.log(`[Resurrection] Reactivating rider ${riderData.email}`);
-                    const uid = docSnap.id;
-                    await updateDoc(doc(db, RIDERS_COLLECTION, uid), {
-                        displayName: riderData.fullName,
-                        phoneNumber: riderData.phone,
-                        franchiseId: riderData.franchiseId,
-                        contractHours: riderData.contractHours,
-                        status: 'active',
-                        role: 'rider', // Ensure role is set
-                        updatedAt: serverTimestamp()
-                    });
-                    return mapDocToRider(await getDoc(doc(db, RIDERS_COLLECTION, uid)));
-                } else {
-                    // Already exists and is active
-                    throw new Error(`auth/email-already-in-use: El usuario con email ${riderData.email} ya existe.`);
-                }
-            }
-
             if (!riderData.password) throw new Error("Contraseña requerida para nuevos riders");
 
-            const credential = await createUserWithEmailAndPassword(secondaryAuth, riderData.email, riderData.password);
-            const uid = credential.user.uid;
+            const functions = getFunctions();
+            const createUserManaged = httpsCallable(functions, 'createUserManaged');
 
+            // Payload must match what useUserManager sends and what Cloud Function expects
             const payload = {
                 email: riderData.email,
-                displayName: riderData.fullName, // Unified field
-                phoneNumber: riderData.phone,    // Unified field
-                franchiseId: riderData.franchiseId,
-                contractHours: riderData.contractHours,
-                photoURL: '',
-                status: 'active',
+                password: riderData.password,
                 role: 'rider',
+                franchiseId: riderData.franchiseId,
+                displayName: riderData.fullName,
+                phoneNumber: riderData.phone ? (riderData.phone.startsWith('+') ? riderData.phone : `+34${riderData.phone}`) : undefined,
+                contractHours: riderData.contractHours,
+                status: 'active',
                 metrics: {
                     totalDeliveries: 0,
                     rating: 5.0,
-                    efficiency: 100,
-                    joinedAt: serverTimestamp()
-                },
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
+                    efficiency: 100
+                }
             };
-            // Remove helper fields if any
-            delete (payload as any).password;
-            delete (payload as any).fullName;
-            delete (payload as any).phone;
 
-            await setDoc(doc(db, RIDERS_COLLECTION, uid), payload);
+            const result = await createUserManaged(payload);
+            const response = result.data as { uid: string, message: string };
+            const uid = response.uid;
+
+            // Return optimistic rider object for UI
             return {
                 id: uid,
                 fullName: riderData.fullName,
@@ -196,12 +161,18 @@ export const fleetService = {
                 contractHours: riderData.contractHours,
                 metrics: { totalDeliveries: 0, rating: 5, efficiency: 100, joinedAt: new Date().toISOString() }
             };
+
         } catch (error: any) {
             console.error('[FleetService] Error creating rider:', error);
-            // Re-throw standardized error for UI
-            if (error.code === 'auth/email-already-in-use') {
-                throw new Error('auth/email-already-in-use: El usuario ya existe en el sistema de autenticación pero no tiene perfil en la base de datos (Usuario Fantasma). Contacta con soporte.');
+
+            // Map Cloud Function errors to friendlier UI messages
+            if (error.message?.includes('already-exists') || error.code === 'already-exists') {
+                throw new Error('Este email ya está registrado en el sistema.');
             }
+            if (error.message?.includes('permission-denied') || error.code === 'permission-denied') {
+                throw new Error('No tienes permisos para crear este tipo de usuario o para esta franquicia.');
+            }
+
             throw error;
         }
     },

@@ -6,6 +6,8 @@ import { formatDate } from '../../utils/formatDate';
 import LessonEditor from './LessonEditor';
 import QuizEditor from './QuizEditor';
 import AcademyAnalytics from './AcademyAnalytics';
+import EncyclopediaView from './EncyclopediaView';
+
 
 interface ModuleFormData {
     title: string;
@@ -26,8 +28,8 @@ const AdminAcademyPanel: React.FC = () => {
     const updateModule = useUpdateModule();
     const deleteModule = useDeleteModule();
 
-    // Tabs: 'modules' | 'analytics'
-    const [activeTab, setActiveTab] = useState<'modules' | 'analytics'>('modules');
+    // Tabs: 'modules' | 'analytics' | 'encyclopedia'
+    const [activeTab, setActiveTab] = useState<'modules' | 'analytics' | 'encyclopedia'>('modules');
 
     const [selectedModule, setSelectedModule] = useState<AcademyModule | null>(null);
     const [selectedQuizModule, setSelectedQuizModule] = useState<AcademyModule | null>(null);
@@ -137,7 +139,9 @@ const AdminAcademyPanel: React.FC = () => {
                         <p className="text-slate-500 dark:text-slate-400 max-w-lg font-normal">
                             {activeTab === 'modules'
                                 ? 'Diseño y orquestación de la arquitectura educativa.'
-                                : 'Monitorización estratégica del rendimiento.'}
+                                : activeTab === 'analytics'
+                                    ? 'Monitorización estratégica del rendimiento.'
+                                    : 'Base de conocimiento y manuales operativos.'}
                         </p>
                     </div>
 
@@ -160,6 +164,14 @@ const AdminAcademyPanel: React.FC = () => {
                             >
                                 Analytics
                             </button>
+                            <button
+                                onClick={() => setActiveTab('encyclopedia')}
+                                className={`px-6 py-2.5 rounded-xl text-sm font-normal transition-all duration-300 ${activeTab === 'encyclopedia'
+                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
+                                    : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                            >
+                                Enciclopedia
+                            </button>
                         </div>
 
                         {activeTab === 'modules' && (
@@ -179,6 +191,8 @@ const AdminAcademyPanel: React.FC = () => {
 
                 {activeTab === 'analytics' ? (
                     <AcademyAnalytics />
+                ) : activeTab === 'encyclopedia' ? (
+                    <EncyclopediaView />
                 ) : (
                     <>
                         {/* Create Module Form - Glassmorphic overlay */}

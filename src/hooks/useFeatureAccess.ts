@@ -65,11 +65,15 @@ export const useFeatureAccess = (): UseFeatureAccessReturn => {
     const [pack, setPack] = useState<PackType | null>(null);
     const [loading, setLoading] = useState(true);
 
+    // Sync loading state during render to avoid effect cascade
+    if (!authLoading && !user && loading) {
+        setLoading(false);
+    }
+
     useEffect(() => {
         if (authLoading) return;
 
         if (!user) {
-            setLoading(false);
             return;
         }
 

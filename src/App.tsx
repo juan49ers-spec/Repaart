@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { useState, Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { useExport } from './hooks/useExport';
@@ -37,6 +37,10 @@ const Academy = lazyWithRetry(() => import('./features/academy/Academy'));
 const AdminFranchiseView = lazyWithRetry(() => import('./features/admin/AdminFranchiseView'));
 const KanbanBoard = lazyWithRetry(() => import('./features/admin/kanban/KanbanBoard'));
 const RidersView = lazyWithRetry(() => import('./features/fleet/RidersView'));
+const AcademyAdminView = lazyWithRetry(() => import('./features/academy/admin/AcademyAdminView').then(module => ({ default: module.AcademyAdminView })));
+const LessonEditor = lazyWithRetry(() => import('./features/academy/admin/LessonEditor').then(module => ({ default: module.LessonEditor })));
+const QuizEditor = lazyWithRetry(() => import('./features/academy/admin/QuizEditor').then(module => ({ default: module.QuizEditor })));
+const IsolatedSeederPage = lazyWithRetry(() => import('./features/academy/admin/IsolatedSeederPage').then(module => ({ default: module.IsolatedSeederPage })));
 
 import { useFranchiseFinance } from './hooks/useFranchiseFinance';
 import { useVersionCheck } from './hooks/useVersionCheck';
@@ -70,12 +74,29 @@ function App() {
     const isFranchise = roleConfig?.role === 'franchise' || !!impersonatedFranchiseId;
 
     // 🛠️ DEBUG & CACHE CLEANUP
-    console.log("🚀 Running App Version: v4.1.0 - STABLE");
+    // console.log("🚀 Running App Version: v4.1.0 - STABLE");
 
-    // --- DATA FETCHING ---
-    const dataHookFranchiseId = (isAdmin && targetFranchiseId)
+    // --- DATA FETCHING IDENTITY ---
+    const profileFranchiseId = roleConfig?.franchiseId;
+    const profileName = roleConfig?.name;
+    const userUid = user?.uid;
+
+    // Logic: Prefer Slug > Name > UID for queries, as historical data uses Slugs
+    const dataHookFranchiseId = ((isAdmin && targetFranchiseId)
         ? targetFranchiseId
-        : (roleConfig?.franchiseId || user?.uid || null);
+        : (profileFranchiseId || profileName || userUid || null)) as string | null;
+
+    // 🔥 IDENTITY PROBE 🔥
+    useEffect(() => {
+        if (user) {
+            console.log(`[Identity] 👤 User: ${user.email}`);
+            console.log(`[Identity] 🔑 Role: ${roleConfig?.role}`);
+            console.log(`[Identity] 🏢 Profile Slug: ${profileFranchiseId}`);
+            console.log(`[Identity] 🏷️  Profile Name: ${profileName}`);
+            console.log(`[Identity] 🆔 UID: ${userUid}`);
+            console.log(`[Identity] 🎯 Final Target ID: ${dataHookFranchiseId}`);
+        }
+    }, [user, roleConfig, dataHookFranchiseId, profileFranchiseId, profileName, userUid]);
 
     const {
         rawData: currentData,
@@ -91,8 +112,9 @@ function App() {
     const report = accounting?.report;
 
     // Handle Admin Select
-    const handleAdminSelectFranchise = (uid: string, name: string) => {
-        setTargetFranchiseId(uid);
+    const handleAdminSelectFranchise = (id: string, name: string) => {
+        console.log(`[Admin] Selecting Franchise: ${name} (${id})`);
+        setTargetFranchiseId(id);
         setTargetFranchiseName(name);
     };
 
@@ -108,7 +130,7 @@ function App() {
         // onMonthChange: setSelectedMonth, -> Handled by Store
         // viewPeriod, setViewPeriod, -> Handled by Store
         onLogout: logout,
-        onExport: () => exportCSV(report as any, selectedMonth, isAdmin && targetFranchiseName ? targetFranchiseName : 'REPAART'),
+        onExport: () => exportCSV(report as import('./hooks/useExport').ReportData, selectedMonth, isAdmin && targetFranchiseName ? targetFranchiseName : 'REPAART'),
         sidebarData: currentData, onCalculate: handleUpdate, readOnly: false,
         saving,
         // isChatOpen, setIsChatOpen, -> Handled by Store (DashboardLayout uses store)
@@ -261,10 +283,35 @@ function App() {
                         </ProtectedRoute>
                     } />
 
+                    <Route path="admin/seed-academy" element={
+                        <ProtectedRoute requireAdmin={true}>
+                            <React.Suspense fallback={<DashboardSkeleton />}>
+                                <IsolatedSeederPage />
+                            </React.Suspense>
+                        </ProtectedRoute>
+                    } />
+
                     {/* ADMIN FINANCE DETAIL */}
                     <Route path="admin/franchise/:franchiseId" element={
                         <ProtectedRoute requireAdmin={true}>
                             <AdminFranchiseView />
+                        </ProtectedRoute>
+                    } />
+
+                    {/* ADMIN ACADEMY STUDIO */}
+                    <Route path="admin/academy" element={
+                        <ProtectedRoute requireAdmin={true}>
+                            <AcademyAdminView />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="admin/academy/module/:moduleId" element={
+                        <ProtectedRoute requireAdmin={true}>
+                            <LessonEditor />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="admin/academy/quiz/:moduleId" element={
+                        <ProtectedRoute requireAdmin={true}>
+                            <QuizEditor />
                         </ProtectedRoute>
                     } />
 
@@ -286,8 +333,9 @@ function App() {
                     <Route path="profile" element={<RiderProfileView />} />
                 </Route>
             </Routes>
+
             {/* <Seeder /> (Removed by User Request) */}
-        </Suspense>
+        </Suspense >
     );
 }
 

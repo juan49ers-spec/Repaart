@@ -17,7 +17,7 @@ const baseUserSchema = z.object({
         .toLowerCase()
         .email("Introduce una dirección de correo válida"),
 
-    role: z.enum(['admin', 'franchise', 'staff', 'driver', 'rider', 'user']),
+    role: z.enum(['admin', 'franchise', 'staff', 'rider', 'user']),
     franchiseId: z.string().optional(),
     phoneNumber: z.string().regex(/^\+?[0-9\s-]{6,}$/, "Formato de teléfono inválido").optional().or(z.literal('')),
     pack: z.enum(['basic', 'premium']).default('basic'),
@@ -34,7 +34,7 @@ const baseUserSchema = z.object({
 /**
  * Esquema de Creación:
  * - Password OBLIGATORIO para 'admin', 'franchise', 'user'.
- * - Password OPCIONAL para 'driver', 'staff'.
+ * - Password OPCIONAL para 'rider', 'staff'.
  */
 export const createUserSchema = baseUserSchema.extend({
     password: z.string().optional()
@@ -98,5 +98,5 @@ export const financeSchema = z.object({
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type FinanceInput = z.infer<typeof financeSchema>;
-export type UserRole = 'admin' | 'franchise' | 'staff' | 'driver' | 'rider' | 'user';
+export type UserRole = 'admin' | 'franchise' | 'staff' | 'rider' | 'user';
 

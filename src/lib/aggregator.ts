@@ -115,9 +115,9 @@ export const aggregateReports = (reports: FinancialReport[]) => {
     let breakEvenOrders: number | "N/A" = "N/A";
     let safetyMargin = 0;
     // Variable Cost per Order
-    let totalVariable = totalExpenses - totalFixedLineItems;
-    let variableCostPerOrder = totalOrders > 0 ? totalVariable / totalOrders : 0;
-    let contributionMargin = avgTicket - variableCostPerOrder;
+    const totalVariable = totalExpenses - totalFixedLineItems;
+    const variableCostPerOrder = totalOrders > 0 ? totalVariable / totalOrders : 0;
+    const contributionMargin = avgTicket - variableCostPerOrder;
 
     if (contributionMargin > 0) {
         breakEvenOrders = Math.ceil(totalFixedLineItems / contributionMargin);

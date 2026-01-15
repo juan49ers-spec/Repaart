@@ -10,12 +10,12 @@ import {
 } from '../schemas/scheduler';
 import { toLocalDateString, getStartOfWeek } from '../utils/dateUtils';
 
-// Helper exported for WeeklyScheduler (and now uses strict types if possible, or string for compat)
+// Helper exported for WeeklyScheduler
 export const getWeekIdFromDate = (date: Date): string => {
-    return WeekService.getWeekId(date); // Reuse logic from service to allow string return for UI compat
+    return WeekService.getWeekId(date);
 };
 
-export type { Shift, WeekData }; // Re-export for components that consumed it from here
+export type { Shift, WeekData };
 
 export interface Rider {
     id: string;
@@ -33,7 +33,7 @@ export interface Moto {
 
 export const useWeeklySchedule = (franchiseIdString: string | null, _readOnly: boolean = false, externalDate?: Date) => {
     // 🔥 PROBE: TOP LEVEL HOOK FIRE 🔥
-    console.log('🔥 EJECUTANDO HOOK useWeeklySchedule PARA:', franchiseIdString);
+    console.log('[useWeeklySchedule] Executing for franchise:', franchiseIdString);
 
     // STATE
     // Initialize strictly to the Monday of the current week to ensure alignment
@@ -57,13 +57,12 @@ export const useWeeklySchedule = (franchiseIdString: string | null, _readOnly: b
     const [loading, setLoading] = useState(true);
 
     // Derived properties
-    // Ensure we always get the ISO Week ID for the MONDAY of the week
     const currentWeekIdString = getWeekIdFromDate(new Date(getStartOfWeek(currentDate)));
 
     // NAVIGATION
     const navigateWeek = useCallback((direction: number) => {
         if (externalDate) {
-            console.warn("Attempting to navigate internally controlled week while externalDate is provided.");
+            console.warn("[useWeeklySchedule] Attempting to navigate internally while externalDate is provided.");
         }
         setInternalDate(prev => {
             const newDate = new Date(prev);
@@ -73,109 +72,104 @@ export const useWeeklySchedule = (franchiseIdString: string | null, _readOnly: b
     }, [externalDate]);
 
 
-    // 🔥 MERGE STRATEGY: Combine docData and liveShifts whenever they change
-    useEffect(() => {
-        if (docData && liveShifts) {
-            // If we have both, Prefer Live Shifts
-            setWeekData({
-                ...docData,
-                shifts: liveShifts
-            });
-        } else if (docData) {
-            // Only Doc Data (initial load phase 1)
-            setWeekData(docData);
-        } else {
-            // Waiting...
-            setWeekData(null);
-        }
-    }, [docData, liveShifts]);
+    // State management and loading synchronization
+    const [prevFranchiseId, setPrevFranchiseId] = useState(franchiseIdString);
+    const [prevWeekId, setPrevWeekId] = useState(currentWeekIdString);
 
-
-    // FETCH / SUBSCRIPTION
-    useEffect(() => {
-        // 🔥 FORCE EXECUTION LOG
-        console.log('🔥 useWeeklySchedule EFFECT TRIGGERED. FranchiseID:', franchiseIdString);
-
-        if (!franchiseIdString) {
-            console.warn('⚠️ FranchiseID faltante en hook, pero intentando continuar...');
-            // setLoading(false);
-            // return; // 🔥 REMOVED EARLY RETURN TO FORCE ATTEMPT (Though query might fail empty)
-        }
-
-
-        if (!weekData || weekData.id !== currentWeekIdString) {
-            setLoading(true);
-        }
-
-        // Reset local state on week change
+    if (franchiseIdString !== prevFranchiseId || currentWeekIdString !== prevWeekId) {
+        setPrevFranchiseId(franchiseIdString);
+        setPrevWeekId(currentWeekIdString);
+        setLoading(!!franchiseIdString); // If no franchise, not loading. If franchise, start loading.
         setDocData(null);
         setLiveShifts(null);
+    }
+    // Sync weekData whenever docData or liveShifts change
+    const [prevDocData, setPrevDocData] = useState<WeekData | null>(null);
+    const [prevLiveShifts, setPrevLiveShifts] = useState<Shift[] | null>(null);
 
-        // Convert to Branded Types for Service
-        const fid = toFranchiseId(franchiseIdString || '');
+    if (docData !== prevDocData || liveShifts !== prevLiveShifts) {
+        setPrevDocData(docData);
+        setPrevLiveShifts(liveShifts);
+
+        if (docData && liveShifts) {
+            // Priority: Live Shifts from collection. If empty but docData has shifts, it might be legacy
+            const effectiveShifts = (liveShifts.length > 0) ? liveShifts : (docData.shifts || []);
+            setWeekData({ ...docData, shifts: effectiveShifts });
+        } else if (docData) {
+            setWeekData(docData);
+        } else if (weekData !== null) {
+            setWeekData(null);
+        }
+    }
+    // Subscription Effect
+    useEffect(() => {
+        if (!franchiseIdString) {
+            return;
+        }
+
+        const fid = toFranchiseId(franchiseIdString);
         const wid = toWeekId(currentWeekIdString);
 
+        console.log(`[useWeeklySchedule] Subscribing to Week: ${wid} for Franchise: ${fid}`);
+
         // 1. Subscribe using WeekService (Metadata & Legacy)
-        const unsubscribeWeek = WeekService.subscribeToWeek(franchiseIdString || '', currentWeekIdString, (data) => {
+        const unsubscribeWeek = WeekService.subscribeToWeek(franchiseIdString, currentWeekIdString, (data) => {
             if (data) {
                 setDocData(data);
+                setLoading(false);
             } else {
                 // Initialize if not exists
                 const startDate = toLocalDateString(getStartOfWeek(currentDate));
-                if (fid) {
-                    WeekService.initWeek(fid, wid, startDate).then((initial) => {
-                        if (initial) setDocData(initial);
-                    });
-                }
+                WeekService.initWeek(fid, wid, startDate).then((initial) => {
+                    if (initial) setDocData(initial);
+                    setLoading(false);
+                }).catch(err => {
+                    console.error("[useWeeklySchedule] Error initializing week:", err);
+                    setLoading(false);
+                });
             }
-            if (data) setLoading(false);
         });
 
-        // 1.5 Subsrcibe to Real Shifts (Source of Truth: work_shifts collection)
-        // 🔥 SIMPLIFIED DIRECT SUBSCRIPTION 🔥
-
+        // 1.5 Subscribe to Real Shifts (Source of Truth)
         const startOfWeekString = getStartOfWeek(currentDate);
         const [y, m, d] = startOfWeekString.split('-').map(Number);
         const startOfWeekDate = new Date(y, m - 1, d, 0, 0, 0, 0);
-        const endOfWeekDate = new Date(startOfWeekDate);
-        endOfWeekDate.setDate(endOfWeekDate.getDate() + 6);
-        endOfWeekDate.setHours(23, 59, 59, 999);
 
-        // Expand for timezone safety
         const searchStart = new Date(startOfWeekDate);
         searchStart.setDate(searchStart.getDate() - 1);
         const searchEnd = new Date(startOfWeekDate);
         searchEnd.setDate(searchEnd.getDate() + 8);
 
         const unsubscribeShifts = shiftService.subscribeToWeekShifts(
-            franchiseIdString || '',
+            franchiseIdString,
             searchStart,
             searchEnd,
             (shifts) => {
                 setLiveShifts(shifts || []);
+                setLoading(false);
             }
         );
 
-        // 2. Riders (via FleetService - Source of Truth for Riders)
-        const unsubscribeRiders = FleetService.subscribeToRiders(franchiseIdString || '', (fleetRiders) => {
+        // 2. Riders
+        const unsubscribeRiders = FleetService.subscribeToRiders(franchiseIdString, (fleetRiders) => {
             const schedulerRiders = fleetRiders
-                .filter(r => r.status === 'active')
+                .filter(r => r.status === 'active' || r.status === 'on_route')
                 .map(r => ({
                     id: r.id,
                     fullName: r.fullName,
-                    role: 'rider', // Fleet service riders are always riders
+                    role: 'rider',
                     status: r.status,
-                    contractHours: r.contractHours || 40 // Default to 40 if missing
+                    contractHours: r.contractHours || 40
                 }));
             setRiders(schedulerRiders);
+            // Don't set loading false here alone as we need the grid structure mostly from Week doc or Shifts
         });
 
-        // 3. Motos (via FleetService)
-        const unsubscribeMotos = FleetService.subscribeToMotos(toFranchiseId(franchiseIdString || ''), (domainMotos) => {
-            // Adapt Domain Moto (plate) to UI Moto (licensePlate)
+        // 3. Motos
+        const unsubscribeMotos = FleetService.subscribeToMotos(fid, (domainMotos) => {
             const uiMotos = domainMotos.map(dm => ({
                 ...dm,
-                licensePlate: dm.plate // UI compatibility
+                licensePlate: dm.plate
             }));
             setMotos(uiMotos as unknown as Moto[]);
         });
@@ -189,8 +183,7 @@ export const useWeeklySchedule = (franchiseIdString: string | null, _readOnly: b
     }, [franchiseIdString, currentWeekIdString, currentDate]);
 
     // ACTIONS
-    const saveWeek = async (fidStr: string, widStr: string, data: any) => {
-        // Validation boundary: input is primitive string, internal is Branded
+    const saveWeek = async (fidStr: string, widStr: string, data: Partial<WeekData>) => {
         const fid = toFranchiseId(fidStr);
         const wid = toWeekId(widStr);
         return await WeekService.saveWeek(fid, wid, data);
@@ -212,4 +205,3 @@ export const useWeeklySchedule = (franchiseIdString: string | null, _readOnly: b
         currentWeekId: currentWeekIdString
     };
 };
-

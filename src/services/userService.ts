@@ -170,14 +170,20 @@ export const userService = {
     /**
      * Get all users, optionally filtered by role
      */
-    fetchUsers: async (roleFilter: string | null = null): Promise<UserProfile[]> => {
+    fetchUsers: async (roleFilter: string | null = null, franchiseId: string | null = null): Promise<UserProfile[]> => {
         try {
             const usersRef = collection(db, COLLECTIONS.USERS);
-            let q = query(usersRef);
+            const constraints: any[] = []; // Changed to const, keeping any for query compatibility or refined typing if possible
 
             if (roleFilter) {
-                q = query(usersRef, where('role', '==', roleFilter));
+                constraints.push(where('role', '==', roleFilter));
             }
+
+            if (franchiseId) {
+                constraints.push(where('franchiseId', '==', franchiseId));
+            }
+
+            const q = query(usersRef, ...constraints);
 
             const snapshot = await getDocs(q);
             return snapshot.docs.map(doc => ({

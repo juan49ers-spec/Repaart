@@ -22,7 +22,7 @@ export interface Rider {
     id: string;
     fullName: string;
     phone: string;
-    role: 'driver' | 'staff' | 'admin' | 'franchise' | 'developer';
+    role: 'rider' | 'staff' | 'admin' | 'franchise' | 'developer';
     franchiseId?: string;
     status: 'active' | 'inactive' | 'deleted';
     drivingLicenseExpiry?: string | null; // YYYY-MM-DD
@@ -93,7 +93,7 @@ export const operationsService = {
             completedShifts: data.completedShifts || 0
         })).filter(user =>
             // 1. Debe ser driver o staff
-            ['driver', 'staff'].includes(user.role) &&
+            ['rider', 'staff'].includes(user.role) &&
             // 2. No debe estar borrado
             user.status !== 'deleted'
         );
@@ -105,7 +105,7 @@ export const operationsService = {
             ...riderData,
             displayName: riderData.fullName, // Estandarizar
             phoneNumber: riderData.phone,    // Estandarizar
-            role: 'driver',
+            role: 'rider',
             status: 'active',
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()

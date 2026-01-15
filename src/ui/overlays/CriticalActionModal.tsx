@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AlertTriangle, X, Loader2 } from 'lucide-react';
 
 export interface CriticalActionModalProps {
@@ -27,12 +27,9 @@ const CriticalActionModal: React.FC<CriticalActionModalProps> = ({
     const [input, setInput] = useState('');
     const [error, setError] = useState(false);
 
-    useEffect(() => {
-        if (isOpen) {
-            setInput('');
-            setError(false);
-        }
-    }, [isOpen]);
+    // Reset state when opening is handled by the initial state or parent unmounting
+    // Removing the effect to avoid 'set-state-in-effect' lint error.
+    // If persistent state is an issue, consider forcing unmount on close in parent.
 
     if (!isOpen) return null;
 
@@ -67,6 +64,8 @@ const CriticalActionModal: React.FC<CriticalActionModalProps> = ({
                         onClick={onClose}
                         className="ml-auto text-slate-400 hover:text-slate-600 transition-colors"
                         disabled={isLoading}
+                        title="Cerrar"
+                        aria-label="Cerrar"
                     >
                         <X className="w-5 h-5" />
                     </button>

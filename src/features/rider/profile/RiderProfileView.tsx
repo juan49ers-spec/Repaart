@@ -86,7 +86,7 @@ export const RiderProfileView: React.FC = () => {
                                 <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
                                     <Clock size={12} /> Rendimiento Semanal
                                 </span>
-                                <span className="text-4xl font-black text-white tracking-tighter">
+                                <span className="text-2xl font-bold text-white tracking-tighter">
                                     {stats.hours}
                                     <span className="text-lg text-slate-500 font-bold ml-1">/{stats.target}h</span>
                                 </span>

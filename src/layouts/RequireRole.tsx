@@ -41,7 +41,7 @@ export const RequireRole: React.FC<RequireRoleProps> = ({ children, allowedRoles
             Required: ${allowedRoles.join(', ')}`);
 
         // 🛡️ Smart Redirect to avoid infinite loops
-        if (['rider', 'driver'].includes(userRole)) {
+        if (['rider'].includes(userRole)) {
             // If already at rider app, don't redirect (let 404/Not Found handle if specific path bad)
             if (location.pathname.startsWith('/rider')) return children as any;
             return <Navigate to="/rider/schedule" replace />;

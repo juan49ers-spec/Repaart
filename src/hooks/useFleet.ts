@@ -37,14 +37,19 @@ export const useFleet = (franchiseId: string | null | undefined): UseFleetReturn
     const [error, setError] = useState<Error | null>(null);
     const { toast } = useToast() || {}; // Fallback seguro si no hay contexto
 
-    // Efecto de Suscripción
-    useEffect(() => {
-        if (!franchiseId) {
+    // Sync loading state during render
+    const [prevFranchiseId, setPrevFranchiseId] = useState(franchiseId);
+    if (franchiseId !== prevFranchiseId) {
+        setPrevFranchiseId(franchiseId);
+        if (franchiseId) {
+            setLoading(true);
+        } else {
             setLoading(false);
-            return;
         }
+    }
 
-        setLoading(true);
+    useEffect(() => {
+        if (!franchiseId) return;
 
         // Iniciamos la escucha
         const unsubscribe = fleetService.subscribeToFleet(franchiseId, (data: Moto[]) => {

@@ -4,10 +4,39 @@ import { useAuth } from '../../context/AuthContext';
 import { financeService } from '../../services/financeService';
 import { userService } from '../../services/userService';
 import { notificationService } from '../../services/notificationService';
-import { OrderCounts, ExpenseData, SimpleFinanceData } from './finance/types';
 import { formatMoney } from '../../lib/finance';
 
 // --- TYPES ---
+interface OrderCounts {
+    [key: string]: number;
+}
+
+interface ExpenseData {
+    renting?: {
+        count: number;
+        pricePerUnit: number;
+    };
+    royaltyPercent?: number;
+    advertising?: number;
+    civLiability?: number;
+    agencyFee?: number;
+    prlFee?: number;
+    accountingFee?: number;
+    services?: number;
+    appFlyder?: number;
+    marketing?: number;
+    incidents?: number;
+    otherExpenses?: number;
+    irpfPercent?: number;
+    socialSecurity?: number;
+    payroll?: number;
+    insurance?: number;
+    fuel?: number;
+    repairs?: number;
+    professionalServices?: number;
+    other?: number;
+    quota?: number;
+}
 type AdvisoryStatus = 'safe' | 'warning' | 'danger' | 'neutral';
 
 interface AdvisoryTip {
@@ -40,8 +69,8 @@ const getAdvisoryData = (
     const { income, expenses, orders, estimatedKm, cancelled } = values;
 
     switch (field) {
-        case 'labor':
-            const laborCost = expenses.payroll + expenses.insurance;
+        case 'labor': {
+            const laborCost = (expenses.payroll ?? 0) + (expenses.insurance ?? 0);
             const laborRatio = income > 0 ? (laborCost / income) * 100 : 0;
             const costPerOrder = orders > 0 ? laborCost / orders : 0;
 
@@ -66,9 +95,10 @@ const getAdvisoryData = (
                 metric: 'Top 10% Sector',
                 icon: <CheckCircle className="w-6 h-6 text-emerald-500" />
             };
+        }
 
-        case 'fuel':
-            const fuelPerKm = estimatedKm > 0 ? expenses.fuel / estimatedKm : 0;
+        case 'fuel': {
+            const fuelPerKm = estimatedKm > 0 ? (expenses.fuel ?? 0) / estimatedKm : 0;
             if (fuelPerKm > 0.06) return {
                 title: 'Desperdicio de Combustible',
                 content: `Tu consumo es de ${formatMoney(fuelPerKm)}€/km, un 50% superior a la media de flota eficiente (0.04€/km). \n\nChecklist: 1) Presión neumáticos, 2) Riders acelerando bruscamente, 3) Motos encendidas en espera.`,
@@ -83,8 +113,9 @@ const getAdvisoryData = (
                 metric: 'Eficiente',
                 icon: <Lightbulb className="w-6 h-6 text-amber-500" />
             };
+        }
 
-        case 'orders':
+        case 'orders': {
             const density = estimatedKm > 0 ? orders / estimatedKm : 0;
             const kmPerDrop = density > 0 ? 1 / density : 0;
 
@@ -102,8 +133,9 @@ const getAdvisoryData = (
                 metric: `${density.toFixed(2)} ped/km`,
                 icon: <Truck className="w-6 h-6 text-blue-500" />
             };
+        }
 
-        case 'cancelled':
+        case 'cancelled': {
             const cancelRate = orders > 0 ? (cancelled / orders) * 100 : 0;
             if (cancelRate > 3) return {
                 title: 'Hemorragia de Ingresos',
@@ -119,8 +151,9 @@ const getAdvisoryData = (
                 metric: `${cancelRate.toFixed(1)}%`,
                 icon: <Sparkles className="w-6 h-6 text-purple-500" />
             };
+        }
 
-        case 'renting':
+        case 'renting': {
             const costPerUnit = expenses.renting?.pricePerUnit || 0;
             if (costPerUnit > 170) return {
                 title: 'Precio de Flota Fuera de Mercado',
@@ -135,10 +168,11 @@ const getAdvisoryData = (
                 status: 'safe',
                 icon: <Truck className="w-6 h-6 text-blue-500" />
             };
+        }
 
-        case 'repairs':
-            const repairCostPerKm = estimatedKm > 0 ? expenses.repairs / estimatedKm : 0;
-            if (repairCostPerKm > 0.03 && expenses.renting.count > 0) return {
+        case 'repairs': {
+            const repairCostPerKm = estimatedKm > 0 ? (expenses.repairs ?? 0) / estimatedKm : 0;
+            if (repairCostPerKm > 0.03 && (expenses.renting?.count ?? 0) > 0) return {
                 title: 'Reparaciones Sospechosas',
                 content: 'Si tienes motos de renting, el mantenimiento debería estar incluido. ¿Por qué estás gastando en taller? Revisa si son daños por accidentes no cubiertos (franquicias).',
                 status: 'warning',
@@ -151,6 +185,7 @@ const getAdvisoryData = (
                 status: 'safe',
                 icon: <Lightbulb className="w-6 h-6 text-orange-500" />
             };
+        }
 
         default:
             return {
@@ -189,8 +224,8 @@ const ActiveHealthCheck = ({
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4" /> Alertas Activas ({alerts.length})
             </h3>
-            {alerts.map((alert, idx) => (
-                <div key={idx} className={`p-4 rounded-xl border flex gap-3 ${alert.status === 'danger'
+            {alerts.map((alert) => (
+                <div key={alert.title} className={`p-4 rounded-xl border flex gap-3 ${alert.status === 'danger'
                     ? 'bg-rose-50 border-rose-100'
                     : 'bg-amber-50 border-amber-100'
                     }`}>
@@ -278,12 +313,52 @@ const BreakEvenWidget = ({
     );
 };
 
+// Define the structure of the financial record from Firestore
+interface FinancialRecord {
+    revenue?: number;
+    totalIncome?: number;
+    totalHours?: number;
+    cancelledOrders?: number;
+    status?: 'pending' | 'draft' | 'submitted' | 'approved' | 'unlock_requested' | 'locked';
+    rejectionReason?: string;
+    ordersDetail?: Record<string, number>;
+    ordersNew0To4?: number;
+    ordersNew4To5?: number;
+    ordersNew5To6?: number;
+    ordersNew6To7?: number;
+    ordersNewGt7?: number;
+    salaries?: number;
+    quota?: number;
+    insurance?: number;
+    gasoline?: number;
+    repairs?: number;
+    motoCount?: number;
+    rentingCost?: number;
+    agencyFee?: number;
+    prlFee?: number;
+    accountingFee?: number;
+    services?: number;
+    appFlyder?: number;
+    marketing?: number;
+    incidents?: number;
+    otherExpenses?: number;
+    royaltyPercent?: number;
+    irpfPercent?: number;
+}
+
 interface FinancialControlCenterProps {
     franchiseId: string;
     month: string;
     onClose: () => void;
-    onSave?: (data: SimpleFinanceData) => void;
-    initialData?: any;
+    onSave?: (data: FinancialRecord) => void;
+    initialData?: Partial<FinancialRecord>;
+}
+
+interface LogisticsRate {
+    name?: string;
+    min?: number;
+    max?: number;
+    price: number;
 }
 
 const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
@@ -303,6 +378,8 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
     // Unlock Workflow State
     const [showUnlockModal, setShowUnlockModal] = useState(false);
     const [unlockReason, setUnlockReason] = useState('');
+    // State to hold rejection reason from Admin, if any
+    const [lastRejectionReason, setLastRejectionReason] = useState<string | null>(null);
 
 
     const isLocked = status === 'submitted' || status === 'approved' || status === 'unlock_requested';
@@ -321,7 +398,7 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
         royaltyPercent: 5,
         irpfPercent: 20
     });
-    const [logisticsRates, setLogisticsRates] = useState<any[]>([]);
+    const [logisticsRates, setLogisticsRates] = useState<LogisticsRate[]>([]);
 
     // --- AUTO-CALCULATE INCOME ---
     useEffect(() => {
@@ -354,7 +431,7 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
         async function loadData() {
             if (!franchiseId || !month) return;
             try {
-                const data = initialData || await financeService.getFinancialData(franchiseId, month) as any;
+                const data = initialData || await financeService.getFinancialData(franchiseId, month) as FinancialRecord;
 
                 // Fetch Profile for Rates (using UID if it's a franchise, else mapping by franchiseId)
                 let profile;
@@ -378,14 +455,19 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
             }
         }
         loadData();
-    }, [franchiseId, month, initialData]);
+    }, [franchiseId, month, initialData, user?.role, user?.uid]);
 
-    const mapDataToState = (data: any) => {
+    const mapDataToState = (data: FinancialRecord) => {
         const revenue = data.revenue || data.totalIncome || 0;
         setTotalIncome(revenue);
         setTotalHours(data.totalHours || 0);
         setCancelledOrders(data.cancelledOrders || 0);
         setStatus(data.status || 'draft');
+
+        // Map Rejection Reason if it exists
+        if (data.rejectionReason) {
+            setLastRejectionReason(data.rejectionReason);
+        }
 
         const reconstructedOrders: OrderCounts = {};
 
@@ -411,8 +493,8 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
             repairs: data.repairs || 0,
             renting: {
                 count: data.motoCount || 0,
-                pricePerUnit: data.motoCount > 0 && (data as any).rentingCost
-                    ? (data as any).rentingCost / data.motoCount
+                pricePerUnit: data.motoCount && data.motoCount > 0 && data.rentingCost
+                    ? data.rentingCost / data.motoCount
                     : 154
             },
             agencyFee: data.agencyFee || 0,
@@ -429,16 +511,24 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
     };
 
     // --- CALCULATIONS ---
-    const calculateStats = () => {
+    const calculateStats = (): { totalExpenses: number; profit: number; fixedCosts: number; variableCosts: number; royaltyAmount: number; totalOrders: number; estimatedKm: number } => {
         const rentingTotal = (expenses.renting?.count ?? 0) * (expenses.renting?.pricePerUnit ?? 0);
         const royaltyAmount = totalIncome * ((expenses.royaltyPercent || 5) / 100);
 
-        const fixedCosts = expenses.payroll + expenses.quota + expenses.insurance +
-            expenses.agencyFee + expenses.prlFee + expenses.accountingFee +
-            expenses.professionalServices + expenses.appFlyder + expenses.marketing;
+        const fixedCosts =
+            (expenses.payroll ?? 0) +
+            (expenses.socialSecurity ?? 0) + // Assuming socialSecurity is a new field in ExpenseData
+            (expenses.quota ?? 0) +
+            (expenses.insurance ?? 0) +
+            (expenses.agencyFee ?? 0) +
+            (expenses.prlFee ?? 0) +
+            (expenses.accountingFee ?? 0) +
+            (expenses.professionalServices ?? 0) +
+            (expenses.appFlyder ?? 0) +
+            (expenses.marketing ?? 0);
 
-        const variableCosts = expenses.fuel + expenses.repairs + rentingTotal +
-            expenses.incidents + expenses.other + royaltyAmount;
+        const variableCosts = (expenses.fuel ?? 0) + (expenses.repairs ?? 0) + rentingTotal +
+            (expenses.incidents ?? 0) + (expenses.other ?? 0) + royaltyAmount;
 
         const totalExpenses = fixedCosts + variableCosts;
         const profit = totalIncome - totalExpenses;
@@ -467,9 +557,15 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
         getAdvisoryData('renting', { income: totalIncome, expenses, orders: stats.totalOrders, totalHours, estimatedKm: stats.estimatedKm, cancelled: cancelledOrders }),
     ];
 
-    // --- HANDLERS ---
     const handleSave = async () => {
-        if (!onSave || isLocked) return;
+        if (!onSave) return;
+
+        // UNLOCK REQUEST LOGIC
+        // If the month is locked, the 'Save' button acts as 'Request Unlock'
+        if (isLocked) {
+            setShowUnlockModal(true);
+            return;
+        }
 
         const confirmMsg = "Al enviar el cierre, los datos quedarán bloqueados para su revisión por parte de la central. ¿Estás seguro de que deseas continuar?";
         if (!window.confirm(confirmMsg)) return;
@@ -483,34 +579,6 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
 
             const notificationPriority = criticalAlerts.length > 0 ? 'high' : (warningAlerts.length > 0 ? 'normal' : 'low');
             const issueSummary = criticalAlerts.map(a => a.title).join(', ');
-
-            if (isLocked) {
-                // UNLOCK REQUEST LOGIC
-                if (!window.confirm("¿Deseas solicitar al administrador el desbloqueo de este mes para realizar correcciones?")) {
-                    return;
-                }
-                setSaving(true);
-                try {
-                    await notificationService.notify(
-                        'UNLOCK_REQUEST',
-                        franchiseId,
-                        'Franquicia',
-                        {
-                            title: `Solicitud Desbloqueo: ${month}`,
-                            message: `Solicitud para editar cierre de ${month}.`,
-                            priority: 'normal',
-                            metadata: { month, status: 'locked' }
-                        }
-                    );
-                    alert("Solicitud enviada al administrador.");
-                    onClose();
-                } catch (error) {
-                    console.error("Error asking for unlock", error);
-                } finally {
-                    setSaving(false);
-                }
-                return;
-            }
 
             const mappedData = {
                 month,
@@ -538,7 +606,7 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                 updatedAt: new Date().toISOString()
             };
 
-            await onSave(mappedData as any);
+            await onSave(mappedData);
 
             // 2. Send Smart Notification
             await notificationService.notify(
@@ -568,6 +636,44 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
         }
     };
 
+    /**
+     * DRAFT MODE: Save without locking or notifying.
+     */
+    const handleSaveDraft = async () => {
+        if (!onSave || isLocked) return;
+
+        setSaving(true);
+        try {
+            const mappedData = {
+                month,
+                totalIncome, revenue: totalIncome, grossIncome: totalIncome,
+                salaries: expenses.payroll, quota: expenses.quota, insurance: expenses.insurance,
+                gasoline: expenses.fuel, gasolinePrice: 0, repairs: expenses.repairs,
+                motoCount: expenses.renting?.count ?? 0,
+                rentingCost: (expenses.renting?.count ?? 0) * (expenses.renting?.pricePerUnit ?? 0),
+                agencyFee: expenses.agencyFee, prlFee: expenses.prlFee, accountingFee: expenses.accountingFee, services: expenses.professionalServices,
+                appFlyder: expenses.appFlyder, marketing: expenses.marketing, incidents: expenses.incidents, otherExpenses: expenses.other,
+                totalExpenses: stats.totalExpenses, expenses: stats.totalExpenses, profit: stats.profit,
+                orders: stats.totalOrders,
+                ordersDetail: orders,
+                cancelledOrders: cancelledOrders,
+                status: 'draft' as const, // DRAFT STATUS
+                is_locked: false, // NOT LOCKED
+                royaltyPercent: expenses.royaltyPercent,
+                irpfPercent: expenses.irpfPercent,
+                updatedAt: new Date().toISOString()
+            };
+
+            await onSave(mappedData);
+            // Don't close, just save toast ideally, but for now just finish
+            onClose();
+        } catch (error) {
+            console.error("Error saving draft", error);
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const submitUnlockRequest = async () => {
         if (!unlockReason.trim()) {
             alert("Por favor, indica un motivo para la solicitud.");
@@ -592,7 +698,7 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
             );
 
             // Optimistic update
-            setStatus('unlock_requested' as any);
+            setStatus('unlock_requested');
 
             alert("Solicitud enviada al administrador.");
             setShowUnlockModal(false);
@@ -616,7 +722,7 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                 const currentIncome = totalIncome;
                 const currentOrders = orders;
 
-                mapDataToState(prevData);
+                mapDataToState(prevData as unknown as FinancialRecord);
 
                 if (currentIncome > 0) {
                     setTotalIncome(currentIncome);
@@ -631,7 +737,7 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
     };
 
     const updateExpense = (field: keyof ExpenseData, value: number) => {
-        setExpenses(prev => ({ ...prev, [field]: value }));
+        setExpenses((prev: ExpenseData) => ({ ...prev, [field]: value }));
     };
 
     // --- UI HELPERS ---
@@ -679,6 +785,18 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                             <Copy className="w-3.5 h-3.5" />
                             Copiar mes anterior
                         </button>
+
+                        {/* SAVE DRAFT BUTTON */}
+                        {!isLocked && (
+                            <button
+                                onClick={handleSaveDraft}
+                                disabled={saving}
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-all text-sm font-medium shadow-sm"
+                            >
+                                <Save className="w-3.5 h-3.5" />
+                                Guardar Borrador
+                            </button>
+                        )}
 
                         <button
                             onClick={handleSave}
@@ -774,8 +892,8 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                                                 <div className="flex items-center gap-2">
                                                     <input
                                                         type="number"
-                                                        value={orders[rate.name] || ''}
-                                                        onChange={(e) => setOrders(prev => ({ ...prev, [rate.name]: parseInt(e.target.value) || 0 }))}
+                                                        value={(rate.name && orders[rate.name]) || ''}
+                                                        onChange={(e) => rate.name && setOrders((prev: OrderCounts) => ({ ...prev, [rate.name!]: parseInt(e.target.value) || 0 }))}
                                                         onFocus={() => setFocusedField('orders')}
                                                         className="w-20 bg-gray-50 hover:bg-white focus:bg-white border border-transparent hover:border-gray-200 focus:border-blue-500 rounded-lg px-2 py-1.5 text-right font-mono text-sm text-gray-900 transition-all outline-none"
                                                         placeholder="0"
@@ -865,15 +983,16 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                             </h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-                                <ExpenseInput label="Nóminas" value={expenses.payroll} onChange={(v) => updateExpense('payroll', v)} onFocus={() => setFocusedField('labor')} totalIncome={totalIncome} />
-                                <ExpenseInput label="Seguridad Social" value={expenses.insurance} onChange={(v) => updateExpense('insurance', v)} onFocus={() => setFocusedField('labor')} totalIncome={totalIncome} />
-                                <ExpenseInput label="Cuota Autónomos" value={expenses.quota} onChange={(v) => updateExpense('quota', v)} onFocus={() => setFocusedField('quota')} totalIncome={totalIncome} />
-                                <ExpenseInput label="Gestoría" value={expenses.agencyFee} onChange={(v) => updateExpense('agencyFee', v)} onFocus={() => setFocusedField('agencyFee')} totalIncome={totalIncome} />
-                                <ExpenseInput label="PRL" value={expenses.prlFee} onChange={(v) => updateExpense('prlFee', v)} onFocus={() => setFocusedField('prlFee')} totalIncome={totalIncome} />
-                                <ExpenseInput label="App Flyder" value={expenses.accountingFee} onChange={(v) => updateExpense('accountingFee', v)} onFocus={() => setFocusedField('accountingFee')} totalIncome={totalIncome} />
-
-                                <ExpenseInput label="Servicios Financieros Repaart" value={expenses.appFlyder} onChange={(v) => updateExpense('appFlyder', v)} onFocus={() => setFocusedField('appFlyder')} totalIncome={totalIncome} />
-                                <ExpenseInput label="Marketing Local" value={expenses.marketing} onChange={(v) => updateExpense('marketing', v)} onFocus={() => setFocusedField('marketing')} totalIncome={totalIncome} />
+                                <ExpenseInput label="Nóminas" value={expenses.payroll ?? 0} onChange={(val) => updateExpense('payroll', val)} onFocus={() => setFocusedField('payroll')} totalIncome={totalIncome} />
+                                <ExpenseInput label="Seguros Sociales" value={expenses.socialSecurity ?? 0} onChange={(val) => updateExpense('socialSecurity', val)} onFocus={() => setFocusedField('socialSecurity')} totalIncome={totalIncome} />
+                                <ExpenseInput label="Cuota Autónomos" value={expenses.quota ?? 0} onChange={(val) => updateExpense('quota', val)} onFocus={() => setFocusedField('quota')} totalIncome={totalIncome} />
+                                <ExpenseInput label="Seguro Franquicia" value={expenses.insurance ?? 0} onChange={(val) => updateExpense('insurance', val)} onFocus={() => setFocusedField('insurance')} totalIncome={totalIncome} />
+                                <ExpenseInput label="Gestor Laboral" value={expenses.agencyFee ?? 0} onChange={(val) => updateExpense('agencyFee', val)} onFocus={() => setFocusedField('agencyFee')} totalIncome={totalIncome} />
+                                <ExpenseInput label="Prevención Riesgos" value={expenses.prlFee ?? 0} onChange={(val) => updateExpense('prlFee', val)} onFocus={() => setFocusedField('prlFee')} totalIncome={totalIncome} />
+                                <ExpenseInput label="Gestor Contable" value={expenses.accountingFee ?? 0} onChange={(val) => updateExpense('accountingFee', val)} onFocus={() => setFocusedField('accountingFee')} totalIncome={totalIncome} />
+                                <ExpenseInput label="Servicios Profesionales" value={expenses.professionalServices ?? 0} onChange={(val) => updateExpense('professionalServices', val)} onFocus={() => setFocusedField('professionalServices')} totalIncome={totalIncome} />
+                                <ExpenseInput label="App & Software (Flyder)" value={expenses.appFlyder ?? 0} onChange={(val) => updateExpense('appFlyder', val)} onFocus={() => setFocusedField('appFlyder')} totalIncome={totalIncome} />
+                                <ExpenseInput label="Marketing" value={expenses.marketing ?? 0} onChange={(val) => updateExpense('marketing', val)} onFocus={() => setFocusedField('marketing')} totalIncome={totalIncome} />
                             </div>
                         </div>
 
@@ -885,10 +1004,10 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                             </h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-                                <ExpenseInput isVariable label="Gasolina" value={expenses.fuel} onChange={(v) => updateExpense('fuel', v)} onFocus={() => setFocusedField('fuel')} totalIncome={totalIncome} />
-                                <ExpenseInput isVariable label="Reparaciones" value={expenses.repairs} onChange={(v) => updateExpense('repairs', v)} onFocus={() => setFocusedField('repairs')} totalIncome={totalIncome} />
-                                <ExpenseInput isVariable label="Incidentes" value={expenses.incidents} onChange={(v) => updateExpense('incidents', v)} onFocus={() => setFocusedField('incidents')} totalIncome={totalIncome} />
-                                <ExpenseInput isVariable label="Otros" value={expenses.other} onChange={(v) => updateExpense('other', v)} onFocus={() => setFocusedField('other')} totalIncome={totalIncome} />
+                                <ExpenseInput isVariable label="Combustible" value={expenses.fuel ?? 0} onChange={(val) => updateExpense('fuel', val)} onFocus={() => setFocusedField('fuel')} totalIncome={totalIncome} />
+                                <ExpenseInput isVariable label="Reparaciones" value={expenses.repairs ?? 0} onChange={(val) => updateExpense('repairs', val)} onFocus={() => setFocusedField('repairs')} totalIncome={totalIncome} />
+                                <ExpenseInput isVariable label="Incidentes" value={expenses.incidents ?? 0} onChange={(val) => updateExpense('incidents', val)} onFocus={() => setFocusedField('incidents')} totalIncome={totalIncome} />
+                                <ExpenseInput isVariable label="Otros Gastos" value={expenses.other ?? 0} onChange={(val) => updateExpense('other', val)} onFocus={() => setFocusedField('other')} totalIncome={totalIncome} />
                             </div>
 
                             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 mt-6 shadow-sm">
@@ -902,9 +1021,12 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                                         <input
                                             type="number"
                                             value={expenses.renting?.count || 0}
-                                            onChange={(e) => setExpenses(prev => ({ ...prev, renting: { ...prev.renting!, count: parseInt(e.target.value) || 0 } }))}
+                                            onChange={(e) => setExpenses((prev: ExpenseData) => ({ ...prev, renting: { ...prev.renting!, count: parseInt(e.target.value) || 0 } }))}
                                             onFocus={() => setFocusedField('renting')}
                                             className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-900 font-mono text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
+                                            aria-label="Unidades de Renting"
+                                            placeholder="0"
+                                            title="Unidades de Renting"
                                         />
                                     </div>
                                     <div className="flex-1">
@@ -912,9 +1034,12 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                                         <input
                                             type="number"
                                             value={expenses.renting?.pricePerUnit || 0}
-                                            onChange={(e) => setExpenses(prev => ({ ...prev, renting: { ...prev.renting!, pricePerUnit: parseFloat(e.target.value) || 0 } }))}
+                                            onChange={(e) => setExpenses((prev: ExpenseData) => ({ ...prev, renting: { ...prev.renting!, pricePerUnit: parseFloat(e.target.value) || 0 } }))}
                                             onFocus={() => setFocusedField('renting')}
                                             className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-900 font-mono text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
+                                            aria-label="Precio por Unidad"
+                                            placeholder="0.00"
+                                            title="Precio por Unidad"
                                         />
                                     </div>
                                 </div>
@@ -1062,6 +1187,34 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                                 <h3 className="text-lg font-bold text-gray-900">Solicitar Desbloqueo</h3>
                             </div>
 
+                            {/* VISUAL TIMELINE */}
+                            <div className="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-xl border border-slate-100 mb-2 text-xs font-bold text-slate-400">
+                                <div className="flex flex-col items-center gap-1 text-slate-900">
+                                    <span className="w-2.5 h-2.5 rounded-full bg-slate-900" />
+                                    <span>Bloqueado</span>
+                                </div>
+                                <div className="h-0.5 flex-1 bg-slate-200 mx-2" />
+                                <div className="flex flex-col items-center gap-1 text-amber-600">
+                                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shadow-[0_0_0_3px_rgba(245,158,11,0.2)]" />
+                                    <span>Solicitar...</span>
+                                </div>
+                                <div className="h-0.5 flex-1 bg-slate-200 mx-2" />
+                                <div className="flex flex-col items-center gap-1">
+                                    <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+                                    <span>Desbloqueo</span>
+                                </div>
+                            </div>
+
+                            {/* REJECTION REASON IF EXISTS */}
+                            {lastRejectionReason && (
+                                <div className="bg-rose-50 border border-rose-100 rounded-lg p-3 text-xs mb-3">
+                                    <p className="font-bold text-rose-800 uppercase tracking-wider mb-1 flex items-center gap-1">
+                                        <X className="w-3 h-3" /> Motivo del Rechazo Anterior
+                                    </p>
+                                    <p className="text-rose-700 italic">&quot;{lastRejectionReason}&quot;</p>
+                                </div>
+                            )}
+
                             <p className="text-sm text-gray-500">
                                 Para desbloquear el mes de <strong>{month}</strong>, debes indicar al administrador el motivo de la corrección.
                             </p>
@@ -1080,7 +1233,8 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                             <div className="flex gap-3 justify-end pt-2">
                                 <button
                                     onClick={() => setShowUnlockModal(false)}
-                                    className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                                    aria-label="Cerrar modal"
                                 >
                                     Cancelar
                                 </button>

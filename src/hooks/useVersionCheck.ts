@@ -5,6 +5,12 @@ declare const __APP_VERSION__: string;
 
 export const useVersionCheck = (checkInterval: number = 60000) => { // Check every 1 minute
     useEffect(() => {
+        // SKIP in development mode to prevent infinite reload loops
+        if (import.meta.env.DEV) {
+            console.debug('[AutoUpdate] Skipping version check in development mode');
+            return;
+        }
+
         const checkVersion = async () => {
             try {
                 // Bypass cache with timestamp

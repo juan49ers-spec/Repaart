@@ -9,7 +9,7 @@ export const UserIdSchema = z.string().min(1).transform(t => t as UserId);
 export const toUserId = (id: string): UserId => id as UserId;
 
 // --- Enums ---
-// export const UserRoleEnum = z.enum(['admin', 'staff', 'driver', 'franchise_owner', 'franchisee', 'user', 'superadmin']);
+// export const UserRoleEnum = z.enum(['admin', 'staff', 'rider', 'franchise_owner', 'franchisee', 'user', 'superadmin']);
 export const UserRoleEnum = z.string(); // EMERGENCY RELAX to prevent crash
 export type UserRole = z.infer<typeof UserRoleEnum>;
 

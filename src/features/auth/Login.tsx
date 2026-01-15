@@ -214,6 +214,7 @@ const Login: FC = () => {
                         <ArrowLeft className="w-4 h-4 mr-1" />
                         {isLogin ? '¿Primera vez? Solicita acceso' : '¿Ya tienes cuenta? Inicia sesión'}
                     </button>
+
                 </div>
             </div>
         </div>

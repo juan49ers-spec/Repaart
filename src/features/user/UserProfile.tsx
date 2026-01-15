@@ -153,7 +153,7 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
                                     {roleConfig?.role === 'admin' ? 'Administrador Global' : 'Franquiciado'}
                                 </span>
                             </div>
-                            <h1 className="text-4xl md:text-5xl font-black text-slate-800 tracking-tight">
+                            <h1 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">
                                 {user.displayName || 'Usuario'}
                             </h1>
                             <div className="flex items-center justify-center md:justify-start gap-4 text-slate-500 font-medium">

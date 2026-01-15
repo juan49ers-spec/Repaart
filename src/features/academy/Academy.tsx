@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AcademyDashboard from './AcademyDashboard';
 import AdminAcademyPanel from './AdminAcademyPanel';
 import ModuleViewer from './ModuleViewer';
+import EncyclopediaView from './EncyclopediaView';
 import { AcademyModule } from '../../hooks/useAcademy';
+import { BookOpen, GraduationCap } from 'lucide-react';
+
 
 /**
  * Academy Main Component - Punto de entrada principal
@@ -11,21 +15,35 @@ import { AcademyModule } from '../../hooks/useAcademy';
  */
 const Academy: React.FC = () => {
     const { isAdmin } = useAuth();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [selectedModule, setSelectedModule] = useState<AcademyModule | null>(null);
-    const [activeView, setActiveView] = useState<'student' | 'admin'>(isAdmin ? 'admin' : 'student');
+
+    const [viewMode, setViewMode] = useState<'student' | 'admin'>(() => {
+        const tab = searchParams.get('tab');
+        const mode = searchParams.get('mode');
+        if ((tab === 'encyclopedia' || mode === 'student') && isAdmin) return 'student';
+        return isAdmin ? 'admin' : 'student';
+    });
+
+    // Current Tab: 'courses' or 'encyclopedia'
+    const currentTab = searchParams.get('tab') === 'encyclopedia' ? 'encyclopedia' : 'courses';
+
+    const handleTabChange = (view: 'courses' | 'encyclopedia') => {
+        setSearchParams({ tab: view });
+    };
 
     // Si hay un módulo seleccionado, mostrar el visor
     if (selectedModule) {
         return (
             <ModuleViewer
-                module={selectedModule as any}
+                module={selectedModule as unknown as AcademyModule}
                 onBack={() => setSelectedModule(null)}
             />
         );
     }
 
     // Vista de administrador
-    if (isAdmin && activeView === 'admin') {
+    if (isAdmin && viewMode === 'admin') {
         return (
             <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500">
                 {/* Toggle View Bar - Floating Glass */}
@@ -36,7 +54,7 @@ const Academy: React.FC = () => {
                             Vista de Administración
                         </h2>
                         <button
-                            onClick={() => setActiveView('student')}
+                            onClick={() => setViewMode('student')}
                             className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold transition-all text-xs tracking-wide border border-transparent hover:border-indigo-200 dark:hover:border-indigo-500/30"
                         >
                             Ver como Estudiante
@@ -61,7 +79,7 @@ const Academy: React.FC = () => {
                             Vista de Estudiante
                         </h2>
                         <button
-                            onClick={() => setActiveView('admin')}
+                            onClick={() => setViewMode('admin')}
                             className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 font-bold transition-all text-xs tracking-wide"
                         >
                             Panel de Administración
@@ -70,8 +88,35 @@ const Academy: React.FC = () => {
                 </div>
             )}
             <div className={isAdmin ? "pt-8" : ""}>
-                <AcademyDashboard onModuleClick={(module) => setSelectedModule(module as AcademyModule)} />
+                {/* Sub-Navigation Toggle */}
+                <div className="flex justify-center mb-8 px-4 md:px-8">
+                    <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md p-1.5 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 flex gap-2 shadow-sm">
+                        <button
+                            onClick={() => handleTabChange('courses')}
+                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-xs transition-all ${currentTab === 'courses' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        >
+                            <GraduationCap size={16} />
+                            Cursos Estructurados
+                        </button>
+                        <button
+                            onClick={() => handleTabChange('encyclopedia')}
+                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-xs transition-all ${currentTab === 'encyclopedia' ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-md' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        >
+                            <BookOpen size={16} />
+                            Enciclopedia Maestra
+                        </button>
+                    </div>
+                </div>
+
+                {currentTab === 'courses' ? (
+                    <AcademyDashboard onModuleClick={(module) => setSelectedModule(module as AcademyModule)} />
+                ) : (
+                    <EncyclopediaView />
+                )}
             </div>
+
+            {/* Academy Footer - Cleaned */}
+
         </div>
     );
 };

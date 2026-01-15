@@ -21,10 +21,11 @@ export interface IncidentReport {
 
 export interface VehicleChecklist {
     riderId: string;
+    franchiseId?: string; // Added for security rules
     vehicleId?: string; // Optional if not assigned
     items: string[]; // List of checked IDs
     allClear: boolean;
-    createdAt: any;
+    createdAt: any; // Using any for compatibility with serverTimestamp() | Date
 }
 
 const COLLECTIONS = {
@@ -65,10 +66,12 @@ export const riderService = {
         data: {
             items: string[];
             vehicleId?: string;
+            franchiseId?: string; // Passed from UI
         }
     ): Promise<DocumentData> => {
         const payload: VehicleChecklist = {
             riderId,
+            franchiseId: data.franchiseId,
             vehicleId: data.vehicleId,
             items: data.items,
             allClear: true, // If they submitted, it's because they checked everything (UI enforced)

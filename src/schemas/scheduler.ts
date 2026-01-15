@@ -45,12 +45,12 @@ export const ShiftSchema = z.object({
 });
 
 export const WeekDataSchema = z.object({
-    id: z.string(),
-    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format YYYY-MM-DD"),
+    id: z.string().optional(),
+    startDate: z.string().optional(), // Allow missing if metadata exists
     endDate: z.string().optional(),
-    status: z.enum(['draft', 'published', 'completed']).default('draft'),
+    status: z.enum(['draft', 'published', 'completed', 'active']).default('draft'),
     metrics: WeekMetricsSchema.optional().default({ totalHours: 0, activeRiders: 0, motosInUse: 0 }),
-    shifts: z.array(ShiftSchema).default([]),
+    shifts: z.array(ShiftSchema).optional().default([]),
 });
 
 // Inference Types

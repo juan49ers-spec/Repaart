@@ -59,10 +59,11 @@ const OperationsFranchiseSelector: React.FC<OperationsFranchiseSelectorProps> = 
                     <Building2 size={18} />
                 </div>
                 <div className="flex flex-col">
-                    <span className="text-[10px] uppercase text-slate-500 font-bold tracking-wider">Viendo Sede</span>
+                    <span className="text-[10px] uppercase text-slate-500 font-bold tracking-wider">Franquicia</span>
                     <select
                         value={selectedFranchiseId || ''}
                         onChange={(e) => onSelect(e.target.value)}
+                        title="Seleccionar sede"
                         className="bg-transparent text-slate-900 font-bold text-sm focus:outline-none appearance-none cursor-pointer min-w-[150px]"
                     >
                         {franchises.length > 0 ? (

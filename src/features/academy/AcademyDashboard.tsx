@@ -1,7 +1,8 @@
-import { type FC, type ReactNode, useState, useMemo } from 'react';
+import { type FC, type ReactNode, useState, useMemo, useCallback } from 'react';
 import { BookOpen, Lock, CheckCircle, Clock, PlayCircle, Award, Search } from 'lucide-react';
 import { useAcademyModules, useAcademyProgress } from '../../hooks/useAcademy';
 import { useAuth } from '../../context/AuthContext';
+import { AcademySeeder } from './AcademySeeder';
 
 type ModuleStatus = 'available' | 'locked' | 'in_progress' | 'completed';
 
@@ -31,7 +32,7 @@ const AcademyDashboard: FC<AcademyDashboardProps> = ({ onModuleClick }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<ModuleStatus | 'all'>('all');
 
-    const getModuleStatus = (module: Module): ModuleStatus => {
+    const getModuleStatus = useCallback((module: Module): ModuleStatus => {
         const moduleProgress = progress[module.id];
 
         if (!moduleProgress) {
@@ -51,7 +52,7 @@ const AcademyDashboard: FC<AcademyDashboardProps> = ({ onModuleClick }) => {
 
         if (moduleProgress.completed) return 'completed';
         return 'in_progress';
-    };
+    }, [modules, progress]);
 
     const getStatusIcon = (status: ModuleStatus): ReactNode => {
         switch (status) {
@@ -77,7 +78,7 @@ const AcademyDashboard: FC<AcademyDashboardProps> = ({ onModuleClick }) => {
             const matchesFilter = statusFilter === 'all' || status === statusFilter;
             return matchesSearch && matchesFilter;
         });
-    }, [modules, progress, searchQuery, statusFilter]);
+    }, [modules, progress, searchQuery, statusFilter, getModuleStatus]);
 
     // Statistics
     const completedCount = modules.filter(m => getModuleStatus(m) === 'completed').length;
@@ -97,6 +98,9 @@ const AcademyDashboard: FC<AcademyDashboardProps> = ({ onModuleClick }) => {
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8 animate-fade-in">
+            {/* Seeder Tool (Admin Only) */}
+            <AcademySeeder />
+
             {/* Header */}
             <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50">
                 <div className="flex flex-col gap-6">

@@ -6,12 +6,12 @@ import NewTicketForm from './support/NewTicketForm';
 
 import UserProfileModal from '../user/UserProfileModal'; // Import modal
 import PremiumServicesPanel from './support/PremiumServicesPanel';
-import { User, LogOut, Activity, HelpCircle, BadgePercent, Ticket } from 'lucide-react'; // Import icons
+import { Activity, HelpCircle, BadgePercent, Ticket } from 'lucide-react'; // Import icons
 
 import { useLocation } from 'react-router-dom';
 
 const SupportHub: React.FC = () => {
-    const { user, logout } = useAuth(); // Get logout
+    const { user } = useAuth(); // Get logout
     const location = useLocation();
     const [isProfileOpen, setIsProfileOpen] = useState(false); // Local state for modal
     const [showInfo, setShowInfo] = useState(false); // Toggle for FAQ info
@@ -42,36 +42,16 @@ const SupportHub: React.FC = () => {
     // Derived counts for UI badges
     const filteredCount = tickets.length;
 
-    const handleLogout = () => {
-        if (window.confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-            logout();
-        }
-    };
+
 
     return (
         <div className="p-6 h-screen max-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden relative">
 
             {/* Top Bar Actions */}
-            <div className="flex justify-between items-center mb-6 shrink-0">
+            <div className="flex flex-col sm:flex-row justify-between items-end sm:items-center mb-6 shrink-0 gap-4 sm:gap-0">
                 <div>
-                    <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Soporte & Ayuda</h1>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Centro de Control de Incidencias</p>
-                </div>
-                <div className="flex gap-3">
-                    <button
-                        onClick={() => setIsProfileOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-600 dark:text-slate-300 text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
-                    >
-                        <User className="w-4 h-4" />
-                        <span>Mi Perfil</span>
-                    </button>
-                    <button
-                        onClick={handleLogout}
-                        className="flex items-center gap-2 px-4 py-2 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-xl text-rose-600 dark:text-rose-400 text-xs font-bold uppercase tracking-wider hover:bg-rose-100 dark:hover:bg-rose-500/20 transition-all"
-                    >
-                        <LogOut className="w-4 h-4" />
-                        <span>Salir</span>
-                    </button>
+                    <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter leading-none mb-1">Soporte & Ayuda</h1>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest pl-0.5">Centro de Control de Incidencias</p>
                 </div>
             </div>
 

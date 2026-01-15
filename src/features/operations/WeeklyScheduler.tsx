@@ -18,8 +18,7 @@ import { validateWeeklySchedule, generateScheduleFix, generateFullSchedule } fro
 import { BadgeCheck, AlertTriangle, ShieldCheck, Wand2, Sparkles } from 'lucide-react';
 import { useOperationsIntel, intelService } from '../../services/intelService';
 
-// 🔥 FILE LOAD LOG matches user request
-console.log('📦 ARCHIVO WeeklyScheduler.tsx CARGADO EN EL NAVEGADOR');
+
 
 const getDayDemandLevel = (dayDate: string, dayIntel: any[]) => {
     const hasCritical = dayIntel.some(e => e.severity === 'critical');
@@ -124,6 +123,8 @@ const ShiftPill: React.FC<{
                 <button
                     onClick={(e) => { e.stopPropagation(); onDelete(event.shiftId || '', e); }}
                     className="absolute right-0.5 opacity-0 group-hover/pill:opacity-100 transition-opacity p-0.5 hover:bg-slate-200 rounded text-slate-400 hover:text-rose-500"
+                    title="Eliminar turno"
+                    aria-label="Eliminar turno"
                 >
                     <XCircle className="w-3 h-3" />
                 </button>
@@ -158,8 +159,7 @@ const CurrentTimeIndicator: React.FC<{ startHour: number, endHour: number }> = (
 };
 
 const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly = false }) => {
-    // 🔥 CRITICAL LOG REQUESTED BY USER
-    console.log('🚀 [CRÍTICO] WeeklyScheduler intentando montar. ID Recibido:', franchiseId);
+
     // 🔥 CRITICAL LOG: Start of Render
 
 
@@ -858,14 +858,13 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
             {/* --- HEADER --- */}
             <div className="flex items-center justify-between p-2 border-b border-white/50 bg-white/60 backdrop-blur-xl sticky top-0 z-30 shadow-sm supports-[backdrop-filter]:bg-white/40 h-14">
                 <div className="flex items-center gap-3">
-                    <h2 className="text-lg font-black text-slate-900 flex items-center tracking-tight">
-                        <span className="bg-gradient-to-r from-indigo-900 to-slate-800 bg-clip-text text-transparent mr-2">
-                            {(() => {
-                                const d = new Date(referenceDate);
-                                const month = d.toLocaleDateString('es-ES', { month: 'long' });
-                                const year = d.getFullYear();
-                                return <span className="capitalize">{month} <span className="text-slate-400 font-light text-base">{year}</span></span>;
-                            })()}
+                    <h2 className="text-lg font-bold text-slate-900 flex items-center tracking-tight">
+                        <span className="bg-gradient-to-r from-indigo-900 to-slate-800 bg-clip-text text-transparent mr-2">        {(() => {
+                            const d = new Date(referenceDate);
+                            const month = d.toLocaleDateString('es-ES', { month: 'long' });
+                            const year = d.getFullYear();
+                            return <span className="capitalize">{month} <span className="text-slate-400 font-light text-base">{year}</span></span>;
+                        })()}
                         </span>
                         <span className="px-2 py-0.5 rounded-full bg-white/50 text-slate-500 text-[10px] font-bold border border-slate-200/60 shadow-sm backdrop-blur-sm">
                             S{getWeekIdFromDate(new Date(referenceDate)).split('_')[1]}
@@ -989,7 +988,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                         </button>
                     )}
                 </div>
-            </div>
+            </div >
 
             {loading || isProcessing ? (
                 <div className="flex-1 flex items-center justify-center text-slate-400 bg-slate-50">
@@ -1166,75 +1165,77 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
             />
 
             {/* Generative Scheduling Modal */}
-            {showGenModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 border border-indigo-100">
-                        <div className="bg-gradient-to-r from-indigo-600 to-violet-600 p-6 text-white relative overflow-hidden">
-                            <div className="relative z-10">
-                                <h3 className="text-xl font-black flex items-center gap-2">
-                                    <Sparkles className="w-6 h-6 text-amber-300" />
-                                    Generador de Horarios IA
-                                </h3>
-                                <p className="text-indigo-100 text-sm mt-1 font-medium">Describe qué necesitas y la IA creará el cuadrante.</p>
-                            </div>
-                            <div className="absolute top-0 right-0 p-4 opacity-10">
-                                <Wand2 className="w-24 h-24 rotate-12" />
-                            </div>
-                        </div>
-
-                        <div className="p-6 space-y-4">
-                            <div>
-                                <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Instrucción para la IA</label>
-                                <textarea
-                                    value={genPrompt}
-                                    onChange={(e) => setGenPrompt(e.target.value)}
-                                    placeholder="Ej: Necesito 4 riders cada noche, y refuerzo el sábado. Lunes y Martes solo 2 riders al mediodía..."
-                                    className="w-full h-32 p-3 rounded-xl border border-slate-200 text-slate-700 font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none bg-slate-50 placeholder:text-slate-400 focus:outline-none"
-                                    autoFocus
-                                />
-                            </div>
-
-                            <div className="bg-indigo-50 p-3 rounded-lg flex items-start gap-3">
-                                <div className="bg-white p-1.5 rounded-full shadow-sm mt-0.5">
-                                    <Wand2 className="w-4 h-4 text-indigo-600" />
+            {
+                showGenModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 border border-indigo-100">
+                            <div className="bg-gradient-to-r from-indigo-600 to-violet-600 p-6 text-white relative overflow-hidden">
+                                <div className="relative z-10">
+                                    <h3 className="text-xl font-black flex items-center gap-2">
+                                        <Sparkles className="w-6 h-6 text-amber-300" />
+                                        Generador de Horarios IA
+                                    </h3>
+                                    <p className="text-indigo-100 text-sm mt-1 font-medium">Describe qué necesitas y la IA creará el cuadrante.</p>
                                 </div>
-                                <p className="text-xs text-indigo-800 leading-relaxed font-medium">
-                                    La IA analizará tus riders disponibles y creará turnos óptimos respetando las reglas de descanso y cobertura.
-                                </p>
+                                <div className="absolute top-0 right-0 p-4 opacity-10">
+                                    <Wand2 className="w-24 h-24 rotate-12" />
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-                            <button
-                                onClick={() => setShowGenModal(false)}
-                                className="px-4 py-2 text-slate-500 hover:text-slate-700 font-bold text-sm transition-colors"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={handleGeneration}
-                                disabled={isGenerating || !genPrompt.trim()}
-                                className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-500/30 flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {isGenerating ? (
-                                    <>
-                                        <div className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
-                                        Generando...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Sparkles className="w-4 h-4" />
-                                        Generar Magia
-                                    </>
-                                )}
-                            </button>
+                            <div className="p-6 space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Instrucción para la IA</label>
+                                    <textarea
+                                        value={genPrompt}
+                                        onChange={(e) => setGenPrompt(e.target.value)}
+                                        placeholder="Ej: Necesito 4 riders cada noche, y refuerzo el sábado. Lunes y Martes solo 2 riders al mediodía..."
+                                        className="w-full h-32 p-3 rounded-xl border border-slate-200 text-slate-700 font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none bg-slate-50 placeholder:text-slate-400 focus:outline-none"
+                                        autoFocus
+                                    />
+                                </div>
+
+                                <div className="bg-indigo-50 p-3 rounded-lg flex items-start gap-3">
+                                    <div className="bg-white p-1.5 rounded-full shadow-sm mt-0.5">
+                                        <Wand2 className="w-4 h-4 text-indigo-600" />
+                                    </div>
+                                    <p className="text-xs text-indigo-800 leading-relaxed font-medium">
+                                        La IA analizará tus riders disponibles y creará turnos óptimos respetando las reglas de descanso y cobertura.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                                <button
+                                    onClick={() => setShowGenModal(false)}
+                                    className="px-4 py-2 text-slate-500 hover:text-slate-700 font-bold text-sm transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleGeneration}
+                                    disabled={isGenerating || !genPrompt.trim()}
+                                    className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-500/30 flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isGenerating ? (
+                                        <>
+                                            <div className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
+                                            Generando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sparkles className="w-4 h-4" />
+                                            Generar Magia
+                                        </>
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
 
-        </div>
+        </div >
     );
 };
 

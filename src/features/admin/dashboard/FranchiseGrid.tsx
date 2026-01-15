@@ -44,7 +44,7 @@ const FranchiseGrid: FC<FranchiseGridProps> = ({ franchises, onSelect: _onSelect
                 <div className="w-12 h-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-4 group-hover:bg-white dark:group-hover:bg-slate-700 transition-colors">
                     <Building className="w-6 h-6 text-slate-300 dark:text-slate-600 group-hover:text-blue-400" />
                 </div>
-                <h3 className="text-sm font-bold text-slate-400 dark:text-slate-500 group-hover:text-blue-500">Nueva Sede</h3>
+                <h3 className="text-sm font-bold text-slate-400 dark:text-slate-500 group-hover:text-blue-500">Nueva Franquicia</h3>
                 <p className="text-xs text-slate-300 dark:text-slate-600 mt-1">Próximamente</p>
             </div>
         </div>

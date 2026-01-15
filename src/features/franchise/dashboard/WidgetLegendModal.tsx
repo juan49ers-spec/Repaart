@@ -356,7 +356,7 @@ const WidgetLegendModal: React.FC<WidgetLegendModalProps> = ({ isOpen, onClose }
                                         {activeContent.decisions.map((decision, idx) => (
                                             <li key={idx} className="text-xs text-indigo-800 dark:text-indigo-200 leading-relaxed flex items-start gap-2">
                                                 <span className="mt-0.5">{decision.startsWith('✅') ? '✅' : decision.startsWith('⚠️') ? '⚠️' : decision.startsWith('❌') ? '❌' : '🎯'}</span>
-                                                <span>{decision.replace(/^[✅⚠️❌]\s*/, '')}</span>
+                                                <span>{decision.replace(/^(✅|⚠️|❌)\s*/, '')}</span>
                                             </li>
                                         ))}
                                     </ul>
