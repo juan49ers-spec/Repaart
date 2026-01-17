@@ -30,9 +30,10 @@ export interface Rider {
     completedShifts?: number;
     displayName?: string; // Legacy/Auth sync
     phoneNumber?: string; // Legacy/Auth sync
-    createdAt?: Timestamp | Date;
-    updatedAt?: Timestamp | Date;
-    [key: string]: any; // Flexibilidad para campos extra
+    email?: string; // Often needed for riders
+    photoURL?: string; // Avatar
+    createdAt?: Timestamp | Date | string; // Allow string for serialized data
+    updatedAt?: Timestamp | Date | string;
 }
 
 export interface Moto {
@@ -43,7 +44,11 @@ export interface Moto {
     status: 'active' | 'maintenance' | 'deleted';
     year?: number;
     lastMaintenance?: string; // YYYY-MM-DD
-    [key: string]: any;
+    nextRevisionKm?: number;
+    currentKm?: number;
+    brand?: string;
+    createdAt?: Timestamp | Date | string;
+    updatedAt?: Timestamp | Date | string;
 }
 
 export interface Shift {
@@ -56,7 +61,9 @@ export interface Shift {
     endTime: string; // HH:mm
     type: 'morning' | 'afternoon' | 'night' | 'custom';
     status?: 'scheduled' | 'completed' | 'cancelled';
-    [key: string]: any;
+    isConfirmed?: boolean;
+    isDraft?: boolean;
+    weekId?: string;
 }
 
 // ==========================================
@@ -74,27 +81,59 @@ export const operationsService = {
     fetchRiders: async (franchiseId: string): Promise<Rider[]> => {
         if (!franchiseId) return [];
 
-        // QUERY SIMPLIFICADA: Evitar índices compuestos faltantes.
         const q = query(
             collection(db, COLLECTIONS.RIDERS),
             where('franchiseId', '==', franchiseId)
         );
 
         const snapshot = await getDocs(q);
-        const allFranchiseUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Rider));
+
+        // Raw mapping first to handle legacy fields safely
+        const rawUsers = snapshot.docs.map(doc => {
+            const data = doc.data();
+            // Cast to any to allow flexible access to potential legacy fields during normalization
+            return {
+                id: doc.id,
+                ...data,
+                _legacyName: data.name,
+                _legacyPhone: data.phoneNumber
+            } as any;
+        });
 
         // Filtrado en memoria (Infalible)
-        return allFranchiseUsers.map(data => ({
-            ...data,
-            fullName: data.displayName || data.name || data.fullName || 'Sin Nombre',
-            phone: data.phoneNumber || data.phone || '',
-            drivingLicenseExpiry: data.drivingLicenseExpiry || null,
-            punctualityScore: data.punctualityScore || 10.0,
-            completedShifts: data.completedShifts || 0
-        })).filter(user =>
-            // 1. Debe ser driver o staff
+        return rawUsers.map(data => {
+            // Priority: displayName -> name (legacy) -> fullName -> Default
+            const resolvedName = data.displayName || data.name || (data as any).fullName || 'Sin Nombre';
+            const resolvedPhone = data.phoneNumber || (data as any).phone || '';
+
+            const status = (data.status as string) || 'active';
+            const validStatus: Rider['status'] = ['active', 'inactive', 'deleted'].includes(status)
+                ? (status as Rider['status'])
+                : 'active';
+
+            const role = (data.role as string) || 'rider';
+            const validRole: Rider['role'] = ['rider', 'staff', 'admin', 'franchise', 'developer'].includes(role)
+                ? (role as Rider['role'])
+                : 'rider';
+
+            const rider: Rider = {
+                id: data.id,
+                fullName: resolvedName,
+                phone: resolvedPhone,
+                role: validRole,
+                franchiseId: data.franchiseId,
+                status: validStatus,
+                drivingLicenseExpiry: data.drivingLicenseExpiry || null,
+                punctualityScore: data.punctualityScore || 10.0,
+                completedShifts: data.completedShifts || 0,
+                email: (data as any).email,
+                photoURL: (data as any).photoURL,
+                createdAt: data.createdAt as Timestamp | Date,
+                updatedAt: data.updatedAt as Timestamp | Date
+            };
+            return rider;
+        }).filter(user =>
             ['rider', 'staff'].includes(user.role) &&
-            // 2. No debe estar borrado
             user.status !== 'deleted'
         );
     },
@@ -114,16 +153,22 @@ export const operationsService = {
 
     updateRider: async (riderId: string, updates: Partial<Rider>): Promise<void> => {
         const ref = doc(db, COLLECTIONS.RIDERS, riderId);
-        const payload: any = { ...updates };
+
+        // Construct payload with explicit type handling
+        // Use a strictly typed object for the update
+        const payload: Partial<Rider> & { displayName?: string; phoneNumber?: string } = { ...updates };
 
         // Mapeo inverso para guardar estandarizado
         if (payload.fullName) payload.displayName = payload.fullName;
         if (payload.phone) payload.phoneNumber = payload.phone;
 
-        await updateDoc(ref, {
+        // Ensure we don't accidentally save undefineds if not intended
+        const finalPayload = {
             ...payload,
             updatedAt: serverTimestamp()
-        });
+        };
+
+        await updateDoc(ref, finalPayload);
     },
 
     deleteRider: async (riderId: string): Promise<void> => {
@@ -193,7 +238,7 @@ export const operationsService = {
 
     // --- BULK OPERATIONS ---
     // Stub typed for future implementation
-    copyWeek: async (_franchiseId: string, _sourceWeekShifts: Shift[], _targetDatesMap: any): Promise<void> => {
+    copyWeek: async (_franchiseId: string, _sourceWeekShifts: Shift[], _targetDatesMap: Record<string, string>): Promise<void> => {
         const batch = writeBatch(db);
         // Implement logic here
         await batch.commit();
