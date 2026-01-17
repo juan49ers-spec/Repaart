@@ -3,7 +3,8 @@ import {
     collection,
     addDoc,
     serverTimestamp,
-    DocumentData
+    DocumentReference,
+    FieldValue
 } from 'firebase/firestore';
 
 export type IncidentType = 'accident' | 'breakdown' | 'traffic' | 'other';
@@ -16,16 +17,16 @@ export interface IncidentReport {
     isUrgent: boolean;
     photoUrl?: string; // Placeholder for future upload
     status: 'open' | 'investigating' | 'resolved';
-    createdAt: any;
+    createdAt: FieldValue | Date;
 }
 
 export interface VehicleChecklist {
     riderId: string;
-    franchiseId?: string; // Added for security rules
+    franchiseId?: string; // Added for Security Rules
     vehicleId?: string; // Optional if not assigned
     items: string[]; // List of checked IDs
     allClear: boolean;
-    createdAt: any; // Using any for compatibility with serverTimestamp() | Date
+    createdAt: FieldValue | Date;
 }
 
 const COLLECTIONS = {
@@ -45,7 +46,7 @@ export const riderService = {
             isUrgent: boolean;
             franchiseId?: string
         }
-    ): Promise<DocumentData> => {
+    ): Promise<DocumentReference> => {
         const payload: IncidentReport = {
             riderId,
             franchiseId: data.franchiseId,
@@ -68,7 +69,7 @@ export const riderService = {
             vehicleId?: string;
             franchiseId?: string; // Passed from UI
         }
-    ): Promise<DocumentData> => {
+    ): Promise<DocumentReference> => {
         const payload: VehicleChecklist = {
             riderId,
             franchiseId: data.franchiseId,
@@ -80,3 +81,4 @@ export const riderService = {
         return await addDoc(collection(db, COLLECTIONS.CHECKS), payload);
     }
 };
+

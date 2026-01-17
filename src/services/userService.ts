@@ -9,7 +9,8 @@ import {
     getDocs,
     query,
     where,
-    FieldValue
+    FieldValue,
+    QueryConstraint
 } from 'firebase/firestore';
 
 // =====================================================
@@ -21,8 +22,8 @@ export interface UserProfile {
     id?: string;
     email?: string;
     displayName?: string;
-    phoneNumber?: string;
-    phone?: string;
+    phoneNumber?: string; // Standard
+    phone?: string;       // Legacy?
     role?: string;
     franchiseId?: string;
     pack?: 'basic' | 'premium';
@@ -33,13 +34,16 @@ export interface UserProfile {
     city?: string;
     address?: string;
     zipCodes?: string[];
-    logisticsRates?: any[];
-    notifications?: any;
+    logisticsRates?: any[]; // Consider typing strictly if schema known
+    notifications?: {
+        email?: boolean;
+        push?: boolean;
+        [key: string]: boolean | undefined;
+    };
     photoURL?: string;
     createdAt?: Date | FieldValue | string | { seconds: number, nanoseconds: number };
     updatedAt?: Date | FieldValue | string | { seconds: number, nanoseconds: number };
     updated_at?: Date | FieldValue; // Legacy support
-    [key: string]: unknown; // Allow additional properties
 }
 
 export interface FranchiseLocation {
@@ -75,14 +79,12 @@ export interface FranchiseEntity {
     };
     createdAt?: Date | FieldValue;
     updatedAt?: Date | FieldValue;
-    [key: string]: unknown;
 }
 
 export interface CreateFranchiseResult {
     success: boolean;
     data: {
         id: string;
-        [key: string]: unknown;
     };
 }
 
@@ -173,7 +175,7 @@ export const userService = {
     fetchUsers: async (roleFilter: string | null = null, franchiseId: string | null = null): Promise<UserProfile[]> => {
         try {
             const usersRef = collection(db, COLLECTIONS.USERS);
-            const constraints: any[] = []; // Changed to const, keeping any for query compatibility or refined typing if possible
+            const constraints: QueryConstraint[] = [];
 
             if (roleFilter) {
                 constraints.push(where('role', '==', roleFilter));
