@@ -89,6 +89,38 @@ export interface EncyclopediaArticle {
     updatedAt?: Timestamp | FieldValue;
 }
 
+// --- SEEDER INTERFACES ---
+export interface SeederQuizQuestion {
+    question: string;
+    options: string[];
+    correctAnswer: number;
+}
+export interface SeederLesson {
+    title: string;
+    content: string;
+    order: number;
+    quiz?: {
+        questions: SeederQuizQuestion[];
+    };
+}
+export interface SeederModule {
+    title: string;
+    description: string;
+    duration: string;
+    order: number;
+    lessons: SeederLesson[];
+}
+export interface EncyclopediaArticleImport {
+    title: string;
+    content: string;
+}
+export interface EncyclopediaCategoryImport {
+    title: string;
+    description: string;
+    icon: string;
+    articles: EncyclopediaArticleImport[];
+}
+
 // --- SERVICE ---
 
 export const academyService = {
@@ -349,7 +381,9 @@ export const academyService = {
 
     // --- SEEDER (Atomic) ---
 
-    seedAcademyContent: async (modulesData: any[], encyclopediaData?: any[]): Promise<void> => {
+    // --- SEEDER (Atomic) ---
+
+    seedAcademyContent: async (modulesData: SeederModule[], encyclopediaData?: EncyclopediaCategoryImport[]): Promise<void> => {
         // 1. DELETE SEQUENTIALLY (Safer for Client SDK)
         // Using batch here crashes the client listener due to "Unexpected state".
         // We delete individually to be safer.
@@ -384,7 +418,7 @@ export const academyService = {
             const courseRef = doc(collection(db, COLLECTIONS.COURSES));
             const courseId = courseRef.id;
 
-            const coursePayload: any = {
+            const coursePayload: Omit<AcademyCourse, 'id'> = {
                 title: moduleData.title,
                 description: moduleData.description,
                 category: 'General',
@@ -405,7 +439,7 @@ export const academyService = {
                 for (const lessonData of moduleData.lessons) {
                     const lessonRef = doc(collection(db, COLLECTIONS.LESSONS));
 
-                    const lessonPayload: any = {
+                    const lessonPayload: Omit<Lesson, 'id'> = {
                         moduleId: courseId,
                         title: lessonData.title,
                         content: lessonData.content,
@@ -418,10 +452,10 @@ export const academyService = {
                 }
 
                 // Aggregate Questions for Module Quiz
-                const allModuleQuestions: any[] = [];
-                moduleData.lessons.forEach((l: any) => {
+                const allModuleQuestions: QuizQuestion[] = [];
+                moduleData.lessons.forEach((l) => {
                     if (l.quiz && l.quiz.questions) {
-                        l.quiz.questions.forEach((q: any) => {
+                        l.quiz.questions.forEach((q) => {
                             allModuleQuestions.push({
                                 id: Math.random().toString(36).substr(2, 9),
                                 text: `[${l.title}] ${q.question}`,
@@ -434,7 +468,7 @@ export const academyService = {
 
                 if (allModuleQuestions.length > 0) {
                     const quizRef = doc(collection(db, COLLECTIONS.QUIZZES));
-                    const quizPayload: any = {
+                    const quizPayload: Omit<Quiz, 'id'> = {
                         moduleId: courseId,
                         questions: allModuleQuestions,
                         passingScore: 70,
@@ -454,25 +488,28 @@ export const academyService = {
                 const catRef = doc(collection(db, COLLECTIONS.ENCYCLOPEDIA_CATEGORIES));
                 const catId = catRef.id;
 
-                await setDoc(catRef, {
+                const catPayload: Omit<EncyclopediaCategory, 'id'> = {
                     title: catData.title,
                     description: catData.description,
                     icon: catData.icon,
                     order: catOrder++
-                });
+                };
+
+                await setDoc(catRef, catPayload);
                 await delay(100);
 
                 if (catData.articles) {
                     let artOrder = 1;
                     for (const artData of catData.articles) {
                         const artRef = doc(collection(db, COLLECTIONS.ENCYCLOPEDIA_ARTICLES));
-                        await setDoc(artRef, {
+                        const artPayload: Omit<EncyclopediaArticle, 'id'> = {
                             categoryId: catId,
                             title: artData.title,
                             content: artData.content,
                             order: artOrder++,
                             updatedAt: serverTimestamp()
-                        });
+                        };
+                        await setDoc(artRef, artPayload);
                         await delay(50);
                     }
                 }
