@@ -2,7 +2,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { VehicleFormValues, VehicleFormSchema } from '../schemas/VehicleSchema';
-import { Button } from '../../../../ui/primitives/Button';
+import { Button } from '../../../../components/ui/primitives/Button';
 import { useVehicleStore } from '../../../../store/useVehicleStore';
 // Use a hardcoded franchiseId for now or get from context context, but usually passed via props or store
 // Assuming franchiseId is handled by the parent or store for 'addVehicle' call. 

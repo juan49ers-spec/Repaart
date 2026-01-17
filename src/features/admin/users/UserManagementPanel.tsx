@@ -6,7 +6,7 @@ import { collection, query, where, onSnapshot, doc, deleteDoc } from 'firebase/f
 import { db } from '../../../lib/firebase';
 import { useToast } from '../../../hooks/useToast';
 import UserTable from './UserTable';
-import CriticalActionModal from '../../../ui/overlays/CriticalActionModal';
+import CriticalActionModal from '../../../components/ui/overlays/CriticalActionModal';
 import CreateUserModal, { CreateUserInput, UpdateUserInput } from './CreateUserModal';
 import { UserProfile } from '../../../services/userService';
 

@@ -1,7 +1,7 @@
 import { type FC } from 'react';
 import { type LucideIcon } from 'lucide-react';
 import InfoTooltip from './InfoTooltip';
-import { Card } from '../../../../ui/primitives/Card';
+import { Card } from '../../../../components/ui/primitives/Card';
 
 type AlertLevel = 'neutral' | 'good' | 'warning' | 'bad';
 

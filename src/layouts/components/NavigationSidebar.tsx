@@ -2,9 +2,9 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import { RepaartLogo } from '../../components/ui/RepaartLogo';
+import { RepaartLogo } from '../../components/common/RepaartLogo';
 import UserMenu from './UserMenu';
-import ThemeToggle from '../../ui/buttons/ThemeToggle';
+import ThemeToggle from '../../components/ui/buttons/ThemeToggle';
 import { adminNavItems, franchiseNavItems } from '../constants/navigation';
 
 interface NavigationSidebarProps {

@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Wallet, X, TrendingUp, Trophy, Zap, Fuel, Users } from 'lucide-react';
 import { formatMoney } from '../../../../lib/finance';
-import { Card } from '../../../../ui/primitives/Card';
-import { SectionHeader } from '../../../../ui/primitives/SectionHeader';
-import { DataRow } from '../../../../ui/primitives/DataRow';
-import { StatValue } from '../../../../ui/primitives/StatValue';
-import { Badge, BadgeIntent } from '../../../../ui/primitives/Badge';
+import { Card } from '../../../../components/ui/primitives/Card';
+import { SectionHeader } from '../../../../components/ui/primitives/SectionHeader';
+import { DataRow } from '../../../../components/ui/primitives/DataRow';
+import { StatValue } from '../../../../components/ui/primitives/StatValue';
+import { Badge, BadgeIntent } from '../../../../components/ui/primitives/Badge';
 
 // Internal MoneyRain Component for gamification
 const MoneyRain = () => {

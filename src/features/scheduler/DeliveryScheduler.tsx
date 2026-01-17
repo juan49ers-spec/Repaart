@@ -11,9 +11,9 @@ import { SchedulerStatusBar } from './SchedulerStatusBar';
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors, closestCenter, DragStartEvent } from '@dnd-kit/core';
 import { DraggableShift } from './DraggableShift';
 import { DroppableCell } from './DroppableCell';
-import { ShiftContextMenu } from '../../components/ui/ShiftContextMenu';
+import { ShiftContextMenu } from './components/ShiftContextMenu';
 import { SchedulerGuideModal } from './SchedulerGuideModal';
-import ConfirmationModal from '../../ui/feedback/ConfirmationModal';
+import ConfirmationModal from '../../components/ui/feedback/ConfirmationModal';
 import { SheriffReportModal } from './SheriffReportModal';
 import { Shift } from '../../schemas/scheduler';
 

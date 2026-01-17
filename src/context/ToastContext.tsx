@@ -1,6 +1,6 @@
 import React, { useState, useCallback, ReactNode } from 'react';
 import { ToastContext } from './contexts';
-import ToastContainer from '../ui/feedback/ToastContainer';
+import ToastContainer from '../components/ui/feedback/ToastContainer';
 
 interface Toast {
     id: string;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, ChevronRight } from 'lucide-react';
-import { PageHelpContent } from '../../constants/pageHelpData';
-import { cn } from '../../lib/utils';
+import { PageHelpContent } from '../../../constants/pageHelpData';
+import { cn } from '../../../lib/utils';
 
 interface PageHelpModalProps {
     isOpen: boolean;

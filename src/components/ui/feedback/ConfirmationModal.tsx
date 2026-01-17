@@ -1,6 +1,6 @@
 import { type FC, type ReactNode } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { cn } from '../../../lib/utils';
 
 interface ConfirmationModalProps {
     isOpen: boolean;

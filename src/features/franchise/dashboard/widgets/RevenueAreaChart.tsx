@@ -1,8 +1,8 @@
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { formatMoney } from '../../../../lib/finance';
-import { Card } from '../../../../ui/primitives/Card';
-import { SectionHeader } from '../../../../ui/primitives/SectionHeader';
+import { Card } from '../../../../components/ui/primitives/Card';
+import { SectionHeader } from '../../../../components/ui/primitives/SectionHeader';
 
 interface RevenueData {
     month: string;

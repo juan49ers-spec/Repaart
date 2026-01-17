@@ -1,11 +1,11 @@
 import { type FC } from 'react';
 import { Timer } from 'lucide-react';
 import { formatMoney } from '../../../../lib/finance';
-import { Card } from '../../../../ui/primitives/Card';
-import { SectionHeader } from '../../../../ui/primitives/SectionHeader';
-import { Badge, BadgeIntent } from '../../../../ui/primitives/Badge';
-import { StatValue } from '../../../../ui/primitives/StatValue';
-import { DataRow } from '../../../../ui/primitives/DataRow';
+import { Card } from '../../../../components/ui/primitives/Card';
+import { SectionHeader } from '../../../../components/ui/primitives/SectionHeader';
+import { Badge, BadgeIntent } from '../../../../components/ui/primitives/Badge';
+import { StatValue } from '../../../../components/ui/primitives/StatValue';
+import { DataRow } from '../../../../components/ui/primitives/DataRow';
 
 interface HourlyCostWidgetProps {
     totalCost: number;

@@ -17,7 +17,7 @@ import {
     BookOpen,
     Layout
 } from 'lucide-react';
-import DocPreviewModal from '../../ui/overlays/DocPreviewModal';
+import DocPreviewModal from '../../components/ui/overlays/DocPreviewModal';
 import GuideViewerModal from './components/GuideViewerModal';
 import { GUIDE_THEMES, GUIDE_ICONS } from '../../lib/constants';
 

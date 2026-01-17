@@ -1,76 +1,95 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supportService, SupportTicket, PremiumRequest } from '../../support/SupportService';
 import { notificationService } from '../../../services/notificationService';
 import { MessageSquare, Star, Reply, CheckCircle2, XCircle } from 'lucide-react';
 import { formatTimeAgo } from '../../../utils/dateHelpers';
 
+const getAdminTickets = () => supportService.getAllTicketsForAdmin();
+const getAdminPremiumRequests = () => supportService.getAllPremiumRequests();
+
 const AdminSupportInbox = () => {
     const [activeTab, setActiveTab] = useState<'tickets' | 'premium'>('tickets');
-    const [tickets, setTickets] = useState<SupportTicket[]>([]);
-    const [premiumRequests, setPremiumRequests] = useState<PremiumRequest[]>([]);
+    const queryClient = useQueryClient();
 
-    // Reply State
+    // Reply State (Restored)
     const [replyingTo, setReplyingTo] = useState<string | null>(null);
     const [replyMesssage, setReplyMessage] = useState('');
 
-    const loadData = useCallback(async () => {
-        if (activeTab === 'tickets') {
-            const data = await supportService.getAllTicketsForAdmin();
-            setTickets(data);
-        } else {
-            const data = await supportService.getAllPremiumRequests();
-            setPremiumRequests(data);
-        }
-    }, [activeTab]);
+    // Queries
+    const { data: tickets = [] } = useQuery<SupportTicket[]>({
+        queryKey: ['admin-tickets'],
+        queryFn: getAdminTickets,
+        enabled: activeTab === 'tickets',
+        staleTime: 1000 * 60 // 1 min sync
+    });
 
-    useEffect(() => {
-        loadData();
-    }, [loadData]);
+    const { data: premiumRequests = [] } = useQuery<PremiumRequest[]>({
+        queryKey: ['admin-premium-requests'],
+        queryFn: getAdminPremiumRequests,
+        enabled: activeTab === 'premium',
+        staleTime: 1000 * 60
+    });
 
-    const handleReply = async (ticketId: string) => {
-        if (!replyMesssage.trim()) return;
-
-        await supportService.replyToTicket(ticketId, {
-            senderId: 'admin',
-            senderName: 'Soporte Admin',
-            message: replyMesssage,
-            isAdmin: true
-        });
-
-        // Notify Franchise about the reply
-        // We need the franchiseId from the ticket, sadly we only have ticketId here.
-        // But we have the 'tickets' state array!
-        const ticket = tickets.find(t => t.id === ticketId);
-        if (ticket && ticket.franchiseId) {
-            await notificationService.notifyFranchise(ticket.franchiseId, {
-                title: 'Nueva Respuesta en Soporte',
-                message: `Admin ha respondido a tu ticket: ${ticket.subject}`,
-                type: 'SUPPORT_TICKET',
-                link: '/support' // Or relevant path
+    // Mutations
+    const replyMutation = useMutation({
+        mutationFn: async ({ ticketId, message }: { ticketId: string, message: string }) => {
+            await supportService.replyToTicket(ticketId, {
+                senderId: 'admin',
+                senderName: 'Soporte Admin',
+                message,
+                isAdmin: true
             });
+            // Return context for notification?
+            return { ticketId, message };
+        },
+        onSuccess: async (ctx) => {
+            if (ctx) {
+                const ticket = tickets.find(t => t.id === ctx.ticketId);
+                if (ticket && ticket.franchiseId) {
+                    await notificationService.notifyFranchise(ticket.franchiseId, {
+                        title: 'Nueva Respuesta en Soporte',
+                        message: `Admin ha respondido a tu ticket: ${ticket.subject}`,
+                        type: 'SUPPORT_TICKET',
+                        link: '/support'
+                    });
+                }
+            }
+            queryClient.invalidateQueries({ queryKey: ['admin-tickets'] });
+            setReplyingTo(null);
+            setReplyMessage('');
         }
+    });
 
-        setReplyingTo(null);
-        setReplyMessage('');
-        loadData(); // Refresh
+    const statusMutation = useMutation({
+        mutationFn: async ({ reqId, status }: { reqId: string, status: PremiumRequest['status'] }) => {
+            await supportService.updatePremiumStatus(reqId, status);
+            return { reqId, status };
+        },
+        onSuccess: async (ctx) => {
+            if (ctx) {
+                const request = premiumRequests.find(r => r.id === ctx.reqId);
+                if (request && request.franchiseId) {
+                    await notificationService.notifyFranchise(request.franchiseId, {
+                        title: `Solicitud Premium ${ctx.status === 'approved' ? 'Aprobada' : 'Rechazada'}`,
+                        message: `Tu solicitud para ${request.serviceName} ha sido ${ctx.status === 'approved' ? 'aprobada' : 'rechazada'}.`,
+                        type: 'PREMIUM_SERVICE_REQUEST',
+                        priority: ctx.status === 'approved' ? 'high' : 'normal',
+                        link: '/support'
+                    });
+                }
+            }
+            queryClient.invalidateQueries({ queryKey: ['admin-premium-requests'] });
+        }
+    });
+
+    const handleReply = (ticketId: string) => {
+        if (!replyMesssage.trim()) return;
+        replyMutation.mutate({ ticketId, message: replyMesssage });
     };
 
-    const handleUpdatePremiumStatus = async (reqId: string, status: PremiumRequest['status']) => {
-        await supportService.updatePremiumStatus(reqId, status);
-
-        // Notify Franchise about status change
-        const request = premiumRequests.find(r => r.id === reqId);
-        if (request && request.franchiseId) {
-            await notificationService.notifyFranchise(request.franchiseId, {
-                title: `Solicitud Premium ${status === 'approved' ? 'Aprobada' : 'Rechazada'}`,
-                message: `Tu solicitud para ${request.serviceName} ha sido ${status === 'approved' ? 'aprobada' : 'rechazada'}.`,
-                type: 'PREMIUM_SERVICE_REQUEST',
-                priority: status === 'approved' ? 'high' : 'normal',
-                link: '/support'
-            });
-        }
-
-        loadData();
+    const handleUpdatePremiumStatus = (reqId: string, status: PremiumRequest['status']) => {
+        statusMutation.mutate({ reqId, status });
     };
 
     return (

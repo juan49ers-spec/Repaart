@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { CheckCircle, ChevronRight, Building, CreditCard, Shield, Save, ArrowLeft } from 'lucide-react';
 import { db } from '../../lib/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { Card } from '../../ui/primitives/Card';
-import Button from '../../ui/inputs/Button';
+import { Card } from '../../components/ui/primitives/Card';
+import Button from '../../components/ui/inputs/Button';
 
 // Initial State
 const INITIAL_DATA = {

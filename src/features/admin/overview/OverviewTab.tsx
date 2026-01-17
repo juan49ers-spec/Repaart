@@ -1,7 +1,7 @@
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
-import DashboardSkeleton from '../../../ui/layout/DashboardSkeleton';
-import EmptyState from '../../../ui/feedback/EmptyState';
+import DashboardSkeleton from '../../../components/ui/layout/DashboardSkeleton';
+import EmptyState from '../../../components/ui/feedback/EmptyState';
 import { useAdminControl } from '../../../hooks/useAdminControl';
 
 // Control Widgets

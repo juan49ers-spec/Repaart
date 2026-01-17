@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { List, PieChart as PieChartIcon, Users, Bike, Car, Fuel, Building2, Smartphone, ShieldCheck, Briefcase, Landmark, FileText, MoreHorizontal, Wrench } from 'lucide-react';
 import { formatMoney } from '../../../../lib/finance';
-import { Card } from '../../../../ui/primitives/Card';
+import { Card } from '../../../../components/ui/primitives/Card';
 
 
 // Icon mapping for expense categories

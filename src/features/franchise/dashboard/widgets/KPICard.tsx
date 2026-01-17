@@ -1,10 +1,10 @@
 import React from 'react';
 import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip as ChartTooltip } from 'recharts';
 import { AlertTriangle, Target, Receipt, Flame, Clock } from 'lucide-react';
-import { Card } from '../../../../ui/primitives/Card';
-import { Badge, BadgeIntent } from '../../../../ui/primitives/Badge';
-import { StatValue } from '../../../../ui/primitives/StatValue';
-import { SectionHeader } from '../../../../ui/primitives/SectionHeader';
+import { Card } from '../../../../components/ui/primitives/Card';
+import { Badge, BadgeIntent } from '../../../../components/ui/primitives/Badge';
+import { StatValue } from '../../../../components/ui/primitives/StatValue';
+import { SectionHeader } from '../../../../components/ui/primitives/SectionHeader';
 
 interface KPICardProps {
     title: string;

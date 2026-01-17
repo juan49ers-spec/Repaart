@@ -1,5 +1,5 @@
 import { useState, useRef, type FC, type ChangeEvent, type DragEvent } from 'react';
-import { storage } from '../../lib/firebase';
+import { storage } from '../../../lib/firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Upload, AlertCircle, Loader2 } from 'lucide-react';
 

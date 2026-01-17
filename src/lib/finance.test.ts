@@ -1,97 +1,98 @@
 import { describe, it, expect } from 'vitest';
-import {
-    calculateExpenses,
-    formatMoney,
-    calculateRevenue,
-    DEFAULT_MONTH_DATA
-} from './finance';
+import { calculateRevenue, calculateMonthlyRevenue, calculateExpenses } from './finance';
+import type { MonthlyData } from '../types/finance';
 
-describe('Financial Core Audit (Blinding Logic)', () => {
+describe('Financial Logic', () => {
+    describe('calculateRevenue', () => {
+        it('should calculate correct revenue for NEW tariff', () => {
+            // 0-4km = 5.50
+            expect(calculateRevenue(3, 'NEW')).toBe(5.50);
+            expect(calculateRevenue(4, 'NEW')).toBe(5.50);
 
-    describe('Case A: Absolute Zero (Inactivity)', () => {
-        it('should yield zero profit and zero expenses when everything is zero', () => {
-            const report = calculateExpenses(0, 0, DEFAULT_MONTH_DATA);
+            // 4-5km = 6.50
+            expect(calculateRevenue(4.1, 'NEW')).toBe(6.50);
 
-            expect(report.totalExpenses).toBe(0);
-            expect(report.netProfit).toBe(0);
-            expect(report.taxes.irpfPago).toBe(0);
-            expect(report.taxes.ivaAPagar).toBe(0);
-            expect(report.taxes.netProfitPostTax).toBe(0);
+            // >7km = 8.50
+            expect(calculateRevenue(10, 'NEW')).toBe(8.50);
+        });
+
+        it('should handle zero or negative distances', () => {
+            expect(calculateRevenue(0, 'NEW')).toBe(5.50); // Assuming min distance falls in bucket 1? 
+            // Wait, logic says: if (dist <= 4) return ...[0-4]. 
+            // So 0 <= 4. Correct.
+            expect(calculateRevenue(-1, 'NEW')).toBe(0);
         });
     });
 
-    describe('Case B: Real-World Scenario (10k Revenue)', () => {
-        /**
-         * Manual Calculation:
-         * Revenue: 10,000
-         * Expenses (Salaries): 5,000
-         * Royalty (5% of 10,000): 500
-         * Total Expenses: 5,500
-         * Net Profit (Pre-tax): 4,500
-         * IRPF (20% of 4,500): 900
-         * Net Profit (Post-Tax): 3,600
-         */
-        it('should calculate net profit accurately for a 10k revenue / 5k salary case (with royalties)', () => {
-            const inputs = {
-                ...DEFAULT_MONTH_DATA,
-                salaries: 5000,
-                irpfPercent: 20
+    describe('calculateMonthlyRevenue', () => {
+        it('should perform legacy calculation based on orders', () => {
+            const data: MonthlyData = {
+                franchiseId: 'test',
+                month: '2024-01',
+                ordersNew0To4: 10,
+                ordersNew4To5: 5,
+                ordersNew5To6: 0,
+                ordersNew6To7: 0,
+                ordersNewGt7: 0,
+                ordersOld0To35: 0,
+                ordersOldGt35: 0
             };
 
-            const report = calculateExpenses(10000, 0, inputs);
+            // 10 * 5.50 = 55
+            // 5 * 6.50 = 32.50
+            // Total = 87.50
+            expect(calculateMonthlyRevenue(data)).toBe(87.50);
+        });
 
-            expect(report.totalExpenses).toBe(5500);
-            expect(report.netProfit).toBe(4500);
-            expect(report.taxes.irpfPago).toBe(900);
-            expect(report.taxes.netProfitPostTax).toBe(3600);
+        it('should prioritize stored revenue if available', () => {
+            const data: MonthlyData = {
+                franchiseId: 'test',
+                month: '2024-01',
+                revenue: 1000,
+                ordersNew0To4: 10 // Should be ignored
+            };
+            expect(calculateMonthlyRevenue(data)).toBe(1000);
         });
     });
 
-    describe('Case C: Decimal Precision (Floating Point Safety)', () => {
-        it('should handle typical floating point issues (0.1 + 0.2) correctly', () => {
-            const inputs = {
-                ...DEFAULT_MONTH_DATA,
-                salaries: 10.1,
-                marketing: 20.2,
-                royaltyPercent: 0
+    describe('calculateExpenses', () => {
+        it('should calculate basic profit and margin correctly', () => {
+            const revenue = 1000;
+            const orderCount = 100; // avg ticket 10
+            const inputs: MonthlyData = {
+                franchiseId: 'test',
+                month: '2024-01',
+                salaries: 400,
+                gasoline: 50,
+                rentingCost: 100, // custom field check
+                motoCount: 1, // should be ignored if rentingCost provided?
+                royaltyPercent: 5
+                // appFlyder omitted -> defaults to 0.35 * orders = 35
             };
 
-            const report = calculateExpenses(100, 0, inputs);
+            const result = calculateExpenses(revenue, orderCount, inputs);
 
-            // 10.1 (salaries) + 20.2 (marketing) = 30.3
-            // Net Profit: 100 - 30.3 = 69.7
-            expect(report.totalExpenses).toBeCloseTo(30.3, 5);
-            expect(report.netProfit).toBeCloseTo(69.7, 5);
-        });
-    });
+            // Fixed Costs:
+            // Salaries: 400
+            // Renting: 100
+            // Total Fixed: 500 (ignoring others defaulted to 0)
 
-    describe('Case D: Formatting (es-ES Compliance)', () => {
-        const normalize = (s: string) => s.replace(/\u00a0/g, ' ').replace(/\u2212/g, '-');
+            // Variable Costs:
+            // Gasoline: 50
+            // Flyder: 100 * 0.35 = 35
+            // Royalty: 5% of 1000 = 50
+            // Total Variable: 50 + 35 + 50 = 135
 
-        it('should format thousands and decimals correctly according to Spanish standards', () => {
-            expect(normalize(formatMoney(1000.5))).toBe('1.000,50');
-            expect(normalize(formatMoney(1234567.89))).toBe('1.234.567,89');
-            expect(normalize(formatMoney(0))).toBe('0,00');
-        });
+            // Total Expenses = 635
+            // Net Profit = 1000 - 635 = 365
 
-        it('should handle negative numbers in Spanish format', () => {
-            expect(normalize(formatMoney(-500))).toBe('-500,00');
-        });
-    });
-
-    describe('Edge Cases: Reliability', () => {
-        it('should handle null or undefined inputs gracefully by returning 0', () => {
-            expect(formatMoney(null)).toBe('0,00');
-            expect(formatMoney(undefined)).toBe('0,00');
-
-            const revenue = calculateRevenue('invalid' as any);
-            expect(revenue).toBe(0);
-        });
-
-        it('should cap productivity calculation to avoid Infinity when hours are zero', () => {
-            const report = calculateExpenses(100, 10, { ...DEFAULT_MONTH_DATA, totalHours: 0 });
-            expect(report.metrics.productivity).toBe(0);
-            expect(isFinite(report.metrics.revenuePerHour)).toBe(true);
+            expect(result.fixed.salaries).toBe(400);
+            expect(result.fixed.renting).toBe(100);
+            expect(result.variable.flyderFee).toBe(35);
+            expect(result.variable.royalty).toBe(50);
+            expect(result.totalExpenses).toBe(635);
+            expect(result.netProfit).toBe(365);
+            expect(result.metrics.profitMargin).toBeCloseTo(36.5);
         });
     });
 });

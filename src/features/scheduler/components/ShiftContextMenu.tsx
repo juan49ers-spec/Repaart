@@ -53,7 +53,12 @@ export const ShiftContextMenu: React.FC<ShiftContextMenuProps> = ({
             finalX = Math.max(10, finalX);
             finalY = Math.max(10, finalY);
 
-            setPos({ top: finalY, left: finalX });
+            // Only update if position actually changed/needs adjustment
+            if (finalX !== x || finalY !== y) {
+                requestAnimationFrame(() => {
+                    setPos({ top: finalY, left: finalX });
+                });
+            }
         }
     }, [x, y]);
 

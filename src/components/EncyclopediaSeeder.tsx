@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { collection, doc, writeBatch, getDocs, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { getAllModules, getContentStats } from '../data/index';
+import { getAllModules, getContentStats } from '../features/academy/data/index';
 import { Upload, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 const EncyclopediaSeeder: React.FC = () => {

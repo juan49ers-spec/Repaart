@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, RefreshCw, Monitor, Database, Activity } from 'lucide-react';
 import { getPerformanceSnapshot, PerformanceMetrics } from '../../../scripts/performanceTracker';
 
@@ -10,18 +10,18 @@ interface PerformanceDashboardProps {
 const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ isOpen, onClose }) => {
     const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
 
-    const refreshMetrics = () => {
+    const refreshMetrics = useCallback(() => {
         setMetrics(getPerformanceSnapshot());
-    };
+    }, []);
 
     useEffect(() => {
         if (isOpen) {
-            refreshMetrics();
+            setTimeout(refreshMetrics, 0);
             // Auto-refresh every 2 seconds
             const interval = setInterval(refreshMetrics, 2000);
             return () => clearInterval(interval);
         }
-    }, [isOpen]);
+    }, [isOpen, refreshMetrics]);
 
     if (!isOpen || !metrics) return null;
 

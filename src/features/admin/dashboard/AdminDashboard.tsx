@@ -10,10 +10,10 @@ import { useAdminDashboardData } from '../../../hooks/useAdminDashboardData';
 import { useAuth } from '../../../context/AuthContext';
 
 // Components (Eager)
-import DashboardSkeleton from '../../../ui/layout/DashboardSkeleton';
-import ErrorBoundary from '../../../ui/feedback/ErrorBoundary';
-import CommandPalette from '../../../ui/navigation/CommandPalette';
-import ThemeToggle from '../../../ui/buttons/ThemeToggle';
+import DashboardSkeleton from '../../../components/ui/layout/DashboardSkeleton';
+import ErrorBoundary from '../../../components/ui/feedback/ErrorBoundary';
+import CommandPalette from '../../../components/ui/navigation/CommandPalette';
+import ThemeToggle from '../../../components/ui/buttons/ThemeToggle';
 
 // Lazy Components
 const OperationsDashboard = React.lazy(() => import('../../operations/OperationsDashboard'));

@@ -2,9 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Search, Edit2, Trash2, LayoutGrid, List as ListIcon, User, Phone, Mail, FileText, TrendingUp, ShieldCheck, MapPin } from 'lucide-react';
 import { useFleetStore, Rider } from '../../store/useFleetStore';
-import { Table, Column } from '../../ui/data-display/Table';
-import { Button } from '../../ui/primitives/Button';
-import { Drawer } from '../../ui/overlays/Drawer';
+import { Table, Column } from '../../components/ui/data-display/Table';
+import { Button } from '../../components/ui/primitives/Button';
+import { Drawer } from '../../components/ui/overlays/Drawer';
 import { RiderForm } from './components/RiderForm';
 import { cn } from '../../lib/utils';
 import { getRiderInitials, getRiderColor } from '../../utils/colorPalette';

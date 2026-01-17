@@ -21,8 +21,8 @@ import {
     Layout,
     Folder
 } from 'lucide-react';
-import DocPreviewModal from '../../ui/overlays/DocPreviewModal';
-import ConfirmationModal from '../../ui/feedback/ConfirmationModal';
+import DocPreviewModal from '../../components/ui/overlays/DocPreviewModal';
+import ConfirmationModal from '../../components/ui/feedback/ConfirmationModal';
 import ResourceUploadModal from './resources/ResourceUploadModal';
 import AdminGuidesPanel from './knowledge/AdminGuidesPanel';
 import UserManual from '../common/UserManual/UserManual';

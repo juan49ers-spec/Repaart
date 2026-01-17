@@ -10,7 +10,7 @@ import DashboardLayout from './layouts/DashboardLayout';
 import ProtectedRoute from './features/auth/ProtectedRoute';
 import RequireRole from './layouts/RequireRole';
 import RequireActiveStatus from './layouts/RequireActiveStatus';
-import DashboardSkeleton from './ui/layout/DashboardSkeleton';
+import DashboardSkeleton from './components/ui/layout/DashboardSkeleton';
 import Login from './features/auth/Login';
 import NotFound from './layouts/pages/NotFound';
 import WeeklyScheduler from './features/operations/WeeklyScheduler';

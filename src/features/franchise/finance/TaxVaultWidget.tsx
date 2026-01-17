@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { formatMoney, MonthlyData } from '../../../lib/finance';
 import { Landmark } from 'lucide-react';
-import { Card } from '../../../ui/primitives/Card';
-import { SectionHeader } from '../../../ui/primitives/SectionHeader';
-import { StatValue } from '../../../ui/primitives/StatValue';
-import { DataRow } from '../../../ui/primitives/DataRow';
+import { Card } from '../../../components/ui/primitives/Card';
+import { SectionHeader } from '../../../components/ui/primitives/SectionHeader';
+import { StatValue } from '../../../components/ui/primitives/StatValue';
+import { DataRow } from '../../../components/ui/primitives/DataRow';
 import QuarterlyTaxModal from '../dashboard/widgets/QuarterlyTaxModal';
 
 interface TaxVaultWidgetProps {

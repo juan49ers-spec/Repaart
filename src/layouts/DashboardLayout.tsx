@@ -4,7 +4,7 @@ import Header from './components/Header';
 import NavigationSidebar from './components/NavigationSidebar';
 import BottomTabBar from './components/BottomTabBar';
 import ChatAssistant from './components/ChatAssistant';
-import PageHelpModal from '../ui/modals/PageHelpModal';
+import PageHelpModal from '../components/ui/modals/PageHelpModal';
 import { pageHelpData, PageHelpContent } from '../constants/pageHelpData';
 
 // Define explicit types for props

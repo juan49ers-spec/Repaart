@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 
 import RidersView from '../fleet/RidersView';
 import { VehiclesView } from '../fleet/vehicles/VehiclesView';
-import ErrorBoundary from '../../ui/feedback/ErrorBoundary';
+import ErrorBoundary from '../../components/ui/feedback/ErrorBoundary';
 import DeliveryScheduler from '../scheduler/DeliveryScheduler';
 
 const OperationsPage = () => {

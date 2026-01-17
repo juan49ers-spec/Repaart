@@ -18,50 +18,8 @@ export interface TariffConfig {
     };
 }
 
-export interface MonthlyData {
-    revenue?: number;
-    orders?: number;
-    ordersNew0To4?: number;
-    ordersNew4To5?: number;
-    ordersNew5To6?: number;
-    ordersNew6To7?: number;
-    ordersNewGt7?: number;
-    ordersOld0To35?: number;
-    ordersOldGt35?: number;
-    contractedRiders?: number;
-    totalHours?: number;
-    totalKm?: number;
-    motoCount?: number;
-    salaries?: number;
-    insurance?: number;
-    services?: number;
-    agencyFee?: number;
-    prlFee?: number;
-    accountingFee?: number;
-    gasoline?: number;
-    gasolinePrice?: number;
-    repairs?: number;
-    marketing?: number;
-    incidents?: number;
-    otherExpenses?: number;
-    appFlyder?: number; // Manual override for franchise fee
-    quota?: number;
-    royaltyPercent?: number;
-    irpfPercent?: number;
-    // Operational Metrics
-    totalOperationalHours?: number;
-    totalShiftsCount?: number;
-    // Explicit Aggregates
-    totalIncome?: number;
-    totalExpenses?: number;
-    expenses?: number;
-    grossIncome?: number;
-    profit?: number;
-    // Status Fields
-    status?: 'pending' | 'draft' | 'submitted' | 'approved' | 'locked' | 'unlock_requested';
-    is_locked?: boolean;
-    breakdown?: Record<string, number>;
-}
+import type { MonthlyData } from '../types/finance';
+export type { MonthlyData };
 
 export interface BreakdownItem {
     name: string;

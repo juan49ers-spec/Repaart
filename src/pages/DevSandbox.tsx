@@ -1,5 +1,5 @@
 import { useForm, FormProvider } from 'react-hook-form';
-import SmartFinanceInput from '../ui/inputs/smart-input/SmartFinanceInput';
+import SmartFinanceInput from '../components/ui/inputs/smart-input/SmartFinanceInput';
 
 interface FormValues {
     amount_happy?: number;

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { academyService } from '../../services/academyService';
-import { COURSE_MODULES_DATA } from '../../data/academy/seedData';
-import { ENCYCLOPEDIA_DATA } from '../../data/academy/encyclopediaData';
+import { COURSE_MODULES_DATA } from './data/academy/seedData';
+import { ENCYCLOPEDIA_DATA } from './data/academy/encyclopediaData';
 import { Database, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 export const AcademySeeder = () => {

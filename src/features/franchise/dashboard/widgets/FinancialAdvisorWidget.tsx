@@ -1,7 +1,7 @@
 import { useState, type FC } from 'react';
 import { Lightbulb, AlertTriangle, TrendingUp, CheckCircle, ArrowRight, ChevronLeft, ChevronRight, Sparkles, Target, Zap } from 'lucide-react';
-import { Card } from '../../../../ui/primitives/Card';
-import { Badge } from '../../../../ui/primitives/Badge';
+import { Card } from '../../../../components/ui/primitives/Card';
+import { Badge } from '../../../../components/ui/primitives/Badge';
 import { formatMoney } from '../../../../lib/finance';
 
 interface FinancialAdvisorWidgetProps {

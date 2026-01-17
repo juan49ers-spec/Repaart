@@ -1,6 +1,6 @@
 import React from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from 'recharts';
-import CustomChartTooltip from '../../../ui/data-display/CustomChartTooltip';
+import CustomChartTooltip from '../../../components/ui/data-display/CustomChartTooltip';
 
 
 import { useQueryClient } from '@tanstack/react-query';

@@ -2,7 +2,7 @@ import { type FC, type CSSProperties, useState } from 'react';
 import { Landmark, Lock, Maximize2, ShieldCheck, TrendingUp } from 'lucide-react';
 import { formatMoney, MonthlyData } from '../../../../lib/finance';
 import QuarterlyTaxModal from './QuarterlyTaxModal';
-import { Card } from '../../../../ui/primitives/Card';
+import { Card } from '../../../../components/ui/primitives/Card';
 
 interface TaxData {
     ivaAPagar: number;

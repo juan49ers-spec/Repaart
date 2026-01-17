@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useOutletContext } from 'react-router-dom';
 import AdminDashboard from '../../features/admin/dashboard/AdminDashboard';
-import DashboardSkeleton from '../../ui/layout/DashboardSkeleton';
+import DashboardSkeleton from '../../components/ui/layout/DashboardSkeleton';
 import FranchiseDashboard from '../../features/franchise/FranchiseDashboard';
 
 interface DashboardContext {

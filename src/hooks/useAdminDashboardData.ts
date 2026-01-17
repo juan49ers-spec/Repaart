@@ -82,8 +82,8 @@ export const useAdminDashboardData = (selectedMonth: string) => {
             // Buscar datos específicos del mes seleccionado con matching robusto
             let selectedMonthData = realTrend.find(item => {
                 try {
-                    if (!item.month && !item.date) return false;
-                    const dateValue = item.month || item.date;
+                    if (!item.month && !item.fullDate) return false;
+                    const dateValue = item.month || item.fullDate;
 
                     // Si ya es formato YYYY-MM, comparar directamente
                     if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}$/)) {

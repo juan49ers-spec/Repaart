@@ -1,5 +1,5 @@
 import React from 'react';
-import InputCard from '../../../../ui/inputs/InputCard';
+import InputCard from '../../../../components/ui/inputs/InputCard';
 import { ExpenseData } from '../../types';
 
 interface MarketingFormProps {

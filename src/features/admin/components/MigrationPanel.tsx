@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { collection, getDocs, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
-import { Button } from '../../../ui/primitives/Button';
-import { Card } from '../../../ui/primitives/Card';
+import { Button } from '../../../components/ui/primitives/Button';
+import { Card } from '../../../components/ui/primitives/Card';
 import { Database } from 'lucide-react';
 
 export const MigrationPanel: React.FC = () => {

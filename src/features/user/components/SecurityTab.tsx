@@ -1,7 +1,7 @@
 import { useState, type FC } from 'react';
 import { updatePassword, type User } from 'firebase/auth';
 import { Loader, Save, ShieldCheck, KeyRound, AlertOctagon, Check } from 'lucide-react';
-import Button from '../../../ui/inputs/Button';
+import Button from '../../../components/ui/inputs/Button';
 
 interface SecurityTabProps {
     user: User;

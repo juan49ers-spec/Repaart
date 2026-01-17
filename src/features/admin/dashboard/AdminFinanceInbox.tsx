@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { financeService } from '../../../services/financeService';
-import type { FinancialRecord } from '../../../services/financeService';
+import type { FinancialRecord } from '../../../types/finance';
 import {
     CheckCircle,
     XCircle,
@@ -104,7 +105,7 @@ const AdminFinanceInbox: React.FC = () => {
 
                             {/* Info */}
                             <div className="flex items-start gap-4">
-                                <div className={`p-3 rounded-lg ${record.type === 'income' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
+                                <div className={`p - 3 rounded - lg ${record.type === 'income' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400'} `}>
                                     <DollarSign size={20} />
                                 </div>
                                 <div>
@@ -188,10 +189,10 @@ const AdminFinanceInbox: React.FC = () => {
                             <button
                                 onClick={confirmAction}
                                 disabled={auditModal.type === 'reject' && !rejectionReason.trim()}
-                                className={`flex-1 py-2.5 rounded-xl font-bold text-white transition-colors shadow-lg ${auditModal.type === 'approve'
+                                className={`flex - 1 py - 2.5 rounded - xl font - bold text - white transition - colors shadow - lg ${auditModal.type === 'approve'
                                     ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20 dark:shadow-emerald-900/20'
                                     : 'bg-rose-600 hover:bg-rose-500 shadow-rose-500/20 dark:shadow-rose-900/20 disabled:opacity-50 disabled:cursor-not-allowed'
-                                    }`}
+                                    } `}
                             >
                                 {auditModal.type === 'approve' ? 'Validar' : 'Rechazar'}
                             </button>

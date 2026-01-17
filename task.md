@@ -3,6 +3,7 @@
 - [x] Create `SchedulerStatusBar.tsx` for real-time cost and coverage tracking.
 - [x] Create `DraggableShift.tsx` component for drag-and-drop interactions.
 - [x] Create `DroppableCell.tsx` to handle shift drops on the grid.
+  - [x] Consolidate UI (`src/ui` -> `src/components/ui`) <!-- id: 16 -->
 - [x] Populate Modules 71-110 (Technology/Legal) <!-- id: 4 -->
 - [/] Phase 2: Core Integration
   - [x] Wrap `DeliveryScheduler` in `DndContext`.

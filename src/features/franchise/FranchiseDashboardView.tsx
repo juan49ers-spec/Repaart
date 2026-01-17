@@ -20,7 +20,7 @@ import { GoalSettingModal } from './components/GoalSettingModal';
 import DynamicBanner from '../../components/common/DynamicBanner';
 import { userService } from '../../services/userService';
 import { useAuth } from '../../context/AuthContext';
-import { PageTitle } from '../../ui/primitives/Typography';
+import { PageTitle } from '../../components/ui/primitives/Typography';
 
 export interface DashboardTrendItem {
     month: string;

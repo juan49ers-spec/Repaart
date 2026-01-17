@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Settings, LogOut } from 'lucide-react';
-import { RepaartLogo } from '../../components/ui/RepaartLogo';
+import { RepaartLogo } from '../../components/common/RepaartLogo';
 import { useAppStore } from '../../store/useAppStore';
 import { useAuth } from '../../context/AuthContext';
 import { adminNavItems, franchiseNavItems } from '../constants/navigation';

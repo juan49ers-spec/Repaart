@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { evaluateFormula, formatCurrency } from '../../../utils/finance';
+import { evaluateFormula, formatCurrency } from '../../../../utils/finance';
 
 describe('SmartFinanceInput - evaluateFormula', () => {
     describe('Basic Arithmetic', () => {

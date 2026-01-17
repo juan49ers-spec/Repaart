@@ -3,7 +3,7 @@ import { User, Phone, Mail, Loader, Save, Briefcase, MapPin, Globe } from 'lucid
 import { updateProfile, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
-import Button from '../../../ui/inputs/Button';
+import Button from '../../../components/ui/inputs/Button';
 import { AuthUser, RoleConfig } from '../../../context/AuthContext';
 
 export interface ProfileTabProps {

@@ -1,6 +1,6 @@
 import React, { useState, Suspense, lazy, type FC, useRef } from 'react';
 import { User, Lock, Bell, LogOut, CheckCircle, AlertTriangle, Camera, Mail, Sparkles, LayoutDashboard } from 'lucide-react'; import { useAuth } from '../../context/AuthContext';
-import Button from '../../ui/inputs/Button';
+import Button from '../../components/ui/inputs/Button';
 import { updateProfile } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc, setDoc } from 'firebase/firestore';

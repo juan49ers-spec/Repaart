@@ -12,7 +12,7 @@ import MobileAgendaView from './MobileAgendaView';
 import { useWeeklySchedule, getWeekIdFromDate, type Shift, type WeekData } from '../../hooks/useWeeklySchedule';
 import { WeekService } from '../../services/scheduler/weekService';
 import { toFranchiseId, toWeekId } from '../../schemas/scheduler';
-import ConfirmationModal from '../../ui/feedback/ConfirmationModal';
+import ConfirmationModal from '../../components/ui/feedback/ConfirmationModal';
 import { getRiderColorMap } from '../../utils/riderColors';
 import { validateWeeklySchedule, generateScheduleFix, generateFullSchedule } from '../../lib/gemini';
 import { BadgeCheck, AlertTriangle, ShieldCheck, Wand2, Sparkles } from 'lucide-react';

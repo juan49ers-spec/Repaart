@@ -1,7 +1,13 @@
 import { db } from '../lib/firebase';
-import type { Result } from '../types/result';
-import type { FinanceError } from '../types/finance';
-import { ok, err } from '../types/result';
+import { startOfMonth, endOfMonth, parseISO } from 'date-fns';
+import type {
+    FinancialRecord,
+    RecordInput,
+    MonthlyData,
+    TrendItem,
+    FinanceError
+} from '../types/finance';
+import { ok, err, Result } from '../types/result';
 import {
     collection,
     query,
@@ -17,66 +23,14 @@ import {
     setDoc,
     getDocs,
     Unsubscribe,
-    DocumentData,
     FieldValue,
     writeBatch,
     increment,
     arrayUnion,
     Timestamp
 } from 'firebase/firestore';
-import { startOfMonth, endOfMonth, parseISO } from 'date-fns';
 
-// =====================================================
-// TYPES & INTERFACES
-// =====================================================
 
-export interface FinancialRecord {
-    id: string;
-    franchise_id: string;
-    amount: number;
-    date: Date;
-    status: 'draft' | 'submitted' | 'approved' | 'rejected' | 'locked';
-    type: 'income' | 'expense';
-    category?: string;
-    description?: string;
-    admin_notes?: string;
-
-    // --- AUDIT TRAIL ---
-    created_at?: Date | FieldValue;
-    updated_at?: Date | FieldValue;
-    submitted_at?: Date | FieldValue;
-    approved_at?: Date | FieldValue;
-    approved_by?: string; // Admin UID
-    rejection_reason?: string;
-
-    // --- CONTROLS ---
-    is_locked?: boolean;
-}
-
-export interface RecordInput {
-    amount: number | string;
-    date?: Date | string;
-    status?: 'pending' | 'approved' | 'rejected';
-    type?: 'income' | 'expense';
-    category?: string;
-    description?: string;
-}
-
-export interface MonthlyData {
-    totalIncome?: number;
-    totalExpenses?: number;
-    revenue?: number;
-    expenses?: number;
-    profit?: number;
-    netProfit?: number;
-    status?: string;
-    recordCount?: number;
-    franchiseId?: string;
-    month?: string;
-    totalHours?: number;
-    updatedAt?: FieldValue;
-    [key: string]: unknown; // Allow additional properties
-}
 
 // =====================================================
 // SERVICE
@@ -97,12 +51,12 @@ export const financeService = {
         const q = query(
             collection(db, COLLECTION),
             where('franchise_id', '==', franchiseId),
-            orderBy('date', 'desc') // Ordenar por fecha, más reciente primero
+            orderBy('date', 'desc')
         );
 
         return onSnapshot(q, (snapshot) => {
-            const records: FinancialRecord[] = snapshot.docs.map(doc => {
-                const data = doc.data() as DocumentData;
+            const records = snapshot.docs.map(doc => {
+                const data = doc.data();
                 return {
                     id: doc.id,
                     ...data,
@@ -138,7 +92,13 @@ export const financeService = {
 
         // Only aggregate if NOT a draft (but now we force approved, so always aggregate)
         if (!isDraft) {
-            await financeService._aggregateToSummary(franchiseId, recordData);
+            // Sanitize for aggregation (ensure number and date types)
+            const aggregationData: Partial<FinancialRecord> = {
+                ...recordData,
+                amount: Number(recordData.amount),
+                date: recordData.date ? new Date(recordData.date) : new Date()
+            };
+            await financeService._aggregateToSummary(franchiseId, aggregationData);
         }
     },
 
@@ -149,7 +109,7 @@ export const financeService = {
         try {
             const docRef = doc(db, COLLECTION, id);
 
-            const updates: any = {
+            const updates: Partial<FinancialRecord> = {
                 status: newStatus,
                 updated_at: serverTimestamp()
             };
@@ -203,7 +163,7 @@ export const financeService = {
                     const summaryRef = doc(db, 'financial_summaries', summaryId);
 
                     // Helper to safely get number
-                    const getNum = (val: any) => Number(val) || 0;
+                    const getNum = (val: unknown) => Number(val) || 0;
 
                     // Determine values to subtract (Reverse of aggregation)
                     // Check specific fields first (revenue/expenses), then fall back to amount/type
@@ -213,7 +173,7 @@ export const financeService = {
                     const profit = getNum(data.profit);
                     const logisticsIncome = getNum(data.logisticsIncome);
 
-                    const updates: any = {
+                    const updates: Record<string, FieldValue> = {
                         totalIncome: increment(-revenue),
                         totalExpenses: increment(-expenses),
                         grossIncome: increment(-revenue), // Legacy
@@ -389,9 +349,9 @@ export const financeService = {
 
             return ok(undefined);
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             // Firebase permission errors
-            if (error.code === 'permission-denied') {
+            if ((error as any).code === 'permission-denied') {
                 return err({ type: 'PERMISSION_DENIED', franchiseId });
             }
 
@@ -541,18 +501,36 @@ export const financeService = {
      * DASHBOARD: Obtener tendencia financiera de los últimos X meses
      * Agrega los datos en el cliente (Client-Side Aggregation)
      */
-    getFinancialTrend: async (franchiseId: string | null, monthsBack: number = 6): Promise<any[]> => {
+    getFinancialTrend: async (franchiseId: string | null, monthsBack: number = 6): Promise<TrendItem[]> => {
         try {
             // 1. Calcular fecha (meses atrás) - pero las summaries usan string "YYYY-MM"
             // Necesitamos generar las keys "YYYY-MM" de los últimos X meses
-            const monthlyStats = new Map<string, { income: number, expense: number, date: Date, orders?: number, totalHours?: number, breakdown?: any, logisticsIncome?: number }>();
+            interface TrendAccumulator {
+                income: number;
+                expenses: number;
+                date: Date;
+                orders: number;
+                totalHours: number;
+                logisticsIncome: number;
+                breakdown: Record<string, number>;
+            }
+
+            const monthlyStats = new Map<string, TrendAccumulator>();
             const today = new Date();
             const summaryKeys: string[] = [];
 
             for (let i = monthsBack; i >= 0; i--) {
                 const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
                 const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                monthlyStats.set(key, { income: 0, expense: 0, date: d, totalHours: 0 });
+                monthlyStats.set(key, {
+                    income: 0,
+                    expenses: 0,
+                    date: d,
+                    orders: 0,
+                    totalHours: 0,
+                    logisticsIncome: 0,
+                    breakdown: {}
+                });
                 summaryKeys.push(key);
             }
 
@@ -562,7 +540,7 @@ export const financeService = {
             // But we added "month" field to the doc! It is "YYYY-MM".
 
             // Construct query
-            const constraints: any[] = [
+            const constraints: (ReturnType<typeof where> | ReturnType<typeof orderBy>)[] = [
                 where('month', 'in', summaryKeys) // Only valid if <= 10 keys
             ];
 
@@ -603,20 +581,16 @@ export const financeService = {
 
                     // CRITICAL FIX: Use += to SUM multiple franchises, not = to overwrite
                     current.income += Number(income);
-                    current.expense += Number(expense);
+                    current.expenses += Number(expense);
 
                     // Aggregate extra metadata
-                    if (!current.breakdown) current.breakdown = {};
-                    if (!current.orders) current.orders = 0;
-                    if (!current.totalHours) current.totalHours = 0;
-
                     current.orders += orders;
                     current.totalHours += totalHours;
 
                     // Aggregate detailed breakdown if present (taxes, labor, etc)
                     if (anyData.breakdown) {
                         Object.entries(anyData.breakdown).forEach(([key, val]) => {
-                            current.breakdown![key] = (current.breakdown![key] || 0) + Number(val || 0);
+                            current.breakdown[key] = (current.breakdown[key] || 0) + Number(val || 0);
                         });
                     }
 
@@ -628,7 +602,7 @@ export const financeService = {
             });
 
             // 4. Formatear para Recharts
-            const result = Array.from(monthlyStats.entries()).map(([monthKey, stat]) => {
+            const result: TrendItem[] = Array.from(monthlyStats.entries()).map(([monthKey, stat]) => {
                 const monthName = stat.date.toLocaleDateString('es-ES', { month: 'short' });
 
                 return {
@@ -636,8 +610,8 @@ export const financeService = {
                     month: monthKey, // <- YYYY-MM format for filtering
                     income: stat.income,
                     revenue: stat.income, // Dual support
-                    expenses: stat.expense,
-                    profit: stat.income - stat.expense,
+                    expenses: stat.expenses,
+                    profit: stat.income - stat.expenses,
                     orders: stat.orders || 0,
                     totalHours: stat.totalHours || 0,
                     logisticsIncome: stat.logisticsIncome || 0,
@@ -702,7 +676,7 @@ export const financeService = {
     /**
      * INTERNAL: Aggregate Record into Monthly Summary atomically
      */
-    _aggregateToSummary: async (franchiseId: string, data: any): Promise<void> => {
+    _aggregateToSummary: async (franchiseId: string, data: Partial<FinancialRecord> & { month?: string }): Promise<void> => {
         try {
             // Priority: Explicit month field > Derived from Date > Current Month
             let monthKey = data.month;
@@ -738,7 +712,7 @@ export const financeService = {
             if (data.breakdown) {
                 if (data.breakdown.labor) updates['summary.totalExpenses'] = increment(expenses); // Ensure total matches
                 Object.keys(data.breakdown).forEach(key => {
-                    updates[`breakdown.${key}`] = increment(Number(data.breakdown[key]) || 0);
+                    updates[`breakdown.${key}`] = increment(Number(data.breakdown![key]) || 0);
                 });
 
                 // Also update legacy fields if needed, or just rely on 'breakdown' object structure

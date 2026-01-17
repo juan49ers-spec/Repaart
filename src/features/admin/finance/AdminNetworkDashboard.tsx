@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useNetworkFinance } from '../../../hooks/useNetworkFinance';
 import { formatMoney } from '../../../lib/finance';
-import DashboardSkeleton from '../../../ui/layout/DashboardSkeleton';
+import DashboardSkeleton from '../../../components/ui/layout/DashboardSkeleton';
 
 interface AdminNetworkDashboardProps {
     selectedMonth: string;

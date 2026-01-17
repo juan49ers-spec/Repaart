@@ -3,14 +3,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { TrendingUp } from 'lucide-react';
 import { formatMoney } from '../../../../lib/finance';
 
-interface MonthlyData {
-    month: string;
-    revenue: number;
-    profit: number;
-}
+import type { TrendItem } from '../../../../types/finance';
 
 interface MonthlyTrendChartProps {
-    last6Months: MonthlyData[];
+    last6Months: TrendItem[];
 }
 
 

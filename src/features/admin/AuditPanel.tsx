@@ -3,7 +3,7 @@ import { db } from '../../lib/firebase';
 import { collection, query, orderBy, limit, onSnapshot, Timestamp } from 'firebase/firestore';
 import { ShieldAlert, RefreshCcw, User, Database, Ghost } from 'lucide-react';
 import { migrationService } from '../../services/migrationService';
-import EmptyState from '../../ui/feedback/EmptyState';
+import EmptyState from '../../components/ui/feedback/EmptyState';
 
 interface AuditLog {
     id: string;

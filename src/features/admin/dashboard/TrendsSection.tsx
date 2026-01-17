@@ -1,8 +1,8 @@
 import { type FC, useState } from 'react';
 import { TrendingUp } from 'lucide-react';
 import { ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, Area, Line } from 'recharts';
-import CustomChartTooltip from '../../../ui/data-display/CustomChartTooltip';
-import InfoTooltip from '../../../ui/feedback/InfoTooltip';
+import CustomChartTooltip from '../../../components/ui/data-display/CustomChartTooltip';
+import InfoTooltip from '../../../components/ui/feedback/InfoTooltip';
 import DrillDownModal from './DrillDownModal';
 
 type TrendIndicator = 'up' | 'down';

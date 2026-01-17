@@ -1,6 +1,6 @@
 import React from 'react';
 import { formatMoney } from '../../../../lib/finance';
-import InputCard from '../../../../ui/inputs/InputCard';
+import InputCard from '../../../../components/ui/inputs/InputCard';
 import { ExpenseData } from '../../types';
 
 interface FixedCostsFormProps {

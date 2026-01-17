@@ -2,24 +2,141 @@
  * Finance Domain Types
  */
 
-import type { FieldValue } from 'firebase/firestore';
+import type { FieldValue, Timestamp } from 'firebase/firestore';
 
-export interface MonthlyData {
-    id?: string;
-    franchiseId: string;
-    month: string;  // YYYY-MM format
-    totalIncome?: number;
-    totalExpenses?: number;
-    netProfit?: number;
-    recordCount?: number;
+// --- RECORD TYPES (Individual Transactions) ---
+
+export type RecordStatus = 'draft' | 'submitted' | 'approved' | 'rejected' | 'locked' | 'pending';
+export type RecordType = 'income' | 'expense';
+
+export interface FinancialRecord {
+    id: string;
+    franchise_id: string;
+    amount: number;
+    date: Date;
+    status: RecordStatus;
+    type: RecordType;
+    category?: string;
+    description?: string;
+    admin_notes?: string;
+
+    // Revenue specific
     revenue?: number;
     expenses?: number;
     profit?: number;
+    logisticsIncome?: number;
+    breakdown?: Record<string, number>;
+
+    // --- AUDIT TRAIL ---
+    created_at?: Date | FieldValue | Timestamp;
+    updated_at?: Date | FieldValue | Timestamp;
+    submitted_at?: Date | FieldValue | Timestamp;
+    approved_at?: Date | FieldValue | Timestamp;
+    approved_by?: string; // Admin UID
+    rejection_reason?: string;
+
+    // --- CONTROLS ---
+    is_locked?: boolean;
+}
+
+export interface RecordInput {
+    amount: number | string;
+    date?: Date | string;
+    status?: RecordStatus;
+    type?: RecordType;
+    category?: string;
+    description?: string;
+    breakdown?: Record<string, number>;
+}
+
+// --- SUMMARY TYPES (Monthly Aggregations) ---
+
+export interface BreakdownData {
+    [category: string]: number;
+}
+
+export interface MonthlyData {
+    id?: string;
+    franchiseId?: string; // Optional in some contexts
+    month?: string;  // YYYY-MM format
+
+    // --- REVENUE METRICS ---
+    revenue?: number;
+    totalIncome?: number; // Alias
+    grossIncome?: number; // Legacy Alias
+
+    // Orders & Activity
+    orders?: number;
+    ordersNew0To4?: number;
+    ordersNew4To5?: number;
+    ordersNew5To6?: number;
+    ordersNew6To7?: number;
+    ordersNewGt7?: number;
+    ordersOld0To35?: number;
+    ordersOldGt35?: number;
+
+    contractedRiders?: number;
+    totalHours?: number;
+    totalKm?: number;
+    motoCount?: number;
+
+    // --- EXPENSES ---
+    expenses?: number;
+    totalExpenses?: number; // Alias
+
+    salaries?: number;
+    insurance?: number;
+    services?: number;
+    agencyFee?: number;
+    prlFee?: number;
+    accountingFee?: number;
+    gasoline?: number;
+    gasolinePrice?: number;
+    repairs?: number;
+    marketing?: number;
+    incidents?: number;
+    otherExpenses?: number;
+    appFlyder?: number; // Manual override for franchise fee
+    quota?: number;
+    royaltyPercent?: number;
+
+    // --- TAXES & PROFIT ---
+    profit?: number;
+    netProfit?: number;
     margin?: number;
-    breakdown?: any[];
-    status?: string;
-    updatedAt?: FieldValue | Date;
-    [key: string]: unknown; // Allow additional properties for flexibility
+    irpfPercent?: number;
+
+    // Operational
+    totalOperationalHours?: number;
+    totalShiftsCount?: number;
+
+    // --- STATE & METADATA ---
+    status?: string | 'pending' | 'draft' | 'submitted' | 'approved' | 'locked' | 'unlock_requested' | 'deleted';
+    is_locked?: boolean;
+    unlockReason?: string | null;
+    rejectionReason?: string | null;
+    statusHistory?: any[]; // Could be stricter
+    recordCount?: number;
+    logisticsIncome?: number;
+
+    breakdown?: BreakdownData;
+    updatedAt?: FieldValue | Date | Timestamp;
+
+    [key: string]: unknown; // Allow additional properties
+}
+
+export interface TrendItem {
+    name: string;
+    month: string;
+    income: number;
+    revenue: number;
+    expenses: number;
+    profit: number;
+    orders: number;
+    totalHours: number;
+    logisticsIncome: number;
+    breakdown: BreakdownData;
+    fullDate: string;
 }
 
 /**

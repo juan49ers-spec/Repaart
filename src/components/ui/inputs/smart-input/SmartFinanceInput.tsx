@@ -1,6 +1,6 @@
 import { type FC, type FocusEvent } from 'react';
 import { useFormContext, type RegisterOptions } from 'react-hook-form';
-import { evaluateFormula } from '../../../utils/finance';
+import { evaluateFormula } from '../../../../utils/finance';
 
 interface SmartFinanceInputProps {
     name: string;
@@ -25,7 +25,7 @@ const SmartFinanceInput: FC<SmartFinanceInputProps> = ({
 
     // 3. Smart Handlers
     const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
-        let rawValue = e.target.value;
+        const rawValue = e.target.value;
         if (!rawValue) return;
 
         // Formula Evaluation (starts with '=')

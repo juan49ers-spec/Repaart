@@ -3,7 +3,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { franchiseService } from '../services/franchiseService';
 import { isOk } from '../types/result';
-import type { MonthlyData } from '../services/financeService';
+import type { MonthlyData } from '../types/finance';
 
 
 export type NetworkStatus = 'submitted' | 'pending' | 'late';

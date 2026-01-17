@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 
 // Components
-import DashboardSkeleton from '../../ui/layout/DashboardSkeleton';
+import DashboardSkeleton from '../../components/ui/layout/DashboardSkeleton';
 import FranchiseDashboardView, { BreakdownItem, DashboardTrendItem } from './FranchiseDashboardView';
 
 import { AuthUser, useAuth } from '../../context/AuthContext';

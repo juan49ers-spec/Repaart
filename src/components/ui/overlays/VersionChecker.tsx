@@ -7,7 +7,7 @@ const CHECK_INTERVAL = 60 * 1000; // Check every minute
 const VERSION_URL = '/version.json';
 
 // Get current version from build
-import currentVersionData from '../../public/version.json';
+import currentVersionData from '../../../public/version.json';
 
 export const VersionChecker: React.FC = () => {
     const [hasUpdate, setHasUpdate] = useState(false);
