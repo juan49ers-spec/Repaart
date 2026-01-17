@@ -1,5 +1,5 @@
 import { db } from '../lib/firebase';
-import { collection, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, updateDoc, FieldValue, Timestamp } from 'firebase/firestore';
 
 export type NotificationType = 'FINANCE_CLOSING' | 'RATE_CHANGE' | 'SUPPORT_TICKET' | 'UNLOCK_REQUEST' | 'MONTH_UNLOCKED' | 'UNLOCK_REJECTED' | 'ALERT' | 'PREMIUM_SERVICE_REQUEST' | 'shift_confirmed' | 'shift_change_request' | 'incident' | 'SCHEDULE_PUBLISHED' | 'SYSTEM' | 'DOCUMENT_REQUEST';
 export type NotificationPriority = 'low' | 'normal' | 'high';
@@ -11,10 +11,9 @@ export interface NotificationPayload {
     priority: NotificationPriority;
     title: string;
     message: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
     read: boolean;
-    createdAt?: any;
+    createdAt?: FieldValue | Timestamp;
     riderId?: string;
     relatedShiftId?: string;
 }
@@ -31,10 +30,9 @@ export const notificationService = {
             title: string;
             message: string;
             priority?: NotificationPriority;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            metadata?: Record<string, any>;
+            metadata?: Record<string, unknown>;
         }
-    ) => {
+    ): Promise<void> => {
         try {
             const payload: NotificationPayload = {
                 type,
@@ -56,12 +54,10 @@ export const notificationService = {
         }
     },
 
-
-
     /**
      * Marks an admin notification as read
      */
-    markAsRead: async (notificationId: string) => {
+    markAsRead: async (notificationId: string): Promise<void> => {
         try {
             const docRef = doc(db, 'admin_notifications', notificationId);
             await updateDoc(docRef, { read: true });
@@ -82,7 +78,7 @@ export const notificationService = {
             priority?: NotificationPriority;
             link?: string;
         }
-    ) => {
+    ): Promise<void> => {
         try {
             const payload = {
                 userId,
@@ -112,7 +108,7 @@ export const notificationService = {
             message: string;
             relatedShiftId?: string;
         }
-    ) => {
+    ): Promise<void> => {
         try {
             const payload = {
                 userId: franchiseId, // Mapping franchiseId to userId for UI visibility
@@ -132,3 +128,4 @@ export const notificationService = {
         }
     }
 };
+
