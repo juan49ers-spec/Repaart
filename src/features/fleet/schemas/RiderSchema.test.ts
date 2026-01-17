@@ -7,7 +7,8 @@ describe('RiderSchema Validation', () => {
             fullName: 'Juan Pérez',
             email: 'juan@repaart.com',
             phone: '+34 600 123 456',
-            status: 'active'
+            status: 'active',
+            contractHours: 40
         };
 
         const result = riderSchema.safeParse(validRider);
@@ -19,7 +20,8 @@ describe('RiderSchema Validation', () => {
             fullName: 'J',
             email: 'juan@repaart.com',
             phone: '+34 600 123 456',
-            status: 'active'
+            status: 'active',
+            contractHours: 40
         };
 
         const result = riderSchema.safeParse(invalidRider);
@@ -34,7 +36,8 @@ describe('RiderSchema Validation', () => {
             fullName: 'Juan Pérez',
             email: 'juan-no-email',
             phone: '+34 600 123 456',
-            status: 'active'
+            status: 'active',
+            contractHours: 40
         };
 
         const result = riderSchema.safeParse(invalidRider);
@@ -49,7 +52,8 @@ describe('RiderSchema Validation', () => {
             fullName: 'Juan Pérez',
             email: 'juan@repaart.com',
             phone: '123', // Too short/invalid format
-            status: 'active'
+            status: 'active',
+            contractHours: 40
         };
 
         const result = riderSchema.safeParse(invalidRider);
@@ -64,7 +68,8 @@ describe('RiderSchema Validation', () => {
             fullName: 'Juan Pérez',
             email: 'juan@repaart.com',
             phone: '+34 600 123 456',
-            status: 'super-active' as any // Force invalid value bypassing TS
+            status: 'super-active' as any, // Force invalid value bypassing TS
+            contractHours: 40
         };
 
         const result = riderSchema.safeParse(invalidRider);

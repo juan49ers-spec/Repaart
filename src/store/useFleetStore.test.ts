@@ -1,14 +1,38 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useFleetStore } from './useFleetStore';
+import { fleetService } from '../services/fleetService';
+
+// Mock the fleetService
+vi.mock('../services/fleetService', () => ({
+    fleetService: {
+        getRiders: vi.fn(),
+        createRider: vi.fn(),
+        updateRider: vi.fn(),
+        deleteRider: vi.fn()
+    }
+}));
 
 describe('useFleetStore Integration', () => {
     // Reset store before each test
     beforeEach(() => {
+        vi.clearAllMocks();
         useFleetStore.setState({
             riders: [],
             isLoading: false,
             searchQuery: ''
         });
+
+        // Default mock implementations
+        (fleetService.getRiders as any).mockResolvedValue([
+            { id: '1', fullName: 'Mock Rider', status: 'active', metrics: {} }
+        ]);
+        (fleetService.createRider as any).mockImplementation((data: any) => Promise.resolve({
+            id: 'new-id',
+            ...data,
+            metrics: { efficiency: 100 }
+        }));
+        (fleetService.updateRider as any).mockResolvedValue(undefined);
+        (fleetService.deleteRider as any).mockResolvedValue(undefined);
     });
 
     it('should initialize with empty state', () => {

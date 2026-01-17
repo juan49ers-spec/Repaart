@@ -13,6 +13,7 @@ vi.mock('firebase/firestore', () => ({
     collection: vi.fn(),
     query: vi.fn(),
     where: vi.fn(),
+    serverTimestamp: vi.fn(),
 }));
 
 vi.mock('../../lib/firebase', () => ({
@@ -127,7 +128,7 @@ describe('Scheduler Module', () => {
             it('should throw if data is invalid (Zod validation)', async () => {
                 const corruptData = {
                     id: '2025_40',
-                    // Missing startDate
+                    startDate: 'bad-date-format', // Invalid format triggers Zod error
                     metrics: { totalHours: 0 }
                 };
                 (getDoc as any).mockResolvedValue({
