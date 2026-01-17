@@ -1,4 +1,4 @@
-import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, query, where, QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import type { Result } from '../types/result';
 import type { FranchiseMetadata, FranchiseError } from '../types/franchise';
@@ -68,7 +68,7 @@ export const franchiseService = {
                 if (isOk(allResult)) {
                     // Try matching by id (franchiseId field) first
                     let match = allResult.data.find((f: FranchiseMetadata) =>
-                        f.id === franchiseId || (f as any).uid === franchiseId
+                        f.id === franchiseId || f.uid === franchiseId
                     );
 
                     // Then try matching by name (case insensitive)
@@ -115,8 +115,8 @@ export const franchiseService = {
             const q = query(colRef, where('role', '==', 'franchise'));
             const snapshot = await getDocs(q);
 
-            const franchises = snapshot.docs.map(doc => {
-                const data = doc.data() as any; // Type assertion for Firestore data
+            const franchises = snapshot.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => {
+                const data = doc.data();
                 return {
                     id: data.franchiseId || doc.id, // Use franchiseId field or doc ID as fallback
                     name: data.name || data.displayName || data.email || 'Franquicia Sin Nombre',

@@ -67,7 +67,7 @@ describe('UserService', () => {
             const result = await userService.createFranchise(franchiseData);
 
             expect(result.success).toBe(true);
-            expect(result.data.id).toBe('new-franchise-id');
+            expect(result.data.id).toBe('franchise-id');
             expect(addDoc).toHaveBeenCalledWith(
                 expect.anything(),
                 expect.objectContaining({

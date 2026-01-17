@@ -10,7 +10,9 @@ import {
     where,
     onSnapshot,
     deleteDoc,
-    setDoc
+    setDoc,
+    QueryDocumentSnapshot,
+    DocumentData
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Rider } from '../store/useFleetStore';
@@ -27,7 +29,7 @@ const ASSETS_COLLECTION = 'fleet_assets';
 /**
  * Mappers to ensure data consistency between Firestore and UI
  */
-const mapDocToRider = (docSnap: any): Rider => {
+const mapDocToRider = (docSnap: QueryDocumentSnapshot<DocumentData>): Rider => {
     const data = docSnap.data();
     return {
         id: docSnap.id,
@@ -47,7 +49,7 @@ const mapDocToRider = (docSnap: any): Rider => {
     };
 };
 
-const mapDocToMoto = (docSnap: any): Moto => {
+const mapDocToMoto = (docSnap: QueryDocumentSnapshot<DocumentData>): Moto => {
     const data = docSnap.data();
     return {
         id: toMotoId(docSnap.id),
@@ -280,12 +282,12 @@ export const fleetService = {
     },
 
     // Vehicle store compatibility
-    async getVehicles(franchiseId: string): Promise<any[]> {
+    async getVehicles(franchiseId: string): Promise<Moto[]> {
         const q = query(collection(db, ASSETS_COLLECTION), where('franchiseId', '==', franchiseId));
         const snap = await getDocs(q);
         return snap.docs.map(mapDocToMoto);
     },
-    async createVehicle(franchiseId: string, data: any): Promise<any> {
+    async createVehicle(franchiseId: string, data: Record<string, any>): Promise<Moto> {
         // Standardize input if it uses snake_case (Legacy Vehicle store)
         const standardized: CreateMotoInput = {
             plate: data.matricula || data.plate,
@@ -293,7 +295,7 @@ export const fleetService = {
             model: data.modelo || data.model,
             currentKm: data.km_actuales || data.currentKm || 0,
             nextRevisionKm: data.proxima_revision_km || data.nextRevisionKm || 5000,
-            status: (data.estado === 'activo' ? 'active' : (data.estado === 'mantenimiento' ? 'maintenance' : (data.estado || 'active'))) as any
+            status: (data.estado === 'activo' ? 'active' : (data.estado === 'mantenimiento' ? 'maintenance' : (data.estado || 'active')))
         };
         return this.createMoto(franchiseId, standardized);
     }

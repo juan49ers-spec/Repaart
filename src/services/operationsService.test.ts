@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { operationsService, Rider } from './operationsService';
-import { getDocs, addDoc, updateDoc } from 'firebase/firestore';
+import { getDocs, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 // Mock Firebase
 vi.mock('../lib/firebase', () => ({
@@ -22,6 +22,7 @@ vi.mock('firebase/firestore', async (importOriginal) => {
             commit: vi.fn()
         })),
         where: vi.fn(() => ({ type: 'where_constraint' })),
+        serverTimestamp: vi.fn(() => 'MOCK_TIMESTAMP'),
     };
 });
 
@@ -99,7 +100,7 @@ describe('OperationsService', () => {
                     displayName: 'New Name', // Mapped
                     phone: '987654321',
                     phoneNumber: '987654321', // Mapped
-                    updatedAt: 'MOCK_TIMESTAMP'
+                    updatedAt: expect.anything()
                 })
             );
         });

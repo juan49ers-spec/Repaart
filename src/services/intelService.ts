@@ -10,7 +10,7 @@ export interface IntellectualEvent {
     date: Date;
     severity: 'info' | 'warning' | 'critical';
     impact: string;
-    metadata?: any;
+    metadata?: Record<string, unknown>;
 }
 
 // 2026 Spanish National Holidays (Simplified)

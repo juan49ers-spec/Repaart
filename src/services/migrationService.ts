@@ -1,5 +1,5 @@
 import { db } from '../lib/firebase';
-import { collection, getDocs, writeBatch, doc, query, where, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, doc, query, where, updateDoc, serverTimestamp, QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 
 export const migrationService = {
     /**
@@ -125,7 +125,7 @@ export const migrationService = {
             const activeRiderFranchiseMap = new Map<string, string>();
             const inactiveRiderIds = new Set<string>();
 
-            const processRiderDoc = (d: any, collectionName: string) => {
+            const processRiderDoc = (d: QueryDocumentSnapshot<DocumentData>, collectionName: string) => {
                 const data = d.data();
                 const name = (data.fullName || data.displayName || "").toLowerCase();
                 const email = (data.email || "").toLowerCase();
@@ -219,7 +219,7 @@ export const migrationService = {
                         const currentShifts = weekData.shifts || [];
                         let legacyDeleted = 0;
 
-                        const cleanShifts = currentShifts.filter((s: any) => {
+                        const cleanShifts = currentShifts.filter((s: unknown) => {
                             const json = JSON.stringify(s).toLowerCase();
                             if (json.includes('valentino')) {
                                 log(`   👻 Eliminando turno Valentino en array de [${weekId}]: ${json.substring(0, 100)}...`);

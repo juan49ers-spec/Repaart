@@ -82,5 +82,31 @@ describe('Fleet Module (Phase 2)', () => {
                 })
             );
         });
+        describe('Legacy Compatibility', () => {
+            it('createVehicle should map snake_case to camelCase', async () => {
+                const fid = toFranchiseId('f1');
+                const input = {
+                    matricula: 'LEGACY1',
+                    modelo: 'OldModel',
+                    km_actuales: 100,
+                    proxima_revision_km: 1000,
+                    estado: 'activo'
+                };
+
+                await FleetService.createVehicle(fid, input);
+
+                expect(setDoc).toHaveBeenCalledWith(
+                    expect.anything(),
+                    expect.objectContaining({
+                        plate: 'LEGACY1',
+                        model: 'OldModel',
+                        currentKm: 100,
+                        nextRevisionKm: 1000,
+                        status: 'active'
+                    })
+                );
+            });
+        });
     });
 });
+

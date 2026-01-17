@@ -9,6 +9,7 @@ export interface FranchiseMetadata {
     manager?: string;
     location?: string;
     status?: string;
+    uid?: string; // User ID associated with franchise
     [key: string]: any;
 }
 
