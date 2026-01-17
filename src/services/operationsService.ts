@@ -36,6 +36,30 @@ export interface Rider {
     updatedAt?: Timestamp | Date | string;
 }
 
+/**
+ * Raw Firestore document shape (legacy & modern fields combined)
+ * Used for safe normalization in fetchRiders
+ */
+interface RawUserDoc {
+    // Modern fields
+    fullName?: string;
+    phone?: string;
+    email?: string;
+    photoURL?: string;
+    franchiseId?: string;
+    status?: string;
+    role?: string;
+    drivingLicenseExpiry?: string | null;
+    punctualityScore?: number;
+    completedShifts?: number;
+    createdAt?: Timestamp | Date | string;
+    updatedAt?: Timestamp | Date | string;
+    // Legacy fields (for backward compatibility)
+    name?: string;           // -> fullName
+    displayName?: string;   // -> fullName  
+    phoneNumber?: string;   // -> phone
+}
+
 export interface Moto {
     id: string;
     plate: string;
@@ -88,30 +112,27 @@ export const operationsService = {
 
         const snapshot = await getDocs(q);
 
-        // Raw mapping first to handle legacy fields safely
-        const rawUsers = snapshot.docs.map(doc => {
-            const data = doc.data();
-            // Cast to any to allow flexible access to potential legacy fields during normalization
+        // Map to typed RawUserDoc for safe normalization
+        const rawUsers: (RawUserDoc & { id: string })[] = snapshot.docs.map(doc => {
+            const data = doc.data() as RawUserDoc;
             return {
                 id: doc.id,
-                ...data,
-                _legacyName: data.name,
-                _legacyPhone: data.phoneNumber
-            } as any;
+                ...data
+            };
         });
 
-        // Filtrado en memoria (Infalible)
+        // Normalize and filter in memory
         return rawUsers.map(data => {
             // Priority: displayName -> name (legacy) -> fullName -> Default
-            const resolvedName = data.displayName || data.name || (data as any).fullName || 'Sin Nombre';
-            const resolvedPhone = data.phoneNumber || (data as any).phone || '';
+            const resolvedName = data.displayName || data.name || data.fullName || 'Sin Nombre';
+            const resolvedPhone = data.phoneNumber || data.phone || '';
 
-            const status = (data.status as string) || 'active';
+            const status = data.status || 'active';
             const validStatus: Rider['status'] = ['active', 'inactive', 'deleted'].includes(status)
                 ? (status as Rider['status'])
                 : 'active';
 
-            const role = (data.role as string) || 'rider';
+            const role = data.role || 'rider';
             const validRole: Rider['role'] = ['rider', 'staff', 'admin', 'franchise', 'developer'].includes(role)
                 ? (role as Rider['role'])
                 : 'rider';
@@ -126,8 +147,8 @@ export const operationsService = {
                 drivingLicenseExpiry: data.drivingLicenseExpiry || null,
                 punctualityScore: data.punctualityScore || 10.0,
                 completedShifts: data.completedShifts || 0,
-                email: (data as any).email,
-                photoURL: (data as any).photoURL,
+                email: data.email,
+                photoURL: data.photoURL,
                 createdAt: data.createdAt as Timestamp | Date,
                 updatedAt: data.updatedAt as Timestamp | Date
             };

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Vehicle } from '../features/fleet/vehicles/schemas/VehicleSchema';
 import { vehicleService } from '../services/fleetService';
+import { Moto } from '../schemas/fleet';
 
 interface VehicleState {
     vehicles: Vehicle[];
@@ -24,12 +25,12 @@ export const useVehicleStore = create<VehicleState>((set) => ({
         try {
             const rawVehicles = await vehicleService.getVehicles(franchiseId);
             // ADAPTER: Moto (Camel) -> Vehicle (Snake/Legacy)
-            const vehicles: Vehicle[] = rawVehicles.map((m: any) => ({
+            const vehicles: Vehicle[] = rawVehicles.map((m: Moto) => ({
                 id: m.id,
-                matricula: m.plate || m.matricula,
-                modelo: m.brand && m.model ? `${m.brand} ${m.model}` : (m.model || m.modelo),
-                km_actuales: m.currentKm ?? m.km_actuales ?? 0,
-                proxima_revision_km: m.nextRevisionKm ?? m.proxima_revision_km ?? 5000,
+                matricula: m.plate,
+                modelo: m.brand && m.model ? `${m.brand} ${m.model}` : m.model,
+                km_actuales: m.currentKm || 0,
+                proxima_revision_km: m.nextRevisionKm || 5000,
                 estado: (m.status === 'active' ? 'active' : (m.status === 'maintenance' ? 'maintenance' : 'deleted')) as any,
                 type: 'vehicle',
                 franchise_id: franchiseId
@@ -48,10 +49,10 @@ export const useVehicleStore = create<VehicleState>((set) => ({
             // ADAPTER: Moto (Camel) -> Vehicle (Snake/Legacy)
             const newVehicle: Vehicle = {
                 id: m.id,
-                matricula: m.plate || m.matricula,
-                modelo: m.brand && m.model ? `${m.brand} ${m.model}` : (m.model || m.modelo),
-                km_actuales: m.currentKm ?? m.km_actuales ?? 0,
-                proxima_revision_km: m.nextRevisionKm ?? m.proxima_revision_km ?? 5000,
+                matricula: m.plate,
+                modelo: m.brand && m.model ? `${m.brand} ${m.model}` : m.model,
+                km_actuales: m.currentKm || 0,
+                proxima_revision_km: m.nextRevisionKm || 5000,
                 estado: (m.status === 'active' ? 'active' : (m.status === 'maintenance' ? 'maintenance' : 'deleted')) as any,
                 type: 'vehicle',
                 franchise_id: franchiseId
