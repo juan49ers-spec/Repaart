@@ -7,7 +7,7 @@ vi.mock('../lib/firebase', () => ({
 }));
 
 vi.mock('firebase/firestore', async (importOriginal) => {
-    const actual = await importOriginal();
+    const actual = await importOriginal<typeof import('firebase/firestore')>();
     return {
         ...actual,
         collection: vi.fn(() => ({ type: 'collection' })),
@@ -18,7 +18,7 @@ vi.mock('firebase/firestore', async (importOriginal) => {
     };
 });
 
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc } from 'firebase/firestore';
 
 describe('NotificationService', () => {
 

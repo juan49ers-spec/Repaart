@@ -7,7 +7,7 @@ vi.mock('../lib/firebase', () => ({
 }));
 
 vi.mock('firebase/firestore', async (importOriginal) => {
-    const actual = await importOriginal();
+    const actual = await importOriginal<typeof import('firebase/firestore')>();
     return {
         ...actual,
         collection: vi.fn(() => ({ type: 'collection' })),
@@ -36,7 +36,7 @@ describe('UserService', () => {
                 { id: 'u1', data: () => ({ name: 'User 1', role: 'rider' }) },
                 { id: 'u2', data: () => ({ name: 'User 2', role: 'admin' }) }
             ];
-            (getDocs as any).mockResolvedValue({ docs: mockDocs });
+            (getDocs as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ docs: mockDocs });
 
             const result = await userService.fetchUsers();
 
@@ -56,7 +56,7 @@ describe('UserService', () => {
 
     describe('createFranchise', () => {
         it('should create franchise with valid data', async () => {
-            (addDoc as any).mockResolvedValue({ id: 'new-franchise-id' });
+            (addDoc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'franchise-id' });
 
             const franchiseData = {
                 name: 'Test Franchise',

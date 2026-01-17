@@ -1,0 +1,4 @@
+src/services/academyService.test.ts(25,30): error TS6133: 'writeBatch' is declared but its value is never read.
+src/services/academyService.test.ts(74,20): error TS2304: Cannot find name 'setDoc'.
+src/services/academyService.test.ts(83,20): error TS2304: Cannot find name 'setDoc'.
+src/services/academyService.test.ts(92,20): error TS2304: Cannot find name 'setDoc'.

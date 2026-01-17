@@ -7,7 +7,7 @@ vi.mock('../lib/firebase', () => ({
 }));
 
 vi.mock('firebase/firestore', async (importOriginal) => {
-    const actual = await importOriginal();
+    const actual = await importOriginal<typeof import('firebase/firestore')>();
     return {
         ...actual,
         collection: vi.fn(() => ({ type: 'collection' })),
@@ -16,7 +16,7 @@ vi.mock('firebase/firestore', async (importOriginal) => {
     };
 });
 
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc } from 'firebase/firestore';
 
 describe('RiderService', () => {
 
@@ -26,7 +26,7 @@ describe('RiderService', () => {
 
     describe('reportIncident', () => {
         it('should report incident with correct payload', async () => {
-            (addDoc as any).mockResolvedValue({ id: 'incident-id' });
+            (addDoc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'incident-id' });
 
             const incidentData = {
                 type: 'accident' as const,
@@ -52,7 +52,7 @@ describe('RiderService', () => {
 
     describe('submitChecklist', () => {
         it('should submit checklist with correct payload', async () => {
-            (addDoc as any).mockResolvedValue({ id: 'check-id' });
+            (addDoc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'check-id' });
 
             const checkData = {
                 items: ['lights', 'brakes'],

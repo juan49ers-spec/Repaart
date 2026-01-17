@@ -40,6 +40,7 @@ export interface UserProfile {
         push?: boolean;
         [key: string]: boolean | undefined;
     };
+    monthlyRevenueGoal?: number; // Added for Franchise Goals
     photoURL?: string;
     createdAt?: Date | FieldValue | string | { seconds: number, nanoseconds: number };
     updatedAt?: Date | FieldValue | string | { seconds: number, nanoseconds: number };

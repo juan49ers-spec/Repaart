@@ -17,10 +17,10 @@ interface ShiftContextMenuProps {
     y: number;
     shift: ContextMenuShift;
     onClose: () => void;
-    onValidate: (shift: any) => void;
-    onDuplicate: (shift: any) => void;
-    onEdit: (shift: any) => void;
-    onDelete: (shift: any) => void;
+    onValidate: (shift: ContextMenuShift) => void;
+    onDuplicate: (shift: ContextMenuShift) => void;
+    onEdit: (shift: ContextMenuShift) => void;
+    onDelete: (shift: ContextMenuShift) => void;
 }
 
 export const ShiftContextMenu: React.FC<ShiftContextMenuProps> = ({

@@ -1,0 +1,11 @@
+src/features/franchise/components/GoalSettingModal.tsx(26,17): error TS2353: Object literal may only specify known properties, and 'monthlyRevenueGoal' does not exist in type 'Partial<UserProfile>'.
+src/features/franchise/FranchiseDashboardView.tsx(119,40): error TS2339: Property 'monthlyRevenueGoal' does not exist on type 'UserProfile'.
+src/features/franchise/FranchiseDashboardView.tsx(120,51): error TS2339: Property 'monthlyRevenueGoal' does not exist on type 'UserProfile'.
+src/services/academyService.test.ts(12,9): error TS2698: Spread types may only be created from object types.
+src/services/academyService.test.ts(25,38): error TS6133: 'doc' is declared but its value is never read.
+src/services/academyService.test.ts(25,43): error TS6133: 'collection' is declared but its value is never read.
+src/services/notificationService.test.ts(12,9): error TS2698: Spread types may only be created from object types.
+src/services/notificationService.test.ts(21,18): error TS6133: 'collection' is declared but its value is never read.
+src/services/operationsService.test.ts(3,38): error TS6133: 'deleteDoc' is declared but its value is never read.
+src/services/operationsService.test.ts(13,9): error TS2698: Spread types may only be created from object types.
+src/services/userService.test.ts(12,9): error TS2698: Spread types may only be created from object types.

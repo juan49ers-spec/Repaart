@@ -7,22 +7,23 @@ vi.mock('../lib/firebase', () => ({
 }));
 
 vi.mock('firebase/firestore', async (importOriginal) => {
-    const actual = await importOriginal();
+    const actual = await importOriginal<typeof import('firebase/firestore')>();
     return {
         ...actual,
         collection: vi.fn(() => ({ type: 'collection' })),
-        query: vi.fn(),
         getDocs: vi.fn(),
-        addDoc: vi.fn(),
-        updateDoc: vi.fn(),
         deleteDoc: vi.fn(),
         setDoc: vi.fn(),
+        writeBatch: vi.fn(() => ({
+            set: vi.fn(),
+            commit: vi.fn(),
+        })),
         doc: vi.fn(() => ({ id: 'mock-doc-id' })),
         serverTimestamp: () => 'MOCK_TIMESTAMP',
     };
 });
 
-import { getDocs, deleteDoc, setDoc, doc, collection } from 'firebase/firestore';
+import { getDocs, deleteDoc, setDoc } from 'firebase/firestore';
 
 describe('AcademyService', () => {
 
@@ -37,7 +38,7 @@ describe('AcademyService', () => {
                 { ref: 'ref1', id: 'id1' },
                 { ref: 'ref2', id: 'id2' }
             ];
-            (getDocs as any).mockResolvedValue({ docs: mockDocs });
+            (getDocs as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ docs: mockDocs });
 
             const modulesData: SeederModule[] = [
                 {

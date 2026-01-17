@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { operationsService, Rider } from './operationsService';
-import { getDocs, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { getDocs, addDoc, updateDoc } from 'firebase/firestore';
 
 // Mock Firebase
 vi.mock('../lib/firebase', () => ({
@@ -8,18 +8,20 @@ vi.mock('../lib/firebase', () => ({
 }));
 
 vi.mock('firebase/firestore', async (importOriginal) => {
-    const actual = await importOriginal();
+    const actual = await importOriginal<typeof import('firebase/firestore')>();
     return {
         ...actual,
         collection: vi.fn(() => ({ type: 'collection' })),
         query: vi.fn(),
-        where: vi.fn(),
         getDocs: vi.fn(),
         addDoc: vi.fn(),
+        doc: vi.fn(() => ({ id: 'mock-doc-id' })),
         updateDoc: vi.fn(),
-        deleteDoc: vi.fn(),
-        doc: vi.fn(() => ({ type: 'doc' })),
-        serverTimestamp: () => 'MOCK_TIMESTAMP',
+        writeBatch: vi.fn(() => ({
+            set: vi.fn(),
+            commit: vi.fn()
+        })),
+        where: vi.fn(() => ({ type: 'where_constraint' })),
     };
 });
 
