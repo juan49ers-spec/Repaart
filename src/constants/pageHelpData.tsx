@@ -26,20 +26,20 @@ export const pageHelpData: Record<string, PageHelpContent> = {
         title: 'Panel de Control (Cockpit)',
         icon: <LayoutDashboard className="w-6 h-6" />,
         color: 'indigo',
-        intro: 'Vista general del rendimiento de tu franquicia en tiempo real.',
+        intro: 'Vista general del rendimiento de tu franquicia, ahora con diseño responsivo "Sidebar Safe".',
         sections: [
             {
                 title: '📊 Indicadores Clave (KPIs)',
                 items: [
                     {
-                        term: 'Ingresos Brutos',
-                        definition: 'Total facturado antes de gastos.',
-                        tip: '💡 Comprueba la proyección a fin de mes para ver si cumplirás tus objetivos.'
+                        term: 'Flash de Ventas',
+                        definition: 'Visualización rápida de facturación vs periodo anterior.',
+                        tip: '💡 Los widgets se adaptan automáticamente: 2 columnas en portátil, 4 en monitor grande.'
                     },
                     {
-                        term: 'Bolsillo (Neto)',
-                        definition: 'Dinero real que te queda tras pagar personal, impuestos y gastos.',
-                        tip: '💡 Mantén un ojo en el semáforo de salud operacional.'
+                        term: 'Take Home (Bolsillo)',
+                        definition: 'Dinero real disponible tras gastos operativos e impuestos.',
+                        tip: '💡 Mantén un ojo en el semáforo de salud operacional dentro del widget.'
                     }
                 ]
             }
@@ -47,28 +47,33 @@ export const pageHelpData: Record<string, PageHelpContent> = {
     },
     operations: {
         id: 'operations',
-        title: 'Gestión Operativa',
+        title: 'Operativa & Riders',
         icon: <Clock className="w-6 h-6" />,
         color: 'blue',
-        intro: 'Controla el día a día de tus riders y la flota de motos.',
+        intro: 'Centro de mando para tu flota. Gestiona horarios, riders y motos desde un único lugar.',
         sections: [
             {
-                title: '📅 Cuadrante Semanal',
+                title: '📅 Planificador (Scheduler)',
                 items: [
                     {
-                        term: 'Asignación de Turnos',
-                        definition: 'Planificación de horarios para tus riders.',
-                        tip: '💡 Usa el autocompletado para ahorrar tiempo en turnos recurrentes.'
+                        term: 'Filas de Riders',
+                        definition: 'Ahora con diseño alternado (zebra) para distinguir mejor cada fila en horarios densos.',
+                        tip: '💡 Haz clic derecho en un turno para ver opciones rápidas: Validar, Clonar o Borrar.'
+                    },
+                    {
+                        term: 'Snap & Ghost',
+                        definition: 'Arrastra turnos viendo una previsualización semitransparente antes de soltar.',
+                        tip: '💡 Facilita mover turnos complejos sin perder la referencia visual.'
                     }
                 ]
             },
             {
-                title: '🏍️ Gestión de Flota',
+                title: '🏍️ Flota y Motos',
                 items: [
                     {
-                        term: 'Mantenimiento',
-                        definition: 'Registro de reparaciones y estado de las motos.',
-                        tip: '💡 Un buen mantenimiento reduce el gasto de gasolina y evita accidentes.'
+                        term: 'Grid de Vehículos',
+                        definition: 'Nueva vista de tarjetas premium para monitorear estado, batería y mantenimientos.',
+                        tip: '💡 Filtra rápidamente por motos "En Taller" o "Disponibles".'
                     }
                 ]
             }
@@ -79,15 +84,15 @@ export const pageHelpData: Record<string, PageHelpContent> = {
         title: 'Academy & Formación',
         icon: <GraduationCap className="w-6 h-6" />,
         color: 'emerald',
-        intro: 'Forma a tu equipo y mejora tus propias habilidades de gestión.',
+        intro: 'Forma a tu equipo con módulos interactivos y seguimiento de progreso.',
         sections: [
             {
-                title: '📚 Módulos de Aprendizaje',
+                title: '📚 Experiencia de Lectura',
                 items: [
                     {
-                        term: 'Cursos Activos',
-                        definition: 'Material educativo sobre optimización de rutas y seguridad.',
-                        tip: '💡 Asegúrate de que tus nuevos riders completen la formación básica.'
+                        term: 'Modo Cine',
+                        definition: 'Lectura inmersiva con tipografía optimizada y sin distracciones.',
+                        tip: '💡 Ideal para que los riders completen cursos desde el móvil.'
                     }
                 ]
             }
@@ -98,15 +103,20 @@ export const pageHelpData: Record<string, PageHelpContent> = {
         title: 'Perfil y Configuración',
         icon: <UserCircle className="w-6 h-6" />,
         color: 'purple',
-        intro: 'Datos de tu franquicia y personalización de la cuenta.',
+        intro: 'Accede a tu cuenta y ajustes desde la nueva ubicación en el Sidebar.',
         sections: [
             {
-                title: '⚙️ Preferencias',
+                title: '⚙️ Nueva Navegación',
                 items: [
                     {
-                        term: 'Datos de Contacto',
-                        definition: 'Email y teléfono para comunicaciones oficiales.',
-                        tip: '💡 Mantén estos datos actualizados para recibir alertas críticas.'
+                        term: 'Menú de Usuario',
+                        definition: 'Ahora situado en la parte inferior del menú lateral (esquina inferior izquierda).',
+                        tip: '💡 Haz clic en tu avatar abajo a la izquierda para ver "Mi Perfil" o "Cerrar Sesión".'
+                    },
+                    {
+                        term: 'Modo Oscuro',
+                        definition: 'Alterna entre tema claro y oscuro desde el botón junto a tu versión de app.',
+                        tip: '💡 El tema oscuro ahorra batería en dispositivos OLED.'
                     }
                 ]
             }
@@ -114,38 +124,18 @@ export const pageHelpData: Record<string, PageHelpContent> = {
     },
     sidebar_config: {
         id: 'sidebar_config',
-        title: 'Panel de Configuración',
+        title: 'Configuración Financiera',
         icon: <Settings className="w-6 h-6" />,
         color: 'amber',
-        intro: 'Ajusta los parámetros financieros y operativos de tu mes fiscal.',
+        intro: 'Ajusta los parámetros de tu modelo de negocio.',
         sections: [
             {
-                title: '📦 Pedidos',
+                title: '📦 Tarifas y Costes',
                 items: [
                     {
-                        term: 'Tarifas',
-                        definition: 'Desglose de pedidos por distancia (KM).',
-                        tip: '💡 Introduce el número exacto de pedidos cerrados en cada rango para una facturación precisa.'
-                    }
-                ]
-            },
-            {
-                title: '👷 Laboral',
-                items: [
-                    {
-                        term: 'Riders Contratados',
-                        definition: 'Número de repartidores dados de alta.',
-                        tip: '💡 No olvides incluir al gerente si este realiza labores operativas.'
-                    }
-                ]
-            },
-            {
-                title: '🏦 Fiscalidad',
-                items: [
-                    {
-                        term: 'IRPF Estimado',
-                        definition: 'Porcentaje de retención para el pago a cuenta.',
-                        tip: '💡 Un IRPF bien ajustado evita sorpresas en la declaración anual.'
+                        term: 'Estructura de Costes',
+                        definition: 'Define precios por pedido y tramos de distancia.',
+                        tip: '💡 Los cambios aquí afectan al cálculo retroactivo del mes en curso.'
                     }
                 ]
             }
@@ -153,39 +143,18 @@ export const pageHelpData: Record<string, PageHelpContent> = {
     },
     support: {
         id: 'support',
-        title: 'Centro de Soporte',
+        title: 'Ayuda y Soporte',
         icon: <MessageSquare className="w-6 h-6" />,
         color: 'rose',
-        intro: 'Canal directo para resolver incidencias, solicitar ayuda técnica y gestionar tu cuenta.',
+        intro: 'Centro de resolución de dudas y contacto con central.',
         sections: [
             {
-                title: '🎫 Gestión de Tickets',
+                title: '🎫 Tickets',
                 items: [
                     {
-                        term: '1. Crear Nuevo Ticket',
-                        definition: 'Usa el botón "Nuevo Ticket" para reportar problemas técnicos, dudas operativas o solicitudes administrativas.',
-                        tip: '💡 Selecciona la categoría correcta (Técnica, Financiera, Operativa) para que llegue al departamento adecuado más rápido.'
-                    },
-                    {
-                        term: '2. Seguimiento y Estado',
-                        definition: 'Consulta la tabla de historial para ver el progreso de tus solicitudes.',
-                        example: '🟢 Abierto | 🟡 En Proceso | 🔴 Resuelto',
-                        tip: '💡 Recibirás notificaciones cuando un agente responda o cambie el estado de tu ticket.'
-                    }
-                ]
-            },
-            {
-                title: '👤 Mi Perfil de Franquiciado',
-                items: [
-                    {
-                        term: 'Datos de Contacto',
-                        definition: 'Asegúrate de que tu teléfono y email de emergencias estén siempre actualizados.',
-                        tip: '💡 La central utilizará estos datos para comunicaciones urgentes sobre cierres o incidencias de red.'
-                    },
-                    {
-                        term: 'Seguridad',
-                        definition: 'Gestión de contraseña y sesiones activas.',
-                        tip: '💡 Recomendamos cambiar tu contraseña cada 3 meses por seguridad.'
+                        term: 'Categorías',
+                        definition: 'Clasifica tu duda (Técnica, Operativa, Financiera) para una respuesta más rápida.',
+                        tip: '💡 Revisa las FAQ antes de abrir un ticket, ¡la respuesta podría estar ya ahí!'
                     }
                 ]
             }
@@ -196,37 +165,15 @@ export const pageHelpData: Record<string, PageHelpContent> = {
         title: 'Centro de Recursos',
         icon: <BookOpen className="w-6 h-6" />,
         color: 'blue',
-        intro: 'Biblioteca digital integral con toda la documentación operativa, manuales y guías de la franquicia.',
+        intro: 'Documentación oficial, contratos y manuales operativos.',
         sections: [
             {
-                title: '📖 Manuales Operativos (Playbooks)',
+                title: '📂 Archivos',
                 items: [
                     {
-                        term: 'Protocolos de Emergencia',
-                        definition: 'Guías paso a paso para actuar ante accidentes, robos o inspecciones.',
-                        example: '🛡️ Protocolo Accidentes | 🔧 Mantenimiento',
-                        tip: '💡 Ten siempre impresa una copia del Protocolo de Accidentes en el tablón de la tienda.'
-                    },
-                    {
-                        term: 'Guías de Excelencia',
-                        definition: 'Mejores prácticas para mejorar tu puntuación de calidad y servicio.',
-                        tip: '💡 Consulta la guía "Atención al Cliente" para entrenar a tus nuevos empleados.'
-                    }
-                ]
-            },
-            {
-                title: '📂 Navegación y Visualización',
-                items: [
-                    {
-                        term: 'Buscador Inteligente',
-                        definition: 'Localiza documentos rápidamente buscando por nombre, categoría o tipo de archivo.',
-                        tip: '💡 Puedes buscar "Factura" o "Contrato" para filtrar resultados al instante.'
-                    },
-                    {
-                        term: 'Vista Previa Instantánea',
-                        definition: 'Visualiza PDFs e imágenes directamente en la plataforma sin necesidad de descargarlos.',
-                        example: '👁️ Icono de Ojo',
-                        tip: '💡 Usa la vista de cuadrícula para identificar visualmente los documentos por su portada.'
+                        term: 'Playbooks',
+                        definition: 'Guías paso a paso para situaciones comunes (Accidentes, Inspecciones).',
+                        tip: '💡 Descarga los PDFs importantes para tenerlos disponibles offline.'
                     }
                 ]
             }

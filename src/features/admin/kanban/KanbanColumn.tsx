@@ -67,7 +67,8 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ title, tasks, onCardClick, 
             {/* Tasks Area - No Scroll */}
             <div
                 ref={setNodeRef}
-                className={`flex-1 overflow-hidden p-2 transition-all duration-300 ${isOver ? 'bg-indigo-500/5' : ''}`}
+                className={`flex-1 overflow-y-auto p-2 transition-all duration-300 scrollbar-thin scrollbar-thumb-indigo-500/20 scrollbar-track-transparent ${isOver ? 'bg-indigo-500/5' : ''}`}
+
             >
                 <div className="flex flex-col gap-2">
                     <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>

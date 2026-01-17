@@ -38,7 +38,7 @@ const AdminFranchiseView = lazyWithRetry(() => import('./features/admin/AdminFra
 const KanbanBoard = lazyWithRetry(() => import('./features/admin/kanban/KanbanBoard'));
 const RidersView = lazyWithRetry(() => import('./features/fleet/RidersView'));
 const AcademyAdminView = lazyWithRetry(() => import('./features/academy/admin/AcademyAdminView').then(module => ({ default: module.AcademyAdminView })));
-const LessonEditor = lazyWithRetry(() => import('./features/academy/admin/LessonEditor').then(module => ({ default: module.LessonEditor })));
+const LessonEditor = lazyWithRetry(() => import('./features/academy/admin/LessonEditor'));
 const QuizEditor = lazyWithRetry(() => import('./features/academy/admin/QuizEditor').then(module => ({ default: module.QuizEditor })));
 const IsolatedSeederPage = lazyWithRetry(() => import('./features/academy/admin/IsolatedSeederPage').then(module => ({ default: module.IsolatedSeederPage })));
 

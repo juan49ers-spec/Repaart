@@ -56,7 +56,7 @@ const AcademyAnalytics: FC = () => {
     const fetchAnalytics = async (): Promise<void> => {
         try {
             const progressSnap = await getDocs(collection(db, 'academy_progress'));
-            const modulesSnap = await getDocs(collection(db, 'academy_modules'));
+            const modulesSnap = await getDocs(collection(db, 'academy_courses'));
 
             const progressData: ProgressData[] = progressSnap.docs.map(doc => doc.data() as ProgressData);
             const modulesData: Record<string, string> = modulesSnap.docs.reduce((acc, doc) => {

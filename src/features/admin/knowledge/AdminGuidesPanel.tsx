@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../../../lib/firebase';
 import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { generateGuideContent } from '../../../lib/gemini';
-import { Plus, Save, Trash2, X, Type, PlayCircle, Search, Filter, ShieldAlert, Edit2, Sparkles, Wand2 } from 'lucide-react';
+import { Plus, Save, Trash2, X, Type, PlayCircle, Search, Filter, ShieldAlert, Edit2, Sparkles, Wand2, FileText, Layout } from 'lucide-react';
 import { GUIDE_THEMES, GUIDE_ICONS } from '../../../lib/constants';
+import ReactMarkdown from 'react-markdown';
 
 // Internal Interface for the Guide Form
 interface GuideData {
     id?: string;
     title: string;
     description: string;
+    content?: string; // Markdown Content
     category: string;
     theme: keyof typeof GUIDE_THEMES;
     icon: keyof typeof GUIDE_ICONS;
@@ -20,6 +22,7 @@ interface GuideData {
 const INITIAL_FORM: GuideData = {
     title: '',
     description: '',
+    content: '',
     category: 'operativa',
     theme: 'indigo',
     icon: 'FileText',
@@ -35,6 +38,7 @@ const AdminGuidesPanel: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterCategory, setFilterCategory] = useState<string>('all');
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [previewMode, setPreviewMode] = useState<'card' | 'full'>('full'); // 'card' or 'full'
 
     // AI Assistant States
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
@@ -53,7 +57,6 @@ const AdminGuidesPanel: React.FC = () => {
     }, []);
 
     // AI Generation Handler
-    // AI Generation Handler
     const handleAiGenerate = async () => {
         if (!aiPrompt.trim()) return;
         setIsGenerating(true);
@@ -64,6 +67,7 @@ const AdminGuidesPanel: React.FC = () => {
                     ...INITIAL_FORM,
                     title: result.title,
                     description: result.description,
+                    content: result.content || result.description, // Fallback to desc if no content
                     category: result.category,
                     theme: result.theme as any,
                     icon: result.icon as any,
@@ -71,13 +75,14 @@ const AdminGuidesPanel: React.FC = () => {
                 });
                 setIsAiModalOpen(false);
                 setIsDrawerOpen(true); // Open editor with result
+                setPreviewMode('full'); // Show full content
                 setAiPrompt(''); // Clear
             }
         } catch (error: any) {
             console.error("AI Error:", error);
-            if (error.message.includes("Invalid JSON")) {
+            if (error.message && error.message.includes("Invalid JSON")) {
                 alert("La IA generó una respuesta pero no pudimos leerla correctamente (Error de formato). Por favor, intenta simplificar el texto o inténtalo de nuevo.");
-            } else if (error.message.includes("No JSON structure")) {
+            } else if (error.message && error.message.includes("No JSON structure")) {
                 alert("La IA no devolvió un formato válido. Intenta ser más claro en tu petición.");
             } else {
                 alert("Error de conexión o de la IA: " + (error.message || "Desconocido"));
@@ -90,14 +95,16 @@ const AdminGuidesPanel: React.FC = () => {
     // Standard Handlers
     const handleEdit = (guide: GuideData) => {
         setSelectedGuide(guide);
-        setFormData(guide);
+        setFormData({ ...guide, content: guide.content || guide.description }); // Ensure content exists
         setIsDrawerOpen(true);
+        setPreviewMode('full');
     };
 
     const handleNew = () => {
         setSelectedGuide(null);
         setFormData(INITIAL_FORM);
         setIsDrawerOpen(true);
+        setPreviewMode('card');
     };
 
     const handleCloseDrawer = () => {
@@ -113,6 +120,7 @@ const AdminGuidesPanel: React.FC = () => {
             const dataToSave = {
                 title: formData.title,
                 description: formData.description,
+                content: formData.content || '',
                 category: formData.category,
                 theme: formData.theme,
                 icon: formData.icon,
@@ -264,7 +272,7 @@ const AdminGuidesPanel: React.FC = () => {
                                             {guide.category}
                                         </span>
                                         <div className="flex items-center gap-1 text-[10px] font-bold text-slate-300 group-hover:text-indigo-400 transition-colors">
-                                            Editar <PlayCircle className="w-3 h-3" />
+                                            Leer Guía <PlayCircle className="w-3 h-3" />
                                         </div>
                                     </div>
                                 </div>
@@ -298,7 +306,7 @@ const AdminGuidesPanel: React.FC = () => {
                                         Asistente IA
                                     </h3>
                                     <p className="text-sm text-slate-500 mt-1">
-                                        Pega un texto borrador, un email o una nota rápida. Gemini estructurará la guía por ti.
+                                        Pega un texto borrador, un email o una nota. Gemini estructurará la guía completa por ti.
                                     </p>
                                 </div>
                                 <button
@@ -313,7 +321,7 @@ const AdminGuidesPanel: React.FC = () => {
                             <textarea
                                 value={aiPrompt}
                                 onChange={(e) => setAiPrompt(e.target.value)}
-                                placeholder="Ej: 'Avisar a todos que el lunes hay revisión de frenos obligatoria en el taller central de 9 a 14h. Es muy importante por seguridad.'"
+                                placeholder="Ej: 'Cómo gestionar un accidente leve con la moto. Paso 1: llamar al seguro 91000... Paso 2: avisar al coordinador...'"
                                 className="w-full h-40 p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10 transition-all font-medium text-slate-700 dark:text-slate-200 resize-none mb-6 placeholder-slate-400"
                             />
 
@@ -325,7 +333,7 @@ const AdminGuidesPanel: React.FC = () => {
                                 {isGenerating ? (
                                     <>
                                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        Analizando y Redactando...
+                                        Redactando Guía...
                                     </>
                                 ) : (
                                     <>
@@ -343,7 +351,7 @@ const AdminGuidesPanel: React.FC = () => {
                 </div>
             )}
 
-            {/* --- DRAWER (SLIDE-OVER) --- */}
+            {/* --- DRAWER (EDITOR) --- */}
             {/* Backdrop */}
             {isDrawerOpen && (
                 <div
@@ -352,16 +360,48 @@ const AdminGuidesPanel: React.FC = () => {
                 />
             )}
 
-            {/* Drawer Panel */}
+            {/* Drawer Panel - WIDER FOR DOCUMENT EDITING */}
             <div
-                className={`absolute inset-y-0 right-0 w-full md:w-[600px] bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                className={`absolute inset-y-0 right-0 w-full md:w-[800px] lg:w-[900px] bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}
             >
                 {/* Drawer Header */}
                 <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                        {selectedGuide ? 'Editar Guía' : 'Nueva Guía'}
-                    </h3>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={handleCloseDrawer}
+                            title="Cerrar Editor"
+                            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                            {selectedGuide ? 'Editar Guía' : 'Nueva Guía'}
+                        </h3>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        {/* Preview Switcher */}
+                        <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-1 flex items-center">
+                            <button
+                                onClick={() => setPreviewMode('card')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2 ${previewMode === 'card'
+                                    ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
+                                    : 'text-slate-400 hover:text-slate-600'
+                                    }`}
+                            >
+                                <Layout className="w-3 h-3" /> Tarjeta
+                            </button>
+                            <button
+                                onClick={() => setPreviewMode('full')}
+                                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2 ${previewMode === 'full'
+                                    ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
+                                    : 'text-slate-400 hover:text-slate-600'
+                                    }`}
+                            >
+                                <FileText className="w-3 h-3" /> Documento
+                            </button>
+                        </div>
+
                         {selectedGuide?.id && (
                             <button
                                 onClick={() => handleDelete(selectedGuide.id!)}
@@ -372,75 +412,35 @@ const AdminGuidesPanel: React.FC = () => {
                             </button>
                         )}
                         <button
-                            onClick={handleCloseDrawer}
-                            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                            title="Cerrar editor"
+                            onClick={handleSave}
+                            className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold uppercase tracking-widest shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 text-xs"
                         >
-                            <X className="w-6 h-6" />
+                            <Save className="w-3 h-3" />
+                            Guardar
                         </button>
                     </div>
                 </div>
 
-                {/* Drawer Content - Scrollable */}
-                <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
+                {/* Drawer Content - Split View */}
+                <div className="flex-1 overflow-y-hidden flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-slate-800">
 
-                    {/* Live Preview Section (Sticky-ish feel) */}
-                    <div className="bg-slate-50 dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 relative group overflow-hidden">
-                        <div className="absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-slate-200 dark:bg-slate-800 rounded-full text-[9px] font-bold uppercase tracking-widest text-slate-500">Vista Previa</div>
+                    {/* LEFT: FORM & EDITOR */}
+                    <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
+                        {/* Metadata Fields Condensed */}
+                        <div className="space-y-4">
+                            <input
+                                type="text"
+                                value={formData.title}
+                                onChange={e => setFormData({ ...formData, title: e.target.value })}
+                                className="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500/20 font-bold text-lg text-slate-900 dark:text-white placeholder-slate-400"
+                                placeholder="Título de la Guía"
+                            />
 
-                        {/* Card Mockup */}
-                        <div className="mt-4 bg-white dark:bg-black/40 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5 shadow-sm relative overflow-hidden">
-                            {/* Decorative Background Icon */}
-                            <div className="absolute -right-4 -top-4 opacity-5 pointer-events-none">
-                                <PreviewIcon className={`w-32 h-32 ${themeStyles.text}`} />
-                            </div>
-
-                            <div className="flex justify-between items-start mb-4 relative z-10">
-                                <div className={`w-12 h-12 rounded-xl ${themeStyles.bg} flex items-center justify-center`}>
-                                    <PreviewIcon className={`w-6 h-6 ${themeStyles.text}`} />
-                                </div>
-                                {formData.isCritical && (
-                                    <span className="bg-rose-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase shadow-sm">
-                                        Crítico
-                                    </span>
-                                )}
-                            </div>
-
-                            <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight">{formData.title || 'Tu Título Aquí'}</h4>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{formData.description || 'La descripción de tu guía aparecerá aquí...'}</p>
-
-                            <div className="mt-4 pt-3 border-t border-dashed border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                                <span className={`text-[9px] font-bold uppercase ${themeStyles.text}`}>Ver Documento</span>
-                                <PlayCircle className={`w-4 h-4 ${themeStyles.text}`} />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Form Fields */}
-                    <div className="space-y-6">
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Title */}
-                            <div className="md:col-span-2">
-                                <label className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
-                                    <Type className="w-3 h-3" /> Título
-                                </label>
-                                <input
-                                    type="text"
-                                    value={formData.title}
-                                    onChange={e => setFormData({ ...formData, title: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-2 focus:ring-indigo-500/50 font-bold text-slate-900 dark:text-white placeholder-slate-400 transition-all"
-                                    placeholder="Ej: Protocolo de Apertura"
-                                />
-                            </div>
-
-                            {/* Category */}
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Categoría</label>
+                            <div className="grid grid-cols-2 gap-4">
                                 <select
                                     value={formData.category}
                                     onChange={e => setFormData({ ...formData, category: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-bold text-sm text-slate-700 dark:text-slate-200"
+                                    className="w-full px-4 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 font-bold text-sm text-slate-700 dark:text-slate-200"
                                     aria-label="Categoría"
                                 >
                                     <option value="operativa">Operativa</option>
@@ -448,112 +448,142 @@ const AdminGuidesPanel: React.FC = () => {
                                     <option value="accidente">Accidentes</option>
                                     <option value="rrhh">Recursos Humanos</option>
                                 </select>
-                            </div>
 
-                            {/* Critical Toggle */}
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Importancia</label>
                                 <button
                                     onClick={() => setFormData({ ...formData, isCritical: !formData.isCritical })}
-                                    className={`w-full px-4 py-3 rounded-xl border transition-all flex items-center justify-center gap-2 font-bold text-sm uppercase tracking-wide ${formData.isCritical
+                                    className={`w-full px-4 py-2 rounded-xl border transition-all flex items-center justify-center gap-2 font-bold text-sm uppercase tracking-wide ${formData.isCritical
                                         ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400'
-                                        : 'bg-slate-50 dark:bg-slate-800 border-transparent text-slate-400'
+                                        : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-400'
                                         }`}
                                 >
-                                    {formData.isCritical ? <ShieldAlert className="w-4 h-4" /> : <div className="w-4 h-4 rounded-full border-2 border-slate-300" />}
+                                    {formData.isCritical ? <ShieldAlert className="w-4 h-4" /> : <div className="w-2 h-2 rounded-full bg-slate-300" />}
                                     {formData.isCritical ? 'Crítico' : 'Normal'}
                                 </button>
                             </div>
-                        </div>
 
-                        {/* Description */}
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Descripción</label>
                             <textarea
                                 value={formData.description}
                                 onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                rows={3}
-                                className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-2 focus:ring-indigo-500/50 text-sm font-medium text-slate-600 dark:text-slate-300 placeholder-slate-400 resize-none"
-                                placeholder="Breve resumen del contenido..."
+                                rows={2}
+                                className="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 placeholder-slate-400 resize-none"
+                                placeholder="Resumen corto para la tarjeta (Máx 2 frases)..."
                             />
                         </div>
 
-                        {/* URL */}
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Enlace de Destino</label>
-                            <input
-                                type="text"
-                                value={formData.url}
-                                onChange={e => setFormData({ ...formData, url: e.target.value })}
-                                className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium text-sm text-blue-600 dark:text-blue-400"
-                                placeholder="https://..."
+                        {/* CONTENT EDITOR */}
+                        <div className="flex-1 flex flex-col h-[500px]">
+                            <label className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 mt-4">
+                                <span className="flex items-center gap-2"><Type className="w-3 h-3" /> Contenido (Markdown)</span>
+                                <span className="text-[10px] text-indigo-500 cursor-help" title="Usa # para Títulos, - para listas, ** para negrita">¿Ayuda de formato?</span>
+                            </label>
+                            <textarea
+                                value={formData.content}
+                                onChange={e => setFormData({ ...formData, content: e.target.value })}
+                                className="flex-1 w-full p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500/20 font-mono text-sm text-slate-800 dark:text-slate-200 resize-none leading-relaxed"
+                                placeholder="# Introducción\nEscribe aquí tu guía completa...\n\n## Paso 1\n..."
                             />
                         </div>
 
-                        {/* Visual Selectors */}
-                        <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-
-                            {/* Color Theme */}
+                        {/* Visual Selectors (Collapsed by default logic, but showing here for now) */}
+                        <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Color del Tema</label>
-                                <div className="flex flex-wrap gap-2">
-                                    {Object.entries(GUIDE_THEMES).map(([key, theme]) => (
-                                        <button
-                                            key={key}
-                                            onClick={() => setFormData({ ...formData, theme: key as any })}
-                                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${formData.theme === key
-                                                ? 'ring-2 ring-offset-2 ring-indigo-500 scale-110'
-                                                : 'opacity-50 hover:opacity-100 hover:scale-105'
-                                                } ${theme.bg}`}
-                                            title={theme.label}
-                                        >
-                                            <div className={`w-3 h-3 rounded-full ${theme.bg.replace('bg-', 'bg-').replace('50', '500').replace('900/20', '500')}`} />
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Icons - Horizontal Scroll */}
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Icono</label>
-                                <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Icono</label>
+                                <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar">
                                     {Object.entries(GUIDE_ICONS).map(([name, Icon]) => (
                                         <button
                                             key={name}
                                             onClick={() => setFormData({ ...formData, icon: name as any })}
-                                            title={`Seleccionar icono ${name}`}
-                                            className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all ${formData.icon === name
-                                                ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-md transform -translate-y-1'
-                                                : 'bg-slate-50 dark:bg-slate-800 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                            title={name}
+                                            className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all ${formData.icon === name
+                                                ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
+                                                : 'bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-400'
                                                 }`}
                                         >
-                                            <Icon className="w-5 h-5" />
+                                            <Icon className="w-4 h-4" />
                                         </button>
                                     ))}
                                 </div>
                             </div>
-
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Color</label>
+                                <div className="flex gap-2">
+                                    {Object.entries(GUIDE_THEMES).map(([key, theme]) => (
+                                        <button
+                                            key={key}
+                                            onClick={() => setFormData({ ...formData, theme: key as any })}
+                                            title={key}
+                                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${formData.theme === key ? 'ring-2 ring-indigo-500 scale-110' : 'opacity-40 hover:opacity-100'} ${theme.bg}`}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="h-20" /> {/* Spacer */}
-                </div>
+                    {/* RIGHT: PREVIEW AREA */}
+                    <div className={`md:w-1/2 bg-white dark:bg-slate-950 flex flex-col ${previewMode === 'card' ? 'bg-slate-100 dark:bg-slate-900 items-center justify-center' : ''}`}>
 
-                {/* Drawer Footer */}
-                <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex justify-end gap-3 sticky bottom-0 z-10">
-                    <button
-                        onClick={handleCloseDrawer}
-                        className="px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        onClick={handleSave}
-                        className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold uppercase tracking-widest shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-0.5 transition-all flex items-center gap-2"
-                    >
-                        <Save className="w-4 h-4" />
-                        Guardar
-                    </button>
+                        {previewMode === 'card' ? (
+                            <div className="w-full max-w-sm p-8">
+                                <div className="text-center mb-4 text-xs font-bold uppercase text-slate-400 tracking-widest">Vista de Tarjeta</div>
+                                {/* Card Mockup */}
+                                <div className="bg-white dark:bg-black/40 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                                    <div className="absolute -right-4 -top-4 opacity-5 pointer-events-none">
+                                        <PreviewIcon className={`w-32 h-32 ${themeStyles.text}`} />
+                                    </div>
+
+                                    <div className="flex justify-between items-start mb-4 relative z-10">
+                                        <div className={`w-12 h-12 rounded-xl ${themeStyles.bg} flex items-center justify-center`}>
+                                            <PreviewIcon className={`w-6 h-6 ${themeStyles.text}`} />
+                                        </div>
+                                        {formData.isCritical && (
+                                            <span className="bg-rose-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase shadow-sm">
+                                                Crítico
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight">{formData.title || 'Título de la Guía'}</h4>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{formData.description || 'Descripción corta...'}</p>
+
+                                    <div className="mt-4 pt-3 border-t border-dashed border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                                        <span className={`text-[9px] font-bold uppercase ${themeStyles.text}`}>Ver Documento</span>
+                                        <PlayCircle className={`w-4 h-4 ${themeStyles.text}`} />
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex flex-col h-full bg-white dark:bg-slate-950 overflow-hidden">
+                                <div className="px-6 py-4 border-b border-slate-50 dark:border-slate-900 bg-slate-50/50 dark:bg-slate-900/50">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-8 h-8 rounded-lg ${themeStyles.bg} flex items-center justify-center`}>
+                                                <PreviewIcon className={`w-4 h-4 ${themeStyles.text}`} />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-none">{formData.title || 'Sin Título'}</h4>
+                                                <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">{formData.category} &bull; Lectura estimada: 5 min</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* MARKDOWN PREVIEW CONTENT */}
+                                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                                    <article className="prose prose-sm prose-slate dark:prose-invert max-w-none prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-h2:text-indigo-600 dark:prose-h2:text-indigo-400 prose-a:text-indigo-500 hover:prose-a:text-indigo-600 prose-img:rounded-xl prose-hr:border-slate-200 dark:prose-hr:border-slate-800">
+                                        {formData.content ? (
+                                            <ReactMarkdown>{formData.content}</ReactMarkdown>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center h-48 text-slate-300">
+                                                <FileText className="w-12 h-12 mb-2 opacity-50" />
+                                                <p>Escribe en el editor para ver el resultado en tiempo real.</p>
+                                            </div>
+                                        )}
+                                    </article>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

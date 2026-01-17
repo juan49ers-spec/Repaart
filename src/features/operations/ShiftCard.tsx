@@ -107,18 +107,29 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
         if (readOnly || isRiderMode) return;
-        setIsDragging(true);
+
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('application/json', JSON.stringify(event));
 
-        // Create ghost image
+        // Create ghost image for a more professional feel
         const ghost = e.currentTarget.cloneNode(true) as HTMLElement;
-        ghost.style.opacity = '0.9';
+        ghost.style.position = 'absolute';
+        ghost.style.top = '-1000px'; // Offscreen
+        ghost.style.opacity = '1';
         ghost.style.transform = 'scale(1.05) rotate(2deg)';
-        ghost.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
+        ghost.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.25)';
+        ghost.style.width = `${e.currentTarget.offsetWidth}px`;
+        ghost.style.height = `${e.currentTarget.offsetHeight}px`;
         document.body.appendChild(ghost);
-        e.dataTransfer.setDragImage(ghost, 50, 25);
-        setTimeout(() => document.body.removeChild(ghost), 0);
+
+        // Center the drag image on mouse
+        e.dataTransfer.setDragImage(ghost, e.currentTarget.offsetWidth / 2, e.currentTarget.offsetHeight / 2);
+
+        // Cleanup ghost after the drag has started
+        setTimeout(() => {
+            document.body.removeChild(ghost);
+            setIsDragging(true); // Now we hide the original
+        }, 0);
 
         if (onDragStart) onDragStart(event);
     };

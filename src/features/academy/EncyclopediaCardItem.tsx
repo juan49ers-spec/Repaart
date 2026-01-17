@@ -11,38 +11,106 @@ import {
     ShieldCheck,
     Cpu,
     BookOpen,
-    Star,
+    Bookmark,
+    Share2,
+    MoreHorizontal,
     Pencil,
     CheckCircle2,
-    Share2,
-    Copy,
-    Check
+    Star
 } from 'lucide-react';
 import { EncyclopediaCard } from '../../hooks/useEncyclopedia';
 import toast from 'react-hot-toast';
 
-const categoryIcons: Record<string, React.FC<{ size?: number; className?: string }>> = {
-    "Estrategia": TrendingUp,
-    "Finanzas": CreditCard,
-    "Operativa": Truck,
-    "RRHH": Users,
-    "Comercial": Target,
-    "Tecnología": Cpu,
-    "Calidad": ShieldCheck,
-    "Seguridad": ShieldCheck,
-    "Liderazgo": BookOpen
+// Category configurations with colors and icons
+const categoryConfig: Record<string, {
+    icon: React.FC<{ size?: number; className?: string }>;
+    color: string;
+    bgColor: string;
+    borderColor: string;
+    gradientFrom: string;
+    gradientTo: string;
+}> = {
+    "Estrategia": {
+        icon: TrendingUp,
+        color: "text-violet-600 dark:text-violet-400",
+        bgColor: "bg-violet-50 dark:bg-violet-950/40",
+        borderColor: "border-violet-200 dark:border-violet-800/50",
+        gradientFrom: "from-violet-400",
+        gradientTo: "to-purple-500"
+    },
+    "Finanzas": {
+        icon: CreditCard,
+        color: "text-emerald-600 dark:text-emerald-400",
+        bgColor: "bg-emerald-50 dark:bg-emerald-950/40",
+        borderColor: "border-emerald-200 dark:border-emerald-800/50",
+        gradientFrom: "from-emerald-400",
+        gradientTo: "to-teal-500"
+    },
+    "Operativa": {
+        icon: Truck,
+        color: "text-blue-600 dark:text-blue-400",
+        bgColor: "bg-blue-50 dark:bg-blue-950/40",
+        borderColor: "border-blue-200 dark:border-blue-800/50",
+        gradientFrom: "from-blue-400",
+        gradientTo: "to-indigo-500"
+    },
+    "RRHH": {
+        icon: Users,
+        color: "text-orange-600 dark:text-orange-400",
+        bgColor: "bg-orange-50 dark:bg-orange-950/40",
+        borderColor: "border-orange-200 dark:border-orange-800/50",
+        gradientFrom: "from-orange-400",
+        gradientTo: "to-pink-500"
+    },
+    "Comercial": {
+        icon: Target,
+        color: "text-rose-600 dark:text-rose-400",
+        bgColor: "bg-rose-50 dark:bg-rose-950/40",
+        borderColor: "border-rose-200 dark:border-rose-800/50",
+        gradientFrom: "from-rose-400",
+        gradientTo: "to-pink-500"
+    },
+    "Tecnología": {
+        icon: Cpu,
+        color: "text-indigo-600 dark:text-indigo-400",
+        bgColor: "bg-indigo-50 dark:bg-indigo-950/40",
+        borderColor: "border-indigo-200 dark:border-indigo-800/50",
+        gradientFrom: "from-indigo-400",
+        gradientTo: "to-cyan-500"
+    },
+    "Calidad": {
+        icon: ShieldCheck,
+        color: "text-amber-600 dark:text-amber-400",
+        bgColor: "bg-amber-50 dark:bg-amber-950/40",
+        borderColor: "border-amber-200 dark:border-amber-800/50",
+        gradientFrom: "from-amber-400",
+        gradientTo: "to-orange-500"
+    },
+    "Seguridad": {
+        icon: ShieldCheck,
+        color: "text-red-600 dark:text-red-400",
+        bgColor: "bg-red-50 dark:bg-red-950/40",
+        borderColor: "border-red-200 dark:border-red-800/50",
+        gradientFrom: "from-red-400",
+        gradientTo: "to-rose-500"
+    },
+    "Liderazgo": {
+        icon: BookOpen,
+        color: "text-cyan-600 dark:text-cyan-400",
+        bgColor: "bg-cyan-50 dark:bg-cyan-950/40",
+        borderColor: "border-cyan-200 dark:border-cyan-800/50",
+        gradientFrom: "from-cyan-400",
+        gradientTo: "to-blue-500"
+    }
 };
 
-const categoryGradients: Record<string, string> = {
-    "Estrategia": "from-violet-500 to-purple-600",
-    "Finanzas": "from-emerald-400 to-teal-600",
-    "Operativa": "from-blue-500 to-indigo-600",
-    "RRHH": "from-orange-400 to-pink-500",
-    "Comercial": "from-pink-500 to-rose-600",
-    "Tecnología": "from-indigo-500 to-cyan-600",
-    "Calidad": "from-amber-400 to-orange-500",
-    "Seguridad": "from-red-500 to-rose-600",
-    "Liderazgo": "from-cyan-500 to-blue-600"
+const defaultConfig = {
+    icon: Target,
+    color: "text-slate-600 dark:text-slate-400",
+    bgColor: "bg-slate-50 dark:bg-slate-900/40",
+    borderColor: "border-slate-200 dark:border-slate-800/50",
+    gradientFrom: "from-slate-400",
+    gradientTo: "to-slate-500"
 };
 
 interface EncyclopediaCardItemProps {
@@ -72,18 +140,9 @@ const EncyclopediaCardItem = memo(({
     onEdit,
     onToggleRead
 }: EncyclopediaCardItemProps) => {
-    const Icon = categoryIcons[card.category || 'General'] || Target;
-    const gradient = categoryGradients[card.category || 'General'] || "from-slate-500 to-slate-700";
-    const [copied, setCopied] = useState(false);
-
-    const handleCopy = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        const text = `${card.title}\n\n${card.content}\n\nAcción: ${card.action}`;
-        navigator.clipboard.writeText(text);
-        setCopied(true);
-        toast.success("Contenido copiado");
-        setTimeout(() => setCopied(false), 2000);
-    };
+    const config = categoryConfig[card.category || 'General'] || defaultConfig;
+    const Icon = config.icon;
+    const [showActions, setShowActions] = useState(false);
 
     const handleShare = async (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -99,37 +158,69 @@ const EncyclopediaCardItem = memo(({
                 console.log('Share canceled');
             }
         } else {
-            handleCopy(e);
+            navigator.clipboard.writeText(text);
+            toast.success("Contenido copiado");
         }
+        setShowActions(false);
     };
 
     return (
         <div
-            className={`group relative bg-white dark:bg-slate-900 rounded-[2rem] border transition-all duration-500 overflow-hidden
+            className={`
+                group relative bg-white dark:bg-slate-900 
+                rounded-2xl border transition-all duration-300 overflow-hidden
                 ${isExpanded
-                    ? 'border-indigo-500/30 shadow-2xl shadow-indigo-500/10 scale-[1.02]'
-                    : 'border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-800 hover:shadow-xl hover:-translate-y-1'
+                    ? `${config.borderColor} shadow-xl`
+                    : 'border-slate-200 dark:border-slate-800 hover:shadow-lg hover:-translate-y-1'
                 }
             `}
         >
-            {/* Header Gradient Strip with Glassmorphism */}
-            <div className={`absolute top-0 inset-x-0 h-24 bg-gradient-to-br ${gradient} opacity-10 transition-all duration-500 ${isExpanded ? 'h-full opacity-5' : ''}`} />
+            {/* Illustration Header */}
+            <div
+                className={`
+                    relative h-36 ${config.bgColor} 
+                    flex items-center justify-center overflow-hidden
+                    border-b ${config.borderColor}
+                `}
+            >
+                {/* Abstract gradient background */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${config.gradientFrom} ${config.gradientTo} opacity-10`} />
 
-            {/* Featured Badge - Modern Design */}
-            {card.isFeatured && (
-                <div className="absolute top-4 right-4 z-20">
-                    <div className={`bg-gradient-to-r ${gradient} text-white text-[10px] uppercase font-bold px-3 py-1 rounded-full shadow-lg shadow-indigo-500/20 flex items-center gap-1.5`}>
-                        <Star className="w-3 h-3 fill-white" />
-                        Premium
-                    </div>
+                {/* Pattern overlay */}
+                <div className="absolute inset-0 opacity-5" style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+                }} />
+
+                {/* Main Icon */}
+                <div className={`relative z-10 p-6 rounded-2xl ${config.bgColor} border ${config.borderColor} shadow-sm`}>
+                    <Icon className={`w-10 h-10 ${config.color}`} />
                 </div>
-            )}
 
-            {/* Main Clickable Content Area */}
+                {/* Featured Badge */}
+                {card.isFeatured && (
+                    <div className="absolute top-3 right-3 z-20">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide rounded-full bg-gradient-to-r ${config.gradientFrom} ${config.gradientTo} text-white shadow-md`}>
+                            <Star className="w-3 h-3 fill-white" />
+                            Premium
+                        </span>
+                    </div>
+                )}
+
+                {/* Read Badge */}
+                {isRead && (
+                    <div className="absolute top-3 left-3 z-20">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded-full bg-emerald-500 text-white">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Leído
+                        </span>
+                    </div>
+                )}
+            </div>
+
+            {/* Content Body */}
             <div
                 role="button"
                 tabIndex={0}
-                aria-expanded={isExpanded ? "true" : "false"}
                 onClick={() => onToggleExpand(card.id)}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
@@ -137,159 +228,143 @@ const EncyclopediaCardItem = memo(({
                         onToggleExpand(card.id);
                     }
                 }}
-                className="relative z-10 p-6 md:p-8 flex flex-col items-center text-center outline-none"
+                className="p-5 cursor-pointer"
             >
-                {/* Dynamic Icon Container - Centered & Larger */}
-                <div className={`relative shrink-0 mb-6 group-hover:scale-110 transition-transform duration-500`}>
-                    <div className={`absolute inset-0 bg-gradient-to-br ${gradient} blur-2xl opacity-20 group-hover:opacity-50 transition-opacity`} />
-                    <div className={`relative w-16 h-16 bg-gradient-to-br ${gradient} rounded-3xl flex items-center justify-center text-white shadow-xl shadow-indigo-500/20`}>
-                        {isRead ? <CheckCircle2 className="w-7 h-7" /> : <Icon className="w-7 h-7" />}
-                    </div>
-                </div>
+                {/* Category Label */}
+                <span className={`inline-block text-[10px] font-bold uppercase tracking-widest ${config.color} mb-2`}>
+                    {card.category}
+                </span>
 
-                <div className="w-full max-w-2xl">
-                    <div className="flex items-center justify-center gap-3 mb-4">
-                        <span className={`text-[11px] font-bold uppercase tracking-[0.2em] px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400`}>
-                            {card.category}
-                        </span>
-                        {isRead && (
-                            <span className="flex items-center gap-1 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                <CheckCircle2 className="w-3 h-3" />
-                                <CheckCircle2 className="w-3 h-3" />
-                                Leído
-                            </span>
-                        )}
-                    </div>
+                {/* Title */}
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight">
+                    {card.title}
+                </h3>
 
-                    <h3 className={`font-bold text-slate-900 dark:text-white leading-tight mb-4 transition-all duration-300 ${isExpanded ? 'text-3xl md:text-4xl tracking-tight' : 'text-xl md:text-2xl'}`}>
-                        {card.title}
-                    </h3>
+                {/* Description */}
+                <p className={`text-sm text-slate-600 dark:text-slate-400 leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
+                    {card.content}
+                </p>
 
-                    {!isExpanded && (
-                        <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base line-clamp-2 leading-relaxed font-normal mx-auto max-w-prose">
-                            {card.content}
-                        </p>
-                    )}
-                </div>
-
-
-                <div
-                    className={`nav-content w-full text-left transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${isExpanded ? 'grid-rows-[1fr] opacity-100 mt-10' : 'grid-rows-[0fr] opacity-0 hidden'}`}
-                >
-                    <div className="overflow-hidden min-h-0 cursor-auto" onClick={(e) => e.stopPropagation()}>
-                        <div className="prose prose-slate dark:prose-invert max-w-none mb-8">
-                            {card.content.split('\n\n').map((paragraph, idx) => (
-                                <p key={idx} className={`text-slate-600 dark:text-slate-300 text-lg leading-8 ${idx === 0 ? 'first-letter:text-5xl first-letter:font-bold first-letter:mr-3 first-letter:float-left first-letter:text-slate-900 dark:first-letter:text-white' : ''}`}>
-                                    {paragraph}
-                                </p>
-                            ))}
-                        </div>
-
-                        <div className="grid md:grid-cols-2 gap-6">
-                            {/* Action Card */}
-                            <div className="p-6 rounded-3xl bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/30 relative overflow-hidden group/action hover:shadow-lg transition-all">
-                                <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-indigo-500 to-violet-600" />
-                                <h4 className="text-sm font-bold uppercase tracking-widest mb-4 text-indigo-700 dark:text-indigo-400 flex items-center gap-2">
-                                    <Target className="w-5 h-5" />
-                                    Acción Inmediata
+                {/* Expanded Content */}
+                {isExpanded && (
+                    <div className="mt-6 space-y-4 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+                        {/* Action Card */}
+                        {card.action && (
+                            <div className={`p-4 rounded-xl ${config.bgColor} border ${config.borderColor}`}>
+                                <h4 className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${config.color} mb-2`}>
+                                    <Target className="w-4 h-4" />
+                                    Acción Clave
                                 </h4>
-                                <p className="text-base text-slate-700 dark:text-indigo-100 font-medium leading-relaxed">
+                                <p className="text-sm text-slate-700 dark:text-slate-300 font-medium">
                                     {card.action}
                                 </p>
                             </div>
+                        )}
 
-                            {/* Example Card */}
-                            {card.example && (
-                                <div className="p-6 rounded-3xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30 relative overflow-hidden group/example hover:shadow-lg transition-all">
-                                    <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-amber-400 to-orange-500" />
-                                    <h4 className="text-sm font-bold uppercase tracking-widest mb-4 text-amber-700 dark:text-amber-500 flex items-center gap-2">
-                                        <Lightbulb className="w-5 h-5" />
-                                        Caso Real
-                                    </h4>
-                                    <p className="text-base text-slate-700 dark:text-amber-100 italic leading-relaxed">
-                                        &quot;{card.example}&quot;
-                                    </p>
-                                </div>
-                            )}
-                        </div>
+                        {/* Example Card */}
+                        {card.example && (
+                            <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
+                                <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 mb-2">
+                                    <Lightbulb className="w-4 h-4" />
+                                    Ejemplo Práctico
+                                </h4>
+                                <p className="text-sm text-slate-700 dark:text-amber-100 italic">
+                                    &quot;{card.example}&quot;
+                                </p>
+                            </div>
+                        )}
                     </div>
-                </div>
+                )}
             </div>
 
-            {/* Footer Control Bar */}
-            <div className={`px-6 md:px-8 py-4 flex items-center justify-between transition-all duration-500 z-20 relative ${isExpanded ? 'bg-slate-50/80 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800/50 backdrop-blur-sm' : 'bg-transparent border-t border-transparent group-hover:border-slate-50/50'}`}>
-                {/* Audio Control */}
+            {/* Footer Actions */}
+            <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                {/* Audio Button */}
                 <button
                     onClick={(e) => onToggleSpeak(e, card)}
-                    className={`flex items-center gap-2.5 text-xs font-bold uppercase tracking-wider transition-all px-4 py-2 rounded-full transform active:scale-95 ${isSpeaking
-                        ? 'text-white bg-gradient-to-r from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/30 animate-pulse'
-                        : 'text-slate-500 dark:text-slate-400 hover:text-white hover:bg-slate-900 dark:hover:bg-slate-700 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-900 shadow-sm'
-                        }`}
+                    className={`
+                        flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all
+                        ${isSpeaking
+                            ? 'bg-indigo-500 text-white'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                        }
+                    `}
                 >
-                    {isSpeaking ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-                    {isSpeaking ? 'Escuchando...' : 'Escuchar'}
+                    {isSpeaking ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+                    {isSpeaking ? 'Pausar' : 'Escuchar'}
                 </button>
 
-                <div className="flex items-center gap-2">
-                    {/* Share & Copy Actions */}
-                    {isExpanded && (
-                        <>
-                            <button
-                                onClick={handleCopy}
-                                className="p-2.5 rounded-full text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all"
-                                title="Copiar texto"
-                            >
-                                {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                            </button>
-                            <button
-                                onClick={handleShare}
-                                className="p-2.5 rounded-full text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all"
-                                title="Compartir"
-                            >
-                                <Share2 className="w-4 h-4" />
-                            </button>
-                            <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1" />
-                        </>
-                    )}
-
-                    {!isAdmin && onToggleRead && (
-                        <button
-                            onClick={(e) => onToggleRead(card.id, e)}
-                            className={`p-2.5 rounded-full transition-all duration-300 ${isRead
-                                ? 'text-white bg-emerald-500 shadow-lg shadow-emerald-500/30 scale-110'
-                                : 'text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
-                                }`}
-                            title={isRead ? "Marcar no leído" : "Marcar leído"}
-                        >
-                            <CheckCircle2 className="w-5 h-5" />
-                        </button>
-                    )}
-
+                {/* Right Actions */}
+                <div className="flex items-center gap-1">
+                    {/* Bookmark */}
                     {onToggleFavorite && (
                         <button
                             onClick={(e) => onToggleFavorite(card.id, e)}
-                            className={`p-2.5 rounded-full transition-all duration-300 ${isFavorite
-                                ? 'text-amber-400 bg-amber-50 dark:bg-amber-900/20 shadow-lg shadow-amber-500/10 scale-110'
-                                : 'text-slate-400 hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20'
+                            className={`p-2 rounded-lg transition-all ${isFavorite
+                                ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/30'
+                                : 'text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800'
                                 }`}
-                            title="Favoritos"
+                            title="Guardar"
                         >
-                            <Star className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
+                            <Bookmark className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
                         </button>
                     )}
 
-                    {isAdmin && onEdit && (
+                    {/* Mark as Read */}
+                    {!isAdmin && onToggleRead && (
                         <button
-                            onClick={(e) => onEdit(card, e)}
-                            className="p-2.5 rounded-full text-slate-400 hover:text-white hover:bg-indigo-600 transition-all ml-1"
-                            title="Editar (Admin)"
+                            onClick={(e) => onToggleRead(card.id, e)}
+                            className={`p-2 rounded-lg transition-all ${isRead
+                                ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/30'
+                                : 'text-slate-400 hover:text-emerald-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                }`}
+                            title={isRead ? "Marcar no leído" : "Marcar leído"}
                         >
-                            <Pencil className="w-4 h-4" />
+                            <CheckCircle2 className="w-4 h-4" />
                         </button>
+                    )}
+
+                    {/* Share */}
+                    <button
+                        onClick={handleShare}
+                        className="p-2 rounded-lg text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                        title="Compartir"
+                    >
+                        <Share2 className="w-4 h-4" />
+                    </button>
+
+                    {/* More Actions (Admin) */}
+                    {isAdmin && onEdit && (
+                        <div className="relative">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowActions(!showActions);
+                                }}
+                                className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                            >
+                                <MoreHorizontal className="w-4 h-4" />
+                            </button>
+
+                            {showActions && (
+                                <div className="absolute right-0 bottom-full mb-1 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 py-1 min-w-[120px] z-50">
+                                    <button
+                                        onClick={(e) => {
+                                            onEdit(card, e);
+                                            setShowActions(false);
+                                        }}
+                                        className="w-full px-3 py-2 text-left text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2"
+                                    >
+                                        <Pencil className="w-3 h-3" />
+                                        Editar
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
             </div>
-        </div >
+        </div>
     );
 });
 

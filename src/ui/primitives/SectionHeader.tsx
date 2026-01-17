@@ -1,18 +1,20 @@
 import React from 'react';
+import { CardTitle, Micro } from './Typography';
 
 interface SectionHeaderProps {
     title: string;
-    subtitle?: string;
+    subtitle?: string | React.ReactNode;
     icon?: React.ReactNode;
     action?: React.ReactNode;
     color?: string; // Tailwind text color class, e.g. 'text-blue-500'
     className?: string;
+    align?: 'left' | 'center';
 }
 
-export const SectionHeader: React.FC<SectionHeaderProps> = ({ title, subtitle, icon, action, color = 'text-slate-600', className = '' }) => {
+export const SectionHeader: React.FC<SectionHeaderProps> = ({ title, subtitle, icon, action, color = 'text-slate-600', className = '', align = 'left' }) => {
     return (
-        <div className={`flex items-start justify-between w-full mb-4 ${className}`}>
-            <div className="flex items-center gap-3">
+        <div className={`flex items-start ${align === 'center' ? 'justify-center text-center' : 'justify-between'} w-full mb-4 ${className}`}>
+            <div className={`flex items-center gap-3 ${align === 'center' ? 'flex-col gap-2' : ''}`}>
                 {icon && (
                     <div className={`
                         w-10 h-10 rounded-xl flex items-center justify-center 
@@ -23,13 +25,13 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({ title, subtitle, i
                     </div>
                 )}
                 <div>
-                    <h3 className="text-sm font-bold text-slate-800 dark:text-white tracking-tight leading-tight">
+                    <CardTitle as="h3">
                         {title}
-                    </h3>
+                    </CardTitle>
                     {subtitle && (
-                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">
+                        <Micro as="p" className="mt-0.5">
                             {subtitle}
-                        </p>
+                        </Micro>
                     )}
                 </div>
             </div>

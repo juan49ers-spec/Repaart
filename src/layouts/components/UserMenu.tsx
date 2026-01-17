@@ -3,7 +3,11 @@ import { Settings, LogOut, ChevronDown, KeyRound } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-const UserMenu: React.FC = () => {
+interface UserMenuProps {
+    placement?: 'top' | 'bottom';
+}
+
+const UserMenu: React.FC<UserMenuProps> = ({ placement = 'bottom' }) => {
     const { user, logout, resetPassword } = useAuth();
     const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
@@ -56,14 +60,14 @@ const UserMenu: React.FC = () => {
                 <img
                     src={user?.photoURL || `https://ui-avatars.com/api/?name=${user?.email}&background=random`}
                     alt="Profile"
-                    className="w-8 h-8 rounded-full border border-slate-200 shadow-sm object-cover"
+                    className="w-10 h-10 rounded-full border border-slate-200 shadow-sm object-cover"
                 />
-                <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {/* Dropdown */}
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-100 origin-top-right">
+                <div className={`absolute right-0 w-64 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-[9999] animate-in fade-in zoom-in-95 duration-100 origin-${placement === 'top' ? 'bottom-right' : 'top-right'} ${placement === 'top' ? 'bottom-full mb-2' : 'mt-2'}`}>
                     <div className="px-4 py-3 border-b border-slate-50">
                         <p className="text-sm font-bold text-slate-800 truncate">{user?.displayName || 'Usuario'}</p>
                         <p className="text-xs text-slate-500 truncate">{user?.email}</p>

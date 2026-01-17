@@ -65,7 +65,11 @@ const ShiftPill: React.FC<{
     onDelete: (id: string, e: React.MouseEvent) => void;
     riderColor?: { bg: string, border: string, text: string }; // Kept for future optional use
     readOnly?: boolean;
-}> = ({ event, onClick, onDelete, readOnly }) => {
+    isSelected?: boolean;
+    isHovered?: boolean;
+    onMouseEnter?: () => void;
+    onMouseLeave?: () => void;
+}> = ({ event, onClick, onDelete, readOnly, isSelected, isHovered, onMouseEnter, onMouseLeave }) => {
     const isConfirmed = event.isConfirmed;
     const changeRequested = event.changeRequested;
     const changeReason = event.changeReason;
@@ -100,8 +104,22 @@ const ShiftPill: React.FC<{
                 "group/pill relative h-[26px] rounded-md transition-all duration-200 cursor-pointer overflow-hidden flex items-center px-2 select-none",
                 getBaseStyle(),
                 "hover:brightness-95 hover:scale-[1.01] hover:shadow-md hover:z-50 active:scale-95",
-                changeRequested && "hover:bg-amber-50"
+                changeRequested && "hover:bg-amber-50",
+                isSelected && "ring-2 ring-indigo-500 ring-offset-1 z-50 shadow-lg",
+                isHovered && "brightness-95 scale-[1.01]"
             )}
+            style={changeRequested ? {
+                backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(251, 191, 36, 0.1) 5px, rgba(251, 191, 36, 0.1) 10px)',
+                maskImage: 'linear-gradient(to right, black, black)'
+            } : {}}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+            onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onClick(e); // Select it
+                (window as any).showSchedulerContextMenu?.(e, event);
+            }}
             title={`${event.riderName} | ${startTime} - ${endTime} (${duration}h)${changeRequested ? ` | MOTIVO: ${changeReason || 'Sin motivo'}` : ''}`}
         >
             <div className="flex items-center gap-1.5 min-w-0 w-full relative z-10">
@@ -179,15 +197,33 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
 
     // --- UI Local State ---
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingShift, setEditingShift] = useState<any | null>(null); // Ideally narrow down ShiftData
+    const [editingShift, setEditingShift] = useState<any | null>(null);
     const [selectedDateForNew, setSelectedDateForNew] = useState<string | null>(null);
     const [isQuickFillOpen, setIsQuickFillOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [selectedRiderId, setSelectedRiderId] = useState<string | null>(null); // Filter by rider
+    const [selectedRiderId, setSelectedRiderId] = useState<string | null>(null);
+    const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null);
+    const [hoveredShiftId, setHoveredShiftId] = useState<string | null>(null);
+    const [contextMenu, setContextMenu] = useState<{ x: number, y: number, event: ShiftEvent } | null>(null);
+    const [viewMode, setViewMode] = useState<'full' | 'prime'>('full');
+    const [isAuditing, setIsAuditing] = useState(false);
+    const [isFixing, setIsFixing] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [showGenModal, setShowGenModal] = useState(false);
+    const [genPrompt, setGenPrompt] = useState('');
+    const isMobile = useMediaQuery("(max-width: 1024px)");
+
+    const isSaving = loading || isProcessing || isFixing;
+
+    const changeWeek = (offset: number) => {
+        navigateWeek(offset);
+    };
+
+    // Helpers
+    const closeConfirm = () => setConfirmDialog(prev => ({ ...prev, isOpen: false }));
 
     // PRIME MODE STATE - Horario Prime: 12:00-16:00 (comidas) y 19:00-24:00 (cenas)
 
-    const [viewMode, setViewMode] = useState<'full' | 'prime'>('full');
     const { events: intelEvents } = useOperationsIntel(referenceDate);
     const intelByDay = useMemo(() => intelService.getEventsByDay(intelEvents), [intelEvents]);
 
@@ -207,17 +243,22 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
         feedback: string;
         missingCoverage: string[];
     } | null>(null);
-    const [isAuditing, setIsAuditing] = useState(false);
-    const [isFixing, setIsFixing] = useState(false); // Auto-Fix State
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [showGenModal, setShowGenModal] = useState(false);
-    const [genPrompt, setGenPrompt] = useState('');
 
-    // Helpers
-    const changeWeek = (dir: number) => navigateWeek(dir);
-    const isMobile = useMediaQuery('(max-width: 768px)');
-    const isSaving = loading || isProcessing || isFixing;
-    const closeConfirm = () => setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+    // Coverage calculation
+    const coverageMetrics = useMemo(() => {
+        const slots = Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => 0));
+        weekData?.shifts?.forEach(s => {
+            const start = new Date(s.startAt);
+            const end = new Date(s.endAt);
+            const day = (start.getDay() + 6) % 7; // Mon=0
+            const startH = start.getHours();
+            const endH = end.getHours() === 0 ? 24 : end.getHours();
+            for (let h = startH; h < endH; h++) {
+                if (h >= 0 && h < 24) slots[day][h]++;
+            }
+        });
+        return slots;
+    }, [weekData?.shifts]);
 
     // --- LOGIC: Shift Operations ---
 
@@ -439,43 +480,6 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
         await saveInternal(shiftPayload);
     };
 
-    const handleQuickFillCreate = async (shifts: any[]) => {
-        if (!weekData) return;
-        setIsProcessing(true);
-        try {
-            const newShifts = shifts.map(shift => {
-                const startDate = new Date(`${shift.date}T${shift.startTime}:00`);
-                const endDate = new Date(`${shift.date}T${shift.endTime}:00`);
-                return {
-                    id: `shift_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                    shiftId: `shift_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                    riderId: shift.riderId,
-                    riderName: shift.riderName,
-                    motoId: shift.motoId || null,
-                    motoPlate: shift.motoId ? motos.find((m: any) => m.id === shift.motoId)?.licensePlate : null,
-                    startAt: toLocalISOStringWithOffset(startDate),
-                    endAt: toLocalISOStringWithOffset(endDate),
-                    notes: 'Creado con Relleno Rápido'
-                };
-            });
-
-            const updatedShifts: Shift[] = [...(weekData.shifts || []), ...newShifts];
-            const updatedWeekData: WeekData = {
-                ...weekData,
-                shifts: updatedShifts,
-                id: currentWeekId,
-                startDate: toLocalDateString(getStartOfWeek(referenceDate))
-            } as WeekData;
-            await WeekService.saveWeek(toFranchiseId(franchiseId), toWeekId(currentWeekId), updatedWeekData);
-            updateWeekData(updatedWeekData);
-            alert(`✅ ${newShifts.length} turno(s) creado(s)!`);
-        } catch (error) {
-            console.error("Error creating bulk shifts:", error);
-            alert("Error al crear los turnos.");
-        } finally {
-            setIsProcessing(false);
-        }
-    };
 
     const handleDeleteShift = async (shiftId: string, e?: React.MouseEvent) => {
         if (e) e.stopPropagation();
@@ -507,6 +511,53 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
             onConfirm: performDelete
         });
     };
+
+    // KEYBOARD SHORTCUTS
+    React.useEffect(() => {
+        (window as any).showSchedulerContextMenu = (e: React.MouseEvent, event: ShiftEvent) => {
+            setContextMenu({ x: e.clientX, y: e.clientY, event });
+        };
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const targetId = selectedShiftId || hoveredShiftId;
+            if (!targetId || isSaving || readOnly) return;
+
+            // Delete / Backspace
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                const target = weekData?.shifts.find(s => s.shiftId === targetId || s.id === targetId);
+                if (target) {
+                    handleDeleteShift(targetId);
+                }
+            }
+
+            // Ctrl + D (Duplicate)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                e.preventDefault();
+                const target = weekData?.shifts.find(s => s.shiftId === targetId || s.id === targetId);
+                if (target) {
+                    const startD = new Date(target.startAt);
+                    const endD = new Date(target.endAt);
+                    const newStart = new Date(startD);
+                    newStart.setDate(newStart.getDate() + 1);
+                    const newEnd = new Date(endD);
+                    newEnd.setDate(newEnd.getDate() + 1);
+
+                    const payload = {
+                        ...target,
+                        id: `clon_${Date.now()}`,
+                        shiftId: `clon_${Date.now()}`,
+                        startAt: toLocalISOStringWithOffset(newStart),
+                        endAt: toLocalISOStringWithOffset(newEnd),
+                        isConfirmed: false,
+                        changeRequested: false
+                    };
+                    handleSaveShift(payload);
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [selectedShiftId, hoveredShiftId, weekData, isSaving, readOnly, handleDeleteShift, handleSaveShift]);
 
     // --- HELPERS FOR RENDERING ---
 
@@ -655,13 +706,26 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
             });
         });
 
-        return sortedRiders.map(rider => ({
-            ...rider,
-            days: days.map(day => ({
-                ...day,
-                shifts: riderShiftsMap[rider.id][day.isoDate] || []
-            }))
-        }));
+        return sortedRiders.map(rider => {
+            const totalMinutes = days.reduce((acc, day) => {
+                const dayShifts = riderShiftsMap[rider.id][day.isoDate] || [];
+                const dayMinutes = dayShifts.reduce((dAcc, s) => {
+                    const start = new Date(s.startAt);
+                    const end = new Date(s.endAt);
+                    return dAcc + (end.getTime() - start.getTime()) / (1000 * 60);
+                }, 0);
+                return acc + dayMinutes;
+            }, 0);
+
+            return {
+                ...rider,
+                workedHours: Math.round((totalMinutes / 60) * 10) / 10,
+                days: days.map(day => ({
+                    ...day,
+                    shifts: riderShiftsMap[rider.id][day.isoDate] || []
+                }))
+            };
+        });
     }, [riders, visualEvents, days]);
 
     // Position calc constants
@@ -778,6 +842,53 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
             alert("Error de conexión con el Sheriff.");
         } finally {
             setIsAuditing(false);
+        }
+    };
+
+
+    const handleQuickFillCreate = async (newShifts: Partial<any>[]) => {
+        if (!newShifts.length) return;
+        setIsProcessing(true);
+        try {
+            // Prepare shifts with IDs and data
+            const shiftsToSave = newShifts.map(s => {
+                // Find rider to get name
+                const rider = riders.find(r => r.id === s.riderId);
+
+                return {
+                    id: `qf_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                    shiftId: `qf_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                    riderId: s.riderId,
+                    riderName: rider ? rider.fullName : 'Rider',
+                    motoId: s.motoId || null,
+                    motoPlate: s.motoPlate || null,
+                    startAt: s.startAt,
+                    endAt: s.endAt,
+                    notes: 'Auto-Relleno',
+                    isConfirmed: true // Auto-approve quick fill shifts? Or draft? Let's say draft but valid.
+                };
+            });
+
+            // Add to current week shifts
+            const currentShifts = weekData?.shifts || [];
+            const updatedShifts = [...currentShifts, ...shiftsToSave];
+
+            const updatedWeekData: WeekData = {
+                ...(weekData!),
+                shifts: updatedShifts,
+                id: currentWeekId,
+                startDate: toLocalDateString(getStartOfWeek(referenceDate))
+            } as WeekData;
+
+            await WeekService.saveWeek(toFranchiseId(franchiseId), toWeekId(currentWeekId), updatedWeekData);
+            updateWeekData(updatedWeekData);
+            setIsQuickFillOpen(false);
+
+        } catch (error) {
+            console.error("Error QuickFill:", error);
+            alert("Error al guardar los turnos automáticos.");
+        } finally {
+            setIsProcessing(false);
         }
     };
 
@@ -967,7 +1078,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                                     <div className="flex items-center gap-1 p-0.5 bg-slate-100 rounded-lg border border-slate-200">
                                         <button onClick={() => setIsQuickFillOpen(true)} className="flex items-center gap-1.5 px-2 py-1 hover:bg-white text-slate-600 hover:text-indigo-600 rounded-md transition-all disabled:opacity-50 text-[10px] font-bold active:scale-95">
                                             <Zap className="w-3 h-3" />
-                                            <span className="hidden xl:inline">Relleno</span>
+                                            <span className="hidden md:inline">Autocompletar</span>
                                         </button>
                                         <div className="w-px h-3 bg-slate-300 mx-0.5" />
                                         <button
@@ -1012,7 +1123,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                         <div className="flex-1 flex flex-col bg-white overflow-hidden rounded-tl-2xl border-l border-slate-200/50 shadow-xl shadow-slate-200/30">
                             {/* V13 GANTT HEADER (Days) - Glassmorphic */}
                             <div className="flex bg-white/80 border-b border-slate-200/80 sticky top-0 z-40 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60">
-                                <div className="w-40 shrink-0 border-r border-slate-200 p-2 flex items-center justify-between">
+                                <div className="w-56 shrink-0 border-r border-slate-200 p-2 flex items-center justify-between">
                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">RIDER</span>
                                     <Filter className="w-3 h-3 text-slate-300" />
                                 </div>
@@ -1057,21 +1168,33 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                                         rIdx % 2 === 0 ? "bg-white" : "bg-slate-50/40"
                                     )}>
                                         {/* Rider Info Side - Sticky Glass */}
-                                        <div className="w-40 shrink-0 border-r border-slate-100/80 p-2 flex items-center gap-2 sticky left-0 z-30 transition-colors backdrop-blur-md supports-[backdrop-filter]:bg-white/80">
+                                        <div className="w-56 shrink-0 border-r border-slate-100/80 p-2 flex items-center gap-3 sticky left-0 z-30 transition-colors backdrop-blur-md supports-[backdrop-filter]:bg-white/80">
                                             <div className="relative">
                                                 <div className={cn(
-                                                    "w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black border-2 border-white shadow-sm ring-1 ring-slate-100 transition-transform group-hover/row:scale-105",
+                                                    "w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-white shadow-sm ring-1 ring-slate-100 transition-transform group-hover/row:scale-105",
                                                     riderColorMap.get(row.id)?.bg || 'bg-slate-200'
                                                 )}>
                                                     {getRiderInitials(row.fullName)}
                                                 </div>
                                                 {row.status === 'active' && (
-                                                    <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-500 border border-white rounded-full shadow-sm" />
+                                                    <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full shadow-sm" />
                                                 )}
                                             </div>
-                                            <div className="min-w-0 flex flex-col">
-                                                <div className="text-[10px] font-bold text-slate-700 truncate group-hover/row:text-indigo-600 transition-colors leading-tight">{row.fullName}</div>
-                                                {/* Hidden status text to save space, relies on dot */}
+                                            <div className="min-w-0 flex flex-col flex-1">
+                                                <div className="text-[11px] font-bold text-slate-700 truncate group-hover/row:text-indigo-600 transition-colors leading-tight mb-0.5">{row.fullName}</div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[9px] font-medium text-slate-400 bg-slate-100 px-1.5 py-px rounded-full border border-slate-200/50 whitespace-nowrap">
+                                                        C: <span className="font-bold text-slate-600">{row.contractHours || 40}h</span>
+                                                    </span>
+                                                    <span className={cn(
+                                                        "text-[9px] font-medium px-1.5 py-px rounded-full border whitespace-nowrap",
+                                                        (row.workedHours || 0) > (row.contractHours || 40) ? "bg-amber-50 text-amber-600 border-amber-200" :
+                                                            (row.workedHours || 0) < ((row.contractHours || 40) - 5) ? "bg-indigo-50 text-indigo-600 border-indigo-200" :
+                                                                "bg-emerald-50 text-emerald-600 border-emerald-200"
+                                                    )}>
+                                                        R: <span className="font-bold">{(row.workedHours || 0)}h</span>
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -1108,8 +1231,12 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                                                             >
                                                                 <ShiftPill
                                                                     event={ev}
-                                                                    onClick={(e) => { e.stopPropagation(); handleEditShift(ev); }}
+                                                                    onClick={(e) => { e.stopPropagation(); setSelectedShiftId(ev.shiftId || ev.id || null); handleEditShift(ev); }}
                                                                     onDelete={handleDeleteShift}
+                                                                    isSelected={selectedShiftId === (ev.shiftId || ev.id)}
+                                                                    isHovered={hoveredShiftId === (ev.shiftId || ev.id)}
+                                                                    onMouseEnter={() => setHoveredShiftId((ev.shiftId || ev.id) || null)}
+                                                                    onMouseLeave={() => setHoveredShiftId(null)}
                                                                     riderColor={riderColorMap.get(row.id)}
                                                                     readOnly={readOnly}
                                                                 />
@@ -1132,16 +1259,120 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                 </div>
             )}
 
-            <QuickFillModal
-                isOpen={isQuickFillOpen}
-                onClose={() => setIsQuickFillOpen(false)}
-                onRefresh={refresh}
-                franchiseId={toFranchiseId(franchiseId)}
-                onCreateShifts={handleQuickFillCreate as any}
-                riders={riders}
-                motos={motos as any}
-                weekDays={days}
-            />
+            {/* V13 COVERAGE BAR - Bottom Sticky */}
+            <div className="flex bg-slate-900 border-t border-slate-800 h-8 shrink-0">
+                <div className="w-56 shrink-0 border-r border-slate-800 flex items-center px-4 bg-slate-950">
+                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Cobertura</span>
+                </div>
+                <div className="flex-1 grid grid-cols-7 divide-x divide-slate-800">
+                    {days.map((_, dIdx) => (
+                        <div key={dIdx} className="relative h-full flex items-center px-1 gap-px overflow-hidden">
+                            {coverageMetrics[dIdx].slice(START_HOUR, END_HOUR).map((count, hIdx) => {
+                                const currentH = START_HOUR + hIdx;
+                                const isPrime = (currentH >= 12 && currentH < 16) || (currentH >= 19 && currentH < 24);
+                                const minRequired = isPrime ? 4 : 2;
+                                const status = count >= minRequired ? 'optimal' : count > 0 ? 'warning' : 'critical';
+
+                                return (
+                                    <div
+                                        key={hIdx}
+                                        className={cn(
+                                            "flex-1 h-3 rounded-[1px] transition-all relative group/cov",
+                                            status === 'optimal' ? "bg-emerald-500/40" :
+                                                status === 'warning' ? "bg-amber-500/40" : "bg-slate-800"
+                                        )}
+                                    >
+                                        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-800 text-[8px] font-bold text-white px-1.5 py-0.5 rounded opacity-0 group-hover/cov:opacity-100 transition-opacity z-50 whitespace-nowrap border border-slate-700 pointer-events-none">
+                                            {currentH}:00 | {count} Riders
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Context Menu Component */}
+            {contextMenu && (
+                <div
+                    className="fixed z-[999] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl rounded-xl p-1.5 w-48 animate-in fade-in zoom-in-95 duration-100"
+                    style={{ top: contextMenu.y, left: contextMenu.x }}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
+                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Acciones Turno</div>
+                        <div className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{contextMenu.event.riderName}</div>
+                    </div>
+
+                    <button
+                        onClick={() => {
+                            const updated = { ...contextMenu.event, isConfirmed: true, changeRequested: false };
+                            handleSaveShift(updated);
+                            setContextMenu(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg flex items-center gap-2 transition-colors"
+                    >
+                        <BadgeCheck className="w-4 h-4" /> Validar Turno
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            const startD = new Date(contextMenu.event.startAt);
+                            const endD = new Date(contextMenu.event.endAt);
+                            const newStart = new Date(startD);
+                            newStart.setDate(newStart.getDate() + 1);
+                            const newEnd = new Date(endD);
+                            newEnd.setDate(newEnd.getDate() + 1);
+
+                            const payload = {
+                                ...contextMenu.event,
+                                id: `clon_${Date.now()}`,
+                                shiftId: `clon_${Date.now()}`,
+                                startAt: toLocalISOStringWithOffset(newStart),
+                                endAt: toLocalISOStringWithOffset(newEnd),
+                                isConfirmed: false,
+                                changeRequested: false
+                            };
+                            handleSaveShift(payload);
+                            setContextMenu(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2 transition-colors"
+                    >
+                        <Save className="w-4 h-4" /> Duplicar Mañana
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            handleEditShift(contextMenu.event);
+                            setContextMenu(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2 transition-colors"
+                    >
+                        <Zap className="w-4 h-4" /> Editar Detalles
+                    </button>
+
+                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
+
+                    <button
+                        onClick={() => {
+                            const idToDelete = contextMenu.event.shiftId || contextMenu.event.id;
+                            if (idToDelete) {
+                                handleDeleteShift(idToDelete);
+                            }
+                            setContextMenu(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg flex items-center gap-2 transition-colors"
+                    >
+                        <XCircle className="w-4 h-4" /> Eliminar
+                    </button>
+
+                    {/* Backdrop closer */}
+                    <div className="fixed inset-0 -z-10" onClick={() => setContextMenu(null)} />
+                </div>
+            )}
+
+
 
             <ShiftModal
                 isOpen={isModalOpen}
@@ -1164,78 +1395,96 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                 confirmText={confirmDialog.confirmText}
             />
 
+
+
+            <QuickFillModal
+                isOpen={isQuickFillOpen}
+                onClose={() => setIsQuickFillOpen(false)}
+                onRefresh={refresh}
+                franchiseId={franchiseId}
+                onCreateShifts={handleQuickFillCreate as any}
+                riders={riders}
+                motos={motos}
+                weekDays={days}
+                existingShifts={(weekData?.shifts || [])
+                    .filter(s => s.riderId)
+                    .map(s => ({
+                        id: s.id,
+                        shiftId: s.id,
+                        riderId: s.riderId!,
+                        startAt: s.startAt,
+                        endAt: s.endAt
+                    }))}
+            />
+
             {/* Generative Scheduling Modal */}
-            {
-                showGenModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 border border-indigo-100">
-                            <div className="bg-gradient-to-r from-indigo-600 to-violet-600 p-6 text-white relative overflow-hidden">
-                                <div className="relative z-10">
-                                    <h3 className="text-xl font-black flex items-center gap-2">
-                                        <Sparkles className="w-6 h-6 text-amber-300" />
-                                        Generador de Horarios IA
-                                    </h3>
-                                    <p className="text-indigo-100 text-sm mt-1 font-medium">Describe qué necesitas y la IA creará el cuadrante.</p>
-                                </div>
-                                <div className="absolute top-0 right-0 p-4 opacity-10">
-                                    <Wand2 className="w-24 h-24 rotate-12" />
-                                </div>
+            {showGenModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 border border-indigo-100 dark:border-slate-800">
+                        <div className="bg-gradient-to-r from-indigo-600 to-violet-600 p-6 text-white relative overflow-hidden">
+                            <div className="relative z-10">
+                                <h3 className="text-xl font-black flex items-center gap-2">
+                                    <Sparkles className="w-6 h-6 text-amber-300" />
+                                    Generador de Horarios IA
+                                </h3>
+                                <p className="text-indigo-100 text-sm mt-1 font-medium">Describe qué necesitas y la IA creará el cuadrante.</p>
                             </div>
-
-                            <div className="p-6 space-y-4">
-                                <div>
-                                    <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Instrucción para la IA</label>
-                                    <textarea
-                                        value={genPrompt}
-                                        onChange={(e) => setGenPrompt(e.target.value)}
-                                        placeholder="Ej: Necesito 4 riders cada noche, y refuerzo el sábado. Lunes y Martes solo 2 riders al mediodía..."
-                                        className="w-full h-32 p-3 rounded-xl border border-slate-200 text-slate-700 font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none bg-slate-50 placeholder:text-slate-400 focus:outline-none"
-                                        autoFocus
-                                    />
-                                </div>
-
-                                <div className="bg-indigo-50 p-3 rounded-lg flex items-start gap-3">
-                                    <div className="bg-white p-1.5 rounded-full shadow-sm mt-0.5">
-                                        <Wand2 className="w-4 h-4 text-indigo-600" />
-                                    </div>
-                                    <p className="text-xs text-indigo-800 leading-relaxed font-medium">
-                                        La IA analizará tus riders disponibles y creará turnos óptimos respetando las reglas de descanso y cobertura.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-                                <button
-                                    onClick={() => setShowGenModal(false)}
-                                    className="px-4 py-2 text-slate-500 hover:text-slate-700 font-bold text-sm transition-colors"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    onClick={handleGeneration}
-                                    disabled={isGenerating || !genPrompt.trim()}
-                                    className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-500/30 flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isGenerating ? (
-                                        <>
-                                            <div className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
-                                            Generando...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Sparkles className="w-4 h-4" />
-                                            Generar Magia
-                                        </>
-                                    )}
-                                </button>
+                            <div className="absolute top-0 right-0 p-4 opacity-10">
+                                <Wand2 className="w-24 h-24 rotate-12" />
                             </div>
                         </div>
+
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Instrucción para la IA</label>
+                                <textarea
+                                    value={genPrompt}
+                                    onChange={(e) => setGenPrompt(e.target.value)}
+                                    placeholder="Ej: Necesito 4 riders cada noche, y refuerzo el sábado. Lunes y Martes solo 2 riders al mediodía..."
+                                    className="w-full h-32 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none bg-slate-50 dark:bg-slate-800/50 placeholder:text-slate-400 focus:outline-none"
+                                    autoFocus
+                                />
+                            </div>
+
+                            <div className="bg-indigo-50 dark:bg-indigo-950/30 p-3 rounded-lg flex items-start gap-3">
+                                <div className="bg-white dark:bg-slate-800 p-1.5 rounded-full shadow-sm mt-0.5">
+                                    <Wand2 className="w-4 h-4 text-indigo-600" />
+                                </div>
+                                <p className="text-xs text-indigo-800 dark:text-indigo-300 leading-relaxed font-medium">
+                                    La IA analizará tus riders disponibles y creará turnos óptimos respetando las reglas de descanso y cobertura.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowGenModal(false)}
+                                className="px-4 py-2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-bold text-sm transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleGeneration}
+                                disabled={isGenerating || !genPrompt.trim()}
+                                className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-500/30 flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isGenerating ? (
+                                    <>
+                                        <div className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
+                                        Generando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="w-4 h-4" />
+                                        Generar Magia
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
-                )
-            }
-
-
-        </div >
+                </div>
+            )}
+        </div>
     );
 };
 

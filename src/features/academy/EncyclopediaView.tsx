@@ -429,8 +429,8 @@ const EncyclopediaView: React.FC = () => {
                 </div>
             </div>
 
-            {/* Cards List using Memoized Component */}
-            <div className="max-w-3xl mx-auto space-y-3 min-h-[50vh]">
+            {/* Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-7xl mx-auto px-4">
                 {visibleCards.map(card => (
                     <EncyclopediaCardItem
                         key={card.id}

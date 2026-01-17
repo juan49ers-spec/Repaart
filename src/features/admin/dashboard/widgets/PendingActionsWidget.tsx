@@ -26,6 +26,14 @@ interface ControlPendingActionsWidgetProps {
 
 const PendingActionsWidget: React.FC<ControlPendingActionsWidgetProps> = ({ data, loading, onNavigate }) => {
     const navigate = useNavigate();
+    const [filter, setFilter] = React.useState<'all' | 'premium' | 'support'>('all');
+
+    const filteredList = data.list.filter(item => {
+        if (filter === 'all') return true;
+        if (filter === 'premium') return item.type === 'premium';
+        if (filter === 'support') return item.type === 'ticket';
+        return true;
+    });
 
     if (loading) {
         return (
@@ -49,32 +57,44 @@ const PendingActionsWidget: React.FC<ControlPendingActionsWidgetProps> = ({ data
         <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-slate-800/50 p-6 flex flex-col h-full shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20 transition-all duration-300">
 
             {/* Header */}
-            <div className="flex justify-between items-center mb-6">
-                <div>
-                    <h3 className="text-base font-medium tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-                        <Inbox className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            {/* Header - Stacked Layout */}
+            <div className="flex flex-col gap-3 mb-6">
+                <div className="min-w-0">
+                    <h3 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white flex items-center gap-2 truncate">
+                        <Inbox className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0" />
                         Acciones Pendientes
                     </h3>
-                    <p className="text-sm text-slate-500 mt-1 font-normal">
+                    <p className="text-sm text-slate-500 mt-0.5 font-normal truncate">
                         {data.total} tareas requieren atención
                     </p>
                 </div>
-                <div className="flex -space-x-2">
-                    <CountLabel count={data.tickets} icon={Ticket} color="bg-indigo-500" />
-                    <CountLabel count={data.premium} icon={Star} color="bg-amber-500" />
-                    <CountLabel count={data.records} icon={FileText} color="bg-emerald-500" />
+
+                {/* Status Badges - Clean Row */}
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg self-start">
+                    {(['all', 'premium', 'support'] as const).map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => setFilter(tab)}
+                            className={`px-3 py-1.5 rounded-md text-xs font-semibold tracking-tight transition-all duration-200 capitalize ${filter === tab
+                                ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400 ring-1 ring-slate-900/5 dark:ring-white/10'
+                                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                                }`}
+                        >
+                            {tab === 'all' ? 'Todos' : tab === 'premium' ? 'Premium' : 'Soporte'}
+                        </button>
+                    ))}
                 </div>
             </div>
 
             {/* List */}
             <div className="flex-1 space-y-3 overflow-y-auto custom-scrollbar pr-1">
-                {data.list.length === 0 ? (
+                {filteredList.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center py-8 text-slate-400">
                         <CheckCircle2 className="w-10 h-10 mb-3 text-emerald-500/50" />
                         <p className="text-sm font-medium">Todo al día</p>
                     </div>
                 ) : (
-                    data.list.map(action => (
+                    filteredList.map(action => (
                         <div
                             key={action.id}
                             onClick={() => {
@@ -84,12 +104,12 @@ const PendingActionsWidget: React.FC<ControlPendingActionsWidgetProps> = ({ data
                                     else navigate('/dashboard?view=inbox');
                                 }
                             }}
-                            className={`group relative flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${action.priority === 'critical'
+                            className={`group relative flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer ${action.priority === 'critical'
                                 ? 'bg-rose-50 dark:bg-rose-900/10 border-rose-100 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/20'
                                 : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 hover:border-indigo-200 dark:hover:border-indigo-900'
                                 }`}
                         >
-                            <div className="flex items-center gap-4 w-full">
+                            <div className="flex items-center gap-3 w-full">
                                 <div className={`p-2 rounded-lg shrink-0 ${action.priority === 'critical' ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400' :
                                     action.type === 'ticket' ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' :
                                         action.type === 'premium' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' :
@@ -104,16 +124,19 @@ const PendingActionsWidget: React.FC<ControlPendingActionsWidgetProps> = ({ data
                                             }`}>
                                             {action.title}
                                         </p>
-                                        <span className="text-xs text-slate-400 flex items-center gap-1 font-medium">
-                                            <Clock className="w-3 h-3" />
+                                        <span className="text-[10px] text-slate-400 flex items-center gap-1 font-medium bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-100 dark:border-slate-800">
+                                            <Clock className="w-2.5 h-2.5" />
                                             {getRelativeTime(action.timestamp)}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between items-center">
-                                        <p className="text-xs text-slate-500 truncate max-w-[180px]">
+                                    <div className="flex justify-between items-center relative">
+                                        <p className="text-xs text-slate-500 truncate group-hover:opacity-0 transition-opacity">
                                             {action.subtitle}
                                         </p>
-                                        <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-transform" />
+                                        <button className="absolute left-0 opacity-0 group-hover:opacity-100 transition-opacity text-xs font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                                            Resolver ahora <ArrowRight className="w-3 h-3" />
+                                        </button>
+                                        <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-transform opacity-100 group-hover:opacity-0" />
                                     </div>
                                 </div>
                             </div>
@@ -144,11 +167,5 @@ const IconForType = ({ type, priority }: { type: string, priority?: string }) =>
         default: return <Inbox className="w-4 h-4" />;
     }
 }
-
-const CountLabel = ({ count, icon: _Icon, color }: { count: number, icon: any, color: string }) => (
-    <div className={`flex items-center justify-center w-7 h-7 rounded-full ${color} text-white ring-2 ring-white dark:ring-slate-900 shadow-sm`} title={`${count} ítems`}>
-        <span className="text-xs font-bold tracking-tight">{count}</span>
-    </div>
-);
 
 export default PendingActionsWidget;

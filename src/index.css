@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
 @theme {
   --color-brand-50: oklch(0.97 0.01 291.07);
@@ -46,7 +46,7 @@
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: background-color 0.3s ease, color 0.3s ease;
@@ -128,93 +128,31 @@ body {
   @apply text-xs font-bold uppercase tracking-widest text-slate-500;
 }
 
-/* Hyper-Cockpit V3 FX */
-@keyframes orb-float {
-
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-}
-
+/* Hyper-Cockpit V3 FX - DISABLED FOR FLUIDITY */
 .animate-orb {
-  animation: orb-float 20s ease-in-out infinite;
-}
-
-@keyframes haptic-shake {
-
-  10%,
-  90% {
-    transform: translate3d(-1px, 0, 0);
-  }
-
-  20%,
-  80% {
-    transform: translate3d(2px, 0, 0);
-  }
-
-  30%,
-  50%,
-  70% {
-    transform: translate3d(-4px, 0, 0);
-  }
-
-  40%,
-  60% {
-    transform: translate3d(4px, 0, 0);
-  }
+  animation: none;
+  opacity: 0.5;
+  /* Keep visible but static if used */
 }
 
 .animate-haptic {
-  animation: haptic-shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
-}
-
-@keyframes zigzag {
-
-  0%,
-  100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-
-  20% {
-    transform: translate(2px, -2px) rotate(1deg);
-  }
-
-  40% {
-    transform: translate(-2px, 2px) rotate(-1deg);
-  }
-
-  60% {
-    transform: translate(2px, 2px) rotate(1deg);
-  }
-
-  80% {
-    transform: translate(-2px, -2px) rotate(-1deg);
-  }
+  animation: none;
 }
 
 .animate-zigzag {
-  animation: zigzag 1.2s ease-in-out infinite;
+  animation: none;
 }
 
 .glass-premium {
-  @apply bg-slate-900/40 backdrop-blur-2xl border border-white/10 ring-1 ring-white/5 shadow-2xl;
+  @apply bg-slate-900 border border-slate-800 shadow-xl;
 }
 
 .neon-glow-emerald {
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.2), 0 0 40px rgba(16, 185, 129, 0.1);
+  box-shadow: none;
 }
 
 .neon-glow-rose {
-  box-shadow: 0 0 20px rgba(244, 63, 94, 0.2), 0 0 40px rgba(244, 63, 94, 0.1);
+  box-shadow: none;
 }
 
 /* Custom Scrollbar for Light Mode */
@@ -236,35 +174,17 @@ body {
   background: #94a3b8;
 }
 
-/* Aurora Animation */
-@keyframes aurora {
-  0% {
-    transform: translate(0, 0) rotate(0deg) scale(1);
-  }
-
-  33% {
-    transform: translate(2%, 5%) rotate(5deg) scale(1.1);
-  }
-
-  66% {
-    transform: translate(-2%, 2%) rotate(-5deg) scale(0.9);
-  }
-
-  100% {
-    transform: translate(0, 0) rotate(0deg) scale(1);
-  }
-}
-
+/* Aurora Animation - DISABLED */
 .animate-aurora-slow {
-  animation: aurora 20s infinite ease-in-out alternate;
+  animation: none;
 }
 
 .animate-aurora-slower {
-  animation: aurora 30s infinite ease-in-out alternate-reverse;
+  animation: none;
 }
 
 .animate-aurora-reverse {
-  animation: aurora 25s infinite ease-in-out reverse;
+  animation: none;
 }
 
 .mask-marquee {
@@ -306,11 +226,8 @@ h2,
   line-height: 1.2;
 }
 
-/* Glassmorphism Refinements */
-.glass-premium {
-  @apply bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-2xl;
-  /* Better contrast on mobile */
-}
+/* Glassmorphism Refinements - Simplified */
+/* .glass-premium is already defined above */
 
 /* Mobile Safe Area Handling - Enhanced */
 .safe-bottom {
@@ -493,4 +410,107 @@ a,
 
 .category-bubble-label {
   @apply text-xs font-bold text-slate-600 dark:text-slate-300 text-center;
+}
+
+/* ============================================== */
+/* LOGO ANIMATIONS - SPECTACULAR FX               */
+/* ============================================== */
+
+/* 1. Draw-in Animation (SVG Stroke) */
+@keyframes logo-draw {
+  from {
+    stroke-dashoffset: 1000;
+    opacity: 0;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+/* 5. Alert Stripes Animation (Barber Pole) */
+@keyframes barber-pole {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 20px 20px;
+  }
+}
+
+.animate-stripes {
+  background-image: linear-gradient(45deg,
+      rgba(255, 255, 255, 0.15) 25%,
+      transparent 25%,
+      transparent 50%,
+      rgba(255, 255, 255, 0.15) 50%,
+      rgba(255, 255, 255, 0.15) 75%,
+      transparent 75%,
+      transparent);
+  background-size: 20px 20px;
+  animation: barber-pole 1s linear infinite;
+}
+
+.logo-draw-path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: logo-draw 2.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* 2. Gradient Flow (Liquid Shine) */
+@keyframes logo-gradient-flow {
+  0% {
+    stop-color: #4CA1AF;
+  }
+
+  50% {
+    stop-color: #6A4C93;
+  }
+
+  100% {
+    stop-color: #4CA1AF;
+  }
+}
+
+.animate-logo-flow stop {
+  animation: logo-gradient-flow 4s ease-in-out infinite alternate;
+}
+
+/* 3. Floating Hover Effect */
+@keyframes logo-float-premium {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.logo-float:hover {
+  animation: logo-float-premium 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 15px rgba(76, 161, 175, 0.4));
+}
+
+/* 4. Cinematic Glow Pulse */
+@keyframes logo-breathe {
+
+  0%,
+  100% {
+    filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.3));
+    transform: scale(1);
+  }
+
+  50% {
+    filter: drop-shadow(0 0 30px rgba(99, 102, 241, 0.6));
+    transform: scale(1.02);
+  }
+}
+
+.logo-cinematic {
+  animation: logo-breathe 4s ease-in-out infinite;
 }

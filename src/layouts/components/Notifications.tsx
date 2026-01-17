@@ -143,7 +143,12 @@ const Notifications: React.FC<NotificationsProps> = ({ isAdmin = false }) => {
                 // Navigate to scheduler
                 navigate('/operations'); // Or a more specific path if available
             } else if (notification.link) {
-                window.location.href = notification.link;
+                // Use navigate for internal routes, otherwise open in new tab
+                if (notification.link.startsWith('/')) {
+                    navigate(notification.link);
+                } else {
+                    window.open(notification.link, '_blank');
+                }
             }
         }
     };

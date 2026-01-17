@@ -628,16 +628,16 @@ export const financeService = {
             });
 
             // 4. Formatear para Recharts
-            const result = Array.from(monthlyStats.values()).map(stat => {
-                const profit = stat.income - stat.expense;
+            const result = Array.from(monthlyStats.entries()).map(([monthKey, stat]) => {
                 const monthName = stat.date.toLocaleDateString('es-ES', { month: 'short' });
 
                 return {
                     name: monthName.charAt(0).toUpperCase() + monthName.slice(1), // "Ene"
+                    month: monthKey, // <- YYYY-MM format for filtering
                     income: stat.income,
                     revenue: stat.income, // Dual support
                     expenses: stat.expense,
-                    profit: profit,
+                    profit: stat.income - stat.expense,
                     orders: stat.orders || 0,
                     totalHours: stat.totalHours || 0,
                     logisticsIncome: stat.logisticsIncome || 0,

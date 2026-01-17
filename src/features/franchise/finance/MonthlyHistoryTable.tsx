@@ -248,19 +248,19 @@ const MonthlyHistoryTable: React.FC<MonthlyHistoryTableProps> = ({ franchiseId, 
 
             <div className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="w-full min-w-[800px]">
                         <thead>
                             <tr className="border-b border-slate-100 bg-slate-50/50">
                                 <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                                     Periodo
                                 </th>
-                                <th className="px-4 py-3 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                <th className="px-4 py-3 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                                     Ingresos
                                 </th>
-                                <th className="px-4 py-3 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                <th className="px-4 py-3 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                                     Gastos
                                 </th>
-                                <th className="px-4 py-3 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                <th className="px-4 py-3 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                                     Resultado
                                 </th>
                                 <th className="px-4 py-3 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">
@@ -313,17 +313,17 @@ const MonthlyHistoryTable: React.FC<MonthlyHistoryTableProps> = ({ franchiseId, 
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3 text-right">
+                                        <td className="px-4 py-3 text-right whitespace-nowrap">
                                             <div className="font-mono text-slate-700 font-medium group-hover:text-indigo-600 transition-colors text-sm tracking-tight">
                                                 {formatMoney(record.revenue)}€
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3 text-right">
+                                        <td className="px-4 py-3 text-right whitespace-nowrap">
                                             <div className="font-mono text-slate-500 text-sm tracking-tight">
                                                 {formatMoney(record.totalExpenses)}€
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3 text-right">
+                                        <td className="px-4 py-3 text-right whitespace-nowrap">
                                             <div className="flex flex-col items-end gap-0.5">
                                                 <div className={`font-mono font-bold text-sm tracking-tight flex items-center gap-1.5 ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
                                                     {formatMoney(record.profit)}€

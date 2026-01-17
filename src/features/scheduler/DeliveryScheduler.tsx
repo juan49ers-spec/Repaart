@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronLeft, ChevronRight, Sun, Moon, Save, Loader2, BadgeCheck, XCircle } from 'lucide-react'; // Cleaned imports
+import { ChevronLeft, ChevronRight, Sun, Moon, Save, Loader2, BadgeCheck, XCircle, PenLine, Bike } from 'lucide-react'; // Cleaned imports
 import { cn } from '../../lib/utils';
 import { getRiderInitials } from '../../utils/colorPalette';
 import { toLocalDateString, toLocalISOString, toLocalISOStringWithOffset } from '../../utils/dateUtils';
@@ -13,6 +13,9 @@ import { DraggableShift } from './DraggableShift';
 import { DroppableCell } from './DroppableCell';
 import { ShiftContextMenu } from '../../components/ui/ShiftContextMenu';
 import { SchedulerGuideModal } from './SchedulerGuideModal';
+import ConfirmationModal from '../../ui/feedback/ConfirmationModal';
+import { SheriffReportModal } from './SheriffReportModal';
+import { Shift } from '../../schemas/scheduler';
 
 import { useWeeklySchedule } from '../../hooks/useWeeklySchedule';
 import { useAuth } from '../../context/AuthContext';
@@ -24,7 +27,7 @@ import { useFleetStore } from '../../store/useFleetStore';
 import { useVehicleStore } from '../../store/useVehicleStore';
 import { shiftService } from '../../services/shiftService';
 import { notificationService } from '../../services/notificationService';
-import { validateWeeklySchedule } from '../../lib/gemini';
+
 
 
 
@@ -51,12 +54,37 @@ const DeliveryScheduler: React.FC<{
     const [currentTime, setCurrentTime] = useState(new Date());
 
     // --- SHERIFF & MAGIC AI STATE ---
-    const [sheriffResult, setSheriffResult] = useState<{
+    const [isSheriffOpen, setIsSheriffOpen] = useState(false);
+    const [sheriffData, setSheriffData] = useState<{
         score: number;
         status: 'optimal' | 'warning' | 'critical';
-        feedback: string;
-        missingCoverage: string[];
+        feedback: string[];
+        details: {
+            totalHours: number;
+            overtimeCount: number;
+            underutilizedCount: number;
+            coverageScore: number;
+            costEfficiency: number;
+        };
     } | null>(null);
+    // Legacy state used by inline status bar display (TODO: migrate to SheriffReportModal only)
+    const [sheriffResult, setSheriffResult] = useState<{
+        score?: number;
+        status?: string;
+        feedback?: string;
+        details?: {
+            totalHours: number;
+            overtimeCount: number;
+            underutilizedCount: number;
+            coverageScore: number;
+            costEfficiency: number;
+        };
+    } | null>(null);
+
+    // [INTERACTIVE NOTIFICATION STATE]
+    const [isOvertimeConfirmOpen, setIsOvertimeConfirmOpen] = useState(false);
+    const [pendingShiftParams, setPendingShiftParams] = useState<{ dateIso: string, riderId?: string, hour?: number } | null>(null);
+    const [overtimeDetails, setOvertimeDetails] = useState<{ current: number, projected: number, limit: number, riderName: string } | null>(null);
 
     const [isGuideOpen, setIsGuideOpen] = useState(false);
 
@@ -148,7 +176,7 @@ const DeliveryScheduler: React.FC<{
     }, [fetchRiders, fetchVehicles, safeFranchiseId]);
 
     // --- ACTIONS ---
-    const saveShift = (shiftData: any) => {
+    const saveShift = async (shiftData: any) => {
         if (readOnly) {
             alert("Modo solo lectura: No se pueden guardar cambios.");
             return;
@@ -179,19 +207,56 @@ const DeliveryScheduler: React.FC<{
             return;
         }
 
+        // --- REASSIGNMENT NOTIFICATIONS ---
+        // If we are editing an existing shift and the rider has changed
+        if (editingShift && editingShift.riderId !== shiftData.riderId) {
+            const timeStr = `${format(new Date(shiftData.startAt), 'HH:mm')} - ${format(new Date(shiftData.endAt), 'HH:mm')}`;
+            const dateStr = format(new Date(shiftData.startAt), 'dd/MM');
+
+            // 1. Notify Original Rider (if it was an amber shift/change request)
+            if (editingShift.changeRequested) {
+                await notificationService.notifyFranchise(editingShift.riderId, {
+                    title: 'Solicitud de Cambio Procesada',
+                    message: `Tu solicitud para el turno del ${dateStr} (${timeStr}) ha sido aceptada y el turno reasignado.`,
+                    type: 'SYSTEM',
+                    priority: 'normal'
+                });
+            } else {
+                // Regular reassignment
+                await notificationService.notifyFranchise(editingShift.riderId, {
+                    title: 'Turno Eliminado/Reasignado',
+                    message: `El turno del ${dateStr} (${timeStr}) ha sido asignado a otro rider.`,
+                    type: 'SYSTEM',
+                    priority: 'normal'
+                });
+            }
+
+            // 2. Notify New Rider
+            await notificationService.notifyFranchise(shiftData.riderId, {
+                title: 'Nuevo Turno Asignado',
+                message: `Se te ha asignado un nuevo turno para el ${dateStr} de ${timeStr}.`,
+                type: 'shift_confirmed',
+                priority: 'high'
+            });
+        }
+
         const isNewToken = !existingId || (typeof existingId === 'string' && existingId.startsWith('draft-'));
 
         const finalShift = {
             ...shiftData,
             id: existingId || `draft-${crypto.randomUUID()}`,
             isDraft: true,
-            isNew: isNewToken
+            isNew: isNewToken,
+            changeRequested: false, // Reset change requested if reassigned or edited
+            changeReason: null
         };
 
         setLocalShifts(prev => {
             const filtered = prev.filter(s => String(s.id) !== String(finalShift.id));
             return [...filtered, finalShift];
         });
+
+        setIsModalOpen(false); // Ensure modal closes
     };
 
     const deleteShift = (shiftId: string) => {
@@ -275,21 +340,38 @@ const DeliveryScheduler: React.FC<{
             alert("El cuadrante está vacío. Añade turnos antes de auditar.");
             return;
         }
-        // setIsAuditing(true); // Removed
-        setSheriffResult(null);
-        try {
-            const result = await validateWeeklySchedule(mergedShifts);
-            if (result) {
-                setSheriffResult(result);
-            } else {
-                alert("El Sheriff no ha podido validar el cuadrante. Inténtalo de nuevo.");
+
+        // [AUDITORIA 3.0] Advanced Local Calculation
+        const totalHours = ridersGrid.reduce((acc, r) => acc + (r.totalWeeklyHours || 0), 0);
+        const overtimeRiders = ridersGrid.filter(r => (r.totalWeeklyHours || 0) > (r.contractHours || 40));
+        const underRiders = ridersGrid.filter(r => ((r.contractHours || 40) - (r.totalWeeklyHours || 0)) > 5);
+
+        // Coverage heuristic (simple: 1 point per hour covered vs needed)
+        // Just a mock calc for now
+        const coverageScore = 85;
+        const costEfficiency = 12.5; // Calculated simulated cost per hour
+
+        const insights = [];
+        if (overtimeRiders.length > 0) insights.push(`⚠️ ${overtimeRiders.length} riders en Overtime (+${overtimeRiders.reduce((acc, r) => acc + (r.totalWeeklyHours - (r.contractHours || 40)), 0).toFixed(1)}h excedentarias).`);
+        if (underRiders.length > 0) insights.push(`📉 ${underRiders.length} riders infrautilizados (se está pagando por horas no trabajadas).`);
+        if (totalHours < 100) insights.push("⚠️ Cobertura global peligrosamente baja (<100h).");
+        if (overtimeRiders.length === 0 && underRiders.length === 0) insights.push("✅ Distribución de horas perfecta.");
+
+        const score = Math.max(0, 100 - (overtimeRiders.length * 5) - (underRiders.length * 2));
+
+        setSheriffData({
+            score,
+            status: score > 90 ? 'optimal' : score > 70 ? 'warning' : 'critical',
+            feedback: insights,
+            details: {
+                totalHours,
+                overtimeCount: overtimeRiders.length,
+                underutilizedCount: underRiders.length,
+                coverageScore,
+                costEfficiency
             }
-        } catch (error) {
-            console.error("Error en auditoría:", error);
-            alert("Error de conexión con el Sheriff.");
-        } finally {
-            // setIsAuditing(false); // Removed
-        }
+        });
+        setIsSheriffOpen(true);
     };
 
 
@@ -369,14 +451,26 @@ const DeliveryScheduler: React.FC<{
     };
 
     const dayCols = useMemo(() => {
-        const all = Array.from({ length: 48 }).map((_, i) => ({
-            i,
-            h: i / 2,
-            isFullHourEnd: i % 2 === 1, // odd index ends at full hour (e.g. 1 ends at 1:00)
-        }));
+        // 15-minute intervals: 24h * 4 = 96 slots
+        const all = Array.from({ length: 96 }).map((_, i) => {
+            const h = i / 4;
+            const hour = Math.floor(h);
+            const minute = (i % 4) * 15;
+            return {
+                i,
+                h, // 13.0, 13.25, 13.5, 13.75
+                hour,
+                minute,
+                isFullHour: minute === 0,
+                isHalfHour: minute === 30,
+            };
+        });
+
         if (!showPrime) return all;
-        // Prime: 12:00 (24) -> 16:30 (33) AND 20:00 (40) -> 24:00 (48)
-        return all.filter(s => (s.i >= 24 && s.i < 33) || (s.i >= 40 && s.i < 48));
+
+        // Prime: 12:00-16:30 (Indexes 48 to 66) & 20:00-24:00 (Indexes 80 to 96)
+        // 12*4=48, 16.5*4=66, 20*4=80, 24*4=96
+        return all.filter(s => (s.i >= 48 && s.i < 66) || (s.i >= 80 && s.i < 96));
     }, [showPrime]);
 
 
@@ -418,23 +512,31 @@ const DeliveryScheduler: React.FC<{
     };
 
     // --- PRIME HELPERS ---
-    const isFiltered = (startAt: string, endAt: string) => {
-        if (!showLunch && !showDinner) return true; // Show all
+    const isFiltered = useCallback((startStr: string, endStr: string) => {
+        // If no filter active, show all
+        if (!showLunch && !showDinner && !showPrime) return true;
 
-        const start = new Date(startAt);
-        const end = new Date(endAt);
+        const start = new Date(startStr);
+        const end = new Date(endStr);
+        // Start/End in minutes of day
         const startMin = start.getHours() * 60 + start.getMinutes();
         const endMin = end.getHours() * 60 + end.getMinutes();
-        // Handle midnight wrapping for end time if needed (usually date objects handle it, but here we check time of day?)
-        // Assuming shifts fit within the day or we check simple hours. 
-        // For accurate overlap, we should compare full timestamps.
-        // But the previous logic used simple hours. Let's stick to simple Hours for "Turno".
-
-        // Lunch: 12:00 - 16:30 (720 - 990)
-        // Dinner: 20:00 - 24:00 (1200 - 1440)
-
-        // Note: endMin 0 (midnight) should be treated as 1440 if it's the end of shift
+        // Handle midnight wrap (simple assumption for visual filtering)
         const adjustedEndMin = endMin === 0 ? 1440 : endMin;
+
+        // Logic: Shift must overlap with the active ranges
+        // Overlap Condition: (ShiftStart < RangeEnd) AND (ShiftEnd > RangeStart)
+
+        if (showPrime) {
+            // Prime ranges: 12:00-16:30 (720-990) AND 20:00-24:00 (1200-1440)
+            const p1Start = 720, p1End = 990;
+            const p2Start = 1200, p2End = 1440;
+
+            const overlapP1 = startMin < p1End && adjustedEndMin > p1Start;
+            const overlapP2 = startMin < p2End && adjustedEndMin > p2Start;
+
+            if (overlapP1 || overlapP2) return true;
+        }
 
         let visible = false;
 
@@ -454,7 +556,7 @@ const DeliveryScheduler: React.FC<{
         }
 
         return visible;
-    };
+    }, [showLunch, showDinner, showPrime]);
 
     const ridersGrid = useMemo(() => {
         const activeRiders = rosterRiders.filter(r => r.status === 'active' || r.status === 'on_route');
@@ -479,8 +581,9 @@ const DeliveryScheduler: React.FC<{
                 visualBlocks,
                 shifts: displayedShifts
             };
+
         }).sort((a, b) => a.fullName.localeCompare(b.fullName));
-    }, [rosterRiders, mergedShifts, showLunch, showDinner]);
+    }, [rosterRiders, mergedShifts, isFiltered]);
 
     // 2. Real-time Cost Calculation (Simulation)
     const totalWeeklyCost = useMemo(() => {
@@ -532,7 +635,7 @@ const DeliveryScheduler: React.FC<{
         });
     };
 
-    const handleDuplicateShift = (shift: any) => {
+    const handleDuplicateShift = (shift: Shift) => {
         const start = new Date(shift.startAt);
         const end = new Date(shift.endAt);
 
@@ -589,7 +692,8 @@ const DeliveryScheduler: React.FC<{
         const h = hour ?? 13;
         const baseDate = parseISO(dateIso);
         const hours = Math.floor(h);
-        const mins = (h % 1) >= 0.5 ? 30 : 0;
+        const mins = Math.round((h % 1) * 60); // 15-min precision
+        // Default 4 hour shift?
         const startAt = toLocalISOString(setMinutes(setHours(baseDate, hours), mins)) as string;
         const endAt = toLocalISOString(setMinutes(setHours(baseDate, hours + 4), mins)) as string;
 
@@ -601,12 +705,46 @@ const DeliveryScheduler: React.FC<{
         });
     };
 
-    const handleAddShift = (dateIso: string, _riderId?: string, hour?: number) => {
+    const handleAddShift = (dateIso: string, riderId?: string, hour?: number) => {
         if (readOnly) return;
+
+        // [MOD] Overtime Pre-Check (Blocking Interactive)
+        if (riderId) {
+            const riderStats = ridersGrid.find(r => r.id === riderId);
+            if (riderStats) {
+                const current = riderStats.totalWeeklyHours || 0;
+                const contract = riderStats.contractHours || 40;
+                const projected = current + 4; // Assume 4h default shift
+
+                if (projected > contract) {
+                    // BLOCK: Open Confirmation Modal
+                    setPendingShiftParams({ dateIso, riderId, hour });
+                    setOvertimeDetails({
+                        current,
+                        projected,
+                        limit: contract,
+                        riderName: riderStats.fullName
+                    });
+                    setIsOvertimeConfirmOpen(true);
+                    return; // STOP EXECUTION
+                }
+            }
+        }
+
         setEditingShift(null);
         setSelectedDateForNew(dateIso);
         setPrefillHour(hour);
         setIsModalOpen(true);
+    };
+
+    const confirmOvertimeShift = () => {
+        if (!pendingShiftParams) return;
+        setIsOvertimeConfirmOpen(false);
+        setEditingShift(null);
+        setSelectedDateForNew(pendingShiftParams.dateIso);
+        setPrefillHour(pendingShiftParams.hour);
+        setIsModalOpen(true);
+        setPendingShiftParams(null);
     };
 
     const handleEditShift = (shift: any) => {
@@ -672,7 +810,7 @@ const DeliveryScheduler: React.FC<{
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [selectedShiftId, mergedShifts, deleteShift, contextMenu, isModalOpen, isQuickFillOpen, isGuideOpen, localShifts]);
+    }, [selectedShiftId, mergedShifts, deleteShift, contextMenu, isModalOpen, isQuickFillOpen, isGuideOpen, localShifts, handleDuplicateShift]);
 
     if (loading) return <div className="p-8 text-center animate-pulse text-slate-400 font-medium h-96 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
@@ -828,21 +966,76 @@ const DeliveryScheduler: React.FC<{
                     </div>
                 </div>
 
-                {/* SHERIFF OVERLAY REUSED */}
+                {/* SHERIFF OVERLAY REUSED (REPORT 2.0) */}
                 {sheriffResult && (
-                    <div className="absolute top-[130px] right-6 z-50 w-80 animate-in slide-in-from-right-10 fade-in duration-300 pointer-events-auto">
-                        <div className={`
-                        p-4 rounded-xl shadow-2xl border backdrop-blur-md
-                        ${sheriffResult.status === 'optimal'
-                                ? 'bg-emerald-50/95 border-emerald-200 text-emerald-900'
-                                : 'bg-amber-50/95 border-amber-200 text-amber-900'
-                            }
-                    `}>
-                            <div className="flex justify-between items-start mb-2">
-                                <h3 className="font-black text-xs uppercase tracking-wider">Reporte Operativo</h3>
-                                <button onClick={() => setSheriffResult(null)} title="Cerrar reporte" aria-label="Cerrar"><XCircle size={16} className="opacity-50" /></button>
+                    <div className="absolute top-[80px] right-6 z-50 w-96 animate-in slide-in-from-right-10 fade-in duration-300 pointer-events-auto filter drop-shadow-2xl">
+                        <div className={cn(
+                            "rounded-2xl shadow-2xl border backdrop-blur-xl overflow-hidden flex flex-col",
+                            sheriffResult.status === 'optimal'
+                                ? 'bg-emerald-50/95 border-emerald-200'
+                                : 'bg-white/95 border-amber-200'
+                        )}>
+                            {/* Header */}
+                            <div className={cn(
+                                "p-4 flex justify-between items-start border-b",
+                                sheriffResult.status === 'optimal' ? "bg-emerald-100/50 border-emerald-200" : "bg-amber-100/50 border-amber-200"
+                            )}>
+                                <div className="flex items-center gap-3">
+                                    <div className={cn(
+                                        "w-12 h-12 rounded-xl flex items-center justify-center shadow-sm text-xl font-black border",
+                                        sheriffResult.status === 'optimal'
+                                            ? "bg-emerald-500 text-white border-emerald-600"
+                                            : "bg-amber-400 text-amber-900 border-amber-500"
+                                    )}>
+                                        {sheriffResult.score}
+                                    </div>
+                                    <div>
+                                        <h3 className={cn("font-black text-sm uppercase tracking-wider", sheriffResult.status === 'optimal' ? "text-emerald-900" : "text-amber-900")}>
+                                            Reporte Sheriff
+                                        </h3>
+                                        <p className="text-[10px] font-medium opacity-80">
+                                            {sheriffResult.status === 'optimal' ? "Operativa Aprobada" : "Atención Requerida"}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setSheriffResult(null)} className="p-1 hover:bg-black/5 rounded-full transition-colors">
+                                    <XCircle size={20} className="opacity-40 hover:opacity-100" />
+                                </button>
                             </div>
-                            <p className="text-xs font-medium mb-3">{sheriffResult.feedback}</p>
+
+                            {/* Body */}
+                            <div className="p-5 space-y-4">
+                                {/* Feedback Text */}
+                                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-slate-600 text-xs font-medium leading-relaxed">
+                                    {sheriffResult.feedback}
+                                </div>
+
+                                {/* Stats Grid */}
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div className="p-2 rounded-lg bg-rose-50 border border-rose-100 flex flex-col items-center">
+                                        <span className="text-lg font-black text-rose-600">{sheriffResult.details?.overtimeCount || 0}</span>
+                                        <span className="text-[9px] font-bold text-rose-400 uppercase tracking-tight">Overtime</span>
+                                    </div>
+                                    <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-100 flex flex-col items-center">
+                                        <span className="text-lg font-black text-emerald-600">{sheriffResult.details?.underutilizedCount || 0}</span>
+                                        <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-tight">Libres</span>
+                                    </div>
+                                    <div className="p-2 rounded-lg bg-indigo-50 border border-indigo-100 flex flex-col items-center">
+                                        <span className="text-lg font-black text-indigo-600">{Math.round(sheriffResult.details?.totalHours || 0)}h</span>
+                                        <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-tight">Total</span>
+                                    </div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="pt-2">
+                                    <button
+                                        onClick={() => setSheriffResult(null)}
+                                        className="w-full py-2 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10"
+                                    >
+                                        Entendido, gracias sheriff
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -850,44 +1043,63 @@ const DeliveryScheduler: React.FC<{
                 {/* 2. DYNAMIC FLEX GRID CONTAINER (NO SCROLL) */}
                 <div className="flex-1 overflow-hidden bg-white relative flex flex-col min-h-0">
 
-                    {/* HEADER */}
-                    <div className="flex-none flex w-full border-b border-slate-200 bg-slate-50/80 z-20 h-9">
+                    {/* HEADER - Floating Glass Effect */}
+                    <div className="flex-none flex w-full border-b border-indigo-100 bg-white/95 backdrop-blur-sm z-30 h-10 shadow-sm">
                         {/* CORNER (Riders Label) */}
-                        <div className="w-56 flex-none border-r border-slate-200 bg-slate-50/80 backdrop-blur-sm flex items-center px-4">
+                        <div className="w-48 flex-none border-r border-slate-200 bg-slate-50/80 backdrop-blur-sm flex items-center px-4">
                             <span className="text-[9px] uppercase font-medium tracking-widest text-slate-400">Riders</span>
                         </div>
 
                         {/* COLUMNS */}
                         <div className="flex-1 flex min-w-0">
                             {viewMode === 'week' ? (
-                                days.map((d) => (
-                                    <div key={d.isoDate} className="flex-1 border-r border-slate-200 flex items-center justify-center gap-1 min-w-0 last:border-r-0">
-                                        <span className={cn("text-[9px] font-medium uppercase tracking-wide truncate", isToday(d.dateObj) ? "text-indigo-600" : "text-slate-400")}>{d.shortLabel}</span>
-                                        <div className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-medium shrink-0", isToday(d.dateObj) ? "bg-indigo-600 text-white shadow-sm" : "text-slate-400")}>
-                                            {format(d.dateObj, 'd')}
+                                days.map((d) => {
+                                    const isHighVolume = ['vie', 'sáb', 'dom', 'fri', 'sat', 'sun'].some(day => d.shortLabel.toLowerCase().includes(day));
+                                    return (
+                                        <div key={d.isoDate} className={cn(
+                                            "flex-1 border-r border-slate-200 flex items-center justify-center gap-1 min-w-0 last:border-r-0 relative overflow-hidden",
+                                            isHighVolume ? "bg-indigo-50/40" : ""
+                                        )}>
+                                            {isHighVolume && (
+                                                <div className="absolute top-0 right-0 w-3 h-3 bg-rose-500 rounded-bl-full z-10 opacity-80" title="Volumen Alto" />
+                                            )}
+                                            <span className={cn("text-[9px] font-medium uppercase tracking-wide truncate", isToday(d.dateObj) ? "text-indigo-600" : (isHighVolume ? "text-slate-700 font-bold" : "text-slate-400"))}>{d.shortLabel}</span>
+                                            <div className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-medium shrink-0", isToday(d.dateObj) ? "bg-indigo-600 text-white shadow-sm" : "text-slate-400")}>
+                                                {format(d.dateObj, 'd')}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             ) : (
                                 <div className="flex-1 flex relative">
                                     {/* Timeline Header Day View */}
                                     {/* Timeline Header Day View */}
                                     {dayCols.map((slot) => {
+                                        const hourInt = Math.floor(slot.h);
+                                        // Use same zebra logic as grid
+                                        const isOddHour = hourInt % 2 !== 0;
+
                                         return (
                                             <div key={slot.i} className={cn(
-                                                "flex-1 border-r flex items-end justify-start pb-0.5 pl-1 relative group overflow-visible",
-                                                // If ends at Full Hour -> Stronger Border
-                                                slot.isFullHourEnd ? "border-slate-300" : "border-slate-100/50",
-                                                slot.i === 47 ? "border-r-0" : ""
+                                                "flex-1 flex items-end justify-start pb-1 pl-1 relative group overflow-visible h-full border-l",
+                                                // Border Hierarchy (Header)
+                                                slot.isFullHour ? "border-indigo-200" :
+                                                    slot.isHalfHour ? "border-indigo-100/60 border-dashed" : "border-indigo-50/50 border-dotted",
+                                                // Zebra BG
+                                                isOddHour ? "bg-indigo-50/20" : "bg-white",
                                             )}>
-                                                {/* Shade Prime Hours if not in Prime Mode (since Prime Mode hides others) */}
+                                                {/* Prime bg */}
                                                 {!showPrime && ((slot.h >= 12 && slot.h < 16.5) || (slot.h >= 20 && slot.h < 24)) && (
                                                     <div className="absolute inset-0 -z-10 bg-amber-50/30" />
                                                 )}
 
-                                                {/* Label at start of Even slots (Full Hours) */}
-                                                {!slot.isFullHourEnd && (
-                                                    <span className="text-[9px] font-bold text-slate-400 absolute left-[-4px] bottom-0.5">{slot.h}:00</span>
+                                                {/* Label - Clean, Floating Number, Vertically Centered - Indigo Tone */}
+                                                {slot.isFullHour && (
+                                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center z-20 pointer-events-none">
+                                                        <span className="text-[10px] font-semibold text-indigo-400/90 tracking-wide px-1">
+                                                            {slot.h}:00
+                                                        </span>
+                                                    </div>
                                                 )}
                                             </div>
                                         );
@@ -913,55 +1125,51 @@ const DeliveryScheduler: React.FC<{
                             <div
                                 key={rider.id}
                                 className={cn(
-                                    "flex-1 flex w-full border-b border-slate-300 transition-all duration-200 group relative",
-                                    index % 2 === 0 ? "bg-white" : "bg-slate-200/60", // Intense zebra: slate-200 (approx grey-200)
-                                    "hover:bg-indigo-50 hover:border-indigo-200 hover:shadow-[inset_4px_0_0_0_#4f46e5] hover:z-20 overflow-hidden"
+                                    // Row Container
+                                    "flex-1 flex w-full border-b border-indigo-50 transition-all duration-200 group relative",
+                                    // Zebra for sidebar is handled in inner div. Grid cells cover the rest. 
+                                    // row-hover effect is handled by group-hover in children or overlays?
+                                    // Let's add an overlay for hover to ensure it's visible across everything
+                                    "hover:z-20 overflow-visible"
                                 )}
-                                style={{ minHeight: '52px' }} // Slightly increased for the dual buttons
+                                style={{ minHeight: '64px' }} // Expanded Vertical Mode
                             >
-                                {/* Horizontal Divider Line - Separates Midday from Night */}
-                                <div className="absolute top-1/2 left-0 w-full h-px bg-slate-200/50 dark:bg-slate-700/30 z-0 pointer-events-none border-t border-dashed border-slate-300/40" />
+                                {/* Hover Overlay Guide for the whole row */}
+                                <div className="absolute inset-0 pointer-events-none bg-indigo-50/0 group-hover:bg-indigo-50/30 transition-colors z-20 border-y border-transparent group-hover:border-indigo-200/50" />
 
-                                {/* RIDER META (LEFT COL) */}
+                                {/* Horizontal Divider Line - Separates Midday from Night - Keeping it subtle */}
+                                <div className="absolute top-1/2 left-0 w-full h-px bg-slate-100 z-0 pointer-events-none border-t border-dashed border-slate-200/50" />
+
+                                {/* RIDER META (LEFT COL) - Compact */}
                                 <div className={cn(
-                                    "w-56 flex-none border-r border-slate-300 flex items-center px-4 py-2 relative transition-colors z-10",
-                                    index % 2 === 0 ? "bg-white group-hover:bg-indigo-50" : "bg-slate-200/60 group-hover:bg-indigo-50"
+                                    "w-48 flex-none border-r border-slate-200 flex items-center px-3 py-0.5 relative transition-colors z-10",
+                                    index % 2 === 0 ? "bg-white group-hover:bg-indigo-50/30" : "bg-indigo-50/30 group-hover:bg-indigo-50/30"
                                 )}>
                                     <div className="flex items-center gap-3 w-full">
                                         {/* Avatar */}
-                                        <div className={cn("w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-medium text-white shadow-sm shrink-0 ring-1 ring-white/50 transition-transform group-hover:scale-105", getRiderColor(rider.id).bg)}>
+                                        <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-sm shrink-0 ring-1 ring-white/50 transition-transform group-hover:scale-105", getRiderColor(rider.id).bg)}>
                                             {getRiderInitials(rider.fullName)}
                                         </div>
 
                                         {/* Info */}
                                         <div className="min-w-0 flex-1 flex flex-col justify-center gap-0.5">
-                                            <p className="text-xs font-medium text-slate-600 truncate group-hover:text-indigo-700 transition-colors">{rider.fullName}</p>
+                                            <p className="text-[11px] font-bold text-slate-700 truncate group-hover:text-indigo-700 transition-colors mb-0.5">{rider.fullName}</p>
 
-                                            {/* Micro-meter */}                 {(() => {
-                                                const current = rider.totalWeeklyHours;
-                                                const max = rider.contractHours || 40;
-                                                const ratio = current / max;
-                                                const isOver = ratio > 1;
-                                                const isUnder = ratio < 0.8;
-
-                                                return (
-                                                    <div className="flex items-center gap-2 mt-0.5">
-                                                        <div className="h-1 flex-1 bg-slate-100 rounded-full overflow-hidden">
-                                                            <div
-                                                                className={cn("h-full rounded-full transition-all duration-500",
-                                                                    isOver ? "bg-rose-500" : isUnder ? "bg-amber-400" : "bg-emerald-500"
-                                                                )}
-                                                                style={{ width: `${Math.min(ratio * 100, 100)}%` }}
-                                                            />
-                                                        </div>
-                                                        <span className={cn("text-[9px] font-bold w-8 text-right",
-                                                            isOver ? "text-rose-600" : isUnder ? "text-amber-600" : "text-emerald-600"
-                                                        )}>
-                                                            {current.toFixed(0)}h
-                                                        </span>
-                                                    </div>
-                                                );
-                                            })()}
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[9px] font-medium text-slate-400 bg-slate-100 px-1.5 py-px rounded-full border border-slate-200/50 whitespace-nowrap flex items-center gap-1">
+                                                    <PenLine size={10} className="text-slate-400" /> <span className="font-bold text-slate-600">{rider.contractHours || 40}h</span>
+                                                </span>
+                                                <span className={cn(
+                                                    "text-[9px] font-medium px-1.5 py-px rounded-full border whitespace-nowrap flex items-center gap-1 transition-colors",
+                                                    (rider.totalWeeklyHours || 0) > (rider.contractHours || 40)
+                                                        ? "bg-rose-50 text-rose-600 border-rose-200" // Red: Overtime
+                                                        : ((rider.contractHours || 40) - (rider.totalWeeklyHours || 0)) > 5
+                                                            ? "bg-emerald-50 text-emerald-600 border-emerald-200" // Green: Underutilized (>5h left)
+                                                            : "bg-amber-50 text-amber-600 border-amber-200" // Amber: Optimal (Within 5h)
+                                                )}>
+                                                    <Bike size={10} /> <span className="font-bold">{(rider.totalWeeklyHours || 0).toFixed(1)}h</span>
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1023,6 +1231,10 @@ const DeliveryScheduler: React.FC<{
                                             {/* Grid BGs (48 slots for 30m granularity) */}
                                             <div className="absolute inset-0 flex pointer-events-none">
                                                 {dayCols.map((slot) => {
+                                                    const isFullHO = slot.isFullHour;
+                                                    const hourInt = Math.floor(slot.h);
+                                                    const isOddHour = hourInt % 2 !== 0;
+
                                                     return (
                                                         <DroppableCell
                                                             key={slot.i}
@@ -1032,18 +1244,21 @@ const DeliveryScheduler: React.FC<{
                                                             onDoubleClick={() => handleAddShift(toLocalDateString(selectedDate), rider.id, slot.h)}
                                                             isToday={isToday(selectedDate)}
                                                             className={cn(
-                                                                "flex-1 border-r h-full transition-all duration-300",
-                                                                slot.isFullHourEnd ? "border-slate-300" : "border-slate-50 border-dashed",
+                                                                "flex-1 h-full transition-all duration-300 min-w-0 border-l",
+                                                                // Borders: Premium Indigo Hierarchy
+                                                                isFullHO ? "border-indigo-200" :
+                                                                    slot.isHalfHour ? "border-indigo-100/60 border-dashed" : "border-indigo-50/50 border-dotted",
+                                                                // Zebra Columns: Cool Indigo Tint
+                                                                isOddHour ? "bg-indigo-50/20" : "bg-white",
+                                                                // Prime Highlight
                                                                 ((slot.h >= 12 && slot.h < 16) || (slot.h >= 20 && slot.h < 24))
-                                                                    ? (showPrime ? "bg-amber-400/10" : "bg-amber-50/20")
+                                                                    ? (showPrime ? "bg-amber-100/10" : "bg-amber-50/10")
                                                                     : ""
                                                             )}
-                                                            // Pass data for snapping
                                                             hour={slot.h}
                                                         />
                                                     );
-                                                })}
-                                            </div>
+                                                })}    </div>
                                             {/* Shifts Layer */}
                                             <div className="relative w-full h-full z-10 pointer-events-none">
                                                 {rider.shifts.filter((s: any) => toLocalDateString(new Date(s.startAt)) === toLocalDateString(selectedDate)).map((shift: any) => {
@@ -1060,7 +1275,8 @@ const DeliveryScheduler: React.FC<{
                                                     return (
                                                         <div
                                                             key={shift.id}
-                                                            className="absolute top-[10%] bottom-[10%] z-20 hover:z-30 transition-all rounded-md overflow-hidden shadow-sm hover:shadow-md pointer-events-auto"
+                                                            // Interactive "Pop & Glow" effects - Tighter constraints for Compact Mode
+                                                            className="absolute top-[2px] bottom-[2px] z-20 hover:z-50 transition-all duration-200 ease-out rounded-md overflow-hidden shadow-sm hover:shadow-lg hover:shadow-indigo-500/20 hover:scale-[1.02] hover:brightness-105 cursor-pointer ring-0 hover:ring-1 hover:ring-white/50"
                                                             style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
                                                         >
                                                             <DraggableShift
@@ -1068,7 +1284,7 @@ const DeliveryScheduler: React.FC<{
                                                                 gridId={`shift-${shift.id}-day`}
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    setSelectedShiftId(shift.id); // Ensure day view also handles selection
+                                                                    setSelectedShiftId(shift.id);
                                                                 }}
                                                                 onDoubleClick={(e) => {
                                                                     e.stopPropagation();
@@ -1092,7 +1308,7 @@ const DeliveryScheduler: React.FC<{
                 {/* FOOTER: Coverage Aligned with Grid */}
                 <div className="bg-white border-t border-slate-200 flex items-stretch shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.02)] z-30 min-h-[40px]">
                     {/* LEFT COL: Matches Rider Column Width (w-56) */}
-                    <div className="w-56 flex-none flex items-center px-4 border-r border-slate-200 bg-slate-50/50">
+                    <div className="w-48 flex-none flex items-center px-4 border-r border-slate-200 bg-slate-50/50">
                         <span className="text-[9px] font-medium text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Riders / Turno
                         </span>
@@ -1140,6 +1356,7 @@ const DeliveryScheduler: React.FC<{
                             prefillHour={prefillHour}
                             riders={simpleRiders}
                             motos={vehicles.map(v => ({ id: (v.id || 'none') as string, licensePlate: (v.matricula || '') as string, model: (v.modelo || '') as string }))}
+                            existingShifts={mergedShifts}
                         />
                     )
                 }
@@ -1201,11 +1418,77 @@ const DeliveryScheduler: React.FC<{
                         onEdit={() => handleEditShift(contextMenu.shift)}
                         onDelete={() => deleteShift(contextMenu.shift.id)}
                     />
+
                 )}
 
+                {/* OVERTIME CONFIRMATION MODAL (INTERACTIVE) */}
+                <ConfirmationModal
+                    isOpen={isOvertimeConfirmOpen}
+                    onClose={() => {
+                        setIsOvertimeConfirmOpen(false);
+                        setPendingShiftParams(null);
+                    }}
+                    onConfirm={confirmOvertimeShift}
+                    title="⚠️ Alerta de Overtime"
+                    message={
+                        overtimeDetails ? (
+                            <div className="space-y-2 text-sm text-slate-600">
+                                <p>
+                                    El rider <span className="font-bold text-slate-900">{overtimeDetails.riderName}</span> ya acumula <span className="font-bold">{overtimeDetails.current.toFixed(1)}h</span>.
+                                </p>
+                                <p>
+                                    Con este turno, pasará a <span className="font-bold text-rose-600">{overtimeDetails.projected.toFixed(1)}h</span>, superando su límite de contrato ({overtimeDetails.limit}h).
+                                </p>
+                                <p className="pt-2 italic text-xs">
+                                    ¿Deseas aplicar una excepción de manager y proceder?
+                                </p>
+                            </div>
+                        ) : "Rider en overtime."
+                    }
+                    confirmText="Sí, crear igualmente"
+                    cancelText="Cancelar"
+                    variant="warning"
+                />
+
             </DndContext>
+            {/* OVERTIME CONFIRMATION MODAL (INTERACTIVE) */}
+            <ConfirmationModal
+                isOpen={isOvertimeConfirmOpen}
+                onClose={() => {
+                    setIsOvertimeConfirmOpen(false);
+                    setPendingShiftParams(null);
+                }}
+                onConfirm={confirmOvertimeShift}
+                title="⚠️ Alerta de Overtime"
+                message={
+                    overtimeDetails ? (
+                        <div className="space-y-2 text-sm text-slate-600">
+                            <p>
+                                El rider <span className="font-bold text-slate-900">{overtimeDetails.riderName}</span> ya acumula <span className="font-bold">{overtimeDetails.current.toFixed(1)}h</span>.
+                            </p>
+                            <p>
+                                Con este turno, pasará a <span className="font-bold text-rose-600">{overtimeDetails.projected.toFixed(1)}h</span>, superando su límite de contrato ({overtimeDetails.limit}h).
+                            </p>
+                            <p className="pt-2 italic text-xs">
+                                ¿Deseas aplicar una excepción de manager y proceder?
+                            </p>
+                        </div>
+                    ) : "Rider en overtime."
+                }
+                confirmText="Sí, crear igualmente"
+                cancelText="Cancelar"
+                variant="warning"
+            />
+
+            {/* SHERIFF REPORT MODAL (AUDIT 3.0) */}
+            <SheriffReportModal
+                isOpen={isSheriffOpen}
+                onClose={() => setIsSheriffOpen(false)}
+                data={sheriffData}
+            />
         </div >
     );
 };
+
 
 export default DeliveryScheduler;

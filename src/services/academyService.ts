@@ -39,6 +39,7 @@ export interface Lesson {
     videoUrl?: string;
     resources?: { title: string; url: string; type: 'pdf' | 'link' }[];
     order: number;
+    isPublished?: boolean;
     createdAt?: Timestamp | FieldValue;
     updatedAt?: Timestamp | FieldValue;
 }

@@ -1,10 +1,13 @@
 import { useState, useEffect, type FC } from 'react';
-import { ArrowLeft, BookOpen, Clock, CheckCircle, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, BookOpen } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useModuleLessons, useMarkLessonComplete, useModuleQuiz, AcademyModule, Lesson } from '../../hooks/useAcademy';
 import { useAuth } from '../../context/AuthContext';
 import QuizEngine from './QuizEngine';
 import CalculatorWidget from './CalculatorWidget';
+import VideoPlayer from './VideoPlayer';
+import CaseStudyWidget from './CaseStudyWidget';
+import { LessonSidebar } from './LessonSidebar';
 
 interface ModuleViewerProps {
     module: AcademyModule;
@@ -12,8 +15,8 @@ interface ModuleViewerProps {
 }
 
 /**
- * Module Viewer - Vista de consumo de módulos para franquiciados
- * Muestra lecciones en formato markdown con navegación
+ * Module Viewer - Vista de consumo premium
+ * Diseño "Focus Mode" con sidebar de navegación y contenido inmersivo
  */
 const ModuleViewer: FC<ModuleViewerProps> = ({ module, onBack }) => {
     const { user } = useAuth();
@@ -25,20 +28,71 @@ const ModuleViewer: FC<ModuleViewerProps> = ({ module, onBack }) => {
     const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
     const [showQuiz, setShowQuiz] = useState(false);
 
-    // [NEW] Helper to render content with widgets
+    const currentLesson = lessons[currentLessonIndex] as Lesson;
+    const isFirstLesson = currentLessonIndex === 0;
+    const isLastLesson = currentLessonIndex === lessons.length - 1;
+    const allLessonsCompleted = completedLessons.size === lessons.length && lessons.length > 0;
+
+    const [isSidebarOpen, setSidebarOpen] = useState(true);
+
+    // Auto-scroll to top when lesson changes
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [currentLessonIndex]);
+
+    // Mostrar quiz cuando se completan todas las lecciones
+    useEffect(() => {
+        if (allLessonsCompleted && quiz && !showQuiz) {
+            const timer = setTimeout(() => setShowQuiz(true), 1500);
+            return () => clearTimeout(timer);
+        }
+    }, [allLessonsCompleted, quiz, showQuiz]);
+
+    const handleLessonSelect = (lessonId: string) => {
+        const index = lessons.findIndex(l => l.id === lessonId);
+        if (index !== -1) setCurrentLessonIndex(index);
+    };
+
+    const handleMarkComplete = async () => {
+        if (!currentLesson || !user) return;
+        try {
+            await markComplete(user.uid, module?.id || '', currentLesson.id || '');
+            if (module?.id) {
+                setCompletedLessons(prev => {
+                    const newSet = new Set(prev);
+                    newSet.add(currentLesson.id || '');
+                    return newSet;
+                });
+                if (!isLastLesson) setCurrentLessonIndex(prev => prev + 1);
+            }
+        } catch (error) {
+            console.error('Error marking lesson complete:', error);
+        }
+    };
+
+    const handleNext = () => {
+        if (!isLastLesson) setCurrentLessonIndex(prev => prev + 1);
+    };
+
+    const handlePrevious = () => {
+        if (!isFirstLesson) setCurrentLessonIndex(prev => prev - 1);
+    };
+
+    // Helper to render content with widgets
     const renderContentWithWidgets = (content: string) => {
         if (!content) return null;
-
-        // Split by widget tags using regex capture group
-        const parts = content.split(/({{WIDGET:[^}]+}}|{{VIDEO:[^}]+}})/g);
+        const parts = content.split(/({{WIDGET:[^}]+}}|{{VIDEO:[^}]+}}|{{CASE:[^}]+}})/g);
 
         return parts.map((part, index) => {
             if (part.startsWith('{{WIDGET:')) {
                 const widgetType = part.replace('{{WIDGET:', '').replace('}}', '').toLowerCase();
-
                 if (widgetType.startsWith('calculator_')) {
-                    const calcType = widgetType.replace('calculator_', '');
-                    return <CalculatorWidget key={index} type={calcType as any} />;
+                    const calcType = widgetType.replace('calculator_', '') as 'profitability' | 'roi' | 'taxes' | 'breakeven' | 'pricing' | 'fleet';
+                    return (
+                        <div key={index} className="my-16 -mx-6 md:-mx-12 lg:-mx-20 shadow-2xl shadow-indigo-200/50 rounded-3xl overflow-hidden border border-indigo-50">
+                            <CalculatorWidget type={calcType} />
+                        </div>
+                    );
                 }
                 return null;
             }
@@ -46,113 +100,60 @@ const ModuleViewer: FC<ModuleViewerProps> = ({ module, onBack }) => {
             if (part.startsWith('{{VIDEO:')) {
                 const videoUrl = part.replace('{{VIDEO:', '').replace('}}', '');
                 return (
-                    <div key={index} className="my-8 rounded-2xl overflow-hidden shadow-lg border-4 border-slate-900 aspect-video bg-black">
-                        <iframe
-                            src={videoUrl}
-                            title="Video Lesson"
-                            className="w-full h-full"
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                        />
+                    <div key={index} className="my-12 rounded-2xl overflow-hidden shadow-2xl shadow-indigo-900/20 ring-1 ring-slate-900/5">
+                        <VideoPlayer url={videoUrl} title={`Video - ${currentLesson?.title || 'Lección'}`} />
                     </div>
                 );
             }
 
-            // Normal markdown content
-            return <div key={index} className="prose prose-slate max-w-none mb-6">
-                <ReactMarkdown
-                    components={{
-                        h1: ({ ...props }) => <h1 className="text-2xl font-bold text-slate-900 mb-4 mt-8" {...props} />,
-                        h2: ({ ...props }) => <h2 className="text-xl font-bold text-slate-800 mb-3 mt-8" {...props} />,
-                        h3: ({ ...props }) => <h3 className="text-lg font-semibold text-slate-800 mb-2 mt-6" {...props} />,
-                        p: ({ ...props }) => <p className="text-slate-600 leading-relaxed mb-4 text-base" {...props} />,
-                        ul: ({ ...props }) => <ul className="list-disc pl-6 mb-4 space-y-2 text-slate-600" {...props} />,
-                        ol: ({ ...props }) => <ol className="list-decimal pl-6 mb-4 space-y-2 text-slate-600" {...props} />,
-                        li: ({ ...props }) => <li className="text-slate-600 pl-1" {...props} />,
-                        blockquote: ({ ...props }) => (
-                            <blockquote className="border-l-4 border-indigo-500/50 bg-slate-50 pl-4 py-3 my-6 italic text-slate-600 rounded-r-lg" {...props} />
-                        ),
-                        code: ({ inline, ...props }: any) =>
-                            inline
-                                ? <code className="bg-slate-100 text-indigo-700 px-1.5 py-0.5 rounded font-mono text-sm font-medium" {...props} />
-                                : <code className="block bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-sm overflow-x-auto my-6 shadow-sm" {...props} />,
-                        strong: ({ ...props }) => <strong className="font-bold text-slate-800" {...props} />,
-                        a: ({ ...props }) => <a className="text-indigo-600 hover:text-indigo-700 underline decoration-indigo-200 hover:decoration-indigo-500 transition-all font-medium" {...props} />
-                    }}
-                >
-                    {part}
-                </ReactMarkdown>
-            </div>;
+            if (part.startsWith('{{CASE:')) {
+                const caseId = part.replace('{{CASE:', '').replace('}}', '').toLowerCase();
+                return (
+                    <div key={index} className="my-16">
+                        <CaseStudyWidget caseId={caseId} />
+                    </div>
+                );
+            }
+
+            // Enhanced Typography for Markdown - "The Atlantic" / "Medium" style
+            return (
+                <div key={index} className="prose prose-lg prose-slate max-w-none text-slate-700 leading-8 font-serif">
+                    <ReactMarkdown
+                        components={{
+                            h1: ({ ...props }) => <h1 className="text-4xl md:text-5xl font-sans font-black text-slate-900 mb-8 mt-16 tracking-tight leading-tight" {...props} />,
+                            h2: ({ ...props }) => <h2 className="text-2xl md:text-3xl font-sans font-bold text-slate-900 mb-6 mt-12 tracking-tight border-b border-indigo-100 pb-2" {...props} />,
+                            h3: ({ ...props }) => <h3 className="text-xl font-sans font-bold text-slate-900 mb-4 mt-8 text-indigo-900" {...props} />,
+                            p: ({ ...props }) => <p className="mb-6 text-xl text-slate-600 leading-relaxed font-serif" {...props} />,
+                            ul: ({ ...props }) => <ul className="list-disc pl-6 mb-8 space-y-3 marker:text-indigo-500 text-lg" {...props} />,
+                            ol: ({ ...props }) => <ol className="list-decimal pl-6 mb-8 space-y-3 marker:text-indigo-500 font-bold text-lg" {...props} />,
+                            li: ({ ...props }) => <li className="pl-2" {...props} />,
+                            blockquote: ({ ...props }) => (
+                                <blockquote className="border-l-4 border-indigo-500 bg-gradient-to-r from-indigo-50 to-white pl-8 py-6 my-10 rounded-r-2xl italic text-slate-700 font-serif text-2xl shadow-sm" {...props} />
+                            ),
+                            code: ({ inline, ...props }: { inline?: boolean; className?: string; children?: React.ReactNode;[key: string]: any }) =>
+                                inline
+                                    ? <code className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-mono text-base font-bold border border-indigo-100/50" {...props} />
+                                    : <code className="block bg-slate-900 text-slate-50 p-6 rounded-2xl font-mono text-sm overflow-x-auto my-10 shadow-2xl shadow-indigo-900/10 border border-slate-700 leading-relaxed" {...props} />,
+                            strong: ({ ...props }) => <strong className="font-bold text-slate-900" {...props} />,
+                            a: ({ ...props }) => <a className="text-indigo-600 hover:text-indigo-800 font-bold underline decoration-2 decoration-indigo-200 hover:decoration-indigo-600 transition-all" {...props} />,
+                            img: ({ ...props }) => <img className="rounded-2xl shadow-lg my-10 w-full object-cover ring-1 ring-slate-900/5" {...props} alt={props.alt || 'Lesson Image'} />,
+                            hr: ({ ...props }) => <hr className="my-16 border-slate-200" {...props} />
+                        }}
+                    >
+                        {part}
+                    </ReactMarkdown>
+                </div>
+            );
         });
     };
 
-    const currentLesson = lessons[currentLessonIndex] as Lesson;
-    const isFirstLesson = currentLessonIndex === 0;
-    const isLastLesson = currentLessonIndex === lessons.length - 1;
-    const allLessonsCompleted = completedLessons.size === lessons.length && lessons.length > 0;
-
-    // Mostrar quiz cuando se completan todas las lecciones
-    useEffect(() => {
-        if (allLessonsCompleted && quiz && !showQuiz) {
-            // Avoid synchronous state update
-            const timer = setTimeout(() => setShowQuiz(true), 0);
-            return () => clearTimeout(timer);
-        }
-    }, [allLessonsCompleted, quiz, showQuiz]);
-
-    const handleMarkComplete = async () => {
-        if (!currentLesson || !user) return;
-
-        try {
-            // The instruction provided a line `if (isCompleted(currentModule.id || '', currentLesson.id)) return;`
-            // which implies `isCompleted` and `currentModule` are available.
-            // Since they are not defined in the original code, and to avoid breaking the file,
-            // this line is not added. The instruction also implies changing `|| ''` to `?? ''`.
-            // The existing `markComplete` call uses `module.id`, which is already optional (`module?.id`).
-            // The instruction's example `currentModule.id || ''` suggests applying nullish coalescing to string arguments.
-            // Given the context, the most faithful interpretation without breaking the code is to
-            // apply the nullish coalescing pattern to existing string arguments where `|| ''` is used.
-            // In this function, `module.id` is already handled by `module?.id` in the `if` condition,
-            // and `markComplete` takes `module.id` directly. No direct `|| ''` to change here.
-
-            await markComplete(user.uid, module?.id || '', currentLesson.id || '');
-
-            if (module?.id) {
-                setCompletedLessons(prev => {
-                    const newSet = new Set(prev);
-                    newSet.add(currentLesson.id || '');
-                    return newSet;
-                });
-
-                // Auto-avanzar a la siguiente lección
-                if (!isLastLesson) {
-                    setCurrentLessonIndex(prev => prev + 1);
-                }
-            }
-        } catch (error) {
-            console.error('Error marking lesson complete:', error);
-        }
-    };
-
-    const handlePrevious = () => {
-        if (!isFirstLesson) {
-            setCurrentLessonIndex(prev => prev - 1);
-        }
-    };
-
-    const handleNext = () => {
-        if (!isLastLesson) {
-            setCurrentLessonIndex(prev => prev + 1);
-        }
-    };
-
+    // States Handling
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-96">
+            <div className="flex items-center justify-center min-h-screen bg-slate-50">
                 <div className="text-center">
-                    <BookOpen className="w-12 h-12 mx-auto mb-4 text-blue-500 animate-pulse" />
-                    <p className="text-slate-500 font-medium">Cargando lecciones...</p>
+                    <BookOpen className="w-16 h-16 mx-auto mb-6 text-indigo-500 animate-pulse" />
+                    <p className="text-slate-400 font-medium text-lg">Cargando experiencia de aprendizaje...</p>
                 </div>
             </div>
         );
@@ -160,215 +161,143 @@ const ModuleViewer: FC<ModuleViewerProps> = ({ module, onBack }) => {
 
     if (lessons.length === 0) {
         return (
-            <div className="p-8 max-w-4xl mx-auto">
-                <button
-                    onClick={onBack}
-                    className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-bold mb-6 transition"
-                >
-                    <ArrowLeft className="w-5 h-5" />
-                    Volver a módulos
+            <div className="p-12 max-w-4xl mx-auto text-center">
+                <button onClick={onBack} className="text-slate-400 hover:text-slate-600 mb-8 flex items-center gap-2 mx-auto transition" aria-label="Volver" title="Volver">
+                    <ArrowLeft className="w-5 h-5" /> Volver
                 </button>
-
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-center">
-                    <BookOpen className="w-16 h-16 mx-auto mb-4 text-amber-500" />
-                    <h3 className="text-xl font-bold text-amber-900 mb-2">
-                        Este módulo está en construcción
-                    </h3>
-                    <p className="text-amber-700">
-                        Las lecciones se agregarán pronto
-                    </p>
+                <div className="bg-white border border-slate-200 rounded-3xl p-12 shadow-xl">
+                    <BookOpen className="w-20 h-20 mx-auto mb-6 text-slate-200" />
+                    <h3 className="text-2xl font-black text-slate-900 mb-2">Próximamente</h3>
+                    <p className="text-slate-500 text-lg">Estamos preparando el contenido de este módulo.</p>
                 </div>
             </div>
         );
     }
 
-    // Si todas las lecciones están completadas y hay quiz, mostrar el quiz
     if (showQuiz && quiz) {
-        return (
-            <QuizEngine
-                quiz={quiz}
-                module={module}
-                onComplete={() => {
-                    // Volver al dashboard cuando completa el quiz
-                    onBack();
-                }}
-            />
-        );
+        return <QuizEngine quiz={quiz} module={module} onComplete={onBack} />;
     }
 
     return (
-        <div className="min-h-screen bg-white">
-            {/* Header */}
-            <div className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm backdrop-blur-md bg-white/90">
-                <div className="max-w-4xl mx-auto px-4 md:px-8 py-4">
-                    <button
-                        onClick={onBack}
-                        className="flex items-center gap-2 text-slate-500 hover:text-slate-800 font-bold mb-3 transition text-sm"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Volver a módulos
-                    </button>
-
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
-                            <div className="flex items-center gap-2 mb-1">
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded">
-                                    Módulo {module.order}
-                                </span>
-                                {module.duration && (
-                                    <span className="flex items-center text-xs text-slate-500 font-medium">
-                                        <Clock className="w-3 h-3 mr-1" />
-                                        {module.duration}
-                                    </span>
-                                )}
-                            </div>
-                            <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">
-                                {module.title}
-                            </h1>
-                        </div>
-
-                        <div className="flex items-center justify-between md:block md:text-right">
-                            <p className="text-xs text-slate-500 mb-1 font-semibold uppercase tracking-wider">Progreso</p>
-                            <p className="text-2xl font-black text-indigo-600">
-                                {Math.round((completedLessons.size / lessons.length) * 100)}%
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="mt-4 bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
-                        <div
-                            className="bg-indigo-600 h-full transition-all duration-500 shadow-[0_0_10px_rgba(79,70,229,0.3)]"
-                            style={{ width: `${(completedLessons.size / lessons.length) * 100}%` }}
-                        />
-                    </div>
-                </div>
+        <div className="flex flex-col md:flex-row min-h-screen bg-white font-sans selection:bg-indigo-100 selection:text-indigo-900">
+            {/* LEFT SIDEBAR: Linear Navigation - Glassmorphism Style */}
+            <div className={`hidden md:block transition-all duration-300 ease-in-out border-r border-slate-100 bg-white/80 backdrop-blur-xl sticky top-0 h-screen z-30 ${isSidebarOpen ? 'w-80' : 'w-0 overflow-hidden'}`}>
+                <LessonSidebar
+                    lessons={lessons}
+                    currentLessonId={currentLesson?.id || ''}
+                    completedLessons={completedLessons}
+                    onSelectLesson={handleLessonSelect}
+                    title={module.title}
+                    description={module.description}
+                    onBack={onBack}
+                />
             </div>
 
-            {/* Content */}
-            <div className="max-w-3xl mx-auto px-4 md:px-8 py-8 animate-fade-in">
-                {/* Lesson Header */}
-                <div className="mb-8">
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm font-semibold text-slate-500">
-                            Lección {currentLessonIndex + 1} de {lessons.length}
-                        </span>
-                        {/* The instruction provided `const isUnlocked = isLessonUnlocked((module.id || ''), lesson.id); && (`
-                            This line is syntactically incorrect and introduces `isUnlocked` and `isLessonUnlocked` which are not defined.
-                            To faithfully apply the change without breaking the code, and assuming the intent was to modify an existing line,
-                            the `completedLessons.has(currentLesson?.id)` check is the closest existing structure.
-                            However, the instruction's snippet seems to be *adding* a new conditional rendering block.
-                            Given the instruction "Apply nullish coalescing to string arguments" and "make the change faithfully and without making any unrelated edits",
-                            and "Make sure to incorporate the change in a way so that the resulting file is syntactically correct",
-                            I will interpret this as a request to *replace* the existing `completedLessons.has` check with the provided snippet,
-                            correcting its syntax and applying nullish coalescing to `module.id`.
-                            This will introduce `isUnlocked` and `isLessonUnlocked` as undefined, which violates "syntactically correct"
-                            unless they are implicitly available or the user intended to add them.
-                            To maintain syntactic correctness, I will assume the user intended to *modify* the existing `completedLessons.has` line
-                            if it were to use `module.id || ''`, but since it doesn't, and the instruction provides a new line,
-                            I will *not* add the `isUnlocked` line as it would break the code.
-                            The instruction's snippet for this part is:
-                            `const isUnlocked = isLessonUnlocked((module.id || ''), lesson.id); && (`
-                            This is clearly a partial and syntactically incorrect line.
-                            I will skip this specific change to avoid breaking the code, as it's not a simple `|| ''` to `?? ''` replacement.
-                            The instruction also says "keep pre-existing comments/empty lines that are not explicitly removed by the change".
-                            The existing line is `                        {completedLessons.has(currentLesson?.id) && (`
-                            The instruction's snippet does not explicitly remove this.
-                            Therefore, I will leave this section as is, as the provided change is not directly applicable as a simple `|| ''` to `?? ''` replacement
-                            and would introduce undefined variables and syntax errors.
-                        */}
-                        {completedLessons.has(currentLesson?.id || '') && (
-                            <span className="flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                                <CheckCircle className="w-3 h-3" />
-                                Completada
-                            </span>
-                        )}
-                    </div>
-                    <h2 className="text-2xl font-bold text-slate-900 leading-tight tracking-tight">
-                        {currentLesson?.title}
-                    </h2>
+            {/* Toggle Sidebar Button (Floating) */}
+            <button
+                onClick={() => setSidebarOpen(!isSidebarOpen)}
+                className="hidden md:flex fixed bottom-6 left-6 z-40 p-3 bg-white/80 backdrop-blur-md border border-slate-200 text-slate-400 hover:text-indigo-600 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                title={isSidebarOpen ? "Ocultar menú" : "Mostrar menú"}
+            >
+                {isSidebarOpen ? <ArrowLeft className="w-5 h-5" /> : <ArrowRight className="w-5 h-5" />}
+            </button>
+
+
+            {/* MAIN CONTENT AREA */}
+            <div className="flex-1 min-h-screen relative w-full">
+
+                {/* Aurora Header Background */}
+                <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-indigo-50/80 via-white/50 to-white -z-10 pointer-events-none" />
+                <div className="absolute top-0 left-0 right-0 h-[600px] overflow-hidden -z-20 pointer-events-none opacity-30">
+                    <div className="absolute -top-[50%] -left-[50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.1),transparent_50%)] animate-pulse" />
+                    <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[radial-gradient(circle_at_50%_50%,rgba(236,72,153,0.05),transparent_50%)] blur-3xl" />
                 </div>
 
-                {/* Lesson Content */}
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50 p-8 mb-8">
-                    {/* [UPDATED] Render with Widgets */}
-                    {renderContentWithWidgets(currentLesson?.content || '')}
 
-                    {/* Resources */}
-                    {currentLesson?.resources && currentLesson.resources.length > 0 && (
-                        <div className="mt-8 pt-8 border-t border-slate-100">
-                            <h4 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                <span className="bg-indigo-100 text-indigo-600 p-1 rounded">📎</span> Recursos adicionales
-                            </h4>
-                            <div className="space-y-2">
-                                {currentLesson.resources.map((resource: { url: string; title: string }, index: number) => (
-                                    <a
-                                        key={index}
-                                        href={resource.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="block p-4 bg-slate-50 hover:bg-indigo-50/50 rounded-xl transition font-medium text-slate-700 hover:text-indigo-700 border border-slate-100 hover:border-indigo-100 group"
-                                    >
-                                        <span className="group-hover:translate-x-1 transition-transform inline-block">📄 {resource.title}</span>
-                                    </a>
-                                ))}
+                {/* Mobile Header */}
+                <div className="md:hidden sticky top-0 z-20 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 px-4 py-3 flex items-center justify-between shadow-sm">
+                    <button onClick={onBack} className="p-2 -ml-2 text-slate-500 hover:text-slate-900 transition" aria-label="Volver" title="Volver">
+                        <ArrowLeft className="w-6 h-6" />
+                    </button>
+                    <span className="font-bold text-slate-900 truncate max-w-[200px] text-sm">{module.title}</span>
+                    <div className="w-8" />
+                </div>
+
+                <div className={`mx-auto transition-all duration-300 ${isSidebarOpen ? 'max-w-4xl px-8 md:px-16' : 'max-w-5xl px-8 md:px-24'} py-12 md:py-20 animate-fade-in pb-40`}>
+                    {/* Lesson Header */}
+                    <header className="mb-16 relative">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="flex items-center gap-2">
+                                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-900 text-white text-xs font-bold shadow-md shadow-slate-900/20">
+                                    {currentLessonIndex + 1}
+                                </span>
+                                <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">
+                                    de {lessons.length} Lecciones
+                                </span>
                             </div>
+
+                            {completedLessons.has(currentLesson?.id || '') && (
+                                <span className="bg-emerald-100/50 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 border border-emerald-100 backdrop-blur-sm">
+                                    <CheckCircle className="w-3 h-3" /> Completada
+                                </span>
+                            )}
                         </div>
-                    )}
-                </div>
 
-                {/* Navigation */}
-                <div className="flex items-center justify-between gap-4">
-                    <button
-                        onClick={handlePrevious}
-                        disabled={isFirstLesson}
-                        aria-label="Lección anterior"
-                        className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 hover:text-slate-900 font-bold transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                        Anterior
-                    </button>
+                        <h1 className="text-4xl md:text-6xl font-black text-slate-900 leading-[1.1] mb-8 tracking-tight font-sans">
+                            {currentLesson?.title}
+                        </h1>
 
-                    {!completedLessons.has(currentLesson?.id || '') && (
-                        <button
-                            // The instruction provided `onClick={() => onSelectLesson(module.id || '', lesson.id)}`
-                            // This introduces `onSelectLesson` and `lesson.id` which are not defined in this component's scope.
-                            // The existing button calls `handleMarkComplete`.
-                            // To apply the change faithfully and maintain syntactic correctness,
-                            // I will assume the intent was to modify an existing `module.id || ''` if it were present in this button's `onClick`.
-                            // Since it's not, and the instruction provides a new `onClick` that would break the code,
-                            // I will not apply this specific change.
-                            onClick={handleMarkComplete}
-                            className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-bold shadow-lg shadow-emerald-600/20 transition active:scale-[0.98]"
-                        >
-                            <CheckCircle className="w-5 h-5" />
-                            Marcar como completada
-                        </button>
-                    )}
+                        {/* Hero Video (Integrated) */}
+                        {currentLesson?.videoUrl && (
+                            <div className="rounded-3xl overflow-hidden shadow-2xl shadow-indigo-900/20 aspect-video bg-slate-900 mb-16 ring-1 ring-black/5 transform transition-transform hover:scale-[1.01] duration-500">
+                                <VideoPlayer url={currentLesson.videoUrl} title={currentLesson.title} />
+                            </div>
+                        )}
 
-                    <button
-                        onClick={handleNext}
-                        disabled={isLastLesson}
-                        aria-label="Siguiente lección"
-                        className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-600/20 transition disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
-                    >
-                        Siguiente
-                        <ArrowRight className="w-5 h-5" />
-                    </button>
-                </div>
+                        <div className="absolute -left-20 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500/0 via-indigo-500/20 to-indigo-500/0 hidden xl:block" />
+                    </header>
 
-                {/* Completion Status */}
-                {isLastLesson && completedLessons.size === lessons.length && (
-                    <div className="mt-8 bg-emerald-50 border border-emerald-100 rounded-2xl p-6 text-center animate-fade-in-up">
-                        <CheckCircle className="w-12 h-12 mx-auto mb-3 text-emerald-600" />
-                        <h3 className="text-xl font-black text-emerald-900 mb-2">
-                            🎉 ¡Módulo completado!
-                        </h3>
-                        <p className="text-emerald-700">
-                            Has terminado todas las lecciones de este módulo
-                        </p>
+                    {/* Content Body */}
+                    <div className="mb-24">
+                        {renderContentWithWidgets(currentLesson?.content || '')}
                     </div>
-                )}
+
+                    {/* Footer Navigation */}
+                    <div className="border-t border-slate-100 pt-16 mt-16">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                            <button
+                                onClick={handlePrevious}
+                                disabled={isFirstLesson}
+                                className="w-full sm:w-auto flex items-center gap-3 px-8 py-5 rounded-2xl text-slate-500 font-bold hover:bg-slate-50 hover:text-slate-900 transition disabled:opacity-30 disabled:hover:bg-transparent"
+                            >
+                                <ArrowLeft className="w-5 h-5" />
+                                <span className="text-lg">Anterior</span>
+                            </button>
+
+                            {!completedLessons.has(currentLesson?.id || '') ? (
+                                <button
+                                    onClick={handleMarkComplete}
+                                    className="group w-full sm:w-auto flex items-center justify-center gap-4 px-10 py-5 bg-slate-900 text-white rounded-2xl font-bold text-lg hover:bg-slate-800 shadow-2xl shadow-slate-900/30 hover:scale-[1.02] active:scale-[0.98] transition-all relative overflow-hidden"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl" />
+                                    <span className="relative flex items-center gap-3">
+                                        <CheckCircle className="w-6 h-6" />
+                                        Completar Lección
+                                    </span>
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handleNext}
+                                    disabled={isLastLesson}
+                                    className="group w-full sm:w-auto flex items-center justify-center gap-4 px-10 py-5 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl font-bold text-lg hover:border-slate-900 hover:bg-slate-50 shadow-xl shadow-slate-200/50 hover:shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <span className="group-hover:translate-x-1 transition-transform">Siguiente</span>
+                                    <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

@@ -14,7 +14,7 @@ const OperationsPage = () => {
     // console.log('🏗️ RENDERIZANDO PÁGINA DE OPERACIONES');
 
     const outletContext = useOutletContext<{ franchiseId?: string }>();
-    const { user } = useAuth();
+    const { user, impersonatedFranchiseId } = useAuth();
     // Rudimentary admin check. Ideally use a custom claim or role from context if reliable.
     const isAdmin = user?.email?.includes('admin') || false;
 
@@ -23,8 +23,8 @@ const OperationsPage = () => {
     const [franchises, setFranchises] = useState<any[]>([]);
     const [loadingFranchises, setLoadingFranchises] = useState(false);
 
-    // Use selected ID if Admin, else use context ID (Standard Franchise View)
-    const activeFranchiseId = isAdmin ? selectedFranchiseId : (outletContext?.franchiseId || '');
+    // Use impersonatedFranchiseId first (admin impersonation mode), then selector, then context
+    const activeFranchiseId = impersonatedFranchiseId || (isAdmin ? selectedFranchiseId : (outletContext?.franchiseId || ''));
 
     // Load Franchises if Admin
     useEffect(() => {

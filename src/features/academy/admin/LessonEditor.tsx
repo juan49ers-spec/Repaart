@@ -1,328 +1,327 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useModuleLessons, useCreateLesson, useUpdateLesson, useDeleteLesson } from '../../../hooks/useAcademy';
-import { Lesson } from '../../../services/academyService';
-import { ArrowLeft, Plus, Save, Trash2, Video, FileText, Link as LinkIcon, PlayCircle } from 'lucide-react';
-
+import { Plus, Trash2, Save, GripVertical, FileText, Layout, Eye, Monitor, ArrowLeft } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import { useCreateLesson, useUpdateLesson, useDeleteLesson, useModuleLessons, Lesson } from '../../../hooks/useAcademy';
+import { EditorToolbar } from './EditorToolbar';
+import toast from 'react-hot-toast';
 
 interface LessonEditorProps {
-    moduleId?: string;
-    onBack?: () => void;
+    moduleId: string;
+    onBack: () => void;
 }
 
-export const LessonEditor = ({ moduleId: propModuleId, onBack }: LessonEditorProps) => {
-    const { moduleId: paramModuleId } = useParams<{ moduleId: string }>();
-    const navigate = useNavigate();
-    const moduleId = propModuleId || paramModuleId;
-    const { lessons, loading } = useModuleLessons(moduleId || '');
+export default function LessonEditor({ moduleId, onBack }: LessonEditorProps) {
+    const { lessons, loading } = useModuleLessons(moduleId);
     const createLesson = useCreateLesson();
     const updateLesson = useUpdateLesson();
     const deleteLesson = useDeleteLesson();
 
     const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
-    const [form, setForm] = useState<Partial<Lesson>>({});
-    const [isSaving, setIsSaving] = useState(false);
+    const [viewMode, setViewMode] = useState<'editor' | 'preview' | 'split'>('split');
 
-    // Effect to select first lesson if available and none selected
+    // Form States
+    const [title, setTitle] = useState('');
+    const [content, setContent] = useState('');
+    const [videoUrl, setVideoUrl] = useState('');
+    const [order, setOrder] = useState(0);
+    const [resources, setResources] = useState<{ title: string; url: string; type: 'pdf' | 'link' }[]>([]);
+
+    const [isSidebarOpen, setSidebarOpen] = useState(true);
+
+    const handleSelectLesson = (lesson: Lesson) => {
+        setSelectedLessonId(lesson.id || null);
+        setTitle(lesson.title);
+        setContent(lesson.content || '');
+        setVideoUrl(lesson.videoUrl || '');
+        setOrder(lesson.order || 0);
+        setResources(lesson.resources || []);
+    };
+
     useEffect(() => {
-        if (!selectedLessonId && lessons.length > 0) {
-            // Optional: Auto-select first lesson? 
-            // setSelectedLessonId(lessons[0].id!);
+        if (lessons.length > 0 && !selectedLessonId) {
+            // eslint-disable-next-line
+            handleSelectLesson(lessons[0]);
         }
     }, [lessons, selectedLessonId]);
 
-    // When selection changes, update form
-    useEffect(() => {
-        if (selectedLessonId) {
-            const lesson = lessons.find(l => l.id === selectedLessonId);
-            if (lesson) {
-                setForm({ ...lesson });
-            }
-        } else {
-            setForm({});
-        }
-    }, [selectedLessonId, lessons]);
-
-    const handleCreate = async () => {
-        if (!moduleId) return;
-        const newOrder = lessons.length > 0 ? Math.max(...lessons.map(l => l.order)) + 1 : 1;
-        try {
-            const id = await createLesson({
-                moduleId,
-                title: 'Nueva Lección',
-                content: '',
-                order: newOrder,
-                videoUrl: '',
-                resources: []
-            });
-            setSelectedLessonId(id);
-        } catch (e) {
-            console.error(e);
-        }
+    const handleCreateNew = () => {
+        setSelectedLessonId(null);
+        setTitle('Nueva Lección');
+        setContent('');
+        setVideoUrl('');
+        setOrder(lessons.length + 1);
+        setResources([]);
     };
 
     const handleSave = async () => {
-        if (!selectedLessonId || !form.title) return;
-        setIsSaving(true);
+        const lessonData = {
+            title,
+            content,
+            videoUrl,
+            order: Number(order),
+            moduleId,
+            resources,
+            isPublished: true
+        };
+
         try {
-            await updateLesson(selectedLessonId, {
-                title: form.title,
-                content: form.content,
-                videoUrl: form.videoUrl,
-                resources: form.resources,
-                order: form.order,
-                moduleId: moduleId! // Ensure moduleId is preserved
-            });
-            // Update local state implicitly handled by snapshot listener
-        } catch (e) {
-            console.error(e);
-            alert('Error al guardar');
-        } finally {
-            setIsSaving(false);
+            if (selectedLessonId) {
+                await updateLesson(selectedLessonId, lessonData);
+                toast.success('Lección guardada', { icon: '💾', style: { borderRadius: '10px', background: '#333', color: '#fff' } });
+            } else {
+                await createLesson(lessonData);
+                toast.success('Lección creada');
+                handleCreateNew();
+            }
+        } catch (error) {
+            console.error('Error saving lesson:', error);
+            toast.error('Error al guardar');
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (window.confirm('¿Seguro que quieres eliminar esta lección?')) {
-            await deleteLesson(id);
-            if (selectedLessonId === id) setSelectedLessonId(null);
+    const handleDelete = async (lessonId: string) => {
+        if (confirm('¿Estás seguro de eliminar esta lección?')) {
+            await deleteLesson(lessonId);
+            toast.success('Lección eliminada');
+            handleCreateNew();
         }
     };
 
-    const addResource = () => {
-        const current = form.resources || [];
-        setForm({
-            ...form,
-            resources: [...current, { title: '', url: '', type: 'link' }]
-        });
+    const insertText = (text: string) => {
+        setContent(prev => prev + text);
     };
 
-    const updateResource = (index: number, field: string, value: string) => {
-        const current = [...(form.resources || [])];
-        current[index] = { ...current[index], [field]: value };
-        setForm({ ...form, resources: current });
-    };
+    // Helper to render content preview (Matching ModuleViewer styles)
+    const renderPreview = (markdown: string) => {
+        // Simple shim to show widgets in preview
+        const processed = markdown
+            .replace(/{{ WIDGET: ([^}]+)}}/g, '___[ WIDGET: $1 ]___')
+            .replace(/{{ VIDEO: ([^}]+)}}/g, '___[ VIDEO: $1 ]___')
+            .replace(/{{ CASE: ([^}]+)}}/g, '___[ CASE STUDY: $1 ]___');
 
-    const removeResource = (index: number) => {
-        const current = [...(form.resources || [])];
-        current.splice(index, 1);
-        setForm({ ...form, resources: current });
+        return (
+            <div className="prose prose-lg prose-slate max-w-none font-serif leading-8 selection:bg-indigo-100 selection:text-indigo-900">
+                <ReactMarkdown
+                    components={{
+                        h1: ({ ...props }) => <h1 className="text-4xl font-sans font-black text-slate-900 mb-8 mt-4 tracking-tight" {...props} />,
+                        h2: ({ ...props }) => <h2 className="text-2xl font-sans font-bold text-slate-900 mb-4 mt-8 tracking-tight border-b border-indigo-100 pb-2" {...props} />,
+                        h3: ({ ...props }) => <h3 className="text-xl font-sans font-bold text-slate-900 mb-4 mt-6 text-indigo-900" {...props} />,
+                        p: ({ ...props }) => <p className="mb-6 text-xl text-slate-600 leading-relaxed font-serif" {...props} />,
+                        ul: ({ ...props }) => <ul className="list-disc pl-6 mb-8 space-y-3 marker:text-indigo-500 text-lg" {...props} />,
+                        ol: ({ ...props }) => <ol className="list-decimal pl-6 mb-8 space-y-3 marker:text-indigo-500 font-bold text-lg" {...props} />,
+                        blockquote: ({ ...props }) => (
+                            <blockquote className="border-l-4 border-indigo-500 bg-gradient-to-r from-indigo-50 to-white pl-8 py-6 my-10 rounded-r-2xl italic text-slate-700 font-serif text-2xl shadow-sm" {...props} />
+                        ),
+                        code: ({ inline, ...props }: any) =>
+                            inline
+                                ? <code className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-mono text-base font-bold border border-indigo-100/50" {...props} />
+                                : <code className="block bg-slate-900 text-slate-50 p-6 rounded-2xl font-mono text-sm overflow-x-auto my-10 shadow-2xl shadow-indigo-900/10 border border-slate-700 leading-relaxed" {...props} />,
+                    }}
+                >
+                    {processed}
+                </ReactMarkdown>
+            </div>
+        );
     };
-
-    if (loading) return <div className="p-8 text-center text-slate-500">Cargando editor...</div>;
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col md:flex-row">
-            {/* Sidebar List */}
-            <div className="w-full md:w-80 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 h-screen overflow-y-auto flex flex-col">
-                <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-800 z-10">
-                    <button
-                        onClick={() => onBack ? onBack() : navigate('/admin/academy')}
-                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-500"
-                        title="Volver a módulos"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                    </button>
-                    <h2 className="font-bold text-slate-800 dark:text-white">Lecciones</h2>
-                    <button
-                        onClick={handleCreate}
-                        className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                        title="Crear nueva lección"
-                    >
-                        <Plus className="w-4 h-4" />
-                    </button>
+        <div className="flex h-[calc(100vh-100px)] bg-slate-50 -m-6 rounded-b-xl overflow-hidden font-sans">
+            {/* Sidebar List - Colapsable */}
+            <div className={`bg-white border-r border-slate-200 flex flex-col transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-80' : 'w-0 overflow-hidden'}`}>
+                <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 backdrop-blur-sm">
+                    <h3 className="font-bold text-slate-700 text-sm uppercase tracking-wider">Lecciones</h3>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleCreateNew}
+                            className="p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition shadow-sm"
+                            title="Nueva Lección"
+                        >
+                            <Plus className="w-4 h-4" />
+                        </button>
+                    </div>
                 </div>
-                <div className="flex-1 p-2 space-y-2">
-                    {lessons.sort((a, b) => a.order - b.order).map(lesson => (
+                <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                    {loading ? (
+                        <div className="p-4 text-center text-slate-400 text-sm animate-pulse">Cargando...</div>
+                    ) : lessons.map((lesson) => (
                         <div
                             key={lesson.id}
-                            onClick={() => setSelectedLessonId(lesson.id || null)}
-                            className={`p-3 rounded-xl cursor-pointer transition border ${selectedLessonId === lesson.id
-                                ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800'
-                                : 'bg-white dark:bg-slate-800 border-transparent hover:bg-slate-50 dark:hover:bg-slate-700'
-                                }`}
+                            onClick={() => handleSelectLesson(lesson)}
+                            className={`group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all border relative overflow-hidden
+                                ${selectedLessonId === lesson.id
+                                    ? 'bg-indigo-50 border-indigo-200 shadow-sm ring-1 ring-indigo-200'
+                                    : 'bg-white hover:bg-slate-50 border-transparent hover:border-slate-200'
+                                }
+                            `}
                         >
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <span className="text-[10px] uppercase font-bold text-slate-400">Lección {lesson.order}</span>
-                                    <h3 className={`text-sm font-bold ${selectedLessonId === lesson.id ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-300'}`}>
-                                        {lesson.title}
-                                    </h3>
-                                </div>
-                                {selectedLessonId === lesson.id && (
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); handleDelete(lesson.id!); }}
-                                        className="text-red-400 hover:text-red-600 p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
-                                        title="Eliminar lección"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                )}
+                            {selectedLessonId === lesson.id && <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500" />}
+                            <div className="flex items-center gap-3 overflow-hidden">
+                                <span className={`flex items-center justify-center w-6 h-6 rounded-lg text-xs font-bold transition-colors
+                                    ${selectedLessonId === lesson.id ? 'bg-indigo-200 text-indigo-700' : 'bg-slate-100 text-slate-500'}
+                                `}>
+                                    {lesson.order}
+                                </span>
+                                <span className={`text-sm truncate font-medium transition-colors
+                                    ${selectedLessonId === lesson.id ? 'text-indigo-900' : 'text-slate-600'}
+                                `}>
+                                    {lesson.title}
+                                </span>
                             </div>
+                            <GripVertical className="opacity-0 group-hover:opacity-100 w-4 h-4 text-slate-400 cursor-grab transform active:scale-110" />
                         </div>
                     ))}
-                    {lessons.length === 0 && (
-                        <p className="text-center text-slate-400 text-sm py-10">No hay lecciones. Crea una para empezar.</p>
+                </div>
+            </div>
+
+            {/* Toggle Sidebar Button (Vertical Strip when closed) */}
+            {!isSidebarOpen && (
+                <button
+                    onClick={() => setSidebarOpen(true)}
+                    className="w-12 border-r border-slate-200 bg-white flex flex-col items-center py-4 hover:bg-slate-50 transition text-slate-400 hover:text-indigo-600"
+                    title="Mostrar menú"
+                >
+                    <Layout className="w-5 h-5" />
+                </button>
+            )}
+
+
+            {/* Main Editor Area */}
+            <div className="flex-1 flex flex-col bg-slate-50 relative">
+
+                {/* Editor Header */}
+                <div className="h-16 bg-white/90 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-6 shadow-sm z-20 sticky top-0">
+                    <div className="flex items-center gap-4 flex-1">
+                        <button
+                            onClick={onBack}
+                            className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-xl transition-all"
+                            title="Volver"
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                        </button>
+
+                        {isSidebarOpen && (
+                            <button onClick={() => setSidebarOpen(false)} className="p-2 text-slate-400 hover:text-indigo-600 transition -ml-2" title="Ocultar menú">
+                                <Layout className="w-5 h-5 rotate-180" />
+                            </button>
+                        )}
+                        <div className="w-16">
+                            <label className="text-[10px] uppercase font-bold text-slate-400 mb-0.5 block">Orden</label>
+                            <input
+                                type="number"
+                                value={order}
+                                onChange={(e) => setOrder(Number(e.target.value))}
+                                className="w-full bg-slate-100 border-none rounded px-2 py-1 text-sm font-bold text-center focus:ring-2 focus:ring-indigo-500 outline-none hover:bg-indigo-50 transition"
+                            />
+                        </div>
+                        <div className="flex-1 max-w-lg">
+                            <label className="text-[10px] uppercase font-bold text-slate-400 mb-0.5 block">Título</label>
+                            <input
+                                type="text"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                placeholder="Escribe un título..."
+                                className="w-full bg-slate-100 border-none rounded px-3 py-1 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none hover:bg-indigo-50 transition"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <div className="flex bg-slate-100 p-1 rounded-lg mr-4 ring-1 ring-slate-200">
+                            <button
+                                onClick={() => setViewMode('editor')}
+                                className={`p-1.5 rounded-md transition ${viewMode === 'editor' ? 'bg-white shadow text-indigo-600 font-bold' : 'text-slate-500 hover:text-slate-700'}`}
+                                title="Solo Editor"
+                            >
+                                <FileText className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('split')}
+                                className={`p-1.5 rounded-md transition ${viewMode === 'split' ? 'bg-white shadow text-indigo-600 font-bold' : 'text-slate-500 hover:text-slate-700'}`}
+                                title="Vista Dividida"
+                            >
+                                <Layout className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('preview')}
+                                className={`p-1.5 rounded-md transition ${viewMode === 'preview' ? 'bg-white shadow text-indigo-600 font-bold' : 'text-slate-500 hover:text-slate-700'}`}
+                                title="Solo Vista Previa"
+                            >
+                                <Eye className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        {selectedLessonId && (
+                            <button
+                                onClick={() => handleDelete(selectedLessonId)}
+                                className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                                title="Eliminar Lección"
+                            >
+                                <Trash2 className="w-5 h-5" />
+                            </button>
+                        )}
+                        <button
+                            onClick={handleSave}
+                            className="flex items-center gap-2 px-6 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 font-bold shadow-lg shadow-slate-900/20 active:scale-95 transition-all"
+                        >
+                            <Save className="w-4 h-4" />
+                            Guardar
+                        </button>
+                    </div>
+                </div>
+
+                {/* Editor Content split view */}
+                <div className="flex-1 flex overflow-hidden">
+                    {/* Markdown Input */}
+                    {(viewMode === 'editor' || viewMode === 'split') && (
+                        <div className={`flex flex-col border-r border-slate-200 bg-white transition-all ${viewMode === 'split' ? 'w-1/2' : 'w-full'}`}>
+                            <div className="sticky top-0 z-10 bg-white/80 backdrop-blur shadow-sm">
+                                <EditorToolbar onInsert={insertText} />
+                            </div>
+                            <div className="flex-1 relative">
+                                <textarea
+                                    value={content}
+                                    onChange={(e) => setContent(e.target.value)}
+                                    placeholder="Escribe el contenido de la lección aquí... Usa Markdown."
+                                    className="w-full h-full p-8 resize-none focus:outline-none font-mono text-sm leading-7 text-slate-700 selection:bg-indigo-100"
+                                    spellCheck={false}
+                                />
+                            </div>
+                            <div className="p-4 border-t border-slate-200 bg-slate-50">
+                                <label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block flex items-center gap-1">
+                                    <Monitor className="w-3 h-3" /> URL del Video (Opcional)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={videoUrl}
+                                    onChange={(e) => setVideoUrl(e.target.value)}
+                                    placeholder="https://..."
+                                    className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Live Preview */}
+                    {(viewMode === 'preview' || viewMode === 'split') && (
+                        <div className={`flex flex-col bg-slate-50 overflow-y-auto transition-all ${viewMode === 'split' ? 'w-1/2' : 'w-full'}`}>
+                            {viewMode === 'split' && (
+                                <div className="p-2 bg-slate-100/50 border-b border-slate-200 text-xs font-bold text-slate-400 text-center uppercase tracking-widest sticky top-0 z-10 backdrop-blur">
+                                    Vista Previa
+                                </div>
+                            )}
+                            <div className="p-10 max-w-2xl mx-auto w-full">
+                                {videoUrl && (
+                                    <div className="aspect-video bg-slate-200 rounded-2xl mb-8 flex items-center justify-center text-slate-400 shadow-inner">
+                                        [Video Player Preview]
+                                    </div>
+                                )}
+                                <h1 className="text-4xl font-black text-slate-900 mb-8 font-sans leading-tight">{title || 'Título de la Lección'}</h1>
+                                {renderPreview(content)}
+                            </div>
+                        </div>
                     )}
                 </div>
             </div>
-
-            {/* Editor Area */}
-            <div className="flex-1 overflow-y-auto h-screen p-6 md:p-10">
-                {selectedLessonId ? (
-                    <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
-                        {/* Header Inputs */}
-                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
-                            <div className="flex justify-between items-center">
-                                <h1 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-                                    <FileText className="w-6 h-6 text-indigo-500" />
-                                    Editar Contenido
-                                </h1>
-                                <button
-                                    onClick={handleSave}
-                                    disabled={isSaving}
-                                    className="flex items-center gap-2 px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/30 transition disabled:opacity-50"
-                                >
-                                    <Save className="w-4 h-4" />
-                                    {isSaving ? 'Guardando...' : 'Guardar Lección'}
-                                </button>
-                            </div>
-
-                            <div className="grid md:grid-cols-3 gap-4">
-                                <div className="md:col-span-2">
-                                    <label htmlFor="lesson-title" className="block text-xs font-bold text-slate-500 uppercase mb-1">Título de la Lección</label>
-                                    <input
-                                        id="lesson-title"
-                                        type="text"
-                                        value={form.title || ''}
-                                        onChange={e => setForm({ ...form, title: e.target.value })}
-                                        className="w-full text-lg font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="lesson-order" className="block text-xs font-bold text-slate-500 uppercase mb-1">Orden</label>
-                                    <input
-                                        id="lesson-order"
-                                        type="number"
-                                        value={form.order || 0}
-                                        onChange={e => setForm({ ...form, order: parseInt(e.target.value) })}
-                                        className="w-full text-lg font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Video Section */}
-                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
-                            <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-                                <Video className="w-4 h-4" /> Contenido Audiovisual
-                            </h3>
-                            <div>
-                                <label htmlFor="video-url" className="block text-xs font-medium text-slate-400 mb-1">URL del Vídeo (YouTube / Vimeo / Directo)</label>
-                                <input
-                                    id="video-url"
-                                    type="text"
-                                    value={form.videoUrl || ''}
-                                    onChange={e => setForm({ ...form, videoUrl: e.target.value })}
-                                    placeholder="https://youtube.com/watch?v=..."
-                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none"
-                                />
-                            </div>
-                            {form.videoUrl && (
-                                <div className="aspect-video bg-black rounded-xl overflow-hidden shadow-lg mt-4 flex items-center justify-center relative group">
-                                    <div className="text-white text-center">
-                                        <PlayCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                                        <p className="text-sm font-medium opacity-75">Vista previa del vídeo detectado</p>
-                                    </div>
-                                    <iframe
-                                        src={form.videoUrl.replace('watch?v=', 'embed/')}
-                                        className="absolute inset-0 w-full h-full"
-                                        title="Preview"
-                                        allowFullScreen
-                                    />
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Content Editor */}
-                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4 h-[500px] flex flex-col">
-                            <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-                                <FileText className="w-4 h-4" /> Contenido de la Lección (Markdown)
-                            </h3>
-                            <textarea
-                                value={form.content || ''}
-                                onChange={e => setForm({ ...form, content: e.target.value })}
-                                className="flex-1 w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 font-mono text-sm leading-relaxed focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
-                                placeholder="# Escribe aquí el contenido..."
-                            />
-                        </div>
-
-                        {/* Resources Section */}
-                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
-                            <div className="flex justify-between items-center">
-                                <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-                                    <LinkIcon className="w-4 h-4" /> Recursos Descargables
-                                </h3>
-                                <button
-                                    onClick={addResource}
-                                    className="text-xs font-bold text-indigo-600 hover:text-indigo-700 px-3 py-1 bg-indigo-50 rounded-lg"
-                                    title="Añadir nuevo recurso"
-                                >
-                                    + Añadir Recurso
-                                </button>
-                            </div>
-
-                            <div className="space-y-3">
-                                {(form.resources || []).map((res, idx) => (
-                                    <div key={idx} className="flex gap-2 items-center bg-slate-50 dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
-                                        <select
-                                            value={res.type}
-                                            onChange={e => updateResource(idx, 'type', e.target.value)}
-                                            className="bg-white dark:bg-slate-800 border border-slate-200 rounded-md text-xs px-2 py-1"
-                                            title="Tipo de recurso"
-                                        >
-                                            <option value="link">Enlace</option>
-                                            <option value="pdf">PDF</option>
-                                        </select>
-                                        <input
-                                            type="text"
-                                            value={res.title}
-                                            onChange={e => updateResource(idx, 'title', e.target.value)}
-                                            placeholder="Título del recurso"
-                                            className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 rounded-md text-sm px-2 py-1"
-                                            aria-label="Título del recurso"
-                                        />
-                                        <input
-                                            type="text"
-                                            value={res.url}
-                                            onChange={e => updateResource(idx, 'url', e.target.value)}
-                                            placeholder="URL (https://...)"
-                                            className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 rounded-md text-sm px-2 py-1 font-mono"
-                                            aria-label="URL del recurso"
-                                        />
-                                        <button
-                                            onClick={() => removeResource(idx)}
-                                            className="text-red-400 hover:text-red-500"
-                                            title="Eliminar recurso"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                ))}
-                                {(form.resources?.length === 0) && (
-                                    <p className="text-sm text-slate-400 italic text-center py-4">No hay recursos adjuntos.</p>
-                                )}
-                            </div>
-                        </div>
-
-                    </div>
-                ) : (
-                    <div className="h-full flex items-center justify-center text-slate-400 flex-col gap-4">
-                        <FileText className="w-16 h-16 opacity-20" />
-                        <p className="font-medium">Selecciona una lección para editar o crea una nueva.</p>
-                    </div>
-                )}
-            </div>
         </div>
     );
-};
+}

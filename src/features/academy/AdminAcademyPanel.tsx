@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, Save, X, BookOpen, FileText, ClipboardCheck } from 'lucide-react';
+import { Plus, X, BookOpen, Save } from 'lucide-react';
 import { useAcademyModules, useCreateModule, useUpdateModule, useDeleteModule, AcademyModule } from '../../hooks/useAcademy';
-import { formatDate } from '../../utils/formatDate';
 import { serverTimestamp } from 'firebase/firestore';
+import { toast } from 'react-hot-toast';
 
-import { LessonEditor } from './admin/LessonEditor';
+import LessonEditor from './admin/LessonEditor';
 import { QuizEditor } from './admin/QuizEditor';
 import AcademyAnalytics from './AcademyAnalytics';
 import EncyclopediaView from './EncyclopediaView';
+import AdminModuleCard from './AdminModuleCard';
 
 
 interface ModuleFormData {
@@ -45,7 +46,7 @@ const AdminAcademyPanel: React.FC = () => {
 
     const handleCreate = async () => {
         if (!formData.title.trim()) {
-            alert('El título es obligatorio');
+            toast.error('El título es obligatorio');
             return;
         }
 
@@ -61,9 +62,10 @@ const AdminAcademyPanel: React.FC = () => {
 
             setFormData({ title: '', description: '', duration: '', order: modules.length + 2 });
             setIsCreating(false);
+            toast.success('Módulo creado correctamente');
         } catch (error) {
             console.error('Error creating module:', error);
-            alert('Error al crear el módulo');
+            toast.error('Error al crear el módulo');
         }
     };
 
@@ -72,9 +74,10 @@ const AdminAcademyPanel: React.FC = () => {
         try {
             await updateModule(moduleId, editingModule);
             setEditingModule(null);
+            toast.success('Módulo actualizado');
         } catch (error) {
             console.error('Error updating module:', error);
-            alert('Error al actualizar el módulo');
+            toast.error('Error al actualizar el módulo');
         }
     };
 
@@ -85,9 +88,21 @@ const AdminAcademyPanel: React.FC = () => {
 
         try {
             await deleteModule(moduleId);
+            toast.success('Módulo eliminado');
         } catch (error) {
             console.error('Error deleting module:', error);
-            alert('Error al eliminar el módulo');
+            toast.error('Error al eliminar el módulo');
+        }
+    };
+
+    const handleToggleStatus = async (module: AcademyModule) => {
+        const newStatus = module.status === 'active' ? 'draft' : 'active';
+        try {
+            await updateModule(module.id!, { status: newStatus });
+            toast.success(`Módulo ${newStatus === 'active' ? 'publicado' : 'ocultado'}`);
+        } catch (error) {
+            console.error('Error updating status:', error);
+            toast.error('Error al cambiar el estado');
         }
     };
 
@@ -106,7 +121,7 @@ const AdminAcademyPanel: React.FC = () => {
     if (selectedModule) {
         return (
             <LessonEditor
-                moduleId={selectedModule.id}
+                moduleId={selectedModule.id!}
                 onBack={() => setSelectedModule(null)}
             />
         );
@@ -279,9 +294,9 @@ const AdminAcademyPanel: React.FC = () => {
                         )}
 
                         {/* Modules Grid */}
-                        <div className="grid grid-cols-1 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {modules.length === 0 && !isCreating ? (
-                                <div className="text-center py-24 bg-white/60 dark:bg-slate-900/30 rounded-[2.5rem] border border-slate-200 dark:border-white/5 backdrop-blur-sm border-dashed">
+                                <div className="col-span-full text-center py-24 bg-white/60 dark:bg-slate-900/30 rounded-[2.5rem] border border-slate-200 dark:border-white/5 backdrop-blur-sm border-dashed">
                                     <div className="w-20 h-20 mx-auto mb-6 bg-slate-100 dark:bg-slate-800/50 rounded-full flex items-center justify-center">
                                         <BookOpen className="w-10 h-10 text-slate-400 dark:text-slate-600" />
                                     </div>
@@ -303,129 +318,58 @@ const AdminAcademyPanel: React.FC = () => {
                                 modules.map((module: AcademyModule) => {
                                     const isEditing = editingModule?.id === module.id;
 
-                                    return (
-                                        <div
-                                            key={module.id}
-                                            className="group relative bg-white dark:bg-slate-900/40 backdrop-blur-xl rounded-[2rem] border border-slate-200 dark:border-white/5 hover:border-indigo-500/30 hover:bg-slate-50 dark:hover:bg-slate-900/60 transition-all duration-300 p-8 overflow-hidden shadow-sm dark:shadow-none"
-                                        >
-                                            {/* Glow Effect */}
-                                            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-[80px] -mr-32 -mt-32 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-
-                                            {isEditing ? (
-                                                <div className="space-y-6 relative z-10 max-w-3xl">
+                                    if (isEditing) {
+                                        return (
+                                            <div key={module.id} className="relative bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xl z-20">
+                                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Editando Módulo</h3>
+                                                <div className="space-y-4">
                                                     <div>
-                                                        <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Título</label>
-                                                        <div className="space-y-4">
-                                                            <input
-                                                                type="text"
-                                                                value={editingModule?.title || ''}
-                                                                onChange={(e) => setEditingModule(prev => prev ? ({ ...prev, title: e.target.value }) : null)}
-                                                                className="w-full px-4 py-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white outline-none"
-                                                                placeholder="Título del módulo"
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Descripción</label>
-                                                            <textarea
-                                                                value={editingModule?.description || ''}
-                                                                onChange={(e) => setEditingModule(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
-                                                                className="w-full px-4 py-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white outline-none resize-none"
-                                                                rows={2}
-                                                                placeholder="Descripción"
-                                                            />
-                                                        </div>
-                                                        <div className="flex gap-3">
-                                                            <button
-                                                                onClick={() => module.id && handleUpdate(module.id)}
-                                                                className="px-6 py-2.5 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/20 flex items-center gap-2"
-                                                            >
-                                                                <Save className="w-4 h-4" /> Guardar
-                                                            </button>
-                                                            <button
-                                                                onClick={() => setEditingModule(null)}
-                                                                className="px-6 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition"
-                                                            >
-                                                                Cancelar
-                                                            </button>
-                                                        </div>
+                                                        <label className="block text-xs font-bold text-slate-500 mb-1">Título</label>
+                                                        <input
+                                                            type="text"
+                                                            value={editingModule?.title || ''}
+                                                            onChange={(e) => setEditingModule(prev => prev ? ({ ...prev, title: e.target.value }) : null)}
+                                                            className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium"
+                                                        />
                                                     </div>
-                                                </div>
-                                            ) : (
-                                                <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 relative z-10">
-                                                    <div className="space-y-3 flex-1">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="px-3 py-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                                                Módulo {module.order}
-                                                            </div>
-                                                            {module.duration && (
-                                                                <span className="text-xs font-medium text-slate-500">{module.duration}</span>
-                                                            )}
-                                                            {module.status === 'active' ? (
-                                                                <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
-                                                                    Publicado
-                                                                </span>
-                                                            ) : (
-                                                                <span className="px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                                                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400" />
-                                                                    Borrador
-                                                                </span>
-                                                            )}
-                                                        </div>
-
-                                                        <h3 className="text-2xl font-medium text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                                                            {module.title}
-                                                        </h3>
-                                                        <p className="text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl">
-                                                            {module.description}
-                                                        </p>
-
-                                                        <div className="pt-2 flex items-center gap-4">
-                                                            <div className="text-xs text-slate-500 font-medium">
-                                                                <span className="text-slate-800 dark:text-white font-semibold">{module.lessonCount || 0}</span> Lecciones
-                                                            </div>
-                                                            <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
-                                                            <div className="text-xs text-slate-500 font-medium">
-                                                                Actualizado: {formatDate((module.updated_at || module.created_at) as any)}
-                                                            </div>
-                                                        </div>
+                                                    <div>
+                                                        <label className="block text-xs font-bold text-slate-500 mb-1">Descripción</label>
+                                                        <textarea
+                                                            value={editingModule?.description || ''}
+                                                            onChange={(e) => setEditingModule(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
+                                                            className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium resize-none"
+                                                            rows={3}
+                                                        />
                                                     </div>
-
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex gap-2 pt-2">
                                                         <button
-                                                            onClick={() => setSelectedModule(module)}
-                                                            className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white transition-all duration-300 font-medium text-sm flex items-center gap-2 group/btn"
-                                                            title="Gestionar Lecciones"
+                                                            onClick={() => module.id && handleUpdate(module.id)}
+                                                            className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2 rounded-lg text-xs font-bold"
                                                         >
-                                                            <FileText className="w-4 h-4" />
-                                                            <span className="hidden md:inline">Lecciones</span>
+                                                            Guardar Cambios
                                                         </button>
                                                         <button
-                                                            onClick={() => setSelectedQuizModule(module)}
-                                                            className="p-3 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-500/20 hover:bg-purple-600 hover:text-white dark:hover:bg-purple-500 dark:hover:text-white transition-all duration-300"
-                                                            title="Editar Quiz"
+                                                            onClick={() => setEditingModule(null)}
+                                                            className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-2 rounded-lg text-xs font-bold"
                                                         >
-                                                            <ClipboardCheck className="w-4 h-4" />
-                                                        </button>
-                                                        <div className="w-px h-8 bg-slate-200 dark:bg-white/10 mx-1" />
-                                                        <button
-                                                            onClick={() => setEditingModule(module)}
-                                                            className="p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all"
-                                                            title="Configurar Módulo"
-                                                        >
-                                                            <Edit2 className="w-4 h-4" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => module.id && handleDelete(module.id, module.title)}
-                                                            className="p-3 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-all"
-                                                            title="Eliminar Módulo"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
+                                                            Cancelar
                                                         </button>
                                                     </div>
                                                 </div>
-                                            )}
-                                        </div>
+                                            </div>
+                                        );
+                                    }
+
+                                    return (
+                                        <AdminModuleCard
+                                            key={module.id}
+                                            module={module}
+                                            onEdit={setEditingModule}
+                                            onEditContent={setSelectedModule}
+                                            onEditQuiz={setSelectedQuizModule}
+                                            onDelete={handleDelete}
+                                            onToggleStatus={handleToggleStatus}
+                                        />
                                     );
                                 })
                             )}

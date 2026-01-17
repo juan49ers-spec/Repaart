@@ -1,231 +1,274 @@
 import { useState, type FC, type FormEvent } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Lock, User, Briefcase, UserPlus, ArrowLeft } from 'lucide-react';
-
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { type FirebaseError } from 'firebase/app';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
-import logo from '../../assets/logo.jpg';
 import { logAction, AUDIT_ACTIONS } from '../../lib/audit';
 import { useToast } from '../../hooks/useToast';
+import riderImage from '../../assets/login-hero.png';
+import repaartLogoFull from '../../assets/repaart-logo-full.png';
+// import logoTransparent from '../../assets/repaart-logo-final-transparent.png';
+import yamimotoLogo from '../../assets/YamimotoCapa-1.png';
+import flyderTransparent from '../../assets/flyder-logo-new-transparent.png';
 
 const Login: FC = () => {
-    const [isLogin, setIsLogin] = useState<boolean>(true);
-    const [email, setEmail] = useState<string>('');
-    const [password, setPassword] = useState<string>('');
-    const [legalName, setLegalName] = useState<string>('');
-    const [cif, setCif] = useState<string>('');
+    const [isLogin, setIsLogin] = useState(true);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [name, setName] = useState('');
+    const [role, setRole] = useState<'admin' | 'franchise' | 'rider'>('rider');
+    const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
-    const [loading, setLoading] = useState<boolean>(false);
+    // Auth internals
     const { login } = useAuth();
-    const toast = useToast()?.toast;
+    const { toast } = useToast() || {};
 
-    // Helper: Map Firebase Auth errors to user-friendly messages
-    const mapAuthError = (err: FirebaseError): string => {
-        switch (err.code) {
-            case 'auth/email-already-in-use': return 'Este email ya está registrado.';
-            case 'auth/weak-password': return 'La contraseña es muy debil.';
-            case 'auth/invalid-credential': return 'Credenciales incorrectas.';
-            case 'auth/user-not-found': return 'Usuario no encontrado.';
-            case 'auth/wrong-password': return 'Contraseña incorrecta.';
-            default: return err.message || 'Error de autenticación.';
-        }
+    // Need direct access for signup since it's not exposed in context
+    const handleSignup = async () => {
+        const { createUserWithEmailAndPassword, getAuth } = await import("firebase/auth");
+        const auth = getAuth();
+        return createUserWithEmailAndPassword(auth, email, password);
     };
 
-    // Logic: Handle Login
-    const processLogin = async (): Promise<void> => {
-        const userCredential = await login(email, password);
-        if (userCredential?.user) {
-            logAction(userCredential.user, AUDIT_ACTIONS.LOGIN_SUCCESS);
-        }
-        toast?.success('¡Bienvenido de nuevo!');
-        // Allow App.tsx to handle redirect based on user state change
-    };
-
-    // Logic: Handle Registration Request (Lead)
-    const processRegister = async (): Promise<void> => {
-        // Just save a request to Firestore, do NOT create auth user yet
-        const requestId = crypto.randomUUID();
-        await setDoc(doc(db, "registration_requests", requestId), {
-            email,
-            legalName,
-            cif,
-            status: 'pending',
-            createdAt: new Date().toISOString()
-        });
-        toast?.success('Solicitud enviada. Contactaremos contigo en breve.');
-        setIsLogin(true); // Return to login view
-    };
-
-    const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setLoading(true);
-
         try {
             if (isLogin) {
-                if (typeof login !== 'function') throw new Error("Login function is undefined in Context");
-                await processLogin();
+                await login(email, password);
+                toast?.success('Inicio de sesión exitoso');
             } else {
-                await processRegister();
+                const userCredential = await handleSignup();
+                if (userCredential.user) {
+                    await setDoc(doc(db, 'users', userCredential.user.uid), {
+                        email,
+                        name,
+                        role,
+                        createdAt: new Date(),
+                        status: 'active'
+                    });
+
+                    await logAction(
+                        { uid: userCredential.user.uid, email, role },
+                        AUDIT_ACTIONS.CREATE_USER, // Using correct action enum
+                        { role, email }
+                    );
+                    toast?.success('Cuenta creada exitosamente');
+                }
             }
-        } catch (err) {
-            console.error("Auth Error:", err);
-            toast?.error(mapAuthError(err as FirebaseError));
+        } catch (error) {
+            const firebaseError = error as FirebaseError;
+            console.error('Auth error:', firebaseError);
+            let errorMessage = 'Ha ocurrido un error';
+
+            switch (firebaseError.code) {
+                case 'auth/invalid-credential':
+                    errorMessage = 'Credenciales incorrectas';
+                    break;
+                case 'auth/user-not-found':
+                    errorMessage = 'Usuario no encontrado';
+                    break;
+                case 'auth/wrong-password':
+                    errorMessage = 'Contraseña incorrecta';
+                    break;
+                case 'auth/email-already-in-use':
+                    errorMessage = 'El correo ya está registrado';
+                    break;
+                case 'auth/weak-password':
+                    errorMessage = 'La contraseña es muy débil';
+                    break;
+            }
+            toast?.error(errorMessage);
         } finally {
             setLoading(false);
         }
     };
-
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex flex-col justify-center safe-top safe-bottom">
-            {/* Atmospheric Orbs */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute -top-32 -left-32 w-96 h-96 bg-indigo-500/20 rounded-full blur-[100px] animate-orb" />
-                <div className="absolute bottom-0 right-0 w-80 h-80 bg-purple-500/15 rounded-full blur-[80px] animate-orb [animation-delay:2s]" />
-            </div>
+        <div className="min-h-screen w-full flex bg-white dark:bg-slate-950">
 
-            <div className="relative z-10 px-6 py-8 max-w-md mx-auto w-full animate-slide-up">
-                {/* LOGO SECTION - Larger and more prominent */}
-                <div className="text-center mb-10">
-                    <div className="relative inline-block">
-                        <div className="absolute inset-0 bg-indigo-500/30 rounded-full blur-2xl scale-150" />
-                        <img
-                            src={logo}
-                            alt="Logo"
-                            className="relative h-28 w-28 mx-auto rounded-full shadow-2xl ring-4 ring-white/20"
-                        />
+            {/* LEFT SIDE - FORM */}
+            <div className="w-full lg:w-[45%] flex flex-col justify-center items-center px-8 py-12 lg:px-24 xl:px-32 relative bg-gradient-to-br from-white to-slate-50 dark:from-slate-950 dark:to-slate-900">
+                <div className="w-full max-w-sm">
+
+                    {/* Logo - Increased Size */}
+                    <div className="mb-12">
+                        <img src={repaartLogoFull} alt="Repaart" className="h-28 w-auto" />
                     </div>
-                    <h1 className="mt-8 text-mobile-title text-white">
-                        {isLogin ? 'Bienvenido' : 'Únete a nosotros'}
-                    </h1>
-                    <p className="mt-3 text-mobile-body text-slate-400">
-                        {isLogin
-                            ? 'Ingresa para acceder a tu panel'
-                            : 'Solicita acceso a la plataforma'}
-                    </p>
-                </div>
 
-                {/* FORM CARD - Glassmorphism style */}
-                <div className="card-mobile bg-white/5 backdrop-blur-xl border border-white/10">
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Header - Modern & Bold */}
+                    <div className="mb-8">
+                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
+                            {isLogin ? 'Te damos la bienvenida' : 'Únete a Repaart'}
+                        </h1>
+                        <p className="mt-2 text-slate-500 dark:text-slate-400 text-base font-medium">
+                            {isLogin ? 'Gestiona tu negocio con inteligencia.' : 'La plataforma líder para franquicias.'}
+                        </p>
+                    </div>
 
+                    {/* Form */}
+                    <form onSubmit={handleSubmit} className="space-y-5">
                         {!isLogin && (
-                            <>
-                                {/* LEGAL NAME */}
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-300 mb-2">
-                                        Razón Social / Nombre
+                            <div className="space-y-5 animate-slide-up">
+                                {/* Name */}
+                                <div className="group">
+                                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5 ml-1">
+                                        Nombre completo
                                     </label>
-                                    <div className="relative">
-                                        <Briefcase className="absolute left-3 top-3 w-5 h-5 text-slate-500" />
-                                        <input
-                                            type="text"
-                                            required
-                                            value={legalName}
-                                            onChange={(e) => setLegalName(e.target.value)}
-                                            className="w-full pl-11 pr-4 py-3 bg-slate-900 border border-slate-700 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all placeholder-slate-600"
-                                            placeholder="Nombre Fiscal"
-                                        />
-                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="Ej. Juan Pérez"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 text-slate-900 dark:text-white placeholder-slate-400 transition-all duration-150 outline-none"
+                                        required
+                                    />
                                 </div>
 
-                                {/* CIF */}
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-300 mb-2">
-                                        NIF / CIF
+                                {/* Role */}
+                                <div className="group">
+                                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5 ml-1">
+                                        Tipo de cuenta
                                     </label>
                                     <div className="relative">
-                                        <User className="absolute left-3 top-3 w-5 h-5 text-slate-500" />
-                                        <input
-                                            type="text"
-                                            required
-                                            value={cif}
-                                            onChange={(e) => setCif(e.target.value)}
-                                            className="w-full pl-11 pr-4 py-3 bg-slate-900 border border-slate-700 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all placeholder-slate-600"
-                                            placeholder="B-12345678"
-                                        />
+                                        <select
+                                            aria-label="Selecciona tu rol"
+                                            value={role}
+                                            onChange={(e) => setRole(e.target.value as 'admin' | 'franchise' | 'rider')}
+                                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 text-slate-900 dark:text-white transition-all duration-150 outline-none appearance-none cursor-pointer"
+                                        >
+                                            <option value="rider">Repartidor</option>
+                                            <option value="franchise">Franquicia</option>
+                                            <option value="admin">Administrador</option>
+                                        </select>
+                                        <div className="absolute right-4 top-3.5 pointer-events-none text-slate-400">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        </div>
                                     </div>
                                 </div>
-                            </>
+                            </div>
                         )}
 
-                        {/* EMAIL INPUT (Shared) */}
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-semibold text-slate-300 mb-2">
-                                Email Corporativo
+                        {/* Email */}
+                        <div className="group">
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5 ml-1">
+                                Correo electrónico
+                            </label>
+                            <input
+                                type="email"
+                                placeholder="nombre@empresa.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 text-slate-900 dark:text-white placeholder-slate-400 transition-all duration-150 outline-none"
+                                required
+                            />
+                        </div>
+
+                        {/* Password */}
+                        <div className="group">
+                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5 ml-1">
+                                Contraseña
                             </label>
                             <div className="relative">
-                                <User className="absolute left-3 top-3 w-5 h-5 text-slate-500" />
                                 <input
-                                    id="email"
-                                    name="email"
-                                    type="email"
-                                    autoComplete="email"
+                                    type={showPassword ? 'text' : 'password'}
+                                    placeholder="••••••••"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 text-slate-900 dark:text-white placeholder-slate-400 transition-all duration-150 outline-none"
                                     required
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-11 pr-4 py-3 bg-slate-900 border border-slate-700 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all placeholder-slate-600"
-                                    placeholder="contacto@franquicia.com"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors p-1"
+                                >
+                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                </button>
                             </div>
                         </div>
 
-                        {/* PASSWORD INPUT (Login Only) */}
-                        {isLogin && (
-                            <div>
-                                <label htmlFor="password" className="block text-sm font-semibold text-slate-300 mb-2">
-                                    Contraseña
-                                </label>
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-3 w-5 h-5 text-slate-500" />
-                                    <input
-                                        id="password"
-                                        name="password"
-                                        type="password"
-                                        autoComplete="current-password"
-                                        required
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full pl-11 pr-4 py-3 bg-slate-900 border border-slate-700 text-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all placeholder-slate-600"
-                                        placeholder="••••••••"
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        {/* SUBMIT BUTTON */}
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full flex justify-center items-center py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                        >
-                            {loading ? (
-                                <div className="flex items-center">
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                                    Procesando...
-                                </div>
-                            ) : (
-                                <>
-                                    {isLogin ? <Briefcase className="w-5 h-5 mr-2" /> : <UserPlus className="w-5 h-5 mr-2" />}
-                                    {isLogin ? 'Entrar' : 'Solicitar Alta'}
-                                </>
-                            )}
-                        </button>
+                        {/* Submit - Monochrome Professional */}
+                        <div className="pt-2">
+                            <button
+                                type="submit"
+                                className="w-full py-4 px-6 bg-slate-900 dark:bg-white hover:bg-black dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold tracking-wide rounded-xl transition-all duration-150 flex items-center justify-center gap-2 shadow-xl shadow-slate-900/10 hover:shadow-slate-900/20 transform hover:-translate-y-0.5 active:scale-[0.98]"
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <Loader2 className="animate-spin h-5 w-5" />
+                                ) : (
+                                    <span>{isLogin ? 'Acceder al Portal' : 'Crear Cuenta'}</span>
+                                )}
+                            </button>
+                        </div>
                     </form>
-                </div>
 
-                {/* TOGGLE LOGIN/REGISTER */}
-                <div className="text-center">
-                    <button
-                        onClick={() => setIsLogin(!isLogin)}
-                        className="inline-flex items-center text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
-                    >
-                        <ArrowLeft className="w-4 h-4 mr-1" />
-                        {isLogin ? '¿Primera vez? Solicita acceso' : '¿Ya tienes cuenta? Inicia sesión'}
-                    </button>
+                    {/* Footer Actions */}
+                    <div className="mt-8 flex items-center justify-between text-sm px-1">
+                        <button
+                            type="button"
+                            onClick={() => setIsLogin(!isLogin)}
+                            className="text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-semibold"
+                        >
+                            {isLogin ? 'Crear nueva cuenta' : 'Ya tengo cuenta'}
+                        </button>
 
+                        {isLogin && (
+                            <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors font-medium">
+                                ¿Olvidaste la contraseña?
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Partners - Minimalist Grey */}
+                    <div className="mt-16 border-t border-slate-100 dark:border-slate-800 pt-8">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center mb-4">Trusted Partners</p>
+                        <div className="flex items-center justify-center gap-8 opacity-50 grayscale transition-all duration-500 hover:grayscale-0 hover:opacity-100 group/partners">
+                            <img src={yamimotoLogo} alt="Yamimoto" className="h-6 w-auto transition-transform group-hover/partners:scale-105" />
+                            <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800" />
+                            <img src={flyderTransparent} alt="Flyder" className="h-9 w-auto transition-transform group-hover/partners:scale-105" />
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            {/* RIGHT SIDE - IMAGE (Desktop Only) */}
+            <div className="hidden lg:block lg:w-[55%] relative overflow-hidden bg-slate-900">
+                <div className="absolute inset-0 opacity-40 mix-blend-overlay z-10 bg-slate-900"></div>
+                <img
+                    src={riderImage}
+                    alt="Repaart Operations"
+                    className="absolute inset-0 w-full h-full object-cover object-center opacity-90 scale-105"
+                />
+
+                {/* Dark Overlay for Text Contrast */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent z-20" />
+
+                {/* Content */}
+                <div className="absolute bottom-0 left-0 w-full p-20 z-30">
+                    <div className="max-w-xl">
+                        <h2 className="text-4xl font-bold text-white mb-6 leading-tight tracking-tight">
+                            Control total para tu negocio de delivery.
+                        </h2>
+                        <div className="h-1 w-20 bg-white/30 mb-6" />
+                        <p className="text-lg text-slate-300 leading-relaxed font-light">
+                            Repaart centraliza tus operaciones, gestión de flotas y finanzas en una interfaz elegante y eficiente.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <style>{`
+                @keyframes slide-up {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .animate-slide-up {
+                    animation: slide-up 0.3s ease-out forwards;
+                }
+            `}</style>
         </div>
     );
 };

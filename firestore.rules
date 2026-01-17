@@ -154,10 +154,67 @@ service cloud.firestore {
       allow read, write: if isAuthed() && isAdmin();
     }
     
-    // ACADEMY ENCYCLOPEDIA
+    // =============================================
+    // ACADEMY SYSTEM (Courses, Lessons, Quizzes, Progress, Encyclopedia)
+    // =============================================
+    
+    // ACADEMY COURSES (Modules)
+    match /academy_courses/{courseId} {
+      allow read: if isAuthed(); // All authenticated users can read courses
+      allow write: if isAuthed() && isAdmin(); // Only admin can create/edit/delete courses
+    }
+    
+    // ACADEMY LESSONS
+    match /academy_lessons/{lessonId} {
+      allow read: if isAuthed();
+      allow write: if isAuthed() && isAdmin();
+    }
+    
+    // ACADEMY QUIZZES
+    match /academy_quizzes/{quizId} {
+      allow read: if isAuthed();
+      allow write: if isAuthed() && isAdmin();
+    }
+    
+    // ACADEMY PROGRESS (User progress tracking)
+    match /academy_progress/{progressId} {
+      allow read: if isAuthed() && (
+        isAdmin() || 
+        resource.data.userId == request.auth.uid
+      );
+      allow create: if isAuthed(); // Users can create their own progress
+      allow update: if isAuthed() && (
+        isAdmin() || 
+        resource.data.userId == request.auth.uid
+      );
+    }
+    
+    // QUIZ RESULTS
+    match /quiz_results/{resultId} {
+      allow read: if isAuthed() && (
+        isAdmin() || 
+        resource.data.userId == request.auth.uid
+      );
+      allow create: if isAuthed();
+      allow update: if isAuthed() && isAdmin();
+    }
+    
+    // ENCYCLOPEDIA CATEGORIES
+    match /academy_encyclopedia_categories/{categoryId} {
+      allow read: if isAuthed();
+      allow write: if isAuthed() && isAdmin();
+    }
+    
+    // ENCYCLOPEDIA ARTICLES
+    match /academy_encyclopedia_articles/{articleId} {
+      allow read: if isAuthed();
+      allow write: if isAuthed() && isAdmin();
+    }
+    
+    // LEGACY: academy_encyclopedia (for backwards compatibility)
     match /academy_encyclopedia/{cardId} {
-      allow read: if isAuthed(); // All authenticated users can read
-      allow write: if isAuthed() && (isAdmin() || isFranchise()); // TEMPORAL: Admin + Franchise can write
+      allow read: if isAuthed();
+      allow write: if isAuthed() && (isAdmin() || isFranchise());
     }
     
     // SETTINGS (Banner, App Config, etc)

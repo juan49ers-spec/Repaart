@@ -8,7 +8,7 @@ import MonthlyHistoryTable from '../franchise/finance/MonthlyHistoryTable';
 import UserManagementPanel from './users/UserManagementPanel';
 
 // Lazy load heavy components
-const WeeklyScheduler = lazy(() => import('../operations/WeeklyScheduler'));
+const DeliveryScheduler = lazy(() => import('../scheduler/DeliveryScheduler'));
 const FleetManager = lazy(() => import('../operations/FleetManager'));
 const FranchiseDashboard = lazy(() => import('../franchise/FranchiseDashboard'));
 
@@ -47,7 +47,7 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
 
     const { startImpersonation } = useAuth();
     const franchiseId = propId || paramId;
-    const onBack = propOnBack || (() => navigate('/dashboard?view=franchises'));
+    const onBack = propOnBack || (() => navigate('/dashboard'));
 
     // Default to finance
     const [activeTab, setActiveTab] = useState<TabId>('finance');
@@ -95,17 +95,30 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
 
     return (
         <div className="min-h-screen bg-slate-50 relative animate-in fade-in zoom-in-95 duration-300">
-            {/* Header (God Mode Indicator) */}
-            <div className="bg-slate-900 border-b border-indigo-500/30 text-white sticky top-0 z-50 shadow-xl">
-                <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            {/* Header - Clean Apple Style */}
+            <div className="bg-white/95 backdrop-blur-xl border-b border-slate-200/80 text-slate-900 sticky top-0 z-50 shadow-sm">
+                <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+                    {/* Left: Back + Title */}
                     <div className="flex items-center gap-4">
                         <button
                             onClick={onBack}
-                            className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                            title="Volver al Listado"
+                            className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+                            title="Volver"
                         >
-                            <ArrowLeft size={20} className="text-slate-400" />
+                            <ArrowLeft size={18} className="text-slate-500" />
                         </button>
+
+                        <div className="flex flex-col">
+                            <span className="text-[8px] uppercase tracking-widest text-indigo-400 font-medium">Supervisor</span>
+                            <h1 className="text-sm font-medium text-slate-700 tracking-tight">
+                                {loading ? (
+                                    <span className="animate-pulse bg-slate-200 h-4 w-32 rounded inline-block" />
+                                ) : (
+                                    franchiseData?.name || 'Franquicia'
+                                )}
+                            </h1>
+                        </div>
+
                         <button
                             onClick={() => {
                                 if (franchiseId) {
@@ -113,32 +126,16 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
                                     navigate('/dashboard');
                                 }
                             }}
-                            className="flex items-center gap-2 px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 rounded-lg text-xs font-bold transition-all border border-indigo-500/30"
-                            title="Entrar como esta franquicia (Inmersión Completa)"
+                            className="ml-2 flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg text-xs font-medium transition-all"
+                            title="Entrar como franquicia"
                         >
-                            <LogIn size={14} />
+                            <LogIn size={12} />
                             <span>Entrar</span>
                         </button>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h2 className="text-xs uppercase tracking-widest text-indigo-400 font-bold">Modo Supervisor</h2>
-                                {franchiseData?.status === 'active' && (
-                                    <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                                        ACTIVO
-                                    </span>
-                                )}
-                            </div>
-                            <h1 className="text-xl font-bold flex items-center gap-2">
-                                {loading ? (
-                                    <span className="animate-pulse bg-white/20 h-6 w-48 rounded" />
-                                ) : (
-                                    <span>{franchiseData?.name || franchiseId}</span>
-                                )}
-                            </h1>
-                        </div>
                     </div>
 
-                    <div className="flex gap-1 overflow-x-auto pb-1 md:pb-0">
+                    {/* Right: Tabs */}
+                    <div className="flex gap-1 bg-slate-100/80 p-1 rounded-xl">
                         {TABS.map(tab => {
                             const Icon = tab.icon;
                             const isActive = activeTab === tab.id;
@@ -146,13 +143,13 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${isActive
-                                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
-                                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isActive
+                                        ? 'bg-white text-slate-900 shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-700'
                                         }`}
                                 >
-                                    <Icon size={16} />
-                                    <span className="hidden md:inline">{tab.label}</span>
+                                    <Icon size={14} />
+                                    <span className="hidden sm:inline">{tab.label}</span>
                                 </button>
                             );
                         })}
@@ -191,7 +188,7 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
                     <div className="h-[calc(100vh-180px)] min-h-[600px] animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <Suspense fallback={<div className="h-full w-full flex items-center justify-center bg-white/50 rounded-2xl animate-pulse"><div className="text-slate-400 font-medium">Cargando planificador...</div></div>}>
                             <div className="h-full w-full bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden flex flex-col">
-                                <WeeklyScheduler franchiseId={franchiseData?.id || franchiseId} readOnly={true} />
+                                <DeliveryScheduler franchiseId={franchiseData?.id || franchiseId} selectedDate={new Date()} readOnly={true} />
                             </div>
                         </Suspense>
                     </div>

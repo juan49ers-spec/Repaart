@@ -26,7 +26,7 @@ interface DashboardLayoutProps {
     // viewPeriod?: string; -> REMOVED
     // setViewPeriod?: (period: string) => void; -> REMOVED
 
-    onLogout: () => void;
+    // Actions
     onExport: () => void;
     onPrint?: () => void;
     saving?: boolean;
@@ -53,21 +53,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     setFranchiseView,
     targetFranchiseName,
 
-    // Data Control Props
-    // selectedMonth, -> REMOVED
-    // onMonthChange, -> REMOVED
-    // viewPeriod, -> REMOVED
-    // setViewPeriod, -> REMOVED
-
     // Actions
-    onLogout,
     onExport,
     onPrint,
     saving = false,
 
     // Chat Props
-    // isChatOpen, -> REMOVED
-    // setIsChatOpen, -> REMOVED
     chatData,
     outletContext
 }) => {
@@ -95,7 +86,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         // isSidebarOpen, setIsSidebarOpen, selectedMonth, -> REMOVED
         // viewPeriod, setViewPeriod, -> REMOVED
         targetFranchiseName: targetFranchiseName || undefined,
-        saving, onLogout,
+        saving,
         onExport, onPrint,
         // onMonthChange, -> REMOVED
         onOpenHelp: openHelp
@@ -115,7 +106,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <NavigationSidebar isAdmin={isAdmin} isFranchise={isFranchise} />
 
             {/* Main Content Area */}
-            <div className={`flex-1 flex flex-col transition-all duration-300 w-full ${isSidebarOpen ? 'md:ml-96' : 'ml-0'}`}>
+            <div className={`flex-1 flex flex-col transition-all duration-300 w-full`}>
                 <ImpersonationBanner />
                 <Header {...headerProps} />
 

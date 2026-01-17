@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
 import { ToastContext } from '../../../context/contexts';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm, useFieldArray, SubmitHandler } from 'react-hook-form';
 import {
     Building, MapPin, Save, User, Camera,
@@ -24,8 +24,6 @@ interface LogisticsRate {
     name: string;
 }
 
-
-
 interface FranchiseProfileFormData {
     // Franchise Data
     legalName: string;
@@ -41,14 +39,11 @@ interface FranchiseProfileFormData {
     zipCodes: string[];
     logisticsRates: LogisticsRate[];
 
-
     // User Data (Personal)
     userDisplayName: string;
     userPhone: string;
     userPhotoURL: string;
 }
-
-
 
 interface FranchiseProfileProps {
     franchiseId?: string;
@@ -59,6 +54,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
     const { user, isAdmin } = useAuth();
     const { addToast } = useContext(ToastContext) || { addToast: () => { } };
     const navigate = useNavigate();
+    const location = useLocation();
 
     // If no franchiseId provided, we assume we are editing the current user's franchise profile
     // But if we are an admin editing another franchise, we might not want to edit *that user's personal profile* 
@@ -70,6 +66,16 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
     const [loading, setLoading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const initialRatesRef = useRef<LogisticsRate[]>([]);
+
+    // Handle Deep Linking to Tabs
+    useEffect(() => {
+        if (location.state && (location.state as any).tab) {
+            const targetTab = (location.state as any).tab;
+            if (['user', 'general', 'logistics'].includes(targetTab)) {
+                setActiveTab(targetTab);
+            }
+        }
+    }, [location.state]);
 
     // --- RHF CONFIGURATION ---
     const { register, control, handleSubmit, reset, watch, setValue, getValues, formState: { isDirty } } = useForm<FranchiseProfileFormData>({

@@ -1,5 +1,5 @@
-import React from 'react';
-import { PlayCircle, FileText, HelpCircle, Sparkles, ChevronLeft, ChevronRight, Lock, TrendingUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { PlayCircle, FileText, Sparkles, ChevronLeft, ChevronRight, Lock, Banknote } from 'lucide-react';
 import { formatMoney, FinancialReport, MonthlyData } from '../../lib/finance';
 
 // Components
@@ -13,9 +13,14 @@ import TakeHomeProfitWidget from './dashboard/widgets/TakeHomeProfitWidget';
 import RevenueAreaChart from './dashboard/widgets/RevenueAreaChart';
 import KPICard from './dashboard/widgets/KPICard';
 import HourlyCostWidget from './dashboard/widgets/HourlyCostWidget';
+import FinancialAdvisorWidget from './dashboard/widgets/FinancialAdvisorWidget';
 import WidgetLegendModal from './dashboard/WidgetLegendModal';
 import FinancialWorkflowGuide from './components/FinancialWorkflowGuide';
+import { GoalSettingModal } from './components/GoalSettingModal';
 import DynamicBanner from '../../components/common/DynamicBanner';
+import { userService } from '../../services/userService';
+import { useAuth } from '../../context/AuthContext';
+import { PageTitle } from '../../ui/primitives/Typography';
 
 export interface DashboardTrendItem {
     month: string;
@@ -100,12 +105,44 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
     onMonthChange,
     onUpdateFinance
 }) => {
+    const { user } = useAuth();
+    const [monthlyGoal, setMonthlyGoal] = useState(16000);
+    const [showGoalModal, setShowGoalModal] = useState(false);
+    const [goalModalMode, setGoalModalMode] = useState<'default' | 'monthly_kickoff'>('default');
+
+    // Monthly Kickoff Check & Goal Load
+    React.useEffect(() => {
+        const checkKickoffAndLoadGoal = async () => {
+            if (user?.uid) {
+                // 1. Load Goal
+                const profile = await userService.getUserProfile(user.uid);
+                if (profile && profile.monthlyRevenueGoal) {
+                    setMonthlyGoal(Number(profile.monthlyRevenueGoal));
+                }
+
+                // 2. Check Kickoff (Local Storage for simplicity per device)
+                const currentMonthKey = `kickoff_seen_${effectiveMonth}`;
+                const hasSeenKickoff = localStorage.getItem(currentMonthKey);
+
+                if (!hasSeenKickoff) {
+                    // Small delay for better UX
+                    setTimeout(() => {
+                        setGoalModalMode('monthly_kickoff');
+                        setShowGoalModal(true);
+                        localStorage.setItem(currentMonthKey, 'true');
+                    }, 1500);
+                }
+            }
+        };
+        checkKickoffAndLoadGoal();
+    }, [user?.uid, effectiveMonth]);
+
     return (
         <div className="min-h-screen bg-[#fafbfc] dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 selection:bg-indigo-100 dark:selection:bg-indigo-900/30 transition-colors duration-300">
-            <div className="max-w-[1600px] mx-auto p-6 md:p-10 space-y-8">
+            <div className="max-w-[1600px] mx-auto px-4 py-3 space-y-4">
 
                 {/* HEADER */}
-                <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-2">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-3 pb-1">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2 rounded-2xl shadow-sm">
                             <button
@@ -119,9 +156,9 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                             >
                                 <ChevronLeft className="w-5 h-5" />
                             </button>
-                            <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight px-6 min-w-[200px] text-center uppercase tabular-nums">
+                            <PageTitle as="h2" className="text-lg px-4 min-w-[180px] text-center uppercase tabular-nums font-bold">
                                 {new Date(effectiveMonth + '-01').toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
-                            </h2>
+                            </PageTitle>
                             <button
                                 onClick={() => {
                                     const date = new Date(effectiveMonth + '-01');
@@ -141,11 +178,11 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                         {/* Help Button */}
                         <button
                             onClick={() => setIsLegendOpen(true)}
-                            className="group bg-white dark:bg-slate-900 border-2 border-indigo-200 dark:border-indigo-900 hover:border-indigo-400 dark:hover:border-indigo-700 text-indigo-600 dark:text-indigo-400 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 flex items-center gap-2"
-                            title="Guía de Widgets"
+                            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-400 dark:hover:border-emerald-700 text-emerald-600 dark:text-emerald-400 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all shadow-sm hover:shadow flex items-center gap-1.5"
+                            title="Guía Financiera"
                         >
-                            <HelpCircle className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-                            <span className="hidden sm:inline">Ayuda</span>
+                            <Banknote className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                            <span className="hidden sm:inline">Guía</span>
                         </button>
 
                         {/* Workflow Guide Button - Only visible in History View */}
@@ -160,10 +197,10 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                             </button>
                         )}
 
-                        {/* Simulator Trigger - Striking Amber Style */}
+                        {/* Simulator Trigger - Striking Amber Style (viewable in readOnly for analysis) */}
                         <button
                             onClick={() => setIsSimulatorOpen(true)}
-                            className="relative group overflow-hidden bg-amber-500 hover:bg-amber-600 text-white px-6 py-3.5 rounded-xl text-xs font-bold uppercasetracking-widest transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 hover:-translate-y-0.5 flex items-center gap-2 border border-amber-400/50"
+                            className="relative group overflow-hidden bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all shadow-md shadow-amber-500/20 hover:shadow-amber-500/30 flex items-center gap-1.5 border border-amber-400/50"
                         >
                             <div className="absolute inset-x-0 bottom-0 h-1 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
                             <PlayCircle className="w-4 h-4 text-amber-100 group-hover:rotate-12 transition-transform" />
@@ -172,7 +209,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
 
                         <button
                             onClick={() => setIsHistoryView(!isHistoryView)}
-                            className={`text-xs font-bold uppercase tracking-widest px-6 py-3.5 rounded-xl transition-all shadow-sm ${isHistoryView
+                            className={`text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-lg transition-all shadow-sm ${isHistoryView
                                 ? 'bg-slate-800 dark:bg-slate-700 text-white shadow-lg shadow-slate-800/20 hover:bg-slate-900 dark:hover:bg-slate-600'
                                 : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800 hover:border-slate-200 hover:text-slate-700 dark:hover:text-slate-200'
                                 }`}
@@ -184,7 +221,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                         {!readOnly && (
                             <button
                                 onClick={() => setIsWizardOpen(true)}
-                                className={`px-6 py-3.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 shadow-sm hover:shadow-md border ${rawData?.is_locked || rawData?.status === 'submitted' || rawData?.status === 'approved' || rawData?.status === 'locked'
+                                className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-1.5 shadow-sm hover:shadow border ${rawData?.is_locked || rawData?.status === 'submitted' || rawData?.status === 'approved' || rawData?.status === 'locked'
                                     ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
                                     : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                                     }`}
@@ -208,35 +245,86 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
 
                 {/* CONTENT AREA */}
                 {!isHistoryView ? (
-                    <div className="space-y-8 animate-in fade-in duration-700 slide-in-from-bottom-4">
+                    <div className="space-y-4 animate-in fade-in duration-300 slide-in-from-bottom-2">
 
                         {/* --- DYNAMIC BANNER (Admin Controlled) --- */}
                         <DynamicBanner />
 
                         {/* ROW 1: CORE METRICS & WEALTH */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4 gap-4">
                             {/* 1. Ingresos */}
-                            <KPICard
-                                title="Ingresos"
-                                value={formatMoney(revenue || 0) + '€'}
-                                trend={Number(revenueTrend.toFixed(1))}
-                                trendData={trendData.map((d: any) => d.revenue)}
-                                icon={<TrendingUp />}
-                                color="blue"
-                                subtext={`${orders} pedidos`}
-                                monthlyGoal={16000}
-                                lastYearValue={revenue > 0 ? revenue * 0.85 : undefined}
-                                showPrediction={true}
-                            />
+                            <div onClick={() => {
+                                if (readOnly) return; // Disabled in impersonation mode
+                                setGoalModalMode('default');
+                                setShowGoalModal(true);
+                            }} className={`${readOnly ? '' : 'cursor-pointer hover:z-10 transition-all transform hover:-translate-y-1 duration-300 ring-2 ring-transparent hover:ring-indigo-500/20'} group/goal relative rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800`}>
+                                <KPICard
+                                    title="Ingresos"
+                                    value={formatMoney(revenue || 0) + '€'}
+                                    trend={Number(revenueTrend.toFixed(1))}
+                                    trendData={trendData.map((d: any) => d.revenue)}
+                                    icon={<Banknote />}
+                                    color="blue"
+
+                                    subtext={undefined}
+                                    monthlyGoal={monthlyGoal} // Dynamic Goal
+                                    lastYearValue={revenue > 0 ? revenue * 0.85 : undefined}
+                                    showPrediction={false}
+                                    rawValue={revenue || 0}
+                                    orders={orders}
+                                    totalHours={totalHours}
+                                    bestDay="Viernes"
+                                    alignHeader="left"
+                                />
+                                {!readOnly && (
+                                    <div className="absolute top-3 right-3 bg-indigo-50 dark:bg-indigo-500/20 p-2 rounded-full text-indigo-600 dark:text-indigo-400 shadow-sm pointer-events-none">
+                                        <Sparkles className="w-4 h-4" />
+                                    </div>
+                                )}
+                            </div>
 
                             {/* 2. Tu Bolsillo */}
                             <div className="h-full">
-                                <TakeHomeProfitWidget
-                                    revenue={revenue || 0}
-                                    totalExpenses={totalExpenses}
-                                    irpfPercent={rawData?.irpfPercent || 20}
-                                    trend={trendData.map((d: any) => d.profit || 0)}
-                                />
+                                {(() => {
+                                    // Calculate Annual Net Profit (YTD)
+                                    // Calculate Annual Net Profit (YTD) - Hybrid (History + Current)
+                                    const currentYear = effectiveMonth.split('-')[0];
+
+                                    // 1. Calculate Historical Profit (excluding current view month to avoid double counting if present)
+                                    const historicalProfit = formattedTrendData
+                                        .filter((month: any) =>
+                                            month.month &&
+                                            month.month.startsWith(currentYear) &&
+                                            month.month !== effectiveMonth
+                                        )
+                                        .reduce((sum, month) => {
+                                            const opProfit = month.revenue - month.expenses;
+                                            const tax = opProfit > 0 ? opProfit * (rawData?.irpfPercent || 20) / 100 : 0;
+                                            return sum + (opProfit - tax);
+                                        }, 0);
+
+                                    // 2. Calculate Current View Month Profit (Live Data)
+                                    const currentOpProfit = (revenue || 0) - totalExpenses;
+                                    const currentTax = currentOpProfit > 0 ? currentOpProfit * (rawData?.irpfPercent || 20) / 100 : 0;
+                                    const currentNetProfit = currentOpProfit - currentTax;
+
+                                    // 3. Total YTD = History + Current
+                                    // Only add current profit if the current viewed month belongs to the analyzed year
+                                    const annualNetProfit = effectiveMonth.startsWith(currentYear)
+                                        ? historicalProfit + currentNetProfit
+                                        : historicalProfit;
+
+                                    return (
+                                        <TakeHomeProfitWidget
+                                            revenue={revenue || 0}
+                                            totalExpenses={totalExpenses}
+                                            irpfPercent={rawData?.irpfPercent || 20}
+                                            trend={trendData.map((d: any) => d.profit || 0)}
+                                            annualNetProfit={annualNetProfit} // Passing calculated YTD
+                                            onDetailClick={() => setIsWizardOpen(true)}
+                                        />
+                                    );
+                                })()}
                             </div>
 
                             {/* 3. La Hucha */}
@@ -255,6 +343,8 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                                         vat: { toPay: 0 }
                                     }}
                                     minimal
+                                    currentMonth={effectiveMonth}
+                                    historicalData={trendData}
                                 />
                             </div>
 
@@ -271,17 +361,27 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                         </div>
 
                         {/* ROW 2: DETAILED ANALYSIS & TOOLS */}
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                             {/* Left Column: Historical Evolution */}
-                            <div className="lg:col-span-8 h-[300px]">
+                            <div className="lg:col-span-3 h-[280px]">
                                 <RevenueAreaChart data={formattedTrendData} />
                             </div>
 
-                            {/* Right Column: Breakdown */}
-                            <div className="lg:col-span-4 flex flex-col gap-6">
-                                <div className="h-[350px] w-full">
-                                    <ExpenseBreakdownWidget breakdown={fullExpenseBreakdown} />
-                                </div>
+                            {/* Center Column: Financial Advisor */}
+                            <div className="lg:col-span-6 h-[280px]">
+                                <FinancialAdvisorWidget
+                                    revenue={revenue}
+                                    expenses={totalExpenses}
+                                    margin={revenue > 0 ? ((revenue - totalExpenses) / revenue) * 100 : 0}
+                                    hourlyCost={totalHours > 0 ? totalExpenses / totalHours : 0}
+                                    taxReserve={revenue * 0.21}
+                                    trend={revenueTrend}
+                                />
+                            </div>
+
+                            {/* Right Column: Breakdown - Same width as cards above (3 cols) */}
+                            <div className="lg:col-span-3 h-fit">
+                                <ExpenseBreakdownWidget breakdown={fullExpenseBreakdown} />
                             </div>
                         </div>
 
@@ -359,6 +459,17 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                 isOpen={showGuide}
                 onClose={() => setShowGuide(false)}
             />
+
+            {/* Goal Setting Modal */}
+            {showGoalModal && (
+                <GoalSettingModal
+                    currentGoal={monthlyGoal}
+                    currentRevenue={revenue || 0}
+                    onClose={() => setShowGoalModal(false)}
+                    onSave={(newGoal) => setMonthlyGoal(newGoal)}
+                    mode={goalModalMode}
+                />
+            )}
         </div>
     );
 };

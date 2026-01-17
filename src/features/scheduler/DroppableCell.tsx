@@ -1,4 +1,5 @@
 import React from 'react';
+import { Sun, Moon } from 'lucide-react';
 import { useDroppable } from '@dnd-kit/core';
 import { cn } from '../../lib/utils';
 
@@ -6,11 +7,12 @@ interface DroppableCellProps {
     dateIso: string;
     riderId: string;
     children?: React.ReactNode;
-    onQuickAdd: () => void;
+    onQuickAdd: (hour: number) => void;
     onDoubleClick: () => void;
     isToday: boolean;
     className?: string;
     activeDragShift?: any;
+    hour?: number;
 }
 
 export const DroppableCell: React.FC<DroppableCellProps> = ({
@@ -55,18 +57,30 @@ export const DroppableCell: React.FC<DroppableCellProps> = ({
     return (
         <div
             ref={setNodeRef}
-            onClick={onQuickAdd}
             onDoubleClick={onDoubleClick}
             className={cn(
-                "relative h-full transition-colors border-r border-slate-100 dark:border-slate-800",
+                "relative h-full transition-colors border-r border-slate-100 dark:border-slate-800 group/cell",
                 isToday && "bg-slate-50/30",
                 isOver ? "bg-indigo-50/50 dark:bg-indigo-900/20" : "bg-transparent",
                 className
             )}
         >
-            {/* Visual feedback for empty cell hover */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-10 pointer-events-none transition-opacity">
-                {/* Optional subtle hover effect if desired, currently hidden via opacity logic or can be implemented here */}
+            {/* Visual feedback for empty cell hover - REFINED (Narrow & Discrete) */}
+            <div className="absolute left-0 top-0 bottom-0 w-8 flex flex-col items-center justify-center gap-1 opacity-0 group-hover/cell:opacity-100 pointer-events-none transition-opacity z-20">
+                <button
+                    onClick={(e) => { e.stopPropagation(); onQuickAdd(13); }}
+                    className="w-6 h-6 flex items-center justify-center pointer-events-auto bg-amber-400 hover:bg-amber-500 text-amber-900 rounded-full shadow-md transform scale-0 group-hover/cell:scale-100 transition-all active:scale-95 border border-amber-300"
+                    title="Añadir Mediodía (13h-17h)"
+                >
+                    <Sun size={12} strokeWidth={3} />
+                </button>
+                <button
+                    onClick={(e) => { e.stopPropagation(); onQuickAdd(21); }}
+                    className="w-6 h-6 flex items-center justify-center pointer-events-auto bg-indigo-500 hover:bg-indigo-600 text-white rounded-full shadow-md transform scale-0 group-hover/cell:scale-100 transition-all active:scale-95 border border-indigo-400"
+                    title="Añadir Noche (21h-01h)"
+                >
+                    <Moon size={12} strokeWidth={3} />
+                </button>
             </div>
 
             {/* Ghost Shift */}

@@ -1,9 +1,7 @@
 import React, { useState, Suspense } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import DevToolsPanel from '../../../layouts/components/dev/DevToolsPanel';
 import {
-    Search,
-    Plus,
     LogOut
 } from 'lucide-react';
 import FranchiseOnboarding from '../FranchiseOnboarding';
@@ -22,7 +20,6 @@ const OperationsDashboard = React.lazy(() => import('../../operations/Operations
 const FleetManager = React.lazy(() => import('../../operations/FleetManager'));
 const ShiftPlanner = React.lazy(() => import('../../operations/ShiftPlanner'));
 // const FranchiseOnboarding = React.lazy(() => import('../FranchiseOnboarding')); // Removed due to eager import
-const FranchiseGrid = React.lazy(() => import('./FranchiseGrid'));
 const FranchiseProfile = React.lazy(() => import('../settings/FranchiseProfile'));
 const AdminFinanceInbox = React.lazy(() => import('./AdminFinanceInbox'));
 const UserManagementPanel = React.lazy(() => import('../users/UserManagementPanel'));
@@ -40,13 +37,11 @@ interface AdminDashboardProps {
 }
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({
-    onSelectFranchise,
+    onSelectFranchise: _onSelectFranchise,
     selectedMonth,
-    // onMonthChange is unused in local scope but part of props
     onMonthChange: _onMonthChange
 }) => {
     const { logout } = useAuth();
-    const navigate = useNavigate();
     const [isDevToolsOpen, setIsDevToolsOpen] = useState(false);
 
     // URL Persistence
@@ -61,7 +56,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const [isGuideOpen, setIsGuideOpen] = useState(false);
 
     // Hooks
-    const { franchises, loading, refresh } = useAdminDashboardData(selectedMonth || '');
+    const { refresh } = useAdminDashboardData(selectedMonth || '');
 
     // Local View State
     const [view, setView] = useState<'grid' | 'onboarding'>('grid');
@@ -90,10 +85,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         );
     }
 
-    const handleFranchiseClick = (id: string) => {
-        navigate(`/admin/franchise/${id}`);
-        if (onSelectFranchise) onSelectFranchise(id);
-    };
 
     // --- RENDERERS ---
 
@@ -108,46 +99,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         );
     };
 
-    const renderFranchiseList = () => {
-        if (loading) return <DashboardSkeleton />;
-        return (
-            <div className="space-y-6">
-                <div className="flex justify-between items-center mb-6">
-                    <div>
-                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Red de Operaciones</h2>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Gestión y acceso rápido a franquicias gestionadas.</p>
-                    </div>
-
-                    <button
-                        onClick={() => setIsCreateModalOpen(true)}
-                        className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-bold shadow-lg shadow-blue-500/20 transition-all active:scale-95"
-                    >
-                        <Plus size={18} />
-                        Nueva Franquicia
-                    </button>
-                    <div className="relative group">
-                        <input
-                            type="text"
-                            placeholder="Buscar franquicia..."
-                            className="w-64 pl-4 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 text-slate-900 dark:text-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-slate-400"
-                        />
-                        <div className="absolute right-3 top-2.5 text-slate-400 dark:text-slate-500 group-focus-within:text-blue-500 transition-colors">
-                            <Search className="w-5 h-5" />
-                        </div>
-                    </div>
-                </div>
-                <Suspense fallback={<DashboardSkeleton />}>
-                    <FranchiseGrid franchises={franchises || []} onSelect={handleFranchiseClick} />
-                </Suspense>
-            </div>
-        );
-    };
+    // renderFranchiseList removed - "Red de Operaciones" no longer used
 
     // Main Render Switch
     const renderActiveTabContent = () => {
         switch (activeTab) {
             case 'global': return renderGlobalView();
-            case 'franchises': return renderFranchiseList();
+            case 'franchises': return renderGlobalView(); // Removed: was Red de Operaciones, now redirects to global
             case 'finance': return <AdminNetworkDashboard selectedMonth={selectedMonth || ''} />;
             case 'operations': return <OperationsDashboard readOnly={true} />;
             case 'fleet': return <FleetManager />;

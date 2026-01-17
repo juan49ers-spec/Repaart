@@ -9,7 +9,7 @@ export function startNetworkCapture() {
         // Solo interceptar Firestore
         if (url.includes('firestore.googleapis.com')) {
             const startTime = performance.now();
-            let method = init?.method || 'GET';
+            const method = init?.method || 'GET';
 
             // Intentar deducir la operación y colección de la URL
             // Format: .../databases/(default)/documents/users/UID...

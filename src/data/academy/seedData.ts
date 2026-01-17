@@ -35,6 +35,14 @@ Si cobras 5.00€ por reparto, ¿cuánto ganas?
 *   Software/Seguro: -0.10€
 *   **Margen Bruto Real:** 1.00€.
 *   *Lección:* Necesitas volumen masivo. El delivery es un negocio de "centavos repetidos millones de veces".
+
+---
+
+### 🧮 Simulador: Punto de Equilibrio
+
+Usa esta calculadora para determinar cuántos pedidos necesitas para cubrir tus costes fijos:
+
+{{WIDGET:calculator_breakeven}}
                 `,
                 order: 1,
                 quiz: {
@@ -85,6 +93,14 @@ Los cobros (Restaurantes pagan a 30 días) vs Pagos (Nóminas/Gasolina son inmed
 *   *Necesitas Fondo de Maniobra:* Mínimo 2 meses de costes operativos en caja antes de empezar. Sin esto, la primera nómina impagada destruirá tu equipo.
 
 **Axioma:** La falta de beneficio te mata en un año; la falta de caja te mata mañana.
+
+---
+
+### 🧮 Simulador Fiscal
+
+Calcula cuánto debes reservar para IVA e IRPF:
+
+{{WIDGET:calculator_taxes}}
                 `,
                 order: 2,
                 quiz: {
@@ -135,6 +151,14 @@ La rentabilidad está en la densidad, no en la extensión.
 *   Una franquicia con operativa documentada y gerente autónomo vale el doble que una donde el dueño tiene que estar 12 horas trabajando.
 
 **Lección:** Construye el negocio para venderlo, aunque no quieras venderlo. Eso te obligará a hacerlo eficiente y autónomo.
+
+---
+
+### 🧮 Calculadora de Tarifas por Distancia
+
+Optimiza tu pricing con esta herramienta:
+
+{{WIDGET:calculator_pricing}}
                 `,
                 order: 3,
                 quiz: {
@@ -197,6 +221,14 @@ La rotura de stock de un activo menor (batería, casco, caja térmica) puede det
 *   **Stock de Seguridad:** Mantener siempre un 10% de excedente en equipamiento crítico (EPIS, Powerbanks, Cajas).
 
 **Directriz:** La flota no son "motos", son unidades de producción de ingresos. Una moto parada es una fábrica cerrada.
+
+---
+
+### 🧮 Calculadora: ROI de Flota
+
+¿Vale la pena invertir en un nuevo vehículo? Calcula el retorno:
+
+{{WIDGET:calculator_fleet}}
                 `,
                 order: 1,
                 quiz: {
@@ -352,6 +384,14 @@ En noches de tormenta y colapso, el equipo mira al líder.
 *   *Post-Mortem:* Análisis forense del incidente al día siguiente para evitar recurrencia.
 
 **Directriz:** La calidad de un sistema logístico se mide por su capacidad de recuperación ante el fallo, no por la ausencia de fallos.
+
+---
+
+### 🎯 Caso Práctico: Crisis en Hora Punta
+
+Pon a prueba tu capacidad de respuesta bajo presión:
+
+{{CASE:peak_hour_crisis}}
                 `,
                 order: 4,
                 quiz: {

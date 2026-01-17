@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAcademyModules, useCreateModule, useDeleteModule, useUpdateModule } from '../../../hooks/useAcademy';
 import { AcademyModule } from '../../../hooks/useAcademy';
-import { Plus, Edit2, Trash2, GripVertical, Video, FileText, MoreVertical, HelpCircle } from 'lucide-react';
+import { Plus, Video } from 'lucide-react';
 import { AcademySeeder } from '../AcademySeeder';
+import AdminModuleCard from '../AdminModuleCard';
+
 
 export const AcademyAdminView = () => {
     const navigate = useNavigate();
@@ -53,6 +55,15 @@ export const AcademyAdminView = () => {
         setEditForm({ title: module.title, description: module.description, duration: module.duration });
     };
 
+    const handleToggleStatus = async (module: AcademyModule) => {
+        const newStatus = module.status === 'active' ? 'draft' : 'active';
+        try {
+            await updateModule(module.id!, { status: newStatus });
+        } catch (error) {
+            console.error('Error updating status:', error);
+        }
+    };
+
     if (loading) return <div className="p-8 text-center text-slate-500">Cargando Studio...</div>;
 
     return (
@@ -86,95 +97,52 @@ export const AcademyAdminView = () => {
             {/* SEEDER: Keep it handy for massive resets */}
             <AcademySeeder />
 
-            <div className="grid gap-4">
-                {modules.map((module) => (
-                    <div
-                        key={module.id}
-                        className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 flex flex-col md:flex-row items-start md:items-center gap-6 shadow-sm hover:shadow-md transition group"
-                    >
-                        {/* Drag Handle (Visual only for now) */}
-                        <div className="hidden md:flex text-slate-300 cursor-move">
-                            <GripVertical className="w-6 h-6" />
-                        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {modules.map((module) => {
+                    const isEditingModule = isEditing === module.id;
 
-                        <div className="flex-1 w-full">
-                            {isEditing === module.id ? (
-                                <div className="space-y-3">
+                    if (isEditingModule) {
+                        return (
+                            <div key={module.id} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-xl relative z-10">
+                                <div className="space-y-4">
+                                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Editando Módulo</h3>
                                     <input
                                         type="text"
-                                        value={editForm.title}
+                                        value={editForm.title || ''}
                                         onChange={e => setEditForm({ ...editForm, title: e.target.value })}
-                                        className="w-full text-xl font-bold bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2"
+                                        className="w-full text-lg font-bold bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
                                         placeholder="Título del Módulo"
                                     />
                                     <textarea
-                                        value={editForm.description}
+                                        value={editForm.description || ''}
                                         onChange={e => setEditForm({ ...editForm, description: e.target.value })}
-                                        className="w-full text-sm bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 min-h-[80px]"
+                                        className="w-full text-sm bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 min-h-[80px] outline-none focus:ring-2 focus:ring-indigo-500"
                                         placeholder="Descripción..."
                                     />
-                                    <div className="flex gap-2 justify-end">
-                                        <button onClick={() => setIsEditing(null)} className="px-3 py-1 text-sm text-slate-500">Cancelar</button>
-                                        <button onClick={() => module.id && handleSave(module.id)} className="px-3 py-1 text-sm bg-indigo-600 text-white rounded-lg">Guardar</button>
+                                    <div className="flex gap-2 justify-end pt-2">
+                                        <button onClick={() => setIsEditing(null)} className="px-4 py-2 text-sm text-slate-500 font-medium hover:bg-slate-100 rounded-lg transition">Cancelar</button>
+                                        <button onClick={() => module.id && handleSave(module.id)} className="px-4 py-2 text-sm bg-emerald-500 text-white font-bold rounded-lg hover:bg-emerald-600 transition shadow-lg shadow-emerald-500/20">Guardar Cambios</button>
                                     </div>
                                 </div>
-                            ) : (
-                                <div>
-                                    <div className="flex items-center gap-3 mb-1">
-                                        <span className="text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded">
-                                            Módulo {module.order}
-                                        </span>
-                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">{module.title}</h3>
-                                    </div>
-                                    <p className="text-slate-500 text-sm line-clamp-2">{module.description}</p>
-                                    <div className="flex items-center gap-4 mt-3 text-xs font-medium text-slate-400">
-                                        <span className="flex items-center gap-1"><FileText className="w-3 h-3" /> {module.lessonCount || 0} Lecciones</span>
-                                        <span className="flex items-center gap-1"><Video className="w-3 h-3" /> {module.duration}</span>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                            </div>
+                        );
+                    }
 
-                        {/* Actions */}
-                        <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 border-slate-100 pt-4 md:pt-0">
-                            {isEditing !== module.id && module.id && (
-                                <>
-                                    <button
-                                        onClick={() => navigate(`/admin/academy/module/${module.id}`)}
-                                        className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg text-sm font-bold hover:bg-indigo-100 transition"
-                                    >
-                                        <Edit2 className="w-4 h-4" />
-                                        Lecciones
-                                    </button>
-                                    <button
-                                        onClick={() => navigate(`/admin/academy/quiz/${module.id}`)}
-                                        className="flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg text-sm font-bold hover:bg-emerald-100 transition"
-                                    >
-                                        <HelpCircle className="w-4 h-4" />
-                                        Examen
-                                    </button>
-                                    <button
-                                        onClick={() => startEdit(module)}
-                                        className="p-2 text-slate-400 hover:text-indigo-500 transition rounded-lg hover:bg-slate-100"
-                                        title="Editar Detalles"
-                                    >
-                                        <MoreVertical className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(module.id!, module.title)}
-                                        className="p-2 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-red-50"
-                                        title="Eliminar Módulo"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                ))}
+                    return (
+                        <AdminModuleCard
+                            key={module.id}
+                            module={module}
+                            onEdit={startEdit}
+                            onEditContent={() => navigate(`/admin/academy/module/${module.id}`)}
+                            onEditQuiz={() => navigate(`/admin/academy/quiz/${module.id}`)}
+                            onDelete={handleDelete}
+                            onToggleStatus={handleToggleStatus}
+                        />
+                    );
+                })}
 
                 {modules.length === 0 && (
-                    <div className="text-center py-20 border-2 border-dashed border-slate-300 rounded-2xl">
+                    <div className="col-span-full text-center py-20 border-2 border-dashed border-slate-300 rounded-2xl">
                         <p className="text-slate-500 font-medium">No hay módulos creados. ¡Crea el primero o usa el Seeder!</p>
                     </div>
                 )}

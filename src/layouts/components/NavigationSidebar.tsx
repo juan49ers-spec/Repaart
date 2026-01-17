@@ -1,24 +1,11 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import {
-    Activity,
-    FileText,
-    LifeBuoy,
-    GraduationCap,
-    LayoutGrid,
-    Settings,
-    X,
-    LucideIcon
-} from 'lucide-react';
-import logo from '../../assets/logo.jpg';
+import { X } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-
-interface NavItem {
-    path: string;
-    label: string;
-    icon: LucideIcon;
-    highlight?: boolean;
-}
+import { RepaartLogo } from '../../components/ui/RepaartLogo';
+import UserMenu from './UserMenu';
+import ThemeToggle from '../../ui/buttons/ThemeToggle';
+import { adminNavItems, franchiseNavItems } from '../constants/navigation';
 
 interface NavigationSidebarProps {
     isAdmin: boolean;
@@ -30,51 +17,34 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({ isAdmin, isFranch
 
     const onClose = () => toggleSidebar(false);
 
-    const adminNavItems: NavItem[] = [
-        { path: '/dashboard', label: 'Finanzas', icon: Activity },
-        { path: '/admin/resources', label: 'Recursos', icon: FileText },
-        { path: '/admin/support', label: 'Soporte', icon: LifeBuoy },
-        { path: '/academy', label: 'Academia', icon: GraduationCap },
-        { path: '/admin/kanban', label: 'Kanban', icon: LayoutGrid, highlight: true },
-        { path: '/profile', label: 'Configuración', icon: Settings },
-    ];
-
-    const franchiseNavItems: NavItem[] = [
-        { path: '/dashboard', label: 'Finanzas', icon: Activity },
-        { path: '/operations', label: 'Operativa', icon: LayoutGrid },
-        { path: '/resources', label: 'Recursos', icon: FileText },
-        { path: '/support', label: 'Soporte', icon: LifeBuoy },
-        { path: '/academy', label: 'Academia', icon: GraduationCap },
-    ];
-
     const navItems = isAdmin ? adminNavItems : isFranchise ? franchiseNavItems : [];
 
     return (
         <div
-            className={`fixed inset-y-0 left-0 w-80 bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl border-r border-slate-200 dark:border-slate-800 shadow-2xl transform transition-transform duration-300 ease-out z-50 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-                }`}
+            className={`lg:hidden fixed inset-y-0 left-0 flex flex-col bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl border-r border-slate-200 dark:border-slate-800 shadow-2xl transform transition-all duration-300 ease-out z-50 
+            w-80
+            ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
         >
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
+            {/* Header - Fixed Top */}
+            <div className="flex-none flex items-center justify-between p-4 lg:p-3 xl:p-4 border-b border-slate-100 dark:border-slate-800 h-[72px] lg:h-[64px] xl:h-[72px]">
                 <div className="flex items-center gap-3">
-                    <img src={logo} alt="Repaart" className="w-10 h-10 rounded-xl shadow-lg" />
-                    <div>
-                        <h2 className="text-lg font-bold text-slate-900 dark:text-white">REPAART</h2>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">Panel de Control</p>
-                    </div>
+                    <RepaartLogo
+                        className="h-14 lg:h-10 xl:h-14 w-auto text-slate-800 dark:text-white"
+                        interactive
+                    />
                 </div>
                 <button
                     onClick={onClose}
-                    className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                    className="lg:hidden p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                     aria-label="Cerrar menú"
                 >
                     <X className="w-5 h-5" />
                 </button>
             </div>
 
-            {/* Navigation Links */}
-            <nav className="p-4 space-y-1">
-                <p className="px-3 text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+            {/* Navigation Links - Scrollable Area */}
+            <nav className="flex-1 overflow-y-auto min-h-0 p-4 lg:p-3 xl:p-4 space-y-1">
+                <p className="px-3 text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 lg:mb-2 xl:mb-3">
                     Navegación
                 </p>
                 {navItems.map((item) => (
@@ -83,8 +53,8 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({ isAdmin, isFranch
                         to={item.path}
                         onClick={onClose}
                         className={({ isActive }) => `
-                            flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200
-                            ${item.highlight && !isActive
+                            flex items-center gap-3 px-4 py-3 lg:py-2.5 xl:py-3 rounded-xl font-medium transition-all duration-200 group
+                            ${(item as any).highlight && !isActive
                                 ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30'
                                 : isActive
                                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
@@ -92,18 +62,20 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({ isAdmin, isFranch
                             }
                         `}
                     >
-                        <item.icon className="w-5 h-5" />
-                        <span>{item.label}</span>
+                        <item.icon className="w-5 h-5 lg:w-4 lg:h-4 xl:w-5 xl:h-5 transition-transform group-hover:scale-110" />
+                        <span className="lg:text-sm xl:text-base">{item.label}</span>
                     </NavLink>
                 ))}
             </nav>
 
-            {/* Footer */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-100 dark:border-slate-800">
-                <div className="text-center">
-                    <span className="inline-flex items-center px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 text-[10px] font-bold tracking-widest">
-                        v4.1.0
-                    </span>
+            {/* Footer - Fixed Bottom */}
+            <div className="flex-none p-4 lg:p-3 xl:p-4 border-t border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+                <div className="flex items-center justify-between">
+                    <UserMenu placement="top" />
+                    <div className="flex items-center gap-2">
+                        <div className="hidden sm:block text-[10px] font-bold text-slate-300 dark:text-slate-700">v4.1.0</div>
+                        <ThemeToggle />
+                    </div>
                 </div>
             </div>
         </div>

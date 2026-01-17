@@ -97,6 +97,7 @@ export const generateGuideContent = async (rawText: string): Promise<{
     theme: string;
     icon: string;
     isCritical: boolean;
+    content: string; // NEW: Full markdown content
     confidence: number;
 } | null> => {
     const API_KEY = import.meta.env.VITE_GOOGLE_AI_KEY || '';
@@ -108,7 +109,7 @@ export const generateGuideContent = async (rawText: string): Promise<{
     ${SYSTEM_INSTRUCTION}
 
     ACTUA COMO: Director de Operaciones de una Franquicia de Reparto (Repaart).
-    TAREA: Analiza el siguiente "Texto Crudo" y transfórmalo en una Guía Operativa Profesional.
+    TAREA: Analiza el siguiente "Texto Crudo" y transfórmalo en una Guía Operativa Profesional COMPLETA.
     
     TEXTO CRUDO:
     "${rawText}"
@@ -125,10 +126,16 @@ export const generateGuideContent = async (rawText: string): Promise<{
        - "blue" (Informativo)
     5. "icon": Elige el nombre del icono de Lucide que mejor encaje (SOLO ESTOS: ShieldAlert, Wrench, Users, PlayCircle, BookOpen, FileText, Zap, Heart, Star, Award, Info, AlertTriangle, CheckCircle, HelpCircle, Lightbulb, Target).
     6. "isCritical": true si es un tema de seguridad, accidentes o normativa legal imperativa. false si es informativo.
+    7. "content": Texto COMPLETO de la guía en formato MARKDOWN.
+       - Usa # para Títulos y ## para Subtítulos.
+       - Usa **negritas** para conceptos clave.
+       - Usa listas con - o 1. para pasos a seguir.
+       - Estructura: Introducción, Pasos/Procedimiento, Consideraciones Finales.
+       - Tono profesional, instructivo y claro.
 
     IMPORTANTE: 
     - EL RESULTADO DEBE SER UN JSON VÁLIDO.
-    - NO uses Markdown (\`\`\`json). Devuelve SOLO el texto JSON plano.
+    - NO uses Markdown (\`\`\`json) para envolver la respuesta. Devuelve SOLO el texto JSON plano.
     - ESCAPA todas las comillas dobles (") dentro de los valores de texto con backslash (\\").
     - ESCAPA todos los saltos de línea dentro de los valores de texto con \\n.
 

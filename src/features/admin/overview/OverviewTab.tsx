@@ -7,7 +7,6 @@ import { useAdminControl } from '../../../hooks/useAdminControl';
 // Control Widgets
 import ControlNetworkWidget from '../dashboard/widgets/ControlNetworkWidget';
 import PendingActionsWidget from '../dashboard/widgets/PendingActionsWidget';
-import ControlEventsWidget from '../dashboard/widgets/ControlEventsWidget';
 import ControlEarningsWidget from '../dashboard/widgets/ControlEarningsWidget';
 import IntelligenceWidget from '../dashboard/widgets/IntelligenceWidget';
 
@@ -34,7 +33,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onNavigate, selectedMonth }) 
                     <h2 className="text-xl font-medium text-slate-800 dark:text-white tracking-tight">Control Hub</h2>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Widget 1: Network Health */}
                     <div className="h-[420px]">
                         <ControlNetworkWidget data={data.network} loading={loading} />
@@ -49,12 +48,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ onNavigate, selectedMonth }) 
                         />
                     </div>
 
-                    {/* Widget 3: Upcoming Intel/Events */}
-                    <div className="h-[420px]">
-                        <ControlEventsWidget events={data.events} loading={loading} />
-                    </div>
-
-                    {/* Widget 4: Administrative Earnings (Royalties) */}
+                    {/* Widget 3: Administrative Earnings (Royalties) - Previously Widget 4 */}
                     <div className="h-[420px]">
                         <ControlEarningsWidget
                             data={data.earnings}

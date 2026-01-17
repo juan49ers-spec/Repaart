@@ -3,13 +3,14 @@ import { academyService } from '../../services/academyService';
 import { COURSE_MODULES_DATA } from '../../data/academy/seedData';
 import { ENCYCLOPEDIA_DATA } from '../../data/academy/encyclopediaData';
 import { Database, RefreshCw } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 export const AcademySeeder = () => {
-    // const { isAdmin } = useAuth();
+    const { user } = useAuth();
     const [status, setStatus] = useState<'idle' | 'seeding' | 'success' | 'error'>('idle');
     const [log, setLog] = useState<string[]>([]);
 
     // Only allow Admin to see this
-    // if (user?.role !== 'admin') return null;
+    if (user?.role !== 'admin') return null;
 
     const logMessage = (msg: string) => {
         setLog(prev => [...prev, `${new Date().toLocaleTimeString()} - ${msg}`]);

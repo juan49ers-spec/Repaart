@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Zap, User, Truck, Sun, Moon, Split, Copy, Loader2, ArrowRight, Trash2, Users, CheckSquare, Square, Euro, Info, ShieldCheck, AlertTriangle, Bookmark, Plus, Save } from 'lucide-react';
+import { X, Zap, User, Truck, Sun, Moon, Split, Copy, Loader2, ArrowRight, Trash2, Users, CheckSquare, Square, Euro, AlertTriangle, Bookmark, Save } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { toLocalISOString } from '../../utils/dateUtils';
 import { shiftService } from '../../services/shiftService';
@@ -229,7 +229,7 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
             return;
         }
 
-        if (complianceIssues.length > 0 && !window.confirm(`¡Advertencia de cumplimiento! Se han detectado ${complianceIssues.length} problemas:\n\n${complianceIssues.map(i => i.message).join('\n')}\n\n¿Deseas continuar de todos modos?`)) {
+        if (complianceIssues.length > 0 && !window.confirm(`¡Advertencia de cumplimiento! Se han detectado ${complianceIssues.length} problemas: \n\n${complianceIssues.map(i => i.message).join('\n')} \n\n¿Deseas continuar de todos modos ? `)) {
             return;
         }
 
@@ -403,7 +403,7 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
             return;
         }
 
-        if (!window.confirm(`¿Estás seguro de BORRAR todos los turnos de este rider en los ${selectedDays.length} días seleccionados?`)) return;
+        if (!window.confirm(`¿Estás seguro de BORRAR todos los turnos de este rider en los ${selectedDays.length} días seleccionados ? `)) return;
 
         setIsProcessing(true);
         try {

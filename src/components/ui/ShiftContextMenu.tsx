@@ -1,10 +1,21 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useLayoutEffect, useEffect, useRef, useState } from 'react';
 import { Check, Copy, Trash2, Edit, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
+
+interface ContextMenuShift {
+    id: string;
+    isConfirmed?: boolean;
+    changeRequested?: boolean;
+    isDraft?: boolean;
+    startAt: string;
+    endAt: string;
+    [key: string]: any;
+}
 
 interface ShiftContextMenuProps {
     x: number;
     y: number;
-    shift: any;
+    shift: ContextMenuShift;
     onClose: () => void;
     onValidate: (shift: any) => void;
     onDuplicate: (shift: any) => void;
@@ -23,6 +34,28 @@ export const ShiftContextMenu: React.FC<ShiftContextMenuProps> = ({
     onDelete
 }) => {
     const menuRef = useRef<HTMLDivElement>(null);
+    const [pos, setPos] = useState({ top: y, left: x });
+
+    // Adjust position to keep within viewport
+    useLayoutEffect(() => {
+        if (menuRef.current) {
+            const rect = menuRef.current.getBoundingClientRect();
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+
+            let finalX = x;
+            let finalY = y;
+
+            if (x + rect.width > vw) finalX = x - rect.width;
+            if (y + rect.height > vh) finalY = y - rect.height;
+
+            // Prevent going off left/top if viewport is too small
+            finalX = Math.max(10, finalX);
+            finalY = Math.max(10, finalY);
+
+            setPos({ top: finalY, left: finalX });
+        }
+    }, [x, y]);
 
     // Close on click outside
     useEffect(() => {
@@ -36,21 +69,19 @@ export const ShiftContextMenu: React.FC<ShiftContextMenuProps> = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [onClose]);
 
-    // Adjust position to keep within viewport
-    const style: React.CSSProperties = {
-        top: y,
-        left: x,
-    };
-
-    return (
+    return createPortal(
         <div
             ref={menuRef}
-            style={style}
-            className="fixed z-[100] w-56 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden animate-in zoom-in-95 duration-100"
+            style={{ top: pos.top, left: pos.left }}
+            className="fixed z-[9999] w-56 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden animate-in zoom-in-95 duration-100"
         >
             <div className="p-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Acciones Rápidas</span>
-                <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+                <button
+                    onClick={onClose}
+                    className="text-slate-400 hover:text-slate-600 transition-colors"
+                    title="Cerrar menú"
+                >
                     <X size={14} />
                 </button>
             </div>
@@ -71,7 +102,7 @@ export const ShiftContextMenu: React.FC<ShiftContextMenuProps> = ({
                     className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors text-left"
                 >
                     <Copy size={16} />
-                    Duplicar (Siguiente Hueco)
+                    Duplicar (Día Siguiente)
                 </button>
 
                 <button
@@ -97,6 +128,7 @@ export const ShiftContextMenu: React.FC<ShiftContextMenuProps> = ({
                     Eliminar
                 </button>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };

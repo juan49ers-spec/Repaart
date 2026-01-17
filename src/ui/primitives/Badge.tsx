@@ -8,9 +8,10 @@ interface BadgeProps {
     size?: 'sm' | 'md';
     className?: string;
     icon?: React.ReactNode;
+    title?: string;
 }
 
-export const Badge: React.FC<BadgeProps> = ({ children, intent = 'neutral', size = 'md', className = '', icon }) => {
+export const Badge: React.FC<BadgeProps> = ({ children, intent = 'neutral', size = 'md', className = '', icon, title }) => {
     const styles = {
         success: 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400',
         warning: 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400',
@@ -33,7 +34,9 @@ export const Badge: React.FC<BadgeProps> = ({ children, intent = 'neutral', size
             ${styles[intent]}
             ${sizes[size]}
             ${className}
-        `}>
+        `}
+            title={title}
+        >
             {icon && <span className="w-3 h-3">{icon}</span>}
             {children}
         </span>

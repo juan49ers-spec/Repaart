@@ -66,13 +66,21 @@ export const franchiseService = {
                 const allResult = await franchiseService.getAllFranchises();
 
                 if (isOk(allResult)) {
-                    const match = allResult.data.find((f: FranchiseMetadata) =>
-                        f.name.toLowerCase().trim() === franchiseId.toLowerCase().trim()
+                    // Try matching by id (franchiseId field) first
+                    let match = allResult.data.find((f: FranchiseMetadata) =>
+                        f.id === franchiseId || (f as any).uid === franchiseId
                     );
+
+                    // Then try matching by name (case insensitive)
+                    if (!match) {
+                        match = allResult.data.find((f: FranchiseMetadata) =>
+                            f.name.toLowerCase().trim() === franchiseId.toLowerCase().trim()
+                        );
+                    }
 
                     if (match) {
                         data = match;
-                        console.log(`Resolved '${franchiseId}' to ID '${data.id}'`);
+                        console.log(`Resolved '${franchiseId}' to franchise '${data.name}'`);
                     }
                 }
             }

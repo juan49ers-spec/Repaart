@@ -5,7 +5,7 @@ import { useOutletContext } from 'react-router-dom';
 import DashboardSkeleton from '../../ui/layout/DashboardSkeleton';
 import FranchiseDashboardView, { BreakdownItem, DashboardTrendItem } from './FranchiseDashboardView';
 
-import { AuthUser } from '../../context/AuthContext';
+import { AuthUser, useAuth } from '../../context/AuthContext';
 import { useFranchiseFinance } from '../../hooks/useFranchiseFinance';
 
 // TYPE DEFINITIONS
@@ -27,10 +27,16 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
     // Try to get context, but don't fail if it's missing (Admin usage)
     const context = useOutletContext<DashboardContextType | null>();
 
+    // Check if admin is impersonating - force readOnly in that case
+    const { impersonatedFranchiseId } = useAuth();
+    const isImpersonating = !!impersonatedFranchiseId;
+    const effectiveReadOnly = readOnly || isImpersonating;
+
     // Derive values
     const selectedMonth = context?.selectedMonth || new Date().toISOString().slice(0, 7);
     const user = context?.user || null;
-    const activeFranchiseId = propId || context?.franchiseId || user?.franchiseId || user?.uid;
+    // IMPORTANT: When impersonating, use impersonatedFranchiseId directly to ensure correct data loading
+    const activeFranchiseId = impersonatedFranchiseId || propId || context?.franchiseId || user?.franchiseId || user?.uid;
 
     // Helper for Admin Date Switch
     const [localMonth, setLocalMonth] = useState(selectedMonth);
@@ -80,7 +86,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
         : 0;
 
     // Expense Breakdown Preparation
-    let breakdownList = [...(report?.breakdown || [])];
+    const breakdownList = [...(report?.breakdown || [])];
 
     // 1. Find existing Royalty item
     const royaltyIndex = breakdownList.findIndex(i => i.name.includes('Royalty'));
@@ -118,7 +124,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
         <FranchiseDashboardView
             franchiseId={activeFranchiseId}
             effectiveMonth={effectiveMonth}
-            readOnly={readOnly}
+            readOnly={effectiveReadOnly}
 
             // Metrics
             revenue={revenue}

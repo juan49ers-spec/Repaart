@@ -1,6 +1,6 @@
 import React from 'react';
 import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip as ChartTooltip } from 'recharts';
-import { AlertTriangle, TrendingUp as TrendUp, Target, Calendar } from 'lucide-react';
+import { AlertTriangle, Target, Receipt, Flame, Clock } from 'lucide-react';
 import { Card } from '../../../../ui/primitives/Card';
 import { Badge, BadgeIntent } from '../../../../ui/primitives/Badge';
 import { StatValue } from '../../../../ui/primitives/StatValue';
@@ -13,11 +13,17 @@ interface KPICardProps {
     trendData?: number[]; // for sparkline
     icon?: React.ReactNode;
     color?: 'blue' | 'purple' | 'emerald' | 'amber' | 'rose';
-    subtext?: string;
+    subtext?: string | React.ReactNode;
     // New advanced props
     monthlyGoal?: number; // objetivo mensual
     lastYearValue?: number; // valor mismo mes año anterior
     showPrediction?: boolean; // mostrar proyección
+    rawValue?: number; // Raw number for accurate calc
+    // Micro-KPIs for Revenue card
+    orders?: number;
+    totalHours?: number;
+    bestDay?: string;
+    alignHeader?: 'left' | 'center';
 }
 
 const KPICard: React.FC<KPICardProps> = ({
@@ -27,10 +33,12 @@ const KPICard: React.FC<KPICardProps> = ({
     trendData,
     icon,
     color = 'blue',
-    subtext,
     monthlyGoal,
-    lastYearValue,
-    showPrediction = true
+    rawValue,
+    orders,
+    totalHours,
+    bestDay,
+    alignHeader = 'left'
 }) => {
     // Map colors to hex values for charts and badge intents
     const colorMap: Record<string, { main: string, intent: BadgeIntent }> = {
@@ -45,17 +53,10 @@ const KPICard: React.FC<KPICardProps> = ({
     const isPositive = trend && trend >= 0;
 
     // Advanced calculations
-    const numericValue = typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]+/g, '')) : value;
-
-    // Proyección próximo mes basada en tendencia
-    const prediction = showPrediction && trend && numericValue
-        ? numericValue * (1 + trend / 100)
-        : null;
-
-    // YoY comparison
-    const yoyChange = lastYearValue && numericValue
-        ? ((numericValue - lastYearValue) / lastYearValue) * 100
-        : null;
+    // Use rawValue if provided, otherwise failover to parsing (which is risky for EUR format)
+    const numericValue = rawValue !== undefined
+        ? rawValue
+        : (typeof value === 'string' ? parseFloat(value.replace(/\./g, '').replace(',', '.')) : value);
 
     // Monthly goal progress
     const goalProgress = monthlyGoal && numericValue
@@ -89,7 +90,7 @@ const KPICard: React.FC<KPICardProps> = ({
 
             {/* Critical Alert Banner */}
             {isCriticalDrop && (
-                <div className="absolute top-0 left-0 right-0 bg-rose-500 text-white px-3 py-1 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 z-20 rounded-t-xl">
+                <div className="absolute top-0 left-0 right-0 bg-rose-500 text-white px-3 py-1 text-xs font-bold uppercase tracking-widest flex items-center gap-1.5 z-20 rounded-t-xl">
                     <AlertTriangle className="w-3 h-3" />
                     <span>Alerta: Caída significativa</span>
                 </div>
@@ -98,53 +99,81 @@ const KPICard: React.FC<KPICardProps> = ({
             {/* Header using Primitive */}
             <SectionHeader
                 title={title}
-                subtitle={subtext || 'Métrica Principal'}
+                subtitle={null} // Subtitle removed entirely as requested
                 icon={icon}
                 className={isCriticalDrop ? 'mt-6' : ''}
-                action={trend !== undefined && (
-                    <Badge intent={trendBadgeIntent}>
-                        {isPositive ? '↑' : '↓'} {Math.abs(trend).toFixed(1)}%
-                    </Badge>
-                )}
+                action={null}
+                align={alignHeader}
             />
 
             {/* Main Value using Primitive */}
             <div className="mb-4 relative z-10">
                 <StatValue
                     value={value}
-                    description={trendText} // Shows below value
-                    trend={trend !== undefined ? { value: trend } : undefined} // We already show badge, but StatValue uses this to color description
+                    description={undefined} // Removed redundant text description
+                    size="xl"
                 />
             </div>
 
-            {/* Advanced Metrics Grid (Custom Layout) */}
-            <div className="grid grid-cols-2 gap-2 mb-4 relative z-10">
-                {/* YoY Comparison */}
-                {yoyChange !== null && (
-                    <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center gap-1 mb-0.5">
-                            <Calendar className="w-2.5 h-2.5 text-slate-400" />
-                            <span className="text-[8px] text-slate-400 font-bold uppercase tracking-wider">YoY</span>
-                        </div>
-                        <div className={`text-xs font-bold ${yoyChange >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                            {yoyChange >= 0 ? '+' : ''}{yoyChange.toFixed(1)}%
-                        </div>
-                    </div>
+            {/* Compact Badges Row: Orders + Trend */}
+            <div className="mb-4 relative z-10 flex items-center justify-center gap-2">
+                {orders && orders > 0 && (
+                    <span className="inline-flex items-center gap-1 font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider border border-indigo-100 dark:border-indigo-500/20">
+                        {orders} PEDIDOS
+                    </span>
                 )}
-
-                {/* Prediction */}
-                {prediction !== null && (
-                    <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900">
-                        <div className="flex items-center gap-1 mb-0.5">
-                            <TrendUp className="w-2.5 h-2.5 text-indigo-500" />
-                            <span className="text-[8px] text-indigo-500 font-bold uppercase tracking-wider">Proyección</span>
-                        </div>
-                        <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                            {typeof value === 'string' ? value.replace(/[\d.,]+/, prediction.toFixed(0)) : prediction.toFixed(0)}
-                        </div>
+                {trend !== undefined && (
+                    <div title={trendText} className="cursor-help">
+                        <Badge intent={trendBadgeIntent}>
+                            {isPositive ? '↑' : '↓'} {Math.abs(trend).toFixed(1)}%
+                        </Badge>
                     </div>
                 )}
             </div>
+
+            {/* Micro-KPIs Strip - Premium Design */}
+            {(orders || totalHours || bestDay) && (
+                <div className="flex items-stretch gap-0 mb-4 relative z-10 bg-slate-50/80 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-700/50 overflow-hidden shadow-inner">
+                    {/* Ticket Medio */}
+                    {orders && orders > 0 && numericValue > 0 && (
+                        <div className="flex-1 py-2 px-2.5 text-center border-r border-slate-200/60 dark:border-slate-700/40 hover:bg-white/60 dark:hover:bg-slate-700/30 transition-colors">
+                            <div className="flex items-center justify-center gap-1 mb-0.5" title="Ticket Medio por Pedido">
+                                <Receipt className="w-2.5 h-2.5 text-blue-500" />
+                                <span className="text-[8px] text-slate-400 font-semibold uppercase tracking-wide">Ticket</span>
+                            </div>
+                            <div className="text-xs font-black text-slate-800 dark:text-slate-100 tabular-nums">
+                                {(numericValue / orders).toFixed(2)}€
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Mejor Día */}
+                    {bestDay && (
+                        <div className="flex-1 py-2 px-2.5 text-center border-r border-slate-200/60 dark:border-slate-700/40 hover:bg-white/60 dark:hover:bg-slate-700/30 transition-colors">
+                            <div className="flex items-center justify-center gap-1 mb-0.5" title="Día con mayor facturación">
+                                <Flame className="w-2.5 h-2.5 text-amber-500" />
+                                <span className="text-[8px] text-slate-400 font-semibold uppercase tracking-wide">Top</span>
+                            </div>
+                            <div className="text-xs font-black text-slate-800 dark:text-slate-100 truncate">
+                                {bestDay}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Ingresos por Hora */}
+                    {totalHours && totalHours > 0 && numericValue > 0 && (
+                        <div className="flex-1 py-2 px-2.5 text-center hover:bg-white/60 dark:hover:bg-slate-700/30 transition-colors">
+                            <div className="flex items-center justify-center gap-1 mb-0.5" title="Ingresos medios por hora operativa">
+                                <Clock className="w-2.5 h-2.5 text-emerald-500" />
+                                <span className="text-[8px] text-slate-400 font-semibold uppercase tracking-wide">€/h</span>
+                            </div>
+                            <div className="text-xs font-black text-slate-800 dark:text-slate-100 tabular-nums">
+                                {(numericValue / totalHours).toFixed(0)}€
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Monthly Goal Progress (Custom but clean) */}
             {monthlyGoal && goalProgress !== null && (
@@ -152,9 +181,9 @@ const KPICard: React.FC<KPICardProps> = ({
                     <div className="flex items-center justify-between mb-1.5">
                         <div className="flex items-center gap-1">
                             <Target className="w-3 h-3 text-slate-400" />
-                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Objetivo Mensual</span>
+                            <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Objetivo Mensual</span>
                         </div>
-                        <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">{goalProgress.toFixed(0)}%</span>
+                        <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{goalProgress.toFixed(0)}%</span>
                     </div>
                     <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                         <div
@@ -170,7 +199,7 @@ const KPICard: React.FC<KPICardProps> = ({
 
             {/* Chart (Custom) */}
             {trendData && trendData.length > 0 && (
-                <div className="mt-auto h-16 w-full relative z-10 opacity-60 group-hover:opacity-100 transition-all duration-500">
+                <div className="mt-auto h-24 w-full relative z-10 opacity-60 group-hover:opacity-100 transition-all duration-500">
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={chartData}>
                             <defs>

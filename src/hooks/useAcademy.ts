@@ -99,8 +99,7 @@ export const useModuleLessons = (moduleId: string | null) => {
 
         const q = query(
             collection(db, COLLECTIONS.LESSONS),
-            where('moduleId', '==', moduleId),
-            orderBy('order', 'asc')
+            where('moduleId', '==', moduleId)
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -108,6 +107,10 @@ export const useModuleLessons = (moduleId: string | null) => {
                 id: doc.id,
                 ...doc.data()
             } as Lesson));
+
+            // Client-side sort to avoid composite index requirement
+            lessonsData.sort((a, b) => a.order - b.order);
+
             setLessons(lessonsData);
             setLoading(false);
         }, (error) => {
