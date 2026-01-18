@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
 import { adminNavItems, franchiseNavItems } from '../constants/navigation';
-import { useFeatureAccess } from '../../hooks/useFeatureAccess';
 
 // =====================================================
 // TYPES & INTERFACES
@@ -17,22 +16,13 @@ interface BottomTabBarProps {
 // =====================================================
 
 const BottomTabBar: React.FC<BottomTabBarProps> = ({ isAdmin, isFranchise: _isFranchise }) => {
-    const { hasAccess } = useFeatureAccess();
-
     // Standardize navigation items across all devices
     const tabs = useMemo(() => {
-        let baseItems = isAdmin ? adminNavItems : franchiseNavItems;
+        const baseItems = isAdmin ? adminNavItems : franchiseNavItems;
 
         // Skip 'Configuración' in BottomBar as it's now in the Top Header UserMenu
-        baseItems = baseItems.filter(item => item.path !== '/profile');
-
-        // Feature access filtering for franchise users
-        return isAdmin ? baseItems : baseItems.filter(item => {
-            if (item.label === 'Recursos') return hasAccess('downloads');
-            if (item.label === 'Academia') return hasAccess('academy');
-            return true;
-        });
-    }, [isAdmin, hasAccess]);
+        return baseItems.filter(item => item.path !== '/profile');
+    }, [isAdmin]);
 
     return (
         <nav className="xl:hidden tab-dock" aria-label="Navegación principal">
