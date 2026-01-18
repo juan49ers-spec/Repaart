@@ -29,24 +29,22 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({ isAdmin, isFranchise: _isFr
         { path: '/dashboard', label: 'Central', icon: Activity },
         { path: '/admin/kanban', label: 'Kanban', icon: LayoutGrid },
         { path: '/admin/users', label: 'Usuarios', icon: Users },
-    ], []);
-
-    const adminMoreItems = useMemo<Tab[]>(() => [
         { path: '/admin/resources', label: 'Recursos', icon: FileText },
         { path: '/admin/support', label: 'Soporte', icon: LifeBuoy },
     ], []);
+
+    const adminMoreItems = useMemo<Tab[]>(() => [], []);
 
     const franchiseTabs = useMemo<Tab[]>(() => [
         { path: '/dashboard', label: 'Balance', icon: PieChart },
         { path: '/operations', label: 'Horas', icon: Activity },
         { path: '/fleet', label: 'Flota', icon: Bike },
-    ], []);
-
-    const franchiseMoreItems = useMemo<Tab[]>(() => [
+        { path: '/academy', label: 'Academia', icon: GraduationCap },
         { path: '/resources', label: 'Recursos', icon: FileText },
         { path: '/support', label: 'Soporte', icon: LifeBuoy },
-        { path: '/academy', label: 'Academia', icon: GraduationCap },
     ], []);
+
+    const franchiseMoreItems = useMemo<Tab[]>(() => [], []);
 
     const [isMoreOpen, setIsMoreOpen] = React.useState(false);
 
@@ -88,7 +86,7 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({ isAdmin, isFranchise: _isFr
                                 aria-label={tab.label}
                             >
                                 {({ isActive }: { isActive: boolean }) => (
-                                    <div className={`tab-pill ${isActive ? 'tab-pill-active' : ''}`}>
+                                    <div className={`tab-pill transform transition-transform duration-200 active:scale-90 ${isActive ? 'tab-pill-active' : ''}`}>
                                         <Icon
                                             className={`w-6 h-6 transition-all duration-200 ${isActive
                                                 ? 'text-blue-600 dark:text-blue-400 stroke-[2.5]'
@@ -102,21 +100,23 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({ isAdmin, isFranchise: _isFr
                     })}
 
                     {/* "Más" Button */}
-                    <button
-                        onClick={() => setIsMoreOpen(true)}
-                        className="tab-item touch-feedback"
-                        aria-label="Más opciones"
-                        title="Más opciones"
-                    >
-                        <div className={`tab-pill ${isMoreOpen ? 'tab-pill-active' : ''}`}>
-                            <MoreHorizontal
-                                className={`w-6 h-6 transition-all duration-200 ${isMoreOpen
-                                    ? 'text-blue-600 dark:text-blue-400 stroke-[2.5]'
-                                    : 'text-slate-400 dark:text-slate-500 stroke-[1.5]'
-                                    }`}
-                            />
-                        </div>
-                    </button>
+                    {moreItems.length > 0 && (
+                        <button
+                            onClick={() => setIsMoreOpen(true)}
+                            className="tab-item touch-feedback"
+                            aria-label="Más opciones"
+                            title="Más opciones"
+                        >
+                            <div className={`tab-pill ${isMoreOpen ? 'tab-pill-active' : ''}`}>
+                                <MoreHorizontal
+                                    className={`w-6 h-6 transition-all duration-200 ${isMoreOpen
+                                        ? 'text-blue-600 dark:text-blue-400 stroke-[2.5]'
+                                        : 'text-slate-400 dark:text-slate-500 stroke-[1.5]'
+                                        }`}
+                                />
+                            </div>
+                        </button>
+                    )}
                 </div>
             </nav>
 

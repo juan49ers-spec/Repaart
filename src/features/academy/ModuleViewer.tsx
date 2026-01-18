@@ -5,7 +5,9 @@ import { useModuleLessons, useMarkLessonComplete, useModuleQuiz, AcademyModule, 
 import { useAuth } from '../../context/AuthContext';
 import QuizEngine from './QuizEngine';
 import CalculatorWidget from './CalculatorWidget';
-import VideoPlayer from './VideoPlayer';
+// import VideoPlayer from './VideoPlayer'; // Deprecated for CinemaPro
+import { CinemaPlayer } from './player/CinemaPlayer';
+import { NoteTaker } from './player/NoteTaker';
 import CaseStudyWidget from './CaseStudyWidget';
 import { LessonSidebar } from './LessonSidebar';
 
@@ -100,8 +102,8 @@ const ModuleViewer: FC<ModuleViewerProps> = ({ module, onBack }) => {
             if (part.startsWith('{{VIDEO:')) {
                 const videoUrl = part.replace('{{VIDEO:', '').replace('}}', '');
                 return (
-                    <div key={index} className="my-12 rounded-2xl overflow-hidden shadow-2xl shadow-indigo-900/20 ring-1 ring-slate-900/5">
-                        <VideoPlayer url={videoUrl} title={`Video - ${currentLesson?.title || 'Lección'}`} />
+                    <div key={index} className="my-12">
+                        <CinemaPlayer url={videoUrl} title={`Video - ${currentLesson?.title || 'Lección'}`} />
                     </div>
                 );
             }
@@ -249,17 +251,34 @@ const ModuleViewer: FC<ModuleViewerProps> = ({ module, onBack }) => {
 
                         {/* Hero Video (Integrated) */}
                         {currentLesson?.videoUrl && (
-                            <div className="rounded-3xl overflow-hidden shadow-2xl shadow-indigo-900/20 aspect-video bg-slate-900 mb-16 ring-1 ring-black/5 transform transition-transform hover:scale-[1.01] duration-500">
-                                <VideoPlayer url={currentLesson.videoUrl} title={currentLesson.title} />
-                            </div>
+                            <CinemaPlayer
+                                url={currentLesson.videoUrl}
+                                title={currentLesson.title}
+                                thumbnail={currentLesson.customThumbnail}
+                                chapters={currentLesson.chapters}
+                            />
                         )}
 
                         <div className="absolute -left-20 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500/0 via-indigo-500/20 to-indigo-500/0 hidden xl:block" />
                     </header>
 
                     {/* Content Body */}
-                    <div className="mb-24">
-                        {renderContentWithWidgets(currentLesson?.content || '')}
+                    <div className="mb-24 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-12">
+                        <div className="min-w-0">
+                            {renderContentWithWidgets(currentLesson?.content || '')}
+                        </div>
+
+                        {/* Side Column for Notes (Desktop) */}
+                        <div className="hidden lg:block relative">
+                            <div className="sticky top-32">
+                                <NoteTaker />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Mobile Notes */}
+                    <div className="lg:hidden mb-12">
+                        <NoteTaker />
                     </div>
 
                     {/* Footer Navigation */}

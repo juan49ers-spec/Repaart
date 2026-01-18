@@ -37,6 +37,9 @@ export interface Lesson {
     title: string;
     content: string; // HTML/Markdown
     videoUrl?: string;
+    customThumbnail?: string;
+    duration?: number; // Duration in seconds
+    chapters?: { time: number; label: string }[];
     resources?: { title: string; url: string; type: 'pdf' | 'link' }[];
     order: number;
     isPublished?: boolean;

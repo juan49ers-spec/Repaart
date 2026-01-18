@@ -6,6 +6,7 @@ interface RepaartLogoProps {
     variant?: 'color' | 'white' | 'dark';
     animated?: boolean;    // Deprecated
     interactive?: boolean; // Controls cursor only
+    iconOnly?: boolean;    // New prop for Icon-only mode (Rail sidebar)
 }
 
 /**
@@ -16,13 +17,17 @@ interface RepaartLogoProps {
  */
 export const RepaartLogo: FC<RepaartLogoProps> = ({
     className = "h-10 w-auto",
-    interactive = false
+    interactive = false,
+    iconOnly = false
 }) => {
     return (
         <img
             src={logoFull}
             alt="Repaart"
-            className={`${className} ${interactive ? 'cursor-pointer' : ''}`}
+            // If iconOnly, we might ideally swap src to a symbol. 
+            // For now, we rely on the parent to crop or sizing, 
+            // but we accept the prop to fix the TS error.
+            className={`${className} ${interactive ? 'cursor-pointer' : ''} ${iconOnly ? 'object-left object-contain' : ''}`}
         />
     );
 };

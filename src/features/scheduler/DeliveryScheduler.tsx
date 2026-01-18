@@ -867,19 +867,19 @@ const DeliveryScheduler: React.FC<{
                         {/* Left: Navigation */}
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
-                                <button onClick={() => changeWeek(-1)} title={viewMode === 'day' ? "Día anterior" : "Semana anterior"} aria-label={viewMode === 'day' ? "Día anterior" : "Semana anterior"} className="p-1.5 hover:bg-white hover:shadow-sm rounded-md transition-all text-slate-500"><ChevronLeft size={16} /></button>
-                                <span className="px-3 text-xs font-medium text-slate-600 capitalize min-w-[120px] text-center">
+                                <button onClick={() => changeWeek(-1)} title={viewMode === 'day' ? "Día anterior" : "Semana anterior"} aria-label={viewMode === 'day' ? "Día anterior" : "Semana anterior"} className="p-1.5 hover:bg-white hover:shadow-sm rounded-md transition-all text-slate-500"><ChevronLeft size={18} /></button>
+                                <span className="px-3 text-sm font-medium text-slate-600 capitalize min-w-[140px] text-center">
                                     {format(selectedDate, viewMode === 'day' ? 'd MMMM yyyy' : 'MMMM yyyy', { locale: es })}
                                 </span>
-                                <button onClick={() => changeWeek(1)} title={viewMode === 'day' ? "Día siguiente" : "Siguiente semana"} aria-label={viewMode === 'day' ? "Día siguiente" : "Siguiente semana"} className="p-1.5 hover:bg-white hover:shadow-sm rounded-md transition-all text-slate-500"><ChevronRight size={16} /></button>
+                                <button onClick={() => changeWeek(1)} title={viewMode === 'day' ? "Día siguiente" : "Siguiente semana"} aria-label={viewMode === 'day' ? "Día siguiente" : "Siguiente semana"} className="p-1.5 hover:bg-white hover:shadow-sm rounded-md transition-all text-slate-500"><ChevronRight size={18} /></button>
                             </div>
 
                             <div className="h-6 w-px bg-slate-200 mx-2" />
 
                             {/* View Toggles */}
                             <div className="flex bg-slate-100 p-0.5 rounded-lg">
-                                <button onClick={() => setViewMode('day')} className={cn("px-3 py-1 text-[9px] font-medium uppercase rounded-md transition-all", viewMode === 'day' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600")}>Día</button>
-                                <button onClick={() => setViewMode('week')} className={cn("px-3 py-1 text-[9px] font-medium uppercase rounded-md transition-all", viewMode === 'week' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600")}>Semana</button>
+                                <button onClick={() => setViewMode('day')} className={cn("px-4 py-1.5 text-xs font-medium uppercase rounded-md transition-all", viewMode === 'day' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600")}>Día</button>
+                                <button onClick={() => setViewMode('week')} className={cn("px-4 py-1.5 text-xs font-medium uppercase rounded-md transition-all", viewMode === 'week' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600")}>Semana</button>
                             </div>
                         </div>
 
@@ -897,7 +897,7 @@ const DeliveryScheduler: React.FC<{
                                     }}
                                     title="Modo PRIME: Resalta horas punta y muestra todos los turnos"
                                     className={cn(
-                                        "px-3 py-1.5 text-[9px] font-medium rounded-lg border flex items-center gap-2 transition-all tracking-wide uppercase",
+                                        "px-3 py-1.5 text-xs font-normal rounded-lg border flex items-center gap-2 transition-all tracking-wide uppercase",
                                         showPrime ? "bg-indigo-600 border-indigo-700 text-white shadow-lg scale-105" : "bg-white border-slate-200 text-slate-400 hover:bg-slate-50"
                                     )}
                                 >
@@ -910,11 +910,11 @@ const DeliveryScheduler: React.FC<{
                                 onClick={() => setShowLunch(!showLunch)}
                                 title="Filtrar Turno Mediodía (12:00 - 16:30)"
                                 className={cn(
-                                    "px-2.5 py-1.5 text-[9px] font-medium rounded-lg border flex items-center gap-1.5 transition-all",
-                                    showLunch ? "bg-amber-100 border-amber-300 text-amber-700 shadow-sm" : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
+                                    "px-3 py-1.5 text-xs font-normal rounded-lg border flex items-center gap-1.5 transition-all text-slate-500",
+                                    showLunch ? "bg-amber-100 border-amber-300 text-amber-700 shadow-sm" : "bg-white border-slate-200 hover:bg-slate-50"
                                 )}
                             >
-                                <Sun size={14} className={showLunch ? "fill-amber-500 text-amber-600" : ""} />
+                                <Sun size={16} className={showLunch ? "fill-amber-500 text-amber-600" : ""} />
                                 <span className="hidden sm:inline">Mediodía</span>
                             </button>
 
@@ -922,11 +922,11 @@ const DeliveryScheduler: React.FC<{
                                 onClick={() => setShowDinner(!showDinner)}
                                 title="Filtrar Turno Noche (20:00 - 24:00)"
                                 className={cn(
-                                    "px-2.5 py-1.5 text-[9px] font-medium rounded-lg border flex items-center gap-1.5 transition-all",
-                                    showDinner ? "bg-indigo-100 border-indigo-300 text-indigo-700 shadow-sm" : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
+                                    "px-3 py-1.5 text-xs font-normal rounded-lg border flex items-center gap-1.5 transition-all text-slate-500",
+                                    showDinner ? "bg-indigo-100 border-indigo-300 text-indigo-700 shadow-sm" : "bg-white border-slate-200 hover:bg-slate-50"
                                 )}
                             >
-                                <Moon size={14} className={showDinner ? "fill-indigo-500 text-indigo-600" : ""} />
+                                <Moon size={16} className={showDinner ? "fill-indigo-500 text-indigo-600" : ""} />
                                 <span className="hidden sm:inline">Noche</span>
                             </button>
 
@@ -934,7 +934,7 @@ const DeliveryScheduler: React.FC<{
 
                             <button
                                 onClick={handleAuditoria}
-                                className={cn("px-2.5 py-1.5 text-[9px] font-medium rounded-lg border flex items-center gap-1.5 transition-all",
+                                className={cn("px-3 py-1.5 text-xs font-normal rounded-lg border flex items-center gap-1.5 transition-all",
                                     sheriffResult
                                         ? (sheriffResult.status === 'optimal' ? "bg-emerald-50 border-emerald-200 text-emerald-600" : "bg-amber-50 border-amber-200 text-amber-600")
                                         : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
@@ -1036,10 +1036,10 @@ const DeliveryScheduler: React.FC<{
                 <div className="flex-1 overflow-x-auto overflow-y-hidden bg-white relative flex flex-col min-h-0">
 
                     {/* HEADER - Floating Glass Effect */}
-                    <div className="flex-none flex w-full border-b border-indigo-100 bg-white/95 backdrop-blur-sm z-30 h-10 shadow-sm min-w-[1000px]">
+                    <div className="flex-none flex w-full border-b border-indigo-100 bg-white/95 backdrop-blur-sm z-30 h-10 shadow-sm min-w-[1000px] lg:min-w-[900px] xl:min-w-[1000px]">
                         {/* CORNER (Riders Label) */}
-                        <div className="w-48 flex-none border-r border-slate-200 bg-slate-50/80 backdrop-blur-sm flex items-center px-4">
-                            <span className="text-[9px] uppercase font-medium tracking-widest text-slate-400">Riders</span>
+                        <div className="w-48 lg:w-40 xl:w-48 flex-none border-r border-slate-200 bg-slate-50/80 backdrop-blur-sm flex items-center px-4">
+                            <span className="text-xs uppercase font-medium tracking-widest text-slate-400">Riders</span>
                         </div>
 
                         {/* COLUMNS */}
@@ -1055,8 +1055,8 @@ const DeliveryScheduler: React.FC<{
                                             {isHighVolume && (
                                                 <div className="absolute top-0 right-0 w-3 h-3 bg-rose-500 rounded-bl-full z-10 opacity-80" title="Volumen Alto" />
                                             )}
-                                            <span className={cn("text-[9px] font-medium uppercase tracking-wide truncate", isToday(d.dateObj) ? "text-indigo-600" : (isHighVolume ? "text-slate-700 font-bold" : "text-slate-400"))}>{d.shortLabel}</span>
-                                            <div className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-medium shrink-0", isToday(d.dateObj) ? "bg-indigo-600 text-white shadow-sm" : "text-slate-400")}>
+                                            <span className={cn("text-xs font-medium uppercase tracking-wide truncate", isToday(d.dateObj) ? "text-indigo-600" : (isHighVolume ? "text-slate-700 font-medium" : "text-slate-400"))}>{d.shortLabel}</span>
+                                            <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-xs font-normal shrink-0", isToday(d.dateObj) ? "bg-indigo-600 text-white shadow-sm" : "text-slate-400")}>
                                                 {format(d.dateObj, 'd')}
                                             </div>
                                         </div>
@@ -1100,7 +1100,7 @@ const DeliveryScheduler: React.FC<{
                     </div>
 
                     {/* BODY (ROWS) */}
-                    <div className="flex-1 flex flex-col min-h-0 bg-white relative overflow-y-auto min-w-[1000px]">
+                    <div className="flex-1 flex flex-col min-h-0 bg-white relative overflow-y-auto min-w-[1000px] lg:min-w-[900px] xl:min-w-[1000px]">
                         {/* RED LINE INDICATOR REMOVED */}
 
                         {ridersGrid.map((rider, index) => (
@@ -1124,32 +1124,32 @@ const DeliveryScheduler: React.FC<{
 
                                 {/* RIDER META (LEFT COL) - Compact */}
                                 <div className={cn(
-                                    "w-48 flex-none border-r border-slate-200 flex items-center px-3 py-0.5 relative transition-colors z-10",
+                                    "w-48 lg:w-40 xl:w-48 flex-none border-r border-slate-200 flex items-center px-4 py-1 relative transition-colors z-10",
                                     index % 2 === 0 ? "bg-white group-hover:bg-indigo-50/30" : "bg-indigo-50/30 group-hover:bg-indigo-50/30"
                                 )}>
                                     <div className="flex items-center gap-3 w-full">
                                         {/* Avatar */}
-                                        <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-sm shrink-0 ring-1 ring-white/50 transition-transform group-hover:scale-105", getRiderColor(rider.id).bg)}>
+                                        <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-xs font-medium text-white shadow-sm shrink-0 ring-1 ring-white/50 transition-transform group-hover:scale-105", getRiderColor(rider.id).bg)}>
                                             {getRiderInitials(rider.fullName)}
                                         </div>
 
                                         {/* Info */}
-                                        <div className="min-w-0 flex-1 flex flex-col justify-center gap-0.5">
-                                            <p className="text-[11px] font-bold text-slate-700 truncate group-hover:text-indigo-700 transition-colors mb-0.5">{rider.fullName}</p>
+                                        <div className="min-w-0 flex-1 flex flex-col justify-center gap-1">
+                                            <p className="text-sm font-normal text-slate-700 truncate group-hover:text-indigo-700 transition-colors">{rider.fullName}</p>
 
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[9px] font-medium text-slate-400 bg-slate-100 px-1.5 py-px rounded-full border border-slate-200/50 whitespace-nowrap flex items-center gap-1">
-                                                    <PenLine size={10} className="text-slate-400" /> <span className="font-bold text-slate-600">{rider.contractHours || 40}h</span>
+                                                <span className="text-[10px] font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200/50 whitespace-nowrap flex items-center gap-1">
+                                                    <PenLine size={12} className="text-slate-400" /> <span className="font-normal text-slate-600">{rider.contractHours || 40}h</span>
                                                 </span>
                                                 <span className={cn(
-                                                    "text-[9px] font-medium px-1.5 py-px rounded-full border whitespace-nowrap flex items-center gap-1 transition-colors",
+                                                    "text-[10px] font-normal px-2 py-0.5 rounded-full border whitespace-nowrap flex items-center gap-1 transition-colors",
                                                     (rider.totalWeeklyHours || 0) > (rider.contractHours || 40)
                                                         ? "bg-rose-50 text-rose-600 border-rose-200" // Red: Overtime
                                                         : ((rider.contractHours || 40) - (rider.totalWeeklyHours || 0)) > 5
                                                             ? "bg-emerald-50 text-emerald-600 border-emerald-200" // Green: Underutilized (>5h left)
                                                             : "bg-amber-50 text-amber-600 border-amber-200" // Amber: Optimal (Within 5h)
                                                 )}>
-                                                    <Bike size={10} /> <span className="font-bold">{(rider.totalWeeklyHours || 0).toFixed(1)}h</span>
+                                                    <Bike size={12} /> <span className="font-normal">{(rider.totalWeeklyHours || 0).toFixed(1)}h</span>
                                                 </span>
                                             </div>
                                         </div>
@@ -1286,11 +1286,11 @@ const DeliveryScheduler: React.FC<{
 
 
                     {/* FOOTER: Coverage Aligned with Grid */}
-                    <div className="bg-white border-t border-slate-200 flex items-stretch shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.02)] z-30 min-h-[40px] flex-none min-w-[1000px]">
+                    <div className="bg-white border-t border-slate-200 flex items-stretch shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.02)] z-30 min-h-[40px] flex-none min-w-[1000px] lg:min-w-[900px] xl:min-w-[1000px]">
                         {/* LEFT COL: Matches Rider Column Width (w-56) */}
-                        <div className="w-48 flex-none flex items-center px-4 border-r border-slate-200 bg-slate-50/50">
-                            <span className="text-[9px] font-medium text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Riders / Turno
+                        <div className="w-48 lg:w-40 xl:w-48 flex-none flex items-center px-4 border-r border-slate-200 bg-slate-50/50">
+                            <span className="text-xs font-normal text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-indigo-500" /> Riders / Turno
                             </span>
                         </div>
 
@@ -1302,20 +1302,20 @@ const DeliveryScheduler: React.FC<{
                                 const nightCount = counts[21] || 0;
 
                                 return (
-                                    <div key={d.isoDate} className="flex-1 border-r border-slate-100 last:border-r-0 flex justify-center items-center py-1">
-                                        <div className="flex items-center gap-3 opacity-80 hover:opacity-100 transition-opacity">
+                                    <div key={d.isoDate} className="flex-1 border-r border-slate-100 last:border-r-0 flex justify-center items-center py-2">
+                                        <div className="flex items-center gap-4 opacity-100">
                                             {/* Mediodía */}
-                                            <div className="flex items-center gap-1" title="Mediodía (14:00)">
-                                                <Sun className="w-3 h-3 text-amber-500" />
-                                                <span className="text-[9px] font-medium text-slate-500 w-3 text-center">{noonCount}</span>
+                                            <div className="flex items-center gap-1.5" title="Mediodía (14:00)">
+                                                <Sun className="w-5 h-5 text-amber-500" />
+                                                <span className="text-sm font-normal text-slate-600 w-5 text-center">{noonCount}</span>
                                             </div>
 
-                                            <div className="w-px h-2.5 bg-slate-200" />
+                                            <div className="w-px h-4 bg-slate-200" />
 
                                             {/* Noche */}
-                                            <div className="flex items-center gap-1" title="Noche (21:00)">
-                                                <Moon className="w-3 h-3 text-indigo-500" />
-                                                <span className="text-[9px] font-medium text-slate-500 w-3 text-center">{nightCount}</span>
+                                            <div className="flex items-center gap-1.5" title="Noche (21:00)">
+                                                <Moon className="w-5 h-5 text-indigo-500" />
+                                                <span className="text-sm font-normal text-slate-600 w-5 text-center">{nightCount}</span>
                                             </div>
                                         </div>
                                     </div>

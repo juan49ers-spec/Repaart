@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 interface UserMenuProps {
-    placement?: 'top' | 'bottom';
+    placement?: 'top' | 'bottom' | 'right';
 }
 
 const UserMenu: React.FC<UserMenuProps> = ({ placement = 'bottom' }) => {
@@ -39,8 +39,10 @@ const UserMenu: React.FC<UserMenuProps> = ({ placement = 'bottom' }) => {
     };
 
     const handleResetPassword = async () => {
+        // ... (keep existing implementation or assume it's same)
         setIsOpen(false);
         if (user?.email) {
+            /* ... */
             try {
                 await resetPassword(user.email);
                 alert(`Correo de recuperación enviado a ${user.email}`);
@@ -48,6 +50,14 @@ const UserMenu: React.FC<UserMenuProps> = ({ placement = 'bottom' }) => {
                 console.error("Error sending reset email:", error);
                 alert("Error al enviar el correo. Inténtelo más tarde.");
             }
+        }
+    };
+
+    const getMenuPositionClass = () => {
+        switch (placement) {
+            case 'top': return 'bottom-full mb-2 origin-bottom-right';
+            case 'right': return 'left-full ml-2 bottom-0 origin-bottom-left';
+            default: return 'mt-2 origin-top-right';
         }
     };
 
@@ -67,7 +77,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ placement = 'bottom' }) => {
 
             {/* Dropdown */}
             {isOpen && (
-                <div className={`absolute right-0 w-64 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-[9999] animate-in fade-in zoom-in-95 duration-100 origin-${placement === 'top' ? 'bottom-right' : 'top-right'} ${placement === 'top' ? 'bottom-full mb-2' : 'mt-2'}`}>
+                <div className={`absolute right-0 w-64 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-[9999] animate-in fade-in zoom-in-95 duration-100 ${getMenuPositionClass()}`}>
                     <div className="px-4 py-3 border-b border-slate-50">
                         <p className="text-sm font-bold text-slate-800 truncate">{user?.displayName || 'Usuario'}</p>
                         <p className="text-xs text-slate-500 truncate">{user?.email}</p>

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Save, GripVertical, FileText, Layout, Eye, Monitor, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, Save, GripVertical, FileText, Layout, Eye, ArrowLeft } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useCreateLesson, useUpdateLesson, useDeleteLesson, useModuleLessons, Lesson } from '../../../hooks/useAcademy';
 import { EditorToolbar } from './EditorToolbar';
+import { VideoManager, ChapterMarker } from './VideoManager';
 import toast from 'react-hot-toast';
 
 interface LessonEditorProps {
@@ -23,6 +24,9 @@ export default function LessonEditor({ moduleId, onBack }: LessonEditorProps) {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [videoUrl, setVideoUrl] = useState('');
+    const [customThumbnail, setCustomThumbnail] = useState('');
+    const [duration, setDuration] = useState(0);
+    const [chapters, setChapters] = useState<ChapterMarker[]>([]);
     const [order, setOrder] = useState(0);
     const [resources, setResources] = useState<{ title: string; url: string; type: 'pdf' | 'link' }[]>([]);
 
@@ -33,6 +37,9 @@ export default function LessonEditor({ moduleId, onBack }: LessonEditorProps) {
         setTitle(lesson.title);
         setContent(lesson.content || '');
         setVideoUrl(lesson.videoUrl || '');
+        setCustomThumbnail(lesson.customThumbnail || '');
+        setDuration(lesson.duration || 0);
+        setChapters(lesson.chapters || []);
         setOrder(lesson.order || 0);
         setResources(lesson.resources || []);
     };
@@ -49,6 +56,9 @@ export default function LessonEditor({ moduleId, onBack }: LessonEditorProps) {
         setTitle('Nueva Lección');
         setContent('');
         setVideoUrl('');
+        setCustomThumbnail('');
+        setDuration(0);
+        setChapters([]);
         setOrder(lessons.length + 1);
         setResources([]);
     };
@@ -58,6 +68,9 @@ export default function LessonEditor({ moduleId, onBack }: LessonEditorProps) {
             title,
             content,
             videoUrl,
+            customThumbnail,
+            duration,
+            chapters,
             order: Number(order),
             moduleId,
             resources,
@@ -112,7 +125,7 @@ export default function LessonEditor({ moduleId, onBack }: LessonEditorProps) {
                         blockquote: ({ ...props }) => (
                             <blockquote className="border-l-4 border-indigo-500 bg-gradient-to-r from-indigo-50 to-white pl-8 py-6 my-10 rounded-r-2xl italic text-slate-700 font-serif text-2xl shadow-sm" {...props} />
                         ),
-                        code: ({ inline, ...props }: any) =>
+                        code: ({ inline, ...props }: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & { inline?: boolean }) =>
                             inline
                                 ? <code className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-mono text-base font-bold border border-indigo-100/50" {...props} />
                                 : <code className="block bg-slate-900 text-slate-50 p-6 rounded-2xl font-mono text-sm overflow-x-auto my-10 shadow-2xl shadow-indigo-900/10 border border-slate-700 leading-relaxed" {...props} />,
@@ -287,15 +300,15 @@ export default function LessonEditor({ moduleId, onBack }: LessonEditorProps) {
                                 />
                             </div>
                             <div className="p-4 border-t border-slate-200 bg-slate-50">
-                                <label className="text-[10px] uppercase font-bold text-slate-400 mb-1 block flex items-center gap-1">
-                                    <Monitor className="w-3 h-3" /> URL del Video (Opcional)
-                                </label>
-                                <input
-                                    type="text"
-                                    value={videoUrl}
-                                    onChange={(e) => setVideoUrl(e.target.value)}
-                                    placeholder="https://..."
-                                    className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                <VideoManager
+                                    videoUrl={videoUrl}
+                                    onChangeUrl={setVideoUrl}
+                                    duration={duration}
+                                    onChangeDuration={setDuration}
+                                    customThumbnail={customThumbnail}
+                                    onChangeThumbnail={setCustomThumbnail}
+                                    chapters={chapters}
+                                    onChangeChapters={setChapters}
                                 />
                             </div>
                         </div>

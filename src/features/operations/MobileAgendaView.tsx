@@ -69,8 +69,8 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> = ({
                                 )}>
                                     <div className="flex items-center justify-between mb-2">
                                         <span className={cn(
-                                            "text-sm font-bold tracking-tight uppercase",
-                                            isToday ? "text-emerald-500" : "text-zinc-600"
+                                            "text-sm font-medium tracking-tight uppercase",
+                                            isToday ? "text-emerald-500" : "text-zinc-500"
                                         )}>
                                             {dateLabel}
                                         </span>
@@ -78,11 +78,12 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> = ({
                                     </div>
 
                                     <div className="py-4 flex flex-col items-center justify-center opacity-40 group-hover:opacity-60 transition-opacity">
-                                        <p className="text-2xl font-black text-zinc-700 tracking-widest uppercase">Descanso</p>
+                                        <p className="text-xl font-medium text-zinc-600 tracking-widest uppercase">Descanso</p>
                                     </div>
                                 </div>
                             ) : (
-                                // SHIFT CARDS
+                                // SHIFT CARDS - Pass down props to ShiftCard. ShiftCard itself handles card typography internally, 
+                                // but we control the header logic here.
                                 <div className="flex flex-col gap-0">
                                     {sortedEvents.map((ev, index) => (
                                         <ShiftCard

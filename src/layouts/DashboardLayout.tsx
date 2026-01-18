@@ -98,7 +98,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             {/* Sidebar Overlay (All Screens) */}
             {isSidebarOpen && (
                 <div
-                    className="fixed inset-0 bg-slate-900/20 z-40 backdrop-blur-sm transition-opacity duration-300"
+                    className="fixed inset-0 bg-slate-900/20 z-[90] backdrop-blur-sm transition-opacity duration-300"
                     onClick={() => setIsSidebarOpen(false)}
                 />
             )}
@@ -107,7 +107,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <NavigationSidebar isAdmin={isAdmin} isFranchise={isFranchise} />
 
             {/* Main Content Area - Full width */}
-            <div className={`flex-1 flex flex-col transition-all duration-300 w-full`}>
+            <div className={`flex-1 flex flex-col transition-all duration-300 w-full xl:pl-20 2xl:pl-72`}>
                 <ImpersonationBanner />
                 <Header {...headerProps} />
 

@@ -40,7 +40,7 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, isFranchise }) => {
                     {/* Mobile Hamburger */}
                     <button
                         onClick={() => toggleSidebar()}
-                        className="xl:hidden group p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300 focus:outline-none"
+                        className="hidden xl:hidden group p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300 focus:outline-none"
                     >
                         <div className="flex flex-col gap-[5px] w-5">
                             <span className="w-full h-[2px] bg-slate-600 dark:text-white rounded-full transition-all group-hover:bg-indigo-600 group-hover:w-4 ml-auto"></span>
@@ -60,7 +60,7 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, isFranchise }) => {
                 {/* CENTER: Desktop Horizontal Navigation */}
                 {/* CENTER: Desktop Horizontal Navigation */}
                 {/* CENTER: Desktop Horizontal Navigation (Premium Glass Dock) */}
-                <nav className="hidden xl:flex items-center gap-1 justify-center bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-full px-2 py-1.5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] mx-auto">
+                <nav className="hidden items-center gap-1 justify-center bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-full px-2 py-1.5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] mx-auto">
                     {filteredNavItems.map((item) => (
                         <NavLink
                             key={item.path}

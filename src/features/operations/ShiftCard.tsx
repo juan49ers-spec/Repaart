@@ -89,8 +89,8 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
     const duration = getShiftDuration(startAt, endAt);
 
     // Formatting times
-    const startTime = visualStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const endTime = visualEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const startTime = new Date(visualStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const endTime = new Date(visualEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     // Moto info
     const moto = motoAssignments && motoAssignments.length > 0

@@ -1,80 +1,66 @@
-import emailjs from '@emailjs/browser';
-
-// CONFIGURATION
-const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-const EMAILJS_TEMPLATE_NEW_TICKET = import.meta.env.VITE_EMAILJS_TEMPLATE_NEW_TICKET;
-const EMAILJS_TEMPLATE_REPLY = import.meta.env.VITE_EMAILJS_TEMPLATE_REPLY;
-const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-
-export const initEmailSystem = (): void => {
-    try {
-        if (EMAILJS_PUBLIC_KEY) {
-            emailjs.init(EMAILJS_PUBLIC_KEY);
-        } else {
-            console.warn("EmailJS Public Key not found in env vars");
-        }
-    } catch (error) {
-        console.warn("Simluated email error (ignored):", error);
-    }
-};
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from './firebase';
 
 /**
  * Sends an email to Admin (hola@repaart.es) when a new ticket is created.
+ * Uses Firebase Extension: Trigger Email from Firestore
  */
 export const sendTicketCreatedEmail = async (ticket: any): Promise<boolean> => {
-    // In a real scenario, you map these params to your EmailJS Template variables
-    const templateParams = {
-        to_email: 'hola@repaart.es',
-        from_name: ticket.email, // Franchisee Name/Email
-        subject: ticket.subject,
-        message: ticket.message,
-        urgency: ticket.urgency,
-        ticket_id: ticket.id || 'N/A',
-        ticket_link: `${window.location.origin}/admin?ticketId=${ticket.id}` // Link to admin panel
-    };
-
     try {
-        // NOTE: We only attempt to send if key is not the placeholder to avoid errors in dev
-        if (EMAILJS_PUBLIC_KEY === 'YOUR_PUBLIC_KEY') {
-            if (import.meta.env.DEV) {
-                console.log("Mocking Email Send (Keys not set):", templateParams);
+        await addDoc(collection(db, 'mail'), {
+            to: ['hola@repaart.es'],
+            message: {
+                subject: ticket.subject,
+                html: `
+                    <h2>Nuevo Ticket de Soporte</h2>
+                    <p><strong>De:</strong> ${ticket.email}</p>
+                    <p><strong>Asunto:</strong> ${ticket.subject}</p>
+                    <p><strong>Urgencia:</strong> ${ticket.urgency}</p>
+                    <p><strong>Mensaje:</strong></p>
+                    <p>${ticket.message}</p>
+                    <br/>
+                    <p><a href="${window.location.origin}/admin?ticketId=${ticket.id || ''}">Gestionar Ticket en Panel Admin</a></p>
+                `
             }
-            return true;
-        }
-        const response = await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_NEW_TICKET, templateParams);
-        if (import.meta.env.DEV) {
-            console.log("Email enviado con éxito!", response.status, response.text);
-        }
+        });
         return true;
     } catch (error) {
-        console.error("Failed to send email:", error);
+        console.error("Failed to queue email in 'mail' collection:", error);
         return false;
     }
 };
 
 /**
  * Sends an email to the Franchisee when Admin replies.
+ * Uses Firebase Extension: Trigger Email from Firestore
  */
-export const sendTicketReplyEmail = async (toEmail: string, _subject: string, replyMessage: string, originalMessage: string, ticketId: string): Promise<boolean> => {
-    const templateParams = {
-        to_email: toEmail,
-        reply_message: replyMessage,
-        original_message: originalMessage,
-        ticket_id: ticketId,
-        ticket_link: `${window.location.origin}/support?ticketId=${ticketId}` // Link to user portal
-    };
-
+export const sendTicketReplyEmail = async (toEmail: string, subject: string, replyMessage: string, originalMessage: string, ticketId: string): Promise<boolean> => {
     try {
-        if (EMAILJS_PUBLIC_KEY === 'YOUR_PUBLIC_KEY') {
-            if (import.meta.env.DEV) {
-                console.log("Mocking Reply Send (Keys not set):", templateParams);
+        await addDoc(collection(db, 'mail'), {
+            to: [toEmail],
+            message: {
+                subject: `Respuesta a Ticket: ${subject}`,
+                html: `
+                    <h2>Respuesta de Soporte Repaart</h2>
+                    <p>${replyMessage}</p>
+                    <hr/>
+                    <p><strong>Tu mensaje original:</strong></p>
+                    <blockquote style="background: #f9f9f9; padding: 10px; border-left: 4px solid #ccc;">
+                        ${originalMessage}
+                    </blockquote>
+                    <br/>
+                    <p><a href="${window.location.origin}/support?ticketId=${ticketId}">Ver conversación completa</a></p>
+                `
             }
-            return true;
-        }
-        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_REPLY, templateParams);
+        });
         return true;
     } catch (error) {
-        console.error("Failed to send reply:", error);
+        console.error("Failed to queue reply in 'mail' collection:", error);
         return false;
     }
+};
+
+export const initEmailSystem = (): void => {
+    // No initialization needed for Firestore Trigger
+    console.log("Email System initialized (Firestore Trigger mode)");
 };
