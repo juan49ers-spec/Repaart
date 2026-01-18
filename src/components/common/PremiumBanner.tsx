@@ -2,35 +2,35 @@ import React from 'react';
 
 const PremiumBanner: React.FC = () => {
     return (
-        <div className="h-48 w-full relative overflow-hidden bg-slate-900 border-b border-white/10 shrink-0">
+        <div className="h-56 w-full relative overflow-hidden bg-slate-950 border-y border-white/10 shrink-0">
             {/* 🌌 Deep Space Base */}
-            <div className="absolute inset-0 bg-[#0B1120]" />
+            <div className="absolute inset-0 bg-[#020617]" />
 
-            {/* 🌠 Animated Aurora Mesh */}
-            <div className="absolute inset-0 opacity-40">
-                <div className="absolute top-[-50%] left-[-20%] w-[80%] h-[200%] bg-indigo-500/30 blur-[100px] animate-aurora-slow mix-blend-screen rounded-full" />
-                <div className="absolute top-[-20%] right-[-20%] w-[80%] h-[200%] bg-emerald-500/20 blur-[120px] animate-aurora-slower mix-blend-screen rounded-full" />
-                <div className="absolute bottom-[-50%] left-[20%] w-[80%] h-[200%] bg-purple-500/20 blur-[100px] animate-aurora-reverse mix-blend-screen rounded-full" />
+            {/* 🌠 Animated Aurora Mesh - Higher Fidelity */}
+            <div className="absolute inset-0 opacity-50 contrast-125">
+                <div className="absolute top-[-40%] left-[-10%] w-[70%] h-[180%] bg-indigo-600/30 blur-[120px] animate-aurora-slow mix-blend-screen rounded-full" />
+                <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[150%] bg-emerald-600/25 blur-[140px] animate-aurora-slower mix-blend-screen rounded-full" />
+                <div className="absolute bottom-[-40%] left-[15%] w-[70%] h-[180%] bg-purple-600/20 blur-[120px] animate-aurora-reverse mix-blend-screen rounded-full" />
             </div>
 
             {/* ❄️ Frost Texture overlay for glass effect */}
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay" />
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] mix-blend-overlay" />
 
-            {/* 💡 Vignette & Gradient Overlays */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0B1120] via-transparent to-black/20" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0B1120]/50 via-transparent to-[#0B1120]/50" />
+            {/* 💡 Vignette & Gradient Overlays - Deeper contrast */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-black/40" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#020617]/60 via-transparent to-[#020617]/60" />
 
             {/* 📢 Scrolling Ticker (Marquee) - High Visibility Mode */}
-            <div className="absolute top-12 left-0 right-0 overflow-hidden flex items-center h-16 z-30 pointer-events-none">
-                <div className="flex gap-24 animate-marquee whitespace-nowrap min-w-max">
+            <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 overflow-hidden flex items-center h-24 z-30 pointer-events-none">
+                <div className="flex gap-32 animate-marquee whitespace-nowrap min-w-max">
                     {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="flex items-center gap-16">
-                            <span className="text-3xl font-black tracking-widest text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">
+                        <div key={i} className="flex items-center gap-20">
+                            <span className="text-4xl font-bold tracking-tighter text-white drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)]">
                                 POTENCIA TU NEGOCIO
                             </span>
-                            <span className="text-xl font-bold tracking-[0.2em] text-emerald-400 uppercase flex items-center gap-4 bg-black/20 px-4 py-1 rounded-full backdrop-blur-sm border border-emerald-500/30">
-                                <span className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_#34d399]" />
-                                Servicios Premium Disponibles
+                            <span className="text-xl font-medium tracking-[0.25em] text-emerald-400 uppercase flex items-center gap-5 bg-black/40 px-8 py-3 rounded-2xl backdrop-blur-md border border-emerald-500/20 shadow-2xl">
+                                <span className="w-3.5 h-3.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_15px_#10b981]" />
+                                <span className="opacity-90">Servicios Premium Disponibles</span>
                             </span>
                         </div>
                     ))}
@@ -38,7 +38,8 @@ const PremiumBanner: React.FC = () => {
             </div>
 
             {/* ✨ Accent Lines (Subtle Tech Feel) */}
-            <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />
+            <div className="absolute top-0 left-0 right-0 h-[1px] bg-white/5" />
         </div>
     );
 };
