@@ -36,7 +36,7 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({ isAdmin, isFranchise: _isFr
 
     return (
         <nav className="xl:hidden tab-dock" aria-label="Navegación principal">
-            <div className="flex justify-around items-center py-2 px-1">
+            <div className="flex justify-around items-center py-2">
                 {tabs.map((tab) => {
                     const Icon = tab.icon;
 
