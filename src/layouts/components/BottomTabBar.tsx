@@ -1,18 +1,13 @@
 import React, { useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Users, FileText, LifeBuoy, Activity, GraduationCap, LucideIcon, Bike, PieChart, LayoutGrid, MoreHorizontal } from 'lucide-react';
+import { adminNavItems, franchiseNavItems } from '../constants/navigation';
 import { useFeatureAccess } from '../../hooks/useFeatureAccess';
 import MobileMoreMenu from './MobileMoreMenu';
+import { MoreHorizontal } from 'lucide-react';
 
 // =====================================================
 // TYPES & INTERFACES
 // =====================================================
-
-interface Tab {
-    path: string;
-    label: string;
-    icon: LucideIcon;
-}
 
 interface BottomTabBarProps {
     isAdmin?: boolean;
@@ -24,58 +19,37 @@ interface BottomTabBarProps {
 // =====================================================
 
 const BottomTabBar: React.FC<BottomTabBarProps> = ({ isAdmin, isFranchise: _isFranchise }) => {
-    // Memoize tab configurations to prevent recreation on every render
-    const adminTabs = useMemo<Tab[]>(() => [
-        { path: '/dashboard', label: 'Central', icon: Activity },
-        { path: '/admin/kanban', label: 'Kanban', icon: LayoutGrid },
-        { path: '/admin/users', label: 'Usuarios', icon: Users },
-        { path: '/admin/resources', label: 'Recursos', icon: FileText },
-        { path: '/admin/support', label: 'Soporte', icon: LifeBuoy },
-    ], []);
-
-    const adminMoreItems = useMemo<Tab[]>(() => [], []);
-
-    const franchiseTabs = useMemo<Tab[]>(() => [
-        { path: '/dashboard', label: 'Balance', icon: PieChart },
-        { path: '/operations', label: 'Horas', icon: Activity },
-        { path: '/fleet', label: 'Flota', icon: Bike },
-        { path: '/academy', label: 'Academia', icon: GraduationCap },
-        { path: '/resources', label: 'Recursos', icon: FileText },
-        { path: '/support', label: 'Soporte', icon: LifeBuoy },
-    ], []);
-
-    const franchiseMoreItems = useMemo<Tab[]>(() => [], []);
-
     const [isMoreOpen, setIsMoreOpen] = React.useState(false);
-
-    // Feature access for franchise users
     const { hasAccess } = useFeatureAccess();
 
-    // Filter tabs based on permissions (only for franchise users)
-    const tabs = useMemo<Tab[]>(() => {
-        const baseTabs = isAdmin ? adminTabs : franchiseTabs;
+    // Standardize navigation items across all devices
+    const { visibleTabs, overflowItems } = useMemo(() => {
+        let baseItems = isAdmin ? adminNavItems : franchiseNavItems;
 
-        if (isAdmin) return baseTabs;
+        // Skip 'Configuración' in BottomBar as it's now in the Top Header UserMenu
+        baseItems = baseItems.filter(item => item.path !== '/profile');
 
-        return baseTabs;
-    }, [isAdmin, adminTabs, franchiseTabs]);
-
-    const moreItems = useMemo<Tab[]>(() => {
-        const baseMore = isAdmin ? adminMoreItems : franchiseMoreItems;
-        if (isAdmin) return baseMore;
-
-        return baseMore.filter(item => {
+        // Feature access filtering for franchise users
+        const allowedItems = isAdmin ? baseItems : baseItems.filter(item => {
             if (item.label === 'Recursos') return hasAccess('downloads');
+            if (item.label === 'Academia') return hasAccess('academy');
             return true;
         });
-    }, [isAdmin, adminMoreItems, franchiseMoreItems, hasAccess]);
+
+        // Split into visible (max 5) and overflow
+        const splitIndex = 5;
+        return {
+            visibleTabs: allowedItems.slice(0, splitIndex),
+            overflowItems: allowedItems.slice(splitIndex)
+        };
+    }, [isAdmin, hasAccess]);
 
     return (
         <>
             {/* Floating Dock Navigation - Glovo/Apple Style */}
             <nav className="xl:hidden tab-dock" aria-label="Navegación principal">
                 <div className="flex justify-around items-center py-2 px-1">
-                    {tabs.map((tab) => {
+                    {visibleTabs.map((tab) => {
                         const Icon = tab.icon;
 
                         return (
@@ -99,8 +73,8 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({ isAdmin, isFranchise: _isFr
                         );
                     })}
 
-                    {/* "Más" Button */}
-                    {moreItems.length > 0 && (
+                    {/* "Más" Button if overflow exists */}
+                    {overflowItems.length > 0 && (
                         <button
                             onClick={() => setIsMoreOpen(true)}
                             className="tab-item touch-feedback"
@@ -123,7 +97,7 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({ isAdmin, isFranchise: _isFr
             <MobileMoreMenu
                 isOpen={isMoreOpen}
                 onClose={() => setIsMoreOpen(false)}
-                items={moreItems}
+                items={overflowItems}
             />
         </>
     );
