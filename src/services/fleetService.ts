@@ -39,11 +39,12 @@ const mapDocToRider = (docSnap: QueryDocumentSnapshot<DocumentData>): Rider => {
         phone: data.phoneNumber || data.phone || '',
         status: data.status || 'active',
         contractHours: data.contractHours,
+        licenseType: data.licenseType || '125cc', // Default to 125cc if missing
         metrics: {
             totalDeliveries: data.metrics?.totalDeliveries || 0,
             rating: data.metrics?.rating || 0,
             efficiency: data.metrics?.efficiency || 0,
-            joinedAt: data.metrics?.joinedAt?.toDate?.().toISOString() || data.createdAt?.toDate?.().toISOString() || new Date().toISOString()
+            joinedAt: data.metrics?.joinedAt?.toDate?.().toISOString() || data.metrics?.joinedAt || data.createdAt?.toDate?.().toISOString() || new Date().toISOString()
         },
         franchiseId: data.franchiseId,
         avatarUrl: data.photoURL
@@ -129,7 +130,7 @@ export const fleetService = {
     /**
      * Create a new rider (Auth + Firestore) via Secure Backend
      */
-    createRider: async (riderData: Omit<Rider, 'id' | 'metrics'> & { password?: string }): Promise<Rider> => {
+    createRider: async (riderData: Omit<Rider, 'id' | 'metrics'> & { password?: string; joinedAt?: string; licenseType?: '49cc' | '125cc' }): Promise<Rider> => {
         try {
             if (!riderData.password) throw new Error("Contraseña requerida para nuevos riders");
 
@@ -145,11 +146,13 @@ export const fleetService = {
                 displayName: riderData.fullName,
                 phoneNumber: riderData.phone ? (riderData.phone.startsWith('+') ? riderData.phone : `+34${riderData.phone}`) : undefined,
                 contractHours: riderData.contractHours,
+                licenseType: riderData.licenseType || '125cc',
                 status: 'active',
                 metrics: {
                     totalDeliveries: 0,
                     rating: 5.0,
-                    efficiency: 100
+                    efficiency: 100,
+                    joinedAt: riderData.joinedAt || new Date().toISOString() // Use provided date or now
                 }
             };
 
@@ -166,7 +169,8 @@ export const fleetService = {
                 franchiseId: riderData.franchiseId,
                 status: 'active',
                 contractHours: riderData.contractHours,
-                metrics: { totalDeliveries: 0, rating: 5, efficiency: 100, joinedAt: new Date().toISOString() }
+                licenseType: riderData.licenseType || '125cc',
+                metrics: { totalDeliveries: 0, rating: 5, efficiency: 100, joinedAt: riderData.joinedAt || new Date().toISOString() }
             };
 
         } catch (error: any) {

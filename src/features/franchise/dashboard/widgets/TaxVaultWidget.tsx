@@ -33,7 +33,7 @@ const TaxVaultWidget: FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, historic
 
             <div className="relative z-10 p-5 flex flex-col h-full">
                 {/* Header Section */}
-                <div className="flex items-start justify-between mb-6">
+                <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-4 sm:gap-0 mb-6">
                     <div className="flex items-center gap-3">
                         <div className="relative">
                             <div className="p-2.5 bg-emerald-600 rounded-2xl shadow-lg shadow-emerald-500/20">
@@ -56,7 +56,7 @@ const TaxVaultWidget: FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, historic
 
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:scale-110 active:scale-95 transition-all shadow-sm group/btn"
+                        className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:scale-110 active:scale-95 transition-all shadow-sm group/btn self-end sm:self-auto"
                     >
                         <Maximize2 className="w-4 h-4 text-slate-400 group-hover/btn:text-indigo-500 transition-colors" />
                     </button>
@@ -81,9 +81,9 @@ const TaxVaultWidget: FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, historic
                 {/* Pro Progress Visualizers */}
                 <div className="space-y-4 flex-1">
                     <div className="relative group/bar">
-                        <div className="flex justify-between items-end mb-1.5 px-1">
-                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">IVA (303)</span>
-                            <span className="text-xs font-black text-slate-900 dark:text-white tracking-tight">{formatMoney(ivaAPagar)}€</span>
+                        <div className="flex justify-between items-end mb-1.5 px-1 relative z-10">
+                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest truncate mr-2">IVA (303)</span>
+                            <span className="text-xs font-black text-slate-900 dark:text-white tracking-tight shrink-0">{formatMoney(ivaAPagar)}€</span>
                         </div>
                         <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden p-0.5">
                             <div
@@ -94,9 +94,9 @@ const TaxVaultWidget: FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, historic
                     </div>
 
                     <div className="relative group/bar">
-                        <div className="flex justify-between items-end mb-1.5 px-1">
-                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">IRPF (130)</span>
-                            <span className="text-xs font-black text-slate-900 dark:text-white tracking-tight">{formatMoney(irpfPago)}€</span>
+                        <div className="flex justify-between items-end mb-1.5 px-1 relative z-10">
+                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest truncate mr-2">IRPF (130)</span>
+                            <span className="text-xs font-black text-slate-900 dark:text-white tracking-tight shrink-0">{formatMoney(irpfPago)}€</span>
                         </div>
                         <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden p-0.5">
                             <div

@@ -178,7 +178,7 @@ const EncyclopediaCardItem = memo(({
             {/* Illustration Header */}
             <div
                 className={`
-                    relative h-36 ${config.bgColor} 
+                    relative h-28 sm:h-36 ${config.bgColor} 
                     flex items-center justify-center overflow-hidden
                     border-b ${config.borderColor}
                 `}
@@ -228,7 +228,7 @@ const EncyclopediaCardItem = memo(({
                         onToggleExpand(card.id);
                     }
                 }}
-                className="p-5 cursor-pointer"
+                className="p-4 sm:p-5 cursor-pointer"
             >
                 {/* Category Label */}
                 <span className={`inline-block text-[10px] font-bold uppercase tracking-widest ${config.color} mb-2`}>
@@ -278,7 +278,7 @@ const EncyclopediaCardItem = memo(({
             </div>
 
             {/* Footer Actions */}
-            <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div className="px-4 py-3 sm:px-5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-y-2">
                 {/* Audio Button */}
                 <button
                     onClick={(e) => onToggleSpeak(e, card)}

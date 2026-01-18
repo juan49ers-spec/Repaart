@@ -233,9 +233,12 @@ export const VehiclesView: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* FOOTER */}
-                                    <div className="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-400 uppercase font-bold tracking-wider">
-                                        <span>Flota Propia</span>
+                                    {/* STATUS FOOTER */}
+                                    <div className="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center text-[10px] uppercase font-bold tracking-wider">
+                                        <span className="text-slate-400">Estado Mecánico</span>
+                                        <span className={healthPct > 80 ? "text-rose-500" : "text-emerald-500"}>
+                                            {healthPct > 80 ? "Revisión Inminente" : "Óptimo"}
+                                        </span>
                                     </div>
 
                                     {/* HOVER ACTIONS */}

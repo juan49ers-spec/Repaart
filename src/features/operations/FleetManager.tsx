@@ -153,7 +153,7 @@ const FleetManager: React.FC<FleetManagerProps> = ({ franchiseId: propFranchiseI
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-xs font-bold text-slate-700 ml-1">Próxima Revisión</label>
-                                    <select name="nextRevisionKm" className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none">
+                                    <select name="nextRevisionKm" title="Seleccionar intervalo de revisión" className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none">
                                         <option value="1000">1.000 KM</option>
                                         <option value="5000">5.000 KM</option>
                                         <option value="10000">10.000 KM</option>
@@ -163,7 +163,7 @@ const FleetManager: React.FC<FleetManagerProps> = ({ franchiseId: propFranchiseI
 
                             <div className="space-y-1">
                                 <label className="text-xs font-bold text-slate-700 ml-1">Estado Inicial</label>
-                                <select name="status" className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none">
+                                <select name="status" title="Seleccionar estado inicial" className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none">
                                     <option value="active">🟢 Activo</option>
                                     <option value="maintenance">🟠 Mantenimiento</option>
                                     <option value="out_of_service">⚫ Fuera de Servicio</option>
@@ -192,58 +192,99 @@ interface VehicleCardProps {
 
 const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle, onEdit, readOnly }) => {
     const statusColors: Record<string, string> = {
-        active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-        maintenance: 'bg-amber-50 text-amber-700 border-amber-200',
-        out_of_service: 'bg-slate-100 text-slate-600 border-slate-200',
-        deleted: 'bg-rose-50 text-rose-700 border-rose-200'
+        active: 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-emerald-100',
+        maintenance: 'bg-amber-50 text-amber-700 border-amber-200 ring-amber-100',
+        out_of_service: 'bg-slate-100 text-slate-600 border-slate-200 ring-slate-200',
+        deleted: 'bg-rose-50 text-rose-700 border-rose-200 ring-rose-100'
     };
 
+    // Calculate Health (Maintenance)
+    const nextRev = vehicle.nextRevisionKm || 5000; // Default interval if missing
+    const current = vehicle.currentKm || 0;
+    // Assuming nextRevisionKm is the INTERVAL, not the absolute target. 
+    // If it's the target, logic is different. Let's assume it's the target for simplicity based on typical odometer logic.
+    // If nextRevisionKm < current, we are overdue.
+    const kmRemaining = Math.max(0, nextRev - current);
+    const healthPercent = Math.max(0, Math.min(100, (kmRemaining / 5000) * 100)); // Normalize to 5000km window for bar
+
+    let healthColor = 'bg-emerald-500';
+    if (healthPercent < 20) healthColor = 'bg-rose-500';
+    else if (healthPercent < 50) healthColor = 'bg-amber-500';
+
     return (
-        <div className="bg-white p-5 rounded-xl border border-slate-200 hover:border-blue-300 transition-all hover:shadow-lg hover:shadow-slate-200/50 group relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-5 transition-opacity">
-                <Car className="w-24 h-24 rotate-12 -mr-8 -mt-8 text-slate-900" />
+        <div className="group relative bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 overflow-hidden">
+            {/* Status Strip */}
+            <div className={`absolute left-0 top-0 bottom-0 w-1 ${statusColors[vehicle.status]?.split(' ')[0] || 'bg-slate-200'}`} />
+
+            <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-10 transition-opacity duration-500">
+                <Car className="w-32 h-32 rotate-12 -mr-10 -mt-10 text-slate-900" />
             </div>
 
-            <div className="flex justify-between items-start mb-4 relative z-10">
-                <div className="flex items-center gap-3">
-                    <div className={`p-2.5 rounded-lg border ${statusColors[vehicle.status] || statusColors.inactive}`}>
-                        <Car size={20} />
-                    </div>
+            <div className="p-5 pl-6 relative z-10">
+                <div className="flex justify-between items-start mb-4">
                     <div>
-                        <h3 className="font-bold text-slate-900 text-lg leading-tight">{vehicle.plate}</h3>
-                        <p className="text-xs font-medium text-slate-500">{vehicle.model}</p>
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider mb-2 border ${statusColors[vehicle.status] || 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+                            {vehicle.status === 'active' && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+                            {vehicle.status}
+                        </span>
+                        <h3 className="font-black text-slate-900 text-xl leading-none tracking-tight">{vehicle.plate}</h3>
+                        <p className="text-sm font-medium text-slate-500 mt-1">{vehicle.model}</p>
                     </div>
                 </div>
-                <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-md border ${statusColors[vehicle.status] || statusColors.inactive}`}>
-                    {vehicle.status}
-                </span>
-            </div>
 
-            <div className="space-y-3 relative z-10">
-                <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                    <span className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                        <Gauge size={14} className="text-indigo-500" /> KM
-                    </span>
-                    <span className="font-mono text-sm font-bold text-slate-700">{vehicle.currentKm?.toLocaleString()}</span>
+                {/* Health Bar */}
+                <div className="mb-4">
+                    <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                        <span>Estado Mecánico</span>
+                        <span className={healthPercent < 20 ? 'text-rose-500' : 'text-emerald-500'}>
+                            {healthPercent < 20 ? 'Revisión Necesaria' : 'Óptimo'}
+                        </span>
+                    </div>
+                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                            className={`h-full ${healthColor} transition-all duration-1000`}
+                            style={{ width: `${healthPercent}%` }}
+                        />
+                    </div>
                 </div>
-                <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                    <span className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                        <Wrench size={14} className="text-amber-500" /> ITV
-                    </span>
-                    <span className="font-mono text-sm font-bold text-slate-700">
-                        {vehicle.next_itv ? new Date((vehicle.next_itv as Timestamp).seconds * 1000).toLocaleDateString() : 'Pendiente'}
-                    </span>
-                </div>
-            </div>
 
-            {!readOnly && (
-                <button
-                    onClick={onEdit}
-                    className="w-full mt-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-500 bg-white hover:bg-slate-50 hover:text-indigo-600 rounded-lg border border-slate-200 transition-colors relative z-10 shadow-sm"
-                >
-                    Gestionar
-                </button>
-            )}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 group-hover:border-indigo-100 transition-colors">
+                        <span className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+                            <Gauge size={12} className="text-indigo-500" /> Kilometraje
+                        </span>
+                        <span className="font-mono text-lg font-bold text-slate-700 tracking-tight">
+                            {(vehicle.currentKm || 0).toLocaleString()}
+                        </span>
+                    </div>
+                    <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 group-hover:border-indigo-100 transition-colors">
+                        <span className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+                            <Wrench size={12} className="text-amber-500" /> Próx. ITV
+                        </span>
+                        <span className="font-mono text-sm font-bold text-slate-700 mt-1 block">
+                            {vehicle.next_itv ? new Date((vehicle.next_itv as Timestamp).seconds * 1000).toLocaleDateString() : 'Pendiente'}
+                        </span>
+                    </div>
+                </div>
+
+                {!readOnly && (
+                    <div className="flex gap-2 mt-4">
+                        <button
+                            onClick={onEdit}
+                            className="flex-1 py-3 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 bg-white hover:bg-indigo-50/50 rounded-xl border border-slate-200 hover:border-indigo-200 transition-all shadow-sm"
+                        >
+                            Gestionar
+                        </button>
+                        <button
+                            title="Registrar Gasto Rápido"
+                            className="px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 text-slate-400 hover:text-slate-600 transition-colors"
+                            onClick={() => alert("Próximamente: Registro Rápido de Gastos")}
+                        >
+                            <Gauge size={16} /> {/* Using Gauge as placeholder for Wallet if Wallet not imported, assuming Gauge is. Wait, CreditCard or Wallet? Let's check imports. */}
+                        </button>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

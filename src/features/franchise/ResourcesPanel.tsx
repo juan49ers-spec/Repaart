@@ -159,10 +159,10 @@ const ResourcesPanel: React.FC = () => {
     };
 
     return (
-        <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
+        <div className="flex flex-col md:flex-row h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
 
             {/* 📂 SIDEBAR (Folders) */}
-            <aside className="w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col pt-6 pb-4">
+            <aside className="hidden md:flex w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col pt-6 pb-4">
                 <div className="px-6 mb-8">
                     <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                         <FolderOpen className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
@@ -225,32 +225,52 @@ const ResourcesPanel: React.FC = () => {
                 </div>
             </aside>
 
+            {/* 📱 MOBILE TOP NAV (Folder selection on small screens) */}
+            <div className="md:hidden shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 overflow-x-auto whitespace-nowrap p-4 no-scrollbar flex gap-2">
+                {FOLDERS.map(folder => {
+                    const isActive = activeCategory === folder.id;
+                    return (
+                        <button
+                            key={folder.id}
+                            onClick={() => setActiveCategory(folder.id)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${isActive
+                                ? 'bg-indigo-600 text-white shadow-lg'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                                }`}
+                        >
+                            <folder.icon size={14} />
+                            {folder.label}
+                        </button>
+                    );
+                })}
+            </div>
+
             {/* 📄 MAIN CONTENT (Grid) */}
-            <main className="flex-1 flex flex-col min-w-0 bg-slate-50/50 dark:bg-slate-950/50 relative">
+            <main className="flex-1 flex flex-col min-w-0 bg-slate-50/50 dark:bg-slate-950/50 relative overflow-hidden">
 
                 {/* Header / Search */}
-                <div className="h-20 px-8 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md sticky top-0 z-10">
+                <div className="h-auto md:h-20 p-4 md:px-8 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shrink-0 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md sticky top-0 z-10">
                     <div className="flex items-center gap-4">
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                        <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white truncate">
                             {FOLDERS.find(f => f.id === activeCategory)?.label}
                         </h3>
-                        <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-bold px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700">
+                        <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700">
                             {filteredItems.length}
                         </span>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <div className="relative group w-64 transition-all focus-within:w-80">
+                    <div className="flex items-center gap-3 w-full md:w-auto">
+                        <div className="relative group flex-1 md:w-64 transition-all focus-within:md:w-80">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                             <input
                                 type="text"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                placeholder="Buscar en carpeta..."
-                                className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm"
+                                placeholder="Buscar..."
+                                className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm"
                             />
                         </div>
-                        <div className="flex bg-white dark:bg-slate-900 rounded-lg p-1 border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <div className="flex bg-white dark:bg-slate-900 rounded-lg p-1 border border-slate-200 dark:border-slate-700 shadow-sm shrink-0">
                             <button onClick={() => setViewMode('grid')} title="Vista Cuadrícula" className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
                                 <Grid className="w-4 h-4" />
                             </button>
@@ -262,7 +282,7 @@ const ResourcesPanel: React.FC = () => {
                 </div>
 
                 {/* Content Area */}
-                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
                     {loading ? (
                         <div className="grid grid-cols-4 gap-6 animate-pulse">
                             {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-48 bg-slate-200 dark:bg-slate-800 rounded-2xl" />)}

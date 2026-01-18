@@ -55,6 +55,7 @@ interface ShiftCardProps {
     readOnly?: boolean;
     isExpanded?: boolean;
     isRiderMode?: boolean;
+    isManagerView?: boolean;
     className?: string;
 }
 
@@ -71,6 +72,7 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
     readOnly = false,
     isExpanded = false,
     isRiderMode = false,
+    isManagerView = false,
     className
 }) => {
     const { riderName, riderId, visualStart, visualEnd, motoAssignments, startAt, endAt, isConfirmed: propConfirmed } = event;
@@ -247,7 +249,7 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             className={cn(
-                "group relative px-4 py-4 rounded-[32px] transition-all duration-500 overflow-hidden select-none mb-3",
+                "group relative px-3 py-3 sm:px-4 sm:py-4 rounded-[32px] transition-all duration-500 overflow-hidden select-none mb-3",
                 // Base state
                 isDragging ? 'opacity-40 cursor-grabbing scale-95 ring-2 ring-indigo-400 ring-offset-2' : 'cursor-grab',
                 // Conflict State
@@ -278,7 +280,7 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
 
                     {/* ROW 1: HEADER (Visual Theme Indicators) */}
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
+                        <div className="flex items-center gap-1.5 sm:gap-2.5">
                             {/* THE "CUADRITO" (Square Indicator) */}
                             <div className={cn(
                                 "w-4 h-4 rounded-md shadow-lg shrink-0 flex items-center justify-center transition-all duration-300",
@@ -313,6 +315,16 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                             )}
                         </div>
 
+                        {/* MANAGER VIEW EXTRA: Rider Name Badge */}
+                        {isManagerView && (
+                            <div className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-full bg-white/5 border border-white/10 ml-auto mr-1 max-w-[50%]">
+                                <div className={cn("w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-black shrink-0", riderColor.bg || 'bg-slate-500', riderColor.text)}>
+                                    {getRiderInitials(riderName)}
+                                </div>
+                                <span className="text-[9px] font-bold text-zinc-300 truncate">{riderName}</span>
+                            </div>
+                        )}
+
                         <div className="flex items-center gap-2">
                             {moto && (
                                 <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/10">
@@ -325,15 +337,58 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
 
                     {/* ROW 2: PAYLOAD (Time focus) */}
                     <div className="flex items-end justify-between">
-                        <div className="flex flex-col gap-0.5">
-                            <div className="flex items-baseline gap-2">
-                                <span className="text-3xl font-light text-white tracking-tighter">{startTime}</span>
-                                <span className="text-zinc-700 text-xl font-thin">—</span>
-                                <span className="text-2xl font-light text-zinc-500 tracking-tighter">{endTime}</span>
+                        <div className="flex flex-col gap-1 w-full mr-3">
+                            {/* Time Text */}
+                            <div className="flex items-baseline gap-1.5 sm:gap-2">
+                                <span className="text-xl sm:text-3xl font-light text-white tracking-tighter">{startTime}</span>
+                                <span className="text-zinc-700 text-lg sm:text-xl font-thin">—</span>
+                                <span className="text-lg sm:text-2xl font-light text-zinc-500 tracking-tighter">{endTime}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">{duration}H</span>
-                                {isConfirmed && <div className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[8px] font-black tracking-tighter uppercase">Accepted</div>}
+
+                            {/* Visual Timeline Bar */}
+                            <div className="h-1.5 w-full bg-zinc-800 rounded-full relative overflow-hidden mt-0.5">
+                                {/* Track Markers (Optional, e.g. every 3h) */}
+                                <div className="absolute left-[33%] top-0 bottom-0 w-[1px] bg-zinc-700/50" />
+                                <div className="absolute left-[66%] top-0 bottom-0 w-[1px] bg-zinc-700/50" />
+
+                                {/* The Shift Bar */}
+                                {(() => {
+                                    // Calculate position relative to 12:00 - 01:00 (13h window)
+                                    // Start: 12:00 (0%), End: 01:00 (100%)
+                                    const baseHour = 12;
+                                    const totalWindowHours = 13;
+
+                                    const s = new Date(visualStart);
+                                    const e = new Date(visualEnd);
+
+                                    let startH = s.getHours() + (s.getMinutes() / 60);
+                                    let endH = e.getHours() + (e.getMinutes() / 60);
+
+                                    // Adjust for hours after midnight (e.g. 00:30 becomes 24.5)
+                                    if (startH < 12) startH += 24;
+                                    if (endH < 12) endH += 24;
+                                    if (endH < startH) endH += 24; // Handle wrap around just in case
+
+                                    const startPct = Math.max(0, Math.min(100, ((startH - baseHour) / totalWindowHours) * 100));
+                                    const widthPct = Math.max(5, Math.min(100, ((endH - startH) / totalWindowHours) * 100));
+
+                                    return (
+                                        <div
+                                            className={cn(
+                                                "absolute top-0 bottom-0 rounded-full bg-gradient-to-r",
+                                                isConfirmed ? "from-emerald-500 to-emerald-400" :
+                                                    changeRequested ? "from-amber-500 to-amber-400" :
+                                                        isNight ? "from-rose-500 to-rose-400" : "from-indigo-500 to-blue-400"
+                                            )}
+                                            style={{ left: `${startPct}%`, width: `${widthPct}%` }}
+                                        />
+                                    );
+                                })()}
+                            </div>
+
+                            <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">{duration}H</span>
+                                {isConfirmed && <div className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[8px] font-black tracking-tighter uppercase">OK</div>}
                             </div>
                         </div>
 
@@ -455,22 +510,27 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                         )}
                     </div>
                 </div>
-            )}
+            )
+            }
 
             {/* Drag Handle Icon - Only on Hover (ADMIN MODE & NO CONFLICT) */}
-            {!readOnly && !hasConflict && !isRiderMode && (
-                <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <Move className="w-3 h-3 text-slate-400/70" />
-                </div>
-            )}
+            {
+                !readOnly && !hasConflict && !isRiderMode && (
+                    <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <Move className="w-3 h-3 text-slate-400/70" />
+                    </div>
+                )
+            }
 
             {/* Conflict Warning Badge (Admin Top Right) */}
-            {hasConflict && !isRiderMode && (
-                <div className="absolute -top-1 -right-1 bg-red-100 ring-2 ring-white rounded-full p-0.5 shadow-sm animate-pulse z-20">
-                    <AlertCircle className="w-3 h-3 text-red-600" />
-                </div>
-            )}
-        </div>
+            {
+                hasConflict && !isRiderMode && (
+                    <div className="absolute -top-1 -right-1 bg-red-100 ring-2 ring-white rounded-full p-0.5 shadow-sm animate-pulse z-20">
+                        <AlertCircle className="w-3 h-3 text-red-600" />
+                    </div>
+                )
+            }
+        </div >
     );
 };
 

@@ -24,7 +24,11 @@ export const riderSchema = z.object({
 
     contractHours: z.number()
         .min(0, 'Las horas no pueden ser negativas')
-        .max(168, 'Imposible trabajar más de 168h')
+        .max(168, 'Imposible trabajar más de 168h'),
+
+    licenseType: z.enum(['49cc', '125cc']).default('125cc'),
+
+    joinedAt: z.string().optional() // ISO String for manual onboarding date
 });
 
 export type RiderFormValues = z.infer<typeof riderSchema>;

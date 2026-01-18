@@ -69,7 +69,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
                 {/* Content Injection with correct mobile padding */}
                 <main className="flex-1 overflow-y-auto w-full relative z-0 content-safe-bottom">
-                    <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-4 md:py-5 animate-slide-up">
+                    <div className="mx-auto w-full px-2 sm:px-4 lg:px-6 py-4 md:py-5 animate-slide-up">
                         {/* Pass context to Outlet */}
                         {outletContext ? <Outlet context={{ ...outletContext }} /> : children}
                     </div>

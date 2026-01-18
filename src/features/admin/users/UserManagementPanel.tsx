@@ -9,6 +9,7 @@ import UserTable from './UserTable';
 import CriticalActionModal from '../../../components/ui/overlays/CriticalActionModal';
 import CreateUserModal, { CreateUserInput, UpdateUserInput } from './CreateUserModal';
 import { User } from '../../../services/userService';
+import RiderCard from './RiderCard';
 
 // --- SUB-COMPONENTS (Local for now to keep orchestrator clean) ---
 
@@ -79,16 +80,19 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
     // 'structure' = Admin + Franchise
     // 'riders' = Users
     // 'maintenance' = DB Tools
-    // If franchiseId is present, we FORCE 'riders' view and hide structure
-    const [activeTab, setActiveTab] = useState<'structure' | 'riders' | 'maintenance'>(franchiseId ? 'riders' : 'structure');
+    // If franchiseId is present, we FORCE 'riders' view
+    // State for tabs
+    const [activeTab, setActiveTab] = useState<'structure' | 'riders'>('riders');
+    const [statusFilter, setStatusFilter] = useState('active');
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Logic Hook
     const {
         users,
         loading,
         error: fetchError,
-        searchQuery, setSearchQuery,
-        statusFilter, setStatusFilter,
+        // searchQuery, setSearchQuery, // These are now managed locally
+        // statusFilter, setStatusFilter, // These are now managed locally
         createUser,
         updateUser,
         deleteUser,
@@ -340,14 +344,33 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
             )}
 
             {/* Data Layer */}
-            <div className="flex-1 min-h-0 overflow-hidden px-6 pb-6">
-                <UserTable
-                    users={filteredUsers}
-                    onAction={handleAction}
-                    currentUserRole={currentUser?.role || 'user'}
-                    readOnly={readOnly}
-                    franchiseId={franchiseId}
-                />
+            <div className={`flex-1 min-h-0 px-6 pb-6 ${activeTab === 'riders' ? 'overflow-y-auto' : 'overflow-hidden'}`}>
+                {activeTab === 'riders' ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-10">
+                        {filteredUsers.map(user => (
+                            <RiderCard
+                                key={user.uid}
+                                user={user}
+                                onEdit={(u) => handleAction('edit', u)}
+                                onStatusToggle={(u) => handleAction('toggleStatus', u)}
+                            />
+                        ))}
+                        {filteredUsers.length === 0 && (
+                            <div className="col-span-full py-20 text-center text-slate-400">
+                                <Users className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                                <p className="text-lg font-medium">No se encontraron usuarios</p>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <UserTable
+                        users={filteredUsers}
+                        onAction={handleAction}
+                        currentUserRole={currentUser?.role || 'user'}
+                        readOnly={readOnly}
+                        franchiseId={franchiseId}
+                    />
+                )}
             </div>
 
             {/* Create / Edit Modal */}

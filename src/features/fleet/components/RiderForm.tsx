@@ -22,14 +22,17 @@ export const RiderForm: React.FC<RiderFormProps> = ({ onSuccess, onCancel, initi
         register,
         handleSubmit,
         formState: { errors, isSubmitting }
-    } = useForm<RiderFormValues>({
+    } = useForm({
         resolver: zodResolver(riderSchema),
-        defaultValues: initialData || {
-            fullName: '',
-            email: '',
-            phone: '',
-            status: 'active',
-            contractHours: 40
+        defaultValues: {
+            fullName: initialData?.fullName || '',
+            email: initialData?.email || '',
+            phone: initialData?.phone || '',
+            status: initialData?.status || 'active',
+            contractHours: initialData?.contractHours || 40,
+            licenseType: (initialData?.licenseType as "125cc" | "49cc") || '125cc',
+            password: '',
+            joinedAt: initialData?.joinedAt || new Date().toISOString().split('T')[0]
         }
     });
 
@@ -173,29 +176,54 @@ export const RiderForm: React.FC<RiderFormProps> = ({ onSuccess, onCancel, initi
                 )}
             </div>
 
-            {/* Contract Hours */}
+            <div className="grid grid-cols-2 gap-4">
+                {/* Contract Hours */}
+                <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Horas/Semana
+                    </label>
+                    <div className="relative">
+                        <input
+                            {...register('contractHours', { valueAsNumber: true })}
+                            type="number"
+                            className={`
+                                w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 
+                                focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all
+                                ${errors.contractHours
+                                    ? 'border-red-500 focus:border-red-500'
+                                    : 'border-slate-200 dark:border-slate-700'}
+                            `}
+                            placeholder="40"
+                        />
+                        <span className="absolute right-4 top-2 text-slate-400 text-sm">h</span>
+                    </div>
+                </div>
+
+                {/* License Type */}
+                <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Licencia
+                    </label>
+                    <select
+                        {...register('licenseType')}
+                        className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                    >
+                        <option value="125cc">125cc (B)</option>
+                        <option value="49cc">49cc (AM)</option>
+                    </select>
+                </div>
+            </div>
+
+            {/* Joined At (Alta) */}
             <div className="space-y-1.5">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Horas de Contrato (Semanal)
+                    Fecha de Alta
                 </label>
-                <div className="relative">
-                    <input
-                        {...register('contractHours', { valueAsNumber: true })}
-                        type="number"
-                        className={`
-                            w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 
-                            focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all
-                            ${errors.contractHours
-                                ? 'border-red-500 focus:border-red-500'
-                                : 'border-slate-200 dark:border-slate-700'}
-                        `}
-                        placeholder="40"
-                    />
-                    <span className="absolute right-4 top-2 text-slate-400 text-sm">h/semana</span>
-                </div>
-                {errors.contractHours && (
-                    <p className="text-xs text-red-500">{errors.contractHours.message}</p>
-                )}
+                <input
+                    {...register('joinedAt')}
+                    type="date"
+                    className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                />
             </div>
 
             {/* Status */}
@@ -212,9 +240,6 @@ export const RiderForm: React.FC<RiderFormProps> = ({ onSuccess, onCancel, initi
                     <option value="on_route">En Ruta</option>
                     <option value="maintenance">Mantenimiento</option>
                 </select>
-                {errors.status && (
-                    <p className="text-xs text-red-500">{errors.status.message}</p>
-                )}
             </div>
 
             {/* Error Message */}

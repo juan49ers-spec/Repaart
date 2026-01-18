@@ -9,6 +9,7 @@ interface DroppableCellProps {
     children?: React.ReactNode;
     onQuickAdd: (hour: number) => void;
     onDoubleClick: () => void;
+    onClick?: (e: React.MouseEvent) => void;
     isToday: boolean;
     className?: string;
     activeDragShift?: any;
@@ -21,6 +22,7 @@ export const DroppableCell: React.FC<DroppableCellProps> = ({
     children,
     onQuickAdd,
     onDoubleClick,
+    onClick,
     isToday,
     className,
     activeDragShift
@@ -58,25 +60,31 @@ export const DroppableCell: React.FC<DroppableCellProps> = ({
         <div
             ref={setNodeRef}
             onDoubleClick={onDoubleClick}
+            onClick={(e) => {
+                // Allow "Tap to Create" on empty cells if no active drag
+                if (!activeDragShift && onClick) {
+                    onClick(e);
+                }
+            }}
             className={cn(
-                "relative h-full transition-colors border-r border-slate-100 dark:border-slate-800 group/cell",
+                "relative h-full transition-colors border-r border-slate-100 dark:border-slate-800 group/cell touch-manipulation", // Added touch-manipulation
                 isToday && "bg-slate-50/30",
                 isOver ? "bg-indigo-50/50 dark:bg-indigo-900/20" : "bg-transparent",
                 className
             )}
         >
-            {/* Visual feedback for empty cell hover - REFINED (Narrow & Discrete) */}
-            <div className="absolute left-0 top-0 bottom-0 w-8 flex flex-col items-center justify-center gap-1 opacity-0 group-hover/cell:opacity-100 pointer-events-none transition-opacity z-20">
+            {/* Visual feedback for empty cell hover / Touch */}
+            <div className="absolute left-0 top-0 bottom-0 w-8 flex flex-col items-center justify-center gap-1 opacity-100 md:opacity-0 md:group-hover/cell:opacity-100 pointer-events-none transition-opacity z-20">
                 <button
                     onClick={(e) => { e.stopPropagation(); onQuickAdd(13); }}
-                    className="w-6 h-6 flex items-center justify-center pointer-events-auto bg-amber-400 hover:bg-amber-500 text-amber-900 rounded-full shadow-md transform scale-0 group-hover/cell:scale-100 transition-all active:scale-95 border border-amber-300"
+                    className="w-6 h-6 flex items-center justify-center pointer-events-auto bg-amber-400 hover:bg-amber-500 text-amber-900 rounded-full shadow-md transform md:scale-0 md:group-hover/cell:scale-100 transition-all active:scale-95 border border-amber-300 pointer-events-auto" // Added pointer-events-auto
                     title="Añadir Mediodía (13h-17h)"
                 >
                     <Sun size={12} strokeWidth={3} />
                 </button>
                 <button
                     onClick={(e) => { e.stopPropagation(); onQuickAdd(21); }}
-                    className="w-6 h-6 flex items-center justify-center pointer-events-auto bg-indigo-500 hover:bg-indigo-600 text-white rounded-full shadow-md transform scale-0 group-hover/cell:scale-100 transition-all active:scale-95 border border-indigo-400"
+                    className="w-6 h-6 flex items-center justify-center pointer-events-auto bg-indigo-500 hover:bg-indigo-600 text-white rounded-full shadow-md transform md:scale-0 md:group-hover/cell:scale-100 transition-all active:scale-95 border border-indigo-400 pointer-events-auto" // Added pointer-events-auto
                     title="Añadir Noche (21h-01h)"
                 >
                     <Moon size={12} strokeWidth={3} />

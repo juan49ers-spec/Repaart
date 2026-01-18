@@ -205,16 +205,16 @@ const AdminResourcesPanel = () => {
         <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-900 dark:text-slate-200 font-sans transition-colors duration-300">
 
             {/* HEADER with Global Navigation */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-20">
-                <div className="mb-4 md:mb-0">
-                    <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
-                        Centro de Conocimiento
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between p-4 md:p-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-20 gap-4">
+                <div>
+                    <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+                        Conocimiento
                         <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 text-[10px] font-bold border border-indigo-500/20 uppercase tracking-widest">Admin</span>
                     </h2>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">Gestión integral de documentación y guías.</p>
+                    <p className="hidden md:block text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">Gestión integral de documentación y guías.</p>
                 </div>
 
-                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl overflow-x-auto no-scrollbar whitespace-nowrap">
                     <button
                         onClick={() => setActiveTab('vault')}
                         className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'vault' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
@@ -254,11 +254,31 @@ const AdminResourcesPanel = () => {
             </div>
 
             {/* CONTENT AREA */}
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                 {activeTab === 'vault' ? (
                     <>
-                        {/* 📂 SIDEBAR (Folders) */}
-                        <aside className="w-72 bg-white dark:bg-slate-900/50 border-r border-slate-200 dark:border-slate-800 flex flex-col pt-6 pb-4">
+                        {/* 📱 MOBILE CATEGORY SELECTOR (Vault) */}
+                        <div className="md:hidden shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 overflow-x-auto whitespace-nowrap p-4 no-scrollbar flex gap-2">
+                            {FOLDERS.map(folder => {
+                                const isActive = activeCategory === folder.id;
+                                return (
+                                    <button
+                                        key={folder.id}
+                                        onClick={() => setActiveCategory(folder.id)}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${isActive
+                                            ? 'bg-indigo-600 text-white shadow-lg'
+                                            : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                                            }`}
+                                    >
+                                        <folder.icon size={14} />
+                                        {folder.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* 📂 SIDEBAR (Folders) - Desktop Only */}
+                        <aside className="hidden md:flex w-72 bg-white dark:bg-slate-900/50 border-r border-slate-200 dark:border-slate-800 flex-col pt-6 pb-4">
                             <div className="px-6 mb-2">
                                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Estructura de Archivos</h3>
                             </div>
@@ -307,9 +327,9 @@ const AdminResourcesPanel = () => {
                         </aside>
 
                         {/* 📄 MAIN GRID */}
-                        <main className="flex-1 flex flex-col min-w-0 bg-slate-50/50 dark:bg-slate-950/50 relative">
+                        <main className="flex-1 flex flex-col min-w-0 bg-slate-50/50 dark:bg-slate-950/50 relative overflow-hidden">
                             {/* Sub-Header / Search */}
-                            <div className="h-16 px-8 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0 bg-white/50 dark:bg-slate-950/50 backdrop-blur-md sticky top-0 z-10">
+                            <div className="h-auto md:h-16 p-4 md:px-8 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 shrink-0 bg-white/50 dark:bg-slate-950/50 backdrop-blur-md sticky top-0 z-10">
                                 <div className="flex items-center gap-4">
                                     <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                                         {FOLDERS.find(f => f.id === activeCategory)?.label}
@@ -319,18 +339,18 @@ const AdminResourcesPanel = () => {
                                     </span>
                                 </div>
 
-                                <div className="flex items-center gap-3">
-                                    <div className="relative group w-64 transition-all focus-within:w-80">
+                                <div className="flex items-center gap-3 w-full md:w-auto">
+                                    <div className="relative group flex-1 md:w-64 transition-all focus-within:md:w-80">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                                         <input
                                             type="text"
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
-                                            placeholder="Filtrar archivos..."
-                                            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm"
+                                            placeholder="Buscar..."
+                                            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm"
                                         />
                                     </div>
-                                    <div className="flex bg-white dark:bg-slate-900 rounded-lg p-1 border border-slate-200 dark:border-slate-700 shadow-sm">
+                                    <div className="flex bg-white dark:bg-slate-900 rounded-lg p-1 border border-slate-200 dark:border-slate-700 shadow-sm shrink-0">
                                         <button onClick={() => setViewMode('grid')} title="Vista Cuadrícula" className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
                                             <Grid className="w-4 h-4" />
                                         </button>
