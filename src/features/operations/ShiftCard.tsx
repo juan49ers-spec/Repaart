@@ -41,8 +41,6 @@ interface ShiftCardProps {
     readOnly?: boolean;
     isExpanded?: boolean;
     isRiderMode?: boolean;
-    dateLabel?: string;
-    intelIcons?: React.ReactNode;
 }
 
 const ShiftCard: React.FC<ShiftCardProps> = ({
@@ -57,9 +55,7 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
     onDragEnd,
     readOnly = false,
     isExpanded = false,
-    isRiderMode = false,
-    dateLabel,
-    intelIcons
+    isRiderMode = false
 }) => {
     const { riderName, riderId, visualStart, visualEnd, motoAssignments, startAt, endAt, isConfirmed: propConfirmed } = event;
     const [showActions, setShowActions] = useState(false);
@@ -236,39 +232,33 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                 // --- ULTRA-DENSE RIDER CONTENT (50% REDUCTION) ---
                 <div className="flex flex-col gap-1.5">
 
-                    {/* ROW 1: HEADER (Date, Status, Moto) */}
+                    {/* ROW 1: HEADER (Status, Moto) */}
                     <div className="flex items-center justify-between border-b border-white/5 pb-1.5 h-6">
                         <div className="flex items-center gap-2 overflow-hidden">
-                            {dateLabel && (
-                                <span className={cn(
-                                    "text-[10px] font-black tracking-tight uppercase whitespace-nowrap",
-                                    dateLabel.includes('HOY') ? "text-emerald-400" : "text-zinc-500"
-                                )}>
-                                    {dateLabel}
-                                </span>
-                            )}
                             {/* Status Indicator (Compact Pill) */}
                             {isConfirmed ? (
                                 <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                                     <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-                                    <span className="text-[8px] font-bold text-emerald-400 uppercase">OK</span>
+                                    <span className="text-[8px] font-bold text-emerald-400 uppercase">Confirmado</span>
                                 </div>
                             ) : changeRequested ? (
                                 <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
                                     <div className="w-1 h-1 rounded-full bg-amber-500 animate-pulse" />
-                                    <span className="text-[8px] font-bold text-amber-400 uppercase">REQ</span>
+                                    <span className="text-[8px] font-bold text-amber-400 uppercase">Cambio Solicitado</span>
                                 </div>
                             ) : (
-                                <div className="w-1.5 h-1.5 rounded-full bg-zinc-700" title="Pendiente" />
+                                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-zinc-800 border border-white/5">
+                                    <div className="w-1 h-1 rounded-full bg-zinc-500" />
+                                    <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-tighter">Pendiente</span>
+                                </div>
                             )}
                         </div>
 
                         <div className="flex items-center gap-2">
-                            {intelIcons && <div className="flex gap-0.5 scale-75 origin-right">{intelIcons}</div>}
                             {moto && (
                                 <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-white/5 border border-white/5">
-                                    <Truck size={8} className="text-indigo-400" />
-                                    <span className="text-[8px] font-bold text-zinc-400 font-mono">{moto.plate}</span>
+                                    <Truck size={8} className="text-blue-400" />
+                                    <span className="text-[8px] font-bold text-zinc-400 font-mono tracking-tighter">{moto.plate}</span>
                                 </div>
                             )}
                         </div>

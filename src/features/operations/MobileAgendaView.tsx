@@ -38,7 +38,7 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> = ({
         <div className="relative pb-32 min-h-screen bg-slate-50 dark:bg-black transition-colors duration-300">
 
 
-            <div className="space-y-4 relative z-10 px-4 pt-4">
+            <div className="relative z-10 pt-2 pb-12">
                 {days.map((day) => {
                     const isToday = new Date().toISOString().split('T')[0] === day.isoDate;
                     const dayEvents = visualEvents[day.isoDate] || [];
@@ -46,64 +46,77 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> = ({
                         new Date(a.visualStart).getTime() - new Date(b.visualStart).getTime()
                     );
 
-                    // Preparing Label: "LUN 12" or "LUN 12 • HOY"
-                    const baseLabel = `${day.label.split(' ')[0]} ${day.label.split(' ')[1]}`.toUpperCase();
-                    const dateLabel = isToday ? `${baseLabel} • HOY` : baseLabel;
+                    // Robust Date Formatting
+                    const parts = day.label.split(' ');
+                    const dayName = parts[0] || '';
+                    const dayNum = parts[1] || '';
 
                     // Preparing Icons
                     const dayIcons = intelByDay?.[day.isoDate]?.map((intel, idx) => (
-                        <div key={idx} className="flex items-center gap-2 p-1 rounded-full bg-zinc-800/50 border border-white/5" title={intel.title}>
-                            {intel.type === 'holiday' && <span className="text-lg">🎉</span>}
+                        <div key={idx} className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20" title={intel.title}>
+                            {intel.type === 'holiday' && <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-tighter">Festivo</span>}
                         </div>
                     ));
 
                     return (
-                        <div key={day.isoDate} className="relative">
-
-                            {/* SHIFTS or REST? */}
-                            {sortedEvents.length === 0 ? (
-                                // REST CARD
-                                <div className={cn(
-                                    "p-4 rounded-[24px] border transition-all duration-300 relative overflow-hidden group mb-3",
-                                    "bg-white dark:bg-[#1c1c1e] border-slate-200 dark:border-white/5 shadow-sm",
-                                    "touch-feedback"
-                                )}>
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className={cn(
-                                            "text-sm font-medium tracking-tight uppercase",
-                                            isToday ? "text-blue-600 dark:text-blue-400" : "text-slate-500 dark:text-zinc-500"
-                                        )}>
-                                            {dateLabel}
+                        <div key={day.isoDate} className="mb-8">
+                            {/* STICKY DAY HEADER - Apple Style */}
+                            <div className="sticky top-0 z-40 -mx-4 px-6 py-3 flex items-center justify-between bg-slate-50/70 dark:bg-black/70 backdrop-blur-xl saturate-150 border-y border-slate-200/50 dark:border-white/5">
+                                <div className="flex items-baseline gap-2">
+                                    <span className={cn(
+                                        "text-xl font-semibold tracking-tight",
+                                        isToday ? "text-blue-600 dark:text-blue-400" : "text-slate-900 dark:text-white"
+                                    )}>
+                                        {dayName.charAt(0).toUpperCase() + dayName.slice(1)}
+                                    </span>
+                                    <span className="text-xl font-light text-slate-400 dark:text-zinc-500">
+                                        {dayNum}
+                                    </span>
+                                    {isToday && (
+                                        <span className="ml-2 px-1.5 py-0.5 rounded-md bg-blue-500/10 text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">
+                                            Hoy
                                         </span>
-                                        <div className="flex gap-1">{dayIcons}</div>
-                                    </div>
+                                    )}
+                                </div>
+                                <div className="flex gap-2">{dayIcons}</div>
+                            </div>
 
-                                    <div className="py-4 flex flex-col items-center justify-center opacity-40 group-hover:opacity-60 transition-opacity">
-                                        <p className="text-xl font-medium text-slate-400 dark:text-zinc-600 tracking-widest uppercase">Descanso</p>
+                            <div className="px-4 mt-4 space-y-3">
+                                {/* SHIFTS or REST? */}
+                                {sortedEvents.length === 0 ? (
+                                    // REST CARD - Refined
+                                    <div className={cn(
+                                        "p-6 rounded-[28px] border transition-all duration-300 relative overflow-hidden group",
+                                        "bg-white dark:bg-[#1c1c1e] border-slate-200/60 dark:border-white/5 shadow-sm",
+                                        "flex items-center justify-between"
+                                    )}>
+                                        <div className="flex flex-col">
+                                            <p className="text-lg font-medium text-slate-400 dark:text-zinc-500 tracking-tight">Día de Descanso</p>
+                                            <p className="text-xs text-slate-300 dark:text-zinc-600">No hay turnos programados</p>
+                                        </div>
+                                        <div className="w-12 h-12 rounded-full bg-slate-50 dark:bg-zinc-800/50 flex items-center justify-center opacity-40">
+                                            <span className="text-2xl">🌙</span>
+                                        </div>
                                     </div>
-                                </div>
-                            ) : (
-                                // SHIFT CARDS - Pass down props to ShiftCard. ShiftCard itself handles card typography internally, 
-                                // but we control the header logic here.
-                                <div className="flex flex-col gap-0">
-                                    {sortedEvents.map((ev, index) => (
-                                        <ShiftCard
-                                            key={ev.shiftId}
-                                            event={ev}
-                                            onClick={() => onEditShift(ev)}
-                                            onClone={(_ev, _e) => { }}
-                                            onDelete={(id) => onDeleteShift(id)}
-                                            readOnly={readOnly}
-                                            isExpanded={expandedShiftId === ev.shiftId}
-                                            isRiderMode={isRiderMode}
-                                            style={{ width: '100%' }}
-                                            // Pass Date/Icons mainly to the first card to act as header for that day
-                                            dateLabel={index === 0 ? dateLabel : undefined}
-                                            intelIcons={index === 0 ? dayIcons : undefined}
-                                        />
-                                    ))}
-                                </div>
-                            )}
+                                ) : (
+                                    // SHIFT CARDS
+                                    <div className="flex flex-col gap-3">
+                                        {sortedEvents.map((ev) => (
+                                            <ShiftCard
+                                                key={ev.shiftId}
+                                                event={ev}
+                                                onClick={() => onEditShift(ev)}
+                                                onClone={(_ev, _e) => { }}
+                                                onDelete={(id) => onDeleteShift(id)}
+                                                readOnly={readOnly}
+                                                isExpanded={expandedShiftId === ev.shiftId}
+                                                isRiderMode={isRiderMode}
+                                                style={{ width: '100%' }}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     );
                 })}
