@@ -1,0 +1,10 @@
+import * as admin from 'firebase-admin';
+
+admin.initializeApp();
+
+// Export Triggers
+export { syncUserRole } from './triggers/onUserWrite';
+export { createUserManaged } from './callables/createUser';
+export { calculateWeekStats } from './triggers/onWeekWrite';
+export { onIncidentCreated } from './triggers/onIncident';
+export { deleteUserSync } from './triggers/onUserDelete';

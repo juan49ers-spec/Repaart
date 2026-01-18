@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Search, Edit2, Trash2, Bike, LayoutGrid, List as ListIcon, AlertTriangle, CheckCircle, Wrench, Gauge } from 'lucide-react';
 import { useVehicleStore } from '../../../store/useVehicleStore';
-import { Vehicle } from './schemas/VehicleSchema';
 import { Table, Column } from '../../../components/ui/data-display/Table';
 import { Button } from '../../../components/ui/primitives/Button';
 import { Drawer } from '../../../components/ui/overlays/Drawer';
 import { VehicleForm } from './components/VehicleForm';
+import { Vehicle } from '../../../schemas/fleet';
 import { useAuth } from '../../../context/AuthContext';
 import { cn } from '../../../lib/utils';
 
@@ -49,8 +49,8 @@ export const VehiclesView: React.FC = () => {
     };
 
     const filteredVehicles = vehicles.filter(v =>
-        v.matricula.toLowerCase().includes(search.toLowerCase()) ||
-        v.modelo.toLowerCase().includes(search.toLowerCase())
+        v.plate.toLowerCase().includes(search.toLowerCase()) ||
+        v.model.toLowerCase().includes(search.toLowerCase())
     );
 
     // --- LIST COLUMNS ---
@@ -63,8 +63,8 @@ export const VehiclesView: React.FC = () => {
                         <Bike className="w-5 h-5" />
                     </div>
                     <div>
-                        <div className="font-bold text-slate-900 dark:text-white">{v.matricula}</div>
-                        <div className="text-[10px] text-slate-500 uppercase">{v.modelo}</div>
+                        <div className="font-bold text-slate-900 dark:text-white">{v.plate}</div>
+                        <div className="text-[10px] text-slate-500 uppercase">{v.model}</div>
                     </div>
                 </div>
             )
@@ -73,13 +73,13 @@ export const VehiclesView: React.FC = () => {
             header: 'Estado',
             cell: (v) => {
                 const statusStyles: Record<string, string> = {
-                    activo: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-                    mantenimiento: 'bg-amber-100 text-amber-700 border-amber-200',
-                    baja: 'bg-rose-100 text-rose-700 border-rose-200',
+                    active: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                    maintenance: 'bg-amber-100 text-amber-700 border-amber-200',
+                    deleted: 'bg-rose-100 text-rose-700 border-rose-200',
                 };
                 return (
-                    <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border", statusStyles[v.estado] || 'bg-slate-100 text-slate-700')}>
-                        {v.estado.charAt(0).toUpperCase() + v.estado.slice(1)}
+                    <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border", statusStyles[v.status] || 'bg-slate-100 text-slate-700')}>
+                        {v.status.charAt(0).toUpperCase() + v.status.slice(1)}
                     </span>
                 );
             }
@@ -87,8 +87,8 @@ export const VehiclesView: React.FC = () => {
         {
             header: 'Salud',
             cell: (v) => {
-                const limit = v.proxima_revision_km || 5000;
-                const current = v.km_actuales;
+                const limit = v.nextRevisionKm || 5000;
+                const current = v.currentKm;
                 const percentage = Math.min(100, Math.max(0, (current / limit) * 100));
                 return (
                     <div className="w-24">
@@ -171,8 +171,8 @@ export const VehiclesView: React.FC = () => {
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                         {filteredVehicles.map(vehicle => {
-                            const limit = vehicle.proxima_revision_km || 5000;
-                            const current = vehicle.km_actuales;
+                            const limit = vehicle.nextRevisionKm || 5000;
+                            const current = vehicle.currentKm;
                             const healthPct = Math.min(100, Math.max(0, (current / limit) * 100));
                             const isCritical = healthPct >= 100;
 
@@ -189,8 +189,8 @@ export const VehiclesView: React.FC = () => {
                                                 <Bike className="w-6 h-6" />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-slate-900 leading-tight text-lg">{vehicle.matricula}</h3>
-                                                <div className="text-[10px] uppercase font-bold text-slate-400">{vehicle.modelo}</div>
+                                                <h3 className="font-bold text-slate-900 leading-tight text-lg">{vehicle.plate}</h3>
+                                                <div className="text-[10px] uppercase font-bold text-slate-400">{vehicle.model}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -198,14 +198,14 @@ export const VehiclesView: React.FC = () => {
                                     {/* STATUS BADGE */}
                                     <div className="mb-4">
                                         <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold w-full",
-                                            vehicle.estado === 'active' ? "bg-emerald-50 text-emerald-700 border border-emerald-100" :
-                                                vehicle.estado === 'maintenance' ? "bg-amber-50 text-amber-700 border border-amber-100" :
+                                            vehicle.status === 'active' ? "bg-emerald-50 text-emerald-700 border border-emerald-100" :
+                                                vehicle.status === 'maintenance' ? "bg-amber-50 text-amber-700 border border-amber-100" :
                                                     "bg-rose-50 text-rose-700 border border-rose-100"
                                         )}>
-                                            {vehicle.estado === 'active' && <CheckCircle className="w-3.5 h-3.5" />}
-                                            {vehicle.estado === 'maintenance' && <Wrench className="w-3.5 h-3.5" />}
-                                            {vehicle.estado === 'out_of_service' && <AlertTriangle className="w-3.5 h-3.5" />}
-                                            <span className="capitalize flex-1">{vehicle.estado === 'out_of_service' ? 'baja' : vehicle.estado === 'maintenance' ? 'taller' : 'activo'}</span>
+                                            {vehicle.status === 'active' && <CheckCircle className="w-3.5 h-3.5" />}
+                                            {vehicle.status === 'maintenance' && <Wrench className="w-3.5 h-3.5" />}
+                                            {vehicle.status === 'out_of_service' && <AlertTriangle className="w-3.5 h-3.5" />}
+                                            <span className="capitalize flex-1">{vehicle.status === 'out_of_service' ? 'baja' : vehicle.status === 'maintenance' ? 'taller' : 'activo'}</span>
                                         </div>
                                     </div>
 

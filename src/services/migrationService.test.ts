@@ -2,62 +2,99 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { migrationService } from './migrationService';
 import { getDocs, writeBatch } from 'firebase/firestore';
 
-// Mock Firestore
+// Mock Firebase
 vi.mock('firebase/firestore', () => ({
     getFirestore: vi.fn(),
-    collection: vi.fn(),
-    doc: vi.fn(),
+    collection: vi.fn((_db, path) => ({ path, id: path })),
+    doc: vi.fn((_db, _coll, id) => ({ id, type: 'doc_ref' })),
+    getDoc: vi.fn(),
     getDocs: vi.fn(),
-    writeBatch: vi.fn(),
-    query: vi.fn(),
+    writeBatch: vi.fn(() => ({
+        update: vi.fn(),
+        commit: vi.fn()
+    })),
+    deleteField: vi.fn(() => 'DELETE_FIELD'),
+    query: vi.fn((coll) => coll),
     where: vi.fn(),
-    updateDoc: vi.fn(),
-    serverTimestamp: vi.fn().mockReturnValue('TIMESTAMP')
+    serverTimestamp: vi.fn()
 }));
 
 vi.mock('../lib/firebase', () => ({
     db: {}
 }));
 
-describe('MigrationService (Legacy Cleanup)', () => {
-    let mockBatch: any;
+const mockDocSnap = (id: string, data: any) => ({
+    id,
+    ref: { id, type: 'doc_ref' },
+    data: () => data
+});
 
+const mockQuerySnapshot = (docs: any[]) => {
+    const docSnaps = docs.map(d => mockDocSnap(d.id, d.data));
+    return {
+        docs: docSnaps,
+        forEach: (cb: any) => docSnaps.forEach(cb),
+        size: docSnaps.length,
+        empty: docSnaps.length === 0
+    };
+};
+
+describe('MigrationService', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        mockBatch = {
-            delete: vi.fn(),
-            update: vi.fn(),
-            commit: vi.fn().mockResolvedValue(undefined),
-            set: vi.fn()
-        };
-        (writeBatch as any).mockReturnValue(mockBatch);
     });
 
-    describe('cleanOrphanedShifts', () => {
-        it('should mark Valentino as inactive and remove his shifts', async () => {
-            // 1. Mock Riders/Users
-            const valentinoRider = { id: 'r1', data: () => ({ fullName: 'Valentino Rossi', status: 'active', email: 'v@test.com' }), ref: 'ref1' };
-            const normalRider = { id: 'r2', data: () => ({ fullName: 'Normal Rider', status: 'active', franchiseId: 'f1', email: 'n@test.com' }), ref: 'ref2' };
+    describe('migrateFleetLegacyFields', () => {
+        it('should correctly stage updates in dryRun mode', async () => {
+            const legacyAssets = [
+                { id: 'v1', data: { matricula: 'A1', estado: 'activo' } },
+                { id: 'v2', data: { plate: 'B2', status: 'active' } }
+            ];
 
-            (getDocs as any)
-                .mockResolvedValueOnce({ docs: [valentinoRider], forEach: (cb: any) => [valentinoRider].forEach(cb) }) // riders
-                .mockResolvedValueOnce({ docs: [normalRider], forEach: (cb: any) => [normalRider].forEach(cb) });   // users
+            (getDocs as any).mockResolvedValue(mockQuerySnapshot(legacyAssets));
 
-            // 2. Mock Shifts collections check
-            // We mock empty return for simple collections to focus on logic
-            (getDocs as any)
-                .mockResolvedValueOnce({ docs: [], forEach: () => { } }) // shifts
-                .mockResolvedValueOnce({ docs: [], forEach: () => { } }) // work_shifts
-                .mockResolvedValueOnce({ docs: [], forEach: () => { } }); // franchise_shifts
-
-            // 3. Mock Legacy Weeks (if franchiseId provided)
-            // Skip this part for this test by not providing franchiseId or mocking accordingly
-
-            const result = await migrationService.cleanOrphanedShifts();
+            const result = await migrationService.migrateFleetLegacyFields(true);
 
             expect(result.success).toBe(true);
-            // Expect Valentino to be deactivated
-            expect(mockBatch.update).toHaveBeenCalledWith('ref1', expect.objectContaining({ status: 'inactive' }));
+            expect(result.count).toBe(1);
+            expect(writeBatch).toHaveBeenCalled();
+            const mockBatch = vi.mocked(writeBatch).mock.results[0].value;
+            expect(mockBatch.update).not.toHaveBeenCalled();
+        });
+
+        it('should commit updates when dryRun is false', async () => {
+            const legacyAssets = [
+                { id: 'v1', data: { matricula: 'A1', estado: 'activo' } }
+            ];
+
+            (getDocs as any).mockResolvedValue(mockQuerySnapshot(legacyAssets));
+
+            const result = await migrationService.migrateFleetLegacyFields(false);
+
+            expect(result.success).toBe(true);
+            const mockBatch = vi.mocked(writeBatch).mock.results[0].value;
+            expect(mockBatch.update).toBeCalled();
+            expect(mockBatch.commit).toHaveBeenCalled();
+        });
+    });
+
+    describe('migrateFinanceLegacyFields', () => {
+        it('should migrate records and summaries', async () => {
+            const legacyRecords = [{ id: 'r1', data: { franchise_id: 'f1' } }];
+            const legacySummaries = [{ id: 's1', data: { franchise_id: 'f1' } }];
+
+            (getDocs as any).mockImplementation((coll: any) => {
+                if (coll.path === 'financial_records') return Promise.resolve(mockQuerySnapshot(legacyRecords));
+                if (coll.path === 'financial_summaries') return Promise.resolve(mockQuerySnapshot(legacySummaries));
+                return Promise.resolve(mockQuerySnapshot([]));
+            });
+
+            const result = await migrationService.migrateFinanceLegacyFields(false);
+
+            expect(result.success).toBe(true);
+            expect(result.count).toBe(2);
+            const mockBatch = vi.mocked(writeBatch).mock.results[0].value;
+            expect(mockBatch.commit).toHaveBeenCalled();
         });
     });
 });

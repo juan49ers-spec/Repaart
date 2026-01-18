@@ -2,9 +2,9 @@ import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createUserSchema, updateUserSchema, UserRole } from '../../../lib/schemas';
-import { X, Mail, Building, Loader2, Lock, Briefcase, User } from 'lucide-react';
+import { X, Mail, Building, Loader2, Lock, Briefcase, User as UserIcon } from 'lucide-react';
 import { useToast } from '../../../hooks/useToast';
-import { UserProfile } from '../../../services/userService';
+import { User } from '../../../services/userService';
 import { z } from 'zod';
 
 // =====================================================
@@ -18,7 +18,7 @@ export interface CreateUserModalProps {
     onClose: () => void;
     onCreate: (data: CreateUserInput, password?: string) => Promise<void>;
     onUpdate: (uid: string, data: Partial<UpdateUserInput>) => Promise<void>;
-    userToEdit?: UserProfile | null;
+    userToEdit?: User | null;
     isLoading?: boolean;
     initialFranchiseId?: string | null;
     initialData?: any;
@@ -90,7 +90,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                     franchiseId: userToEdit.franchiseId || '',
                     pack: userToEdit.pack || 'basic',
                     status: (userToEdit.status as 'active' | 'pending' | 'banned') || 'active',
-                    name: userToEdit.name || '',
+                    // name property removed as it does not exist on User type
                     legalName: (userToEdit.legalName as string) || '',
                     cif: userToEdit.cif || '',
                     address: userToEdit.address || ''
@@ -221,7 +221,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                         {/* SECTION 2: PERSONAL INFO */}
                         <section>
                             <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
-                                <User className="w-3 h-3" /> Datos de Perfil
+                                <UserIcon className="w-3 h-3" /> Datos de Perfil
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div className="space-y-1.5">

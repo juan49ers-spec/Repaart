@@ -11,14 +11,14 @@ export type RecordType = 'income' | 'expense';
 
 export interface FinancialRecord {
     id: string;
-    franchise_id: string;
+    franchiseId: string;
     amount: number;
     date: Date;
     status: RecordStatus;
     type: RecordType;
     category?: string;
     description?: string;
-    admin_notes?: string;
+    adminNotes?: string;
 
     // Revenue specific
     revenue?: number;
@@ -28,15 +28,15 @@ export interface FinancialRecord {
     breakdown?: Record<string, number>;
 
     // --- AUDIT TRAIL ---
-    created_at?: Date | FieldValue | Timestamp;
-    updated_at?: Date | FieldValue | Timestamp;
-    submitted_at?: Date | FieldValue | Timestamp;
-    approved_at?: Date | FieldValue | Timestamp;
-    approved_by?: string; // Admin UID
-    rejection_reason?: string;
+    createdAt?: Date | FieldValue | Timestamp;
+    updatedAt?: Date | FieldValue | Timestamp;
+    submittedAt?: Date | FieldValue | Timestamp;
+    approvedAt?: Date | FieldValue | Timestamp;
+    approvedBy?: string; // Admin UID
+    rejectionReason?: string;
 
     // --- CONTROLS ---
-    is_locked?: boolean;
+    isLocked?: boolean;
 }
 
 export interface RecordInput {
@@ -112,7 +112,7 @@ export interface MonthlyData {
 
     // --- STATE & METADATA ---
     status?: string | 'pending' | 'draft' | 'submitted' | 'approved' | 'locked' | 'unlock_requested' | 'deleted';
-    is_locked?: boolean;
+    isLocked?: boolean;
     unlockReason?: string | null;
     rejectionReason?: string | null;
     statusHistory?: any[]; // Could be stricter

@@ -88,7 +88,7 @@ const MonthlyHistoryTable: React.FC<MonthlyHistoryTableProps> = ({ franchiseId, 
             await financeService.updateFinancialData(franchiseId, editingMonth, {
                 ...data,
                 status: 'locked', // Force lock on save from wizard
-                is_locked: true
+                isLocked: true
             });
             if (refresh) await refresh();
             setEditingMonth(null);
@@ -305,9 +305,9 @@ const MonthlyHistoryTable: React.FC<MonthlyHistoryTableProps> = ({ franchiseId, 
                                                             return date.toLocaleDateString('es-ES', { month: 'long', year: '2-digit' }).replace(' de ', '-').replace(' ', '-');
                                                         })()}
                                                     </span>
-                                                    {record.updated_at && (
+                                                    {record.updatedAt && (
                                                         <span className="text-[9px] text-slate-400 font-medium">
-                                                            {formatTimeAgo(record.updated_at)}
+                                                            {formatTimeAgo(record.updatedAt)}
                                                         </span>
                                                     )}
                                                 </div>
@@ -327,6 +327,12 @@ const MonthlyHistoryTable: React.FC<MonthlyHistoryTableProps> = ({ franchiseId, 
                                             <div className="flex flex-col items-end gap-0.5">
                                                 <div className={`font-mono font-bold text-sm tracking-tight flex items-center gap-1.5 ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
                                                     {formatMoney(record.profit)}€
+                                                    {record.updatedAt && (
+                                                        <span className="flex items-center gap-1 text-[10px] text-slate-400 font-normal">
+                                                            <Clock className="w-2.5 h-2.5" />
+                                                            {formatTimeAgo(record.updatedAt)}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${isPositive ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
                                                     {isPositive ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
@@ -336,7 +342,7 @@ const MonthlyHistoryTable: React.FC<MonthlyHistoryTableProps> = ({ franchiseId, 
                                         </td>
                                         <td className="px-4 py-3 text-center">
                                             {(() => {
-                                                const status = (record as any).status || ((record as any).is_locked ? 'locked' : 'draft');
+                                                const status = record.status || (record.isLocked ? 'locked' : 'draft');
 
                                                 const getStatusConfig = (s: string) => {
                                                     switch (s) {
@@ -386,8 +392,8 @@ const MonthlyHistoryTable: React.FC<MonthlyHistoryTableProps> = ({ franchiseId, 
                                                             {config.icon}
                                                             {config.label}
                                                         </span>
-                                                        {(record as any).rejectionReason && (
-                                                            <span className="flex items-center gap-1 text-[9px] text-rose-500 font-medium bg-rose-50 px-1.5 py-0.5 rounded border border-rose-100 max-w-[100px] truncate" title={(record as any).rejectionReason}>
+                                                        {record.rejectionReason && (
+                                                            <span className="flex items-center gap-1 text-[9px] text-rose-500 font-medium bg-rose-50 px-1.5 py-0.5 rounded border border-rose-100 max-w-[100px] truncate" title={record.rejectionReason}>
                                                                 <X className="w-2.5 h-2.5" />
                                                                 Rechazado
                                                             </span>
@@ -400,16 +406,16 @@ const MonthlyHistoryTable: React.FC<MonthlyHistoryTableProps> = ({ franchiseId, 
                                             <div className="flex items-center justify-end gap-2 opacity-100 transition-all duration-200">
 
                                                 {/* ADMIN UNLOCK */}
-                                                {isAdmin && ((record as any).is_locked || (record as any).status === 'locked' || (record as any).status === 'unlock_requested') && (
+                                                {isAdmin && (record.isLocked || record.status === 'locked' || record.status === 'unlock_requested') && (
                                                     <button
                                                         onClick={() => setPendingUnlock(record)}
-                                                        className={`p-2 rounded-lg transition-all border shadow-sm group relative ${(record as any).status === 'unlock_requested'
+                                                        className={`p-2 rounded-lg transition-all border shadow-sm group relative ${record.status === 'unlock_requested'
                                                             ? 'bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200'
                                                             : 'bg-white text-slate-400 border-slate-200 hover:border-amber-300 hover:text-amber-600'
                                                             }`}
-                                                        title={(record as any).status === 'unlock_requested' ? "Revisar solicitud pendiente" : "Desbloquear administración"}
+                                                        title={record.status === 'unlock_requested' ? "Revisar solicitud pendiente" : "Desbloquear administración"}
                                                     >
-                                                        <Unlock className={`w-3.5 h-3.5 ${(record as any).status === 'unlock_requested' ? 'animate-pulse' : ''}`} />
+                                                        <Unlock className={`w-3.5 h-3.5 ${record.status === 'unlock_requested' ? 'animate-pulse' : ''}`} />
                                                     </button>
                                                 )}
 
@@ -423,7 +429,7 @@ const MonthlyHistoryTable: React.FC<MonthlyHistoryTableProps> = ({ franchiseId, 
                                                 </button>
 
                                                 {/* EDIT (If allowed) */}
-                                                {(isAdmin || (!record.is_locked && record.status !== 'locked' && record.status !== 'unlock_requested' && record.status !== 'approved')) && (
+                                                {(isAdmin || (!record.isLocked && record.status !== 'locked' && record.status !== 'unlock_requested' && record.status !== 'approved')) && (
                                                     <button
                                                         onClick={() => setEditingMonth(record.month)}
                                                         className="p-2 bg-white hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 border border-slate-200 hover:border-indigo-200 rounded-lg transition-all shadow-sm"
@@ -434,7 +440,7 @@ const MonthlyHistoryTable: React.FC<MonthlyHistoryTableProps> = ({ franchiseId, 
                                                 )}
 
                                                 {/* FRANCHISE REQUEST UNLOCK */}
-                                                {!isAdmin && ((record as any).is_locked || (record as any).status === 'locked' || (record as any).status === 'approved') && (record as any).status !== 'unlock_requested' && (
+                                                {!isAdmin && (record.isLocked || record.status === 'locked' || record.status === 'approved') && record.status !== 'unlock_requested' && (
                                                     <button
                                                         onClick={() => setRequestingUnlock(record)}
                                                         className="p-2 bg-white hover:bg-amber-50 text-slate-400 hover:text-amber-600 border border-slate-200 hover:border-amber-200 rounded-lg transition-all shadow-sm"
@@ -445,7 +451,7 @@ const MonthlyHistoryTable: React.FC<MonthlyHistoryTableProps> = ({ franchiseId, 
                                                 )}
 
                                                 {/* DELETE */}
-                                                {(isAdmin || (!record.is_locked && record.status !== 'locked' && record.status !== 'unlock_requested' && record.status !== 'approved')) && (
+                                                {(isAdmin || (!record.isLocked && record.status !== 'locked' && record.status !== 'unlock_requested' && record.status !== 'approved')) && (
                                                     <button
                                                         onClick={() => handleDelete(record.month)}
                                                         className="p-2 bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 hover:border-rose-200 rounded-lg transition-all shadow-sm group"
@@ -486,7 +492,7 @@ const MonthlyHistoryTable: React.FC<MonthlyHistoryTableProps> = ({ franchiseId, 
                         setEditingMonth(quickViewRecord.month);
                         setQuickViewRecord(null);
                     }}
-                    canEdit={isAdmin || (!(quickViewRecord as any).is_locked && (quickViewRecord as any).status !== 'locked' && (quickViewRecord as any).status !== 'unlock_requested' && (quickViewRecord as any).status !== 'approved')}
+                    canEdit={isAdmin || (!quickViewRecord.isLocked && quickViewRecord.status !== 'locked' && quickViewRecord.status !== 'unlock_requested' && quickViewRecord.status !== 'approved')}
                 />
             )}
 

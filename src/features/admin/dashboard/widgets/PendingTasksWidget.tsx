@@ -116,7 +116,7 @@ const PendingTasksWidget: React.FC<PendingTasksWidgetProps> = ({ limit = 3, comp
                         <div key={record.id} className={`bg-slate-50 dark:bg-slate-900/50 rounded-lg flex justify-between items-center border border-slate-100 dark:border-slate-700/50 transition-colors ${compact ? 'p-2 text-xs' : 'p-3 text-sm'}`}>
                             <div>
                                 <div className="text-slate-900 dark:text-white font-medium truncate max-w-[120px] transition-colors">
-                                    {franchiseNames[record.franchise_id] || record.franchise_id.slice(0, 8) + '...'}
+                                    {franchiseNames[record.franchiseId] || record.franchiseId.slice(0, 8) + '...'}
                                 </div>
                                 <div className="text-slate-400 dark:text-slate-500 text-[10px] text-left transition-colors">
                                     {dateToString(record.date)}
@@ -124,16 +124,16 @@ const PendingTasksWidget: React.FC<PendingTasksWidgetProps> = ({ limit = 3, comp
                             </div>
                             <div className="text-right">
                                 <div className="font-black text-emerald-600 dark:text-emerald-400 transition-colors">
-                                    {record.amount.toFixed(record.amount < 1000 ? 2 : 0)}€
+                                    {franchiseNames[record.franchiseId] || record.franchiseId.slice(0, 8) + '...'}
                                 </div>
-                                {!compact && (
+                                <div className="flex items-center gap-2 mt-auto">
                                     <button
-                                        onClick={() => navigate(`/admin/franchise/${record.franchise_id}`)}
+                                        onClick={() => navigate(`/admin/franchise/${record.franchiseId}`)}
                                         className="text-[10px] text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-bold uppercase tracking-wide mt-1 flex items-center justify-end gap-1 transition-colors"
                                     >
                                         Revisar <ArrowRight className="w-3 h-3" />
                                     </button>
-                                )}
+                                </div>
                             </div>
                         </div>
                     ))}

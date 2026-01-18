@@ -1,7 +1,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { VehicleFormValues, VehicleFormSchema } from '../schemas/VehicleSchema';
+import { VehicleFormValues, VehicleFormSchema } from '../../../../schemas/fleet';
 import { Button } from '../../../../components/ui/primitives/Button';
 import { useVehicleStore } from '../../../../store/useVehicleStore';
 // Use a hardcoded franchiseId for now or get from context context, but usually passed via props or store
@@ -27,11 +27,11 @@ export const VehicleForm: React.FC<VehicleFormProps> = ({ onSuccess, onCancel, i
     } = useForm<VehicleFormValues>({
         resolver: zodResolver(VehicleFormSchema),
         defaultValues: initialData || {
-            matricula: '',
-            modelo: '',
-            km_actuales: 0,
-            proxima_revision_km: 5000,
-            estado: 'active'
+            plate: '',
+            model: '',
+            currentKm: 0,
+            nextRevisionKm: 5000,
+            status: 'active'
         }
     });
 
@@ -56,18 +56,18 @@ export const VehicleForm: React.FC<VehicleFormProps> = ({ onSuccess, onCancel, i
                     Matrícula
                 </label>
                 <input
-                    {...register('matricula')}
+                    {...register('plate')}
                     className={`
                         w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 
                         focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all
-                        ${errors.matricula
+                        ${errors.plate
                             ? 'border-red-500 focus:border-red-500'
                             : 'border-slate-200 dark:border-slate-700'}
                     `}
                     placeholder="1234-ABC"
                 />
-                {errors.matricula && (
-                    <p className="text-xs text-red-500">{errors.matricula.message}</p>
+                {errors.plate && (
+                    <p className="text-xs text-red-500">{errors.plate.message}</p>
                 )}
             </div>
 
@@ -77,18 +77,18 @@ export const VehicleForm: React.FC<VehicleFormProps> = ({ onSuccess, onCancel, i
                     Modelo
                 </label>
                 <input
-                    {...register('modelo')}
+                    {...register('model')}
                     className={`
                         w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 
                         focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all
-                        ${errors.modelo
+                        ${errors.model
                             ? 'border-red-500 focus:border-red-500'
                             : 'border-slate-200 dark:border-slate-700'}
                     `}
                     placeholder="Honda PCX 125"
                 />
-                {errors.modelo && (
-                    <p className="text-xs text-red-500">{errors.modelo.message}</p>
+                {errors.model && (
+                    <p className="text-xs text-red-500">{errors.model.message}</p>
                 )}
             </div>
 
@@ -101,18 +101,18 @@ export const VehicleForm: React.FC<VehicleFormProps> = ({ onSuccess, onCancel, i
                     </label>
                     <input
                         type="number"
-                        {...register('km_actuales', { valueAsNumber: true })}
+                        {...register('currentKm', { valueAsNumber: true })}
                         className={`
                             w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 
                             focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all
-                            ${errors.km_actuales
+                            ${errors.currentKm
                                 ? 'border-red-500 focus:border-red-500'
                                 : 'border-slate-200 dark:border-slate-700'}
                         `}
                         placeholder="0"
                     />
-                    {errors.km_actuales && (
-                        <p className="text-xs text-red-500">{errors.km_actuales.message}</p>
+                    {errors.currentKm && (
+                        <p className="text-xs text-red-500">{errors.currentKm.message}</p>
                     )}
                 </div>
 
@@ -123,18 +123,18 @@ export const VehicleForm: React.FC<VehicleFormProps> = ({ onSuccess, onCancel, i
                     </label>
                     <input
                         type="number"
-                        {...register('proxima_revision_km', { valueAsNumber: true })}
+                        {...register('nextRevisionKm', { valueAsNumber: true })}
                         className={`
                             w-full px-4 py-2 rounded-lg border bg-white dark:bg-slate-800 
                             focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all
-                            ${errors.proxima_revision_km
+                            ${errors.nextRevisionKm
                                 ? 'border-red-500 focus:border-red-500'
                                 : 'border-slate-200 dark:border-slate-700'}
                         `}
                         placeholder="5000"
                     />
-                    {errors.proxima_revision_km && (
-                        <p className="text-xs text-red-500">{errors.proxima_revision_km.message}</p>
+                    {errors.nextRevisionKm && (
+                        <p className="text-xs text-red-500">{errors.nextRevisionKm.message}</p>
                     )}
                 </div>
             </div>
@@ -145,7 +145,7 @@ export const VehicleForm: React.FC<VehicleFormProps> = ({ onSuccess, onCancel, i
                     Estado
                 </label>
                 <select
-                    {...register('estado')}
+                    {...register('status')}
                     className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
                 >
                     <option value="active">Activo</option>
@@ -153,8 +153,8 @@ export const VehicleForm: React.FC<VehicleFormProps> = ({ onSuccess, onCancel, i
                     <option value="out_of_service">Fuera de Servicio</option>
                     <option value="deleted">Baja</option>
                 </select>
-                {errors.estado && (
-                    <p className="text-xs text-red-500">{errors.estado.message}</p>
+                {errors.status && (
+                    <p className="text-xs text-red-500">{errors.status.message}</p>
                 )}
             </div>
 

@@ -5,6 +5,11 @@ import { toFranchiseId } from '../../schemas/scheduler';
 import { setDoc } from 'firebase/firestore';
 
 // --- Mocks ---
+vi.mock('firebase/functions', () => ({
+    getFunctions: vi.fn(),
+    httpsCallable: vi.fn(),
+}));
+
 vi.mock('firebase/firestore', () => ({
     getFirestore: vi.fn(),
     collection: vi.fn(),
@@ -93,7 +98,7 @@ describe('Fleet Module (Phase 2)', () => {
                     estado: 'activo'
                 };
 
-                await FleetService.createVehicle(fid, input);
+                await FleetService.createMoto(fid, input);
 
                 expect(setDoc).toHaveBeenCalledWith(
                     expect.anything(),

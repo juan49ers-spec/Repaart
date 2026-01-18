@@ -51,7 +51,7 @@ const DeliveryScheduler: React.FC<{
     const [showDinner, setShowDinner] = useState(false);
     const [showPrime, setShowPrime] = useState(false);
     const [isPublishing, setIsPublishing] = useState(false);
-    const [currentTime, setCurrentTime] = useState(new Date());
+
 
     // --- SHERIFF & MAGIC AI STATE ---
     const [isSheriffOpen, setIsSheriffOpen] = useState(false);
@@ -88,11 +88,7 @@ const DeliveryScheduler: React.FC<{
 
     const [isGuideOpen, setIsGuideOpen] = useState(false);
 
-    // Update time every minute for the Red Line
-    useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(new Date()), 60000);
-        return () => clearInterval(timer);
-    }, []);
+
 
     // --- DATA HOOKS ---
     const { weekData, loading, motos, riders } = useWeeklySchedule(safeFranchiseId, readOnly, selectedDate);
@@ -259,7 +255,7 @@ const DeliveryScheduler: React.FC<{
         setIsModalOpen(false); // Ensure modal closes
     };
 
-    const deleteShift = (shiftId: string) => {
+    const deleteShift = useCallback((shiftId: string) => {
         if (readOnly) {
             alert("Modo solo lectura: No se pueden borrar turnos.");
             return;
@@ -275,7 +271,7 @@ const DeliveryScheduler: React.FC<{
             });
             setLocalShifts(prev => prev.filter(s => String(s.id) !== shiftIdStr));
         }
-    };
+    }, [readOnly]);
 
     const handlePublish = async () => {
         if (!safeFranchiseId || isPublishing || readOnly) return;
@@ -614,9 +610,6 @@ const DeliveryScheduler: React.FC<{
         return res;
     }, [days, mergedShifts]);
 
-    // --- TIME INDICATOR CALC ---
-    const viewingToday = isToday(selectedDate);
-    const redLinePosition = viewingToday ? (currentTime.getHours() * 60 + currentTime.getMinutes()) / 1440 * 100 : null;
 
 
 
@@ -635,7 +628,7 @@ const DeliveryScheduler: React.FC<{
         });
     };
 
-    const handleDuplicateShift = (shift: Shift) => {
+    const handleDuplicateShift = useCallback((shift: Shift) => {
         const start = new Date(shift.startAt);
         const end = new Date(shift.endAt);
 
@@ -661,7 +654,7 @@ const DeliveryScheduler: React.FC<{
         };
 
         saveShift(newShiftData);
-    };
+    }, [saveShift]);
 
     const handleValidateShift = (shift: any) => {
         // Just save it with confirmed flag - simplified for now
@@ -811,7 +804,6 @@ const DeliveryScheduler: React.FC<{
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [selectedShiftId, mergedShifts, deleteShift, contextMenu, isModalOpen, isQuickFillOpen, isGuideOpen, localShifts, handleDuplicateShift]);
-
     if (loading) return <div className="p-8 text-center animate-pulse text-slate-400 font-medium h-96 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
             <Loader2 className="animate-spin text-indigo-500" size={32} />
@@ -1040,11 +1032,11 @@ const DeliveryScheduler: React.FC<{
                     </div>
                 )}
 
-                {/* 2. DYNAMIC FLEX GRID CONTAINER (NO SCROLL) */}
-                <div className="flex-1 overflow-hidden bg-white relative flex flex-col min-h-0">
+                {/* 2. DYNAMIC FLEX GRID CONTAINER (SCROLLABLE X, FIXED Y) */}
+                <div className="flex-1 overflow-x-auto overflow-y-hidden bg-white relative flex flex-col min-h-0">
 
                     {/* HEADER - Floating Glass Effect */}
-                    <div className="flex-none flex w-full border-b border-indigo-100 bg-white/95 backdrop-blur-sm z-30 h-10 shadow-sm">
+                    <div className="flex-none flex w-full border-b border-indigo-100 bg-white/95 backdrop-blur-sm z-30 h-10 shadow-sm min-w-[1000px]">
                         {/* CORNER (Riders Label) */}
                         <div className="w-48 flex-none border-r border-slate-200 bg-slate-50/80 backdrop-blur-sm flex items-center px-4">
                             <span className="text-[9px] uppercase font-medium tracking-widest text-slate-400">Riders</span>
@@ -1075,18 +1067,16 @@ const DeliveryScheduler: React.FC<{
                                     {/* Timeline Header Day View */}
                                     {/* Timeline Header Day View */}
                                     {dayCols.map((slot) => {
-                                        const hourInt = Math.floor(slot.h);
-                                        // Use same zebra logic as grid
-                                        const isOddHour = hourInt % 2 !== 0;
+                                        // Minimalist: No Zebra logic needed
 
                                         return (
                                             <div key={slot.i} className={cn(
                                                 "flex-1 flex items-end justify-start pb-1 pl-1 relative group overflow-visible h-full border-l",
                                                 // Border Hierarchy (Header)
-                                                slot.isFullHour ? "border-indigo-200" :
-                                                    slot.isHalfHour ? "border-indigo-100/60 border-dashed" : "border-indigo-50/50 border-dotted",
-                                                // Zebra BG
-                                                isOddHour ? "bg-indigo-50/20" : "bg-white",
+                                                slot.isFullHour ? "border-slate-200" :
+                                                    slot.isHalfHour ? "border-slate-100 border-dashed" : "border-slate-50 border-dotted",
+                                                // Minimalist: No Zebra
+                                                "bg-white",
                                             )}>
                                                 {/* Prime bg */}
                                                 {!showPrime && ((slot.h >= 12 && slot.h < 16.5) || (slot.h >= 20 && slot.h < 24)) && (
@@ -1110,16 +1100,8 @@ const DeliveryScheduler: React.FC<{
                     </div>
 
                     {/* BODY (ROWS) */}
-                    <div className="flex-1 flex flex-col min-h-0 bg-white relative">
-                        {/* RED LINE INDICATOR (Absolute over the entire grid) */}
-                        {viewMode === 'day' && redLinePosition !== null && (
-                            <div
-                                className="absolute top-0 bottom-0 w-px bg-rose-500 z-50 pointer-events-none shadow-[0_0_8px_1px_rgba(244,63,94,0.4)]"
-                                style={{ left: `calc(14rem + ((100% - 14rem) * ${getDayViewPosition(currentTime.getHours() * 60 + currentTime.getMinutes()) / 100}))` }} // 14rem is w-56
-                            >
-                                <div className="absolute -top-1 -translate-x-1/2 w-2 h-2 rounded-full bg-rose-500" />
-                            </div>
-                        )}
+                    <div className="flex-1 flex flex-col min-h-0 bg-white relative overflow-y-auto min-w-[1000px]">
+                        {/* RED LINE INDICATOR REMOVED */}
 
                         {ridersGrid.map((rider, index) => (
                             <div
@@ -1232,8 +1214,6 @@ const DeliveryScheduler: React.FC<{
                                             <div className="absolute inset-0 flex pointer-events-none">
                                                 {dayCols.map((slot) => {
                                                     const isFullHO = slot.isFullHour;
-                                                    const hourInt = Math.floor(slot.h);
-                                                    const isOddHour = hourInt % 2 !== 0;
 
                                                     return (
                                                         <DroppableCell
@@ -1245,11 +1225,11 @@ const DeliveryScheduler: React.FC<{
                                                             isToday={isToday(selectedDate)}
                                                             className={cn(
                                                                 "flex-1 h-full transition-all duration-300 min-w-0 border-l",
-                                                                // Borders: Premium Indigo Hierarchy
-                                                                isFullHO ? "border-indigo-200" :
-                                                                    slot.isHalfHour ? "border-indigo-100/60 border-dashed" : "border-indigo-50/50 border-dotted",
-                                                                // Zebra Columns: Cool Indigo Tint
-                                                                isOddHour ? "bg-indigo-50/20" : "bg-white",
+                                                                // Borders: Clean Slate Hierarchy
+                                                                isFullHO ? "border-slate-200" :
+                                                                    slot.isHalfHour ? "border-slate-100 border-dashed" : "border-slate-50 border-dotted",
+                                                                // Minimalist: No Zebra stripes
+                                                                "bg-white",
                                                                 // Prime Highlight
                                                                 ((slot.h >= 12 && slot.h < 16) || (slot.h >= 20 && slot.h < 24))
                                                                     ? (showPrime ? "bg-amber-100/10" : "bg-amber-50/10")
@@ -1303,44 +1283,45 @@ const DeliveryScheduler: React.FC<{
                         ))}
                     </div>
 
-                </div>
 
-                {/* FOOTER: Coverage Aligned with Grid */}
-                <div className="bg-white border-t border-slate-200 flex items-stretch shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.02)] z-30 min-h-[40px]">
-                    {/* LEFT COL: Matches Rider Column Width (w-56) */}
-                    <div className="w-48 flex-none flex items-center px-4 border-r border-slate-200 bg-slate-50/50">
-                        <span className="text-[9px] font-medium text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Riders / Turno
-                        </span>
-                    </div>
 
-                    {/* RIGHT COLS: Match Day Columns */}
-                    <div className="flex-1 flex min-w-0">
-                        {days.map(d => {
-                            const counts = coverage[d.isoDate] || Array(24).fill(0);
-                            const noonCount = counts[14] || 0;
-                            const nightCount = counts[21] || 0;
+                    {/* FOOTER: Coverage Aligned with Grid */}
+                    <div className="bg-white border-t border-slate-200 flex items-stretch shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.02)] z-30 min-h-[40px] flex-none min-w-[1000px]">
+                        {/* LEFT COL: Matches Rider Column Width (w-56) */}
+                        <div className="w-48 flex-none flex items-center px-4 border-r border-slate-200 bg-slate-50/50">
+                            <span className="text-[9px] font-medium text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Riders / Turno
+                            </span>
+                        </div>
 
-                            return (
-                                <div key={d.isoDate} className="flex-1 border-r border-slate-100 last:border-r-0 flex justify-center items-center py-1">
-                                    <div className="flex items-center gap-3 opacity-80 hover:opacity-100 transition-opacity">
-                                        {/* Mediodía */}
-                                        <div className="flex items-center gap-1" title="Mediodía (14:00)">
-                                            <Sun className="w-3 h-3 text-amber-500" />
-                                            <span className="text-[9px] font-medium text-slate-500 w-3 text-center">{noonCount}</span>
-                                        </div>
+                        {/* RIGHT COLS: Match Day Columns */}
+                        <div className="flex-1 flex min-w-0">
+                            {days.map(d => {
+                                const counts = coverage[d.isoDate] || Array(24).fill(0);
+                                const noonCount = counts[14] || 0;
+                                const nightCount = counts[21] || 0;
 
-                                        <div className="w-px h-2.5 bg-slate-200" />
+                                return (
+                                    <div key={d.isoDate} className="flex-1 border-r border-slate-100 last:border-r-0 flex justify-center items-center py-1">
+                                        <div className="flex items-center gap-3 opacity-80 hover:opacity-100 transition-opacity">
+                                            {/* Mediodía */}
+                                            <div className="flex items-center gap-1" title="Mediodía (14:00)">
+                                                <Sun className="w-3 h-3 text-amber-500" />
+                                                <span className="text-[9px] font-medium text-slate-500 w-3 text-center">{noonCount}</span>
+                                            </div>
 
-                                        {/* Noche */}
-                                        <div className="flex items-center gap-1" title="Noche (21:00)">
-                                            <Moon className="w-3 h-3 text-indigo-500" />
-                                            <span className="text-[9px] font-medium text-slate-500 w-3 text-center">{nightCount}</span>
+                                            <div className="w-px h-2.5 bg-slate-200" />
+
+                                            {/* Noche */}
+                                            <div className="flex items-center gap-1" title="Noche (21:00)">
+                                                <Moon className="w-3 h-3 text-indigo-500" />
+                                                <span className="text-[9px] font-medium text-slate-500 w-3 text-center">{nightCount}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
 
@@ -1355,7 +1336,7 @@ const DeliveryScheduler: React.FC<{
                             selectedDate={selectedDateForNew || toLocalDateString(selectedDate)}
                             prefillHour={prefillHour}
                             riders={simpleRiders}
-                            motos={vehicles.map(v => ({ id: (v.id || 'none') as string, licensePlate: (v.matricula || '') as string, model: (v.modelo || '') as string }))}
+                            motos={vehicles.map(v => ({ id: (v.id || 'none') as string, licensePlate: (v.plate || '') as string, model: (v.model || '') as string }))}
                             existingShifts={mergedShifts}
                         />
                     )

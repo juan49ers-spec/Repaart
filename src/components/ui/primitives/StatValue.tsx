@@ -14,10 +14,10 @@ interface StatValueProps {
 
 export const StatValue: React.FC<StatValueProps> = ({ value, unit, trend, description, size = 'lg' }) => {
     const sizeClasses = {
-        sm: 'text-xl',
-        md: 'text-2xl',
-        lg: 'text-3xl',
-        xl: 'text-4xl'
+        sm: 'text-lg md:text-xl',
+        md: 'text-xl md:text-2xl',
+        lg: 'text-2xl md:text-3xl',
+        xl: 'text-3xl lg:text-4xl'
     };
 
     const isPositive = trend && trend.value >= 0;

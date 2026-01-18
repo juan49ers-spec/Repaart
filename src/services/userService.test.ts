@@ -73,7 +73,7 @@ describe('UserService', () => {
                 expect.objectContaining({
                     name: 'Test Franchise',
                     role: 'franchise',
-                    active: true
+                    isActive: true
                 })
             );
         });

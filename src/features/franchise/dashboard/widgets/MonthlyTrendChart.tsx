@@ -17,7 +17,7 @@ const CustomTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload
                 <p className="font-bold text-slate-200 mb-2 border-b border-slate-700 pb-1 text-xs uppercase tracking-wider">{label}</p>
                 {payload.map((entry, index) => (
                     <div key={index} className="flex items-center gap-2 text-sm py-0.5">
-                        <div className="w-2 h-2 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.5)] bg-[var(--entry-color)]" style={{ '--entry-color': entry.color } as React.CSSProperties} />
+                        <div className={`w-2 h-2 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.5)] ${entry.name === 'Ingresos' ? 'bg-blue-400' : 'bg-emerald-400'}`} />
                         <span className="text-slate-400 text-xs">{entry.name}:</span>
                         <span className={`font-bold font-mono ${Number(entry.value) >= 0 ? entry.name === 'Ingresos' ? 'text-blue-400' : 'text-emerald-400' : 'text-rose-400'}`}>
                             {formatMoney(Number(entry.value))}€

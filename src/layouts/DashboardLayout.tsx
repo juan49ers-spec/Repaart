@@ -5,6 +5,7 @@ import NavigationSidebar from './components/NavigationSidebar';
 import BottomTabBar from './components/BottomTabBar';
 import ChatAssistant from './components/ChatAssistant';
 import PageHelpModal from '../components/ui/modals/PageHelpModal';
+import CommandPalette from '../components/ui/CommandPalette';
 import { pageHelpData, PageHelpContent } from '../constants/pageHelpData';
 
 // Define explicit types for props
@@ -102,10 +103,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 />
             )}
 
-            {/* Navigation Sidebar */}
+            {/* Navigation Sidebar (Mobile Only - Drawer) */}
             <NavigationSidebar isAdmin={isAdmin} isFranchise={isFranchise} />
 
-            {/* Main Content Area */}
+            {/* Main Content Area - Full width */}
             <div className={`flex-1 flex flex-col transition-all duration-300 w-full`}>
                 <ImpersonationBanner />
                 <Header {...headerProps} />
@@ -139,6 +140,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 content={helpContent}
                 onClose={() => setHelpContent(null)}
             />
+
+            <CommandPalette />
         </div >
     );
 };

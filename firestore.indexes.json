@@ -51,7 +51,7 @@
             "queryScope": "COLLECTION",
             "fields": [
                 {
-                    "fieldPath": "franchise_id",
+                    "fieldPath": "franchiseId",
                     "order": "ASCENDING"
                 },
                 {
@@ -65,11 +65,25 @@
             "queryScope": "COLLECTION",
             "fields": [
                 {
-                    "fieldPath": "rider_id",
+                    "fieldPath": "franchiseId",
                     "order": "ASCENDING"
                 },
                 {
-                    "fieldPath": "start_time",
+                    "fieldPath": "startAt",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "work_shifts",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "riderId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "startAt",
                     "order": "ASCENDING"
                 }
             ]

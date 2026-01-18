@@ -1,53 +1,49 @@
 
 [1m[46m RUN [49m[22m [36mv4.0.16 [39m[90mC:/Users/Usuario/.gemini/antigravity/playground/synthetic-sagan[39m
 
- [31mÔØ»[39m src/services/scheduler/weekService.test.ts [2m([22m[2m11 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 20[2mms[22m[39m
-       [32mÔ£ô[39m should validate a correct WeekData object[32m 3[2mms[22m[39m
-       [32mÔ£ô[39m should fail with invalid date format[32m 1[2mms[22m[39m
-       [32mÔ£ô[39m should enforce default values[32m 1[2mms[22m[39m
-         [32mÔ£ô[39m should correctly calculate ISO week for regular date[32m 0[2mms[22m[39m
-         [32mÔ£ô[39m should handle year boundary correctly (late Dec)[32m 0[2mms[22m[39m
-         [32mÔ£ô[39m should handle year boundary correctly (early Jan)[32m 0[2mms[22m[39m
-         [32mÔ£ô[39m should return validated data when document exists[32m 3[2mms[22m[39m
-         [32mÔ£ô[39m should return null if document does not exist[32m 0[2mms[22m[39m
-[31m         [31m├ù[31m should throw if data is invalid (Zod validation)[39m[32m 8[2mms[22m[39m
-         [32mÔ£ô[39m should create new week if not exists[32m 1[2mms[22m[39m
-         [32mÔ£ô[39m should validation fail if trying to init with bad date[32m 1[2mms[22m[39m
+ [31mÔØ»[39m src/services/fleetService.test.ts [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 11[2mms[22m[39m
+       [32mÔ£ô[39m should map legacy snake_case fields correctly[32m 2[2mms[22m[39m
+       [32mÔ£ô[39m should map new CamelCase fields correctly[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m should trigger maintenance status and notification when km limit reached[39m[32m 7[2mms[22m[39m
 
 ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ» Failed Tests 1 ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»
 
- FAIL  src/services/scheduler/weekService.test.ts > Scheduler Module > WeekService > getWeek > should throw if data is invalid (Zod validation)
-AssertionError: promise resolved "{ id: '2025_40', status: 'draft', ÔÇª(2) }" instead of rejecting
+ FAIL  src/services/fleetService.test.ts > FleetService > updateVehicle Maintenance Logic > should trigger maintenance status and notification when km limit reached
+AssertionError: expected "vi.fn()" to be called with arguments: [ Anything, ObjectContaining{ÔÇª} ]
 
-- Expected
-+ Received
+Received: 
 
-- Error {
--   "message": "rejected promise",
-+ {
-+   "id": "2025_40",
-+   "metrics": {
-+     "activeRiders": 0,
-+     "motosInUse": 0,
-+     "totalHours": 0,
-+   },
-+   "shifts": [],
-+   "status": "draft",
-  }
+  1st vi.fn() call:
 
- ÔØ» src/services/scheduler/weekService.test.ts:139:91
+  [
+-   Anything,
+-   ObjectContaining {
++   undefined,
++   {
+      "currentKm": 5001,
+      "status": "maintenance",
++     "updatedAt": {
++       "type": "timestamp",
++     },
+    },
+  ]
 
-    137|                 });
-    138| 
-    139|                 await expect(WeekService.getWeek(toFranchiseId('f1'), ÔÇª
-       |                                                                                           ^
-    140|                     .rejects
-    141|                     .toThrow(); // ZodError
+
+Number of calls: 1
+
+ ÔØ» src/services/fleetService.test.ts:124:31
+    122|             await fleetService.updateVehicle('veh_1', updates);
+    123| 
+    124|             expect(updateDoc).toHaveBeenCalledWith(
+       |                               ^
+    125|                 expect.anything(),
+    126|                 expect.objectContaining({
+
 
 ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[1/1]ÔÄ»
 
 [2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
-[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m10 passed[39m[22m[90m (11)[39m
-[2m   Start at [22m 22:06:18
-[2m   Duration [22m 1.64s[2m (transform 108ms, setup 171ms, import 164ms, tests 20ms, environment 1.01s)[22m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m2 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 00:12:58
+[2m   Duration [22m 1.32s[2m (transform 97ms, setup 130ms, import 137ms, tests 11ms, environment 814ms)[22m
 

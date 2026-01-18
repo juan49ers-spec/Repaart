@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
-import { ToastContext } from '../../../context/contexts';
+import { FranchiseId } from '../../../schemas/scheduler';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm, useFieldArray, SubmitHandler } from 'react-hook-form';
 import {
@@ -7,7 +7,8 @@ import {
     Mail, Phone, Shield, Trash2, Plus, DollarSign, Lock, ArrowLeft
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
-import { userService, UserProfile } from '../../../services/userService';
+import { ToastContext } from '../../../context/contexts';
+import { userService, User as AppUser } from '../../../services/userService';
 import { updateProfile } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -69,8 +70,9 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
 
     // Handle Deep Linking to Tabs
     useEffect(() => {
-        if (location.state && (location.state as any).tab) {
-            const targetTab = (location.state as any).tab;
+        const state = location.state as { tab?: string } | null;
+        if (state && state.tab) {
+            const targetTab = state.tab;
             if (['user', 'general', 'logistics'].includes(targetTab)) {
                 setActiveTab(targetTab);
             }
@@ -115,7 +117,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
             try {
                 // 1. Load Franchise Data
                 const franchiseData = await userService.getUserProfile(targetId);
-                const data = (franchiseData || {}) as UserProfile;
+                const data = (franchiseData || {}) as AppUser;
 
                 // 2. Load User Data (if self)
                 let userData = {
@@ -139,12 +141,12 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                 reset({
                     // Franchise
                     legalName: (data as any).legalName || (data as any).businessName || '',
-                    name: data.name || (data as any).franchiseName || '',
+                    name: data.displayName || (data as any).franchiseName || '',
                     cif: data.cif || (data as any).taxId || '',
                     city: data.city || '',
                     address: data.address || '',
                     email: data.email || (targetId === user?.uid ? (user?.email || '') : ''),
-                    phone: data.phone || '', // Business phone (was data.phone)
+                    phone: data.phoneNumber || '', // Business phone
                     franchiseId: data.franchiseId || '',
                     role: data.role || 'franchise',
                     zipCodes: data.zipCodes || [],
@@ -218,14 +220,14 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
             // 2. Update Franchise Profile (Business)
             const cleanFranchiseId = (data.franchiseId || '').toUpperCase().replace(/\s+/g, '-').trim();
             const franchisePayload = {
+                displayName: data.name,
                 legalName: data.legalName,
-                name: data.name,
                 cif: data.cif,
                 address: data.address,
-                email: data.email, // Business Email
-                phone: data.phone, // Business Phone
+                email: data.email,
+                phoneNumber: data.phone,
                 role: data.role,
-                franchiseId: cleanFranchiseId,
+                franchiseId: cleanFranchiseId as FranchiseId,
                 pack: data.pack,
                 zipCodes: data.zipCodes,
 

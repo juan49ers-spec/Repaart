@@ -1,0 +1,74 @@
+46nnpHC2CaMOtCX1zClTwkLcO0Y2 {
+  email: 'ridertest4@repaart.es',
+  displayName: 'Alvaro Llorente',
+  phoneNumber: '666555222',
+  franchiseId: 'IAVDV9ZDFZWGF0OSU986OCYWU0A3',
+  contractHours: 25,
+  photoURL: '',
+  status: 'active',
+  role: 'rider',
+  createdAt: Timestamp { _seconds: 1768258040, _nanoseconds: 820000000 },
+  metrics: {
+    totalDeliveries: 0,
+    rating: 5,
+    efficiency: 100,
+    joinedAt: Timestamp { _seconds: 1768258040, _nanoseconds: 820000000 }
+  },
+  updatedAt: Timestamp { _seconds: 1768258040, _nanoseconds: 820000000 }
+}
+4JtiGTXnJnQW6T5vr0trGwfriVp2 {
+  email: 'ridertest2@repaart.es',
+  displayName: 'Juan Mu├▒oz',
+  phoneNumber: '666558556',
+  franchiseId: 'IAVDV9ZDFZWGF0OSU986OCYWU0A3',
+  contractHours: 25,
+  photoURL: '',
+  status: 'active',
+  role: 'rider',
+  createdAt: Timestamp { _seconds: 1768257898, _nanoseconds: 425000000 },
+  metrics: {
+    totalDeliveries: 0,
+    rating: 5,
+    efficiency: 100,
+    joinedAt: Timestamp { _seconds: 1768257898, _nanoseconds: 425000000 }
+  },
+  updatedAt: Timestamp { _seconds: 1768257898, _nanoseconds: 425000000 }
+}
+IAvDv9ZdFzWgF0osu986OCYWu0A3 {
+  uid: 'IAvDv9ZdFzWgF0osu986OCYWu0A3',
+  createdAt: Timestamp { _seconds: 1767134297, _nanoseconds: 764000000 },
+  role: 'franchise',
+  email: 'franquicia3@repaart.es',
+  status: 'active',
+  updatedAt: Timestamp { _seconds: 1767134297, _nanoseconds: 764000000 },
+  phoneNumber: '6566566656',
+  pack: 'basic',
+  password: 'Botellinesa1euro',
+  zipCodes: [],
+  radius: null,
+  royaltyExemptLogistics: false,
+  minOrder: null,
+  notifications: {
+    docsExpired: true,
+    lowBattery: true,
+    riderIncident: true,
+    monthlyClosing: true
+  },
+  cif: 'B12345678',
+  photoURL: '',
+  legalName: '',
+  logisticsRates: [
+    { min: 0, max: 4, price: 6, name: '0-4 km' },
+    { min: 4.1, max: 5, price: 7, name: '4.1-5 km' },
+    { min: 5.1, max: 6, price: 8, name: '5.1-6 km' },
+    { min: 6.1, max: 7, price: 9, name: '6.1-7 km' }
+  ],
+  address: 'Calle Sevilla',
+  city: 'Sevilla',
+  franchiseId: 'IAVDV9ZDFZWGF0OSU986OCYWU0A3',
+  name: 'Alcal├í de Guadaira',
+  displayName: 'Mohamed',
+  phone: '',
+  monthlyRevenueGoal: 12000,
+  updated_at: Timestamp { _seconds: 1768603059, _nanoseconds: 86000000 }
+}

@@ -10,8 +10,8 @@ const MOCK_RIDERS = [
 ];
 
 const MOCK_MOTOS = [
-    { plate: '1111-AAA', model: 'Silence S02', brand: 'Silence', currentKm: 1500, nextRevisionKm: 5000 },
-    { plate: '2222-BBB', model: 'Niu NQi', brand: 'Niu', currentKm: 4950, nextRevisionKm: 5000 }
+    { plate: '1111-AAA', model: 'Silence S02', brand: 'Silence', currentKm: 1500, nextRevisionKm: 5000, type: 'vehicle' as const, status: 'active' as const },
+    { plate: '2222-BBB', model: 'Niu NQi', brand: 'Niu', currentKm: 4950, nextRevisionKm: 5000, type: 'vehicle' as const, status: 'active' as const }
 ];
 
 export const Seeder: React.FC = () => {

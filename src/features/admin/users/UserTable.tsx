@@ -1,8 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Shield, Trash2, Edit, Building, User } from 'lucide-react';
+import { Shield, Trash2, Edit, Building, User as UserIcon } from 'lucide-react';
 import { getStatusConfig } from '../../../lib/constants';
 import { formatDate } from '../../../utils/formatDate';
-import { UserProfile } from '../../../services/userService';
+import { User } from '../../../services/userService';
 
 // =====================================================
 // TYPES & INTERFACES
@@ -11,17 +11,17 @@ import { UserProfile } from '../../../services/userService';
 export type UserAction = 'edit' | 'delete' | 'toggleStatus';
 
 interface UserRowProps {
-    user: UserProfile;
+    user: User;
     style?: React.CSSProperties;
-    onAction: (action: UserAction, user: UserProfile) => void;
+    onAction: (action: UserAction, user: User) => void;
     currentUserRole: string;
     readOnly?: boolean;
     franchiseId?: string | null;
 }
 
 interface UserTableProps {
-    users: UserProfile[];
-    onAction: (action: UserAction, user: UserProfile) => void;
+    users: User[];
+    onAction: (action: UserAction, user: User) => void;
     currentUserRole: string;
     readOnly?: boolean;
     franchiseId?: string | null;
@@ -44,9 +44,9 @@ const UserRow: React.FC<UserRowProps> = ({ user, style, onAction, currentUserRol
             case 'franchise':
                 return { label: 'FRANQ', bg: 'bg-amber-500 text-black border-amber-600 font-extrabold', icon: <Building className="w-3 h-3" /> };
             case 'rider':
-                return { label: 'RIDER', bg: 'bg-slate-700 text-slate-300 border-slate-600', icon: <User className="w-3 h-3" /> };
+                return { label: 'RIDER', bg: 'bg-slate-700 text-slate-300 border-slate-600', icon: <UserIcon className="w-3 h-3" /> };
             default:
-                return { label: role.toUpperCase().substring(0, 4), bg: 'bg-slate-800 text-slate-400 border-slate-700', icon: <User className="w-3 h-3" /> };
+                return { label: role.toUpperCase().substring(0, 4), bg: 'bg-slate-800 text-slate-400 border-slate-700', icon: <UserIcon className="w-3 h-3" /> };
         }
     };
 
@@ -118,7 +118,7 @@ const UserRow: React.FC<UserRowProps> = ({ user, style, onAction, currentUserRol
 
             {/* Date */}
             <div className="w-[100px] hidden 2xl:flex text-[10px] text-slate-600 font-bold uppercase tracking-wider">
-                {formatDate(user.createdAt as any)}
+                {formatDate(user.createdAt)}
             </div>
 
             {/* Actions */}

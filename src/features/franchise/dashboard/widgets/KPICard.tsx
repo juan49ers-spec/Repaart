@@ -86,7 +86,7 @@ const KPICard: React.FC<KPICardProps> = ({
     const trendBadgeIntent: BadgeIntent = isPositive ? 'success' : 'danger';
 
     return (
-        <Card className="h-full relative group">
+        <Card className="h-full relative group animate-in fade-in zoom-in-95 duration-500 ease-out hover:shadow-lg hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all border-transparent hover:border-indigo-100 dark:hover:border-indigo-900/50">
 
             {/* Critical Alert Banner */}
             {isCriticalDrop && (

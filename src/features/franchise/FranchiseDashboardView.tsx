@@ -221,13 +221,13 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                         {!readOnly && (
                             <button
                                 onClick={() => setIsWizardOpen(true)}
-                                className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-1.5 shadow-sm hover:shadow border ${rawData?.is_locked || rawData?.status === 'submitted' || rawData?.status === 'approved' || rawData?.status === 'locked'
-                                    ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
-                                    : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                                className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-1.5 shadow-sm hover:shadow border ${rawData?.isLocked || rawData?.status === 'submitted' || rawData?.status === 'approved' || rawData?.status === 'locked'
+                                    ? 'bg-amber-50/50 border-amber-200 text-amber-700'
+                                    : 'bg-indigo-600 border-indigo-500 text-white hover:bg-indigo-700 hover:-translate-y-0.5'
                                     }`}
-                                title={rawData?.is_locked ? "Ver Cierre (Bloqueado)" : "Iniciar Cierre de Mes"}
+                                title={rawData?.isLocked ? "Ver Cierre (Bloqueado)" : "Iniciar Cierre de Mes"}
                             >
-                                {rawData?.is_locked || rawData?.status === 'submitted' || rawData?.status === 'approved' || rawData?.status === 'locked' ? (
+                                {rawData?.isLocked || rawData?.status === 'submitted' || rawData?.status === 'approved' || rawData?.status === 'locked' ? (
                                     <>
                                         <Lock className="w-4 h-4 text-emerald-500" />
                                         <span>Ver Cierre</span>
@@ -251,13 +251,13 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                         <DynamicBanner />
 
                         {/* ROW 1: CORE METRICS & WEALTH */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
                             {/* 1. Ingresos */}
                             <div onClick={() => {
                                 if (readOnly) return; // Disabled in impersonation mode
                                 setGoalModalMode('default');
                                 setShowGoalModal(true);
-                            }} className={`${readOnly ? '' : 'cursor-pointer hover:z-10 transition-all transform hover:-translate-y-1 duration-300 ring-2 ring-transparent hover:ring-indigo-500/20'} group/goal relative rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800`}>
+                            }} className={`${readOnly ? '' : 'cursor-pointer hover:z-10 transition-all transform hover:-translate-y-1 duration-300 ring-2 ring-transparent hover:ring-indigo-500/20'} group/goal relative rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-700 delay-0 fill-mode-backwards`}>
                                 <KPICard
                                     title="Ingresos"
                                     value={formatMoney(revenue || 0) + '€'}
@@ -292,11 +292,12 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
 
                                     // 1. Calculate Historical Profit (excluding current view month to avoid double counting if present)
                                     const historicalProfit = formattedTrendData
-                                        .filter((month: any) =>
-                                            month.month &&
-                                            month.month.startsWith(currentYear) &&
-                                            month.month !== effectiveMonth
-                                        )
+                                        .filter((month: any) => {
+                                            const monthKey = month.fullDate || month.month;
+                                            return monthKey &&
+                                                monthKey.startsWith(currentYear) &&
+                                                monthKey !== effectiveMonth;
+                                        })
                                         .reduce((sum, month) => {
                                             const opProfit = month.revenue - month.expenses;
                                             const tax = opProfit > 0 ? opProfit * (rawData?.irpfPercent || 20) / 100 : 0;

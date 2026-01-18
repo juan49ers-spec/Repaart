@@ -56,7 +56,7 @@ const MotoManagement: React.FC<MotoManagementProps> = ({ franchiseId, readOnly =
             };
 
             if (editingMoto) {
-                await FleetService.updateMoto(editingMoto.id, payload);
+                await FleetService.updateMoto(editingMoto.id || '', payload);
             } else {
                 await FleetService.createMoto(toFranchiseId(franchiseId), {
                     ...payload,
@@ -93,7 +93,7 @@ const MotoManagement: React.FC<MotoManagementProps> = ({ franchiseId, readOnly =
     const handleDelete = async (id: string) => {
         if (!confirm('¿Estás seguro de desactivar esta moto?')) return;
         try {
-            await FleetService.updateMoto(id, { status: 'deleted' });
+            await FleetService.updateMoto(id || '', { status: 'deleted' });
         } catch (error) {
             console.error("Error deleting moto:", error);
         }
@@ -104,7 +104,7 @@ const MotoManagement: React.FC<MotoManagementProps> = ({ franchiseId, readOnly =
         e.stopPropagation();
         const newStatus: Moto['status'] = moto.status === 'maintenance' ? 'active' : 'maintenance';
         try {
-            await FleetService.updateMoto(moto.id, { status: newStatus });
+            await FleetService.updateMoto(moto.id || '', { status: newStatus });
         } catch (error) {
             console.error("Error toggling status", error);
         }
@@ -425,7 +425,7 @@ const MotoManagement: React.FC<MotoManagementProps> = ({ franchiseId, readOnly =
                                 <div className="pt-2 flex justify-center">
                                     <button
                                         type="button"
-                                        onClick={() => handleDelete(editingMoto.id)}
+                                        onClick={() => handleDelete(editingMoto.id || '')}
                                         className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity font-medium"
                                     >
                                         <Trash2 className="w-3 h-3" /> Desactivar permanentemente este activo

@@ -8,9 +8,9 @@ export interface MonthlyRecord {
     revenue: number;
     totalExpenses: number;
     profit: number;
-    updated_at?: Date | string;
+    updatedAt?: Date | string;
     status: 'draft' | 'pending' | 'approved' | 'rejected' | 'locked' | 'unlock_requested';
-    is_locked?: boolean;
+    isLocked?: boolean;
     unlockReason?: string;
     rejectionReason?: string;
 }
@@ -48,9 +48,9 @@ export const useFranchiseHistory = (franchiseId?: string) => {
                         revenue,
                         totalExpenses: expenses,
                         profit: revenue - expenses,
-                        updated_at: d.updatedAt?.toDate?.() || d.updated_at || new Date(),
-                        status: d.status || (d.is_locked ? 'locked' : 'draft'),
-                        is_locked: d.is_locked || false,
+                        updatedAt: d.updatedAt?.toDate?.() || d.updatedAt || new Date(),
+                        status: d.status || (d.isLocked ? 'locked' : 'draft'),
+                        isLocked: d.isLocked || false,
                         unlockReason: d.unlockReason,
                         rejectionReason: d.rejectionReason
                     } as MonthlyRecord;

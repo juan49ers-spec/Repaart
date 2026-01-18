@@ -8,7 +8,7 @@ import { useToast } from '../../../hooks/useToast';
 import UserTable from './UserTable';
 import CriticalActionModal from '../../../components/ui/overlays/CriticalActionModal';
 import CreateUserModal, { CreateUserInput, UpdateUserInput } from './CreateUserModal';
-import { UserProfile } from '../../../services/userService';
+import { User } from '../../../services/userService';
 
 // --- SUB-COMPONENTS (Local for now to keep orchestrator clean) ---
 
@@ -32,7 +32,7 @@ export interface UserManagementPanelProps {
 interface ModalConfig {
     isOpen: boolean;
     type: 'create' | 'edit' | 'delete' | 'ban' | null;
-    target: UserProfile | null;
+    target: User | null;
     requestData?: RegistrationRequest; // For approval flow
 }
 
@@ -100,7 +100,7 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
     // Ideally useUserManager should allow fetching all. We assume it does by default.
 
     // --- CLIENT SIDE FILTERING BASED ON TABS ---
-    const filteredUsers = users.filter((u: UserProfile) => {
+    const filteredUsers = users.filter((u: User) => {
         const role = u.role || 'user';
         if (activeTab === 'structure') {
             return role === 'admin' || role === 'franchise' || role === 'franchisee';
@@ -115,7 +115,7 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
     const [modalConfig, setModalConfig] = useState<ModalConfig>({ isOpen: false, type: null, target: null });
     const [actionLoading, setActionLoading] = useState(false);
 
-    const handleAction = (type: string, targetUser: UserProfile) => {
+    const handleAction = (type: string, targetUser: User) => {
         if (readOnly) return; // Guard clause
         if (type === 'delete') {
             setModalConfig({
@@ -188,7 +188,7 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
         }
     };
 
-    const executeStatusToggle = async (target: UserProfile | null = modalConfig.target) => {
+    const executeStatusToggle = async (target: User | null = modalConfig.target) => {
         if (!target) return;
         setActionLoading(true);
         try {

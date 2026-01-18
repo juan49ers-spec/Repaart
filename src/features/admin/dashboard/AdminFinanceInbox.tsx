@@ -114,7 +114,7 @@ const AdminFinanceInbox: React.FC = () => {
                                             {Number(record.amount).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
                                         </span>
                                         <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                                            {record.franchise_id.substring(0, 5)}...
+                                            {record.franchiseId.substring(0, 5)}...
                                         </span>
                                     </div>
                                     <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">{record.description || 'Sin descripción'}</p>

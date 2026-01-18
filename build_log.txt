@@ -1,3 +1,0 @@
-error TS18003: No inputs were found in config file 'C:/Users/Usuario/.gemini/antigravity/playground/synthetic-sagan/tsconfig.node.json'. Specified 'include' paths were '["vite.config.js"]' and 'exclude' paths were '[]'.
-src/features/admin/dashboard/widgets/PendingActionsWidget.tsx(148,36): error TS6133: 'Icon' is declared but its value is never read.
-src/features/admin/kanban/KanbanCard.tsx(4,31): error TS6133: 'AlertCircle' is declared but its value is never read.

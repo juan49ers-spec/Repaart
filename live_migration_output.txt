@@ -1,0 +1,96 @@
+
+[1m[46m RUN [49m[22m [36mv4.0.16 [39m[90mC:/Users/Usuario/.gemini/antigravity/playground/synthetic-sagan[39m
+
+[90mstdout[2m | run_migration.test.ts[2m > [22m[2mLIVE MIGRATION - Phase 9[2m > [22m[2mshould execute the migration for ALL domains
+[22m[39m­ƒÜÇ Starting Global Migration Phase 9...
+
+--- [1/4] Fleet Domain ---
+­ƒº╣ [Fleet] Migraci├│n de campos (EJECUCI├ôN)...
+
+stderr | run_migration.test.ts > LIVE MIGRATION - Phase 9 > should execute the migration for ALL domains
+ÔØî ERROR en migrateFleetLegacyFields: [FirebaseError: Missing or insufficient permissions.] {
+  code: 'permission-denied',
+  customData: undefined,
+  toString: [Function (anonymous)]
+}
+
+[90mstdout[2m | run_migration.test.ts[2m > [22m[2mLIVE MIGRATION - Phase 9[2m > [22m[2mshould execute the migration for ALL domains
+[22m[39mFleet migration result: {
+  success: [33mfalse[39m,
+  error: [FirebaseError: Missing or insufficient permissions.] {
+    code: [32m'permission-denied'[39m,
+    customData: [90mundefined[39m,
+    toString: [36m[Function (anonymous)][39m
+  }
+}
+
+--- [2/4] Finance Domain ---
+­ƒº╣ [Finance] Migraci├│n de campos (EJECUCI├ôN)...
+
+stderr | run_migration.test.ts > LIVE MIGRATION - Phase 9 > should execute the migration for ALL domains
+ÔØî ERROR en migrateFinanceLegacyFields: [FirebaseError: Missing or insufficient permissions.] {
+  code: 'permission-denied',
+  customData: undefined,
+  toString: [Function (anonymous)]
+}
+
+[90mstdout[2m | run_migration.test.ts[2m > [22m[2mLIVE MIGRATION - Phase 9[2m > [22m[2mshould execute the migration for ALL domains
+[22m[39mFinance migration result: {
+  success: [33mfalse[39m,
+  error: [FirebaseError: Missing or insufficient permissions.] {
+    code: [32m'permission-denied'[39m,
+    customData: [90mundefined[39m,
+    toString: [36m[Function (anonymous)][39m
+  }
+}
+
+--- [3/4] User Domain ---
+­ƒº╣ [Users] Migraci├│n de campos (EJECUCI├ôN)...
+
+stderr | run_migration.test.ts > LIVE MIGRATION - Phase 9 > should execute the migration for ALL domains
+ÔØî ERROR en migrateUserLegacyFields: [FirebaseError: Missing or insufficient permissions.] {
+  code: 'permission-denied',
+  customData: undefined,
+  toString: [Function (anonymous)]
+}
+
+[90mstdout[2m | run_migration.test.ts[2m > [22m[2mLIVE MIGRATION - Phase 9[2m > [22m[2mshould execute the migration for ALL domains
+[22m[39mUser migration result: {
+  success: [33mfalse[39m,
+  error: [FirebaseError: Missing or insufficient permissions.] {
+    code: [32m'permission-denied'[39m,
+    customData: [90mundefined[39m,
+    toString: [36m[Function (anonymous)][39m
+  }
+}
+
+--- [4/4] Franchise Domain ---
+­ƒº╣ [Franchises] Migraci├│n de campos (EJECUCI├ôN)...
+
+stderr | run_migration.test.ts > LIVE MIGRATION - Phase 9 > should execute the migration for ALL domains
+ÔØî ERROR en migrateFranchiseLegacyFields: [FirebaseError: Missing or insufficient permissions.] {
+  code: 'permission-denied',
+  customData: undefined,
+  toString: [Function (anonymous)]
+}
+
+[90mstdout[2m | run_migration.test.ts[2m > [22m[2mLIVE MIGRATION - Phase 9[2m > [22m[2mshould execute the migration for ALL domains
+[22m[39mFranchise migration result: {
+  success: [33mfalse[39m,
+  error: [FirebaseError: Missing or insufficient permissions.] {
+    code: [32m'permission-denied'[39m,
+    customData: [90mundefined[39m,
+    toString: [36m[Function (anonymous)][39m
+  }
+}
+
+Ô£à Global Migration complete!
+
+ [32mÔ£ô[39m run_migration.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 468[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m should execute the migration for ALL domains [33m 466[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m   Start at [22m 00:22:11
+[2m   Duration [22m 1.91s[2m (transform 69ms, setup 141ms, import 195ms, tests 468ms, environment 851ms)[22m
+

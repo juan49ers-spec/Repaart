@@ -9,85 +9,66 @@ import {
     getDocs,
     query,
     where,
-    FieldValue,
-    QueryConstraint
+    QueryConstraint,
+    QueryDocumentSnapshot,
+    DocumentData
 } from 'firebase/firestore';
+import {
+    User,
+    Franchise,
+    toUserId
+} from '../schemas/users';
+
+export type { User, Franchise };
+export { toUserId };
 
 // =====================================================
-// TYPES & INTERFACES
+// MAPPERS
 // =====================================================
 
-export interface UserProfile {
-    uid: string;
-    id?: string;
-    email?: string;
-    displayName?: string;
-    phoneNumber?: string; // Standard
-    phone?: string;       // Legacy?
-    role?: string;
-    franchiseId?: string;
-    pack?: 'basic' | 'premium';
-    status?: 'active' | 'pending' | 'banned' | 'deleted';
-    name?: string;
-    legalName?: string;
-    cif?: string;
-    city?: string;
-    address?: string;
-    zipCodes?: string[];
-    logisticsRates?: any[]; // Consider typing strictly if schema known
-    notifications?: {
-        email?: boolean;
-        push?: boolean;
-        [key: string]: boolean | undefined;
-    };
-    monthlyRevenueGoal?: number; // Added for Franchise Goals
-    photoURL?: string;
-    createdAt?: Date | FieldValue | string | { seconds: number, nanoseconds: number };
-    updatedAt?: Date | FieldValue | string | { seconds: number, nanoseconds: number };
-    updated_at?: Date | FieldValue; // Legacy support
-}
+const mapDocToUser = (doc: QueryDocumentSnapshot<DocumentData>): User => {
+    const data = doc.data();
+    return {
+        uid: toUserId(doc.id),
+        id: data.id || doc.id,
+        email: data.email || '',
+        displayName: data.displayName || data.name || '',
+        role: data.role || 'user',
+        status: data.status || 'active',
+        franchiseId: data.franchiseId || (data.role === 'franchise' ? doc.id : ''),
+        phoneNumber: data.phoneNumber || data.phone || '',
+        photoURL: data.photoURL || '',
+        pack: data.pack,
+        legalName: data.legalName || data.name || '',
+        cif: data.cif || '',
+        city: data.city || '',
+        address: data.address || '',
+        zipCodes: data.zipCodes || [],
+        monthlyRevenueGoal: data.monthlyRevenueGoal || data.goal || 0,
+        notifications: data.notifications || {},
+        createdAt: data.createdAt || data.created_at,
+        updatedAt: data.updatedAt || data.updated_at
+    } as User;
+};
 
-export interface FranchiseLocation {
-    zipCodes: string[];
-}
-
-export interface FranchiseSettings {
-    isActive: boolean;
-}
-
-export interface FranchiseData {
-    name: string;
-    location: FranchiseLocation;
-    settings: FranchiseSettings;
-}
-
-export interface FranchiseEntity {
-    id: string;
-    uid: string;
-    name?: string;
-    email?: string;
-    role?: string;
-    active?: boolean;
-    status?: string;
-    location?: FranchiseLocation | string;
-    settings?: FranchiseSettings;
-    displayName?: string;
-    metrics?: {
-        revenue?: number;
-        orders?: number;
-        profit?: number;
-        margin?: number;
-    };
-    createdAt?: Date | FieldValue;
-    updatedAt?: Date | FieldValue;
-}
-
-export interface CreateFranchiseResult {
-    success: boolean;
-    data: {
-        id: string;
-    };
-}
+const mapDocToFranchise = (doc: QueryDocumentSnapshot<DocumentData>): Franchise => {
+    const data = doc.data();
+    return {
+        id: data.id || doc.id,
+        uid: data.uid || doc.id,
+        name: data.name || data.displayName || data.email || 'Franquicia',
+        email: data.email || '',
+        role: data.role || 'franchise',
+        isActive: data.isActive !== undefined ? data.isActive : (data.active !== undefined ? data.active : (data.status === 'active' || data.status !== 'deleted')),
+        status: data.status || 'active',
+        location: data.location || data.address || '',
+        settings: data.settings || { isActive: data.active !== undefined ? data.active : true },
+        displayName: data.displayName || data.name || '',
+        metrics: data.metrics || {},
+        createdAt: data.createdAt || data.created_at,
+        updatedAt: data.updatedAt || data.updated_at
+    } as Franchise;
+};
 
 // =====================================================
 // SERVICE
@@ -101,16 +82,13 @@ const COLLECTIONS = {
 export const userService = {
     // --- IDENTITY (Users) ---
 
-    /**
-     * Get user profile by UID
-     */
-    getUserProfile: async (uid: string): Promise<UserProfile | null> => {
+    getUserProfile: async (uid: string): Promise<User | null> => {
         try {
             if (!uid) return null;
             const docRef = doc(db, COLLECTIONS.USERS, uid);
             const snap = await getDoc(docRef);
             if (snap.exists()) {
-                return { uid: snap.id, ...snap.data() } as UserProfile;
+                return mapDocToUser(snap as QueryDocumentSnapshot<DocumentData>);
             }
             return null;
         } catch (error) {
@@ -119,17 +97,13 @@ export const userService = {
         }
     },
 
-    /**
-     * Get user profile by custom Franchise ID
-     */
-    getUserByFranchiseId: async (franchiseId: string): Promise<UserProfile | null> => {
+    getUserByFranchiseId: async (franchiseId: string): Promise<User | null> => {
         try {
             if (!franchiseId) return null;
             const q = query(collection(db, COLLECTIONS.USERS), where('franchiseId', '==', franchiseId));
             const snap = await getDocs(q);
             if (!snap.empty) {
-                const doc = snap.docs[0];
-                return { uid: doc.id, ...doc.data() } as UserProfile;
+                return mapDocToUser(snap.docs[0]);
             }
             return null;
         } catch (error) {
@@ -138,16 +112,12 @@ export const userService = {
         }
     },
 
-    /**
-     * Create or Update User Profile
-     */
-    updateUser: async (uid: string, data: Partial<UserProfile>): Promise<void> => {
+    updateUser: async (uid: string, data: Partial<User>): Promise<void> => {
         try {
             const docRef = doc(db, COLLECTIONS.USERS, uid);
-            // Use setDoc with merge to ensure document exists
             await setDoc(docRef, {
                 ...data,
-                updated_at: serverTimestamp()
+                updatedAt: serverTimestamp()
             }, { merge: true });
         } catch (error) {
             console.error("Error updating user:", error);
@@ -155,14 +125,11 @@ export const userService = {
         }
     },
 
-    /**
-     * Set user profile data (Create/Overwrite)
-     */
-    setUserProfile: async (uid: string, data: Partial<UserProfile>): Promise<void> => {
+    setUserProfile: async (uid: string, data: Partial<User>): Promise<void> => {
         try {
             await setDoc(doc(db, COLLECTIONS.USERS, uid), {
                 ...data,
-                updated_at: serverTimestamp()
+                updatedAt: serverTimestamp()
             }, { merge: true });
         } catch (error) {
             console.error("Error setting user profile:", error);
@@ -170,10 +137,7 @@ export const userService = {
         }
     },
 
-    /**
-     * Get all users, optionally filtered by role
-     */
-    fetchUsers: async (roleFilter: string | null = null, franchiseId: string | null = null): Promise<UserProfile[]> => {
+    fetchUsers: async (roleFilter: string | null = null, franchiseId: string | null = null): Promise<User[]> => {
         try {
             const usersRef = collection(db, COLLECTIONS.USERS);
             const constraints: QueryConstraint[] = [];
@@ -187,48 +151,45 @@ export const userService = {
             }
 
             const q = query(usersRef, ...constraints);
-
             const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({
-                id: doc.id,
-                uid: doc.id,
-                ...doc.data()
-            } as UserProfile));
+            return snapshot.docs.map(mapDocToUser);
         } catch (error) {
             console.error("Error fetching users:", error);
-            return []; // Return empty array on error to prevent crash
+            return [];
         }
     },
 
     // --- BUSINESS ENTITIES (Franchises) ---
 
-    /**
-     * Create a new Franchise Entity + Admin User link
-     */
-    createFranchise: async (franchiseData: FranchiseData): Promise<CreateFranchiseResult> => {
+    createFranchise: async (franchiseData: any): Promise<{ success: boolean; data: { id: string } }> => {
         try {
-
-            // Validacion defensiva pre-flight (Cinturón de seguridad)
-            if (!franchiseData.name || franchiseData.location.zipCodes.length === 0) {
-                throw new Error("Datos incompletos: Nombre y al menos un CP son obligatorios.");
+            // Validation: Ensure zipCodes are present
+            const zipCodes = franchiseData.location?.zipCodes || franchiseData.zipCodes;
+            if (!zipCodes || !Array.isArray(zipCodes) || zipCodes.length === 0) {
+                throw new Error("Datos incompletos: Faltan códigos postales (zipCodes)");
             }
 
-            // Real Firestore Write
-            const docRef = await addDoc(collection(db, COLLECTIONS.FRANCHISES), {
+            // Flatten location data for User schema compatibility
+            const flatData = {
                 ...franchiseData,
-                role: 'franchise', // Mandatory for fetchUsers('franchise') to find it
+                role: 'franchise',
+                status: 'active',
+                isActive: true, // Legacy compatibility
+                zipCodes: zipCodes,
+                city: franchiseData.location?.city || franchiseData.city,
+                address: franchiseData.location?.address || franchiseData.address,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
-                // Ensure default values are consistent with fetchUsers expectations
-                active: franchiseData.settings.isActive
-            });
+            };
+
+            // Remove nested location if it was flattened to avoid duplication/confusion
+            if (flatData.location) delete flatData.location;
+
+            const docRef = await addDoc(collection(db, COLLECTIONS.USERS), flatData);
 
             return {
                 success: true,
-                data: {
-                    id: docRef.id,
-                    ...franchiseData
-                }
+                data: { id: docRef.id }
             };
         } catch (error) {
             console.error("Error creating franchise:", error);
@@ -236,41 +197,24 @@ export const userService = {
         }
     },
 
-    /**
-     * Delete user profile
-     */
     deleteUser: async (uid: string): Promise<void> => {
         try {
             const docRef = doc(db, COLLECTIONS.USERS, uid);
-            // Note: This only deletes the Firestore profile
-            // Firebase Auth user deletion requires admin SDK or secondary auth instance
-            await setDoc(docRef, { status: 'deleted', updated_at: serverTimestamp() }, { merge: true });
+            await setDoc(docRef, {
+                status: 'deleted',
+                updatedAt: serverTimestamp()
+            }, { merge: true });
         } catch (error) {
             console.error("Error deleting user:", error);
             throw error;
         }
     },
-    /**
-     * Get all franchises (users with role='franchise')
-     */
-    fetchFranchises: async (): Promise<FranchiseEntity[]> => {
+
+    fetchFranchises: async (): Promise<Franchise[]> => {
         try {
-            // Fetch users with role 'franchise' from the users collection
             const q = query(collection(db, COLLECTIONS.USERS), where('role', '==', 'franchise'));
             const snapshot = await getDocs(q);
-
-            return snapshot.docs.map(doc => {
-                const data = doc.data();
-                return {
-                    id: doc.id,
-                    uid: doc.id,
-                    name: data.displayName || data.email || 'Franquicia',
-                    active: data.status === 'active' || data.status !== 'deleted',
-                    role: data.role,
-                    email: data.email,
-                    ...data
-                } as FranchiseEntity;
-            });
+            return snapshot.docs.map(mapDocToFranchise);
         } catch (error) {
             console.error("Error fetching franchises:", error);
             return [];

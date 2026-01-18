@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useEffect, useRef, useState } from 'react';
+import React, { useLayoutEffect, useEffect, useRef } from 'react';
 import { Check, Copy, Trash2, Edit, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
@@ -9,7 +9,7 @@ interface ContextMenuShift {
     isDraft?: boolean;
     startAt: string;
     endAt: string;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 interface ShiftContextMenuProps {
@@ -34,7 +34,6 @@ export const ShiftContextMenu: React.FC<ShiftContextMenuProps> = ({
     onDelete
 }) => {
     const menuRef = useRef<HTMLDivElement>(null);
-    const [pos, setPos] = useState({ top: y, left: x });
 
     // Adjust position to keep within viewport
     useLayoutEffect(() => {
@@ -53,12 +52,9 @@ export const ShiftContextMenu: React.FC<ShiftContextMenuProps> = ({
             finalX = Math.max(10, finalX);
             finalY = Math.max(10, finalY);
 
-            // Only update if position actually changed/needs adjustment
-            if (finalX !== x || finalY !== y) {
-                requestAnimationFrame(() => {
-                    setPos({ top: finalY, left: finalX });
-                });
-            }
+            // Directly apply styles to DOM to avoid React inline-style lint
+            menuRef.current.style.top = `${finalY}px`;
+            menuRef.current.style.left = `${finalX}px`;
         }
     }, [x, y]);
 
@@ -77,7 +73,6 @@ export const ShiftContextMenu: React.FC<ShiftContextMenuProps> = ({
     return createPortal(
         <div
             ref={menuRef}
-            style={{ top: pos.top, left: pos.left }}
             className="fixed z-[9999] w-56 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden animate-in zoom-in-95 duration-100"
         >
             <div className="p-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { X, RefreshCw, Monitor, Database, Activity } from 'lucide-react';
 import { getPerformanceSnapshot, PerformanceMetrics } from '../../../scripts/performanceTracker';
 
@@ -9,10 +9,18 @@ interface PerformanceDashboardProps {
 
 const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ isOpen, onClose }) => {
     const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
+    const progressRef = useRef<HTMLDivElement>(null);
 
     const refreshMetrics = useCallback(() => {
         setMetrics(getPerformanceSnapshot());
     }, []);
+
+    useEffect(() => {
+        if (progressRef.current && metrics?.memory) {
+            const p = (metrics.memory.usedJSHeapSize / metrics.memory.totalJSHeapSize) * 100;
+            progressRef.current.style.width = `${p}%`;
+        }
+    }, [metrics]);
 
     useEffect(() => {
         if (isOpen) {
@@ -79,8 +87,8 @@ const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({ isOpen, onC
                                     </div>
                                     <div className="w-full bg-slate-700 h-1.5 rounded-full mt-2 overflow-hidden">
                                         <div
+                                            ref={progressRef}
                                             className="bg-purple-500 h-full transition-all duration-500"
-                                            style={{ width: `${(metrics.memory.usedJSHeapSize / metrics.memory.totalJSHeapSize) * 100}%` }}
                                         />
                                     </div>
                                     <p className="text-xs text-slate-500 mt-2">

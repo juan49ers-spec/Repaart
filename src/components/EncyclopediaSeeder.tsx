@@ -9,6 +9,13 @@ const EncyclopediaSeeder: React.FC = () => {
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [message, setMessage] = useState('');
     const [progress, setProgress] = useState(0);
+    const progressRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        if (progressRef.current) {
+            progressRef.current.style.width = `${progress}%`;
+        }
+    }, [progress]);
 
     const stats = getContentStats();
 
@@ -88,8 +95,8 @@ const EncyclopediaSeeder: React.FC = () => {
                     {status === 'loading' && (
                         <div className="mt-2 h-1.5 bg-indigo-200 dark:bg-indigo-800 rounded-full overflow-hidden">
                             <div
+                                ref={progressRef}
                                 className="h-full bg-indigo-600 dark:bg-indigo-400 transition-all duration-300 rounded-full"
-                                style={{ width: `${progress}%` }}
                             />
                         </div>
                     )}

@@ -55,13 +55,30 @@ export const financeService = {
         );
 
         return onSnapshot(q, (snapshot) => {
-            const records = snapshot.docs.map(doc => {
-                const data = doc.data();
+            const records = snapshot.docs.map(docSnap => {
+                const data = docSnap.data();
                 return {
-                    id: doc.id,
-                    ...data,
-                    // Normalizamos la fecha para evitar errores en UI
-                    date: data.date?.toDate ? data.date.toDate() : new Date(data.date)
+                    id: docSnap.id,
+                    franchiseId: data.franchiseId || data.franchise_id || '',
+                    amount: Number(data.amount) || 0,
+                    date: data.date?.toDate ? data.date.toDate() : new Date(data.date),
+                    status: data.status,
+                    type: data.type,
+                    category: data.category || '',
+                    description: data.description || '',
+                    adminNotes: data.adminNotes || data.admin_notes || '',
+                    revenue: data.revenue,
+                    expenses: data.expenses,
+                    profit: data.profit,
+                    logisticsIncome: data.logisticsIncome,
+                    breakdown: data.breakdown,
+                    createdAt: data.createdAt || data.created_at,
+                    updatedAt: data.updatedAt || data.updated_at,
+                    submittedAt: data.submittedAt || data.submitted_at,
+                    approvedAt: data.approvedAt || data.approved_at,
+                    approvedBy: data.approvedBy || data.approved_by,
+                    rejectionReason: data.rejectionReason || data.rejection_reason,
+                    isLocked: data.isLocked ?? data.is_locked ?? false
                 } as FinancialRecord;
             });
             callback(records);
@@ -74,31 +91,29 @@ export const financeService = {
     addRecord: async (franchiseId: string, recordData: RecordInput, isDraft: boolean = false): Promise<void> => {
         if (!franchiseId) throw new Error("Franchise ID required");
 
-        await addDoc(collection(db, COLLECTION), {
+        const dataToSave = {
             ...recordData,
-            franchise_id: franchiseId,
+            franchise_id: franchiseId, // Keep for query compatibility
+            franchiseId, // Add for new standard
             amount: Number(recordData.amount),
             date: recordData.date ? new Date(recordData.date) : new Date(),
-            status: isDraft ? 'draft' : 'approved', // FIXED: Auto-approve for franchise inputs
-            is_locked: false,
+            status: isDraft ? 'draft' : 'approved',
+            isLocked: false,
+            is_locked: false, // Legacy
 
             // Timestamps
-            created_at: serverTimestamp(),
-            updated_at: serverTimestamp(),
-            submitted_at: isDraft ? null : serverTimestamp()
-        });
+            createdAt: serverTimestamp(),
+            created_at: serverTimestamp(), // Legacy
+            updatedAt: serverTimestamp(),
+            updated_at: serverTimestamp(), // Legacy
+            submittedAt: isDraft ? null : serverTimestamp(),
+            submitted_at: isDraft ? null : serverTimestamp() // Legacy
+        };
 
-        // FIXED: Atomic aggregation to keep widgets in sync
+        await addDoc(collection(db, COLLECTION), dataToSave);
 
-        // Only aggregate if NOT a draft (but now we force approved, so always aggregate)
         if (!isDraft) {
-            // Sanitize for aggregation (ensure number and date types)
-            const aggregationData: Partial<FinancialRecord> = {
-                ...recordData,
-                amount: Number(recordData.amount),
-                date: recordData.date ? new Date(recordData.date) : new Date()
-            };
-            await financeService._aggregateToSummary(franchiseId, aggregationData);
+            await financeService._aggregateToSummary(franchiseId, dataToSave as any);
         }
     },
 
@@ -109,18 +124,24 @@ export const financeService = {
         try {
             const docRef = doc(db, COLLECTION, id);
 
-            const updates: Partial<FinancialRecord> = {
+            const updates: any = {
                 status: newStatus,
-                updated_at: serverTimestamp()
+                updatedAt: serverTimestamp(),
+                updated_at: serverTimestamp() // Legacy
             };
 
             if (newStatus === 'approved') {
-                updates.approved_at = serverTimestamp();
-                if (adminUid) updates.approved_by = adminUid;
+                updates.approvedAt = serverTimestamp();
+                updates.approved_at = serverTimestamp(); // Legacy
+                if (adminUid) {
+                    updates.approvedBy = adminUid;
+                    updates.approved_by = adminUid; // Legacy
+                }
             }
 
             if (newStatus === 'rejected' && reason) {
-                updates.rejection_reason = reason;
+                updates.rejectionReason = reason;
+                updates.rejection_reason = reason; // Legacy
             }
 
             await updateDoc(docRef, updates);
@@ -184,7 +205,8 @@ export const financeService = {
                         profit: increment(-profit),
                         logisticsIncome: increment(-logisticsIncome),
 
-                        updatedAt: serverTimestamp()
+                        updatedAt: serverTimestamp(),
+                        updated_at: serverTimestamp() // Legacy
                     };
 
                     if (data.breakdown) {
@@ -226,10 +248,32 @@ export const financeService = {
             );
 
             const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            } as FinancialRecord));
+            return snapshot.docs.map(docSnap => {
+                const data = docSnap.data();
+                return {
+                    id: docSnap.id,
+                    franchiseId: data.franchiseId || data.franchise_id || '',
+                    amount: Number(data.amount) || 0,
+                    date: data.date?.toDate ? data.date.toDate() : new Date(data.date),
+                    status: data.status,
+                    type: data.type,
+                    category: data.category || '',
+                    description: data.description || '',
+                    adminNotes: data.adminNotes || data.admin_notes || '',
+                    revenue: data.revenue,
+                    expenses: data.expenses,
+                    profit: data.profit,
+                    logisticsIncome: data.logisticsIncome,
+                    breakdown: data.breakdown,
+                    createdAt: data.createdAt || data.created_at,
+                    updatedAt: data.updatedAt || data.updated_at,
+                    submittedAt: data.submittedAt || data.submitted_at,
+                    approvedAt: data.approvedAt || data.approved_at,
+                    approvedBy: data.approvedBy || data.approved_by,
+                    rejectionReason: data.rejectionReason || data.rejection_reason,
+                    isLocked: data.isLocked ?? data.is_locked ?? false
+                } as FinancialRecord;
+            });
         } catch (error) {
             console.error("Error fetching global pending records:", error);
             return [];
@@ -252,10 +296,13 @@ export const financeService = {
             const snapshot = await getDocs(q);
             const batch = writeBatch(db);
 
-            snapshot.docs.forEach(doc => {
-                batch.update(doc.ref, {
-                    is_locked: true,
-                    status: 'locked'
+            snapshot.docs.forEach(docSnap => {
+                batch.update(docSnap.ref, {
+                    isLocked: true,
+                    is_locked: true, // Legacy
+                    status: 'locked',
+                    updatedAt: serverTimestamp(),
+                    updated_at: serverTimestamp() // Legacy
                 });
             });
 
@@ -277,7 +324,12 @@ export const financeService = {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-            return docSnap.data() as MonthlyData;
+            const data = docSnap.data();
+            return {
+                ...data,
+                isLocked: data.isLocked ?? data.is_locked ?? false,
+                franchiseId: data.franchiseId || data.franchise_id || franchiseId
+            } as MonthlyData;
         }
         return null;
     },
@@ -331,6 +383,8 @@ export const financeService = {
                 revenue: validRevenue, // Ensure these exist for UI
                 expenses: validExpenses,
                 profit: validProfit,
+                isLocked: data.isLocked || (data.status === 'submitted' || data.status === 'locked'),
+                is_locked: data.isLocked || (data.status === 'submitted' || data.status === 'locked'), // Legacy
                 // Ensure breakdown values are numbers if they exist
                 breakdown: data.breakdown ? Object.fromEntries(
                     Object.entries(data.breakdown).map(([k, v]) => [k, Number(v) || 0])
@@ -341,10 +395,11 @@ export const financeService = {
             await setDoc(docRef, {
                 ...sanitizedData,
                 franchiseId,
+                franchise_id: franchiseId, // Legacy
                 month,
                 status: data.status || 'approved', // Respect input status (e.g. 'submitted' from franchise)
-                is_locked: data.is_locked || (data.status === 'submitted' || data.status === 'locked'), // Auto-lock if submitted/locked
-                updatedAt: serverTimestamp()
+                updatedAt: serverTimestamp(),
+                updated_at: serverTimestamp() // Legacy
             }, { merge: true });
 
             return ok(undefined);
@@ -376,8 +431,10 @@ export const financeService = {
 
             await updateDoc(docRef, {
                 status: 'open',
-                is_locked: false,
+                isLocked: false,
+                is_locked: false, // Legacy
                 updatedAt: serverTimestamp(),
+                updated_at: serverTimestamp(), // Legacy
                 statusHistory: arrayUnion({
                     status: 'open',
                     timestamp: Timestamp.now(),
@@ -429,10 +486,13 @@ export const financeService = {
 
             await updateDoc(docRef, {
                 status: 'locked', // Revert to locked
-                is_locked: true, // Re-lock
+                isLocked: true, // Re-lock
+                is_locked: true, // Legacy
                 unlockReason: null, // Clear request reason
                 rejectionReason: reason || null, // Store rejection reason
+                rejection_reason: reason || null, // Legacy
                 updatedAt: serverTimestamp(),
+                updated_at: serverTimestamp(), // Legacy
                 statusHistory: arrayUnion({
                     status: 'locked',
                     timestamp: Timestamp.now(),
@@ -466,22 +526,22 @@ export const financeService = {
             const snapshot = await getDocs(q);
 
             const data = snapshot.docs
-                .map(doc => {
-                    const d = doc.data();
-                    // Normalize Data for UI: Ensure revenue/expenses/profit exist
+                .map(docSnap => {
+                    const d = docSnap.data();
                     const revenue = Number(d.totalIncome || d.revenue || 0);
                     const expenses = Number(d.totalExpenses || d.expenses || 0);
                     const profit = revenue - expenses;
 
                     return {
                         ...d,
-                        id: doc.id,
+                        id: docSnap.id,
                         revenue,
                         expenses,
                         profit,
-                        // Ensure totals match if checks rely on them
                         totalIncome: revenue,
-                        totalExpenses: expenses
+                        totalExpenses: expenses,
+                        isLocked: d.isLocked ?? d.is_locked ?? false,
+                        franchiseId: d.franchiseId || d.franchise_id || franchiseId
                     } as MonthlyData;
                 })
                 .filter(item => item.status !== 'deleted'); // Filter soft-deleted items
@@ -494,6 +554,39 @@ export const financeService = {
                 type: 'NETWORK_ERROR',
                 cause: error instanceof Error ? error : new Error(String(error))
             });
+        }
+    },
+
+    /**
+     * Get financial data for a specific year
+     */
+    getFinancialYearlyData: async (franchiseId: string, year: number): Promise<MonthlyData[]> => {
+        try {
+            if (!franchiseId) return [];
+
+            // Reuse fetchClosures to get all data and filter in memory
+            // This avoids complex compound queries and indexes for now
+            const result = await financeService.fetchClosures(franchiseId);
+
+            if (!result.success) {
+                console.error("Error fetching yearly data:", result.error);
+                return [];
+            }
+
+            const allRecords = result.data;
+            return allRecords.filter((record: any) => {
+                if (record.month) {
+                    return record.month.startsWith(`${year}-`);
+                }
+                if (record.date) {
+                    const d = record.date instanceof Date ? record.date : (record.date as any).toDate();
+                    return d.getFullYear() === year;
+                }
+                return false;
+            });
+        } catch (error) {
+            console.error("Error in getFinancialYearlyData:", error);
+            return [];
         }
     },
 
@@ -565,8 +658,8 @@ export const financeService = {
 
             const snapshot = await getDocs(q);
 
-            snapshot.docs.forEach(doc => {
-                const data = doc.data() as MonthlyData;
+            snapshot.docs.forEach(docSnap => {
+                const data = docSnap.data() as MonthlyData;
                 if (!data.month) return;
 
                 if (monthlyStats.has(data.month)) {
@@ -574,8 +667,8 @@ export const financeService = {
                     // Mapeo de campos nuevos + compatibilidad
                     // Cast to any to access dynamic/legacy properties
                     const anyData = data as any;
-                    const income = data.totalIncome || data.revenue || anyData.summary?.grossIncome || 0;
-                    const expense = data.totalExpenses || (typeof anyData.expenses === 'number' ? anyData.expenses : anyData.expenses?.total) || anyData.summary?.totalExpenses || 0;
+                    const income = data.totalIncome || data.revenue || anyData.summary?.grossIncome || anyData.grossIncome || 0;
+                    const expense = data.totalExpenses || data.expenses || anyData.summary?.totalExpenses || 0;
                     const orders = Number(anyData.orders || 0);
                     const totalHours = Number(anyData.totalHours || 0);
 
@@ -699,9 +792,11 @@ export const financeService = {
             // Prepare Updates
             const updates: any = {
                 franchiseId,
+                franchise_id: franchiseId, // Legacy
                 month: monthKey,
                 status: 'approved', // FIXED: Resurrect document if it was deleted
                 updatedAt: serverTimestamp(),
+                updated_at: serverTimestamp(), // Legacy
                 totalIncome: increment(revenue),
                 totalExpenses: increment(expenses),
                 // Legacy support
@@ -853,6 +948,7 @@ export const financeService = {
 
             await setDoc(summaryRef, {
                 franchiseId,
+                franchise_id: franchiseId, // Legacy
                 month: monthKey,
                 status: 'approved', // FIXED: Resurrect if it was deleted
                 totalIncome,
@@ -867,6 +963,7 @@ export const financeService = {
 
                 breakdown,
                 updatedAt: serverTimestamp(),
+                updated_at: serverTimestamp(), // Legacy
                 lastForceSync: serverTimestamp()
             }, { merge: true });
 

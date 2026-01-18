@@ -54,7 +54,10 @@ const FleetManager: React.FC<FleetManagerProps> = ({ franchiseId: propFranchiseI
         const data: VehicleInput = {
             plate: formData.get('plate') as string,
             model: formData.get('model') as string,
-            status: formData.get('status') as VehicleStatus || 'active'
+            status: formData.get('status') as VehicleStatus || 'active',
+            type: 'vehicle',
+            currentKm: 0,
+            nextRevisionKm: 5000
         };
         await addVehicle(data);
         setIsModalOpen(false);

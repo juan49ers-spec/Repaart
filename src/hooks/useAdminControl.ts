@@ -220,7 +220,7 @@ export const useAdminControl = (monthKey?: string) => {
                                     id: r.id,
                                     type: 'record' as const,
                                     title: 'Cierre Mensual',
-                                    subtitle: `Sede: ${franchiseMap.get(r.franchise_id) || r.franchise_id}`,
+                                    subtitle: `Sede: ${franchiseMap.get(r.franchiseId) || r.franchiseId}`,
                                     priority: 'normal' as const
                                 }))
                             ].slice(0, 10)

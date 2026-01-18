@@ -116,6 +116,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
     // Historical Chart Data formatting
     const formattedTrendData: DashboardTrendItem[] = trendData.map((d: any) => ({
         month: d.name || d.monthName || d.month || 'Mes',
+        fullDate: d.month, // ISO format for logic (YYYY-MM)
         revenue: d.revenue || d.income || 0,
         expenses: d.expenses || d.totalExpenses || 0
     }));

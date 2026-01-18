@@ -75,7 +75,7 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({ isAdmin, isFranchise: _isFr
     return (
         <>
             {/* Floating Dock Navigation - Glovo/Apple Style */}
-            <nav className="md:hidden tab-dock" aria-label="Navegación principal">
+            <nav className="xl:hidden tab-dock" aria-label="Navegación principal">
                 <div className="flex justify-around items-center py-2 px-1">
                     {tabs.map((tab) => {
                         const Icon = tab.icon;
@@ -91,8 +91,8 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({ isAdmin, isFranchise: _isFr
                                     <div className={`tab-pill ${isActive ? 'tab-pill-active' : ''}`}>
                                         <Icon
                                             className={`w-6 h-6 transition-all duration-200 ${isActive
-                                                    ? 'text-blue-600 dark:text-blue-400 stroke-[2.5]'
-                                                    : 'text-slate-400 dark:text-slate-500 stroke-[1.5]'
+                                                ? 'text-blue-600 dark:text-blue-400 stroke-[2.5]'
+                                                : 'text-slate-400 dark:text-slate-500 stroke-[1.5]'
                                                 }`}
                                         />
                                     </div>
@@ -111,8 +111,8 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({ isAdmin, isFranchise: _isFr
                         <div className={`tab-pill ${isMoreOpen ? 'tab-pill-active' : ''}`}>
                             <MoreHorizontal
                                 className={`w-6 h-6 transition-all duration-200 ${isMoreOpen
-                                        ? 'text-blue-600 dark:text-blue-400 stroke-[2.5]'
-                                        : 'text-slate-400 dark:text-slate-500 stroke-[1.5]'
+                                    ? 'text-blue-600 dark:text-blue-400 stroke-[2.5]'
+                                    : 'text-slate-400 dark:text-slate-500 stroke-[1.5]'
                                     }`}
                             />
                         </div>

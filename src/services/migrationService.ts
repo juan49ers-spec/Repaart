@@ -1,61 +1,46 @@
 import { db } from '../lib/firebase';
-import { collection, getDocs, writeBatch, doc, query, where, updateDoc, serverTimestamp, QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, doc, query, where, serverTimestamp, QueryDocumentSnapshot, DocumentData, deleteField } from 'firebase/firestore';
 
 export const migrationService = {
     /**
      * Misión: Encontrar registros antiguos sin 'status' y curarlos.
-     * Acción: status -> 'approved', is_locked -> true.
      */
     fixZombieData: async () => {
         console.log("🧟 Iniciando búsqueda de datos zombis...");
-
         try {
-            // 1. Obtener TODO (Para una app pequeña/mediana esto está bien. 
-            // Para miles de registros se necesitaría paginación).
             const snapshot = await getDocs(collection(db, 'financial_records'));
-
-            // Firestore Batch solo permite 500 operaciones por lote.
-            // Aquí hacemos una implementación simple. Si tienes >500 registros antiguos,
-            // avísame para darte la versión paginada.
             const batch = writeBatch(db);
             let count = 0;
 
             snapshot.docs.forEach(d => {
                 const data = d.data();
-
-                // DETECTOR DE ZOMBIS: ¿Le falta el status?
                 if (!data.status) {
                     const ref = doc(db, 'financial_records', d.id);
                     batch.update(ref, {
-                        status: 'approved', // Asumimos que lo viejo es válido
-                        is_locked: true,    // Lo cerramos para protegerlo
-                        updated_at: new Date(),
-                        _migrated: true     // Marca de agua para saber que fuimos nosotros
+                        status: 'approved',
+                        isLocked: true,
+                        is_locked: true,
+                        updatedAt: serverTimestamp(),
+                        _migrated: true
                     });
                     count++;
                 }
             });
 
-            // 2. Ejecutar la cura
             if (count > 0) {
                 await batch.commit();
                 console.log(`✅ ÉXITO: Se han curado ${count} registros zombis.`);
                 return { success: true, count };
-            } else {
-                console.log("✨ LIMPIO: No se encontraron registros antiguos.");
-                return { success: true, count: 0 };
             }
-
+            return { success: true, count: 0 };
         } catch (error) {
-            console.error("❌ ERROR en Migración:", error);
+            console.error("❌ ERROR en fixZombieData:", error);
             return { success: false, error };
         }
     },
 
     /**
-     * Misión: Migrar colecciones mal nombradas a la estructura correcta V12.
-     * 1. financial_data -> financial_records
-     * 2. academy_modules -> academy_courses
+     * Misión: Migrar colecciones mal nombradas.
      */
     migrateCollections: async () => {
         console.log("🚚 Iniciando migración de colecciones...");
@@ -63,248 +48,311 @@ export const migrationService = {
             const batch = writeBatch(db);
             let count = 0;
 
-            // --- 1. Finance Migration ---
             const financeSnap = await getDocs(collection(db, 'financial_data'));
-            if (!financeSnap.empty) {
-                console.log(`Found ${financeSnap.size} financial_data records. Moving...`);
-                financeSnap.forEach(d => {
-                    const data = d.data();
-                    const newRef = doc(db, 'financial_records', d.id);
-                    batch.set(newRef, { ...data, _migratedFrom: 'financial_data' });
-                    // Optional: Delete old doc? Keeping it safer for manual deletion later
-                    // batch.delete(d.ref); 
-                    count++;
-                });
-            }
+            financeSnap.forEach(d => {
+                const newRef = doc(db, 'financial_records', d.id);
+                batch.set(newRef, { ...d.data(), _migratedFrom: 'financial_data' });
+                count++;
+            });
 
-            // --- 2. Academy Migration ---
             const academySnap = await getDocs(collection(db, 'academy_modules'));
-            if (!academySnap.empty) {
-                console.log(`Found ${academySnap.size} academy_modules records. Moving...`);
-                academySnap.forEach(d => {
-                    const data = d.data();
-                    const newRef = doc(db, 'academy_courses', d.id);
-                    batch.set(newRef, { ...data, _migratedFrom: 'academy_modules' });
-                    count++;
-                });
-            }
+            academySnap.forEach(d => {
+                const newRef = doc(db, 'academy_courses', d.id);
+                batch.set(newRef, { ...d.data(), _migratedFrom: 'academy_modules' });
+                count++;
+            });
 
             if (count > 0) {
                 await batch.commit();
-                console.log(`✅ MIGRACIÓN EXITOSA: ${count} documentos movidos.`);
                 return { success: true, count };
-            } else {
-                console.log("✨ Nada que migrar.");
-                return { success: true, count: 0 };
             }
-
+            return { success: true, count: 0 };
         } catch (error) {
-            console.error("❌ ERROR en Migración de Colecciones:", error);
+            console.error("❌ ERROR en migrateCollections:", error);
             return { success: false, error };
         }
     },
 
     /**
-     * Misión: Eliminar turnos de riders que ya no existen en la colección 'users'.
-     * Problema: El planificador muestra "Fantasmas" porque encuentra turnos huérfanos.
+     * Misión: Eliminar turnos de riders inexistentes.
      */
-    cleanOrphanedShifts: async (franchiseId?: string, _weekId?: string) => {
-        console.log("👻 Buscando turnos fantasmas (GOD MODE)...");
+    cleanOrphanedShifts: async (_franchiseId?: string) => {
+        console.log("👻 Buscando turnos fantasmas...");
         let report = "";
         const log = (msg: string) => { console.log(msg); report += msg + "\n"; };
 
         try {
-            // --- PREPARACIÓN ---
             const batch = writeBatch(db);
             let deletedCount = 0;
 
-            // 1. OBTENER RIDERS ACTIVOS E INACTIVOS (De ambas colecciones posibles)
             const ridersSnap = await getDocs(collection(db, 'riders'));
             const usersSnap = await getDocs(collection(db, 'users'));
 
-            const activeRiderFranchiseMap = new Map<string, string>();
+            const activeRiderIds = new Set<string>();
             const inactiveRiderIds = new Set<string>();
 
-            const processRiderDoc = (d: QueryDocumentSnapshot<DocumentData>, collectionName: string) => {
+            const process = (d: QueryDocumentSnapshot<DocumentData>) => {
                 const data = d.data();
-                const name = (data.fullName || data.displayName || "").toLowerCase();
-                const email = (data.email || "").toLowerCase();
-                const isValentino = name.includes('valentino') || email.includes('valentino') || d.id === 'valentino';
-
-                if (isValentino) {
-                    log(`🎯 DETECTADO VALENTINO en ${collectionName}: ID=${d.id}, Status=${data.status}`);
-                    // Si está activo, lo marcamos para borrar/desactivar
-                    if (data.status !== 'inactive' && data.status !== 'deleted') {
-                        inactiveRiderIds.add(d.id);
-                        // No lo borramos del tirón para dejar rastro pero lo desactivamos
-                        log(`   ⚔️ Desactivando Valentino en ${collectionName}...`);
-                        batch.update(d.ref, { status: 'inactive', _ghostBusted: serverTimestamp() });
-                        deletedCount++;
-                    } else {
-                        inactiveRiderIds.add(d.id);
-                    }
-                } else if (data.status === 'inactive' || data.status === 'deleted') {
+                if (data.status === 'inactive' || data.status === 'deleted') {
                     inactiveRiderIds.add(d.id);
                 } else {
-                    activeRiderFranchiseMap.set(d.id, data.franchiseId);
+                    activeRiderIds.add(d.id);
                 }
             };
 
-            ridersSnap.forEach(d => processRiderDoc(d, 'riders'));
-            usersSnap.forEach(d => processRiderDoc(d, 'users'));
+            ridersSnap.forEach(process);
+            usersSnap.forEach(process);
 
-            log(`📊 Riders Activos: ${activeRiderFranchiseMap.size}`);
-            log(`❌ Riders Inactivos/Borrados: ${inactiveRiderIds.size}`);
-
-            // 2. LIMPIEZA DE TURNOS EN COLECCIONES PLANAS
-            const collectionsToScan = ['shifts', 'work_shifts', 'franchise_shifts'];
-
-            for (const collName of collectionsToScan) {
-                log(`🧹 Escaneando colección: ${collName}...`);
-                const snap = await getDocs(collection(db, collName));
-
+            const collections = ['shifts', 'work_shifts', 'franchise_shifts'];
+            for (const coll of collections) {
+                const snap = await getDocs(collection(db, coll));
                 snap.forEach(d => {
                     const data = d.data();
                     const riderId = data.riderId || data.rider_id;
-                    const riderName = (data.riderName || data.rider_name || "").toLowerCase();
-                    const shiftFranchiseId = data.franchiseId || data.franchise_id;
-
-                    let shouldDelete = false;
-
-                    // Criterio 1: Nombre contiene Valentino
-                    if (riderName.includes('valentino')) {
-                        log(`   👻 Eliminando turno por NOMBRE en ${collName}: ${riderName} (ID: ${d.id})`);
-                        shouldDelete = true;
-                    }
-                    // Criterio 2: Rider ID inactivo o desconocido
-                    else if (riderId) {
-                        if (inactiveRiderIds.has(riderId)) {
-                            log(`   🗑️ Eliminando turno en ${collName} de rider inactivo: ${riderId}`);
-                            shouldDelete = true;
-                        } else if (!activeRiderFranchiseMap.has(riderId)) {
-                            log(`   🗑️ Eliminando turno en ${collName} de rider inexistente: ${riderId}`);
-                            shouldDelete = true;
-                        } else {
-                            // Criterio 3: Mismatch de franquicia
-                            const riderFranchiseId = activeRiderFranchiseMap.get(riderId);
-                            if (shiftFranchiseId && riderFranchiseId && shiftFranchiseId !== riderFranchiseId) {
-                                log(`   👻 Eliminando turno GHOST (Mismatch) en ${collName}: shift in ${shiftFranchiseId}, rider in ${riderFranchiseId}`);
-                                shouldDelete = true;
-                            }
-                        }
-                    }
-
-                    if (shouldDelete) {
+                    if (riderId && (inactiveRiderIds.has(riderId) || !activeRiderIds.has(riderId))) {
                         batch.delete(d.ref);
                         deletedCount++;
                     }
                 });
             }
 
-            // 3. LEGACY CLEANUP (SCAN ALL WEEKS)
-            // Esto toca los arrays internos de los documentos de la colección 'weeks'
-            if (franchiseId) {
-                log(`🧹 Escaneando TODAS las semanas en: franchises/${franchiseId}/weeks`);
-                const weeksRef = collection(db, 'franchises', franchiseId, 'weeks');
-                const weeksSnap = await getDocs(weeksRef);
-
-                for (const weekDoc of weeksSnap.docs) {
-                    const weekData = weekDoc.data();
-                    const weekId = weekDoc.id;
-                    const fullJson = JSON.stringify(weekData).toLowerCase();
-
-                    if (fullJson.includes('valentino')) {
-                        log(`🚨 MATCH FOUND in week [${weekId}]! Analyzing shifts array...`);
-
-                        const currentShifts = weekData.shifts || [];
-                        let legacyDeleted = 0;
-
-                        const cleanShifts = currentShifts.filter((s: unknown) => {
-                            const json = JSON.stringify(s).toLowerCase();
-                            if (json.includes('valentino')) {
-                                log(`   👻 Eliminando turno Valentino en array de [${weekId}]: ${json.substring(0, 100)}...`);
-                                legacyDeleted++;
-                                return false;
-                            }
-                            return true;
-                        });
-
-                        await updateDoc(weekDoc.ref, { shifts: cleanShifts, _ghostBusted: serverTimestamp() });
-                        deletedCount += legacyDeleted;
-                        log(`✅ Limpiados ${legacyDeleted} turnos en array de semana ${weekId}`);
-                    } else {
-                        // FORCE CACHE REFRESH anyway to be sure
-                        await updateDoc(weekDoc.ref, { _ghostBusted: serverTimestamp() });
-                    }
-                }
-            }
-
-            // --- TRABAJO FINAL ---
-            if (deletedCount > 0) {
-                await batch.commit();
-                log(`✅ LIMPIEZA COMPLETADA: ${deletedCount} operaciones realizadas.`);
-                return { success: true, count: deletedCount, report };
-            } else {
-                log("✨ Nada que limpiar. Todo parece en orden.");
-                return { success: true, count: 0, report };
-            }
-
-        } catch (error: any) {
-            console.error("❌ ERROR en Limpieza de Fantasmas:", error);
-            return { success: false, error, report: report + `\nERROR: ${error.message}` };
+            if (deletedCount > 0) await batch.commit();
+            return { success: true, count: deletedCount, report };
+        } catch (error) {
+            log(`❌ ERROR: ${error instanceof Error ? error.message : String(error)}`);
+            return { success: false, error };
         }
     },
 
     /**
-     * Misión: Eliminar turnos duplicados (mismo rider, misma hora de inicio).
+     * Misión: Eliminar turnos duplicados.
      */
     cleanDuplicateShifts: async (franchiseId: string) => {
-        console.log("👯 Buscando duplicados para la franquicia:", franchiseId);
-        let report = `DEDUP REPORT - ${new Date().toISOString()}\n`;
-        const log = (msg: string) => { console.log(msg); report += msg + "\n"; };
-
+        console.log("👯 Buscando duplicados para:", franchiseId);
         try {
             const batch = writeBatch(db);
             let deletedCount = 0;
-
-            // 1. OBTENER TODOS LOS TURNOS DE LA FRANQUICIA
             const q = query(collection(db, 'work_shifts'), where('franchise_id', '==', franchiseId));
             const snap = await getDocs(q);
-
-            log(`📊 Analizando ${snap.size} turnos...`);
-
-            // Agrupar por rider y tiempo de inicio
-            const seen = new Map<string, string>(); // key: riderId_startTime, value: firstFoundDocId
+            const seen = new Set<string>();
 
             snap.docs.forEach(d => {
                 const data = d.data();
-                const riderId = data.rider_id;
-                const startTime = data.start_time?.toDate().getTime();
-
-                if (riderId && startTime) {
-                    const key = `${riderId}_${startTime}`;
-                    if (seen.has(key)) {
-                        log(`   👯 DUPLICADO DETECTADO: Rider=${riderId}, Inicio=${new Date(startTime).toLocaleString()}. Borrando doc ${d.id}`);
-                        batch.delete(d.ref);
-                        deletedCount++;
-                    } else {
-                        seen.set(key, d.id);
-                    }
+                const key = `${data.rider_id}_${data.start_time?.toDate?.().getTime()}`;
+                if (seen.has(key)) {
+                    batch.delete(d.ref);
+                    deletedCount++;
+                } else {
+                    seen.add(key);
                 }
             });
 
-            if (deletedCount > 0) {
-                await batch.commit();
-                log(`✅ DEDUPLICACIÓN COMPLETADA: ${deletedCount} turnos eliminados.`);
-                return { success: true, count: deletedCount, report };
-            } else {
-                log("✨ No se encontraron duplicados exactos.");
-                return { success: true, count: 0, report };
-            }
+            if (deletedCount > 0) await batch.commit();
+            return { success: true, count: deletedCount };
+        } catch (error) {
+            console.error("❌ ERROR en cleanDuplicateShifts:", error);
+            return { success: false, error };
+        }
+    },
 
-        } catch (error: any) {
-            console.error("❌ ERROR en Deduplicación:", error);
-            return { success: false, error, report: report + `\nERROR: ${error.message}` };
+    /**
+     * Misión: Migrar campos snake_case a CamelCase en Finanzas.
+     */
+    migrateFinanceLegacyFields: async (dryRun: boolean = true) => {
+        console.log(`🧹 [Finance] Migración de campos (${dryRun ? 'VISTA PREVIA' : 'EJECUCIÓN'})...`);
+        try {
+            const batch = writeBatch(db);
+            let count = 0;
+
+            // 1. Records
+            const recordsSnap = await getDocs(collection(db, 'financial_records'));
+            recordsSnap.forEach(d => {
+                const data = d.data();
+                const updates: Record<string, any> = {};
+                const map: Record<string, string> = {
+                    franchise_id: 'franchiseId',
+                    admin_notes: 'adminNotes',
+                    created_at: 'createdAt',
+                    updated_at: 'updatedAt',
+                    submitted_at: 'submittedAt',
+                    approved_at: 'approvedAt',
+                    approved_by: 'approvedBy',
+                    rejection_reason: 'rejectionReason',
+                    is_locked: 'isLocked'
+                };
+
+                Object.entries(map).forEach(([oldKey, newKey]) => {
+                    const val = (data as Record<string, any>)[oldKey];
+                    const newVal = (data as Record<string, any>)[newKey];
+                    if (val !== undefined && newVal === undefined) {
+                        updates[newKey] = val;
+                        if (!dryRun) updates[oldKey] = deleteField();
+                    }
+                });
+
+                if (Object.keys(updates).length > 0) {
+                    if (!dryRun) batch.update(d.ref, updates);
+                    count++;
+                }
+            });
+
+            // 2. Summaries
+            const summariesSnap = await getDocs(collection(db, 'financial_summaries'));
+            summariesSnap.forEach(d => {
+                const data = d.data();
+                const updates: Record<string, any> = {};
+                const map: Record<string, string> = {
+                    franchise_id: 'franchiseId',
+                    is_locked: 'isLocked',
+                    updated_at: 'updatedAt'
+                };
+
+                Object.entries(map).forEach(([oldKey, newKey]) => {
+                    const val = (data as Record<string, any>)[oldKey];
+                    const newVal = (data as Record<string, any>)[newKey];
+                    if (val !== undefined && newVal === undefined) {
+                        updates[newKey] = val;
+                        if (!dryRun) updates[oldKey] = deleteField();
+                    }
+                });
+
+                if (Object.keys(updates).length > 0) {
+                    if (!dryRun) batch.update(d.ref, updates);
+                    count++;
+                }
+            });
+
+            if (count > 0 && !dryRun) await batch.commit();
+            return { success: true, count };
+        } catch (error) {
+            console.error("❌ ERROR en migrateFinanceLegacyFields:", error);
+            return { success: false, error };
+        }
+    },
+
+    /**
+     * Misión: Migrar campos snake_case a CamelCase en Fleet.
+     */
+    migrateFleetLegacyFields: async (dryRun: boolean = true) => {
+        console.log(`🧹 [Fleet] Migración de campos (${dryRun ? 'VISTA PREVIA' : 'EJECUCIÓN'})...`);
+        try {
+            const batch = writeBatch(db);
+            let count = 0;
+            const assetsSnap = await getDocs(collection(db, 'fleet_assets'));
+            assetsSnap.forEach(d => {
+                const data = d.data();
+                const updates: Record<string, any> = {};
+                const map: Record<string, string> = {
+                    matricula: 'plate',
+                    modelo: 'model',
+                    km_actuales: 'currentKm',
+                    proxima_revision_km: 'nextRevisionKm',
+                    estado: 'status'
+                };
+
+                Object.entries(map).forEach(([oldKey, newKey]) => {
+                    const val = (data as Record<string, any>)[oldKey];
+                    const newVal = (data as Record<string, any>)[newKey];
+                    if (val !== undefined && newVal === undefined) {
+                        updates[newKey] = val;
+                        if (!dryRun) updates[oldKey] = deleteField();
+                    }
+                });
+
+                if (Object.keys(updates).length > 0) {
+                    if (!dryRun) batch.update(d.ref, updates);
+                    count++;
+                }
+            });
+
+            if (count > 0 && !dryRun) await batch.commit();
+            return { success: true, count };
+        } catch (error) {
+            console.error("❌ ERROR en migrateFleetLegacyFields:", error);
+            return { success: false, error };
+        }
+    },
+
+    /**
+     * Misión: Migrar campos snake_case a CamelCase en Usuarios.
+     */
+    migrateUserLegacyFields: async (dryRun: boolean = true) => {
+        console.log(`🧹 [Users] Migración de campos (${dryRun ? 'VISTA PREVIA' : 'EJECUCIÓN'})...`);
+        try {
+            const batch = writeBatch(db);
+            let count = 0;
+            const snap = await getDocs(collection(db, 'users'));
+            snap.forEach(d => {
+                const data = d.data();
+                const updates: Record<string, any> = {};
+                const map: Record<string, string> = {
+                    phone: 'phoneNumber',
+                    created_at: 'createdAt',
+                    updated_at: 'updatedAt',
+                    goal: 'monthlyRevenueGoal'
+                };
+
+                Object.entries(map).forEach(([oldKey, newKey]) => {
+                    const val = (data as Record<string, any>)[oldKey];
+                    const newVal = (data as Record<string, any>)[newKey];
+                    if (val !== undefined && newVal === undefined) {
+                        updates[newKey] = val;
+                        if (!dryRun) updates[oldKey] = deleteField();
+                    }
+                });
+
+                if (Object.keys(updates).length > 0) {
+                    if (!dryRun) batch.update(d.ref, updates);
+                    count++;
+                }
+            });
+
+            if (count > 0 && !dryRun) await batch.commit();
+            return { success: true, count };
+        } catch (error) {
+            console.error("❌ ERROR en migrateUserLegacyFields:", error);
+            return { success: false, error };
+        }
+    },
+
+    /**
+     * Misión: Migrar campos snake_case a CamelCase en Franquicias.
+     */
+    migrateFranchiseLegacyFields: async (dryRun: boolean = true) => {
+        console.log(`🧹 [Franchises] Migración de campos (${dryRun ? 'VISTA PREVIA' : 'EJECUCIÓN'})...`);
+        try {
+            const batch = writeBatch(db);
+            let count = 0;
+            const snap = await getDocs(collection(db, 'franchises'));
+            snap.forEach(d => {
+                const data = d.data();
+                const updates: Record<string, any> = {};
+                const map: Record<string, string> = {
+                    active: 'isActive',
+                    created_at: 'createdAt',
+                    updated_at: 'updatedAt'
+                };
+
+                Object.entries(map).forEach(([oldKey, newKey]) => {
+                    const val = (data as Record<string, any>)[oldKey];
+                    const newVal = (data as Record<string, any>)[newKey];
+                    if (val !== undefined && newVal === undefined) {
+                        updates[newKey] = val;
+                        if (!dryRun) updates[oldKey] = deleteField();
+                    }
+                });
+
+                if (Object.keys(updates).length > 0) {
+                    if (!dryRun) batch.update(d.ref, updates);
+                    count++;
+                }
+            });
+
+            if (count > 0 && !dryRun) await batch.commit();
+            return { success: true, count };
+        } catch (error) {
+            console.error("❌ ERROR en migrateFranchiseLegacyFields:", error);
+            return { success: false, error };
         }
     }
 };

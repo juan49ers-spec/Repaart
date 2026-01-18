@@ -1,7 +1,6 @@
 import { create } from 'zustand';
-import { Vehicle } from '../features/fleet/vehicles/schemas/VehicleSchema';
 import { vehicleService } from '../services/fleetService';
-import { Moto } from '../schemas/fleet';
+import { Vehicle } from '../schemas/fleet';
 
 interface VehicleState {
     vehicles: Vehicle[];
@@ -23,18 +22,7 @@ export const useVehicleStore = create<VehicleState>((set) => ({
     fetchVehicles: async (franchiseId: string) => {
         set({ isLoading: true, error: null });
         try {
-            const rawVehicles = await vehicleService.getVehicles(franchiseId);
-            // ADAPTER: Moto (Camel) -> Vehicle (Snake/Legacy)
-            const vehicles: Vehicle[] = rawVehicles.map((m: Moto) => ({
-                id: m.id,
-                matricula: m.plate,
-                modelo: m.brand && m.model ? `${m.brand} ${m.model}` : m.model,
-                km_actuales: m.currentKm || 0,
-                proxima_revision_km: m.nextRevisionKm || 5000,
-                estado: (m.status === 'active' ? 'active' : (m.status === 'maintenance' ? 'maintenance' : 'deleted')) as any,
-                type: 'vehicle',
-                franchise_id: franchiseId
-            }));
+            const vehicles = await vehicleService.getVehicles(franchiseId);
             set({ vehicles, isLoading: false });
         } catch (error) {
             console.error('Failed to fetch vehicles:', error);
@@ -45,18 +33,8 @@ export const useVehicleStore = create<VehicleState>((set) => ({
     addVehicle: async (franchiseId: string, vehicleData: Partial<Vehicle>) => {
         set({ isLoading: true, error: null });
         try {
-            const m = await vehicleService.createVehicle(franchiseId, vehicleData);
-            // ADAPTER: Moto (Camel) -> Vehicle (Snake/Legacy)
-            const newVehicle: Vehicle = {
-                id: m.id,
-                matricula: m.plate,
-                modelo: m.brand && m.model ? `${m.brand} ${m.model}` : m.model,
-                km_actuales: m.currentKm || 0,
-                proxima_revision_km: m.nextRevisionKm || 5000,
-                estado: (m.status === 'active' ? 'active' : (m.status === 'maintenance' ? 'maintenance' : 'deleted')) as any,
-                type: 'vehicle',
-                franchise_id: franchiseId
-            };
+            // The service now handles standardized input or accepts the new schema
+            const newVehicle = await vehicleService.createVehicle(franchiseId, vehicleData as any);
             set(state => ({
                 vehicles: [newVehicle, ...state.vehicles],
                 isLoading: false
@@ -71,18 +49,7 @@ export const useVehicleStore = create<VehicleState>((set) => ({
     updateVehicle: async (id: string, updates: Partial<Vehicle>) => {
         set({ isLoading: true, error: null });
         try {
-            // ADAPTER: Vehicle (Legacy) -> Moto (Service)
-            const serviceUpdates: any = {};
-            if (updates.matricula) serviceUpdates.plate = updates.matricula;
-            if (updates.modelo) serviceUpdates.model = updates.modelo;
-            if (updates.km_actuales !== undefined) serviceUpdates.currentKm = updates.km_actuales;
-            if (updates.proxima_revision_km !== undefined) serviceUpdates.nextRevisionKm = updates.proxima_revision_km;
-            if (updates.estado) {
-                serviceUpdates.status = updates.estado === 'active' ? 'active' :
-                    (updates.estado === 'maintenance' ? 'maintenance' : 'deleted');
-            }
-
-            await vehicleService.updateVehicle(id, serviceUpdates);
+            await vehicleService.updateVehicle(id, updates);
 
             set(state => ({
                 vehicles: state.vehicles.map(v => v.id === id ? { ...v, ...updates } : v),

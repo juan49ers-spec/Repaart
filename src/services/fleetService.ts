@@ -15,12 +15,13 @@ import {
     DocumentData
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Rider } from '../store/useFleetStore';
+import type { Rider } from '../store/useFleetStore';
 import { notificationService } from './notificationService';
 import {
-    Moto,
-    CreateMotoInput,
-    toMotoId
+    Vehicle,
+    VehicleStatus,
+    CreateVehicleInput,
+    toVehicleId
 } from '../schemas/fleet';
 
 const RIDERS_COLLECTION = 'users'; // UNIFIED DATA SOURCE
@@ -49,20 +50,28 @@ const mapDocToRider = (docSnap: QueryDocumentSnapshot<DocumentData>): Rider => {
     };
 };
 
-const mapDocToMoto = (docSnap: QueryDocumentSnapshot<DocumentData>): Moto => {
+const mapDocToVehicle = (docSnap: QueryDocumentSnapshot<DocumentData>): Vehicle => {
     const data = docSnap.data();
+    let status = data.status || data.estado || 'active';
+
+    // Translate legacy Spanish status values
+    if (status === 'activo') status = 'active';
+    if (status === 'mantenimiento') status = 'maintenance';
+    if (status === 'fuera_de_servicio') status = 'out_of_service';
+
     return {
-        id: toMotoId(docSnap.id),
-        franchiseId: data.franchiseId,
-        plate: data.plate || data.matricula || '', // Support legacy matricula field
+        id: toVehicleId(docSnap.id),
+        franchiseId: data.franchiseId || data.franchise_id,
+        plate: data.plate || data.matricula || '',
         brand: data.brand || '',
-        model: data.model || data.modelo || '', // Support legacy modelo field
+        model: data.model || data.modelo || '',
         currentKm: data.currentKm || data.km_actuales || 0,
         nextRevisionKm: data.nextRevisionKm || data.proxima_revision_km || 5000,
-        status: data.status || data.estado || 'active',
+        status: status as VehicleStatus,
+        type: data.type || 'vehicle',
         createdAt: data.createdAt?.toDate?.().toISOString() || new Date().toISOString(),
         updatedAt: data.updatedAt?.toDate?.().toISOString() || new Date().toISOString()
-    } as Moto;
+    } as Vehicle;
 };
 
 export const fleetService = {
@@ -93,9 +102,8 @@ export const fleetService = {
             const querySnapshot = await getDocs(q);
             const riders = querySnapshot.docs.map(mapDocToRider);
 
-            // Filter status in memory if needed, but 'users' might have non-riders if query fails
             return riders.filter(r => r.status !== 'deleted');
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('[FleetService] Error fetching riders:', error);
             throw error;
         }
@@ -118,9 +126,6 @@ export const fleetService = {
         });
     },
 
-    /**
-     * Create a new rider (Auth + Firestore)
-     */
     /**
      * Create a new rider (Auth + Firestore) via Secure Backend
      */
@@ -200,22 +205,22 @@ export const fleetService = {
     /**
      * Subscribe to all assets for a franchise
      */
-    subscribeToFleet: (franchiseId: string, callback: (assets: Moto[]) => void) => {
+    subscribeToFleet: (franchiseId: string, callback: (assets: Vehicle[]) => void) => {
         const q = query(
             collection(db, ASSETS_COLLECTION),
             where('franchiseId', '==', franchiseId)
         );
 
         return onSnapshot(q, (snap) => {
-            const assets = snap.docs.map(mapDocToMoto);
+            const assets = snap.docs.map(mapDocToVehicle);
             callback(assets);
         });
     },
 
     /**
-     * Create a new Moto with validation
+     * Create a new Vehicle with validation
      */
-    createMoto: async (franchiseId: string, data: CreateMotoInput): Promise<Moto> => {
+    createVehicle: async (franchiseId: string, data: CreateVehicleInput): Promise<Vehicle> => {
         const newRef = doc(collection(db, ASSETS_COLLECTION));
 
         const payload = {
@@ -229,22 +234,22 @@ export const fleetService = {
         await setDoc(newRef, payload);
 
         return {
-            id: toMotoId(newRef.id),
+            id: toVehicleId(newRef.id),
             ...data,
             franchiseId,
             status: 'active',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
-        } as Moto;
+        } as Vehicle;
     },
 
     /**
-     * Update Moto details with Predictive Maintenance Logic
+     * Update Vehicle details with Predictive Maintenance Logic
      */
-    updateVehicle: async (id: string, data: Partial<Moto>): Promise<void> => {
+    updateVehicle: async (id: string, data: Partial<Vehicle>): Promise<void> => {
         const ref = doc(db, ASSETS_COLLECTION, id);
         const snap = await getDoc(ref);
-        if (!snap.exists()) throw new Error("Moto not found");
+        if (!snap.exists()) throw new Error("Vehicle not found");
 
         const current = snap.data();
         const newKm = data.currentKm ?? current.currentKm ?? 0;
@@ -274,30 +279,31 @@ export const fleetService = {
     },
 
     // Aliases for backward compatibility
-    subscribeToMotos(franchiseId: string, callback: (assets: Moto[]) => void) {
+    subscribeToMotos(franchiseId: string, callback: (assets: Vehicle[]) => void) {
         return this.subscribeToFleet(franchiseId, callback);
     },
-    async updateMoto(id: string, data: Partial<Moto>): Promise<void> {
+    async updateMoto(id: string, data: Partial<Vehicle>): Promise<void> {
         return this.updateVehicle(id, data);
     },
 
     // Vehicle store compatibility
-    async getVehicles(franchiseId: string): Promise<Moto[]> {
+    async getVehicles(franchiseId: string): Promise<Vehicle[]> {
         const q = query(collection(db, ASSETS_COLLECTION), where('franchiseId', '==', franchiseId));
         const snap = await getDocs(q);
-        return snap.docs.map(mapDocToMoto);
+        return snap.docs.map(mapDocToVehicle);
     },
-    async createVehicle(franchiseId: string, data: Record<string, any>): Promise<Moto> {
+    async createMoto(franchiseId: string, data: Record<string, any>): Promise<Vehicle> {
         // Standardize input if it uses snake_case (Legacy Vehicle store)
-        const standardized: CreateMotoInput = {
+        const standardized: CreateVehicleInput = {
             plate: data.matricula || data.plate,
             brand: data.brand || '',
             model: data.modelo || data.model,
             currentKm: data.km_actuales || data.currentKm || 0,
             nextRevisionKm: data.proxima_revision_km || data.nextRevisionKm || 5000,
-            status: (data.estado === 'activo' ? 'active' : (data.estado === 'mantenimiento' ? 'maintenance' : (data.estado || 'active')))
+            status: (data.estado === 'activo' ? 'active' : (data.estado === 'mantenimiento' ? 'maintenance' : (data.estado || 'active'))),
+            type: 'vehicle'
         };
-        return this.createMoto(franchiseId, standardized);
+        return this.createVehicle(franchiseId, standardized);
     }
 };
 

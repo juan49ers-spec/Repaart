@@ -14,7 +14,7 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthed() && (
         getUserData().role == 'admin' || 
-        request.auth.token.role == 'admin' // Support custom claims if used
+        request.auth.token.role == 'admin'
       );
     }
     
@@ -24,25 +24,53 @@ service cloud.firestore {
         request.auth.token.role == 'franchise'
       );
     }
-
-    function isRider() {
-       return isAuthed(); // Simplified for now, or check role == 'rider'
+    
+    // --- VALIDATION HELPERS ---
+    function incomingData() {
+      return request.resource.data;
+    }
+    
+    function isNonEmptyString(fieldName) {
+      return incomingData()[fieldName] is string && incomingData()[fieldName].size() > 0;
+    }
+    
+    function isNumber(fieldName) {
+      return incomingData()[fieldName] is number;
+    }
+    
+    function hasField(fieldName) {
+      return fieldName in incomingData();
+    }
+    
+    // --- SCHEMA VALIDATORS ---
+    
+    function isValidFinancialRecord() {
+      return 
+        // Required Fields
+        isNonEmptyString('category') &&
+        isNumber('amount') &&
+        isNonEmptyString('franchiseId') &&
+        (incomingData().type == 'income' || incomingData().type == 'expense');
+    }
+    
+    function isValidFleetAsset() {
+      return
+        isNonEmptyString('plate') &&
+        isNonEmptyString('franchiseId') &&
+        incomingData().status in ['active', 'maintenance', 'out_of_service', 'deleted'];
     }
 
     // --- COLLECTION RULES ---
 
-    // USERS: Owner can read/write own profile. Admin can read/write all. Franchise can read/list/update their riders.
+    // USERS
     match /users/{userId} {
       allow read: if isAuthed() && (request.auth.uid == userId || isAdmin() || isFranchise());
-      // CREATE: DENIED. Handled by Cloud Function 'createUserManaged' (Admin SDK)
-      allow create: if false; 
-      // UPDATE: Admin OR Own Profile OR Franchise updating their own riders
+      allow create: if false; // Handled by Admin SDK only
       allow update: if isAuthed() && (
         isAdmin() || 
         request.auth.uid == userId ||
         (isFranchise() && resource.data.franchiseId == request.auth.uid)
       );
-      // Allow list queries for Admins and Franchises
       allow list: if isAuthed() && (isAdmin() || isFranchise()); 
     }
 
@@ -54,7 +82,10 @@ service cloud.firestore {
     
     // FINANCIAL DATA & SUMMARIES
     match /financial_records/{recordId} {
-      allow read, write: if isAuthed() && (isAdmin() || isFranchise());
+      allow read: if isAuthed() && (isAdmin() || isFranchise());
+      allow create: if isAuthed() && (isAdmin() || isFranchise()) && isValidFinancialRecord();
+      allow update: if isAuthed() && (isAdmin() || isFranchise()) && isValidFinancialRecord();
+      allow delete: if isAuthed() && (isAdmin() || isFranchise());
     }
     match /financial_data/{docId} {
       allow read, write: if isAuthed() && (isAdmin() || isFranchise());
@@ -66,13 +97,12 @@ service cloud.firestore {
        allow read, write: if isAuthed() && (isAdmin() || isFranchise());
     }
 
-    // SUPPORT TICKETS (Incidents & SupportHub)
+    // SUPPORT TICKETS
     match /tickets/{ticketId} {
       allow read: if isAuthed() && (isAdmin() || resource.data.uid == request.auth.uid || resource.data.franchiseId == request.auth.uid || resource.data.createdBy == request.auth.uid);
       allow create: if isAuthed();
       allow update: if isAuthed() && (isAdmin() || resource.data.uid == request.auth.uid || resource.data.createdBy == request.auth.uid);
       
-      // Subcollection: Messages
       match /messages/{messageId} {
         allow read, write: if isAuthed();
       }
@@ -96,16 +126,16 @@ service cloud.firestore {
         isAdmin() ||
         (isFranchise() && resource.data.userId == getUserData().franchiseId)
       );
-      allow write: if isAuthed(); // Logic usually handled by server, but allowing client writes for now
+      allow write: if isAuthed();
     }
     match /admin_notifications/{notifId} {
-      allow read, write: if isAuthed() && (isAdmin() || isFranchise()); // Franchise might create alerts
+      allow read, write: if isAuthed() && (isAdmin() || isFranchise());
     }
 
     // FEATURES & ROADMAP
     match /feature_requests/{featureId} {
       allow read: if isAuthed();
-      allow write: if isAuthed() && isAdmin(); // Only Admin edits roadmap
+      allow write: if isAuthed() && isAdmin();
     }
 
     // PREMIUM SERVICES
@@ -121,8 +151,7 @@ service cloud.firestore {
       allow update: if isAdmin();
     }
 
-    // OPERATIONS: FRANCHISES & WEEKS (Matrix V3)
-    // FIX: Auth UID might be mixed case while Franchise ID is uppercase. Allowing flexible check.
+    // OPERATIONS: FRANCHISES & WEEKS
     match /franchises/{franchiseId} {
       allow read: if isAuthed() && (request.auth.uid.lower() == franchiseId.lower() || isAdmin());
       allow write: if isAuthed() && isAdmin();
@@ -135,7 +164,10 @@ service cloud.firestore {
     // FLEET ASSETS (Vehicles)
     match /fleet_assets/{assetId} {
       allow read: if isAuthed() && (isAdmin() || resource.data.franchiseId.lower() == request.auth.uid.lower());
-      allow write: if isAuthed() && (isAdmin() || resource.data.franchiseId.lower() == request.auth.uid.lower());
+      allow list: if isAuthed(); // Optimization
+      allow create: if isAuthed() && (isAdmin() || isFranchise()) && isValidFleetAsset();
+      allow update: if isAuthed() && (isAdmin() || resource.data.franchiseId == request.auth.uid) && isValidFleetAsset();
+      allow delete: if isAuthed() && isAdmin();
     }
     
     // AUDIT LOGS
@@ -154,82 +186,57 @@ service cloud.firestore {
       allow read, write: if isAuthed() && isAdmin();
     }
     
-    // =============================================
-    // ACADEMY SYSTEM (Courses, Lessons, Quizzes, Progress, Encyclopedia)
-    // =============================================
-    
-    // ACADEMY COURSES (Modules)
+    // ACADEMY SYSTEM
     match /academy_courses/{courseId} {
-      allow read: if isAuthed(); // All authenticated users can read courses
-      allow write: if isAuthed() && isAdmin(); // Only admin can create/edit/delete courses
+      allow read: if isAuthed();
+      allow write: if isAuthed() && isAdmin();
     }
-    
-    // ACADEMY LESSONS
     match /academy_lessons/{lessonId} {
       allow read: if isAuthed();
       allow write: if isAuthed() && isAdmin();
     }
-    
-    // ACADEMY QUIZZES
     match /academy_quizzes/{quizId} {
       allow read: if isAuthed();
       allow write: if isAuthed() && isAdmin();
     }
-    
-    // ACADEMY PROGRESS (User progress tracking)
     match /academy_progress/{progressId} {
-      allow read: if isAuthed() && (
-        isAdmin() || 
-        resource.data.userId == request.auth.uid
-      );
-      allow create: if isAuthed(); // Users can create their own progress
-      allow update: if isAuthed() && (
-        isAdmin() || 
-        resource.data.userId == request.auth.uid
-      );
+      allow read: if isAuthed() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow create: if isAuthed();
+      allow update: if isAuthed() && (isAdmin() || resource.data.userId == request.auth.uid);
     }
-    
-    // QUIZ RESULTS
     match /quiz_results/{resultId} {
-      allow read: if isAuthed() && (
-        isAdmin() || 
-        resource.data.userId == request.auth.uid
-      );
+      allow read: if isAuthed() && (isAdmin() || resource.data.userId == request.auth.uid);
       allow create: if isAuthed();
       allow update: if isAuthed() && isAdmin();
     }
-    
-    // ENCYCLOPEDIA CATEGORIES
     match /academy_encyclopedia_categories/{categoryId} {
       allow read: if isAuthed();
       allow write: if isAuthed() && isAdmin();
     }
-    
-    // ENCYCLOPEDIA ARTICLES
     match /academy_encyclopedia_articles/{articleId} {
       allow read: if isAuthed();
       allow write: if isAuthed() && isAdmin();
     }
     
-    // LEGACY: academy_encyclopedia (for backwards compatibility)
+    // LEGACY: academy_encyclopedia
     match /academy_encyclopedia/{cardId} {
       allow read: if isAuthed();
       allow write: if isAuthed() && (isAdmin() || isFranchise());
     }
     
-    // SETTINGS (Banner, App Config, etc)
+    // SETTINGS
     match /settings/{settingId} {
-      allow read: if isAuthed(); // All authenticated users can read settings
-      allow write: if isAuthed() && isAdmin(); // Only Admin can modify settings
+      allow read: if isAuthed();
+      allow write: if isAuthed() && isAdmin();
     }
 
-    // RESOURCES (Franchise Resources Panel)
+    // RESOURCES
     match /resources/{resourceId} {
       allow read: if isAuthed();
       allow write: if isAuthed() && isAdmin();
     }
 
-    // GUIDES (Financial Guides, Manuals)
+    // GUIDES
     match /guides/{guideId} {
         allow read: if isAuthed();
         allow write: if isAuthed() && isAdmin();

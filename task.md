@@ -1,5 +1,8 @@
 # Task: Encyclopedia Ultimate Upgrade
 
+- [x] Research existing migration patterns and collection structures (`migrationService.ts`, `financeService.ts`, `fleetService.ts`)
+- [x] Identify all fields requiring migration from `snake_case` to `camelCase` in Finance and Fleet domains
+- [x] Implement migration script for Finance (`migrateFinanceLegacyFields`) and Fleet (`migrateFleetLegacyFields`) in `migrationService.ts`
 - [x] Create `SchedulerStatusBar.tsx` for real-time cost and coverage tracking.
 - [x] Create `DraggableShift.tsx` component for drag-and-drop interactions.
 - [x] Create `DroppableCell.tsx` to handle shift drops on the grid.
@@ -13,9 +16,45 @@
   - [x] Redesign `SchedulerStatusBar` (Glassmorphism, lighter weight).
   - [x] Refine Grid Typography and Spacing.
   - [x] Add subtle animations and hover effects.
-- [/] Phase 4: Minimalist Redesign (Response to Feedback)
+- [x] Phase 4: Minimalist Redesign (Response to Feedback)
   - [x] Remove "Red Line" indicator.
   - [x] Fix element overlapping (z-index issues) & Fix Syntax Errors.
-  - [ ] Simplify `SchedulerStatusBar` (Clean, flat, elegant).
-  - [ ] Simplify Grid & Shifts (Remove heavy gradients, "90s" feel).
-- [ ] Final Lint Check <!-- id: 8 -->
+  - [x] Simplify `SchedulerStatusBar` (Clean, flat, elegant).
+  - [x] Simplify Grid & Shifts (Remove heavy gradients, "90s" feel).
+- [x] Phase 9: Architecture Standardization & Testing Reliability
+  - [x] Phase 9.1: Finance Domain Standardization (CamelCase Refactor)
+  - [x] Phase 9.2: Fleet Domain Standardization & Cleanup
+    - [x] Unify `Vehicle` and `Moto` schemas in `src/schemas/fleet.ts`
+    - [x] Refactor `fleetService.ts` to use CamelCase and unified types
+    - [x] Execute `migrateFleetLegacyFields` for Firestore data cleanup
+    - [x] Update UI components (`VehiclesView`, `VehicleForm`) to new schema
+    - [x] Verify with unit tests (`fleetService.test.ts`, `migrationService.test.ts`)
+- [x] Phase 9.3: User Domain Standardization (Standardizing `UserProfile` & `FranchiseEntity`)
+  - [x] Unify `UserProfile` and `FranchiseEntity` schemas in `src/schemas/users.ts`
+  - [x] Refactor `userService.ts` to use CamelCase and standardized types
+  - [x] Eliminate duplicate service logic (`src/services/users/`)
+  - [x] Implement and execute migration scripts for user/franchise data
+  - [x] Verify with unit tests (`userService.test.ts`)
+- [/] Final Audit and Documentation cleanup
+- [ ] Phase 10: Firebase Modernization
+  - [x] Phase 10.1: Configuration Hardening (Rules & Indexes)
+    - [x] Update `firestore.indexes.json` to CamelCase
+    - [x] Refactor `firestore.rules` with strict schema validation
+  - [x] Phase 10.2: Backend Professionalization (Functions)
+    - [x] Configure TypeScript Environment (`tsconfig.json`, `package.json`)
+    - [x] Modularize `functions/src` architecture (Triggers, Callables)
+    - [x] Refactor `syncUserRole` to TypeScript (Gen 1)
+    - [x] Refactor `createUserManaged` to TypeScript (Gen 1)
+    - [x] Refactor `calculateWeekStats` to TypeScript (Gen 1)
+    - [x] Refactor `onIncidentCreated` & `deleteUserSync` (Gen 1)
+    - [x] Verify successful deployment (Partial: `deleteUserSync` failed, others active)
+- [x] Phase 11: Final System Audit & Cleanup
+  - [x] Full Frontend Test Suite (`npm test`) - Passed (19/19 files)
+  - [x] Resolve `deleteUserSync` deployment issue (Recreated function)
+  - [x] Final Manual Walkthrough (User)
+- [/] Phase 12: Production Build & Deployment Prep
+  - [x] Standardize `User` type exports in `src/services/userService.ts`
+  - [x] Fix `FranchiseProfile` mapping and type casting
+  - [x] Resolve `VehicleInput` alignment in `useFleet.ts`
+  - [x] Fix `MotoManagement` undefined ID handling
+  - [/] Verify `npm run build` success (Currently diagnosing)

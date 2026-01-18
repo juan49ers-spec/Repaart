@@ -6,17 +6,15 @@ import { useToast } from './useToast';
 // TYPES & INTERFACES
 // =====================================================
 
-import { Moto, MotoStatus } from '../schemas/fleet';
+import { Moto, CreateVehicleInput } from '../schemas/fleet';
 
 export interface Vehicle extends Omit<Moto, 'id'> {
-    id: string; // useFleet expects id to be string, Moto has branded MotoId
+    id: string;
     alias?: string;
     [key: string]: unknown;
 }
 
-export type VehicleInput = Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt' | 'franchiseId' | 'status'> & {
-    status?: MotoStatus;
-};
+export type VehicleInput = CreateVehicleInput;
 
 export interface UseFleetReturn {
     vehicles: Vehicle[];
