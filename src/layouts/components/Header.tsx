@@ -1,9 +1,10 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { Settings, LogOut } from 'lucide-react';
-import { RepaartLogo } from '../../components/common/RepaartLogo';
-import { useAppStore } from '../../store/useAppStore';
+import { useNavigate, NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { LogOut, Settings } from 'lucide-react';
+import { RepaartLogo } from '../../components/common/RepaartLogo';
+import UserMenu from './UserMenu';
+import { useAppStore } from '../../store/useAppStore';
 import { adminNavItems, franchiseNavItems } from '../constants/navigation';
 
 export interface HeaderProps {
@@ -114,11 +115,10 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, isFranchise }) => {
                     </button>
                 </nav>
 
-                {/* RIGHT: Plain Spacer (formerly held tools) */}
-                <div className="hidden lg:block w-8" />
-
-                {/* Mobile Right Spacer (to balance logo) */}
-                <div className="lg:hidden w-8" />
+                {/* RIGHT: User Menu & Profile */}
+                <div className="flex items-center gap-2">
+                    <UserMenu placement="bottom" />
+                </div>
             </div>
         </header>
     );
