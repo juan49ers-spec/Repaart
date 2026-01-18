@@ -1,11 +1,24 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Truck, AlertCircle, Edit2, Copy, Trash2, Move, RefreshCw, Check } from 'lucide-react';
 import { getRiderColor, getShiftDuration, getRiderInitials } from '../../utils/colorPalette';
 import { cn } from '../../lib/utils';
 import { shiftService } from '../../services/shiftService';
 import { notificationService } from '../../services/notificationService';
 
-interface MotoAssignment {
+// Helper for native touch feedback
+const triggerHaptic = (style: 'light' | 'medium' | 'heavy' = 'light') => {
+    if (typeof window !== 'undefined' && 'navigator' in window && 'vibrate' in navigator) {
+        const patterns = {
+            light: [10],
+            medium: [20],
+            heavy: [30]
+        };
+        navigator.vibrate(patterns[style]);
+    }
+};
+
+export interface MotoAssignment {
     motoId: string;
     plate: string;
     startAt: string;
@@ -24,6 +37,7 @@ export interface ShiftEvent {
     swapRequested?: boolean;
     changeRequested?: boolean;
     changeReason?: string | null;
+    isDraft?: boolean;
     franchiseId?: string;
     motoAssignments?: MotoAssignment[];
 }
@@ -41,6 +55,7 @@ interface ShiftCardProps {
     readOnly?: boolean;
     isExpanded?: boolean;
     isRiderMode?: boolean;
+    className?: string;
 }
 
 const ShiftCard: React.FC<ShiftCardProps> = ({
@@ -55,9 +70,15 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
     onDragEnd,
     readOnly = false,
     isExpanded = false,
-    isRiderMode = false
+    isRiderMode = false,
+    className
 }) => {
     const { riderName, riderId, visualStart, visualEnd, motoAssignments, startAt, endAt, isConfirmed: propConfirmed } = event;
+
+    // Check if shift is currently active
+    const now = new Date();
+    const isCurrent = now >= new Date(startAt) && now <= new Date(endAt);
+
     const [showActions, setShowActions] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -77,6 +98,29 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
     // Effective state
     const isConfirmed = localConfirmed;
     const changeRequested = localRequested;
+
+    // Color-Coding Logic (Agenda 2.0)
+    const startHour = new Date(visualStart).getHours();
+    const isMidday = startHour >= 12 && startHour < 18; // 12:00 - 18:00
+    const isNight = startHour >= 20 || startHour < 5;   // 20:00 - 05:00
+
+    // Priority: Night (Red) > Midday (Blue) > Default (Indigo)
+    let themeLabel = "Mañana";
+    let ringClass = "ring-indigo-500/10";
+
+    if (isMidday) {
+        themeLabel = "Mediodía";
+        ringClass = "ring-blue-500/10";
+    } else if (isNight) {
+        themeLabel = "Noche";
+        ringClass = "ring-rose-500/10";
+    }
+
+    if (isCurrent) ringClass = "ring-2 ring-white/20";
+    // Change Request accent
+    if (changeRequested) ringClass = "ring-1 ring-amber-500/30";
+    // Confirmed accent
+    if (isConfirmed) ringClass = "ring-1 ring-emerald-500/30";
 
     // Get rider color
     const riderColor = getRiderColor(riderId || '');
@@ -139,6 +183,7 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
         e.stopPropagation();
         if (isProcessing) return;
         setIsProcessing(true);
+        triggerHaptic('medium');
         const nextState = !isConfirmed;
         setLocalConfirmed(nextState); // Optimistic
         try {
@@ -156,6 +201,7 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
         e.stopPropagation();
         if (isProcessing) return;
         setIsProcessing(true);
+        triggerHaptic('light');
         const nextState = !changeRequested;
 
         let reason = "";
@@ -177,7 +223,7 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                         {
                             type: 'shift_change_request',
                             title: 'Solicitud de Cambio de Turno',
-                            message: `El rider ${riderName} solicita cambio para el turno del ${new window.Date(event.startAt).toLocaleDateString()}.Motivo: ${reason || 'N/A'} `,
+                            message: `El rider ${riderName} solicita cambio para el turno del ${new window.Date(event.startAt).toLocaleDateString()}. Motivo: ${reason || 'N/A'}`,
                             relatedShiftId: event.shiftId
                         }
                     );
@@ -201,7 +247,7 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             className={cn(
-                "group relative px-2.5 py-2 rounded-2xl transition-all duration-300 overflow-hidden select-none mb-1.5 mx-0.5",
+                "group relative px-4 py-4 rounded-[32px] transition-all duration-500 overflow-hidden select-none mb-3",
                 // Base state
                 isDragging ? 'opacity-40 cursor-grabbing scale-95 ring-2 ring-indigo-400 ring-offset-2' : 'cursor-grab',
                 // Conflict State
@@ -210,17 +256,15 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                     : changeRequested
                         ? 'bg-amber-50/90 border border-amber-200 shadow-sm'
                         : isRiderMode
-                            // ULTRA PREMIUM RIDER MODE (ZINC)
-                            ? "bg-[#18181b] ring-1 ring-white/5 shadow-xl shadow-black/40"
-                            // ADMIN STANDARD MODE
-                            // Modern clean white pill with soft lift
+                            ? cn("bg-[#1c1c1e] shadow-2xl shadow-black/60", ringClass)
                             : cn(
                                 "bg-white border text-left",
-                                "border-slate-200/60 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)]",
-                                "hover:z-50 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-0.5 hover:border-indigo-200/50"
+                                "border-slate-200/60 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)]",
+                                "hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-0.5 hover:border-indigo-200/50"
                             ),
                 canDrag && "touch-feedback-subtle active:cursor-grabbing",
-                isExpanded && isRiderMode && "ring-1 ring-white/10"
+                isExpanded && isRiderMode && "ring-1 ring-white/20",
+                className
             )}
             style={style}
             onClick={onClick}
@@ -229,95 +273,113 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
             onMouseLeave={() => setShowActions(false)}
         >
             {isRiderMode ? (
-                // --- ULTRA-DENSE RIDER CONTENT (50% REDUCTION) ---
-                <div className="flex flex-col gap-1.5">
+                // --- ULTRA-PREMIUM RIDER CONTENT (AGENDA 2.0) ---
+                <div className="flex flex-col gap-3.5">
 
-                    {/* ROW 1: HEADER (Status, Moto) */}
-                    <div className="flex items-center justify-between border-b border-white/5 pb-1.5 h-6">
-                        <div className="flex items-center gap-2 overflow-hidden">
-                            {/* Status Indicator (Compact Pill) */}
+                    {/* ROW 1: HEADER (Visual Theme Indicators) */}
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                            {/* THE "CUADRITO" (Square Indicator) */}
+                            <div className={cn(
+                                "w-4 h-4 rounded-md shadow-lg shrink-0 flex items-center justify-center transition-all duration-300",
+                                changeRequested ? "bg-amber-500 shadow-amber-500/40" :
+                                    isNight ? "bg-rose-500 shadow-rose-500/40" :
+                                        isMidday ? "bg-blue-500 shadow-blue-500/40" :
+                                            "bg-indigo-500 shadow-indigo-500/40"
+                            )}>
+                                {isConfirmed && <Check size={10} strokeWidth={4} className="text-white" />}
+                            </div>
+
+                            {/* Status Pill */}
                             {isConfirmed ? (
-                                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                                    <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-                                    <span className="text-[8px] font-bold text-emerald-400 uppercase">Confirmado</span>
+                                <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-tight">Confirmado</span>
                                 </div>
                             ) : changeRequested ? (
-                                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
-                                    <div className="w-1 h-1 rounded-full bg-amber-500 animate-pulse" />
-                                    <span className="text-[8px] font-bold text-amber-400 uppercase">Cambio Solicitado</span>
+                                <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+                                    <span className="text-[10px] font-bold text-amber-400 uppercase tracking-tight">Cambio Solicitado</span>
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-zinc-800 border border-white/5">
-                                    <div className="w-1 h-1 rounded-full bg-zinc-500" />
-                                    <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-tighter">Pendiente</span>
+                                <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/5 border border-white/5">
+                                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-tight">{themeLabel}</span>
+                                </div>
+                            )}
+
+                            {isCurrent && (
+                                <div className="px-2 py-0.5 rounded-full bg-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.5)]">
+                                    <span className="text-[10px] font-black text-white uppercase tracking-tighter">Ahora</span>
                                 </div>
                             )}
                         </div>
 
                         <div className="flex items-center gap-2">
                             {moto && (
-                                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-white/5 border border-white/5">
-                                    <Truck size={8} className="text-blue-400" />
-                                    <span className="text-[8px] font-bold text-zinc-400 font-mono tracking-tighter">{moto.plate}</span>
+                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/10">
+                                    <Truck size={10} className={cn("text-white/40", isCurrent && (isConfirmed ? "text-emerald-400" : "text-white"))} />
+                                    <span className="text-[10px] font-bold text-zinc-400 font-mono tracking-tighter">{moto.plate}</span>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* ROW 2: PAYLOAD (Time + Actions) */}
-                    <div className="flex items-center justify-between h-10">
-                        {/* Time Left */}
-                        <div className="flex items-baseline gap-1.5">
-                            <span className="text-2xl font-light text-white tracking-tighter">{startTime}</span>
-                            <span className="text-zinc-700 text-lg mx-0.5">—</span>
-                            <span className="text-zinc-500 text-lg font-light tracking-tighter">{endTime}</span>
-                            <span className="ml-2 px-1 py-0.5 rounded bg-white/5 text-[8px] font-bold text-zinc-600 uppercase tracking-tighter">{duration}h</span>
+                    {/* ROW 2: PAYLOAD (Time focus) */}
+                    <div className="flex items-end justify-between">
+                        <div className="flex flex-col gap-0.5">
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-3xl font-light text-white tracking-tighter">{startTime}</span>
+                                <span className="text-zinc-700 text-xl font-thin">—</span>
+                                <span className="text-2xl font-light text-zinc-500 tracking-tighter">{endTime}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">{duration}H</span>
+                                {isConfirmed && <div className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[8px] font-black tracking-tighter uppercase">Accepted</div>}
+                            </div>
                         </div>
 
-                        {/* Actions Right (Compact Icons) */}
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={handleRequestChange}
-                                disabled={isProcessing}
-                                className={cn(
-                                    "w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 border",
-                                    changeRequested
-                                        ? "bg-amber-500/10 border-amber-500/30 text-amber-500"
-                                        : "bg-zinc-800/50 border-white/5 text-zinc-500 hover:text-white"
-                                )}
-                                title="Solicitar cambio"
-                            >
-                                <RefreshCw size={14} className={cn(changeRequested && "animate-spin-slow")} />
-                            </button>
+                        {/* Actions Right (Apple Style Buttons) */}
+                        <div className="flex items-center gap-2.5">
+                            {!isConfirmed && (
+                                <motion.button
+                                    whileTap={{ scale: 0.92 }}
+                                    onClick={handleRequestChange}
+                                    disabled={isProcessing}
+                                    className={cn(
+                                        "w-12 h-12 rounded-full flex items-center justify-center transition-all active:scale-90 border",
+                                        changeRequested
+                                            ? "bg-amber-500/10 border-amber-500/30 text-amber-500"
+                                            : "bg-zinc-800/80 border-white/5 text-zinc-500"
+                                    )}
+                                    title="Solicitar cambio"
+                                >
+                                    <RefreshCw size={20} className={cn(changeRequested && "animate-spin-slow")} />
+                                </motion.button>
+                            )}
 
-                            <button
+                            <motion.button
+                                whileTap={{ scale: 0.92 }}
                                 onClick={handleConfirm}
                                 disabled={isProcessing || isConfirmed}
                                 className={cn(
-                                    "w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-95 shadow-lg",
+                                    "w-12 h-12 rounded-full flex items-center justify-center transition-all active:scale-90 border",
                                     isConfirmed
-                                        ? "bg-zinc-800/50 border border-emerald-500/30 text-emerald-500"
-                                        : "bg-white text-black hover:bg-zinc-200"
+                                        ? "bg-emerald-500 border-none text-white shadow-[0_0_20px_rgba(16,185,129,0.4)]"
+                                        : "bg-emerald-500/10 border-emerald-500/30 text-emerald-500"
                                 )}
-                                title="Confirmar turno"
+                                title={isConfirmed ? "Confirmado" : "Confirmar turno"}
                             >
-                                {isConfirmed ? <Check size={16} /> : <Check size={18} strokeWidth={3} />}
-                            </button>
+                                <Check size={24} strokeWidth={isConfirmed ? 3 : 2} />
+                            </motion.button>
                         </div>
                     </div>
-
-                    {/* Conflict Banner */}
-                    {hasConflict && (
-                        <div className="absolute inset-x-0 top-0 h-0.5 bg-red-500/50" />
-                    )}
                 </div>
             ) : (
                 // --- ADMIN/STANDARD CONTENT (Modern Pill Layout) ---
-                <>
+                <div className="relative h-full">
                     {/* Left Color Indicator Pill */}
                     <div className={cn(
                         "absolute left-1.5 top-1.5 bottom-1.5 w-1 rounded-full opacity-80",
-                        hasConflict ? "bg-red-500" : (riderColor.bg?.replace('bg-', 'bg-') || 'bg-slate-400')
+                        hasConflict ? "bg-red-500" : (riderColor.bg || 'bg-slate-400')
                     )} />
 
                     {/* Quick Actions Overlay (Glass) */}
@@ -392,7 +454,7 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                             </div>
                         )}
                     </div>
-                </>
+                </div>
             )}
 
             {/* Drag Handle Icon - Only on Hover (ADMIN MODE & NO CONFLICT) */}

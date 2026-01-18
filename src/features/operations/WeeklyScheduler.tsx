@@ -41,6 +41,9 @@ interface WeeklySchedulerProps {
 }
 
 interface VisualEvent extends Shift {
+    shiftId: string;
+    riderId: string;
+    riderName: string;
     visualDate: string;
     visualStart: Date;
     visualEnd: Date;
@@ -52,8 +55,6 @@ interface VisualEvent extends Shift {
 }
 
 interface ShiftEvent extends VisualEvent {
-    riderId: string;
-    riderName: string;
     franchiseId: string;
 }
 
@@ -617,13 +618,16 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
             if (startDay === endDay) {
                 pushToDay(startDay, {
                     ...shift,
+                    shiftId: shift.shiftId || shift.id || `unknown_${Math.random()}`,
+                    riderId: shift.riderId || 'unassigned',
+                    riderName: shift.riderName || 'Sin Asignar',
                     visualDate: startDay,
                     visualStart: start,
                     visualEnd: end,
                     isConfirmed: shift.isConfirmed === true,
                     changeRequested: shift.changeRequested === true,
                     changeReason: shift.changeReason || null,
-                    franchiseId: shift.franchiseId,
+                    franchiseId: shift.franchiseId || '',
                     isContinuation: false
                 });
             } else {
@@ -632,13 +636,16 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                 endOfDay.setHours(23, 59, 59, 999);
                 pushToDay(startDay, {
                     ...shift,
+                    shiftId: shift.shiftId || shift.id || `unknown_${Math.random()}`,
+                    riderId: shift.riderId || 'unassigned',
+                    riderName: shift.riderName || 'Sin Asignar',
                     visualDate: startDay,
                     visualStart: start,
                     visualEnd: endOfDay,
                     isConfirmed: shift.isConfirmed === true,
                     changeRequested: shift.changeRequested === true,
                     changeReason: shift.changeReason || null,
-                    franchiseId: shift.franchiseId,
+                    franchiseId: shift.franchiseId || '',
                     isContinuation: false
                 });
 
@@ -646,13 +653,16 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                 startOfNextDay.setHours(0, 0, 0, 0);
                 pushToDay(endDay, {
                     ...shift,
+                    shiftId: shift.shiftId || shift.id || `unknown_${Math.random()}`,
+                    riderId: shift.riderId || 'unassigned',
+                    riderName: shift.riderName || 'Sin Asignar',
                     visualDate: endDay,
                     visualStart: startOfNextDay,
                     visualEnd: end,
                     isConfirmed: shift.isConfirmed === true,
                     changeRequested: shift.changeRequested === true,
                     changeReason: shift.changeReason || null,
-                    franchiseId: shift.franchiseId,
+                    franchiseId: shift.franchiseId || '',
                     isContinuation: true
                 });
             }

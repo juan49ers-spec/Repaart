@@ -1,6 +1,41 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
+/* Premium Glass Utilities */
+.glass-card {
+  @apply bg-white/70 dark:bg-black/40 backdrop-blur-xl saturate-[1.8] transition-all duration-300;
+}
+
+.glass-premium {
+  @apply bg-white/80 dark:bg-black/60 backdrop-blur-[40px] saturate-[2.5] border border-white/40 dark:border-white/20;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  transition: all 500ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.brand-island-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.brand-island-glow::after {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: conic-gradient(from 0deg, transparent, rgba(99, 102, 241, 0.1), transparent 40%);
+  animation: rotate-glow 10s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes rotate-glow {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @theme {
   --color-brand-50: oklch(0.97 0.01 291.07);
   --color-brand-100: oklch(0.93 0.03 289.49);

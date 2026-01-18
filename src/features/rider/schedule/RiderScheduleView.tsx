@@ -5,6 +5,7 @@ import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useOperationsIntel, intelService } from '../../../services/intelService';
 import MobileAgendaView from '../../operations/MobileAgendaView';
+import { ShiftEvent } from '../../operations/ShiftCard';
 import { shiftService, Shift } from '../../../services/shiftService';
 import { useAuth, AuthUser } from '../../../context/AuthContext';
 
@@ -73,7 +74,7 @@ const RiderScheduleView: React.FC = () => {
                 }] : []
             });
             return acc;
-        }, {} as Record<string, any[]>);
+        }, {} as Record<string, ShiftEvent[]>);
     }, [shifts]);
 
     // Metrics
@@ -140,7 +141,7 @@ const RiderScheduleView: React.FC = () => {
                 days={agendaDays}
                 visualEvents={visualEvents}
                 intelByDay={intelByDay}
-                onEditShift={(s) => setExpandedShiftId(expandedShiftId === (s.shiftId || s.id) ? null : (s.shiftId || s.id))}
+                onEditShift={(s) => setExpandedShiftId(expandedShiftId === s.shiftId ? null : s.shiftId)}
                 onDeleteShift={() => { }}
                 onAddShift={() => { }}
                 readOnly={true}
