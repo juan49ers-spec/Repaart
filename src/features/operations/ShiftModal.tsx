@@ -237,10 +237,10 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
 
     return (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-xl rounded-[2rem] shadow-2xl border border-slate-200/60 dark:border-slate-800/60 flex flex-col overflow-hidden max-h-[90vh] ring-1 ring-black/5">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2rem] shadow-2xl border border-slate-200/60 dark:border-slate-800/60 flex flex-col overflow-hidden max-h-[85vh] ring-1 ring-black/5">
 
                 {/* HEADER (Premium Ribbon Look) */}
-                <div className="relative px-8 pt-8 pb-6 border-b border-slate-100 dark:border-slate-800/50">
+                <div className="relative px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800/50">
                     <div className="flex justify-between items-start">
                         <div className="flex items-center gap-4">
                             <div className={cn(
@@ -272,7 +272,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                 </div>
 
                 {/* BODY */}
-                <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
+                <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
 
                     {/* ERROR ALERT */}
                     {error && (
@@ -311,39 +311,42 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                                         type="button"
                                         onClick={() => setValue('riderId', r.id)}
                                         className={cn(
-                                            "group relative flex flex-col items-center gap-2 transition-all p-1 min-w-[56px]",
-                                            isSelected ? "scale-105" : "hover:scale-105"
+                                            "group relative flex flex-col items-center gap-2 transition-all p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50",
+                                            isSelected ? "scale-105 bg-indigo-50/50 dark:bg-indigo-900/20" : "hover:scale-105"
                                         )}
                                         title={r.fullName + (isBusy ? ' (Ocupado)' : '')}
                                     >
                                         <div className={cn(
-                                            "w-10 h-10 rounded-xl flex items-center justify-center text-xs font-semibold transition-all relative overflow-hidden",
+                                            "w-14 h-14 rounded-2xl flex items-center justify-center text-base font-bold transition-all relative overflow-hidden shadow-sm",
                                             color.bg, color.text,
                                             isSelected
-                                                ? "shadow-[0_0_15px_-3px_rgba(99,102,241,0.4)] ring-2 ring-indigo-500 dark:ring-indigo-400"
-                                                : "opacity-40 grayscale hover:grayscale-0 hover:opacity-100 ring-1 ring-slate-100 dark:ring-slate-800",
-                                            isBusy && !isSelected && "opacity-20 contrast-50"
+                                                ? "shadow-[0_0_20px_-5px_rgba(99,102,241,0.5)] ring-2 ring-indigo-500 dark:ring-indigo-400 scale-110"
+                                                : "opacity-60 grayscale-[0.3] hover:grayscale-0 hover:opacity-100 ring-1 ring-slate-100 dark:ring-slate-800",
+                                            isBusy && !isSelected && "opacity-30 grayscale contrast-75"
                                         )}>
                                             {getRiderInitials(r.fullName)}
                                             {isSelected && (
-                                                <div className="absolute right-1 top-1 w-1.5 h-1.5 rounded-full bg-white shadow-sm" />
+                                                <div className="absolute right-1.5 top-1.5 w-2 h-2 rounded-full bg-white shadow-sm ring-1 ring-indigo-100" />
                                             )}
                                             {isBusy && (
-                                                <div className="absolute inset-0 bg-rose-500/10 flex items-center justify-center">
-                                                    <div className="w-full h-px bg-rose-500/40 rotate-45" />
+                                                <div className="absolute inset-0 bg-rose-500/10 flex items-center justify-center backdrop-blur-[1px]">
+                                                    <div className="w-full h-px bg-rose-500/50 rotate-45" />
+                                                    <div className="absolute w-full h-px bg-rose-500/50 -rotate-45" />
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="flex flex-col items-center">
+                                        <div className="flex flex-col items-center gap-0.5">
                                             <span className={cn(
-                                                "text-[8px] font-semibold uppercase tracking-wider text-center break-words max-w-[64px]",
-                                                isSelected ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600",
+                                                "text-[10px] font-bold uppercase tracking-wider text-center break-words max-w-[72px] leading-tight",
+                                                isSelected ? "text-indigo-600 dark:text-indigo-400" : "text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300",
                                                 isBusy && "text-rose-400"
                                             )}>
                                                 {r.fullName.split(' ')[0]}
                                             </span>
                                             {isBusy && (
-                                                <span className="text-[6px] font-bold text-rose-500 uppercase tracking-tighter">Ocupado</span>
+                                                <span className="px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-900/30 text-[7px] font-extrabold text-rose-600 dark:text-rose-400 uppercase tracking-wider border border-rose-200 dark:border-rose-800">
+                                                    Ocupado
+                                                </span>
                                             )}
                                         </div>
                                     </button>
@@ -432,7 +435,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                 </div>
 
                 {/* FOOTER */}
-                <div className="px-8 py-6 border-t border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900 flex justify-between items-center">
+                <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900 flex justify-between items-center">
                     <div>
                         {initialData && onDelete && (
                             <button

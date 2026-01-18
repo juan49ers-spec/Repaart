@@ -118,7 +118,7 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({ isAdmin, isFranch
 
 // Extracted Content Component for reuse/cleanliness if needed, or kept inline for speed. 
 // For this refactor, I'll keep the mobile part largely as is but wrapped.
-const SidebarContent = ({ navItems, onClose, isMobile }: any) => (
+const SidebarContent = ({ navItems, onClose }: any) => (
     /* ... Re-insert the mobile specific content structure here or reuse logic ... */
     <div className="flex flex-col h-full w-full">
         {/* Decorative gradients */}

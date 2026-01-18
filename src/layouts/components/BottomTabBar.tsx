@@ -86,7 +86,7 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({ isAdmin, isFranchise: _isFr
                                 aria-label={tab.label}
                             >
                                 {({ isActive }: { isActive: boolean }) => (
-                                    <div className={`tab-pill transform transition-transform duration-200 active:scale-90 ${isActive ? 'tab-pill-active' : ''}`}>
+                                    <div className={`tab-pill transform transition-transform duration-200 ${isActive ? 'tab-pill-active' : ''}`}>
                                         <Icon
                                             className={`w-6 h-6 transition-all duration-200 ${isActive
                                                 ? 'text-blue-600 dark:text-blue-400 stroke-[2.5]'

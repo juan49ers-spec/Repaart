@@ -35,7 +35,7 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> = ({
     isRiderMode = false
 }) => {
     return (
-        <div className="relative pb-32 min-h-screen bg-[#09090b]">
+        <div className="relative pb-32 min-h-screen bg-slate-50 dark:bg-black transition-colors duration-300">
 
 
             <div className="space-y-4 relative z-10 px-4 pt-4">
@@ -65,12 +65,13 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> = ({
                                 // REST CARD
                                 <div className={cn(
                                     "p-4 rounded-[24px] border transition-all duration-300 relative overflow-hidden group mb-3",
-                                    "bg-[#09090b] border-white/5 hover:bg-[#121214]"
+                                    "bg-white dark:bg-[#1c1c1e] border-slate-200 dark:border-white/5 shadow-sm",
+                                    "touch-feedback"
                                 )}>
                                     <div className="flex items-center justify-between mb-2">
                                         <span className={cn(
                                             "text-sm font-medium tracking-tight uppercase",
-                                            isToday ? "text-emerald-500" : "text-zinc-500"
+                                            isToday ? "text-blue-600 dark:text-blue-400" : "text-slate-500 dark:text-zinc-500"
                                         )}>
                                             {dateLabel}
                                         </span>
@@ -78,7 +79,7 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> = ({
                                     </div>
 
                                     <div className="py-4 flex flex-col items-center justify-center opacity-40 group-hover:opacity-60 transition-opacity">
-                                        <p className="text-xl font-medium text-zinc-600 tracking-widest uppercase">Descanso</p>
+                                        <p className="text-xl font-medium text-slate-400 dark:text-zinc-600 tracking-widest uppercase">Descanso</p>
                                     </div>
                                 </div>
                             ) : (

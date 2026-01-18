@@ -32,24 +32,24 @@
 }
 
 .dark {
-  /* Dark Mode Colors - Classic Admin Style */
-  --bg-primary: #020617;
-  /* slate-950 */
-  --bg-card: #0f172a;
-  /* slate-900 */
-  --text-primary: #f8fafc;
-  /* slate-50 */
-  --text-secondary: #94a3b8;
-  /* slate-400 */
-  --border: #1e293b;
-  /* slate-800 */
+  /* Dark Mode Colors - True Black OLED Style */
+  --bg-primary: #000000;
+  /* Absolute Black for OLED */
+  --bg-card: #1c1c1e;
+  /* iOS System Gray 6 */
+  --text-primary: #f2f2f7;
+  /* iOS Label Color */
+  --text-secondary: #aeaeb2;
+  /* iOS Secondary Label */
+  --border: #2c2c2e;
+  /* iOS Separator */
 }
 
 body {
-  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), color 0.3s ease;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -61,13 +61,14 @@ body {
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
   -webkit-overflow-scrolling: touch;
+  /* Momentum scrolling */
 
   /* SF Pro uses double-story 'a', so we keep Inter defaults. 
      ss01 (open digits) or cv05 (l with tail) are optional preferences. 
      We stick to defaults for maximum resemblance to standard SF Pro. */
   font-feature-settings: 'calt' 1;
-  letter-spacing: -0.011em;
-  /* Slight tightening for that "Display" feel */
+  letter-spacing: -0.012em;
+  /* Slightly tighter for that Apple feel */
 }
 
 /* Safe Area Utilities */
@@ -106,33 +107,30 @@ body {
 
 .hide-scrollbar {
   -ms-overflow-style: none;
-  /* IE and Edge */
   scrollbar-width: none;
-  /* Firefox */
 }
 
 /* Apple Typography Extensions */
 .text-apple-h1 {
-  @apply text-4xl font-black tracking-tight leading-none text-white;
+  @apply text-4xl font-bold tracking-tighter leading-tight text-slate-900 dark:text-white;
 }
 
 .text-apple-h2 {
-  @apply text-2xl font-extrabold tracking-tight text-white;
+  @apply text-2xl font-bold tracking-tight text-slate-900 dark:text-white;
 }
 
 .text-apple-body {
-  @apply text-base font-medium text-slate-300;
+  @apply text-base font-normal tracking-normal text-slate-600 dark:text-slate-300;
 }
 
 .text-apple-sub {
-  @apply text-xs font-bold uppercase tracking-widest text-slate-500;
+  @apply text-xs font-semibold uppercase tracking-widest text-slate-500;
 }
 
 /* Hyper-Cockpit V3 FX - DISABLED FOR FLUIDITY */
 .animate-orb {
   animation: none;
   opacity: 0.5;
-  /* Keep visible but static if used */
 }
 
 .animate-haptic {
@@ -143,8 +141,10 @@ body {
   animation: none;
 }
 
+/* Glassmorphism Refinement - Mobile Premium */
 .glass-premium {
-  @apply bg-slate-900 border border-slate-800 shadow-xl;
+  @apply bg-white/70 dark:bg-slate-900/60 backdrop-blur-2xl saturate-150 border-b border-white/20 dark:border-white/10;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
 }
 
 .neon-glow-emerald {
@@ -157,21 +157,21 @@ body {
 
 /* Custom Scrollbar for Light Mode */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+  background: rgba(148, 163, 184, 0.5);
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgba(148, 163, 184, 0.8);
 }
 
 /* Aurora Animation - DISABLED */
@@ -192,7 +192,6 @@ body {
   -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
 }
 
-
 /* Smooth Marquee */
 @keyframes marquee {
   0% {
@@ -212,22 +211,37 @@ body {
 /* Responsive Apple-style Typography */
 h1,
 .text-apple-h1 {
-  font-size: clamp(2rem, 5vw, 2.5rem);
-  letter-spacing: -0.02em;
-  font-weight: 800;
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+  letter-spacing: -0.025em;
+  font-weight: 700;
   line-height: 1.1;
 }
 
 h2,
 .text-apple-h2 {
-  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-size: clamp(1.25rem, 4vw, 1.75rem);
   letter-spacing: -0.015em;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.2;
 }
 
-/* Glassmorphism Refinements - Simplified */
-/* .glass-premium is already defined above */
+/* iOS Input Zoom Prevention */
+input,
+textarea,
+select {
+  font-size: 16px !important;
+  /* Force 16px to prevent iOS zoom */
+}
+
+@media (min-width: 768px) {
+
+  input,
+  textarea,
+  select {
+    font-size: 14px !important;
+    /* Revert on desktop if needed */
+  }
+}
 
 /* Mobile Safe Area Handling - Enhanced */
 .safe-bottom {
@@ -240,10 +254,16 @@ h2,
 
 /* iOS-style Dock Blur */
 .ios-dock {
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(25px) saturate(180%);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dark .ios-dock {
+  background: rgba(20, 20, 20, 0.75);
+  /* Not fully black for glass effect */
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Smooth Scrolling for Layouts */
@@ -251,7 +271,6 @@ html,
 body {
   scroll-behavior: smooth;
   overscroll-behavior-y: none;
-  /* Prevent bounce on pull-to-refresh if native app feel is desired */
 }
 
 /* ============================================== */
