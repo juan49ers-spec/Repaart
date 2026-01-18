@@ -1053,7 +1053,7 @@ const DeliveryScheduler: React.FC<{
                         {/* HEADER - Floating Glass Effect */}
                         <div className="flex-none flex w-full border-b border-indigo-100 bg-white/95 backdrop-blur-sm z-30 h-10 shadow-sm sticky top-0">
                             {/* CORNER (Riders Label) */}
-                            <div className="w-40 lg:w-40 xl:w-48 flex-none border-r border-slate-200 bg-slate-50 flex items-center px-4 sticky left-0 z-[60] shadow-[4px_0_24px_-4px_rgba(0,0,0,0.1)]">
+                            <div className="w-40 lg:w-40 xl:w-44 flex-none border-r border-slate-200 bg-slate-50 flex items-center px-4 sticky left-0 z-[60] shadow-[4px_0_24px_-4px_rgba(0,0,0,0.1)]">
                                 <span className="text-xs uppercase font-medium tracking-widest text-slate-400">Riders</span>
                             </div>
 
@@ -1083,7 +1083,7 @@ const DeliveryScheduler: React.FC<{
                                         {dayCols.map((slot) => {
                                             return (
                                                 <div key={slot.i} className={cn(
-                                                    "flex-1 flex items-end justify-start pb-1 pl-1 relative group overflow-visible h-full border-l",
+                                                    "flex-1 flex items-end justify-start pb-1 pl-1 relative group overflow-hidden h-full border-l",
                                                     slot.isFullHour ? "border-slate-200" :
                                                         slot.isHalfHour ? "border-slate-100 border-dashed" : "border-slate-50 border-dotted",
                                                     "bg-white",
@@ -1122,7 +1122,7 @@ const DeliveryScheduler: React.FC<{
 
                                     {/* RIDER META (LEFT COL) - Sticky */}
                                     <div className={cn(
-                                        "w-40 lg:w-40 xl:w-48 flex-none border-r border-slate-200 flex items-center px-4 py-1 relative transition-colors sticky left-0 z-[60] shadow-[4px_0_24px_-4px_rgba(0,0,0,0.1)]",
+                                        "w-40 lg:w-40 xl:w-44 flex-none border-r border-slate-200 flex items-center px-4 py-1 relative transition-colors sticky left-0 z-[60] shadow-[4px_0_24px_-4px_rgba(0,0,0,0.1)]",
                                         index % 2 === 0 ? "bg-white group-hover:bg-[#F8FAFC]" : "bg-[#F8FAFC] group-hover:bg-[#F8FAFC]"
                                     )}>
                                         <div className="flex items-center gap-3 w-full">
@@ -1131,19 +1131,19 @@ const DeliveryScheduler: React.FC<{
                                             </div>
                                             <div className="min-w-0 flex-1 flex flex-col justify-center gap-1">
                                                 <p className="text-sm font-normal text-slate-700 truncate group-hover:text-indigo-700 transition-colors">{rider.fullName}</p>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200/50 whitespace-nowrap flex items-center gap-1">
-                                                        <PenLine size={12} className="text-slate-400" /> <span className="font-normal text-slate-600">{rider.contractHours || 40}h</span>
+                                                <div className="flex items-center gap-2 xl:gap-1">
+                                                    <span className="text-[10px] xl:text-[9.5px] font-normal text-slate-400 bg-slate-100 px-2 xl:px-1.5 py-0.5 xl:py-0 rounded-full border border-slate-200/50 whitespace-nowrap flex items-center gap-1">
+                                                        <PenLine size={12} className="text-slate-400 xl:scale-90" /> <span className="font-normal text-slate-600">{rider.contractHours || 40}h</span>
                                                     </span>
                                                     <span className={cn(
-                                                        "text-[10px] font-normal px-2 py-0.5 rounded-full border whitespace-nowrap flex items-center gap-1 transition-colors",
+                                                        "text-[10px] xl:text-[9.5px] font-normal px-2 xl:px-1.5 py-0.5 xl:py-0 rounded-full border whitespace-nowrap flex items-center gap-1 transition-colors",
                                                         (rider.totalWeeklyHours || 0) > (rider.contractHours || 40)
                                                             ? "bg-rose-50 text-rose-600 border-rose-200"
                                                             : ((rider.contractHours || 40) - (rider.totalWeeklyHours || 0)) > 5
                                                                 ? "bg-emerald-50 text-emerald-600 border-emerald-200"
                                                                 : "bg-amber-50 text-amber-600 border-amber-200"
                                                     )}>
-                                                        <Bike size={12} /> <span className="font-normal">{(rider.totalWeeklyHours || 0).toFixed(1)}h</span>
+                                                        <Bike size={12} className="xl:scale-90" /> <span className="font-normal">{(rider.totalWeeklyHours || 0).toFixed(1)}h</span>
                                                     </span>
                                                 </div>
                                             </div>
