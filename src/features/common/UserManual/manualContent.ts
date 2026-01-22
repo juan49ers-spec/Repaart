@@ -48,85 +48,83 @@ Su objetivo es servir como la única fuente de la verdad para toda la operativa 
     // --- ADMIN MODULES ---
     {
         id: 'admin_dashboard',
-        title: 'Centro de Mando (Dashboard)',
+        title: 'Centro de Control (Global)',
         icon: LayoutDashboard,
         role: 'admin',
         content: [
             {
-                title: 'Visión de Alto Nivel',
-                body: `El Dashboard Admin no es solo un resumen; es un centro de control operativo.
+                title: 'Arquitectura del Centro de Control',
+                body: `El **Centro de Control** es el corazón operativo del Administrador. Se divide en tres zonas de monitorización crítica:
                 
-*   **Métricas en Tiempo Real**: Las tarjetas superiores ("Active Franchises", "Total Revenue") se actualizan en vivo.
-*   **Estado del Sistema**: El widget "System Health" monitoriza la latencia de la base de datos y el estado de los servidores de autenticación.
-*   **Mapa de Red**: Visualiza la distribución geográfica de tus unidades. Un punto rojo indica una alerta crítica.`
+1.  **Estado de la Red (Health)**: Visualiza de forma agregada el rendimiento de todas las franquicias activas. El color de los indicadores determina la urgencia de intervención técnica o comercial.
+2.  **Acciones Pendientes**: Tu lista de tareas tácticas. Aquí aparecen aprobaciones de cierres mensuales, solicitudes de soporte y alertas de mantenimiento de flota.
+3.  **Ingresos Administrativos**: Seguimiento de los Royalties y Fees recolectados por la red en el mes seleccionado.
+
+**Tip**: El Centro de Control se sincroniza en tiempo real con la base de datos de Firestore para asegurar datos frescos.`
             },
             {
-                title: 'Inteligencia Artificial (Anomaly Detector)',
-                body: `El sistema monitoriza constantemente los flujos financieros en busca de irregularidades.
+                title: 'Capa de Inteligencia Artificial',
+                body: `En la parte inferior del Dashboard reside el módulo de **Inteligencia Artificial**.
                 
-**¿Qué detecta?**
-*   **Caídas de Ingresos**: Si una franquicia reporta 0€ en un día laborable.
-*   **Márgenes Críticos**: Si los gastos superan el 95% de los ingresos.
-*   **Patrones Inusuales**: Picos de facturación no justificados.
+Este sistema analiza los KPIs principales de cada franquicia para detectar:
+*   **Anomalías de Facturación**: Desviaciones estadísticas fuera de la normalidad.
+*   **Riesgo de Margen**: Alertas cuando los costes operativos amenazan la viabilidad de una unidad.
+*   **Previsiones de Crecimiento**: Algoritmos predictivos que sugieren qué unidades están listas para escalar.
 
-Cuando veas una alerta en el widget de "Inteligencia", haz clic para ver el detalle y contactar con la franquicia.`
+Utiliza el widget de Inteligencia para priorizar tus auditorías semanales.`
             }
         ]
     },
     {
         id: 'user_management',
-        title: 'Gestión de Usuarios',
+        title: 'Gestión de Estructura',
         icon: Users,
         role: 'admin',
         content: [
             {
-                title: 'Alta de Nuevas Unidades',
-                body: `El proceso de alta es crítico para la seguridad.
+                title: 'Alta y Onboarding de Franquicias',
+                body: `El crecimiento de la red se gestiona desde el flujo de **Recrutamiento**.
                 
-1.  Navega a la pestaña **Usuarios**.
-2.  Pulsa **"Crear Usuario"**.
-3.  **Roles**:
-    *   **Franquicia**: Propietarios de unidad. Necesitan un ID de ubicación único.
-    *   **Admin**: Acceso total. *Úsalo con precaución*.
-    *   **Rider**: Personal de reparto. Se asignan a una franquicia específica.
+1.  **Creación**: Define el nombre de la unidad e ID único (Slug).
+2.  **Configuración de Tarifas**: Asigna el modelo de Royalties (Fixed vs Variable) específico para esa ubicación.
+3.  **Roles Especiales**:
+    *   **Manager de Franquicia**: Acceso total a la unidad local.
+    *   **Rider**: Acceso simplificado (PWA) centrado únicamente en su horario y perfil.
     
-**Importante**: La contraseña temporal debe ser comunicada por un canal seguro (ej. en persona o llamada), nunca por email.`
+**Seguridad**: El sistema genera logs de auditoría por cada usuario creado o modificado.`
             },
             {
-                title: 'Control de Seguridad',
-                body: `Desde la tabla de usuarios puedes:
-*   **Resetear Contraseña**: Si un usuario la olvida.
-*   **Desactivar Cuenta**: Para empleados que abandonan la empresa. El acceso se revoca inmediatamente.
-*   **Auditoría de Accesos**: Ver cuándo fue la última vez que un usuario inició sesión.`
+                title: 'Protocolo de Seguridad (Auditoría)',
+                body: `Como Administrador, tienes acceso al **Registro de Auditoría** (Escudo de Seguridad).
+                
+Este panel registra:
+*   **IP de Conexión**: Ubicación desde donde se operan las finanzas.
+*   **Cambios de Datos**: Quién cambió un valor de facturación y cuándo.
+*   **Intentos de Acceso**: Monitorización de seguridad proactiva contra accesos no autorizados.
+
+Usa el botón de **Auditoría** en la barra superior para acceder instantáneamente a la traza completa de eventos.`
             }
         ]
     },
     {
         id: 'global_finance',
-        title: 'Finanzas Globales',
+        title: 'Validación Financiera',
         icon: DollarSign,
         role: 'admin',
         content: [
             {
-                title: 'Flujo de Validación Mensual',
-                body: `Como Admin, eres el responsable de validar la salud financiera de la red.
+                title: 'Bandeja de Entrada de Cierres',
+                body: `El flujo financiero administrativo se centra en la **Validación de Cierres**.
                 
-**El Ciclo de Cierre:**
-1.  La Franquicia envía su cierre (días 1-5 del mes).
-2.  Aparece en tu **Bandeja de Entrada Financiera**.
-3.  **Revisión**: Analiza los Ticket Medio y el Margen Operativo.
-4.  **Decisión**:
-    *   **Validar**: Los datos se consolidan.
-    *   **Rechazar**: Debes aportar una razón. La franquicia recibe una notificación para corregir.
+1.  **Recepción**: Las franquicias envían sus datos del mes vencido.
+2.  **Análisis de Desviación**: Compara el rendimiento actual vs el mes anterior.
+3.  **Sellado de Datos**: Al aprobar un cierre, los datos se vuelven inmutables para la franquicia, garantizando la integridad de los reportes anuales.
     
-**Bloqueo**: Una vez validado, el mes queda "sellado" y no se puede modificar.`
+**Decisión Crítica**: Si rechazas un cierre, el sistema reabre automáticamente el periodo para la franquicia y le notifica los cambios requeridos.`
             },
             {
-                title: 'Análisis de Tendencias',
-                body: `Usa los gráficos comparativos para detectar tendencias a medio plazo.
-                
-*   **Línea Verde**: Crecimiento sostenido.
-*   **Línea Roja**: Declive. Investiga si es estacional o un problema operativo.`
+                title: 'Red de Pagos y Royalties',
+                body: `Visualiza el balance consolidado de la red. El sistema calcula automáticamente el IVA soportado a nivel global, facilitando los modelos de liquidación trimestral.`
             }
         ]
     },
