@@ -1,5 +1,5 @@
 import React from 'react';
-import { Inbox, Ticket, Star, FileText, Bell, ArrowRight, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
+import { Inbox, Ticket, Star, FileText, Bell, ArrowRight, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface PendingAction {
@@ -37,135 +37,138 @@ const PendingActionsWidget: React.FC<ControlPendingActionsWidgetProps> = ({ data
 
     if (loading) {
         return (
-            <div className="bg-white/50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 h-full">
-                <div className="h-5 w-32 bg-slate-200 dark:bg-slate-800 rounded mb-6" />
-                <div className="space-y-4">
-                    {[1, 2, 3].map(i => (
-                        <div key={i} className="h-14 bg-slate-100 dark:bg-slate-800/50 rounded-xl" />
+            <div className="workstation-card p-4 h-full flex flex-col space-y-3">
+                <div className="h-3 w-32 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
+                <div className="space-y-2 flex-1">
+                    {[1, 2, 3, 4].map(i => (
+                        <div key={i} className="h-10 bg-slate-50 dark:bg-slate-800/40 rounded animate-pulse" />
                     ))}
                 </div>
             </div>
         );
     }
 
-    const getRelativeTime = (date?: Date) => {
-        if (!date) return '2h';
+    const getRelativeTime = (_date?: Date) => {
         return '2h';
     };
 
     return (
-        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-slate-800/50 p-6 flex flex-col h-full shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20 transition-all duration-300">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-full overflow-hidden transition-all hover:shadow-md">
+            {/* HEADER */}
+            <div className="p-5 pb-3">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-rose-50 dark:bg-rose-900/20 rounded-lg">
+                            <Inbox className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-bold text-slate-800 dark:text-white leading-tight">
+                                Acciones Pendientes
+                            </h3>
+                            <div className="text-xs font-medium text-slate-500 dark:text-slate-400">{data.total} tareas en cola</div>
+                        </div>
+                    </div>
 
-            {/* Header */}
-            {/* Header - Stacked Layout */}
-            <div className="flex flex-col gap-3 mb-6">
-                <div className="min-w-0">
-                    <h3 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white flex items-center gap-2 truncate">
-                        <Inbox className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                        Acciones Pendientes
-                    </h3>
-                    <p className="text-sm text-slate-500 mt-0.5 font-normal truncate">
-                        {data.total} tareas requieren atención
-                    </p>
-                </div>
-
-                {/* Status Badges - Clean Row */}
-                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg self-start">
-                    {(['all', 'premium', 'support'] as const).map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => setFilter(tab)}
-                            className={`px-3 py-1.5 rounded-md text-xs font-semibold tracking-tight transition-all duration-200 capitalize ${filter === tab
-                                ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-indigo-400 ring-1 ring-slate-900/5 dark:ring-white/10'
-                                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-                                }`}
-                        >
-                            {tab === 'all' ? 'Todos' : tab === 'premium' ? 'Premium' : 'Soporte'}
-                        </button>
-                    ))}
+                    <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                        {(['all', 'premium', 'support'] as const).map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={(e) => { e.stopPropagation(); setFilter(tab); }}
+                                className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all ${filter === tab
+                                    ? 'bg-white dark:bg-slate-700 shadow-sm text-rose-600 dark:text-white'
+                                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                                    }`}
+                            >
+                                {tab === 'all' ? 'Todo' : tab === 'premium' ? 'VIP' : 'Soporte'}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
-            {/* List */}
-            <div className="flex-1 space-y-3 overflow-y-auto custom-scrollbar pr-1">
+            {/* ACTION LIST */}
+            <div className="flex-1 space-y-1 overflow-y-auto custom-scrollbar px-3 pb-3">
                 {filteredList.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center py-8 text-slate-400">
-                        <CheckCircle2 className="w-10 h-10 mb-3 text-emerald-500/50" />
-                        <p className="text-sm font-medium">Todo al día</p>
+                    <div className="h-full flex flex-col items-center justify-center py-6 text-slate-400">
+                        <CheckCircle2 className="w-10 h-10 mb-3 opacity-20" />
+                        <p className="text-xs font-bold text-slate-500">Todo al día</p>
                     </div>
                 ) : (
-                    filteredList.map(action => (
+                    filteredList.slice(0, 6).map(action => (
                         <div
                             key={action.id}
-                            onClick={() => {
+                            onClick={(e) => {
+                                e.stopPropagation();
                                 if (action.type === 'ticket' || action.type === 'premium') navigate('/admin/support');
                                 else if (action.type === 'record') {
                                     if (onNavigate) onNavigate('inbox');
                                     else navigate('/dashboard?view=inbox');
                                 }
                             }}
-                            className={`group relative flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer ${action.priority === 'critical'
-                                ? 'bg-rose-50 dark:bg-rose-900/10 border-rose-100 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/20'
-                                : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 hover:border-indigo-200 dark:hover:border-indigo-900'
-                                }`}
+                            className={`
+                                flex items-center gap-3 p-3 rounded-lg border border-transparent transition-all cursor-pointer relative overflow-hidden group
+                                ${action.priority === 'critical'
+                                    ? 'bg-rose-50 border-rose-100 dark:bg-rose-900/20 dark:border-rose-800/30'
+                                    : 'hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-50 dark:border-slate-800/50'
+                                }
+                            `}
                         >
-                            <div className="flex items-center gap-3 w-full">
-                                <div className={`p-2 rounded-lg shrink-0 ${action.priority === 'critical' ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400' :
-                                    action.type === 'ticket' ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' :
-                                        action.type === 'premium' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' :
-                                            action.type === 'record' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' :
-                                                'bg-slate-100 dark:bg-slate-800 text-slate-500'
-                                    }`}>
-                                    <IconForType type={action.type} priority={action.priority} />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex justify-between items-center mb-0.5">
-                                        <p className={`text-sm font-medium tracking-tight truncate ${action.priority === 'critical' ? 'text-rose-700 dark:text-rose-300' : 'text-slate-900 dark:text-white'
-                                            }`}>
-                                            {action.title}
-                                        </p>
-                                        <span className="text-[10px] text-slate-400 flex items-center gap-1 font-medium bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-100 dark:border-slate-800">
-                                            <Clock className="w-2.5 h-2.5" />
-                                            {getRelativeTime(action.timestamp)}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between items-center relative">
-                                        <p className="text-xs text-slate-500 truncate group-hover:opacity-0 transition-opacity">
-                                            {action.subtitle}
-                                        </p>
-                                        <button className="absolute left-0 opacity-0 group-hover:opacity-100 transition-opacity text-xs font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
-                                            Resolver ahora <ArrowRight className="w-3 h-3" />
-                                        </button>
-                                        <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-transform opacity-100 group-hover:opacity-0" />
-                                    </div>
-                                </div>
+                            <div className={`
+                                w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors
+                                ${action.priority === 'critical' 
+                                    ? 'bg-rose-100 text-rose-600 dark:bg-rose-800 dark:text-rose-100' 
+                                    : 'bg-slate-100 text-slate-500 group-hover:bg-white group-hover:shadow-sm dark:bg-slate-800 dark:text-slate-400'
+                                }
+                            `}>
+                                <IconForType type={action.type} priority={action.priority} />
                             </div>
+
+                            <div className="min-w-0 flex-1">
+                                <div className="flex justify-between items-center mb-0.5">
+                                    <h4 className={`text-xs font-bold truncate ${action.priority === 'critical' ? 'text-rose-700 dark:text-rose-300' : 'text-slate-800 dark:text-slate-200'
+                                        }`}>
+                                        {action.title}
+                                    </h4>
+                                    <span className="text-[10px] font-medium text-slate-400 ml-2">
+                                        {getRelativeTime(action.timestamp)}
+                                    </span>
+                                </div>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                                    {action.subtitle}
+                                </p>
+                            </div>
+                            {action.priority === 'critical' && (
+                                <div className="absolute left-0 top-0 w-1 h-full bg-rose-500" />
+                            )}
                         </div>
                     ))
                 )}
             </div>
 
-            <button
-                onClick={() => navigate('/admin/support')}
-                className="mt-4 w-full py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all flex items-center justify-center gap-2 group"
-            >
-                Ir al Centro de Soporte
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </button>
+            {/* FOOTER ACTION */}
+            <div className="p-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+                <button
+                    onClick={(e) => { e.stopPropagation(); navigate('/admin/support'); }}
+                    className="w-full bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold uppercase tracking-wide text-[10px] py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 group shadow-sm hover:shadow-md"
+                >
+                    Centro de Soporte
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </button>
+            </div>
         </div>
     );
 };
 
 const IconForType = ({ type, priority }: { type: string, priority?: string }) => {
-    if (priority === 'critical') return <AlertTriangle className="w-4 h-4" />;
+    if (priority === 'critical') return <AlertTriangle className="w-3.5 h-3.5" />;
 
     switch (type) {
-        case 'ticket': return <Ticket className="w-4 h-4" />;
-        case 'premium': return <Star className="w-4 h-4" />;
-        case 'record': return <FileText className="w-4 h-4" />;
-        case 'alert': return <Bell className="w-4 h-4" />;
-        default: return <Inbox className="w-4 h-4" />;
+        case 'ticket': return <Ticket className="w-3.5 h-3.5" />;
+        case 'premium': return <Star className="w-3.5 h-3.5" />;
+        case 'record': return <FileText className="w-3.5 h-3.5" />;
+        case 'alert': return <Bell className="w-3.5 h-3.5" />;
+        default: return <Inbox className="w-3.5 h-3.5" />;
     }
-}
+};
 
 export default PendingActionsWidget;

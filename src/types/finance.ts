@@ -99,6 +99,9 @@ export interface MonthlyData {
     appFlyder?: number; // Manual override for franchise fee
     quota?: number;
     royaltyPercent?: number;
+    socialSecurity?: number;
+    repaartServices?: number;
+    rentingCost?: number; // Explicit renting cost if not calculated by motoCount
 
     // --- TAXES & PROFIT ---
     profit?: number;
@@ -111,7 +114,7 @@ export interface MonthlyData {
     totalShiftsCount?: number;
 
     // --- STATE & METADATA ---
-    status?: string | 'pending' | 'draft' | 'submitted' | 'approved' | 'locked' | 'unlock_requested' | 'deleted';
+    status?: string | 'pending' | 'draft' | 'submitted' | 'approved' | 'locked' | 'unlock_requested' | 'open' | 'deleted';
     isLocked?: boolean;
     unlockReason?: string | null;
     rejectionReason?: string | null;

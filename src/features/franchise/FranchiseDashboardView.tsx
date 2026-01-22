@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PlayCircle, FileText, Sparkles, ChevronLeft, ChevronRight, Lock, Banknote } from 'lucide-react';
+import { PlayCircle, ChevronLeft, ChevronRight, Lock, Banknote, Activity, Target } from 'lucide-react';
 import { formatMoney, FinancialReport, MonthlyData } from '../../lib/finance';
 
 // Components
@@ -7,7 +7,6 @@ import TaxVaultWidget from './finance/TaxVaultWidget';
 import FinancialControlCenter from './FinancialControlCenter';
 import FranchiseHistoryView from './finance/FranchiseHistoryView';
 import ScenarioSimulator from './finance/ScenarioSimulator';
-import DrillDownModal from '../admin/dashboard/DrillDownModal';
 import ExpenseBreakdownWidget from './dashboard/widgets/ExpenseBreakdownWidget';
 import TakeHomeProfitWidget from './dashboard/widgets/TakeHomeProfitWidget';
 import RevenueAreaChart from './dashboard/widgets/RevenueAreaChart';
@@ -20,7 +19,6 @@ import { GoalSettingModal } from './components/GoalSettingModal';
 import DynamicBanner from '../../components/common/DynamicBanner';
 import { userService } from '../../services/userService';
 import { useAuth } from '../../context/AuthContext';
-import { PageTitle } from '../../components/ui/primitives/Typography';
 
 export interface DashboardTrendItem {
     month: string;
@@ -36,27 +34,19 @@ export interface BreakdownItem {
 }
 
 export interface FranchiseDashboardViewProps {
-    // Context & Config
     franchiseId?: string;
     effectiveMonth: string;
     readOnly: boolean;
-
-    // Metrics & Data
     revenue: number;
     orders: number;
     totalExpenses: number;
     totalHours: number;
-    // costPerHour removed
     revenueTrend: number;
-
-    // Data Structures
-    report: FinancialReport | null; // Using FinancialReport from lib/finance
+    report: FinancialReport | null;
     rawData: MonthlyData | null;
-    trendData: any[]; // Raw trend data for sparklines
+    trendData: any[];
     formattedTrendData: DashboardTrendItem[];
     fullExpenseBreakdown: BreakdownItem[];
-
-    // View State
     isWizardOpen: boolean;
     setIsWizardOpen: (open: boolean) => void;
     isSimulatorOpen: boolean;
@@ -69,8 +59,6 @@ export interface FranchiseDashboardViewProps {
     setIsLegendOpen: (open: boolean) => void;
     showGuide: boolean;
     setShowGuide: (show: boolean) => void;
-
-    // Actions
     onMonthChange: (month: string) => void;
     onUpdateFinance: (data: any) => Promise<void>;
 }
@@ -83,7 +71,6 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
     orders,
     totalExpenses,
     totalHours,
-    // costPerHour removed
     revenueTrend,
     report,
     rawData,
@@ -96,36 +83,30 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
     setIsSimulatorOpen,
     isHistoryView,
     setIsHistoryView,
-    drillDown,
-    setDrillDown,
     isLegendOpen,
     setIsLegendOpen,
     showGuide,
     setShowGuide,
     onMonthChange,
     onUpdateFinance
-}) => {
+}: FranchiseDashboardViewProps) => {
     const { user } = useAuth();
     const [monthlyGoal, setMonthlyGoal] = useState(16000);
     const [showGoalModal, setShowGoalModal] = useState(false);
     const [goalModalMode, setGoalModalMode] = useState<'default' | 'monthly_kickoff'>('default');
 
-    // Monthly Kickoff Check & Goal Load
     React.useEffect(() => {
         const checkKickoffAndLoadGoal = async () => {
             if (user?.uid) {
-                // 1. Load Goal
                 const profile = await userService.getUserProfile(user.uid);
                 if (profile && profile.monthlyRevenueGoal) {
                     setMonthlyGoal(Number(profile.monthlyRevenueGoal));
                 }
 
-                // 2. Check Kickoff (Local Storage for simplicity per device)
                 const currentMonthKey = `kickoff_seen_${effectiveMonth}`;
                 const hasSeenKickoff = localStorage.getItem(currentMonthKey);
 
                 if (!hasSeenKickoff) {
-                    // Small delay for better UX
                     setTimeout(() => {
                         setGoalModalMode('monthly_kickoff');
                         setShowGoalModal(true);
@@ -138,104 +119,101 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
     }, [user?.uid, effectiveMonth]);
 
     return (
-        <div className="min-h-screen bg-[#fafbfc] dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 selection:bg-indigo-100 dark:selection:bg-indigo-900/30 transition-colors duration-300">
-            <div className="max-w-[1600px] mx-auto px-4 py-3 space-y-4">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
+            <div className="max-w-[1700px] mx-auto px-4 md:px-8 py-6">
 
-                {/* HEADER */}
-                <div className="flex flex-col md:flex-row items-center justify-between gap-3 pb-1">
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2 rounded-2xl shadow-sm">
+                {/* TACTICAL HEADER */}
+                <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6 mb-8">
+                    <div className="flex flex-col md:flex-row items-center gap-6">
+                        {/* Month Selector Island */}
+                        <div className="flex items-center gap-1 p-1 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-2xl shadow-sm">
                             <button
                                 onClick={() => {
                                     const date = new Date(effectiveMonth + '-01');
                                     date.setMonth(date.getMonth() - 1);
                                     onMonthChange(date.toISOString().slice(0, 7));
                                 }}
-                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500"
-                                title="Mes Anterior"
+                                className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl transition-all mechanical-press text-slate-500"
                             >
                                 <ChevronLeft className="w-5 h-5" />
                             </button>
-                            <PageTitle as="h2" className="text-lg px-4 min-w-[180px] text-center uppercase tabular-nums font-bold">
-                                {new Date(effectiveMonth + '-01').toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
-                            </PageTitle>
+                            <div className="px-5 py-1 text-center">
+                                <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">
+                                    {new Date(effectiveMonth + '-01').toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }).replace(/^\w/, (c) => c.toUpperCase())}
+                                </h2>
+                            </div>
                             <button
                                 onClick={() => {
                                     const date = new Date(effectiveMonth + '-01');
                                     date.setMonth(date.getMonth() + 1);
                                     onMonthChange(date.toISOString().slice(0, 7));
                                 }}
-                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors text-slate-500"
-                                title="Mes Siguiente"
+                                className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl transition-all mechanical-press text-slate-500"
                             >
                                 <ChevronRight className="w-5 h-5" />
                             </button>
                         </div>
+
+                        {/* View Switcher Capsule */}
+                        <div className="flex bg-slate-200/50 dark:bg-white/5 p-1 rounded-2xl border border-slate-300/30 dark:border-white/5">
+                            <button
+                                onClick={() => setIsHistoryView(false)}
+                                className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all mechanical-press ${!isHistoryView
+                                    ? 'bg-white dark:bg-slate-800 text-ruby-600 shadow-sm border border-slate-200 dark:border-white/10'
+                                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                                    }`}
+                            >
+                                mensual
+                            </button>
+                            <button
+                                onClick={() => setIsHistoryView(true)}
+                                className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all mechanical-press ${isHistoryView
+                                    ? 'bg-white dark:bg-slate-800 text-ruby-600 shadow-sm border border-slate-200 dark:border-white/10'
+                                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                                    }`}
+                            >
+                                histórico
+                            </button>
+                        </div>
                     </div>
 
-
-                    <div className="flex items-center gap-3">
-                        {/* Help Button */}
-                        <button
-                            onClick={() => setIsLegendOpen(true)}
-                            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-400 dark:hover:border-emerald-700 text-emerald-600 dark:text-emerald-400 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all shadow-sm hover:shadow flex items-center gap-1.5"
-                            title="Guía Financiera"
-                        >
-                            <Banknote className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-                            <span className="hidden sm:inline">Guía</span>
-                        </button>
-
-                        {/* Workflow Guide Button - Only visible in History View */}
-                        {isHistoryView && (
-                            <button
-                                onClick={() => setShowGuide(true)}
-                                className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 flex items-center gap-2 animate-in fade-in slide-in-from-right-4"
-                                title="Guía del Proceso de Cierre"
-                            >
-                                <FileText className="w-4 h-4" />
-                                <span className="hidden sm:inline">Guía</span>
-                            </button>
-                        )}
-
-                        {/* Simulator Trigger - Striking Amber Style (viewable in readOnly for analysis) */}
+                    <div className="flex flex-wrap items-center gap-3">
+                        {/* Simulation Tool */}
                         <button
                             onClick={() => setIsSimulatorOpen(true)}
-                            className="relative group overflow-hidden bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all shadow-md shadow-amber-500/20 hover:shadow-amber-500/30 flex items-center gap-1.5 border border-amber-400/50"
+                            className="flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all mechanical-press shadow-lg shadow-amber-500/20 border border-amber-400/50"
                         >
-                            <div className="absolute inset-x-0 bottom-0 h-1 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
-                            <PlayCircle className="w-4 h-4 text-amber-100 group-hover:rotate-12 transition-transform" />
-                            <span>Simular</span>
+                            <PlayCircle className="w-4 h-4" />
+                            <span>Simulación</span>
                         </button>
 
+                        {/* Help Protocol */}
                         <button
-                            onClick={() => setIsHistoryView(!isHistoryView)}
-                            className={`text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-lg transition-all shadow-sm ${isHistoryView
-                                ? 'bg-slate-800 dark:bg-slate-700 text-white shadow-lg shadow-slate-800/20 hover:bg-slate-900 dark:hover:bg-slate-600'
-                                : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800 hover:border-slate-200 hover:text-slate-700 dark:hover:text-slate-200'
-                                }`}
-                            title={isHistoryView ? "Cambiar a Vista Mensual" : "Cambiar a Vista Histórica"}
+                            onClick={() => setShowGuide(true)}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 hover:text-ruby-600 dark:hover:text-ruby-400 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all mechanical-press shadow-sm"
                         >
-                            {isHistoryView ? 'Mensual' : 'Histórico'}
+                            <Target className="w-4 h-4" />
+                            <span>Guía</span>
                         </button>
 
+                        {/* Action Primary: Close Month */}
                         {!readOnly && (
                             <button
                                 onClick={() => setIsWizardOpen(true)}
-                                className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-1.5 shadow-sm hover:shadow border ${rawData?.isLocked || rawData?.status === 'submitted' || rawData?.status === 'approved' || rawData?.status === 'locked'
-                                    ? 'bg-amber-50/50 border-amber-200 text-amber-700'
-                                    : 'bg-indigo-600 border-indigo-500 text-white hover:bg-indigo-700 hover:-translate-y-0.5'
+                                className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all mechanical-press shadow-xl flex items-center gap-2 ${rawData?.isLocked || rawData?.status === 'submitted' || rawData?.status === 'approved' || rawData?.status === 'locked'
+                                    ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600'
+                                    : 'bg-ruby-600 hover:bg-ruby-700 text-white shadow-ruby-600/20 border border-ruby-500/50'
                                     }`}
-                                title={rawData?.isLocked ? "Ver Cierre (Bloqueado)" : "Iniciar Cierre de Mes"}
                             >
                                 {rawData?.isLocked || rawData?.status === 'submitted' || rawData?.status === 'approved' || rawData?.status === 'locked' ? (
                                     <>
-                                        <Lock className="w-4 h-4 text-emerald-500" />
-                                        <span>Ver Cierre</span>
+                                        <Lock className="w-3.5 h-3.5" />
+                                        <span>Cierre Mensual</span>
                                     </>
                                 ) : (
                                     <>
-                                        <Sparkles className="w-4 h-4 text-indigo-500" />
-                                        <span>Cerrar Mes</span>
+                                        <Activity className="w-3.5 h-3.5" />
+                                        <span>ejecutar.cierre</span>
                                     </>
                                 )}
                             </button>
@@ -243,60 +221,43 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                     </div>
                 </div>
 
-                {/* CONTENT AREA */}
+                {/* MAIN COCKPIT GRID */}
                 {!isHistoryView ? (
-                    <div className="space-y-4 animate-in fade-in duration-300 slide-in-from-bottom-2">
+                    <div className="space-y-6 animate-in fade-in duration-500">
 
-                        {/* --- DYNAMIC BANNER (Admin Controlled) --- */}
                         <DynamicBanner />
 
-                        {/* ROW 1: CORE METRICS & WEALTH */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                            {/* 1. Ingresos */}
+                        {/* CORE TELEMETRY ROW */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {/* Revenue Cockpit */}
                             <div onClick={() => {
-                                if (readOnly) return; // Disabled in impersonation mode
+                                if (readOnly) return;
                                 setGoalModalMode('default');
                                 setShowGoalModal(true);
-                            }} className={`${readOnly ? '' : 'cursor-pointer hover:z-10 transition-all transform hover:-translate-y-1 duration-300 ring-2 ring-transparent hover:ring-indigo-500/20'} group/goal relative rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-700 delay-0 fill-mode-backwards`}>
+                            }} className="h-full">
                                 <KPICard
-                                    title="Ingresos"
+                                    title="Ingresos Netos"
                                     value={formatMoney(revenue || 0) + '€'}
                                     trend={Number(revenueTrend.toFixed(1))}
                                     trendData={trendData.map((d: any) => d.revenue)}
                                     icon={<Banknote />}
-                                    color="blue"
-
-                                    subtext={undefined}
-                                    monthlyGoal={monthlyGoal} // Dynamic Goal
-                                    lastYearValue={revenue > 0 ? revenue * 0.85 : undefined}
-                                    showPrediction={false}
+                                    color="ruby"
+                                    monthlyGoal={monthlyGoal}
                                     rawValue={revenue || 0}
                                     orders={orders}
                                     totalHours={totalHours}
-                                    bestDay="Viernes"
-                                    alignHeader="left"
+                                    bestDay="FRIDAY"
                                 />
-                                {!readOnly && (
-                                    <div className="absolute top-3 right-3 bg-indigo-50 dark:bg-indigo-500/20 p-2 rounded-full text-indigo-600 dark:text-indigo-400 shadow-sm pointer-events-none">
-                                        <Sparkles className="w-4 h-4" />
-                                    </div>
-                                )}
                             </div>
 
-                            {/* 2. Tu Bolsillo */}
+                            {/* Net Profit Unit */}
                             <div className="h-full">
                                 {(() => {
-                                    // Calculate Annual Net Profit (YTD)
-                                    // Calculate Annual Net Profit (YTD) - Hybrid (History + Current)
                                     const currentYear = effectiveMonth.split('-')[0];
-
-                                    // 1. Calculate Historical Profit (excluding current view month to avoid double counting if present)
                                     const historicalProfit = formattedTrendData
                                         .filter((month: any) => {
                                             const monthKey = month.fullDate || month.month;
-                                            return monthKey &&
-                                                monthKey.startsWith(currentYear) &&
-                                                monthKey !== effectiveMonth;
+                                            return monthKey && monthKey.startsWith(currentYear) && monthKey !== effectiveMonth;
                                         })
                                         .reduce((sum, month) => {
                                             const opProfit = month.revenue - month.expenses;
@@ -304,16 +265,10 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                                             return sum + (opProfit - tax);
                                         }, 0);
 
-                                    // 2. Calculate Current View Month Profit (Live Data)
                                     const currentOpProfit = (revenue || 0) - totalExpenses;
                                     const currentTax = currentOpProfit > 0 ? currentOpProfit * (rawData?.irpfPercent || 20) / 100 : 0;
                                     const currentNetProfit = currentOpProfit - currentTax;
-
-                                    // 3. Total YTD = History + Current
-                                    // Only add current profit if the current viewed month belongs to the analyzed year
-                                    const annualNetProfit = effectiveMonth.startsWith(currentYear)
-                                        ? historicalProfit + currentNetProfit
-                                        : historicalProfit;
+                                    const annualNetProfit = effectiveMonth.startsWith(currentYear) ? historicalProfit + currentNetProfit : historicalProfit;
 
                                     return (
                                         <TakeHomeProfitWidget
@@ -321,27 +276,19 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                                             totalExpenses={totalExpenses}
                                             irpfPercent={rawData?.irpfPercent || 20}
                                             trend={trendData.map((d: any) => d.profit || 0)}
-                                            annualNetProfit={annualNetProfit} // Passing calculated YTD
+                                            annualNetProfit={annualNetProfit}
+                                            year={currentYear}
                                             onDetailClick={() => setIsWizardOpen(true)}
                                         />
                                     );
                                 })()}
                             </div>
 
-                            {/* 3. La Hucha */}
+                            {/* Tax Vault Station */}
                             <div className="h-full">
                                 <TaxVaultWidget
                                     taxes={report?.taxes || {
-                                        ivaRepercutido: 0,
-                                        ivaSoportado: 0,
-                                        ivaAPagar: 0,
-                                        irpfPago: 0,
-                                        totalReserve: 0,
-                                        irpfPercent: 20,
-                                        netProfitPostTax: 0,
-                                        netProfit: 0,
-                                        margin: 0,
-                                        vat: { toPay: 0 }
+                                        ivaRepercutido: 0, ivaSoportado: 0, ivaAPagar: 0, irpfPago: 0, totalReserve: 0, irpfPercent: 20, netProfitPostTax: 0, netProfit: 0, margin: 0, vat: { toPay: 0 }
                                     }}
                                     minimal
                                     currentMonth={effectiveMonth}
@@ -349,27 +296,22 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                                 />
                             </div>
 
-                            {/* 4. Coste por Hora */}
+                            {/* Resource Efficiency */}
                             <div className="h-full">
                                 <HourlyCostWidget
                                     totalCost={totalExpenses}
                                     totalHours={totalHours}
-                                    trend={0} // Trend calculation logic moved out or simplified
+                                    trend={0}
                                     laborCost={Number(rawData?.salaries || 0)}
                                     otherCosts={totalExpenses - Number(rawData?.salaries || 0)}
                                 />
                             </div>
                         </div>
 
-                        {/* ROW 2: DETAILED ANALYSIS & TOOLS */}
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                            {/* Left Column: Historical Evolution */}
-                            <div className="lg:col-span-3 h-[280px]">
-                                <RevenueAreaChart data={formattedTrendData} />
-                            </div>
-
-                            {/* Center Column: Financial Advisor */}
-                            <div className="lg:col-span-6 h-[280px]">
+                        {/* ANALYTICS RADAR LAYER */}
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                            {/* Distribution Radar */}
+                            <div className="lg:col-span-8">
                                 <FinancialAdvisorWidget
                                     revenue={revenue}
                                     expenses={totalExpenses}
@@ -380,9 +322,20 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                                 />
                             </div>
 
-                            {/* Right Column: Breakdown - Same width as cards above (3 cols) */}
-                            <div className="lg:col-span-3 h-fit">
+                            {/* Breakdown Terminal */}
+                            <div className="lg:col-span-4 h-full">
                                 <ExpenseBreakdownWidget breakdown={fullExpenseBreakdown} />
+                            </div>
+                        </div>
+
+                        {/* TIMELINE EVOLUTION */}
+                        <div className="workstation-card workstation-scanline p-6">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="h-6 w-1 bg-ruby-600 rounded-full" />
+                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-[.3em] font-mono">evolucion.temporal</h3>
+                            </div>
+                            <div className="h-[300px]">
+                                <RevenueAreaChart data={formattedTrendData} />
                             </div>
                         </div>
 
@@ -391,6 +344,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                     <FranchiseHistoryView franchiseId={franchiseId || ''} />
                 )}
 
+                {/* MODALS & OVERLAYS */}
                 {isWizardOpen && (
                     <FinancialControlCenter
                         franchiseId={franchiseId || ''}
@@ -416,7 +370,6 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                         revenue: revenue || (report as any)?.totalIncome || 0,
                         orders: orders || 0,
                         totalExpenses: report?.totalExpenses || 0,
-                        // Ensure required props for ScenarioSimulator (it might expect more strict types now)
                         fixed: report?.fixed || { total: 0, salaries: 0, renting: 0, insurance: 0, services: 0, quota: 0, other: 0 },
                         variable: report?.variable || { total: 0, gasoline: 0, repairs: 0, flyderFee: 0, royalty: 0 },
                         netProfit: report?.netProfit || 0,
@@ -426,51 +379,19 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                     }}
                 />
 
-                <DrillDownModal
-                    isOpen={!!drillDown}
-                    onClose={() => setDrillDown(null)}
-                    title={drillDown === 'revenue' ? 'Desglose de Ingresos' : 'Desglose de Gastos'}
-                    data={drillDown === 'revenue' ? (
-                        Object.entries(rawData || {})
-                            .filter(([key, val]) => typeof val === 'number' && key !== 'totalHours' && val > 0)
-                            .map(([key, val]) => ({
-                                label: key,
-                                value: `${val} pedidos`,
-                                pct: 0,
-                                trend: 'up'
-                            }))
-                    ) : (
-                        fullExpenseBreakdown.map((item: any) => ({
-                            label: item.label,
-                            value: formatMoney(item.amount) + '€',
-                            pct: Math.round((item.amount / (totalExpenses || 1)) * 100),
-                            trend: 'down'
-                        }))
-                    )}
-                />
+                {showGoalModal && (
+                    <GoalSettingModal
+                        currentGoal={monthlyGoal}
+                        currentRevenue={revenue || 0}
+                        onClose={() => setShowGoalModal(false)}
+                        onSave={(newGoal) => setMonthlyGoal(newGoal)}
+                        mode={goalModalMode}
+                    />
+                )}
+
+                <FinancialWorkflowGuide isOpen={showGuide} onClose={() => setShowGuide(false)} />
+                <WidgetLegendModal isOpen={isLegendOpen} onClose={() => setIsLegendOpen(false)} />
             </div>
-
-            {/* Widget Legend Modal */}
-            <WidgetLegendModal
-                isOpen={isLegendOpen}
-                onClose={() => setIsLegendOpen(false)}
-            />
-            {/* Workflow Guide */}
-            <FinancialWorkflowGuide
-                isOpen={showGuide}
-                onClose={() => setShowGuide(false)}
-            />
-
-            {/* Goal Setting Modal */}
-            {showGoalModal && (
-                <GoalSettingModal
-                    currentGoal={monthlyGoal}
-                    currentRevenue={revenue || 0}
-                    onClose={() => setShowGoalModal(false)}
-                    onSave={(newGoal) => setMonthlyGoal(newGoal)}
-                    mode={goalModalMode}
-                />
-            )}
         </div>
     );
 };

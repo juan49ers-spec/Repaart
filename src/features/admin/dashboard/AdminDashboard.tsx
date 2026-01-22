@@ -2,8 +2,11 @@ import React, { useState, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DevToolsPanel from '../../../layouts/components/dev/DevToolsPanel';
 import {
-    LogOut
+    LogOut,
+    Activity,
+    ShieldCheck
 } from 'lucide-react';
+import { cn } from '../../../lib/utils';
 import FranchiseOnboarding from '../FranchiseOnboarding';
 import CreateFranchiseModal from '../CreateFranchiseModal';
 import { useAdminDashboardData } from '../../../hooks/useAdminDashboardData';
@@ -19,7 +22,6 @@ import ThemeToggle from '../../../components/ui/buttons/ThemeToggle';
 const OperationsDashboard = React.lazy(() => import('../../operations/OperationsDashboard'));
 const FleetManager = React.lazy(() => import('../../operations/FleetManager'));
 const ShiftPlanner = React.lazy(() => import('../../operations/ShiftPlanner'));
-// const FranchiseOnboarding = React.lazy(() => import('../FranchiseOnboarding')); // Removed due to eager import
 const FranchiseProfile = React.lazy(() => import('../settings/FranchiseProfile'));
 const AdminFinanceInbox = React.lazy(() => import('./AdminFinanceInbox'));
 const UserManagementPanel = React.lazy(() => import('../users/UserManagementPanel'));
@@ -68,15 +70,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="p-6">
                 <button
                     onClick={() => setView('grid')}
-                    className="mb-4 text-sm text-slate-500 hover:text-slate-200 flex items-center gap-2 transition-colors"
+                    className="mb-4 text-xs font-bold text-slate-500 hover:text-ruby-600 flex items-center gap-2 transition-colors uppercase tracking-widest"
                 >
-                    ← Volver al Dashboard
+                    ← return.to.base
                 </button>
                 <div className="max-w-4xl mx-auto">
                     <FranchiseOnboarding
                         onCancel={() => setView('grid')}
                         onComplete={(_name) => {
-                            // alert(`Franquicia ${name} creada!`); // Optional feedback
                             setView('grid');
                         }}
                     />
@@ -85,27 +86,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         );
     }
 
-
-    // --- RENDERERS ---
-
-    const renderGlobalView = () => {
-        return (
-            <div className="animate-in fade-in duration-500 relative">
-                <OverviewTab
-                    onNavigate={setActiveTab}
-                    selectedMonth={selectedMonth || ''}
-                />
-            </div>
-        );
-    };
-
-    // renderFranchiseList removed - "Red de Operaciones" no longer used
-
     // Main Render Switch
     const renderActiveTabContent = () => {
         switch (activeTab) {
-            case 'global': return renderGlobalView();
-            case 'franchises': return renderGlobalView(); // Removed: was Red de Operaciones, now redirects to global
+            case 'global': return (
+                <Suspense fallback={<DashboardSkeleton />}>
+                    <OverviewTab onNavigate={setActiveTab} selectedMonth={selectedMonth || ''} />
+                </Suspense>
+            );
             case 'finance': return <AdminNetworkDashboard selectedMonth={selectedMonth || ''} />;
             case 'operations': return <OperationsDashboard readOnly={true} />;
             case 'fleet': return <FleetManager />;
@@ -122,106 +110,108 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             case 'kanban': return <KanbanBoard />;
             case 'reset': return <SystemReset />;
             case 'audit': return <AuditPanel />;
-            default: return renderGlobalView();
+            default: return <OverviewTab onNavigate={setActiveTab} selectedMonth={selectedMonth || ''} />;
         }
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-200 transition-colors duration-300">
+        <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950/40 font-sans text-slate-900 dark:text-slate-200 transition-colors duration-300">
             <CommandPalette />
 
-            {/* MAIN CONTENT WRAPPER WITH ERROR BOUNDARY & SUSPENSE */}
-            <div className={`
-                mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500
-                ${activeTab === 'kanban' ? 'w-full p-0' : 'max-w-[1600px] p-4 md:p-8'}
-            `}>
-                {/* 🛠️ PERSISTENT TOOLS (Admin) */}
+            {/* MAIN COCKPIT VIEW */}
+            <div className="relative z-10 mx-auto max-w-[1700px] px-4 md:px-8 py-6">
+
+                {/* TOP BAR / COMMANDER HEADER */}
                 {activeTab !== 'kanban' && (
-                    <div className="flex justify-end mb-8">
-                        <div className="flex items-center gap-3">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-600/20">
+                                <Activity className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white leading-none">
+                                    FLYDER<span className="text-indigo-600">.OS</span>
+                                </h1>
+                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
+                                    Unidad de Control de Administración
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 p-1.5 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
                             <button
                                 onClick={() => setIsGuideOpen(true)}
-                                className="px-3 py-1.5 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 border border-slate-200 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
-                                title="Ver Guía de Uso"
+                                className="px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all flex items-center gap-2"
                             >
-                                <span>📚</span>
-                                <span className="hidden sm:inline">Guía</span>
+                                <span>Guía</span>
                             </button>
                             <button
                                 onClick={() => setActiveTab('audit')}
-                                className="px-3 py-1.5 bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
-                                title="Ir a Auditoría y Migración"
+                                className="px-5 py-2 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all flex items-center gap-2 shadow-sm"
                             >
-                                <span>🛡️</span>
+                                <ShieldCheck className="w-3.5 h-3.5" />
                                 <span>Auditoría</span>
                             </button>
-                            <button
-                                onClick={() => setIsDevToolsOpen(true)}
-                                className="px-3 py-1.5 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 border border-slate-200 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 shadow-sm dark:shadow-none"
-                                title="Herramientas de desarrollo y diagnóstico"
-                            >
-                                <span className="text-sm">🛠️</span>
-                                <span>Dev Tools</span>
-                            </button>
+                            <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-1" />
                             <ThemeToggle />
                         </div>
                     </div>
                 )}
 
-                <DevToolsPanel
-                    isOpen={isDevToolsOpen}
-                    onClose={() => setIsDevToolsOpen(false)}
-                    onOpenReset={() => setActiveTab('reset')}
-                />
+                {/* DYNAMIC CONTENT AREA */}
+                <div className={cn(
+                    "transition-all duration-700 ease-in-out",
+                    activeTab === 'kanban' ? 'w-full p-0' : 'relative z-10'
+                )}>
+                    <DevToolsPanel
+                        isOpen={isDevToolsOpen}
+                        onClose={() => setIsDevToolsOpen(false)}
+                        onOpenReset={() => setActiveTab('reset')}
+                    />
 
-                <ErrorBoundary>
-                    <Suspense fallback={<DashboardSkeleton />}>
-                        {renderActiveTabContent()}
-                    </Suspense>
-                </ErrorBoundary>
+                    <ErrorBoundary>
+                        <Suspense fallback={<DashboardSkeleton />}>
+                            {renderActiveTabContent()}
+                        </Suspense>
+                    </ErrorBoundary>
+                </div>
             </div>
 
-            {/* MODALS */}
-
-
-            {/* LOGOUT CONFIRMATION (Inline for portability) */}
+            {/* MODALS - Minimalist Translucent Overlay */}
             {showLogoutConfirm && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center transition-colors">
-                        <div className="w-12 h-12 bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <LogOut className="w-6 h-6" />
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="glass-premium rounded-[2.5rem] w-full max-w-sm shadow-2xl p-8 text-center animate-in zoom-in-95 duration-300">
+                        <div className="w-20 h-20 bg-ruby-600/10 text-ruby-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-inner ring-1 ring-ruby-600/20">
+                            <LogOut className="w-8 h-8" strokeWidth={3} />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">¿Cerrar Sesión?</h3>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">¿Estás seguro de que quieres salir del sistema?</p>
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => setShowLogoutConfirm(false)}
-                                className="flex-1 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                            >
-                                Cancelar
-                            </button>
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2 uppercase italic tracking-tight">TERMINATE <span className="text-ruby-600">SESSION</span></h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-[9px] font-bold uppercase tracking-[0.2em] mb-8">Confirm system logout protocol?</p>
+                        <div className="flex flex-col gap-3">
                             <button
                                 onClick={() => { setShowLogoutConfirm(false); logout(); }}
-                                className="flex-1 px-4 py-2 rounded-xl bg-rose-600 text-white font-bold hover:bg-rose-500 transition-colors shadow-lg shadow-rose-900/20"
+                                className="ruby-button w-full mechanical-press"
                             >
-                                Sí, salir
+                                YES, DISCONNECT
+                            </button>
+                            <button
+                                onClick={() => setShowLogoutConfirm(false)}
+                                className="w-full py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors mechanical-press"
+                            >
+                                CANCEL PROTOCOL
                             </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Renderizado Condicional del Modal */}
             <CreateFranchiseModal
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
                 onSuccess={() => {
-                    console.log("Franquicia creada exitosamente. Actualizando lista...");
                     refresh();
                 }}
             />
 
-            {/* Guide Modal */}
             <Suspense fallback={null}>
                 <DashboardGuideModal
                     isOpen={isGuideOpen}

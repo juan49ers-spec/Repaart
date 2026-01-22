@@ -64,11 +64,11 @@ const OperationsPage = () => {
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
     return (
-        <div className="h-full bg-slate-50 p-6 overflow-hidden flex flex-col space-y-6">
+        <div className="h-full bg-slate-50 p-6 overflow-hidden flex flex-col space-y-2">
 
             {/* Header & Tabs */}
-            <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 border-b border-slate-200 pb-4 shrink-0">
-                <div className="flex flex-col gap-2">
+            <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 border-b border-slate-200 pb-2 shrink-0">
+                <div className="flex flex-col gap-1">
                     <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
                         {activeTab === 'scheduler' && <Calendar className="w-6 h-6 text-indigo-600" />}
                         {activeTab === 'riders' && <Users className="w-6 h-6 text-blue-600" />}

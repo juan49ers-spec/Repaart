@@ -1,5 +1,10 @@
-src/features/academy/admin/LessonEditor.tsx(2,67): error TS6133: 'Monitor' is declared but its value is never read.
-src/features/academy/player/CinemaPlayer.tsx(5,33): error TS2307: Cannot find module '../../store/academyStore' or its corresponding type declarations.
-src/features/academy/player/CinemaPlayer.tsx(17,37): error TS6133: 'title' is declared but its value is never read.
-src/features/academy/player/CinemaPlayer.tsx(24,30): error TS2749: 'ReactPlayer' refers to a value, but is being used as a type here. Did you mean 'typeof ReactPlayer'?
-src/features/academy/player/NoteTaker.tsx(2,33): error TS2307: Cannot find module '../../store/academyStore' or its corresponding type declarations.
+src/features/admin/dashboard/AdminDashboard.tsx(6,5): error TS6133: 'Activity' is declared but its value is never read.
+src/features/admin/dashboard/AdminDashboard.tsx(7,5): error TS6133: 'TrendingUp' is declared but its value is never read.
+src/features/admin/dashboard/widgets/PendingActionsWidget.tsx(2,88): error TS6133: 'Clock' is declared but its value is never read.
+src/features/franchise/FinancialControlCenter.tsx(2,20): error TS6133: 'BarChart3' is declared but its value is never read.
+src/features/franchise/FinancialControlCenter.tsx(197,12): error TS6133: 'ytdProfit' is declared but its value is never read.
+src/features/franchise/FinancialControlCenter.tsx(323,34): error TS2339: Property 'royaltyPercent' does not exist on type 'FinancialRecord'.
+src/features/franchise/FinancialControlCenter.tsx(323,73): error TS2339: Property 'irpfPercent' does not exist on type 'FinancialRecord'.
+src/features/operations/MobileAgendaView.tsx(3,10): error TS6133: 'Wallet' is declared but its value is never read.
+src/features/scheduler/DeliveryScheduler.tsx(478,11): error TS6133: 'dayColsLength' is declared but its value is never read.
+src/features/scheduler/DeliveryScheduler.tsx(1103,63): error TS6133: 'minuteLabel' is declared but its value is never read.

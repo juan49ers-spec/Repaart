@@ -341,7 +341,7 @@ export const financeService = {
     updateFinancialData: async (
         franchiseId: string,
         month: string,
-        data: MonthlyData
+        data: Partial<MonthlyData>
     ): Promise<Result<void, FinanceError>> => {
         try {
             // Validation
@@ -370,26 +370,48 @@ export const financeService = {
             const docId = `${franchiseId}_${month}`;
             const docRef = doc(db, 'financial_summaries', docId);
 
-            // Sanitize Data: Ensure numbers are numbers and keys are consistent
-            const validRevenue = Number(data.totalIncome || data.revenue || 0);
-            const validExpenses = Number(data.totalExpenses || data.expenses || 0);
-            const validProfit = validRevenue - validExpenses;
+            const existingSnap = await getDoc(docRef);
+            const existing: any = existingSnap.exists() ? existingSnap.data() : {};
 
-            const sanitizedData = {
-                ...data, // Keep original fields
-                totalIncome: validRevenue,
-                totalExpenses: validExpenses,
-                grossIncome: validRevenue, // Legacy sync
-                revenue: validRevenue, // Ensure these exist for UI
-                expenses: validExpenses,
-                profit: validProfit,
-                isLocked: data.isLocked || (data.status === 'submitted' || data.status === 'locked'),
-                is_locked: data.isLocked || (data.status === 'submitted' || data.status === 'locked'), // Legacy
-                // Ensure breakdown values are numbers if they exist
-                breakdown: data.breakdown ? Object.fromEntries(
-                    Object.entries(data.breakdown).map(([k, v]) => [k, Number(v) || 0])
-                ) : {}
+            const existingRevenue = Number(existing.totalIncome ?? existing.revenue ?? 0);
+            const existingExpenses = Number(existing.totalExpenses ?? existing.expenses ?? 0);
+            const existingStatus = existing.status;
+            const existingIsLocked = existing.isLocked ?? existing.is_locked ?? false;
+
+            const hasIncome = data.totalIncome !== undefined || data.revenue !== undefined;
+            const hasExpenses = data.totalExpenses !== undefined || data.expenses !== undefined;
+
+            const nextRevenue = Number(hasIncome ? (data.totalIncome ?? data.revenue ?? 0) : existingRevenue);
+            const nextExpenses = Number(hasExpenses ? (data.totalExpenses ?? data.expenses ?? 0) : existingExpenses);
+            const nextProfit = nextRevenue - nextExpenses;
+
+            const nextStatus = (data.status ?? existingStatus ?? 'approved') as any;
+
+            let nextIsLocked =
+                (data.isLocked ?? (data as any).is_locked ?? existingIsLocked) as boolean;
+
+            if (nextStatus === 'open') nextIsLocked = false;
+            else if (nextStatus === 'submitted' || nextStatus === 'locked' || nextStatus === 'unlock_requested' || nextStatus === 'approved') {
+                nextIsLocked = true;
+            }
+
+            const sanitizedData: any = {
+                ...data,
+                totalIncome: nextRevenue,
+                totalExpenses: nextExpenses,
+                grossIncome: nextRevenue,
+                revenue: nextRevenue,
+                expenses: nextExpenses,
+                profit: nextProfit,
+                isLocked: nextIsLocked,
+                is_locked: nextIsLocked
             };
+
+            if (data.breakdown !== undefined) {
+                sanitizedData.breakdown = Object.fromEntries(
+                    Object.entries(data.breakdown || {}).map(([k, v]) => [k, Number(v) || 0])
+                );
+            }
 
             // Usamos setDoc con merge para no borrar campos si actualizamos parcial
             await setDoc(docRef, {
@@ -397,7 +419,7 @@ export const financeService = {
                 franchiseId,
                 franchise_id: franchiseId, // Legacy
                 month,
-                status: data.status || 'approved', // Respect input status (e.g. 'submitted' from franchise)
+                status: nextStatus,
                 updatedAt: serverTimestamp(),
                 updated_at: serverTimestamp() // Legacy
             }, { merge: true });
@@ -594,7 +616,7 @@ export const financeService = {
      * DASHBOARD: Obtener tendencia financiera de los últimos X meses
      * Agrega los datos en el cliente (Client-Side Aggregation)
      */
-    getFinancialTrend: async (franchiseId: string | null, monthsBack: number = 6): Promise<TrendItem[]> => {
+    getFinancialTrend: async (franchiseId: string | null, monthsBack: number = 6, baseDate?: string | Date): Promise<TrendItem[]> => {
         try {
             // 1. Calcular fecha (meses atrás) - pero las summaries usan string "YYYY-MM"
             // Necesitamos generar las keys "YYYY-MM" de los últimos X meses
@@ -609,11 +631,11 @@ export const financeService = {
             }
 
             const monthlyStats = new Map<string, TrendAccumulator>();
-            const today = new Date();
+            const referenceDate = baseDate ? (typeof baseDate === 'string' ? new Date(baseDate + '-01') : baseDate) : new Date();
             const summaryKeys: string[] = [];
 
             for (let i = monthsBack; i >= 0; i--) {
-                const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                const d = new Date(referenceDate.getFullYear(), referenceDate.getMonth() - i, 1);
                 const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
                 monthlyStats.set(key, {
                     income: 0,

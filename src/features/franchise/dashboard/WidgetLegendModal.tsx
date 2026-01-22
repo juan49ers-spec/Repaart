@@ -56,13 +56,13 @@ const WidgetLegendModal: React.FC<WidgetLegendModalProps> = ({ isOpen, onClose }
             ]
         },
         ingresos: {
-            title: 'Ingresos Brutos',
+            title: 'Ingresos Netos',
             icon: <Banknote className="w-6 h-6" />,
             color: 'blue',
             intro: 'El combustible del motor: Facturación Total Generada.',
             description: 'Todo euro que entra en la caja antes de enfrentarse a la realidad de los gastos.',
             formula: 'Ingresos = (Pedidos × Tarifa Base) + Incentivos + Bonus Calidad',
-            detailedExplanation: 'Los Ingresos Brutos son la "Top Line" de tu P&L. Es la suma total de valor generado, pero cuidado: es un "Vanity Metric". Validar Mercado no es validar Modelo de Negocio. Un crecimiento sano requiere que el aumento de ingresos no degrade proporcionalmente el margen operativo (EBITDA Latente). Mide aquí tu CAPACIDAD DE PRODUCCIÓN, no tu RIQUEZA.',
+            detailedExplanation: 'Los Ingresos Netos son la "Top Line" de tu P&L. Es la suma total de valor generado, pero cuidado: es un "Vanity Metric". Validar Mercado no es validar Modelo de Negocio. Un crecimiento sano requiere que el aumento de ingresos no degrade proporcionalmente el margen operativo (EBITDA Latente). Mide aquí tu CAPACIDAD DE PRODUCCIÓN, no tu RIQUEZA.',
             practicalExample: {
                 scenario: 'Récord de Facturación (+20%) pero el saldo bancario baja.',
                 result: 'Síndrome de "Crecimiento Hinchado". Has aumentado costes ineficientes para conseguir esa venta extra.'
@@ -84,7 +84,7 @@ const WidgetLegendModal: React.FC<WidgetLegendModalProps> = ({ isOpen, onClose }
             ]
         },
         bolsillo: {
-            title: 'Tu Bolsillo',
+            title: 'En Tu Bolsillo',
             icon: <Wallet className="w-6 h-6" />,
             color: 'emerald',
             intro: 'La fórmula definitiva: ¿Por qué restamos "TÚ"?',

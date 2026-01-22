@@ -12,7 +12,7 @@ interface ShiftManagerViewProps {
 
 const ShiftManagerView: FC<ShiftManagerViewProps> = ({ franchiseId, readOnly = false, selectedDate, onDateChange }) => {
     return (
-        <div className="h-full w-full">
+        <div className="h-full w-full overflow-auto">
             {/* Wrapper allows for future injection of specific toolbar or context for the editor specifically */}
             <Suspense fallback={<div className="p-8 text-center text-slate-400">Cargando Smart Scheduler...</div>}>
                 <DeliveryScheduler

@@ -1,5 +1,5 @@
 import React, { useState, Suspense, lazy, type FC, useRef } from 'react';
-import { User, Lock, Bell, LogOut, CheckCircle, AlertTriangle, Camera, Mail, Sparkles, LayoutDashboard } from 'lucide-react'; import { useAuth } from '../../context/AuthContext';
+import { User, Lock, Bell, LogOut, CheckCircle, AlertTriangle, Camera, Mail, Sparkles } from 'lucide-react'; import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/ui/inputs/Button';
 import { updateProfile } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -203,17 +203,6 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
                             icon={Bell}
                             label="Alertas"
                         />
-                        {isAdmin && (
-                            <>
-                                <div className="w-px h-6 bg-slate-200 mx-1"></div>
-                                <TabButton
-                                    active={activeTab === 'admin'}
-                                    onClick={() => setActiveTab('admin')}
-                                    icon={LayoutDashboard}
-                                    label="GESTIÓN DE FRANQUICIAS"
-                                />
-                            </>
-                        )}
                     </div>
                 </div>
 

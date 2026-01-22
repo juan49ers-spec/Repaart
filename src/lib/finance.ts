@@ -303,64 +303,87 @@ export const calculateExpenses = (
     orderCount: number,
     inputs: Partial<MonthlyData> = {}
 ): FinancialReport => {
-    // 1. Costs WITHOUT IVA
+    // 1. Inputs from MonthlyData (following FinancialControlCenter fields)
     const salaries = safeFloat(inputs.salaries);
-    const insurance = safeFloat(inputs.insurance);
+    const socialSecurity = safeFloat(inputs.socialSecurity);
     const quota = safeFloat(inputs.quota);
+    const insurance = safeFloat(inputs.insurance);
 
-    // 2. Costs WITH IVA (Base)
-    const motoCount = safeFloat(inputs.motoCount);
+    // Structural / Professional Services
+    const agencyFee = safeFloat(inputs.agencyFee);
+    const prlFee = safeFloat(inputs.prlFee);
+    const accountingFee = safeFloat(inputs.accountingFee);
+    const profServices = safeFloat(inputs.services); // General pro services
 
-    // FIXED: Use stored rentingCost if available, otherwise calculate with standard rate
-    // This allows SimpleFinanceWizard to save custom renting prices
-    const rentingBase = safeFloat((inputs as any).rentingCost) || (motoCount * 154);
-
-    // Detailed Professional Services
-    const agencyFeeBase = safeFloat(inputs.agencyFee);
-    const prlFeeBase = safeFloat(inputs.prlFee);
-    const accountingFeeBase = safeFloat(inputs.accountingFee);
-
-    const totalProfServicesBase = agencyFeeBase + prlFeeBase + accountingFeeBase;
-
-    const gasolineBase = safeFloat(inputs.gasoline);
-    const gasolinePrice = safeFloat(inputs.gasolinePrice);
-
-    const otherExpensesBase = safeFloat(inputs.otherExpenses) + safeFloat(inputs.marketing) + safeFloat(inputs.incidents);
-    const repairsBase = safeFloat(inputs.repairs);
-
-    // Specific tracking
+    // Marketing & Fixed Ops
     const marketing = safeFloat(inputs.marketing);
+    const appFlyder = safeFloat(inputs.appFlyder);
+    const repaartServices = safeFloat(inputs.repaartServices);
+
+    // Variable / Operational
+    const motoCount = safeFloat(inputs.motoCount);
+    const hasExplicitRentingCost = inputs.rentingCost !== undefined && inputs.rentingCost !== null;
+    const rentingCost = hasExplicitRentingCost ? safeFloat(inputs.rentingCost) : (motoCount * 154);
+
+    const fuel = safeFloat(inputs.gasoline);
+    const repairs = safeFloat(inputs.repairs);
     const incidents = safeFloat(inputs.incidents);
+    const otherExpenses = safeFloat(inputs.otherExpenses);
 
-    // Variable Costs
-    // Use manual input if available, otherwise fallback to 0.35 * orders
-    const flyderFeeBase = inputs.appFlyder !== undefined
-        ? safeFloat(inputs.appFlyder)
-        : orderCount * 0.35;
+    const royaltyPercent = safeFloat(inputs.royaltyPercent) || 5;
+    const royaltyAmount = revenue * (royaltyPercent / 100);
 
-    const royaltyPercent = safeFloat(inputs.royaltyPercent);
-    const royaltyBase = revenue * (royaltyPercent / 100);
+    // FIXED COSTS (Aligned with FinancialControlCenter.tsx line 331)
+    const totalFixedCostsBase =
+        salaries +
+        socialSecurity +
+        quota +
+        insurance +
+        agencyFee +
+        prlFee +
+        accountingFee +
+        profServices +
+        appFlyder +
+        marketing +
+        repaartServices;
 
-    // Total Base Expenses (P&L View)
-    const totalFixedCostsBase = salaries + rentingBase + insurance + totalProfServicesBase + quota + otherExpensesBase;
-    const totalVariableCostsBase = flyderFeeBase + royaltyBase + gasolineBase + repairsBase;
+    // VARIABLE COSTS (Aligned with FinancialControlCenter.tsx line 335)
+    const totalVariableCostsBase =
+        fuel +
+        repairs +
+        rentingCost +
+        incidents +
+        otherExpenses +
+        royaltyAmount;
 
     const calculatedTotalExpenses = totalFixedCostsBase + totalVariableCostsBase;
 
-    // Explicit Total Override (if manual entry > calculated sum)
-    // This allows manual "Total Expenses" entry without breakdown to work
-    // SUPPORT LEGACY/NESTED DATA: Check inputs.totalExpenses, inputs.expenses, OR inputs.summary.totalExpenses
-    const storedTotalExpenses = safeFloat(inputs.totalExpenses || inputs.expenses || (inputs as any).summary?.totalExpenses);
+    // Consistency check with explicitly stored total
+    const storedTotalExpenses = safeFloat(inputs.totalExpenses || inputs.expenses);
     const totalExpensesBase = Math.max(calculatedTotalExpenses, storedTotalExpenses);
 
     const netProfitPreTax = revenue - totalExpensesBase;
 
     // --- TAX ESTIMATION ---
     const ivaPercent = 0.21;
-    const taxableExpensesBase = rentingBase + totalProfServicesBase + gasolineBase + repairsBase + flyderFeeBase + royaltyBase + otherExpensesBase;
+    // Items that typically carry VAT
+    const taxableExpensesBase =
+        rentingCost +
+        agencyFee +
+        prlFee +
+        accountingFee +
+        profServices +
+        fuel +
+        repairs +
+        appFlyder +
+        marketing +
+        repaartServices +
+        royaltyAmount +
+        otherExpenses;
+
     const ivaSoportado = taxableExpensesBase * ivaPercent;
     const ivaRepercutido = revenue * ivaPercent;
-    const ivaAPagar = ivaRepercutido - ivaSoportado;
+    const ivaAPagar = Math.max(0, ivaRepercutido - ivaSoportado);
 
     const irpfPercent = safeFloat(inputs.irpfPercent) || 20;
     const irpfPago = netProfitPreTax > 0 ? netProfitPreTax * (irpfPercent / 100) : 0;
@@ -368,25 +391,26 @@ export const calculateExpenses = (
     const netProfitPostTax = netProfitPreTax - irpfPago;
 
     // --- METRICS ---
-    const activeRiders = safeFloat(inputs.contractedRiders) + 1; // +1 Manager
-
+    const activeRiders = safeFloat(inputs.contractedRiders) || 0;
     const totalHours = safeFloat(inputs.totalHours);
 
-    // Logistics Metrics (Automated Calculation)
+    // Km Estimation
+    const gasolineBase = fuel;
+    const gasolinePrice = safeFloat(inputs.gasolinePrice) || 1.6; // Fallback price
     let totalKm = 0;
     if (gasolinePrice > 0) {
-        const litersConsumed = gasolineBase / gasolinePrice;
-        totalKm = litersConsumed * 35; // Yamaha Liberty 125 factor
+        totalKm = (gasolineBase / gasolinePrice) * 35; // 35km/L factor
     } else {
         totalKm = safeFloat(inputs.totalKm);
     }
     totalKm = Math.round(Math.max(0, totalKm));
 
-    let breakEvenOrders: number | 'N/A' = 'N/A';
+    // Break-even
     const avgTicket = orderCount > 0 ? revenue / orderCount : 0;
     const variableCostPerOrder = orderCount > 0 ? totalVariableCostsBase / orderCount : 0;
     const contributionMargin = avgTicket - variableCostPerOrder;
 
+    let breakEvenOrders: number | 'N/A' = 'N/A';
     if (contributionMargin > 0) {
         breakEvenOrders = Math.ceil(totalFixedCostsBase / contributionMargin);
     }
@@ -396,25 +420,21 @@ export const calculateExpenses = (
         safetyMargin = ((orderCount - breakEvenOrders) / orderCount) * 100;
     }
 
-    // --- POWER METRICS ---
-    const laborRatio = revenue > 0 ? (salaries / revenue) * 100 : 0;
-    const incidentRatio = revenue > 0 ? (incidents / revenue) * 100 : 0;
-
     return {
         fixed: {
-            salaries,
-            renting: rentingBase,
+            salaries: salaries + socialSecurity,
+            renting: 0, // In FCC renting is variable
             insurance,
-            services: totalProfServicesBase,
+            services: agencyFee + prlFee + accountingFee + profServices,
             quota,
-            other: otherExpensesBase,
+            other: marketing + appFlyder + repaartServices,
             total: totalFixedCostsBase
         },
         variable: {
-            gasoline: gasolineBase,
-            repairs: repairsBase,
-            flyderFee: flyderFeeBase,
-            royalty: royaltyBase,
+            gasoline: fuel,
+            repairs,
+            flyderFee: royaltyAmount, // Alias for royalty in some views
+            royalty: royaltyAmount,
             total: totalVariableCostsBase
         },
         totalExpenses: totalExpensesBase,
@@ -426,13 +446,10 @@ export const calculateExpenses = (
             irpfPercent,
             irpfPago,
             netProfitPostTax,
-            // UI Helper Population
             netProfit: netProfitPreTax,
             margin: revenue > 0 ? (netProfitPreTax / revenue) * 100 : 0,
             totalReserve: ivaAPagar + irpfPago,
-            vat: {
-                toPay: ivaAPagar
-            }
+            vat: { toPay: ivaAPagar }
         },
         metrics: {
             avgTicket,
@@ -449,27 +466,26 @@ export const calculateExpenses = (
             costPerKm: totalKm > 0 ? totalExpensesBase / totalKm : 0,
             dropDensity: totalKm > 0 ? (orderCount / totalKm) * 100 : 0,
             safetyMargin,
-            laborRatio,
-            incidentRatio,
+            laborRatio: revenue > 0 ? ((salaries + socialSecurity) / revenue) * 100 : 0,
+            incidentRatio: revenue > 0 ? (incidents / revenue) * 100 : 0,
             marketingSpend: marketing,
             incidentCost: incidents
         },
         breakdown: [
             { name: 'Salarios', value: salaries, type: 'fixed' },
-            { name: 'Renting Motos', value: rentingBase, type: 'fixed' },
-            { name: 'Seguros', value: insurance, type: 'fixed' },
-
-            { name: 'Gestoría', value: agencyFeeBase, type: 'fixed' },
-            { name: 'PRL', value: prlFeeBase, type: 'fixed' },
-            { name: 'App Flyder', value: accountingFeeBase, type: 'fixed' },
+            { name: 'Seguridad Social', value: socialSecurity, type: 'fixed' },
             { name: 'Cuota Autónomo', value: quota, type: 'fixed' },
+            { name: 'Renting Motos', value: rentingCost, type: 'variable' },
+            { name: 'Gasolina', value: fuel, type: 'variable' },
+            { name: 'Reparaciones', value: repairs, type: 'variable' },
+            { name: 'Seguros', value: insurance, type: 'fixed' },
+            { name: 'Gestoría', value: agencyFee, type: 'fixed' },
+            { name: 'Royalty Repaart', value: royaltyAmount, type: 'variable' },
+            { name: 'App Flyder', value: appFlyder, type: 'fixed' },
             { name: 'Marketing', value: marketing, type: 'fixed' },
-            { name: 'Mermas', value: incidents, type: 'fixed' },
-            { name: 'Otros Costes', value: safeFloat(inputs.otherExpenses), type: 'fixed' },
-            { name: 'Gasolina', value: gasolineBase, type: 'variable' },
-            { name: 'Reparaciones', value: repairsBase, type: 'variable' },
-            { name: 'Servicios Financieros Repaart', value: flyderFeeBase, type: 'variable' },
-            { name: 'Royalty', value: royaltyBase, type: 'variable' },
+            { name: 'Servicios Repaart', value: repaartServices, type: 'fixed' },
+            { name: 'Incidentes/Mermas', value: incidents, type: 'variable' },
+            { name: 'Otros Costes', value: otherExpenses, type: 'variable' }
         ]
     };
 };

@@ -76,13 +76,13 @@ export const useFranchiseFinance = ({ franchiseId, month, tariffs }: FranchiseFi
     // AI/Algo Analysis
     const analysis = analyzeFinancialHealth(report.breakdown, revenue);
 
-    // 3. FETCH TREND DATA (New)
+    // 3. FETCH TREND DATA (Updated to be month-relative and fetch 12 months for YTD support)
     const { data: trendData } = useQuery({
-        queryKey: ['franchise-trend', franchiseId],
+        queryKey: ['franchise-trend', franchiseId, month],
         queryFn: async () => {
             if (!franchiseId) return [];
-            // Fetch last 6 months
-            return financeService.getFinancialTrend(franchiseId, 6);
+            // Fetch 12 months back from the selected month to ensure full year coverage
+            return financeService.getFinancialTrend(franchiseId, 12, month);
         },
         enabled: !!franchiseId,
         staleTime: 1000 * 60 * 10 // 10 minutes

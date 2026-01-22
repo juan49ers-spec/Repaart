@@ -252,18 +252,20 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                 "group relative px-3 py-3 sm:px-4 sm:py-4 rounded-[32px] transition-all duration-500 overflow-hidden select-none mb-3",
                 // Base state
                 isDragging ? 'opacity-40 cursor-grabbing scale-95 ring-2 ring-indigo-400 ring-offset-2' : 'cursor-grab',
-                // Conflict State
+                // Priority States (Admin & Common)
                 hasConflict
                     ? 'bg-red-50/90 border border-red-200 shadow-sm'
                     : changeRequested
                         ? 'bg-amber-50/90 border border-amber-200 shadow-sm'
-                        : isRiderMode
-                            ? cn("bg-[#1c1c1e] shadow-2xl shadow-black/60", ringClass)
-                            : cn(
-                                "bg-white border text-left",
-                                "border-slate-200/60 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)]",
-                                "hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-0.5 hover:border-indigo-200/50"
-                            ),
+                        : !isRiderMode && isConfirmed
+                            ? 'bg-emerald-50/40 border-emerald-100/80 shadow-sm'
+                            : isRiderMode
+                                ? cn("bg-[#1c1c1e] shadow-2xl shadow-black/60", ringClass)
+                                : cn(
+                                    "bg-white border text-left",
+                                    "border-slate-200/60 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)]",
+                                    "hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-0.5 hover:border-indigo-200/50"
+                                ),
                 canDrag && "touch-feedback-subtle active:cursor-grabbing",
                 isExpanded && isRiderMode && "ring-1 ring-white/20",
                 className
@@ -466,7 +468,7 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
 
                     {/* Admin Content Container */}
                     <div className="pl-3.5 flex flex-col items-start justify-center h-full gap-0.5">
-                        {/* Header: Rider Name + Duration */}
+                        {/* Header: Rider Name + Status Badge */}
                         <div className="flex items-center justify-between w-full">
                             <div className="flex items-center gap-1.5 min-w-0">
                                 <div className={cn(
@@ -479,12 +481,24 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                                 <span className="text-[11px] font-bold text-slate-700 truncate">{riderName}</span>
                             </div>
 
-                            {/* Duration Badge */}
-                            <div className={cn(
-                                "text-[9px] font-bold px-1 rounded-md",
-                                hasConflict ? "text-red-600 bg-red-100" : "text-slate-400 bg-slate-50"
-                            )}>
-                                {duration}h
+                            {/* Status and info layout */}
+                            <div className="flex items-center gap-1.5">
+                                {isConfirmed && !changeRequested && (
+                                    <div className="px-1.5 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-[8px] font-black tracking-tighter uppercase">
+                                        Confirmado
+                                    </div>
+                                )}
+                                {changeRequested && (
+                                    <div className="px-1.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 text-amber-700 text-[8px] font-black tracking-tighter uppercase animate-pulse">
+                                        Modificación
+                                    </div>
+                                )}
+                                <div className={cn(
+                                    "text-[9px] font-bold px-1 rounded-md",
+                                    hasConflict ? "text-red-600 bg-red-100" : "text-slate-400 bg-slate-50"
+                                )}>
+                                    {duration}h
+                                </div>
                             </div>
                         </div>
 
@@ -502,10 +516,15 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                             )}
                         </div>
 
-                        {/* Conflict Text */}
+                        {/* Conflict/Status Text Overlays */}
                         {hasConflict && (
-                            <div className="absolute inset-x-0 bottom-0 bg-red-50/90 text-[8px] font-bold text-red-500 text-center border-t border-red-100">
+                            <div className="absolute inset-x-0 bottom-0 bg-red-50/90 text-[8px] font-bold text-red-500 text-center border-t border-red-100 py-0.5">
                                 CONFLICTO
+                            </div>
+                        )}
+                        {changeRequested && !hasConflict && (
+                            <div className="absolute inset-x-0 bottom-0 bg-amber-500/10 text-[7px] font-black text-amber-600 text-center border-t border-amber-200/50 py-0.2 uppercase tracking-widest">
+                                Rider solicita cambio
                             </div>
                         )}
                     </div>

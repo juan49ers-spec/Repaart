@@ -125,9 +125,9 @@ const DeliveryScheduler: React.FC<{
             const newStart = parseISO(dateIso);
 
             if (hour !== undefined) {
-                // Day View Snapping
+                // Day View Snapping - 15 min precision to match the new 15-min grid structure
                 const h = Math.floor(hour);
-                const m = (hour % 1) >= 0.5 ? 30 : 0;
+                const m = Math.round((hour % 1) * 4) * 15;
                 newStart.setHours(h, m, 0, 0);
             } else {
                 // Weekly View: Keep original minutes
@@ -433,45 +433,55 @@ const DeliveryScheduler: React.FC<{
 
     // --- DAY VIEW HELPERS ---
     const getDayViewPosition = (minutes: number) => {
-        if (!showPrime) return (minutes / 1440) * 100;
+        // [MOD] Optimización de línea de tiempo: Ocultamos de 02:00 a 07:00 (120-420 mins)
+        // Esto permite ver más horas útiles en pantalla y reduce drásticamente el scroll horizontal.
+        const HIDDEN_START = 120; // 02:00
+        const HIDDEN_END = 420;   // 07:00
+        const HIDDEN_DUR = 300;   // 5 horas ocultas (300 mins)
+        const TOTAL_VISIBLE = 1440 - HIDDEN_DUR; // 1140 minutos totales visibles
 
-        // Prime: 12:00-16:30 (720-990) & 20:00-24:00 (1200-1440)
-        // Total visible: 510 mins
-        // Gap: 990-1200 (210 mins) hidden
+        let adjustedMinutes = minutes;
+        if (minutes >= HIDDEN_START && minutes < HIDDEN_END) {
+            adjustedMinutes = HIDDEN_START; // Colapsar el bloque oculto en un punto
+        } else if (minutes >= HIDDEN_END) {
+            adjustedMinutes = minutes - HIDDEN_DUR;
+        }
 
-        if (minutes < 720) return -100; // Too early
-        if (minutes >= 720 && minutes <= 990) return ((minutes - 720) / 510) * 100;
-        if (minutes > 990 && minutes < 1200) return (270 / 510) * 100; // In gap
-        if (minutes >= 1200) return ((270 + (minutes - 1200)) / 510) * 100;
-        return 100; // Too late
+        return (adjustedMinutes / TOTAL_VISIBLE) * 100;
     };
 
-    const dayCols = useMemo(() => {
-        // 15-minute intervals: 24h * 4 = 96 slots
-        const all = Array.from({ length: 96 }).map((_, i) => {
-            const h = i / 4;
-            const hour = Math.floor(h);
-            const minute = (i % 4) * 15;
-            return {
-                i,
-                h, // 13.0, 13.25, 13.5, 13.75
-                hour,
-                minute,
-                isFullHour: minute === 0,
-                isHalfHour: minute === 30,
-            };
-        });
+    const dayStructure = useMemo(() => {
+        // [MOD] Estructura de 24 horas, pero omitiendo el bloque no operativo (02:00-07:00)
+        const hours = Array.from({ length: 24 })
+            .map((_, h) => h)
+            .filter(h => h < 2 || h >= 7) // Mantenemos [0, 1] y [7, 8, ..., 23]
+            .map((h) => {
+                const slots = Array.from({ length: 4 }).map((_, m) => {
+                    const i = h * 4 + m;
+                    const minute = m * 15;
+                    return {
+                        i,
+                        h: h + (minute / 60),
+                        hour: h,
+                        minute,
+                        isFullHour: minute === 0,
+                        isHalfHour: minute === 30
+                    };
+                });
+                return { hour: h, slots };
+            });
 
-        if (!showPrime) return all;
+        return hours;
+    }, []);
 
-        // Prime: 12:00-16:30 (Indexes 48 to 66) & 20:00-24:00 (Indexes 80 to 96)
-        // 12*4=48, 16.5*4=66, 20*4=80, 24*4=96
-        return all.filter(s => (s.i >= 48 && s.i < 66) || (s.i >= 80 && s.i < 96));
-    }, [showPrime]);
+    // Note: dayCols was previously used for flattened slot iteration, now replaced by dayStructure
+    // Kept this comment for reference in case legacy code needs it
 
-
-
-    // 1. Merge adjacent shifts into continuous blocks
+    // --- RENDER HELPERS ---
+    const dayViewMinWidth = useMemo(() => {
+        // [MOD] Cambiado a 0 para permitir que el grid sea fluido y quepa en pantalla sin scroll
+        return 0;
+    }, []);
     const processRiderShifts = (shifts: any[]) => {
         if (!shifts.length) return [];
         // Sort by start time
@@ -1048,7 +1058,7 @@ const DeliveryScheduler: React.FC<{
                 <div className="flex-1 overflow-x-auto overflow-y-hidden bg-white relative flex flex-col min-h-0 touch-pan-x">
 
                     {/* SINGLE SCROLL CONTEXT WRAPPER - Forces unified width */}
-                    <div className="flex flex-col min-w-[1000px] h-full relative">
+                    <div className="flex flex-col min-w-full h-full relative">
 
                         {/* HEADER - Floating Glass Effect */}
                         <div className="flex-none flex w-full border-b border-indigo-100 bg-white/95 backdrop-blur-sm z-30 h-10 shadow-sm sticky top-0">
@@ -1078,26 +1088,46 @@ const DeliveryScheduler: React.FC<{
                                         );
                                     })
                                 ) : (
-                                    <div className="flex-1 flex relative">
-                                        {/* Timeline Header Day View */}
-                                        {dayCols.map((slot) => {
+                                    <div className="flex-1 flex relative" style={{ minWidth: `${dayViewMinWidth}px` }}>
+                                        {/* Timeline Header Day View - 24h with 15-min intervals */}
+                                        {dayStructure.map((hObj) => {
                                             return (
-                                                <div key={slot.i} className={cn(
-                                                    "flex-1 flex items-end justify-start pb-1 pl-1 relative group overflow-hidden h-full border-l",
-                                                    slot.isFullHour ? "border-slate-200" :
-                                                        slot.isHalfHour ? "border-slate-100 border-dashed" : "border-slate-50 border-dotted",
-                                                    "bg-white",
-                                                )}>
-                                                    {!showPrime && ((slot.h >= 12 && slot.h < 16.5) || (slot.h >= 20 && slot.h < 24)) && (
-                                                        <div className="absolute inset-0 -z-10 bg-amber-50/30" />
-                                                    )}
-                                                    {slot.isFullHour && (
-                                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center z-20 pointer-events-none">
-                                                            <span className="text-[10px] font-semibold text-indigo-400/90 tracking-wide px-1">
-                                                                {slot.h}:00
-                                                            </span>
-                                                        </div>
-                                                    )}
+                                                <div key={hObj.hour} className="flex-1 flex border-l-2 border-slate-400 relative group h-full">
+                                                    {/* 15-min Slots with Labels */}
+                                                    {hObj.slots.map((slot) => {
+                                                        const isHour = slot.minute === 0;
+                                                        const isHalfHour = slot.minute === 30;
+
+
+                                                        return (
+                                                            <div
+                                                                key={slot.i}
+                                                                className={cn(
+                                                                    "flex-1 h-full relative flex items-center justify-center",
+                                                                    // Border styling based on interval
+                                                                    isHour ? "" : isHalfHour
+                                                                        ? "border-l border-slate-300 border-dashed"
+                                                                        : "border-l border-slate-200/60",
+                                                                    // Prime time highlight
+                                                                    ((slot.h >= 12 && slot.h < 16.5) || (slot.h >= 20 && slot.h < 24))
+                                                                        ? "bg-amber-50/20"
+                                                                        : "bg-white"
+                                                                )}
+                                                            >
+                                                                {/* Time Label - Mostramos solo :00 y :30 para evitar solapamientos en vista fluida */}
+                                                                <span className={cn(
+                                                                    "text-[9px] font-medium pointer-events-none select-none",
+                                                                    isHour
+                                                                        ? "text-slate-700 font-bold"
+                                                                        : isHalfHour
+                                                                            ? "text-slate-500/60"
+                                                                            : "hidden"
+                                                                )}>
+                                                                    {isHour ? `${hObj.hour}:00` : ":30"}
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             );
                                         })}
@@ -1203,32 +1233,42 @@ const DeliveryScheduler: React.FC<{
                                                 );
                                             })
                                         ) : (
-                                            <div className="w-full h-full relative">
+                                            <div className="w-full h-full relative" style={{ minWidth: `${dayViewMinWidth}px` }}>
+                                                {/* Grid Background - Nested Structure */}
                                                 <div className="absolute inset-0 flex pointer-events-none">
-                                                    {dayCols.map((slot) => {
-                                                        const isFullHO = slot.isFullHour;
-                                                        return (
-                                                            <DroppableCell
-                                                                key={slot.i}
-                                                                dateIso={toLocalDateString(selectedDate)}
-                                                                riderId={rider.id}
-                                                                onQuickAdd={(qh) => handleQuickAdd(toLocalDateString(selectedDate), rider.id, qh)}
-                                                                onDoubleClick={() => handleAddShift(toLocalDateString(selectedDate), rider.id, slot.h)}
-                                                                onClick={() => handleAddShift(toLocalDateString(selectedDate), rider.id, slot.h)}
-                                                                isToday={isToday(selectedDate)}
-                                                                className={cn(
-                                                                    "flex-1 h-full transition-all duration-300 min-w-0 border-l",
-                                                                    isFullHO ? "border-slate-200" :
-                                                                        slot.isHalfHour ? "border-slate-100 border-dashed" : "border-slate-50 border-dotted",
-                                                                    "bg-white",
-                                                                    ((slot.h >= 12 && slot.h < 16) || (slot.h >= 20 && slot.h < 24))
-                                                                        ? (showPrime ? "bg-amber-100/10" : "bg-amber-50/10")
-                                                                        : ""
-                                                                )}
-                                                                hour={slot.h}
-                                                            />
-                                                        );
-                                                    })}    </div>
+                                                    {dayStructure.map((hObj) => (
+                                                        <div key={hObj.hour} className="flex-1 flex border-l-2 border-slate-400 h-full">
+                                                            {hObj.slots.map((slot) => {
+                                                                const isHour = slot.minute === 0;
+                                                                const isHalfHour = slot.minute === 30;
+
+                                                                return (
+                                                                    <DroppableCell
+                                                                        key={slot.i}
+                                                                        dateIso={toLocalDateString(selectedDate)}
+                                                                        riderId={rider.id}
+                                                                        onQuickAdd={(qh) => handleQuickAdd(toLocalDateString(selectedDate), rider.id, qh)}
+                                                                        onDoubleClick={() => handleAddShift(toLocalDateString(selectedDate), rider.id, slot.h)}
+                                                                        onClick={() => handleAddShift(toLocalDateString(selectedDate), rider.id, slot.h)}
+                                                                        isToday={isToday(selectedDate)}
+                                                                        className={cn(
+                                                                            "flex-1 h-full transition-all duration-300 min-w-0",
+                                                                            // Border styling matching header
+                                                                            isHour ? "" : isHalfHour
+                                                                                ? "border-l border-slate-300 border-dashed"
+                                                                                : "border-l border-slate-200/60",
+                                                                            // Prime time highlight
+                                                                            ((slot.h >= 12 && slot.h < 16.5) || (slot.h >= 20 && slot.h < 24))
+                                                                                ? "bg-amber-50/20"
+                                                                                : "bg-white"
+                                                                        )}
+                                                                        hour={slot.h}
+                                                                    />
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    ))}
+                                                </div>
                                                 <div className="relative w-full h-full z-10 pointer-events-none">
                                                     {rider.shifts.filter((s: any) => toLocalDateString(new Date(s.startAt)) === toLocalDateString(selectedDate)).map((shift: any) => {
                                                         const start = new Date(shift.startAt);

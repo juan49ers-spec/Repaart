@@ -1,0 +1,60 @@
+ M functions/lib/callables/createUser.js
+ M functions/lib/index.js
+ M functions/lib/triggers/onIncident.js
+ M functions/lib/triggers/onUserDelete.js
+ M functions/lib/triggers/onUserWrite.js
+ M functions/lib/triggers/onWeekWrite.js
+ M public/version.json
+ M src/features/academy/AcademyDashboard.tsx
+ M src/features/academy/ModuleCard.tsx
+ M src/features/admin/AuditPanel.tsx
+ M src/features/admin/dashboard/AdminDashboard.tsx
+ M src/features/admin/dashboard/SidebarWidgets.tsx
+ M src/features/admin/dashboard/widgets/ControlEarningsWidget.tsx
+ M src/features/admin/dashboard/widgets/ControlEventsWidget.tsx
+ M src/features/admin/dashboard/widgets/ControlNetworkWidget.tsx
+ M src/features/admin/dashboard/widgets/IntelligenceWidget.tsx
+ M src/features/admin/dashboard/widgets/PendingActionsWidget.tsx
+ M src/features/admin/overview/OverviewTab.tsx
+ M src/features/fleet/RidersView.tsx
+ M src/features/franchise/FinancialControlCenter.tsx
+ M src/features/franchise/FranchiseDashboard.tsx
+ M src/features/franchise/FranchiseDashboardView.tsx
+ M src/features/franchise/ResourcesPanel.tsx
+ M src/features/franchise/components/FinancialWorkflowGuide.tsx
+ M src/features/franchise/dashboard/WidgetLegendModal.tsx
+ M src/features/franchise/dashboard/widgets/CoverageStats.tsx
+ M src/features/franchise/dashboard/widgets/ExpenseBreakdownWidget.tsx
+ M src/features/franchise/dashboard/widgets/FinancialAdvisorWidget.tsx
+ M src/features/franchise/dashboard/widgets/HourlyCostWidget.tsx
+ M src/features/franchise/dashboard/widgets/KPICard.tsx
+ M src/features/franchise/dashboard/widgets/TakeHomeProfitWidget.tsx
+ M src/features/franchise/dashboard/widgets/TaxVaultWidget.tsx
+ M src/features/franchise/finance/TaxVaultWidget.tsx
+ M src/features/operations/MobileAgendaView.tsx
+ M src/features/operations/OperationsPage.tsx
+ M src/features/operations/ShiftCard.tsx
+ M src/features/operations/views/ShiftManagerView.tsx
+ M src/features/scheduler/DeliveryScheduler.tsx
+ M src/features/scheduler/DraggableShift.tsx
+ M src/features/scheduler/SchedulerGuideModal.tsx
+ M src/features/user/UserProfile.tsx
+ M src/features/user/components/ProfileTab.tsx
+ M src/hooks/useFranchiseFinance.ts
+ M src/index.css
+ M src/layouts/DashboardLayout.tsx
+ M src/layouts/components/BottomTabBar.tsx
+ M src/layouts/components/Header.tsx
+ M src/lib/finance.test.ts
+ M src/lib/finance.ts
+ M src/services/financeService.ts
+ M src/services/shiftService.ts
+ M src/types/finance.ts
+ M tsc_errors.txt
+?? .trae/
+?? build_output_deploy.txt
+?? git_status_deploy.txt
+?? src/layouts/components/DesktopSidebar.tsx
+?? src/layouts/components/NavigationSidebar.tsx
+?? src/layouts/components/SystemConsole.tsx
+?? src/services/financeService.test.ts

@@ -267,10 +267,10 @@ export const shiftService = {
                     franchiseId: data.franchiseId ?? data.franchise_id,
                     status: data.status || 'scheduled',
                     // 🔥 ESTOS SON LOS CAMPOS QUE FALTAN O ESTÁN MAL MAPEADOS 🔥
-                    isConfirmed: data.isConfirmed === true,
-                    swapRequested: data.swapRequested === true,
-                    changeRequested: data.changeRequested === true,
-                    changeReason: data.changeReason || null,
+                    isConfirmed: (data.isConfirmed === true || data.is_confirmed === true),
+                    swapRequested: (data.swapRequested === true || data.swap_requested === true),
+                    changeRequested: (data.changeRequested === true || data.change_requested === true),
+                    changeReason: data.changeReason || data.change_reason || null,
                     isDraft: data.isDraft || false,
                 };
             });
@@ -317,10 +317,10 @@ export const shiftService = {
                 franchiseId: data.franchiseId ?? data.franchise_id,
                 status: data.status || 'scheduled',
                 // 🔥 ESTOS SON LOS CAMPOS QUE FALTAN O ESTÁN MAL MAPEADOS 🔥
-                isConfirmed: data.isConfirmed === true,
-                swapRequested: data.swapRequested === true,
-                changeRequested: data.changeRequested === true,
-                changeReason: data.changeReason || null,
+                isConfirmed: (data.isConfirmed === true || data.is_confirmed === true),
+                swapRequested: (data.swapRequested === true || data.swap_requested === true),
+                changeRequested: (data.changeRequested === true || data.change_requested === true),
+                changeReason: data.changeReason || data.change_reason || null,
                 isDraft: data.isDraft || false
             };
         });

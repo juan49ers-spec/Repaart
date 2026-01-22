@@ -27,15 +27,10 @@ interface DashboardLayoutProps {
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     children,
-    // Navigation / View Props
     isAdmin,
     isFranchise,
     targetFranchiseName,
-
-    // Actions
     onExport,
-
-    // Chat Props
     chatData,
     outletContext
 }) => {
@@ -51,7 +46,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         setHelpContent(content);
     };
 
-    // Header Props Bundle - Only passing what Header actually uses
     const headerProps: HeaderProps = {
         isAdmin,
         isFranchise,
@@ -61,27 +55,22 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     };
 
     return (
-        <div className="print:hidden min-h-screen bg-slate-50 dark:bg-slate-950 flex overflow-hidden font-sans relative transition-colors duration-300">
-            {/* Main Content Area - Full width */}
-            <div className={`flex-1 flex flex-col transition-all duration-300 w-full`}>
-                <ImpersonationBanner />
-                <Header {...headerProps} />
+        <div className="print:hidden viewport-fixed bg-slate-50 dark:bg-slate-950 font-sans relative transition-colors duration-300">
+            <ImpersonationBanner />
+            <Header {...headerProps} />
 
-                {/* Content Injection with correct mobile padding */}
-                <main className="flex-1 overflow-y-auto w-full relative z-0 content-safe-bottom">
-                    <div className="content-wrapper py-4 md:py-5 animate-slide-up">
-                        {/* Pass context to Outlet */}
-                        {outletContext ? <Outlet context={{ ...outletContext }} /> : children}
-                    </div>
-                </main>
-            </div>
+            {/* Main Content Area - Fixed Viewport with independent scroll */}
+            <main className="scrollable-area w-full relative z-0 content-safe-bottom">
+                <div className="content-wrapper py-4 md:py-8 animate-slide-up mx-auto max-w-[1920px]">
+                    {/* Pass context to Outlet */}
+                    {outletContext ? <Outlet context={{ ...outletContext }} /> : children}
+                </div>
+            </main>
 
             {/* Bottom Tab Bar (Mobile Only) */}
             <BottomTabBar
                 isAdmin={isAdmin}
                 isFranchise={isFranchise}
-            // Legacy view props might be ignored by new BottomTabBar with NavLinks, 
-            // but kept for interface compatibility if needed transiently
             />
 
             {/* Controlled Chat Assistant */}
@@ -98,7 +87,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             />
 
             <CommandPalette />
-        </div >
+        </div>
     );
 };
 

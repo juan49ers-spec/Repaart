@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Wallet, X, TrendingUp, Trophy, Zap, Fuel, Users } from 'lucide-react';
+import { Wallet, Trophy, Activity, ShieldCheck } from 'lucide-react';
 import { formatMoney } from '../../../../lib/finance';
-import { Card } from '../../../../components/ui/primitives/Card';
-import { SectionHeader } from '../../../../components/ui/primitives/SectionHeader';
-import { DataRow } from '../../../../components/ui/primitives/DataRow';
-import { StatValue } from '../../../../components/ui/primitives/StatValue';
-import { Badge, BadgeIntent } from '../../../../components/ui/primitives/Badge';
+import { cn } from '../../../../lib/utils';
 
 // Internal MoneyRain Component for gamification
 const MoneyRain = () => {
     const [items, setItems] = useState<any[]>([]);
-
     React.useEffect(() => {
         const newItems = Array.from({ length: 40 }).map((_, i) => ({
             id: i,
@@ -54,48 +49,18 @@ const MoneyRain = () => {
                         <div className="w-3 h-3 rounded-full border border-amber-600/50" />
                     </div>
                 );
-            default:
-                return null;
+            default: return null;
         }
     };
 
     return (
         <div className="fixed inset-0 pointer-events-none z-[10001] overflow-hidden">
             {items.map((item) => (
-                <div
-                    key={item.id}
-                    className="absolute top-[-50px] animate-fall-sway opacity-0"
-                    style={{
-                        left: item.left,
-                        animationDelay: item.delay,
-                        animationDuration: item.duration,
-                        transform: `scale(${item.scale})`,
-                        '--tw-enter-rotate': item.rotation,
-                    } as any}
-                >
-                    <div className="drop-shadow-md">
-                        {renderItem(item.type)}
-                    </div>
+                <div key={item.id} className="absolute top-[-50px] animate-fall-sway opacity-0" style={{ left: item.left, animationDelay: item.delay, animationDuration: item.duration, transform: `scale(${item.scale})` } as any} >
+                    <div className="drop-shadow-md">{renderItem(item.type)}</div>
                 </div>
             ))}
-            <style>
-                {`
-                @keyframes fall-sway {
-                    0% { transform: translateY(-50px) rotate(0deg) translateX(0px); opacity: 0; }
-                    10% { opacity: 1; }
-                    25% { transform: translateY(25vh) rotate(45deg) translateX(30px); }
-                    50% { transform: translateY(50vh) rotate(-45deg) translateX(-30px); }
-                    75% { transform: translateY(75vh) rotate(20deg) translateX(15px); }
-                    100% { transform: translateY(110vh) rotate(0deg) translateX(0px); opacity: 0; }
-                }
-                .animate-fall-sway {
-                    animation-name: fall-sway;
-                    animation-timing-function: ease-in-out;
-                    animation-iteration-count: 1;
-                    animation-fill-mode: forwards;
-                }
-                `}
-            </style>
+            <style>{`@keyframes fall-sway { 0% { transform: translateY(-50px) rotate(0deg) translateX(0px); opacity: 0; } 10% { opacity: 1; } 25% { transform: translateY(25vh) rotate(45deg) translateX(30px); } 50% { transform: translateY(50vh) rotate(-45deg) translateX(-30px); } 75% { transform: translateY(75vh) rotate(20deg) translateX(15px); } 100% { transform: translateY(110vh) rotate(0deg) translateX(0px); opacity: 0; } } .animate-fall-sway { animation-name: fall-sway; animation-timing-function: ease-in-out; animation-iteration-count: 1; animation-fill-mode: forwards; }`}</style>
         </div>
     );
 };
@@ -103,7 +68,6 @@ const MoneyRain = () => {
 // Internal StormRain Component for negative results
 const StormRain = () => {
     const [items, setItems] = useState<any[]>([]);
-
     React.useEffect(() => {
         const newItems = Array.from({ length: 60 }).map((_, i) => ({
             id: i,
@@ -117,30 +81,9 @@ const StormRain = () => {
     return (
         <div className="fixed inset-0 pointer-events-none z-[10001] overflow-hidden bg-slate-900/10">
             {items.map((item) => (
-                <div
-                    key={item.id}
-                    className="absolute top-[-20px] w-[2px] h-4 bg-slate-400 dark:bg-slate-500 rounded-full opacity-60 animate-rain"
-                    style={{
-                        left: item.left,
-                        animationDelay: item.delay,
-                        animationDuration: item.duration,
-                    } as any}
-                />
+                <div key={item.id} className="absolute top-[-20px] w-[2px] h-4 bg-slate-400 dark:bg-slate-500 rounded-full opacity-60 animate-rain" style={{ left: item.left, animationDelay: item.delay, animationDuration: item.duration, } as any} />
             ))}
-            <style>
-                {`
-                @keyframes rain {
-                    0% { transform: translateY(-20px) scaleY(1); opacity: 0; }
-                    10% { opacity: 0.8; }
-                    100% { transform: translateY(110vh) scaleY(1.5); opacity: 0; }
-                }
-                .animate-rain {
-                    animation-name: rain;
-                    animation-timing-function: linear;
-                    animation-iteration-count: infinite;
-                }
-                `}
-            </style>
+            <style>{`@keyframes rain { 0% { transform: translateY(-20px) scaleY(1); opacity: 0; } 10% { opacity: 0.8; } 100% { transform: translateY(110vh) scaleY(1.5); opacity: 0; } } .animate-rain { animation-name: rain; animation-timing-function: linear; animation-iteration-count: infinite; }`}</style>
         </div>
     );
 };
@@ -151,22 +94,18 @@ interface TakeHomeProfitWidgetProps {
     irpfPercent?: number;
     trend?: number[];
     annualNetProfit?: number;
+    year?: string | number;
     onDetailClick?: () => void;
 }
-
-import { useNavigate } from 'react-router-dom';
-
-// ... (imports remain matching, just adding useNavigate)
 
 const TakeHomeProfitWidget: React.FC<TakeHomeProfitWidgetProps> = ({
     revenue,
     totalExpenses,
     irpfPercent = 20,
     annualNetProfit,
-    onDetailClick: _onDetailClick,
+    year = new Date().getFullYear(),
 }) => {
     const [showYTDModal, setShowYTDModal] = useState(false);
-    const navigate = useNavigate();
 
     const operatingProfit = revenue - totalExpenses;
     const estimatedTax = operatingProfit > 0 ? (operatingProfit * irpfPercent) / 100 : 0;
@@ -175,160 +114,110 @@ const TakeHomeProfitWidget: React.FC<TakeHomeProfitWidgetProps> = ({
 
     const isProfitable = (annualNetProfit || 0) > 0;
 
-    const getConfig = (): { badge: string; intent: BadgeIntent } => {
-        if (margin >= 20) return { badge: `${margin.toFixed(0)}%`, intent: 'success' };
-        if (margin >= 10) return { badge: `${margin.toFixed(0)}%`, intent: 'warning' };
-        if (margin > 0) return { badge: `${margin.toFixed(0)}%`, intent: 'danger' };
-        return { badge: '0%', intent: 'danger' };
-    };
-
-    const config = getConfig();
-
     return (
-        <Card className="h-full flex flex-col">
-            <SectionHeader
-                title="Tu Bolsillo"
-                subtitle={null}
-                icon={<Wallet className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />}
-                action={<Badge intent={config.intent} title="Margen Neto">{config.badge}</Badge>}
-            />
-
-            <div className="mb-4">
-                <StatValue
-                    value={formatMoney(takeHomeProfit)}
-                    unit="€"
-                    size="xl"
-                />
-            </div>
-
-            <div className="flex-1 space-y-2">
-                <DataRow
-                    label="Ingresos Brutos"
-                    value={`${formatMoney(revenue)}€`}
-                    color="bg-blue-500"
-                />
-                <DataRow
-                    label="Gastos + IRPF"
-                    value={`- ${formatMoney(totalExpenses + estimatedTax)}€`}
-                    color="bg-rose-500"
-                />
-            </div>
-
-            {/* Elegant Centered Annual Summary Pill */}
-            <div className="mt-auto pt-6 flex justify-center">
-                <button
-                    onClick={() => {
-                        setShowYTDModal(true);
-                    }}
-                    className="px-6 py-2.5 rounded-full bg-indigo-50/30 dark:bg-indigo-950/20 border border-indigo-100/50 dark:border-indigo-400/10 shadow-sm hover:shadow-indigo-500/10 hover:scale-[1.02] transition-all flex items-center gap-4 group"
-                >
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-indigo-500 transition-colors">
-                        Resumen Anual
-                    </span>
-                    <div className="h-4 w-[1px] bg-indigo-200/50 dark:bg-indigo-500/20" />
-                    <div className="flex items-center gap-2">
-                        <Wallet className={`w-4 h-4 ${isProfitable ? 'text-emerald-500' : 'text-rose-500'}`} />
-                        <span className={`text-sm font-black tracking-tight ${isProfitable ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                            {isProfitable ? '+' : ''}{formatMoney(annualNetProfit || 0)}€
-                        </span>
+        <div className="workstation-card workstation-scanline p-6 h-full flex flex-col group/card transition-all mechanical-press overflow-hidden">
+            {/* HEADER */}
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                    <div className="p-1.5 bg-ruby-50 dark:bg-ruby-900/10 rounded-lg">
+                        <Wallet className="w-3.5 h-3.5 text-ruby-600" />
                     </div>
+                    <div>
+                        <h3 className="text-base font-semibold text-slate-900 dark:text-white leading-tight">
+                            En Tu Bolsillo
+                        </h3>
+                    </div>
+                </div>
+                <div className={cn(
+                    "text-xs font-bold px-2 py-0.5 rounded tabular-nums",
+                    margin >= 10 ? 'text-emerald-600 bg-emerald-50' : 'text-ruby-600 bg-ruby-50'
+                )}>
+                    {margin.toFixed(1)}% margen
+                </div>
+            </div>
+
+            {/* MAIN VALUE DISPLAY */}
+            <div className="mb-5">
+                <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight tabular-nums">
+                        {formatMoney(takeHomeProfit)}€
+                    </span>
+                    <span className="text-xs font-medium text-slate-400 ml-1">liquidez</span>
+                </div>
+            </div>
+
+            {/* HIGH-DENSITY BREAKDOWN */}
+            <div className="space-y-1 mb-6">
+                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Ingresos Netos</span>
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200 tabular-nums">+{formatMoney(revenue)}€</span>
+                </div>
+                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Gastos Totales</span>
+                    <span className="text-xs font-bold text-rose-600 tabular-nums">-{formatMoney(totalExpenses + estimatedTax)}€</span>
+                </div>
+            </div>
+
+            {/* YEARLY ANALYTICS PORT */}
+            <div className="mt-auto pt-4 border-t border-slate-100 dark:border-white/5">
+                <button
+                    onClick={(e) => { e.stopPropagation(); setShowYTDModal(true); }}
+                    className="w-full py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-950 rounded-lg text-xs font-bold uppercase tracking-wide hover:bg-ruby-600 dark:hover:bg-ruby-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-sm hover:shadow-lg"
+                >
+                    <Activity className="w-3.5 h-3.5" />
+                    Informe Anual {year}
+                    <div className="h-3 w-px bg-white/20 dark:bg-slate-900/20" />
+                    <span className={cn("tabular-nums", isProfitable ? 'text-emerald-400 dark:text-emerald-600' : 'text-ruby-400')}>
+                        {isProfitable ? '+' : ''}{formatMoney(annualNetProfit || 0)}€
+                    </span>
                 </button>
             </div>
 
-            {/* YTD Achievement Modal - "Fino y Elegante" Redesign */}
+            {/* YTD MODAL - GLASS PREMIUM */}
             {showYTDModal && createPortal(
-                <div className="fixed inset-0 z-[9999] isolation-auto">
-                    {/* Background Overlay */}
-                    <div
-                        className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-300"
-                        onClick={() => setShowYTDModal(false)}
-                    />
-
-                    {/* Confetti/Rain Effects */}
+                <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setShowYTDModal(false)} />
                     {isProfitable ? <MoneyRain /> : <StormRain />}
 
-                    <div className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
-                        <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl w-full max-w-[360px] p-6 animate-in zoom-in-95 slide-in-from-bottom-8 duration-500 pointer-events-auto relative overflow-hidden">
-
-                            {/* Header Section */}
-                            <div className="flex items-start justify-between mb-8">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 transform rotate-[-6deg]">
-                                        <Trophy className="w-8 h-8 text-white" strokeWidth={1.5} />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-none mb-2">Hitos 2026</h3>
-                                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/80 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wide">
-                                            <Zap className="w-3 h-3 fill-current" /> Rendimiento Auditado
-                                        </div>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => setShowYTDModal(false)}
-                                    className="p-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
-                                >
-                                    <X size={20} />
-                                </button>
+                    <div className="glass-premium rounded-[2.5rem] w-full max-w-[380px] p-8 text-center animate-in zoom-in-95 duration-300 relative z-10 overflow-hidden shadow-2xl">
+                        <div className="flex justify-center mb-6">
+                            <div className="w-20 h-20 bg-ruby-600/10 text-ruby-600 rounded-[2rem] flex items-center justify-center shadow-inner ring-1 ring-ruby-600/20 rotate-[-8deg]">
+                                <Trophy className="w-10 h-10" />
                             </div>
-
-                            {/* Main Stat Card - Clean & Airy */}
-                            <div className="bg-emerald-50/50 dark:bg-emerald-900/10 rounded-3xl p-8 mb-8 text-center border border-emerald-100/50 dark:border-emerald-500/10">
-                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Acumulado Neto Anual</h4>
-                                <div className="text-4xl font-black tracking-tighter text-emerald-500 dark:text-emerald-400 drop-shadow-sm">
-                                    +{formatMoney(annualNetProfit || 0)}€
-                                </div>
-                            </div>
-
-                            {/* Achievement List - Elegant Clean Cards */}
-                            <div className="space-y-3 mb-8">
-                                <div className="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900/50">
-                                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-500">
-                                        <Fuel size={20} strokeWidth={2} />
-                                    </div>
-                                    <div>
-                                        <h5 className="text-xs font-black uppercase tracking-wide text-slate-900 dark:text-white">Combustible Óptimo</h5>
-                                        <p className="text-[11px] text-slate-500 font-medium">Gasto -8% vs media sector</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900/50">
-                                    <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl text-purple-500">
-                                        <Users size={20} strokeWidth={2} />
-                                    </div>
-                                    <div>
-                                        <h5 className="text-xs font-black uppercase tracking-wide text-slate-900 dark:text-white">Eficiencia RRHH</h5>
-                                        <p className="text-[11px] text-slate-500 font-medium">Cuadrante ajustado 100%</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900/50">
-                                    <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl text-orange-500">
-                                        <TrendingUp size={20} strokeWidth={2} />
-                                    </div>
-                                    <div>
-                                        <h5 className="text-xs font-black uppercase tracking-wide text-slate-900 dark:text-white">Servicio Record</h5>
-                                        <p className="text-[11px] text-slate-500 font-medium">1.240 pedidos en un mes</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Action Button - Dark & Bold */}
-                            <button
-                                onClick={() => {
-                                    setShowYTDModal(false);
-                                    navigate('/dashboard'); // Return to main dashboard
-                                }}
-                                className="w-full py-4 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-slate-900/20"
-                            >
-                                Mantener el Rumbo
-                            </button>
-
                         </div>
+
+                        <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2 uppercase italic tracking-tight">HITOS <span className="text-ruby-600">ANUALES</span></h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mb-8">Ciclo de Rendimiento {year}</p>
+
+                        <div className="bg-emerald-500/10 border border-emerald-500/20 py-8 rounded-3xl mb-8 group overflow-hidden relative">
+                            <div className="absolute inset-0 workstation-scanline opacity-10" />
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Neto Acumulado</p>
+                            <div className="text-4xl font-black italic tracking-tighter text-emerald-500 dark:text-emerald-400 tabular-nums">
+                                +{formatMoney(annualNetProfit || 0)}€
+                            </div>
+                        </div>
+
+                        <div className="space-y-3 mb-8 text-left">
+                            <div className="flex items-center gap-4 p-4 bg-white/50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl">
+                                <ShieldCheck className="w-5 h-5 text-ruby-600" />
+                                <div>
+                                    <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Eficiencia Verificada</p>
+                                    <p className="text-[9px] text-slate-500 uppercase tracking-tight font-bold">Margen operativo +12% vs media red</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => setShowYTDModal(false)}
+                            className="ruby-button w-full mechanical-press"
+                        >
+                            CERRAR
+                        </button>
                     </div>
                 </div>,
                 document.body
             )}
-        </Card>
+        </div>
     );
 };
 

@@ -63,7 +63,6 @@ const AcademyDashboard: FC<AcademyDashboardProps> = ({ onModuleClick }) => {
 
     // Statistics
     const completedCount = modules.filter((m: AcademyModule) => getModuleStatus(m) === 'completed').length;
-    const inProgressCount = modules.filter((m: AcademyModule) => getModuleStatus(m) === 'in_progress').length;
 
 
     if (loading) {
@@ -82,79 +81,83 @@ const AcademyDashboard: FC<AcademyDashboardProps> = ({ onModuleClick }) => {
             {/* Seeder Tool (Admin Only) */}
             <AcademySeeder />
 
-            {/* Header */}
-            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50">
-                <div className="flex flex-col gap-6">
-                    {/* Title and Stats */}
-                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                        <div>
-                            <h1 className="text-3xl font-bold mb-2 text-slate-900 dark:text-white tracking-tight">🎓 Academia Repaart</h1>
-                            <p className="text-slate-500 dark:text-slate-400 text-base md:text-lg font-medium">
-                                Tu camino hacia la excelencia operativa
-                            </p>
-                        </div>
-                        <div className="flex gap-4">
-                            <div className="text-center bg-indigo-50/50 dark:bg-indigo-950/30 p-4 rounded-xl border border-indigo-100 dark:border-indigo-900/50">
-                                <p className="text-[10px] text-indigo-600 dark:text-indigo-400 mb-1 font-bold uppercase tracking-wider">Progreso</p>
-                                <p className="text-2xl font-bold text-indigo-900 dark:text-indigo-100">{Math.round(totalProgress)}%</p>
+            {/* Header Compacto */}
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-sm">
+                <div className="flex flex-col gap-4">
+                    {/* Top Row: Title & Stats */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-1">
+                                <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">🎓 Academia Repaart</h1>
+                                <span className="hidden md:inline-block w-px h-4 bg-slate-300 dark:bg-slate-600"></span>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium hidden md:block">
+                                    Tu camino hacia la excelencia operativa
+                                </p>
                             </div>
-                            <div className="text-center bg-emerald-50/50 dark:bg-emerald-950/30 p-4 rounded-xl border border-emerald-100 dark:border-emerald-900/50">
-                                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mb-1 font-bold uppercase tracking-wider">Completados</p>
-                                <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">{completedCount}/{modules.length}</p>
+                            
+                            {/* Progress Bar Inline */}
+                            <div className="flex items-center gap-3 mt-2 max-w-xl">
+                                <div className="flex-1 bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden border border-slate-200 dark:border-slate-600">
+                                    <div
+                                        className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(99,102,241,0.4)]"
+                                        style={{ width: `${totalProgress}%` }}
+                                    />
+                                </div>
+                                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 whitespace-nowrap">{Math.round(totalProgress)}% Completado</span>
+                            </div>
+                        </div>
+
+                        {/* Mini Stats */}
+                        <div className="flex items-center gap-3 shrink-0">
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-100 dark:border-emerald-800">
+                                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">Módulos</span>
+                                <span className="text-sm font-black text-emerald-700 dark:text-emerald-300">{completedCount}/{modules.length}</span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Progress Bar */}
-                    <div className="bg-slate-100 dark:bg-slate-700 rounded-full h-4 overflow-hidden border border-slate-200 dark:border-slate-600">
-                        <div
-                            className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(99,102,241,0.4)]"
-                            style={{ width: `${totalProgress}%` }}
-                        />
-                    </div>
-
-                    {/* Search and Filters */}
-                    <div className="flex flex-col sm:flex-row gap-3">
+                    {/* Bottom Row: Search & Filters */}
+                    <div className="flex flex-col sm:flex-row gap-2 items-center border-t border-slate-100 dark:border-slate-700/50 pt-3">
                         {/* Search Bar */}
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <div className="relative flex-1 w-full">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                             <input
                                 type="text"
-                                placeholder="Buscar módulos..."
+                                placeholder="Buscar lecciones..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                className="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-lg text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                             />
                         </div>
 
-                        {/* Filter Buttons */}
-                        <div className="flex gap-2 bg-slate-100 dark:bg-slate-700 p-1 rounded-xl border border-slate-200 dark:border-slate-600">
+                        {/* Compact Filter Buttons */}
+                        <div className="flex gap-1 bg-slate-100 dark:bg-slate-700 p-0.5 rounded-lg border border-slate-200 dark:border-slate-600 w-full sm:w-auto overflow-x-auto">
                             <button
                                 onClick={() => setStatusFilter('all')}
-                                className={`px-4 py-2 rounded-lg text-xs font-bold transition ${statusFilter === 'all'
+                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition whitespace-nowrap flex-1 sm:flex-none ${statusFilter === 'all'
                                     ? 'bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 shadow-sm'
                                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                                     }`}
                             >
-                                Todos ({modules.length})
+                                Todos
                             </button>
                             <button
                                 onClick={() => setStatusFilter('in_progress')}
-                                className={`px-4 py-2 rounded-lg text-xs font-bold transition ${statusFilter === 'in_progress'
+                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition whitespace-nowrap flex-1 sm:flex-none ${statusFilter === 'in_progress'
                                     ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
                                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                                     }`}
                             >
-                                En Curso ({inProgressCount})
+                                En Curso
                             </button>
                             <button
                                 onClick={() => setStatusFilter('completed')}
-                                className={`px-4 py-2 rounded-lg text-xs font-bold transition ${statusFilter === 'completed'
+                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition whitespace-nowrap flex-1 sm:flex-none ${statusFilter === 'completed'
                                     ? 'bg-white dark:bg-slate-600 text-emerald-600 dark:text-emerald-400 shadow-sm'
                                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                                     }`}
                             >
-                                Completados ({completedCount})
+                                Listos
                             </button>
                         </div>
                     </div>
@@ -162,7 +165,7 @@ const AcademyDashboard: FC<AcademyDashboardProps> = ({ onModuleClick }) => {
             </div>
 
             {/* Modules Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {filteredModules.map((module) => {
                     const status = getModuleStatus(module);
                     const moduleProgress = module.id ? progress[module.id] : undefined;

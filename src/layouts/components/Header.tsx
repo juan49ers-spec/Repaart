@@ -24,7 +24,7 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, isFranchise }) => {
                     <div className="glass-premium brand-island-glow px-6 py-3 rounded-[24px] shadow-2xl hover:scale-[1.02] active:scale-[0.98] group transition-all duration-500">
                         <NavLink to="/" className="flex items-center">
                             <RepaartLogo
-                                className="h-9 lg:h-8 w-auto text-slate-800 dark:text-white transition-all duration-500 group-hover:drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]"
+                                className="h-9 lg:h-8 w-auto text-slate-800 dark:text-white transition-all duration-500 group-hover:drop-shadow-[0_0_8px_rgba(225,29,72,0.5)]"
                                 iconOnly={false}
                             />
                         </NavLink>
@@ -41,8 +41,8 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, isFranchise }) => {
                                 className={({ isActive }) => `
                                     group relative flex items-center justify-center gap-0 px-3.5 py-2.5 rounded-full transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] border border-transparent z-0
                                     ${isActive
-                                        ? 'bg-indigo-600 text-white shadow-[0_8px_20px_-6px_rgba(79,70,229,0.5)] ring-1 ring-white/20'
-                                        : 'text-slate-500 hover:text-indigo-600 dark:text-zinc-400 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-white/5'
+                                        ? 'bg-ruby-600 text-white shadow-[0_8px_20px_-6px_rgba(225,29,72,0.5)] ring-1 ring-white/20'
+                                        : 'text-slate-500 hover:text-ruby-600 dark:text-zinc-400 dark:hover:text-ruby-400 hover:bg-slate-100 dark:hover:bg-white/5'
                                     }
                                     active:scale-95
                                 `}

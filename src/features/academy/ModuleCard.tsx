@@ -131,7 +131,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
             `}
         >
             {/* Illustration Header */}
-            <div className={`relative h-32 ${colorConfig.bgColor} flex items-center justify-center overflow-hidden`}>
+            <div className={`relative h-24 ${colorConfig.bgColor} flex items-center justify-center overflow-hidden`}>
                 {/* Gradient Background */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${colorConfig.gradientFrom} ${colorConfig.gradientTo} opacity-20`} />
 
@@ -142,51 +142,51 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
                 </div>
 
                 {/* Module Number Badge */}
-                <div className={`relative z-10 w-16 h-16 rounded-2xl bg-white dark:bg-slate-900 border ${colorConfig.borderColor} shadow-lg flex items-center justify-center`}>
-                    <span className={`text-2xl font-bold ${colorConfig.textColor}`}>
+                <div className={`relative z-10 w-12 h-12 rounded-xl bg-white dark:bg-slate-900 border ${colorConfig.borderColor} shadow-lg flex items-center justify-center`}>
+                    <span className={`text-xl font-bold ${colorConfig.textColor}`}>
                         {module.order}
                     </span>
                 </div>
 
                 {/* Status Badge */}
-                <div className={`absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${isCompleted
-                        ? 'bg-emerald-500 text-white'
-                        : status === 'in_progress'
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-white/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
+                <div className={`absolute top-2 right-2 flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide ${isCompleted
+                    ? 'bg-emerald-500 text-white'
+                    : status === 'in_progress'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-white/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
                     }`}>
-                    <span className={statusConfig.iconColor}>{statusConfig.icon}</span>
+                    <span className={statusConfig.iconColor}>{React.cloneElement(statusConfig.icon as React.ReactElement<any>, { className: "w-3 h-3" })}</span>
                 </div>
             </div>
 
             {/* Content Body */}
-            <div className="p-5">
+            <div className="p-4">
                 {/* Category Label */}
-                <span className={`inline-block text-[10px] font-bold uppercase tracking-widest ${colorConfig.textColor} mb-2`}>
+                <span className={`inline-block text-[9px] font-bold uppercase tracking-widest ${colorConfig.textColor} mb-1.5`}>
                     Módulo {module.order}
                 </span>
 
                 {/* Title */}
-                <h3 className={`text-lg font-bold mb-2 leading-tight ${isLocked ? 'text-slate-400' : 'text-slate-900 dark:text-white'}`}>
+                <h3 className={`text-base font-bold mb-1.5 leading-tight ${isLocked ? 'text-slate-400' : 'text-slate-900 dark:text-white'}`}>
                     {module.title}
                 </h3>
 
                 {/* Description */}
-                <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-4">
+                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-3">
                     {module.description}
                 </p>
 
                 {/* Metadata */}
-                <div className="flex items-center gap-4 text-xs text-slate-400 mb-4">
+                <div className="flex items-center gap-3 text-[10px] text-slate-400 mb-3">
                     {module.duration && (
                         <span className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5" />
+                            <Clock className="w-3 h-3" />
                             {module.duration}
                         </span>
                     )}
                     {module.lessonCount && (
                         <span className="flex items-center gap-1">
-                            <BookOpen className="w-3.5 h-3.5" />
+                            <BookOpen className="w-3 h-3" />
                             {module.lessonCount} lecciones
                         </span>
                     )}
@@ -194,16 +194,16 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
 
                 {/* Progress Bar */}
                 {hasProgress && (
-                    <div className="mb-4">
-                        <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wide mb-1.5">
+                    <div className="mb-3">
+                        <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-wide mb-1">
                             <span className="text-slate-400">
-                                {progress.completedLessons}/{module.lessonCount} completadas
+                                {progress.completedLessons}/{module.lessonCount}
                             </span>
                             <span className={colorConfig.textColor}>
                                 {Math.round(progress.progress)}%
                             </span>
                         </div>
-                        <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                             <div
                                 className={`h-full bg-gradient-to-r ${colorConfig.gradientFrom} ${colorConfig.gradientTo} transition-all duration-500`}
                                 style={{ width: `${progress.progress}%` }}
@@ -214,25 +214,25 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
 
                 {/* Certificate Badge */}
                 {isCompleted && progress?.quizScore && progress.quizScore >= 80 && (
-                    <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-2 rounded-lg text-xs font-bold border border-emerald-200 dark:border-emerald-800/50 mb-4">
-                        <Award className="w-4 h-4" />
+                    <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-1.5 rounded-lg text-[10px] font-bold border border-emerald-200 dark:border-emerald-800/50 mb-3">
+                        <Award className="w-3 h-3" />
                         Certificado: {progress.quizScore}%
                     </div>
                 )}
 
                 {/* CTA Button */}
                 {!isLocked && (
-                    <button className={`w-full py-2.5 px-4 ${colorConfig.buttonBg} text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all group-hover:shadow-lg`}>
+                    <button className={`w-full py-2 px-3 ${colorConfig.buttonBg} text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all group-hover:shadow-md`}>
                         {isCompleted ? 'Repasar' : hasProgress ? 'Continuar' : 'Comenzar'}
-                        <ChevronRight className="w-4 h-4" />
+                        <ChevronRight className="w-3 h-3" />
                     </button>
                 )}
 
                 {/* Locked Message */}
                 {isLocked && (
-                    <div className="flex items-center justify-center gap-2 py-2.5 px-4 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-xl text-sm font-medium">
-                        <Lock className="w-4 h-4" />
-                        Completa el módulo anterior
+                    <div className="flex items-center justify-center gap-1.5 py-2 px-3 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-lg text-xs font-medium">
+                        <Lock className="w-3 h-3" />
+                        Completa el anterior
                     </div>
                 )}
             </div>

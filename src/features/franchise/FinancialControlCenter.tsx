@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { PieChart, BarChart3, Wallet, X, Activity } from 'lucide-react';
+import { PieChart, Wallet, X, Activity } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
 import { useAuth } from '../../context/AuthContext';
 import { financeService } from '../../services/financeService';
 import { userService } from '../../services/userService';
@@ -36,13 +38,13 @@ interface ExpenseData {
     professionalServices?: number;
     other?: number;
     quota?: number;
+    repaartServices?: number;
 }
 
 
 
 
-// --- CONFIG: FINANCE & AUDIT DATA ---
-const FRANCHISE_CONFIG = {
+    const FRANCHISE_CONFIG = {
     packType: 'PREMIUM',
     entryFee: 3000,
     amortizationMonths: 12,
@@ -74,57 +76,78 @@ const estimateTotalKm = (orders: OrderCounts): number => {
 
 
 
-// --- STARK UI COMPONENTS ---
+// --- PROFESSIONAL UI COMPONENTS ---
 
-const StarkCard = ({ title, children, className, icon: Icon }: { title?: string, children: React.ReactNode, className?: string, icon?: any }) => (
+const ProfessionalCard = ({ title, children, className, icon: Icon, action }: { title?: string, children: React.ReactNode, className?: string, icon?: any, action?: React.ReactNode }) => (
     <div className={`
-        bg-slate-900/60 backdrop-blur-xl border border-white/5 rounded-[2rem] p-6 
-        shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] ring-1 ring-white/10
-        hover:ring-indigo-500/30 hover:bg-slate-900/80 transition-all duration-500
+        bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 rounded-xl
+        shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] transition-all duration-300 backdrop-blur-sm h-full flex flex-col overflow-hidden group/card
         ${className}
     `}>
         {title && (
-            <div className="flex items-center gap-3 mb-4">
-                {Icon && <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400"><Icon className="w-4 h-4" /></div>}
-                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">{title}</h3>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700/30 bg-gradient-to-b from-white to-slate-50/50 dark:from-slate-800 dark:to-slate-800/50 shrink-0">
+                <div className="flex items-center gap-3">
+                    {Icon && (
+                        <div className="p-1.5 rounded-lg bg-indigo-50/50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-100 dark:ring-indigo-500/20 shadow-sm group-hover/card:scale-110 transition-transform duration-300">
+                            <Icon className="w-4 h-4" strokeWidth={2} />
+                        </div>
+                    )}
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 tracking-tight">{title}</h3>
+                </div>
+                {action && <div>{action}</div>}
             </div>
         )}
-        {children}
+        <div className="flex-1 min-h-0 overflow-y-auto p-6">{children}</div>
     </div>
 );
 
-const StarkStat = ({ label, value, subtext, trend, color = "indigo" }: { label: string, value: string, subtext?: string, trend?: 'up' | 'down', color?: string }) => (
-    <div>
-        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">{label}</p>
-        <div className="flex items-baseline gap-2">
-            <span className={`text-2xl font-mono font-bold text-white tracking-tight`}>{value}</span>
-            {trend && (
-                <span className={`text-xs font-bold ${trend === 'up' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {trend === 'up' ? '↗' : '↘'}
-                </span>
-            )}
-        </div>
-        {subtext && <p className={`text-[10px] font-medium mt-1 text-${color}-400/80`}>{subtext}</p>}
-    </div>
-);
-
-const StarkInput = ({ label, value, onChange, prefix, type = "number", className }: any) => (
+const ProfessionalInput = ({ label, value, onChange, prefix, suffix, type = "number", className, placeholder, size = "default", readOnly = false }: any) => (
     <div className={`group relative ${className}`}>
-        <label className="absolute -top-2 left-3 px-1 bg-slate-900/90 text-[9px] font-bold text-indigo-400 uppercase tracking-wider transition-all">
+        <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1 transition-colors group-focus-within:text-indigo-600 truncate">
             {label}
         </label>
-        <div className="flex items-center bg-slate-950/50 border border-slate-800 rounded-xl overflow-hidden focus-within:border-indigo-500/50 focus-within:ring-2 focus-within:ring-indigo-500/10 transition-all">
+        <div className={`
+            flex items-center rounded-xl overflow-hidden transition-all duration-200
+            ${readOnly 
+                ? 'bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/50 dark:border-slate-800' 
+                : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm hover:border-indigo-200 dark:hover:border-indigo-800 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/10'
+            }
+            ${size === 'small' ? 'h-9' : 'h-11'}
+        `}>
             {prefix && (
-                <div className="pl-3 pr-2 text-slate-500 text-xs font-mono select-none">
+                <div className={`
+                    pl-3 pr-2.5 text-[11px] font-bold select-none h-full flex items-center
+                    ${readOnly 
+                        ? 'bg-transparent text-slate-400' 
+                        : 'bg-slate-50/50 dark:bg-slate-800/50 text-slate-500 border-r border-slate-100 dark:border-slate-700'
+                    }
+                `}>
                     {prefix}
                 </div>
             )}
             <input
                 type={type}
-                value={value}
-                onChange={e => onChange(type === "number" ? parseFloat(e.target.value) || 0 : e.target.value)}
-                className="w-full bg-transparent border-none text-white text-sm font-mono focus:ring-0 placeholder-slate-700 py-3"
+                value={value || ''}
+                onChange={e => !readOnly && onChange(type === "number" ? parseFloat(e.target.value) || 0 : e.target.value)}
+                placeholder={placeholder || "0"}
+                readOnly={readOnly}
+                className={`
+                    w-full bg-transparent border-none text-slate-900 dark:text-white font-mono font-medium focus:ring-0 placeholder-slate-300 px-3
+                    ${size === 'small' ? 'text-sm py-1' : 'text-base py-2'}
+                    ${readOnly ? 'cursor-default text-slate-500' : ''}
+                `}
             />
+            {suffix && (
+                <div className={`
+                    pr-3 pl-2.5 text-[11px] font-bold select-none h-full flex items-center
+                    ${readOnly 
+                        ? 'bg-transparent text-slate-400' 
+                        : 'bg-slate-50/50 dark:bg-slate-800/50 text-slate-500 border-l border-slate-100 dark:border-slate-700'
+                    }
+                `}>
+                    {suffix}
+                </div>
+            )}
         </div>
     </div>
 );
@@ -136,7 +159,7 @@ interface FinancialRecord {
     totalIncome?: number;
     totalHours?: number;
     cancelledOrders?: number;
-    status?: 'pending' | 'draft' | 'submitted' | 'approved' | 'unlock_requested' | 'locked';
+    status?: 'pending' | 'draft' | 'submitted' | 'approved' | 'unlock_requested' | 'locked' | 'open';
     rejectionReason?: string;
     ordersDetail?: Record<string, number>;
     ordersNew0To4?: number;
@@ -159,6 +182,8 @@ interface FinancialRecord {
     marketing?: number;
     incidents?: number;
     otherExpenses?: number;
+    socialSecurity?: number;
+    repaartServices?: number;
     royaltyPercent?: number;
     irpfPercent?: number;
 }
@@ -184,7 +209,8 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
     const { user } = useAuth();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [status, setStatus] = useState<'pending' | 'draft' | 'submitted' | 'approved' | 'unlock_requested' | 'locked'>('draft');
+    const [status, setStatus] = useState<'pending' | 'draft' | 'submitted' | 'approved' | 'unlock_requested' | 'locked' | 'open'>('draft');
+    const [step, setStep] = useState<1 | 2>(1);
 
     // State
     const [orders, setOrders] = useState<OrderCounts>({});
@@ -196,11 +222,9 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
         renting: { count: 0, pricePerUnit: 0 },
         agencyFee: 0, prlFee: 0, accountingFee: 0, professionalServices: 0,
         appFlyder: 0, marketing: 0, incidents: 0, other: 0,
-        royaltyPercent: 5, irpfPercent: 20
+        royaltyPercent: 5, irpfPercent: 20, repaartServices: 0, socialSecurity: 0
     });
     const [logisticsRates, setLogisticsRates] = useState<LogisticsRate[]>([]);
-
-    const [ytdProfit, setYtdProfit] = useState(0);
 
     const isLocked = status === 'submitted' || status === 'approved' || status === 'unlock_requested' || status === 'locked';
 
@@ -289,7 +313,6 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                 }
 
                 console.log(`[FinancialControlCenter] Total Previous YTD: ${prevMonthsYtd}`);
-                setYtdProfit(prevMonthsYtd);
 
                 let profile;
                 if (user?.role === 'franchise' && user?.uid) profile = await userService.getUserProfile(user.uid);
@@ -322,11 +345,12 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
         setExpenses({
             payroll: data.salaries || 0, quota: data.quota || 0, insurance: data.insurance || 0,
             fuel: data.gasoline || 0, repairs: data.repairs || 0,
-            renting: { count: data.motoCount || 0, pricePerUnit: (data.motoCount && data.rentingCost) ? data.rentingCost / data.motoCount : 154 },
+            renting: { count: data.motoCount || 0, pricePerUnit: (data.motoCount && Number.isFinite(Number(data.rentingCost))) ? Number(data.rentingCost) / data.motoCount : 154 },
             agencyFee: data.agencyFee || 0, prlFee: data.prlFee || 0, accountingFee: data.accountingFee || 0,
             professionalServices: data.services || 0, appFlyder: data.appFlyder || 0, marketing: data.marketing || 0,
             incidents: data.incidents || 0, other: data.otherExpenses || 0,
-            royaltyPercent: data.royaltyPercent ?? 5, irpfPercent: data.irpfPercent ?? 20
+            royaltyPercent: data.royaltyPercent ?? 5, irpfPercent: data.irpfPercent ?? 20,
+            repaartServices: data.repaartServices || 0, socialSecurity: data.socialSecurity || 0
         });
     };
 
@@ -335,7 +359,8 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
         const royaltyAmount = totalIncome * ((expenses.royaltyPercent || 5) / 100);
         const fixedCosts = (expenses.payroll ?? 0) + (expenses.socialSecurity ?? 0) + (expenses.quota ?? 0) +
             (expenses.insurance ?? 0) + (expenses.agencyFee ?? 0) + (expenses.prlFee ?? 0) +
-            (expenses.accountingFee ?? 0) + (expenses.professionalServices ?? 0) + (expenses.appFlyder ?? 0) + (expenses.marketing ?? 0);
+            (expenses.accountingFee ?? 0) + (expenses.professionalServices ?? 0) + (expenses.appFlyder ?? 0) + (expenses.marketing ?? 0) +
+            (expenses.repaartServices ?? 0);
         const variableCosts = (expenses.fuel ?? 0) + (expenses.repairs ?? 0) + rentingTotal + (expenses.incidents ?? 0) + (expenses.other ?? 0) + royaltyAmount;
         const totalExpenses = fixedCosts + variableCosts;
         const grossMargin = totalIncome - totalExpenses;
@@ -359,12 +384,13 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
             const persistenceStatus = shouldLock ? 'locked' : (status === 'locked' ? 'locked' : 'draft');
             const persistenceData: any = { // Using any to reuse existing mapping structure easily
                 month, totalHours, totalIncome, revenue: totalIncome, grossIncome: totalIncome,
-                salaries: expenses.payroll, quota: expenses.quota, insurance: expenses.insurance,
+                salaries: expenses.payroll, socialSecurity: expenses.socialSecurity, quota: expenses.quota, insurance: expenses.insurance,
                 gasoline: expenses.fuel, repairs: expenses.repairs,
                 motoCount: expenses.renting?.count ?? 0,
                 rentingCost: (expenses.renting?.count ?? 0) * (expenses.renting?.pricePerUnit ?? 0),
                 agencyFee: expenses.agencyFee, prlFee: expenses.prlFee, accountingFee: expenses.accountingFee, services: expenses.professionalServices,
                 appFlyder: expenses.appFlyder, marketing: expenses.marketing, incidents: expenses.incidents, otherExpenses: expenses.other,
+                repaartServices: expenses.repaartServices,
                 totalExpenses: stats.totalExpenses, expenses: stats.totalExpenses, profit: stats.profit,
                 orders: stats.totalOrders, ordersDetail: orders, cancelledOrders,
                 status: persistenceStatus, is_locked: shouldLock,
@@ -381,6 +407,12 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
 
             await onSave(persistenceData);
             if (shouldLock) {
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#4f46e5', '#818cf8', '#c7d2fe']
+                });
                 await notificationService.notify('FINANCE_CLOSING', franchiseId, 'Franquicia', {
                     title: `Cierre: ${month}`, message: 'Cierre enviado.', priority: 'normal',
                     metadata: { month, profit: stats.profit, status: 'locked' }
@@ -391,171 +423,255 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
         } catch (e) { console.error(e); } finally { setSaving(false); }
     };
 
-    if (loading) return <div className="p-10 text-white text-center animate-pulse">Iniciando Sistemas Financieros...</div>;
+    if (loading) return (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center">
+            <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-xl flex flex-col items-center gap-4">
+                <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Cargando datos financieros...</p>
+            </div>
+        </div>
+    );
 
     return (
-        <div className="fixed inset-0 z-50 bg-[#0a0a0c] text-slate-200 font-sans overflow-hidden flex flex-col">
-            {/* Header */}
-            <div className="h-16 border-b border-white/5 bg-slate-950/50 backdrop-blur-md flex items-center justify-between px-6 shrink-0 relative z-20">
-                <div className="flex items-center gap-4">
-                    <div className="p-2 bg-indigo-500/20 rounded-xl border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.3)]">
-                        <Activity className="w-5 h-5 text-indigo-400" />
-                    </div>
-                    <div>
-                        <h1 className="text-lg font-bold text-white tracking-widest uppercase">Financial Command</h1>
-                        <p className="text-[10px] text-slate-500 font-mono tracking-wider">SECURE LINK • {month.toUpperCase()}</p>
-                    </div>
-                </div>
-                <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-5 h-5 text-slate-400" /></button>
-            </div>
-
-            {/* Main Scrollable Grid */}
-            <div className="flex-1 overflow-y-auto p-6 relative">
-                {/* Background FX */}
-                <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px]" />
-                    <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px]" />
-                </div>
-
-                <div className="max-w-[1600px] mx-auto grid grid-cols-12 gap-6 relative z-10">
-
-                    {/* TOP HERO KPIs */}
-                    <div className="col-span-12 lg:col-span-8 grid grid-cols-3 gap-4">
-                        <StarkCard className="col-span-1 bg-gradient-to-br from-indigo-950/40 to-slate-900/40 via-slate-900/40 !border-indigo-500/30">
-                            <StarkStat label="Beneficio Neto" value={`${formatMoney(stats.profit)}€`} trend={stats.profit > 0 ? "up" : "down"} subtext="Post-Operational" />
-                        </StarkCard>
-                        <StarkCard className="col-span-1">
-                            <StarkStat label="Margen Bruto" value={`${formatMoney(stats.grossMargin)}€`} color="blue" subtext="Pre-Amortization" />
-                        </StarkCard>
-                        <StarkCard className="col-span-1">
-                            <StarkStat label="Cash Flow Real" value={`${formatMoney(stats.safeToSpend)}€`} color="emerald" subtext="Safe-to-Spend (80%)" />
-                        </StarkCard>
-                    </div>
-
-                    {/* STATUS / ALERTS */}
-                    <div className="p-6 bg-white dark:bg-slate-900 rounded-[2rem] shadow-xl border border-slate-200 dark:border-slate-800 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-4 opacity-50">
-                            <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold border border-amber-200">15%</span>
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/60 backdrop-blur-md p-4 pt-8 lg:pt-12 animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-[95vw] lg:max-w-[1200px] h-[85vh] max-h-[800px] rounded-2xl shadow-2xl flex flex-col overflow-hidden ring-1 ring-slate-900/5 dark:ring-slate-800">
+                
+                {/* Header Compacto */}
+                <div className="h-14 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex items-center justify-between px-6 shrink-0 relative z-20 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-3">
+                        <div className="p-1.5 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-lg shadow-sm text-white">
+                            <Activity className="w-4 h-4" strokeWidth={2} />
                         </div>
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600"><Wallet className="w-6 h-6" /></div>
-                            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Tu Bolsillo</h3>
-                        </div>
-                        <div className="mt-4">
-                            <span className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">{formatMoney(stats.netResultAfterAmortization)}</span>
-                            <span className="text-sm font-medium text-slate-400 ml-1">€</span>
-                        </div>
-                        <div className="mt-6 space-y-3">
-                            <div className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-blue-500" />
-                                    <span className="text-xs font-bold text-slate-500 uppercase">Ingresos Brutos</span>
-                                </div>
-                                <span className="text-sm font-bold text-slate-900 dark:text-white">{formatMoney(totalIncome)}€</span>
-                            </div>
-                            <div className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-rose-500" />
-                                    <span className="text-xs font-bold text-slate-500 uppercase">Gastos + IRPF</span>
-                                </div>
-                                <span className="text-sm font-bold text-slate-900 dark:text-white">
-                                    - {formatMoney(stats.totalExpenses + (stats.grossMargin * (expenses.irpfPercent || 20) / 100))}€
-                                </span>
-                            </div>
-                        </div>
-                        <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                            <div className="text-center">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Resumen Anual</p>
-                                <p className="text-[10px] font-medium text-indigo-500">Acumulado {month.split('-')[0]}</p>
-                            </div>
-                            <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
-                                <Wallet className="w-4 h-4" />
-                                <span className="text-sm font-bold">+ {formatMoney(ytdProfit + stats.profit)}€</span>
-                            </div>
+                        <div>
+                            <h1 className="text-base font-bold text-slate-900 dark:text-white tracking-tight leading-none">Cierre Financiero</h1>
+                            <p className="text-[10px] text-slate-500 font-bold tracking-wide mt-0.5 opacity-80">PERIODO: {month.toUpperCase()}</p>
                         </div>
                     </div>
+                    
+                    {/* Stepper Integrado en Header */}
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-lg">
+                        <button 
+                            onClick={() => !isLocked && setStep(1)}
+                            className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${step === 1 ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                        >
+                            1. Ingresos
+                        </button>
+                        <button 
+                            onClick={() => !isLocked && setStep(2)}
+                            className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${step === 2 ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                        >
+                            2. Gastos
+                        </button>
+                    </div>
 
-                    {/* INPUTS - REVENUE */}
-                    <StarkCard title="Vector de Ingresos" className="col-span-12 lg:col-span-4 row-span-2" icon={Wallet}>
-                        <div className="space-y-4">
-                            <div className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-3">
-                                <p className="text-[10px] font-bold text-slate-500 uppercase">Volumen Logístico</p>
-                                {['0-4 km', '4-5 km', '5-6 km', '6-7 km', '>7 km'].map((range) => (
-                                    <div key={range} className="flex items-center justify-between group">
-                                        <span className="text-xs text-slate-400 group-hover:text-white transition-colors">{range}</span>
-                                        <input
-                                            type="number"
-                                            className="w-20 bg-slate-900 border border-slate-700 rounded-lg text-right text-xs py-1 px-2 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-mono text-white"
-                                            value={orders[range] || ''}
-                                            onChange={(e) => setOrders(prev => ({ ...prev, [range]: parseInt(e.target.value) || 0 }))}
-                                            disabled={isLocked}
-                                        />
-                                    </div>
-                                ))}
-                                <div className="h-px bg-white/10 my-2" />
-                                <StarkInput label="Pedidos Cancelados" value={cancelledOrders} onChange={setCancelledOrders} type="number" />
-                            </div>
-
-                            <StarkInput label="Ingreso Bruto (€)" value={totalIncome} onChange={setTotalIncome} prefix="€" type="number" />
-                        </div>
-                    </StarkCard>
-
-                    {/* INPUTS - COSTS */}
-                    <StarkCard title="Estructura de Costes" className="col-span-12 lg:col-span-8" icon={PieChart}>
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                            <StarkInput label="Nóminas" value={expenses.payroll} onChange={(v: number) => setExpenses(e => ({ ...e, payroll: v }))} prefix="€" />
-                            <StarkInput label="Seg. Social" value={expenses.socialSecurity} onChange={(v: number) => setExpenses(e => ({ ...e, socialSecurity: v }))} prefix="€" />
-                            <StarkInput label="Autónomos" value={expenses.quota} onChange={(v: number) => setExpenses(e => ({ ...e, quota: v }))} prefix="€" />
-                            <StarkInput label="Combustible" value={expenses.fuel} onChange={(v: number) => setExpenses(e => ({ ...e, fuel: v }))} prefix="€" />
-
-                            <StarkInput label="Renting (Unds)" value={expenses.renting?.count} onChange={(v: number) => setExpenses(e => ({ ...e, renting: { ...e.renting!, count: v } }))} />
-                            <StarkInput label="Renting (€/Ud)" value={expenses.renting?.pricePerUnit} onChange={(v: number) => setExpenses(e => ({ ...e, renting: { ...e.renting!, pricePerUnit: v } }))} prefix="€" />
-                            <StarkInput label="Reparaciones" value={expenses.repairs} onChange={(v: number) => setExpenses(e => ({ ...e, repairs: v }))} prefix="€" />
-                            <StarkInput label="Marketing" value={expenses.marketing} onChange={(v: number) => setExpenses(e => ({ ...e, marketing: v }))} prefix="€" />
-                        </div>
-                    </StarkCard>
-
-                    {/* OPERATIONAL METRICS */}
-                    <StarkCard title="Métricas Operativas" className="col-span-12 lg:col-span-8" icon={BarChart3}>
-                        <div className="grid grid-cols-3 gap-6">
-                            <StarkInput label="Horas Totales" value={totalHours} onChange={setTotalHours} />
-                            <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-                                <p className="text-[10px] text-slate-500 uppercase font-bold">Productividad</p>
-                                <p className="text-2xl font-mono text-white mt-1">{(totalHours > 0 ? stats.totalOrders / totalHours : 0).toFixed(2)} <span className="text-xs text-slate-500">ped/h</span></p>
-                            </div>
-                            <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-                                <p className="text-[10px] text-slate-500 uppercase font-bold">Coste Medio</p>
-                                <p className="text-2xl font-mono text-white mt-1">{formatMoney(stats.totalOrders > 0 ? stats.totalExpenses / stats.totalOrders : 0)} <span className="text-xs text-slate-500">€/ped</span></p>
-                            </div>
-                        </div>
-                    </StarkCard>
-
-                </div>
-            </div>
-
-            {/* Footer Actions */}
-            <div className="h-20 border-t border-white/10 bg-slate-950/80 backdrop-blur-xl flex items-center justify-end px-8 gap-4 shrink-0 z-20">
-                {!isLocked && (
-                    <button
-                        onClick={() => handleSaveData(false)}
-                        className="px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-white hover:bg-white/5 transition-all"
-                    >
-                        Guardar Borrador
+                    <button onClick={onClose} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-400">
+                        <X className="w-4 h-4" strokeWidth={2.5} />
                     </button>
-                )}
-                <button
-                    onClick={() => isLocked ? onClose() : handleSaveData(true)}
-                    disabled={saving}
-                    className={`
-                        px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest text-white shadow-lg transition-all
-                        ${isLocked
-                            ? 'bg-slate-800 hover:bg-slate-700'
-                            : 'bg-indigo-600 hover:bg-indigo-500 hover:shadow-indigo-500/25'
-                        }
-                    `}
-                >
-                    {saving ? 'Procesando...' : isLocked ? 'Cerrar' : 'Confirmar Cierre'}
-                </button>
+                </div>
+
+                {/* Main Content - Zero Scroll Layout */}
+                <div className="flex-1 min-h-0 bg-slate-50 dark:bg-slate-950 p-4 relative overflow-hidden">
+                    <AnimatePresence mode="wait">
+                        {/* STEP 1: REVENUE - 2 COLUMNS LAYOUT */}
+                        {step === 1 && (
+                            <motion.div 
+                                key="step1"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                transition={{ duration: 0.2 }}
+                                className="h-full"
+                            >
+                                <div className="grid grid-cols-2 gap-4 h-full">
+                                    {/* Left: Km Breakdown */}
+                                    <ProfessionalCard title="Desglose por Distancia" icon={Wallet} className="h-full">
+                                        <div className="flex flex-col h-full gap-2">
+                                            {['0-4 km', '4-5 km', '5-6 km', '6-7 km', '>7 km'].map((range, index) => (
+                                                <div key={range} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 group transition-colors border border-transparent hover:border-slate-100 dark:hover:border-slate-800">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`
+                                                            w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold
+                                                            ${index === 0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                                                                index === 1 ? 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400' :
+                                                                    index === 2 ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400' :
+                                                                        index === 3 ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400' :
+                                                                            'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400'}
+                                                        `}>
+                                                            {index + 1}
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">{range}</span>
+                                                            <span className="text-[9px] font-medium text-slate-400 uppercase tracking-wide">Pedidos</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="w-24">
+                                                        <input
+                                                            type="number"
+                                                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md text-right text-sm font-bold py-1 px-2 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-mono text-slate-900 dark:text-white"
+                                                            value={orders[range] || ''}
+                                                            onChange={(e) => setOrders(prev => ({ ...prev, [range]: parseInt(e.target.value) || 0 }))}
+                                                            disabled={isLocked}
+                                                            placeholder="0"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center px-2">
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Pedidos</span>
+                                                <span className="text-sm font-black text-slate-900 dark:text-white tabular-nums">
+                                                    {Object.values(orders).reduce((sum, count) => sum + count, 0)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </ProfessionalCard>
+
+                                    {/* Right: Totals & Adjustments */}
+                                    <div className="flex flex-col gap-4 h-full">
+                                        <ProfessionalCard title="Ajustes" className="flex-shrink-0">
+                                            <ProfessionalInput label="Pedidos Cancelados" value={cancelledOrders} onChange={setCancelledOrders} type="number" size="small" />
+                                        </ProfessionalCard>
+                                        
+                                        <div className="flex-1 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-xl p-6 shadow-xl shadow-indigo-500/20 flex flex-col justify-center items-center text-center relative overflow-hidden group border border-indigo-500/50">
+                                            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
+                                            <div className="relative z-10">
+                                                <p className="text-[10px] font-bold text-indigo-100 uppercase tracking-[0.2em] mb-3 opacity-80">Ingreso Bruto Total</p>
+                                                <div className="flex items-baseline justify-center gap-1 mb-6">
+                                                    <span className="text-5xl font-black text-white tracking-tighter tabular-nums drop-shadow-sm">
+                                                        {formatMoney(totalIncome).split(',')[0]}
+                                                    </span>
+                                                    <span className="text-2xl font-bold text-indigo-200">,{formatMoney(totalIncome).split(',')[1]}€</span>
+                                                </div>
+                                                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/10 max-w-[220px] mx-auto">
+                                                    <label className="block text-[9px] font-bold text-indigo-200 uppercase tracking-wider mb-1 text-left">Ajuste Manual (€)</label>
+                                                    <input 
+                                                        type="number" 
+                                                        value={totalIncome}
+                                                        onChange={(e) => setTotalIncome(parseFloat(e.target.value) || 0)}
+                                                        className="w-full bg-transparent border-b border-indigo-300/30 text-white font-mono font-bold text-sm focus:outline-none focus:border-white py-1 text-center placeholder-indigo-300/50"
+                                                        placeholder="0.00"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* STEP 2: EXPENSES - HORIZONTAL GRID LAYOUT */}
+                        {step === 2 && (
+                            <motion.div 
+                                key="step2"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                transition={{ duration: 0.2 }}
+                                className="h-full flex flex-col"
+                            >
+                                <ProfessionalCard 
+                                    title="Estructura de Costes" 
+                                    icon={PieChart}
+                                    action={
+                                        <div className="flex items-center gap-3 bg-rose-50 dark:bg-rose-900/20 px-3 py-1 rounded-lg border border-rose-100 dark:border-rose-900/30">
+                                            <span className="text-[10px] uppercase font-bold text-rose-600 dark:text-rose-400">Total</span>
+                                            <span className="text-lg font-black text-rose-600 dark:text-rose-400 tabular-nums">-{formatMoney(stats.totalExpenses)}€</span>
+                                        </div>
+                                    }
+                                    className="h-full"
+                                >
+                                    <div className="flex flex-col gap-3 h-full">
+                                        {/* Row 1: Personal & Horas */}
+                                        <div className="grid grid-cols-4 gap-3">
+                                            <ProfessionalInput label="Salarios" value={expenses.payroll} onChange={(v: number) => setExpenses(e => ({ ...e, payroll: v }))} prefix="€" size="small" />
+                                            <ProfessionalInput label="Seguros Sociales" value={expenses.socialSecurity} onChange={(v: number) => setExpenses(e => ({ ...e, socialSecurity: v }))} prefix="€" size="small" />
+                                            <ProfessionalInput label="Cuota Autónomo" value={expenses.quota} onChange={(v: number) => setExpenses(e => ({ ...e, quota: v }))} prefix="€" size="small" />
+                                            <ProfessionalInput label="Horas Operativas" value={totalHours} onChange={setTotalHours} type="number" size="small" />
+                                        </div>
+
+                                        <div className="h-px bg-slate-100 dark:bg-slate-800" />
+
+                                        {/* Row 2: Flota */}
+                                        <div className="grid grid-cols-5 gap-3">
+                                            <ProfessionalInput label="Renting (Unds)" value={expenses.renting?.count} onChange={(v: number) => setExpenses(e => ({ ...e, renting: { ...e.renting!, count: v } }))} size="small" />
+                                            <ProfessionalInput label="Precio Unit. (€)" value={expenses.renting?.pricePerUnit} onChange={(v: number) => setExpenses(e => ({ ...e, renting: { ...e.renting!, pricePerUnit: v } }))} size="small" />
+                                            <div className="flex flex-col justify-center px-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-800">
+                                                <span className="text-[9px] text-slate-400 font-bold uppercase">Total Renting</span>
+                                                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{formatMoney((expenses.renting?.count || 0) * (expenses.renting?.pricePerUnit || 0))}€</span>
+                                            </div>
+                                            <ProfessionalInput label="Gasolina" value={expenses.fuel} onChange={(v: number) => setExpenses(e => ({ ...e, fuel: v }))} prefix="€" size="small" />
+                                            <ProfessionalInput label="Reparaciones" value={expenses.repairs} onChange={(v: number) => setExpenses(e => ({ ...e, repairs: v }))} prefix="€" size="small" />
+                                        </div>
+
+                                        <div className="h-px bg-slate-100 dark:bg-slate-800" />
+
+                                        {/* Row 3: Estructura & Tech */}
+                                        <div className="grid grid-cols-5 gap-3">
+                                            <div className="flex flex-col justify-center px-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30">
+                                                <span className="text-[9px] text-indigo-400 font-bold uppercase">Royalty Base</span>
+                                                <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">{formatMoney(stats.royaltyAmount)}€</span>
+                                            </div>
+                                            <ProfessionalInput label="Royalty %" value={expenses.royaltyPercent} onChange={(v: number) => setExpenses(e => ({ ...e, royaltyPercent: v }))} suffix="%" size="small" />
+                                            <ProfessionalInput label="App Flyder" value={expenses.appFlyder} onChange={(v: number) => setExpenses(e => ({ ...e, appFlyder: v }))} prefix="€" size="small" />
+                                            <ProfessionalInput label="Gestoría" value={expenses.agencyFee} onChange={(v: number) => setExpenses(e => ({ ...e, agencyFee: v }))} prefix="€" size="small" />
+                                            <ProfessionalInput label="Seguros RC" value={expenses.insurance} onChange={(v: number) => setExpenses(e => ({ ...e, insurance: v }))} prefix="€" size="small" />
+                                        </div>
+
+                                        <div className="h-px bg-slate-100 dark:bg-slate-800" />
+
+                                        {/* Row 4: Varios */}
+                                        <div className="grid grid-cols-4 gap-3">
+                                            <ProfessionalInput label="Marketing" value={expenses.marketing} onChange={(v: number) => setExpenses(e => ({ ...e, marketing: v }))} prefix="€" size="small" />
+                                            <ProfessionalInput label="Serv. Repaart" value={expenses.repaartServices} onChange={(v: number) => setExpenses(e => ({ ...e, repaartServices: v }))} prefix="€" size="small" />
+                                            <ProfessionalInput label="Incidencias" value={expenses.incidents} onChange={(v: number) => setExpenses(e => ({ ...e, incidents: v }))} prefix="€" size="small" />
+                                            <ProfessionalInput label="Otros" value={expenses.other} onChange={(v: number) => setExpenses(e => ({ ...e, other: v }))} prefix="€" size="small" />
+                                        </div>
+                                    </div>
+                                </ProfessionalCard>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+
+                {/* Footer Compacto */}
+                <div className="h-16 bg-white dark:bg-slate-900 flex items-center justify-end px-6 gap-3 shrink-0 z-20 border-t border-slate-100 dark:border-slate-800">
+                    {step === 2 && (
+                        <button
+                            onClick={() => setStep(1)}
+                            className="mr-auto px-4 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-2"
+                        >
+                            ← Atrás
+                        </button>
+                    )}
+
+                    {step === 2 && !isLocked && (
+                        <button
+                            onClick={() => handleSaveData(false)}
+                            className="px-4 py-2 rounded-lg text-xs font-bold text-slate-500 hover:text-indigo-600 hover:bg-slate-100 transition-all"
+                        >
+                            Guardar Borrador
+                        </button>
+                    )}
+                    
+                    {step === 1 ? (
+                        <button
+                            onClick={() => setStep(2)}
+                            className="px-6 py-2 rounded-lg text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md transition-all flex items-center gap-2"
+                        >
+                            Siguiente: Gastos →
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => isLocked ? onClose() : handleSaveData(true)}
+                            disabled={saving}
+                            className={`
+                                px-6 py-2 rounded-lg text-xs font-bold text-white shadow-md transition-all flex items-center gap-2
+                                ${isLocked ? 'bg-slate-800 hover:bg-slate-700' : 'bg-emerald-600 hover:bg-emerald-700'}
+                            `}
+                        >
+                            {saving ? '...' : isLocked ? 'Cerrar' : 'Confirmar Cierre'}
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );

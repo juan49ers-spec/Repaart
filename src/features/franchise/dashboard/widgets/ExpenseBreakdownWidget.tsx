@@ -1,37 +1,14 @@
 import React, { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { List, PieChart as PieChartIcon, Users, Bike, Car, Fuel, Building2, Smartphone, ShieldCheck, Briefcase, Landmark, FileText, MoreHorizontal, Wrench } from 'lucide-react';
+import { List, PieChart as PieChartIcon, Users, Bike, Car, Fuel, Building2, Smartphone, ShieldCheck, Briefcase, Landmark, FileText, MoreHorizontal, Wrench, Activity } from 'lucide-react';
 import { formatMoney } from '../../../../lib/finance';
-import { Card } from '../../../../components/ui/primitives/Card';
+import { cn } from '../../../../lib/utils';
 
-
-// Icon mapping for expense categories
 const EXPENSE_ICONS: Record<string, typeof Users> = {
-    'salarios': Users,
-    'nominas': Users,
-    'personal': Users,
-    'seguros': ShieldCheck,
-    'renting': Bike,
-    'motos': Bike,
-    'flota': Car,
-    'royalty': Building2,
-    'app': Smartphone,
-    'software': Smartphone,
-    'flyder': Smartphone,
-    'gasolina': Fuel,
-    'combustible': Fuel,
-    'autonomo': Briefcase,
-    'cuota': Briefcase,
-    'financieros': Landmark,
-    'banco': Landmark,
-    'gestoria': FileText,
-    'asesoria': FileText,
-    'legal': FileText,
-    'mantenimiento': Wrench,
-    'reparaciones': Wrench,
-    'otros': MoreHorizontal,
-    'varios': MoreHorizontal,
-    'default': MoreHorizontal
+    'salarios': Users, 'nominas': Users, 'personal': Users, 'social': Users, 'seguridad social': Users, 'seguros': ShieldCheck, 'renting': Bike, 'motos': Bike, 'flota': Car,
+    'royalty': Building2, 'app': Smartphone, 'software': Smartphone, 'flyder': Smartphone, 'gasolina': Fuel, 'combustible': Fuel,
+    'autonomo': Briefcase, 'cuota': Briefcase, 'financieros': Landmark, 'banco': Landmark, 'gestoria': FileText, 'asesoria': FileText,
+    'legal': FileText, 'mantenimiento': Wrench, 'reparaciones': Wrench, 'otros': MoreHorizontal, 'varios': MoreHorizontal, 'default': MoreHorizontal
 };
 
 const getExpenseIcon = (label: string) => {
@@ -52,20 +29,22 @@ interface ExpenseBreakdownWidgetProps {
     breakdown: ExpenseCategory[];
 }
 
-// Custom tooltip for donut
 const CustomTooltip = ({ active, payload, totalExpenses }: any) => {
     if (active && payload && payload.length) {
         const data = payload[0];
         const percent = totalExpenses > 0 ? (data.value / totalExpenses) * 100 : 0;
         return (
-            <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-lg">
-                <p className="text-sm font-bold text-slate-800 mb-1">{data.name}</p>
-                <p className="text-base font-black text-indigo-600 tabular-nums">
+            <div className="bg-slate-900 border border-white/10 rounded-xl p-3 shadow-2xl">
+                <p className="text-xs font-semibold text-white/60 mb-1 capitalize">{data.name}</p>
+                <p className="text-lg font-bold text-rose-500 tabular-nums">
                     {formatMoney(data.value)}€
                 </p>
-                <p className="text-xs text-slate-500 mt-0.5">
-                    {percent.toFixed(1)}% del total
-                </p>
+                <div className="flex items-center gap-2 mt-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                    <p className="text-xs font-medium text-white/80">
+                        {percent.toFixed(1)}% del total
+                    </p>
+                </div>
             </div>
         );
     }
@@ -74,134 +53,114 @@ const CustomTooltip = ({ active, payload, totalExpenses }: any) => {
 
 const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdown }) => {
     const [viewMode, setViewMode] = useState<'list' | 'chart'>('list');
-
-    // 1. Sort by amount descending
     const sortedData = [...breakdown].sort((a, b) => b.amount - a.amount);
-
-    // 2. Calculate total for percentage bars
     const totalExpenses = sortedData.reduce((sum, item) => sum + item.amount, 0);
+    const COLORS = ['#e11d48', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#14b8a6', '#f97316'];
 
-    // Modern Finance Color Palette - Repeating if necessary
-    const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#14b8a6', '#f97316'];
-
-    // Prepare data for display (show all expenses)
-    const displayData = sortedData;
-    const chartData = displayData.map((item, index) => ({
+    const chartData = sortedData.map((item, index) => ({
         name: item.label,
         value: item.amount,
         color: item.color || COLORS[index % COLORS.length]
     }));
 
-
-
-
     return (
-        <Card className="flex flex-col overflow-hidden pt-2 px-3 pb-3">
-            {/* Header with Toggle */}
-            <div className="flex items-center justify-between mb-2 shrink-0">
-                <div>
-                    <h3 className="font-bold text-slate-800 dark:text-white text-base">Desglose de Gastos</h3>
+        <div className="workstation-card workstation-scanline p-6 h-full flex flex-col group/card transition-all mechanical-press overflow-hidden min-h-[460px]">
+            {/* HEADER */}
+            <div className="flex items-center justify-between mb-4 shrink-0">
+                <div className="flex items-center gap-3">
+                    <div className="p-1.5 bg-rose-50 dark:bg-rose-900/20 rounded-lg">
+                        <Activity className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                    </div>
+                    <h3 className="text-base font-semibold text-slate-900 dark:text-white leading-tight">
+                        Desglose de Gastos
+                    </h3>
                 </div>
-                <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 flex gap-0.5 border border-slate-200 dark:border-slate-700">
+                <div className="bg-slate-100 dark:bg-white/5 rounded-lg p-0.5 flex gap-1 border border-slate-200 dark:border-white/5">
                     <button
-                        onClick={() => setViewMode('list')}
-                        className={`p-1 rounded-md transition-all ${viewMode === 'list'
-                            ? 'bg-indigo-600 text-white shadow-sm'
-                            : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-                            }`}
-                        title="Lista"
+                        onClick={(e) => { e.stopPropagation(); setViewMode('list'); }}
+                        className={cn(
+                            "p-1.5 rounded transition-all",
+                            viewMode === 'list' ? 'bg-ruby-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
+                        )}
                     >
                         <List className="w-3 h-3" />
                     </button>
                     <button
-                        onClick={() => setViewMode('chart')}
-                        className={`p-1 rounded-md transition-all ${viewMode === 'chart'
-                            ? 'bg-indigo-600 text-white shadow-sm'
-                            : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-                            }`}
-                        title="Gráfico"
+                        onClick={(e) => { e.stopPropagation(); setViewMode('chart'); }}
+                        className={cn(
+                            "p-1.5 rounded transition-all",
+                            viewMode === 'chart' ? 'bg-ruby-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
+                        )}
                     >
                         <PieChartIcon className="w-3 h-3" />
                     </button>
                 </div>
             </div>
 
-            {/* Content Area */}
-            <div className="flex-1 overflow-hidden">
+            {/* HIGH-DENSITY CONTENT */}
+            <div className="flex-1 min-h-0 flex flex-col">
                 {viewMode === 'list' ? (
-                    /* EXPANDED LIST VIEW - ALL EXPENSES WITH ICONS */
                     <div className="flex flex-col h-full">
-                        <div className="overflow-auto min-h-0 space-y-0.5 pr-1">
-                            {displayData.map((item, index) => {
+                        <div className="flex-1 overflow-y-auto pr-1 space-y-1">
+                            {sortedData.map((item, index) => {
                                 const percent = totalExpenses > 0 ? (item.amount / totalExpenses) * 100 : 0;
                                 const color = item.color || COLORS[index % COLORS.length];
                                 const Icon = getExpenseIcon(item.label);
 
                                 return (
-                                    <div
-                                        key={index}
-                                        className="group flex items-center justify-between py-0.5 px-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors"
-                                    >
-                                        {/* Left: Icon with tooltip + Amount */}
-                                        <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                                            <div
-                                                className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 cursor-help transition-transform group-hover:scale-105"
-                                                style={{ backgroundColor: `${color}15` }}
-                                                title={item.label}
-                                            >
+                                    <div key={index} className="group/item flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 hover:border-rose-200 dark:hover:border-rose-900/30 transition-all">
+                                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                                            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${color}15` }}>
                                                 <Icon className="w-4 h-4" style={{ color }} />
                                             </div>
-                                            <span className="text-sm font-bold text-slate-900 dark:text-white tabular-nums">
-                                                {formatMoney(item.amount)}€
-                                            </span>
+                                            <div className="min-w-0">
+                                                <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate capitalize">{item.label}</p>
+                                                <p className="text-xs font-bold text-rose-600 tabular-nums">{formatMoney(item.amount)}€</p>
+                                            </div>
                                         </div>
-
-                                        {/* Right: % + Mini Bar */}
-                                        <div className="flex items-center gap-3 flex-shrink-0">
-                                            <span className="text-xs text-slate-400 w-8 text-right tabular-nums font-semibold">
-                                                {percent.toFixed(0)}%
-                                            </span>
-                                            <div className="w-8 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full rounded-full"
-                                                    style={{ width: `${Math.min(percent, 100)}%`, backgroundColor: color }}
-                                                />
+                                        <div className="flex items-center gap-3 shrink-0">
+                                            <span className="text-xs font-medium text-slate-400 tabular-nums">{percent.toFixed(0)}%</span>
+                                            <div className="w-12 h-1.5 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
+                                                <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${percent}%`, backgroundColor: color }} />
                                             </div>
                                         </div>
                                     </div>
                                 );
                             })}
                         </div>
-                        {/* Total Box - Compact & Minimalist */}
-                        <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+
+                        {/* AGGREGATE SUMMARY */}
+                        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
                             <div className="flex items-center justify-between px-2">
-                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                    TOTAL
-                                </span>
-                                <span className="text-sm font-black text-slate-900 dark:text-white tabular-nums bg-slate-50 dark:bg-slate-800/50 px-2 py-1 rounded-lg border border-slate-100 dark:border-slate-800">
+                                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Gastos</p>
+                                <span className="text-sm font-bold text-slate-900 dark:text-white tabular-nums bg-slate-100 dark:bg-white/10 px-3 py-1 rounded-lg border border-slate-200 dark:border-white/5">
                                     {formatMoney(totalExpenses)}€
                                 </span>
                             </div>
                         </div>
                     </div>
                 ) : (
-                    /* DONUT CHART VIEW */
-                    <div className="w-full flex items-center justify-center p-2">
-                        {/* Donut Chart - Full Space */}
-                        <div className="w-full h-[250px]">
+                    <div className="flex-1 flex items-center justify-center p-4">
+                        <div className="w-full h-[280px] relative">
+                            {/* Technical Overlay */}
+                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
+                                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Visualización</p>
+                                <p className="text-xl font-bold text-rose-600">Gastos</p>
+                            </div>
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
                                         data={chartData}
                                         cx="50%"
                                         cy="50%"
-                                        innerRadius={60}
-                                        outerRadius={90}
-                                        paddingAngle={2}
+                                        innerRadius={70}
+                                        outerRadius={100}
+                                        paddingAngle={4}
                                         dataKey="value"
+                                        stroke="none"
                                     >
                                         {chartData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                            <Cell key={`cell-${index}`} fill={entry.color} opacity={0.8} />
                                         ))}
                                     </Pie>
                                     <Tooltip content={<CustomTooltip totalExpenses={totalExpenses} />} />
@@ -211,7 +170,7 @@ const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdo
                     </div>
                 )}
             </div>
-        </Card>
+        </div>
     );
 };
 

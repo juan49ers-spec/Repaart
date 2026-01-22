@@ -312,35 +312,35 @@ const ResourcesPanel: React.FC = () => {
                                                 <div
                                                     key={item.id}
                                                     onClick={() => handleItemClick(item)}
-                                                    className="group bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2rem] p-6 hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-500/30 transition-all duration-300 cursor-pointer overflow-hidden relative"
+                                                    className="group bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl p-4 hover:shadow-lg hover:shadow-indigo-500/10 hover:border-indigo-500/30 transition-all duration-300 cursor-pointer overflow-hidden relative flex flex-col h-full"
                                                 >
                                                     {/* Decorative Background */}
-                                                    <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full ${theme.bg} opacity-20 group-hover:scale-150 transition-transform duration-500`} />
+                                                    <div className={`absolute -right-6 -top-6 w-20 h-20 rounded-full ${theme.bg} opacity-20 group-hover:scale-150 transition-transform duration-500`} />
 
-                                                    <div className="flex justify-between items-start mb-4 relative z-10">
-                                                        <div className={`w-12 h-12 rounded-2xl ${theme.bg} flex items-center justify-center transition-transform group-hover:scale-110`}>
-                                                            <Icon className={`w-6 h-6 ${theme.text}`} />
+                                                    <div className="flex justify-between items-start mb-3 relative z-10">
+                                                        <div className={`w-10 h-10 rounded-lg ${theme.bg} flex items-center justify-center transition-transform group-hover:scale-110`}>
+                                                            <Icon className={`w-5 h-5 ${theme.text}`} />
                                                         </div>
                                                         {item.isCritical && (
-                                                            <span className="bg-rose-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm animate-pulse">
+                                                            <span className="bg-rose-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm animate-pulse">
                                                                 Crítico
                                                             </span>
                                                         )}
                                                     </div>
 
-                                                    <h4 className="font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                                    <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-1.5 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">
                                                         {item.title}
                                                     </h4>
-                                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-2 mb-4">
+                                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium line-clamp-2 mb-3 flex-1">
                                                         {item.description}
                                                     </p>
 
-                                                    <div className="mt-auto pt-3 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between">
-                                                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                                                    <div className="pt-2 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between mt-auto">
+                                                        <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider truncate max-w-[70%]">
                                                             {item.category}
                                                         </span>
-                                                        <span className={`text-[10px] font-bold ${theme.text} opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1`}>
-                                                            Leer <Eye className="w-3 h-3" />
+                                                        <span className={`text-[9px] font-bold ${theme.text} opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1`}>
+                                                            Ver <Eye className="w-2.5 h-2.5" />
                                                         </span>
                                                     </div>
                                                 </div>

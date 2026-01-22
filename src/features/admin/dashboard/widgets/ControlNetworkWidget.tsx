@@ -32,11 +32,11 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
 
     if (loading) {
         return (
-            <div className="bg-white/50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 h-full">
-                <div className="h-5 w-32 bg-slate-200 dark:bg-slate-800 rounded mb-6" />
-                <div className="space-y-4">
-                    {[1, 2, 3].map(i => (
-                        <div key={i} className="h-14 bg-slate-100 dark:bg-slate-800/50 rounded-xl" />
+            <div className="workstation-card p-4 h-full flex flex-col">
+                <div className="h-4 w-24 bg-slate-100 dark:bg-slate-800 rounded animate-pulse mb-6" />
+                <div className="space-y-2 flex-1">
+                    {[1, 2, 3, 4, 5].map(i => (
+                        <div key={i} className="h-8 bg-slate-50 dark:bg-slate-800/40 rounded animate-pulse" />
                     ))}
                 </div>
             </div>
@@ -65,175 +65,145 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
         return matchesFilter && matchesSearch;
     });
 
-    const displayList = viewMode === 'top3' ? topPerformers : filteredFranchises.slice(0, 6);
+    const displayList = viewMode === 'top3' ? topPerformers : filteredFranchises.slice(0, 8);
 
     return (
-        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-slate-800/50 flex flex-col h-full shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20 overflow-hidden transition-all duration-300">
-
-            {/* Header */}
-            {/* Header - Stacked Layout to prevent overlap */}
-            <div className="p-5 pb-2">
-                <div className="flex flex-col gap-3 mb-4">
-                    <div className="min-w-0">
-                        <h3 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white flex items-center gap-2 truncate">
-                            <Activity className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                            Monitoreo de Red
-                        </h3>
-                        <p className="text-sm text-slate-500 mt-0.5 font-normal flex items-center gap-1.5 truncate">
-                            <span>{data.total} activos</span>
-                            <span className="text-slate-300 dark:text-slate-700 mx-1">•</span>
-                            <span className="text-slate-600 dark:text-slate-400">
-                                {viewMode === 'top3' ? 'Top Revenue' : 'Análisis'}
-                            </span>
-                        </p>
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-full overflow-hidden transition-all hover:shadow-md">
+            {/* HEADER */}
+            <div className="p-5 pb-3">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
+                            <Activity className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-bold text-slate-800 dark:text-white leading-tight">
+                                Estado de la Red
+                            </h3>
+                            <div className="text-xs font-medium text-slate-500 dark:text-slate-400">{data.total} unidades activas</div>
+                        </div>
                     </div>
 
-                    {/* View Switcher - Premium Segmented Control (Full width or aligned start) */}
-                    <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg self-start">
+                    <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
                         <button
-                            onClick={() => setViewMode('list')}
-                            className={`px-3 py-1.5 rounded-md text-xs font-semibold tracking-tight transition-all duration-200 ${viewMode === 'list'
-                                ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white ring-1 ring-slate-900/5 dark:ring-white/10'
-                                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                            onClick={(e) => { e.stopPropagation(); setViewMode('list'); }}
+                            className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all ${viewMode === 'list'
+                                ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-white'
+                                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
                                 }`}
                         >
                             Lista
                         </button>
                         <button
-                            onClick={() => setViewMode('top3')}
-                            className={`px-3 py-1.5 rounded-md text-xs font-semibold tracking-tight transition-all duration-200 flex items-center gap-1.5 ${viewMode === 'top3'
-                                ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-amber-400 ring-1 ring-slate-900/5 dark:ring-white/10'
-                                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                            onClick={(e) => { e.stopPropagation(); setViewMode('top3'); }}
+                            className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all ${viewMode === 'top3'
+                                ? 'bg-white dark:bg-slate-700 shadow-sm text-amber-500'
+                                : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
                                 }`}
                         >
-                            <span className={viewMode === 'top3' ? 'opacity-100' : 'opacity-70 grayscale'}>🏆</span> Top 3
+                            Top 3
                         </button>
                     </div>
                 </div>
 
-                {/* Controls (Only for List Mode) */}
-                {viewMode === 'list' && (
-                    <div className="flex gap-2 mb-3 animate-in fade-in slide-in-from-top-1 duration-200">
-                        <div className="relative flex-1">
-                            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-                            <input
-                                type="text"
-                                placeholder="Buscar..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-8 pr-3 py-1.5 bg-slate-50/50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium tracking-tight focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
-                            />
-                        </div>
-                        <button
-                            onClick={() => setFilter(filter === 'critical' ? 'all' : 'critical')}
-                            title="Filtrar Críticos"
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium tracking-tight border transition-all flex items-center gap-1.5 whitespace-nowrap ${filter === 'critical'
-                                ? 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400'
-                                : 'bg-slate-50/50 border-transparent text-slate-500 hover:bg-slate-100 dark:bg-slate-800/30 dark:text-slate-400'
-                                }`}
-                        >
-                            <div className={`w-1.5 h-1.5 rounded-full ${filter === 'critical' ? 'bg-rose-600' : 'bg-rose-400/50'}`} />
-                            {data.critical > 0 ? `${data.critical} Críticos` : 'Filtros'}
-                        </button>
+                {/* Integrated Search & Filter */}
+                <div className="flex gap-2">
+                    <div className="relative flex-1 group/search">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-focus-within/search:text-indigo-500 transition-colors" />
+                        <input
+                            type="text"
+                            placeholder="Filtrar unidades..."
+                            value={searchTerm}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg pl-9 pr-3 py-2 text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                        />
                     </div>
-                )}
+                    <button
+                        onClick={(e) => { e.stopPropagation(); setFilter(filter === 'critical' ? 'all' : 'critical'); }}
+                        className={`px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wide border transition-all flex items-center gap-2 ${filter === 'critical'
+                            ? 'bg-rose-50 text-rose-600 border-rose-200 shadow-sm'
+                            : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:bg-slate-50'
+                            }`}
+                    >
+                        <div className={`w-1.5 h-1.5 rounded-full ${filter === 'critical' ? 'bg-rose-500 animate-pulse' : 'bg-slate-300'}`} />
+                        Riesgo
+                    </button>
+                </div>
             </div>
 
-            {/* Table Header */}
-            <div className="grid grid-cols-12 gap-2 px-6 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
-                <div className="col-span-1 flex items-center justify-center">#</div>
-                <div className="col-span-4 pl-2">Franquicia</div>
-                <div className="col-span-2 text-right">Eficiencia</div>
-                <div className="col-span-3 text-right">Revenue</div>
-                <div className="col-span-2 text-right">Margen</div>
+            {/* TABLE HEADER */}
+            <div className="grid grid-cols-12 gap-2 px-5 py-2 bg-slate-50 dark:bg-slate-800/50 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-y border-slate-100 dark:border-slate-800">
+                <div className="col-span-1 text-center">#</div>
+                <div className="col-span-1 text-center">ID</div>
+                <div className="col-span-4 pl-1">Unidad</div>
+                <div className="col-span-3 text-right">Ingresos</div>
+                <div className="col-span-3 text-right">Margen</div>
             </div>
 
-            {/* List */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar relative">
+            {/* LIST BODY */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar px-2 py-1">
                 {displayList.length === 0 ? (
-                    <div className="h-32 flex flex-col items-center justify-center text-slate-400">
-                        <p className="text-xs font-medium tracking-tight">No hay datos disponibles</p>
+                    <div className="h-full flex flex-col items-center justify-center py-8 text-slate-400">
+                        <Activity className="w-10 h-10 mb-3 opacity-20" />
+                        <p className="text-xs font-bold text-slate-500">Sin resultados</p>
                     </div>
                 ) : (
-                    <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                    <div className="space-y-1">
                         {displayList.map((f, index) => {
                             const margin = f.metrics?.margin || 0;
                             const revenue = f.metrics?.revenue || 0;
                             const status = margin > 20 ? 'excellent' : margin > 10 ? 'acceptable' : 'critical';
 
-                            // Colors map
                             const colors = {
-                                excellent: 'text-emerald-500 bg-emerald-500',
-                                acceptable: 'text-amber-500 bg-amber-500',
-                                critical: 'text-rose-500 bg-rose-500'
+                                excellent: 'bg-emerald-500',
+                                acceptable: 'bg-amber-500',
+                                critical: 'bg-rose-500'
                             };
 
-                            // Rank Indicators
-                            const isTop3 = viewMode === 'top3';
-                            const rankIcons = ['👑', '🥈', '🥉'];
-
+                            const isFirst = index === 0 && viewMode === 'top3';
 
                             return (
                                 <div
                                     key={f.id}
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                        e.stopPropagation();
                                         startImpersonation(f.id);
                                         navigate('/dashboard');
                                     }}
-                                    className={`grid grid-cols-12 gap-4 px-6 py-3 items-center cursor-pointer group transition-all ${isTop3 && index === 0
-                                        ? 'bg-gradient-to-r from-amber-50/50 to-transparent dark:from-amber-900/10'
-                                        : 'hover:bg-slate-50/50 dark:hover:bg-slate-800/40'
-                                        }`}
+                                    className={`
+                                        grid grid-cols-12 gap-2 px-3 py-2.5 items-center cursor-pointer group transition-all rounded-lg border border-transparent
+                                        ${isFirst ? 'bg-amber-50 border-amber-100' : 'hover:bg-slate-50 hover:border-slate-100 dark:hover:bg-slate-800'}
+                                    `}
                                 >
-                                    {/* Rank / Status */}
-                                    <div className="col-span-1 flex justify-center items-center h-full">
-                                        {isTop3 ? (
-                                            <span className="text-sm scale-110 drop-shadow-sm filter">{rankIcons[index]}</span>
+                                    <div className="col-span-1 flex justify-center">
+                                        {viewMode === 'top3' ? (
+                                            <span className="text-sm">{['🥇', '🥈', '🥉'][index]}</span>
                                         ) : (
-                                            <div className={`w-2 h-2 rounded-full ${colors[status].split(' ')[1]} ${status === 'critical' ? 'animate-pulse' : ''}`} />
+                                            <div className={`w-2 h-2 rounded-full ${colors[status]} ${status === 'critical' ? 'animate-pulse' : ''}`} />
                                         )}
                                     </div>
 
-                                    {/* Name & ID */}
-                                    <div className="col-span-4 pl-2">
-                                        <div className="flex items-center gap-2">
-                                            <p className={`text-sm font-medium tracking-tight truncate ${isTop3 && index === 0 ? 'text-amber-900 dark:text-amber-400' : 'text-slate-900 dark:text-white'}`}>
-                                                {f.name}
-                                            </p>
-                                            {status === 'excellent' && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />}
-                                        </div>
-                                        <p className="text-[10px] text-slate-400 font-mono hidden group-hover:block transition-all pt-0.5">
-                                            {f.id.substring(0, 8)}...
+                                    <div className="col-span-1 text-[10px] font-bold text-slate-400 text-center">
+                                        {f.id.substring(0, 2)}
+                                    </div>
+
+                                    <div className="col-span-4 pl-1">
+                                        <p className={`text-xs font-bold truncate ${isFirst ? 'text-amber-700' : 'text-slate-700 dark:text-slate-300'}`}>
+                                            {f.name}
                                         </p>
                                     </div>
 
-                                    {/* Efficiency (New) */}
-                                    <div className="col-span-2 text-right">
-                                        <div className="flex items-center justify-end gap-1">
-                                            <span className="text-[10px] font-bold text-slate-500">
-                                                {(94 + (f.id.charCodeAt(0) % 5)).toFixed(0)}%
-                                            </span>
-                                            <Activity className="w-2.5 h-2.5 text-slate-400" />
-                                        </div>
-                                    </div>
-
-                                    {/* Revenue */}
                                     <div className="col-span-3 text-right">
-                                        <span className={`text-xs font-mono font-medium tracking-tight ${isTop3 ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
-                                            {revenue.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
+                                        <span className={`text-xs font-semibold tabular-nums ${isFirst ? 'text-amber-700' : 'text-slate-600 dark:text-slate-400'}`}>
+                                            {formatMoney(revenue)}
                                         </span>
-                                        {isTop3 && (
-                                            <div className="w-full bg-slate-100 dark:bg-slate-800 h-1 rounded-full mt-1 overflow-hidden">
-                                                <div className="h-full bg-indigo-500" style={{ width: `${(revenue / (topPerformers[0].metrics?.revenue || 1)) * 100}%` }} />
-                                            </div>
-                                        )}
                                     </div>
 
-                                    {/* Margin */}
-                                    <div className="col-span-2 text-right">
-                                        <span className={`text-xs font-mono font-medium tracking-tight ${colors[status].split(' ')[0]}`}>
+                                    <div className="col-span-3 text-right">
+                                        <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block min-w-[40px] text-center ${margin < 10 ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`}>
                                             {margin.toFixed(1)}%
-                                        </span>
+                                        </div>
                                     </div>
                                 </div>
                             );
@@ -242,17 +212,22 @@ const ControlNetworkWidget: React.FC<ControlNetworkWidgetProps> = ({ data, loadi
                 )}
             </div>
 
-            {/* Footer Action */}
-            <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/30">
+            {/* FOOTER ACTION BUTTON */}
+            <div className="p-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
                 <button
-                    onClick={() => navigate('/admin/network')}
-                    className="w-full flex items-center justify-center gap-2 py-2 text-xs font-medium tracking-tight text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors group"
+                    onClick={(e) => { e.stopPropagation(); navigate('/admin/network'); }}
+                    className="w-full bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold uppercase tracking-wide text-[10px] py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 group shadow-sm hover:shadow-md"
                 >
-                    Expandir Red Completa <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                    Ver Red Global
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </button>
             </div>
         </div>
     );
+};
+
+const formatMoney = (val: number) => {
+    return val.toLocaleString('es-ES', { maximumFractionDigits: 0 }) + '€';
 };
 
 export default ControlNetworkWidget;

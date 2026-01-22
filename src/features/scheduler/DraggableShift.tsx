@@ -56,7 +56,7 @@ export const DraggableShift: React.FC<DraggableShiftProps> = ({
     if (isDraft) {
         bgClass = "bg-white border-2 border-slate-300 text-slate-700 border-dashed";
     } else if (isChangeRequested) {
-        bgClass = "bg-amber-500 border border-amber-600 text-white z-20";
+        bgClass = "bg-amber-500 border border-amber-600 shadow-[0_0_15px_rgba(245,158,11,0.3)] text-white z-20 animate-pulse";
     } else if (isNight) {
         bgClass = "bg-rose-600 border border-rose-700 text-white"; // Night = Red
     } else {
@@ -74,16 +74,24 @@ export const DraggableShift: React.FC<DraggableShiftProps> = ({
             onDoubleClick={onDoubleClick}
             className={cn(
                 "relative h-full rounded text-[11px] font-semibold flex items-center px-2 select-none cursor-grab active:cursor-grabbing hover:brightness-110 transition-all",
-                isConfirmed && !isDraft && !isChangeRequested && "pl-7",
+                isConfirmed && !isDraft && !isChangeRequested && "pl-5",
                 bgClass,
                 isGhost ? "opacity-30 scale-100 rotate-0 grayscale-[0.5] border-dashed" : "",
-                isOverlay ? "opacity-100 scale-105 shadow-xl z-[1000] pointer-events-none w-[180px] min-w-[180px]" : ""
+                isOverlay ? "opacity-100 scale-105 shadow-xl z-[1000] pointer-events-none w-[180px] min-w-[180px]" : "",
+                isConfirmed && "ring-1 ring-emerald-400 ring-offset-1 dark:ring-offset-slate-900"
             )}
         >
-            {/* Accepted Indicator (Green Piece) - Flat */}
+            {/* Accepted Indicator (Green Bar) */}
             {isConfirmed && !isDraft && !isChangeRequested && (
-                <div className="absolute left-0 top-0 bottom-0 w-5 bg-emerald-600 rounded-l flex items-center justify-center z-20">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="text-white"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <div className="absolute left-0 top-0 bottom-0 w-3.5 bg-emerald-500 rounded-l flex items-center justify-center z-20 border-r border-emerald-600/30">
+                    <CheckIcon />
+                </div>
+            )}
+
+            {/* Change Requested Label Overlay */}
+            {isChangeRequested && (
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-amber-600 text-[8px] px-1 rounded border border-amber-400 shadow-sm z-30 font-black uppercase tracking-tighter">
+                    CAMBIO
                 </div>
             )}
 
@@ -92,9 +100,9 @@ export const DraggableShift: React.FC<DraggableShiftProps> = ({
                     <span className="tracking-tight font-medium leading-none">{format(sStart, 'HH:mm')}</span>
                 </div>
 
-                {duration > 1.5 && <span className="opacity-40 mx-1 w-px h-3 bg-current" />}
+                {duration > 1.2 && <span className="opacity-40 mx-1 w-px h-3 bg-current" />}
 
-                {duration > 1.5 && (
+                {duration > 1.2 && (
                     <div className="flex items-center gap-1.5">
                         <span className="tracking-tight font-medium leading-none">{format(sEnd, 'HH:mm')}</span>
                     </div>
@@ -103,3 +111,9 @@ export const DraggableShift: React.FC<DraggableShiftProps> = ({
         </div>
     );
 };
+
+const CheckIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+        <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+);

@@ -47,7 +47,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ user, showMessage, roleConfig }
                         phone: data.phone || user.phoneNumber || '',
                         photoURL: data.photoURL || user.photoURL || '',
                         location: data.location || 'Madrid, España',
-                        role_description: data.role_description || (roleConfig?.role === 'admin' ? 'Strategic Operations Director' : 'Franquiciado')
+                        role_description: data.role_description || (roleConfig?.role === 'admin' ? 'Director de Operaciones Estratégicas' : 'Franquiciado')
                     }));
                 }
             } catch (error) {
@@ -142,7 +142,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ user, showMessage, roleConfig }
                                         value={formData.role_description}
                                         onChange={(e) => setFormData({ ...formData, role_description: e.target.value })}
                                         className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl font-medium text-slate-600 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all shadow-sm"
-                                        placeholder="Ej. Operations Manager"
+                                        placeholder="Ej. Gestor de Operaciones"
                                     />
                                 </div>
                             </div>

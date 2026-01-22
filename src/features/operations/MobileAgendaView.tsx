@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, Clock, Zap, TrendingUp, Calendar, ChevronRight } from 'lucide-react';
+import { Clock, Zap, TrendingUp, Calendar, ChevronRight } from 'lucide-react';
 import ShiftCard, { ShiftEvent } from './ShiftCard';
 import { cn } from '../../lib/utils';
 import { CostService, EST_HOURLY_BASE } from '../../services/scheduler/costService';
@@ -93,77 +93,78 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> = ({
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-8 p-6 rounded-[32px] bg-[#1c1c1e] border border-white/5 shadow-2xl relative overflow-hidden group"
+                        className="mb-8 p-7 rounded-[2.5rem] bg-[#1c1c1e] border border-white/5 shadow-2xl relative overflow-hidden group"
                     >
-                        {/* Background mesh/glow - Adjusted for better visibility */}
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-500/10 blur-[60px] rounded-full -mr-10 -mt-10 pointer-events-none" />
-                        <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/5 blur-[40px] rounded-full -ml-8 -mb-8 pointer-events-none" />
+                        {/* Background mesh/glow */}
+                        <div className="absolute top-0 right-0 w-48 h-48 bg-ruby-600/10 blur-[60px] rounded-full -mr-12 -mt-12 pointer-events-none" />
+                        <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/5 blur-[40px] rounded-full -ml-8 -mb-8 pointer-events-none" />
 
-                        <div className="relative z-10 flex flex-col gap-6">
+                        <div className="relative z-10 flex flex-col gap-7">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10">
-                                    <TrendingUp size={12} className="text-indigo-400" />
-                                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Resumen Semanal</span>
+                                    <TrendingUp size={12} className="text-ruby-500" />
+                                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest font-mono">Resumen Semanal</span>
                                 </div>
-                                <div className="flex items-center gap-1.5 text-zinc-500">
+                                <div className="flex items-center gap-1.5 text-zinc-600">
                                     <Calendar size={12} />
-                                    <span className="text-[11px] font-medium">Esta semana</span>
+                                    <span className="text-[10px] font-black uppercase tracking-tighter">Esta semana</span>
                                 </div>
                             </div>
 
                             <div className="flex items-end justify-between">
                                 <div className="flex flex-col">
-                                    <span className="text-sm font-medium text-zinc-500 mb-1">Ganancias Est.</span>
-                                    <div className="flex items-baseline gap-1">
-                                        {/* Relaxed tracking for clear numbers */}
-                                        <span className="text-4xl font-light text-white tracking-tight">
-                                            {CostService.formatCurrency(stats.earnings)}
+                                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-2 font-mono">Ganancias Est.</span>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-5xl font-black text-white tracking-tighter tabular-nums drop-shadow-md">
+                                            {CostService.formatCurrency(stats.earnings).split(',')[0]}
                                         </span>
-                                        <Wallet size={18} className="text-indigo-400/50 ml-1" />
+                                        <span className="text-2xl font-black text-white/30 italic">€</span>
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end">
-                                    <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-1 text-right">Horas Totales</span>
+                                    <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1 shadow-sm">Horas</span>
                                     <div className="flex items-baseline gap-1.5">
-                                        <span className="text-2xl font-light text-white">{stats.totalHours.toFixed(1)}</span>
-                                        <span className="text-sm font-medium text-zinc-600">H</span>
+                                        <span className="text-3xl font-black text-white tabular-nums italic">{stats.totalHours.toFixed(1)}</span>
+                                        <span className="text-sm font-black text-ruby-600">H</span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Distribution Indicators */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5">
-                                    <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="flex items-center gap-3 p-4 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.6)]" />
                                     <div className="flex flex-col">
-                                        <span className="text-[10px] font-bold text-zinc-500">MEDIODÍA</span>
-                                        <span className="text-sm font-medium text-white">{stats.middayCount} turnos</span>
+                                        <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Mediodía</span>
+                                        <span className="text-sm font-black text-white">{stats.middayCount} turnos</span>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5">
-                                    <div className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]" />
+                                <div className="flex items-center gap-3 p-4 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-ruby-500 shadow-[0_0_12px_rgba(225,29,72,0.6)]" />
                                     <div className="flex flex-col">
-                                        <span className="text-[10px] font-bold text-zinc-500">NOCHE</span>
-                                        <span className="text-sm font-medium text-white">{stats.nightCount} turnos</span>
+                                        <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Noche</span>
+                                        <span className="text-sm font-black text-white">{stats.nightCount} turnos</span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* NEXT SHIFT CALLOUT */}
                             {stats.nextShift && (
-                                <div className="mt-2 flex items-center justify-between p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 group-hover:bg-indigo-500/15 transition-colors">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
-                                            <Zap size={20} className="animate-pulse" />
+                                <div className="mt-1 flex items-center justify-between p-5 rounded-3xl bg-ruby-600 shadow-[0_8px_25px_rgba(225,29,72,0.3)] group-hover:bg-ruby-700 transition-all duration-300">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white">
+                                            <Zap size={24} className="fill-white animate-pulse" />
                                         </div>
                                         <div className="flex flex-col">
-                                            <span className="text-[10px] font-black text-indigo-400 uppercase tracking-tighter">PRÓXIMO TURNO</span>
-                                            <span className="text-sm font-semibold text-white">
-                                                Hoy a las {new Date(stats.nextShift.startAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            <span className="text-[9px] font-black text-white/60 uppercase tracking-[0.2em] mb-0.5">Siguiente Turno</span>
+                                            <span className="text-base font-black text-white tracking-tight">
+                                                Hoy {new Date(stats.nextShift.startAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </span>
                                         </div>
                                     </div>
-                                    <ChevronRight size={18} className="text-indigo-400 group-hover:translate-x-1 transition-transform" />
+                                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white backdrop-blur-sm">
+                                        <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                                    </div>
                                 </div>
                             )}
                         </div>

@@ -72,27 +72,42 @@ describe('Financial Logic', () => {
 
             const result = calculateExpenses(revenue, orderCount, inputs);
 
-            // Fixed Costs:
-            // Salaries: 400
-            // Renting: 100
-            // Total Fixed: 500 (ignoring others defaulted to 0)
-
-            // Variable Costs:
-            // Gasoline: 50
-            // Flyder: 100 * 0.35 = 35
-            // Royalty: 5% of 1000 = 50
-            // Total Variable: 50 + 35 + 50 = 135
-
-            // Total Expenses = 635
-            // Net Profit = 1000 - 635 = 365
-
             expect(result.fixed.salaries).toBe(400);
-            expect(result.fixed.renting).toBe(100);
-            expect(result.variable.flyderFee).toBe(35);
+            expect(result.variable.gasoline).toBe(50);
             expect(result.variable.royalty).toBe(50);
-            expect(result.totalExpenses).toBe(635);
-            expect(result.netProfit).toBe(365);
-            expect(result.metrics.profitMargin).toBeCloseTo(36.5);
+            expect(result.totalExpenses).toBe(600);
+            expect(result.netProfit).toBe(400);
+            expect(result.metrics.profitMargin).toBeCloseTo(40);
+            expect(result.breakdown.find((x) => x.name === 'Renting Motos')?.value).toBe(100);
+        });
+
+        it('should not fallback rentingCost when explicitly set to 0', () => {
+            const revenue = 1000;
+            const orderCount = 100;
+            const inputs: MonthlyData = {
+                franchiseId: 'test',
+                month: '2024-01',
+                motoCount: 2,
+                rentingCost: 0,
+                royaltyPercent: 5
+            };
+
+            const result = calculateExpenses(revenue, orderCount, inputs);
+            expect(result.breakdown.find((x) => x.name === 'Renting Motos')?.value).toBe(0);
+        });
+
+        it('should fallback rentingCost when missing and motoCount provided', () => {
+            const revenue = 1000;
+            const orderCount = 100;
+            const inputs: MonthlyData = {
+                franchiseId: 'test',
+                month: '2024-01',
+                motoCount: 2,
+                royaltyPercent: 5
+            };
+
+            const result = calculateExpenses(revenue, orderCount, inputs);
+            expect(result.breakdown.find((x) => x.name === 'Renting Motos')?.value).toBe(308);
         });
     });
 });

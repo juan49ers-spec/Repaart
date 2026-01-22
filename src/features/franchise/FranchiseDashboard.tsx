@@ -86,25 +86,8 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
         : 0;
 
     // Expense Breakdown Preparation
-    const breakdownList = [...(report?.breakdown || [])];
-
-    // 1. Find existing Royalty item
-    const royaltyIndex = breakdownList.findIndex(i => i.name.includes('Royalty'));
-
-    // 2. Calculate the robust value (Never be less than 5% if revenue exists)
-    const storedRoyalty = Number(rawData?.breakdown?.['Royalty'] || rawData?.breakdown?.['Royalty Flyder'] || 0);
-    const fallbackRoyalty = (revenue || 0) * 0.05;
-    const currentReportRoyalty = breakdownList[royaltyIndex]?.value || 0;
-
-    const finalRoyaltyValue = Math.max(currentReportRoyalty, storedRoyalty, fallbackRoyalty);
-
-    if (royaltyIndex >= 0) {
-        breakdownList[royaltyIndex] = { ...breakdownList[royaltyIndex], value: finalRoyaltyValue };
-    } else if (finalRoyaltyValue > 0) {
-        breakdownList.push({ name: 'Royalty Flyder', value: finalRoyaltyValue, type: 'variable' });
-    }
-
-    const fullExpenseBreakdown: BreakdownItem[] = breakdownList
+    // Using centralized breakdown from report (lib/finance) to ensure consistency with Monthly Closing
+    const fullExpenseBreakdown: BreakdownItem[] = (report?.breakdown || [])
         .filter(item => item.value > 0)
         .sort((a, b) => b.value - a.value)
         .map((item, index) => ({

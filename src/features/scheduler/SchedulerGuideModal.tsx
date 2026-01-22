@@ -1,5 +1,17 @@
-import React, { useState } from 'react';
-import { X, MousePointer2, Keyboard, Layers, Filter, Zap, ShieldCheck, ChevronRight } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import {
+    AlertTriangle,
+    Calendar,
+    CheckCircle,
+    Copy,
+    HelpCircle,
+    Keyboard,
+    MousePointer2,
+    Plus,
+    Send,
+    ShieldCheck,
+    X
+} from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface SchedulerGuideModalProps {
@@ -7,447 +19,455 @@ interface SchedulerGuideModalProps {
     onClose: () => void;
 }
 
-type TabKey = 'concepts' | 'expert' | 'tools' | 'shortcuts';
+type SectionKey = 'inicio' | 'crear' | 'mover' | 'publicar' | 'colores' | 'problemas' | 'atajos';
 
 export const SchedulerGuideModal: React.FC<SchedulerGuideModalProps> = ({ isOpen, onClose }) => {
-    const [activeTab, setActiveTab] = useState<TabKey>('concepts');
+    const [activeSection, setActiveSection] = useState<SectionKey>('inicio');
+    const scrollRef = useRef<HTMLDivElement | null>(null);
+    const sectionRefs = {
+        inicio: useRef<HTMLDivElement | null>(null),
+        crear: useRef<HTMLDivElement | null>(null),
+        mover: useRef<HTMLDivElement | null>(null),
+        publicar: useRef<HTMLDivElement | null>(null),
+        colores: useRef<HTMLDivElement | null>(null),
+        problemas: useRef<HTMLDivElement | null>(null),
+        atajos: useRef<HTMLDivElement | null>(null)
+    };
+
+    const sections = useMemo(() => {
+        return [
+            { key: 'inicio' as const, title: 'Inicio rápido', icon: Calendar, badge: '2 min' },
+            { key: 'crear' as const, title: 'Crear turnos', icon: Plus, badge: 'Paso 1' },
+            { key: 'mover' as const, title: 'Mover / copiar', icon: Copy, badge: 'Paso 2' },
+            { key: 'publicar' as const, title: 'Publicar', icon: Send, badge: 'Paso 3' },
+            { key: 'colores' as const, title: 'Qué significan', icon: ShieldCheck, badge: 'Visual' },
+            { key: 'problemas' as const, title: 'Problemas típicos', icon: AlertTriangle, badge: 'Evita' },
+            { key: 'atajos' as const, title: 'Atajos', icon: Keyboard, badge: 'Extra' }
+        ];
+    }, []);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 
-    const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
-        { key: 'concepts', label: 'Conceptos', icon: <Layers size={18} /> },
-        { key: 'expert', label: 'Operativa', icon: <MousePointer2 size={18} /> },
-        { key: 'tools', label: 'Herramientas', icon: <Filter size={18} /> },
-        { key: 'shortcuts', label: 'Atajos', icon: <Keyboard size={18} /> },
-    ];
+    const scrollTo = (key: SectionKey) => {
+        setActiveSection(key);
+        sectionRefs[key].current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
+        <div className="fixed inset-0 z-[100]">
+            <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md" onClick={onClose} />
 
-            <div className="relative w-full max-w-4xl bg-white dark:bg-slate-900 rounded-[1.5rem] shadow-2xl border border-slate-200 dark:border-white/10 flex flex-col md:flex-row max-h-[85vh] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
-
-                {/* Close Button - Compact */}
-                <button
-                    onClick={onClose}
-                    className="absolute top-3 right-3 z-[110] p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-rose-100 dark:hover:bg-rose-900/40 text-slate-400 hover:text-rose-500 transition-colors"
-                    title="Cerrar Guía"
+            <div className="fixed inset-0 flex items-start justify-start p-4 pt-6 lg:pt-8 pl-4 lg:pl-[88px] pointer-events-none">
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Guía de operativa"
+                    className="pointer-events-auto w-full max-w-6xl max-h-[86vh] overflow-hidden rounded-2xl bg-white dark:bg-slate-900 shadow-2xl ring-1 ring-slate-900/10 dark:ring-white/10 flex flex-col"
                 >
-                    <X className="w-4 h-4" />
-                </button>
-
-                {/* Compact Sidebar */}
-                <nav className="hidden md:flex w-16 bg-slate-50 dark:bg-slate-950/50 border-r border-slate-100 dark:border-white/5 flex-col items-center py-4 gap-3 overflow-y-auto">
-                    {tabs.map((tab) => {
-                        const isActive = activeTab === tab.key;
-                        return (
-                            <button
-                                key={tab.key}
-                                onClick={() => setActiveTab(tab.key)}
-                                title={tab.label}
-                                className={cn(
-                                    "p-3 rounded-xl transition-all",
-                                    isActive
-                                        ? 'bg-white dark:bg-slate-800 shadow-md text-indigo-600 dark:text-indigo-400'
-                                        : 'text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 hover:text-slate-600'
-                                )}
-                            >
-                                {React.cloneElement(tab.icon as React.ReactElement<{ size?: number }>, { size: 20 })}
-                            </button>
-                        );
-                    })}
-                </nav>
-
-                {/* Main Content - Dense Grid */}
-                <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-white dark:bg-slate-900 relative">
-                    <div className="max-w-3xl mx-auto space-y-6">
-
-                        {/* Header: Compact */}
-                        <div className="flex items-center gap-3 border-b border-slate-100 dark:border-white/5 pb-4">
-                            <div className="p-2 rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
-                                {tabs.find(t => t.key === activeTab)?.icon}
+                    <div className="px-6 py-5 border-b border-slate-100 dark:border-white/10 flex items-center justify-between bg-gradient-to-b from-white to-slate-50/60 dark:from-slate-900 dark:to-slate-950/60">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 ring-1 ring-indigo-100 dark:ring-indigo-500/20">
+                                <MousePointer2 className="w-5 h-5" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">
-                                    {tabs.find(t => t.key === activeTab)?.label}
-                                </h2>
-                                <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
-                                    Manual Operativo v2.1
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-lg md:text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                                        Guía de Operativa
+                                    </h2>
+                                    <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10">
+                                        Horarios sin líos
+                                    </span>
+                                </div>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                    Crear turnos, moverlos, publicar y evitar errores típicos.
                                 </p>
                             </div>
                         </div>
+                        <button
+                            onClick={onClose}
+                            title="Cerrar (Esc)"
+                            className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
 
-                        {/* 2-Column Dense Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-
-                            {/* LEFT COLUMN: Theory & Definition (7 cols) */}
-                            <div className="md:col-span-7 space-y-6">
-
-                                {/* TAB: CONCEPTOS (Left) */}
-                                {activeTab === 'concepts' && (
-                                    <div className="space-y-6">
-                                        <div className="space-y-2">
-                                            <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Filosofía del Ciclo de Vida</h4>
-                                            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed text-justify">
-                                                En Repaart, un turno es un organismo vivo que evoluciona. Entender su maduración es clave para evitar conflictos.
-                                            </p>
+                    <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[280px_1fr] bg-slate-50/60 dark:bg-slate-950/60">
+                        <div className="hidden lg:flex flex-col border-r border-slate-100 dark:border-white/10 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm">
+                            <div className="p-4">
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div className="rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 p-3">
+                                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-300">
+                                            <Plus className="w-4 h-4 text-indigo-500" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Crear</span>
                                         </div>
-
-                                        <div className="bg-slate-50 dark:bg-slate-800/30 rounded-xl p-5 border border-slate-100 dark:border-white/5 space-y-5">
-                                            {/* Phase 1: Draft */}
-                                            <div className="relative pl-6 border-l-2 border-slate-200">
-                                                <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-slate-200 border-2 border-white" />
-                                                <div className="mb-1 flex items-center gap-2">
-                                                    <span className="text-xs font-black text-slate-700 uppercase">Fase 1: Borrador</span>
-                                                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-500 border border-slate-200">Gris / Transparente</span>
-                                                </div>
-                                                <p className="text-[10px] text-slate-500 leading-relaxed">
-                                                    El turno solo existe en tu pantalla. Es el momento de experimentar. Aunque guardes, si no publicas, el rider no lo ve.
-                                                    <br /><span className="italic text-slate-400">&quot;Zona segura para planificadores.&quot;</span>
-                                                </p>
-                                            </div>
-
-                                            {/* Phase 2: Published */}
-                                            <div className="relative pl-6 border-l-2 border-indigo-200">
-                                                <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-indigo-500 border-2 border-white shadow-sm shadow-indigo-500/50" />
-                                                <div className="mb-1 flex items-center gap-2">
-                                                    <span className="text-xs font-black text-indigo-700 uppercase">Fase 2: Publicado</span>
-                                                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-200">Color Sólido</span>
-                                                </div>
-                                                <p className="text-[10px] text-slate-500 leading-relaxed">
-                                                    El turno es oficial. El rider recibe una notificación push inmediata. Cualquier cambio a partir de aquí generará alertas de &quot;Modificación de Horario&quot;.
-                                                </p>
-                                            </div>
-
-                                            {/* Phase 3: Validated */}
-                                            <div className="relative pl-6 border-l-2 border-emerald-200">
-                                                <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white shadow-sm shadow-emerald-500/50 flex items-center justify-center">
-                                                    <ShieldCheck size={8} className="text-white" />
-                                                </div>
-                                                <div className="mb-1 flex items-center gap-2">
-                                                    <span className="text-xs font-black text-emerald-700 uppercase">Fase 3: Validado</span>
-                                                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">Check Verde</span>
-                                                </div>
-                                                <p className="text-[10px] text-slate-500 leading-relaxed">
-                                                    <span className="font-bold text-emerald-600">Santificado para Nómina.</span> El sistema bloquea modificaciones accidentales. Indica que el servicio se ha cumplido y pagado.
-                                                </p>
-                                            </div>
-                                        </div>
+                                        <p className="text-xs font-bold text-slate-900 dark:text-white mt-1">Paso 1</p>
                                     </div>
-                                )}
-
-                                {/* NEW: Workflow Completo (Visual) */}
-                                {activeTab === 'concepts' && (
-                                    <div className="mt-8 space-y-4 pt-6 border-t border-slate-100">
-                                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Pipeline de Producción</h4>
-                                        <div className="flex items-center justify-between text-[9px] font-bold text-slate-500 overflow-x-auto pb-2">
-                                            <div className="flex flex-col items-center gap-2 min-w-[60px]">
-                                                <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">1</div>
-                                                <span>Borrador</span>
-                                            </div>
-                                            <div className="h-px bg-slate-200 flex-1 mx-2" />
-                                            <div className="flex flex-col items-center gap-2 min-w-[60px]">
-                                                <div className="w-8 h-8 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">2</div>
-                                                <span>Auditoría</span>
-                                            </div>
-                                            <div className="h-px bg-slate-200 flex-1 mx-2" />
-                                            <div className="flex flex-col items-center gap-2 min-w-[60px]">
-                                                <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600">3</div>
-                                                <span>Publicación</span>
-                                            </div>
-                                            <div className="h-px bg-slate-200 flex-1 mx-2" />
-                                            <div className="flex flex-col items-center gap-2 min-w-[60px]">
-                                                <div className="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">4</div>
-                                                <span>Validación</span>
-                                            </div>
+                                    <div className="rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 p-3">
+                                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-300">
+                                            <Copy className="w-4 h-4 text-violet-500" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Mover</span>
                                         </div>
+                                        <p className="text-xs font-bold text-slate-900 dark:text-white mt-1">Paso 2</p>
                                     </div>
-                                )}
-
-                                {/* TAB: EXPERT (Left) */}
-                                {activeTab === 'expert' && (
-                                    <div className="space-y-6">
-                                        <div className="space-y-2">
-                                            <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Mecánicas de Precisión</h4>
-                                            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed text-justify">
-                                                Dominar el tablero requiere entender cómo el sistema interpreta tus movimientos. No es solo &quot;mover cajas&quot;, es orquestar recursos.
-                                            </p>
+                                    <div className="rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 p-3">
+                                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-300">
+                                            <Send className="w-4 h-4 text-emerald-500" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Publicar</span>
                                         </div>
-
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="p-4 bg-indigo-50/50 rounded-xl border border-indigo-100 dark:border-white/5">
-                                                <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center mb-3 text-indigo-600">
-                                                    <Layers size={16} />
-                                                </div>
-                                                <h5 className="text-xs font-bold text-slate-700 mb-1">Smart Snap (Imán)</h5>
-                                                <p className="text-[10px] text-slate-500 leading-relaxed">
-                                                    Todo se alinea a bloques de <strong>15 minutos</strong>. Es imposible crear turnos &quot;rotos&quot; (ej: 14:07). Esto garantiza nóminas limpias y cuadrantes legibles.
-                                                </p>
-                                            </div>
-
-                                            <div className="p-4 bg-rose-50/50 rounded-xl border border-rose-100 dark:border-white/5">
-                                                <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center mb-3 text-rose-600">
-                                                    <Zap size={16} />
-                                                </div>
-                                                <h5 className="text-xs font-bold text-slate-700 mb-1">Gestión de Conflictos</h5>
-                                                <p className="text-[10px] text-slate-500 leading-relaxed">
-                                                    Si intentas solapar dos turnos, el sistema los fusionará o te alertará. <span className="font-bold text-rose-600">Nunca</span> permitirá doble asignación a un mismo rider.
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {/* NEW: Overtime Policy Alert */}
-                                        <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-100 dark:border-white/5 flex gap-4">
-                                            <div className="shrink-0">
-                                                <ShieldCheck size={20} className="text-indigo-600" />
-                                            </div>
-                                            <div>
-                                                <h5 className="text-xs font-bold text-indigo-900 mb-1">Política de Flexibilidad Gerencial</h5>
-                                                <p className="text-[10px] text-indigo-600/80 leading-relaxed">
-                                                    Las alertas de Overtime (Rojo) son <strong>bloqueantes con confirmación</strong>. El sistema detendrá la asignación y pedirá tu aprobación explícita (&quot;Manager Override&quot;) para exceder el límite. <span className="italic">&quot;La IA protege, el humano decide.&quot;</span>
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                            <h5 className="text-[10px] font-bold uppercase text-slate-400 mb-2">Flujo de Reasignación</h5>
-                                            <div className="flex items-center gap-2 text-[10px] text-slate-600">
-                                                <div className="px-2 py-1 bg-white border rounded shadow-sm">Rider A (Original)</div>
-                                                <ChevronRight size={12} className="text-slate-400" />
-                                                <div className="px-2 py-1 bg-indigo-100 border border-indigo-200 text-indigo-700 rounded shadow-sm font-bold">Rider B (Nuevo)</div>
-                                            </div>
-                                            <p className="mt-2 text-[10px] text-slate-500 italic">
-                                                &quot;Al mover un turno de fila, el Rider A recibe cancelación y el Rider B recibe nueva asignación automáticamente.&quot;
-                                            </p>
-                                        </div>
+                                        <p className="text-xs font-bold text-slate-900 dark:text-white mt-1">Paso 3</p>
                                     </div>
-                                )}
-
-                                {/* TAB: TOOLS (Left) */}
-                                {activeTab === 'tools' && (
-                                    <div className="space-y-6">
-                                        <div className="bg-slate-900 text-slate-200 p-6 rounded-2xl shadow-xl shadow-slate-900/10 relative overflow-hidden group hover:scale-[1.01] transition-transform">
-                                            <div className="absolute top-0 right-0 p-3 opacity-10">
-                                                <ShieldCheck size={80} />
-                                            </div>
-                                            <div className="relative z-10 flex gap-6 items-center">
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[9px] font-bold border border-emerald-500/30 uppercase tracking-wider">Premium AI</span>
-                                                        <h3 className="text-lg font-bold text-white">The Sheriff</h3>
-                                                    </div>
-                                                    <p className="text-xs text-slate-400 leading-relaxed mb-4">
-                                                        Tu auditor personal. Analiza en tiempo real <strong>+20 parámetros</strong> (descansos legales, horas máximas, cobertura mínima). Si ves el badge verde, estás blindado legalmente.
-                                                    </p>
-                                                    <div className="flex gap-2">
-                                                        <div className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[10px] text-slate-300">
-                                                            <span className="font-bold text-white">40h</span> Límite
-                                                        </div>
-                                                        <div className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[10px] text-slate-300">
-                                                            <span className="font-bold text-white">12h</span> Descanso
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="flex flex-col items-center">
-                                                    <div className="text-4xl font-black text-white tracking-tighter filter drop-shadow-lg">98<span className="text-lg text-emerald-500">%</span></div>
-                                                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">Score Operativo</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <h5 className="text-[10px] font-bold uppercase text-slate-400">QuickFill (Relleno Mágico)</h5>
-                                                <p className="text-[10px] text-slate-500 leading-relaxed text-justify">
-                                                    ¿Semana vacía? QuickFill analiza el histórico de las últimas 4 semanas y propone un borrador inteligente basado en patrones de demanda. <span className="font-bold text-indigo-600">Ahorra el 80% del setup inicial.</span>
-                                                </p>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <h5 className="text-[10px] font-bold uppercase text-slate-400">Filtros (Sol / Luna)</h5>
-                                                <p className="text-[10px] text-slate-500 leading-relaxed text-justify">
-                                                    Simplifica el ruido visual. Activa el modo &quot;Mediodía&quot; para trabajar solo la franja 13:00-16:00, o &quot;Noche&quot; para enfocar el servicio de cena.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* TAB: SHORTCUTS (Left) */}
-                                {activeTab === 'shortcuts' && (
-                                    <div className="space-y-6">
-                                        <div className="space-y-2">
-                                            <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Maestría de Teclado</h4>
-                                            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed text-justify">
-                                                Un planificador senior apenas toca el ratón. Usa estos combos para operar a la velocidad del pensamiento.
-                                            </p>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div className="col-span-2 p-3 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-between group">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded bg-white flex items-center justify-center font-black text-xs text-slate-700 shadow-sm border border-slate-200">Alt</div>
-                                                    <div className="flex flex-col">
-                                                        <span className="text-xs font-bold text-indigo-900">Modo Clonado (Dios)</span>
-                                                        <span className="text-[9px] text-indigo-600">Arrastra un turno mientras mantienes pulsado.</span>
-                                                    </div>
-                                                </div>
-                                                <span className="px-2 py-1 rounded bg-white text-[9px] font-bold text-indigo-500 border border-indigo-100">Esencial</span>
-                                            </div>
-
-                                            <div className="p-3 bg-white border border-slate-200 rounded-lg flex items-center gap-3">
-                                                <kbd className="px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-700 border border-slate-300 shadow-[0_2px_0_#cbd5e1]">Supr</kbd>
-                                                <span className="text-[10px] font-medium text-slate-600">Borrar selección</span>
-                                            </div>
-
-                                            <div className="p-3 bg-white border border-slate-200 rounded-lg flex items-center gap-3">
-                                                <kbd className="px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-700 border border-slate-300 shadow-[0_2px_0_#cbd5e1]">Esc</kbd>
-                                                <span className="text-[10px] font-medium text-slate-600">Cancelar / Cerrar</span>
-                                            </div>
-
-                                            <div className="p-3 bg-white border border-slate-200 rounded-lg flex items-center gap-3">
-                                                <div className="flex gap-1">
-                                                    <kbd className="px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-700 border border-slate-300 shadow-[0_2px_0_#cbd5e1]">Ctrl</kbd>
-                                                    <kbd className="px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-700 border border-slate-300 shadow-[0_2px_0_#cbd5e1]">Z</kbd>
-                                                </div>
-                                                <span className="text-[10px] font-medium text-slate-600">Deshacer (WIP)</span>
-                                            </div>
-
-                                            <div className="p-3 bg-white border border-slate-200 rounded-lg flex items-center gap-3 cursor-not-allowed opacity-50">
-                                                <div className="flex gap-1">
-                                                    <kbd className="px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-700 border border-slate-300 shadow-[0_2px_0_#cbd5e1]">Ctrl</kbd>
-                                                    <kbd className="px-2 py-1 bg-slate-100 rounded text-xs font-bold text-slate-700 border border-slate-300 shadow-[0_2px_0_#cbd5e1]">S</kbd>
-                                                </div>
-                                                <span className="text-[10px] font-medium text-slate-600">Guardar Forzoso</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
+                                </div>
                             </div>
 
-                            {/* RIGHT COLUMN: Execution & Metrics (5 cols) */}
-                            <div className="md:col-span-5 space-y-6">
-
-                                {/* TAB: CONCEPTOS (Right) */}
-                                {activeTab === 'concepts' && (
-                                    <div className="space-y-4">
-                                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Diccionario Visual</h4>
-                                        <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-3">
-                                            {/* Standard */}
-                                            {/* Green: Available */}
-                                            <div className="flex gap-3 items-start">
-                                                <div className="w-10 h-6 bg-emerald-500 rounded border border-emerald-600 shadow-sm shrink-0" />
-                                                <div>
-                                                    <p className="text-[10px] font-bold text-slate-700">Disponible (Verde)</p>
-                                                    <p className="text-[9px] text-slate-500 leading-tight">Le restan más de 5h para cumplir contrato. Priorizar asignación.</p>
-                                                </div>
-                                            </div>
-                                            {/* Amber: Optimal */}
-                                            <div className="flex gap-3 items-start">
-                                                <div className="w-10 h-6 bg-amber-400 rounded border border-amber-500 shadow-sm shrink-0" />
-                                                <div>
-                                                    <p className="text-[10px] font-bold text-slate-700">Óptimo (Ámbar)</p>
-                                                    <p className="text-[9px] text-slate-500 leading-tight">En rango de cierre (faltan menos de 5h). Gestión fina.</p>
-                                                </div>
-                                            </div>
-                                            {/* Red: Overtime */}
-                                            <div className="flex gap-3 items-start">
-                                                <div className="w-10 h-6 bg-rose-500 rounded border border-rose-600 shadow-sm shrink-0 relative overflow-hidden flex items-center justify-center">
-                                                    <div className="text-[9px] font-black text-white/90 uppercase tracking-widest leading-none">+H</div>
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] font-bold text-slate-700">Overtime (Rojo)</p>
-                                                    <p className="text-[9px] text-slate-500 leading-tight">Ha superado horas de contrato. Evitar asignar salvo emergencia.</p>
-                                                </div>
-                                            </div>
-                                            {/* Conflict/Request */}
-                                            <div className="flex gap-3 items-start">
-                                                <div className="w-10 h-6 bg-amber-100 rounded border border-amber-300 shadow-sm shrink-0 relative overflow-hidden flex items-center justify-center">
-                                                    <div className="w-full h-[1px] bg-amber-300 rotate-45" />
-                                                    <div className="w-full h-[1px] bg-amber-300 -rotate-45 absolute" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] font-bold text-slate-700">Solicitud / Incidencia</p>
-                                                    <p className="text-[9px] text-slate-500 leading-tight">El rider ha pedido un cambio. Requiere tu aprobación.</p>
-                                                </div>
-                                            </div>
-                                        </div>
+                            <div className="px-4 pb-4">
+                                <div className="rounded-2xl p-4 bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-xl shadow-indigo-500/20 border border-indigo-500/30">
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-100">Reglas fáciles</p>
+                                        <ShieldCheck className="w-4 h-4 text-indigo-100" />
                                     </div>
-                                )}
+                                    <ul className="mt-3 space-y-2 text-xs font-semibold text-indigo-50/95">
+                                        <li className="flex gap-2"><span className="mt-1 w-1.5 h-1.5 rounded-full bg-white/70" />Primero crea, luego revisa, y al final publica.</li>
+                                        <li className="flex gap-2"><span className="mt-1 w-1.5 h-1.5 rounded-full bg-white/70" />Si dudas, guarda borrador (no avisa al rider).</li>
+                                        <li className="flex gap-2"><span className="mt-1 w-1.5 h-1.5 rounded-full bg-white/70" />Si cambias algo ya publicado, avisa al rider.</li>
+                                    </ul>
+                                </div>
+                            </div>
 
-                                {/* TAB: EXPERT (Right) */}
-                                {activeTab === 'expert' && (
-                                    <div className="space-y-4">
-                                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Acciones Contextuales</h4>
-                                        <div className="bg-white border border-slate-200 rounded-xl shadow-lg p-2 max-w-[200px] mx-auto rotate-1 hover:rotate-0 transition-transform cursor-default">
-                                            <div className="px-3 py-2 hover:bg-slate-50 rounded flex justify-between items-center text-xs text-slate-700">
-                                                <span>Editar Horas</span>
-                                                <span className="text-[9px] text-slate-400">E</span>
-                                            </div>
-                                            <div className="px-3 py-2 hover:bg-slate-50 rounded flex justify-between items-center text-xs text-slate-700 border-b border-slate-100/50">
-                                                <span>Cambiar Rider</span>
-                                                <ChevronRight size={10} className="text-slate-400" />
-                                            </div>
-                                            <div className="px-3 py-2 hover:bg-rose-50 rounded flex justify-between items-center text-xs text-rose-600 mt-1">
-                                                <span>Eliminar</span>
-                                                <span className="text-[9px] text-rose-300">Supr</span>
-                                            </div>
-                                        </div>
-                                        <p className="text-[10px] text-center text-slate-400 italic mt-2">
-                                            &quot;El click derecho es tu mejor amigo. Úsalo sobre cualquier turno para ver opciones avanzadas.&quot;
-                                        </p>
-                                    </div>
-                                )}
-
-                                {/* TAB: TOOLS (Right) */}
-                                {activeTab === 'tools' && (
-                                    <div className="space-y-4">
-                                        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Atajos de Cobertura</h4>
-                                        <div className="space-y-3">
-                                            <p className="text-[10px] text-slate-500 text-justify">
-                                                La barra inferior te muestra la cobertura neta. Si ves números rojos, falta personal.
-                                            </p>
-                                            <div className="p-3 rounded-lg bg-orange-50 border border-orange-100 flex items-center gap-3">
-                                                <div className="px-2 py-1 bg-white rounded border border-orange-200 text-xs font-black text-orange-600 shadow-sm">-2</div>
-                                                <div>
-                                                    <p className="text-[10px] font-bold text-orange-800">Déficit de Riders</p>
-                                                    <p className="text-[9px] text-orange-600/80">Necesitas 2 motos más para cubrir la demanda prevista.</p>
+                            <div className="px-2 pb-4">
+                                <div className="px-2 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                                    Navegación
+                                </div>
+                                <div className="mt-2 flex flex-col gap-1">
+                                    {sections.map((s) => {
+                                        const Icon = s.icon;
+                                        const isActive = activeSection === s.key;
+                                        return (
+                                            <button
+                                                key={s.key}
+                                                onClick={() => scrollTo(s.key)}
+                                                className={cn(
+                                                    'w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-center justify-between border',
+                                                    isActive
+                                                        ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                                                        : 'bg-white/60 dark:bg-white/5 text-slate-700 dark:text-slate-200 border-slate-100 dark:border-white/10 hover:bg-white hover:dark:bg-white/10'
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <div className={cn(
+                                                        'w-8 h-8 rounded-lg flex items-center justify-center',
+                                                        isActive ? 'bg-white/10' : 'bg-slate-100 dark:bg-white/5'
+                                                    )}>
+                                                        <Icon className="w-4 h-4" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-xs font-black tracking-tight">{s.title}</div>
+                                                        <div className={cn(
+                                                            'text-[10px] font-bold uppercase tracking-widest',
+                                                            isActive ? 'text-white/70' : 'text-slate-400'
+                                                        )}>
+                                                            {s.badge}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* TAB: SHORTCUTS (Right) */}
-                                {activeTab === 'shortcuts' && (
-                                    <div className="h-full flex flex-col justify-center items-center text-center space-y-4 opacity-50">
-                                        <Keyboard size={48} className="text-slate-300" />
-                                        <p className="text-xs text-slate-400 max-w-[200px]">
-                                            Próximamente añadiremos macros personalizables y soporte para StreamDeck.
-                                        </p>
-                                    </div>
-                                )}
-
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
-                        <div className="mt-8 flex justify-between items-center pt-6 border-t border-slate-100 dark:border-white/5">
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                                Página {(tabs.findIndex(t => t.key === activeTab) + 1)} de {tabs.length}
-                            </p>
+
+                        <div ref={scrollRef} className="min-h-0 overflow-y-auto p-4 md:p-8">
+                            <div className="lg:hidden mb-4">
+                                <div className="flex gap-2 overflow-x-auto pb-2">
+                                    {sections.map((s) => {
+                                        const Icon = s.icon;
+                                        const isActive = activeSection === s.key;
+                                        return (
+                                            <button
+                                                key={s.key}
+                                                onClick={() => scrollTo(s.key)}
+                                                className={cn(
+                                                    'shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-black',
+                                                    isActive
+                                                        ? 'bg-slate-900 text-white border-slate-900'
+                                                        : 'bg-white/70 dark:bg-white/5 text-slate-700 dark:text-slate-200 border-slate-100 dark:border-white/10'
+                                                )}
+                                            >
+                                                <Icon className="w-4 h-4" />
+                                                {s.title}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div className="max-w-3xl mx-auto space-y-10">
+                                <div ref={sectionRefs.inicio} className="scroll-mt-6">
+                                    <div className="rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+                                        <div className="p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white">
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70">Inicio rápido</p>
+                                            <h3 className="text-xl font-black tracking-tight mt-1">Haz una semana en 2 minutos</h3>
+                                            <p className="text-sm text-white/80 mt-2 leading-relaxed">
+                                                Crea turnos, muévelos si hace falta y publica cuando lo tengas claro.
+                                            </p>
+                                        </div>
+                                        <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-3">
+                                            <div className="rounded-xl p-4 border border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-white/5">
+                                                <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
+                                                    <Plus className="w-4 h-4 text-indigo-500" />
+                                                    <p className="text-xs font-black uppercase tracking-widest">Paso 1</p>
+                                                </div>
+                                                <p className="text-sm font-bold text-slate-900 dark:text-white mt-2">Crea</p>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Pon los turnos base (mañana / mediodía / noche).</p>
+                                            </div>
+                                            <div className="rounded-xl p-4 border border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-white/5">
+                                                <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
+                                                    <Copy className="w-4 h-4 text-violet-500" />
+                                                    <p className="text-xs font-black uppercase tracking-widest">Paso 2</p>
+                                                </div>
+                                                <p className="text-sm font-bold text-slate-900 dark:text-white mt-2">Ajusta</p>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Mueve, copia o cambia riders sin miedo.</p>
+                                            </div>
+                                            <div className="rounded-xl p-4 border border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-white/5">
+                                                <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
+                                                    <Send className="w-4 h-4 text-emerald-500" />
+                                                    <p className="text-xs font-black uppercase tracking-widest">Final</p>
+                                                </div>
+                                                <p className="text-sm font-bold text-slate-900 dark:text-white mt-2">Publica</p>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">El rider lo verá y recibirá aviso.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div ref={sectionRefs.crear} className="scroll-mt-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-500/20">
+                                            <Plus className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Crear turnos</h3>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">Lo básico para empezar bien.</p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-slate-900 p-5 shadow-sm">
+                                        <ol className="space-y-3 text-sm text-slate-700 dark:text-slate-200">
+                                            <li className="flex gap-3">
+                                                <span className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-[10px] font-black text-slate-700 dark:text-slate-200">1</span>
+                                                <span>Elige el día y crea el turno con la franja horaria que toca.</span>
+                                            </li>
+                                            <li className="flex gap-3">
+                                                <span className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-[10px] font-black text-slate-700 dark:text-slate-200">2</span>
+                                                <span>Asigna un rider. Si no lo tienes claro, déjalo en borrador y decide luego.</span>
+                                            </li>
+                                            <li className="flex gap-3">
+                                                <span className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-[10px] font-black text-slate-700 dark:text-slate-200">3</span>
+                                                <span>Revisa que no se solapen turnos del mismo rider.</span>
+                                            </li>
+                                        </ol>
+                                    </div>
+                                </div>
+
+                                <div ref={sectionRefs.mover} className="scroll-mt-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-xl bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-300 border border-violet-100 dark:border-violet-500/20">
+                                            <Copy className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Mover / copiar</h3>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">Para ajustar rápido sin rehacer todo.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div className="rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-slate-900 p-5 shadow-sm">
+                                            <p className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Mover</p>
+                                            <p className="text-sm font-semibold text-slate-900 dark:text-white mt-2">Arrastra el turno al hueco correcto</p>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                                                Si el rider ya tiene turno a esa hora, te avisará para evitar errores.
+                                            </p>
+                                        </div>
+                                        <div className="rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-slate-900 p-5 shadow-sm">
+                                            <p className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Copiar</p>
+                                            <p className="text-sm font-semibold text-slate-900 dark:text-white mt-2">Duplica un turno para repetir patrón</p>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                                                Ideal para hacer semanas “tipo” sin perder tiempo.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div ref={sectionRefs.publicar} className="scroll-mt-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-500/20">
+                                            <Send className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Publicar (avisar al rider)</h3>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">Lo que cambia al publicar.</p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 rounded-2xl border border-emerald-100 dark:border-emerald-500/20 bg-emerald-50/60 dark:bg-emerald-500/10 p-5">
+                                        <div className="flex items-start gap-3">
+                                            <div className="p-2 rounded-xl bg-white/80 dark:bg-white/10 border border-emerald-100 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                                                <CheckCircle className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-300">Idea simple</p>
+                                                <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100 mt-1">
+                                                    Borrador = solo lo ves tú. Publicado = lo ve el rider y recibe aviso.
+                                                </p>
+                                                <p className="text-xs text-emerald-800/80 dark:text-emerald-200/80 mt-2">
+                                                    Si cambias un turno ya publicado, el rider puede recibir un aviso de cambio. Hazlo solo si hace falta.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div ref={sectionRefs.colores} className="scroll-mt-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10">
+                                            <ShieldCheck className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Qué significan los colores</h3>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">Para entenderlo de un vistazo.</p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-3">
+                                        <div className="flex items-start gap-3">
+                                            <div className="w-10 h-6 rounded bg-emerald-500 border border-emerald-600 shrink-0" />
+                                            <div>
+                                                <p className="text-xs font-bold text-slate-900 dark:text-white">Verde</p>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400">Normal / bien asignado.</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <div className="w-10 h-6 rounded bg-amber-400 border border-amber-500 shrink-0" />
+                                            <div>
+                                                <p className="text-xs font-bold text-slate-900 dark:text-white">Ámbar</p>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400">Revisar con calma (suele ser aviso).</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <div className="w-10 h-6 rounded bg-rose-500 border border-rose-600 shrink-0" />
+                                            <div>
+                                                <p className="text-xs font-bold text-slate-900 dark:text-white">Rojo</p>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400">Problema: algo no cuadra. No lo ignores.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div ref={sectionRefs.problemas} className="scroll-mt-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-300 border border-rose-100 dark:border-rose-500/20">
+                                            <AlertTriangle className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Problemas típicos</h3>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">Los que más se repiten.</p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 grid grid-cols-1 gap-3">
+                                        {[
+                                            {
+                                                title: 'Se solapan turnos del mismo rider',
+                                                desc: 'Solución: mueve uno de los turnos o cambia el rider.'
+                                            },
+                                            {
+                                                title: 'He publicado y ahora tengo que cambiarlo',
+                                                desc: 'Haz el cambio, pero intenta avisar al rider para evitar líos.'
+                                            },
+                                            {
+                                                title: 'No sé si está bien',
+                                                desc: 'Guarda borrador, revisa y publica cuando lo veas claro.'
+                                            }
+                                        ].map((x) => (
+                                            <div key={x.title} className="rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-slate-900 p-5 shadow-sm">
+                                                <p className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">{x.title}</p>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">{x.desc}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div ref={sectionRefs.atajos} className="scroll-mt-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10">
+                                            <Keyboard className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Atajos</h3>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">Para ir más rápido (opcional).</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        {[
+                                            { k: 'Esc', v: 'Cerrar esta guía / cancelar' },
+                                            { k: 'Supr', v: 'Borrar selección (si aplica)' }
+                                        ].map((x) => (
+                                            <div key={x.k} className="rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-slate-900 p-5 shadow-sm flex items-center justify-between gap-4">
+                                                <kbd className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-black text-slate-700 dark:text-slate-200">
+                                                    {x.k}
+                                                </kbd>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 text-right">{x.v}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="mt-3 rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-slate-900 p-5 shadow-sm flex items-start gap-3">
+                                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 text-slate-700 dark:text-slate-200">
+                                            <HelpCircle className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-black text-slate-900 dark:text-white">Consejo</p>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                                Si el equipo es nuevo, publica con tiempo. Evitas mensajes de última hora.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="px-6 py-4 border-t border-slate-100 dark:border-white/10 bg-white dark:bg-slate-900 flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                            <span className="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10">
+                                <HelpCircle className="w-4 h-4 text-indigo-500" />
+                                Consejo: usa Esc para cerrar
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2">
                             <button
-                                onClick={() => {
-                                    const nextIdx = (tabs.findIndex(t => t.key === activeTab) + 1) % tabs.length;
-                                    setActiveTab(tabs[nextIdx].key);
-                                }}
-                                className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-400 transition-colors"
+                                onClick={() => scrollTo('inicio')}
+                                className="px-4 py-2 rounded-xl text-xs font-black bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 dark:hover:bg-white/10 transition-colors"
                             >
-                                Siguiente Lección
-                                <ChevronRight className="w-4 h-4" />
+                                Volver arriba
+                            </button>
+                            <button
+                                onClick={onClose}
+                                className="px-5 py-2 rounded-xl text-xs font-black bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20 active:scale-95"
+                            >
+                                Entendido
                             </button>
                         </div>
                     </div>
-                </main>
-            </div >
-        </div >
+                </div>
+            </div>
+        </div>
     );
 };
