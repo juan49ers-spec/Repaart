@@ -45,7 +45,7 @@
   @apply flex items-center justify-between py-2 px-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors cursor-pointer;
 }
 
-/* Mechanical/Rigid Animations (Flyder Style) */
+/* Mechanical/Rigid Animations (Repaart Style) */
 .mechanical-press {
   @apply transition-transform duration-100 ease-out active:scale-[0.97] active:brightness-90;
 }

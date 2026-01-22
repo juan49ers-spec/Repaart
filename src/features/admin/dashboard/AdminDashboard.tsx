@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import DevToolsPanel from '../../../layouts/components/dev/DevToolsPanel';
 import {
     LogOut,
-    Activity,
     ShieldCheck
 } from 'lucide-react';
 import { cn } from '../../../lib/utils';
@@ -115,44 +114,30 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     };
 
     return (
-        <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950/40 font-sans text-slate-900 dark:text-slate-200 transition-colors duration-300">
+        <div className="w-full font-sans text-slate-900 dark:text-slate-200 transition-colors duration-300">
             <CommandPalette />
 
             {/* MAIN COCKPIT VIEW */}
-            <div className="relative z-10 mx-auto max-w-[1700px] px-4 md:px-8 py-6">
+            <div className="relative z-10 mx-auto max-w-[1700px] px-4 md:px-8 py-0">
 
-                {/* TOP BAR / COMMANDER HEADER */}
+                {/* GLOBAL ACTION CONTROL - Subtle Integrated Dock */}
                 {activeTab !== 'kanban' && (
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-600/20">
-                                <Activity className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white leading-none">
-                                    FLYDER<span className="text-indigo-600">.OS</span>
-                                </h1>
-                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
-                                    Unidad de Control de Administración
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 p-1.5 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
+                    <div className="flex justify-end items-center gap-3 mb-4 sticky top-24 z-20">
+                        <div className="flex items-center gap-1 p-1 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/60 dark:border-white/5 shadow-xl glass-premium">
                             <button
                                 onClick={() => setIsGuideOpen(true)}
-                                className="px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all flex items-center gap-2"
+                                className="px-4 py-2 hover:bg-white/60 dark:hover:bg-white/10 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
                             >
-                                <span>Guía</span>
+                                Guía
                             </button>
                             <button
                                 onClick={() => setActiveTab('audit')}
-                                className="px-5 py-2 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all flex items-center gap-2 shadow-sm"
+                                className="px-5 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2"
                             >
                                 <ShieldCheck className="w-3.5 h-3.5" />
-                                <span>Auditoría</span>
+                                Auditoría
                             </button>
-                            <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-1" />
+                            <div className="w-px h-5 bg-slate-200 dark:bg-slate-800 mx-1" />
                             <ThemeToggle />
                         </div>
                     </div>
