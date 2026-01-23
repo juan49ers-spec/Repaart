@@ -61,7 +61,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
             {/* Main Content Area - Fixed Viewport with independent scroll */}
             <main className="scrollable-area w-full relative z-0 content-safe-bottom">
-                <div className="content-wrapper py-4 md:py-8 animate-slide-up mx-auto max-w-[1920px]">
+                <div className="content-wrapper py-2 md:pt-4 md:pb-8 animate-slide-up mx-auto max-w-[1920px]">
                     {/* Pass context to Outlet */}
                     {outletContext ? <Outlet context={{ ...outletContext }} /> : children}
                 </div>

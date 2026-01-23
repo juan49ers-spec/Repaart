@@ -122,7 +122,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                 {/* GLOBAL ACTION CONTROL - Subtle Integrated Dock */}
                 {activeTab !== 'kanban' && (
-                    <div className="flex justify-end items-center gap-3 mb-4 sticky top-24 z-20">
+                    <div className="flex justify-end items-center gap-3 mb-2 sticky top-20 z-20">
                         <div className="flex items-center gap-1 p-1 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/60 dark:border-white/5 shadow-xl glass-premium">
                             <button
                                 onClick={() => setIsGuideOpen(true)}

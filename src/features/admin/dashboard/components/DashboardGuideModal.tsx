@@ -19,7 +19,7 @@ const DashboardGuideModal: React.FC<DashboardGuideModalProps> = ({ isOpen, onClo
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[200] flex items-start justify-center p-4 pt-16 md:pt-24 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
             <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-5xl shadow-2xl overflow-hidden flex h-[700px] max-h-[90vh]">
 
                 {/* Sidebar Navigation */}
