@@ -3,6 +3,7 @@ import { X, Zap, User, Truck, Sun, Moon, Split, Copy, Loader2, ArrowRight, Trash
 import { cn } from '../../lib/utils';
 import { toLocalISOString } from '../../utils/dateUtils';
 import { shiftService } from '../../services/shiftService';
+import { Shift } from '../../schemas/scheduler';
 
 import { CostService } from '../../services/scheduler/costService';
 import { ComplianceService, ComplianceIssue } from '../../services/scheduler/complianceService';
@@ -25,15 +26,6 @@ interface WeekDay {
     shortLabel: string;
 }
 
-interface ShiftEntry {
-    shiftId?: string; // Add shiftId for deleting
-    id?: string;
-    riderId: string;
-    startAt: string;
-    endAt: string;
-    [key: string]: string | number | boolean | null | undefined | Date;
-}
-
 interface QuickFillModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -42,8 +34,8 @@ interface QuickFillModalProps {
     riders: Rider[];
     motos: Moto[];
     weekDays: WeekDay[];
-    existingShifts?: ShiftEntry[];
-    onCreateShifts?: (shifts: Partial<ShiftEntry>[]) => Promise<void>;
+    existingShifts?: Shift[];
+    onCreateShifts?: (shifts: Partial<Shift>[]) => Promise<void>;
 }
 
 type PresetType = 'custom' | 'comida' | 'cena' | 'partido' | 'clone_rider';
@@ -114,7 +106,6 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
 
         // 1. Calculate Shift Params
         let minutesPerShift = 0;
-        // shiftTimes removed as it was unused and causing lints
 
         // Helper to get time for a specific day
         const getShiftTimesForDay = (dayIso: string) => {
@@ -132,8 +123,6 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
             return times; // array of {start, end, startAt, endAt}
         };
 
-        // ... Cost Calculation Logic (Existing, simplified) ...
-        // Re-using logic roughly for cost
         if (activePreset === 'partido') minutesPerShift = 300;
         else if (activePreset === 'comida' || activePreset === 'cena') minutesPerShift = 150;
         else if (activePreset === 'custom') {
@@ -144,9 +133,8 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
         }
 
         if (activePreset !== 'clone_rider') {
-            const minutesPerShiftCalc = minutesPerShift; // Capture for use
+            const minutesPerShiftCalc = minutesPerShift;
 
-            // WE do not need totalHours/cost variables if we don't use them other than for state
             const niceCost = CostService.calculateEstimatedCost(
                 Array(selectedDays.length).fill(null).map(() => ({
                     startAt: '2024-01-01T00:00:00',
@@ -155,7 +143,6 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
             );
             setEstimatedCost({ total: niceCost.totalCost, hours: niceCost.totalHours });
 
-            // 2. Compliance Check
             const issuesFound: ComplianceIssue[] = [];
             const riderShifts = existingShifts.filter(s => s.riderId === selectedRiderId);
 
@@ -170,7 +157,6 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                 });
             });
 
-            // Deduplicate issues by message
             const uniqueIssues = Array.from(new Set(issuesFound.map(i => i.message)))
                 .map(msg => issuesFound.find(i => i.message === msg)!);
 
@@ -194,7 +180,7 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
     const selectWeekends = () => {
         const weekends = weekDays.filter(d => {
             const date = parseISO(d.isoDate);
-            const day = date.getDay(); // 0 is Sunday, 6 is Saturday, 5 is Friday
+            const day = date.getDay();
             return day === 0 || day === 6 || day === 5;
         }).map(d => d.isoDate);
         setSelectedDays(weekends);
@@ -245,7 +231,6 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
 
             const moto = motos.find(m => m.id === selectedMotoId);
 
-            // 1. Handle Overwrite (Delete existing shifts on selected days for this rider)
             if (overwrite) {
                 const shiftsToDelete = existingShifts.filter(s =>
                     s.riderId === selectedRiderId &&
@@ -253,14 +238,13 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                 );
 
                 const deletePromises = shiftsToDelete.map(s => {
-                    const id = s.shiftId || s.id;
-                    if (id) return shiftService.deleteShift(id);
+                    const sid = s.shiftId || s.id;
+                    if (sid) return shiftService.deleteShift(sid);
                     return Promise.resolve();
                 });
                 await Promise.all(deletePromises);
             }
 
-            // 2. Create Shifts
             const newShifts: any[] = [];
 
             for (const dayIso of selectedDays) {
@@ -270,8 +254,8 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                         newShifts.push({
                             riderId: rider.id,
                             riderName: rider.name || rider.email || 'Rider',
-                            motoId: moto?.id || null, // FIX TYPE
-                            motoPlate: moto?.licensePlate || '', // FIX TYPE
+                            motoId: moto?.id || null,
+                            motoPlate: moto?.licensePlate || '',
                             startAt: s1.startAt,
                             endAt: s1.endAt
                         });
@@ -282,8 +266,8 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                         newShifts.push({
                             riderId: rider.id,
                             riderName: rider.name || rider.email || 'Rider',
-                            motoId: moto?.id || null, // FIX TYPE
-                            motoPlate: moto?.licensePlate || '', // FIX TYPE
+                            motoId: moto?.id || null,
+                            motoPlate: moto?.licensePlate || '',
                             startAt: s2.startAt,
                             endAt: s2.endAt
                         });
@@ -294,8 +278,8 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                         newShifts.push({
                             riderId: rider.id,
                             riderName: rider.name || rider.email || 'Rider',
-                            motoId: moto?.id || null, // FIX TYPE
-                            motoPlate: moto?.licensePlate || '', // FIX TYPE
+                            motoId: moto?.id || null,
+                            motoPlate: moto?.licensePlate || '',
                             startAt: s.startAt,
                             endAt: s.endAt
                         });
@@ -307,7 +291,6 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                 if (_onCreateShifts) {
                     await _onCreateShifts(newShifts);
                 } else {
-                    // Fallback to old behavior if no callback provided (though unlikely now)
                     const promises = newShifts.map(s => shiftService.createShift({ ...s, franchiseId }));
                     await Promise.all(promises);
                 }
@@ -333,7 +316,6 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
 
         setIsProcessing(true);
         try {
-            // Find shifts for source rider on selected days
             const shiftsToClone = existingShifts.filter(s =>
                 s.riderId === sourceRiderId &&
                 selectedDays.some(day => s.startAt.startsWith(day))
@@ -344,15 +326,14 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                 return;
             }
 
-            // Overwrite logic for Cloning
             if (overwrite) {
                 const shiftsToDelete = existingShifts.filter(s =>
                     s.riderId === selectedRiderId &&
                     selectedDays.some(day => s.startAt.startsWith(day))
                 );
                 const deletePromises = shiftsToDelete.map(s => {
-                    const id = s.shiftId || s.id;
-                    if (id) return shiftService.deleteShift(id);
+                    const sid = s.shiftId || s.id;
+                    if (sid) return shiftService.deleteShift(sid);
                     return Promise.resolve();
                 });
                 await Promise.all(deletePromises);
@@ -362,7 +343,6 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
             if (!rider) throw new Error("Rider destino no encontrado");
 
             const promises = shiftsToClone.map(s => {
-                // Check conflict if not overwrite
                 if (!overwrite) {
                     const conflict = existingShifts.some(es =>
                         es.riderId === selectedRiderId &&
@@ -378,8 +358,8 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                     franchiseId,
                     riderId: selectedRiderId,
                     riderName: rider.name || rider.email || 'Rider',
-                    motoId: (s.motoId as string | null), // Fix TS error
-                    motoPlate: (s.motoPlate as string) || '', // Fix TS error
+                    motoId: (s.motoId as string | null),
+                    motoPlate: (s.motoPlate as string) || '',
                     startAt: s.startAt,
                     endAt: s.endAt
                 });
@@ -418,14 +398,13 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
             }
 
             const deletePromises = shiftsToDelete.map(s => {
-                const id = s.shiftId || s.id;
-                if (id) return shiftService.deleteShift(id);
+                const sid = s.shiftId || s.id;
+                if (sid) return shiftService.deleteShift(sid);
                 return Promise.resolve();
             });
 
             await Promise.all(deletePromises);
             onRefresh();
-            // Don't close, user might want to fill now
         } catch (e: unknown) {
             const message = e instanceof Error ? e.message : String(e);
             alert("Error al borrar: " + message);
@@ -543,20 +522,18 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-all animate-in fade-in duration-200">
-            <div className="bg-white/95 backdrop-blur-2xl border border-white/40 rounded-3xl w-full max-w-[500px] shadow-2xl flex flex-col max-h-[85vh] overflow-hidden ring-1 ring-black/5 animate-in zoom-in-95 duration-200">
+            <div className="bg-white/95 backdrop-blur-2xl border border-white/40 rounded-3xl w-full max-w-md sm:max-w-lg shadow-2xl flex flex-col max-h-[85vh] overflow-hidden ring-1 ring-black/5 animate-in zoom-in-95 duration-200">
 
-                {/* Header with Glass Effect */}
                 <div className="px-8 pt-8 pb-6 border-b border-slate-100/50 flex justify-between items-center bg-gradient-to-r from-indigo-50/30 to-blue-50/30">
                     <div>
-                        <h3 className="text-xl font-bold text-slate-800 flex items-center gap-3 tracking-tight">
-                            <div className="p-2.5 bg-indigo-500 text-white rounded-2xl shadow-lg shadow-indigo-500/20">
-                                <Zap className="w-5 h-5" />
+                        <h3 className="text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2 md:gap-3 tracking-tight">
+                            <div className="p-2 md:p-2.5 bg-indigo-500 text-white rounded-2xl shadow-lg shadow-indigo-500/20">
+                                <Zap className="w-4 h-4 md:w-5 md:h-5" />
                             </div>
-                            Autocompletar Turnos
+                            <span className="hidden sm:inline">Autocompletar Turnos</span>
+                            <span className="sm:hidden">Autocompletar</span>
                         </h3>
                         <div className="flex items-center gap-3 mt-2">
-
-                            {/* Compliance Warning Badge */}
                             {complianceIssues.length > 0 && !isProcessing && (
                                 <div className="animate-in fade-in slide-in-from-left-4 hidden sm:flex items-center gap-2 px-3 py-1 bg-amber-50 border border-amber-100 rounded-full cursor-help group/compliance"
                                     title={complianceIssues.map(i => i.message).join('\n')}>
@@ -590,29 +567,23 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                     </button>
                 </div>
 
-                {/* Body */}
                 <div className="px-6 py-5 overflow-y-auto space-y-6 flex-1 custom-scrollbar">
 
-                    {/* 0. PRESETS */}
                     <div className="space-y-3">
                         <label className="text-xs font-bold text-slate-500 pl-1 block">Acciones Rápidas</label>
                         <div className="grid grid-cols-4 gap-2">
-                            {/* Comida */}
                             <button onClick={() => applyPreset('comida')} aria-label="Preset Comida" className={cn("relative p-3 rounded-2xl border transition-all flex flex-col items-center gap-2", activePreset === 'comida' ? "bg-amber-50 border-amber-200 ring-2 ring-amber-400/30" : "bg-white border-slate-100 hover:bg-slate-50")}>
                                 <Sun className={cn("w-5 h-5", activePreset === 'comida' ? "text-amber-500" : "text-slate-400")} />
                                 <div className="text-[9px] font-bold text-slate-700">Comida</div>
                             </button>
-                            {/* Cena */}
                             <button onClick={() => applyPreset('cena')} aria-label="Preset Cena" className={cn("relative p-3 rounded-2xl border transition-all flex flex-col items-center gap-2", activePreset === 'cena' ? "bg-indigo-50 border-indigo-200 ring-2 ring-indigo-400/30" : "bg-white border-slate-100 hover:bg-slate-50")}>
                                 <Moon className={cn("w-5 h-5", activePreset === 'cena' ? "text-indigo-500" : "text-slate-400")} />
                                 <div className="text-[9px] font-bold text-slate-700">Cena</div>
                             </button>
-                            {/* Partido */}
                             <button onClick={() => applyPreset('partido')} aria-label="Preset Partido" className={cn("relative p-3 rounded-2xl border transition-all flex flex-col items-center gap-2", activePreset === 'partido' ? "bg-emerald-50 border-emerald-200 ring-2 ring-emerald-400/30" : "bg-white border-slate-100 hover:bg-slate-50")}>
                                 <Split className={cn("w-5 h-5", activePreset === 'partido' ? "text-emerald-500" : "text-slate-400")} />
                                 <div className="text-[9px] font-bold text-slate-700">Partido</div>
                             </button>
-                            {/* Clone Rider */}
                             <button onClick={() => setActivePreset('clone_rider')} aria-label="Modo Clonar" className={cn("relative p-3 rounded-2xl border transition-all flex flex-col items-center gap-2", activePreset === 'clone_rider' ? "bg-purple-50 border-purple-200 ring-2 ring-purple-400/30" : "bg-white border-slate-100 hover:bg-slate-50")}>
                                 <Users className={cn("w-5 h-5", activePreset === 'clone_rider' ? "text-purple-500" : "text-slate-400")} />
                                 <div className="text-[9px] font-bold text-slate-700">Clonar</div>
@@ -620,7 +591,6 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                         </div>
                     </div>
 
-                    {/* Templates Section */}
                     {savedTemplates.length > 0 && (
                         <div className="space-y-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
                             <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
@@ -641,7 +611,6 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                         </div>
                     )}
 
-                    {/* Presets & Time Configuration */}
                     <div className="space-y-5">
                         <div className="flex items-center justify-between">
                             <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
@@ -651,7 +620,7 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                                 </button>
                             </h4>
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                             {activePreset === 'clone_rider' ? (
                                 <>
                                     <div className="space-y-2">
@@ -713,7 +682,6 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                             )}
                         </div>
 
-                        {/* 2. Días */}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between pl-1">
                                 <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.25em]">Días</label>
@@ -738,7 +706,6 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                             </div>
                         </div>
 
-                        {/* 3. Horario Custom */}
                         {activePreset !== 'partido' && activePreset !== 'clone_rider' && (
                             <div className="space-y-4 animate-in slide-in-from-top-2">
                                 <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.25em] pl-1">Horario</label>
@@ -750,7 +717,6 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                             </div>
                         )}
 
-                        {/* 4. Overwrite Option */}
                         <div onClick={() => setOverwrite(!overwrite)} className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors group">
                             {overwrite ? <CheckSquare className="w-5 h-5 text-indigo-500" /> : <Square className="w-5 h-5 text-slate-300 group-hover:text-indigo-400" />}
                             <div>
@@ -762,7 +728,6 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                     </div>
                 </div>
 
-                {/* Footer (Fixed outside scroll) */}
                 <div className="px-8 py-5 border-t border-slate-100 bg-slate-50/80 flex justify-between items-center rounded-b-3xl">
                     <button
                         onClick={handleBulkDelete}

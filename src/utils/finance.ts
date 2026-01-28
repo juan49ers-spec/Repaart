@@ -78,7 +78,7 @@ export const evaluateFormula = (expression: string): number => {
     if (/\/0(?![.0-9])/.test(clean)) throw new Error("División por cero");
 
     try {
-        // eslint-disable-next-line no-new-func
+         
         const result = new Function(`return ${clean}`)();
 
         if (!isFinite(result) || isNaN(result as number)) throw new Error("Resultado inválido");

@@ -1,4 +1,5 @@
 import { useState, type FC, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { type FirebaseError } from 'firebase/app';
@@ -24,6 +25,7 @@ const Login: FC = () => {
     // Auth internals
     const { login } = useAuth();
     const { toast } = useToast() || {};
+    const navigate = useNavigate();
 
     // Need direct access for signup since it's not exposed in context
     const handleSignup = async () => {
@@ -37,8 +39,16 @@ const Login: FC = () => {
         setLoading(true);
         try {
             if (isLogin) {
-                await login(email, password);
+                const result = await login(email, password);
                 toast?.success('Inicio de sesión exitoso');
+
+                // Navegación explícita basada en el rol inyectado o por defecto
+                const userRole = result.user.role || role; // Intentamos usar el rol inyectado
+                if (userRole === 'rider') {
+                    navigate('/rider/dashboard');
+                } else {
+                    navigate('/dashboard');
+                }
             } else {
                 const userCredential = await handleSignup();
                 if (userCredential.user) {

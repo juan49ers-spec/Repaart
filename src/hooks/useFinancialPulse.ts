@@ -6,7 +6,7 @@ import { db } from '../lib/firebase'; // Correct path for this project
 export interface FinancialData {
     totalOperationalHours: number;
     totalShiftsCount: number;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 export interface FinancialTrendData extends FinancialData {
@@ -73,7 +73,13 @@ export const useFinancialPulse = (franchiseId: string | null): UseFinancialPulse
                 setCurrentMonthData({ totalOperationalHours: 0, totalShiftsCount: 0 });
             }
             setLoading(false);
-        }, (_error) => {
+        }, (error) => {
+            console.error("❌ [useFinancialPulse] Firestore error:", {
+                code: error.code,
+                message: error.message,
+                franchiseId,
+                currentMonthId
+            });
             setLoading(false);
         });
 
@@ -81,7 +87,7 @@ export const useFinancialPulse = (franchiseId: string | null): UseFinancialPulse
         const fetchTrend = async () => {
             try {
                 const q = query(
-                    collection(db, 'financial_summaries'), // FIXED
+                    collection(db, 'financial_summaries'),
                     where('franchiseId', '==', franchiseId)
                 );
                 const snap = await getDocs(q);
@@ -104,7 +110,7 @@ export const useFinancialPulse = (franchiseId: string | null): UseFinancialPulse
         fetchTrend();
 
         return () => unsubscribe();
-    }, [franchiseId, docId]);
+    }, [franchiseId, currentMonthId, docId]);
 
     return { currentMonthData, yearlyTrend, loading };
 };

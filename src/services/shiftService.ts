@@ -13,7 +13,8 @@ import {
     Timestamp,
     Unsubscribe,
     DocumentData,
-    getDocs
+    getDocs,
+    getDoc
 } from 'firebase/firestore';
 
 // =====================================================
@@ -196,10 +197,27 @@ export const shiftService = {
     },
 
     /**
-     * Confirm Shift (Rider)
-     */
+      * Confirm Shift (Rider)
+      */
     confirmShift: async (shiftId: string): Promise<void> => {
         console.log(`[ShiftService] Confirming shift ${shiftId} in ${COLLECTION}`);
+
+        // Get the shift document first to debug
+        const shiftRef = doc(db, COLLECTION, shiftId);
+        const shiftDoc = await getDoc(shiftRef);
+        if (shiftDoc.exists()) {
+            const shiftData = shiftDoc.data();
+            console.log('[ShiftService] Current shift data:', {
+                shiftId,
+                riderId: shiftData?.riderId,
+                riderId_type: typeof shiftData?.riderId,
+                riderId_null: shiftData?.riderId === null,
+                isConfirmed: shiftData?.isConfirmed
+            });
+        } else {
+            console.warn('[ShiftService] Shift document not found:', shiftId);
+        }
+
         const ref = doc(db, COLLECTION, shiftId);
         await updateDoc(ref, {
             isConfirmed: true,
@@ -235,7 +253,8 @@ export const shiftService = {
         riderId: string,
         start: Date,
         end: Date,
-        callback: (shifts: Shift[]) => void
+        callback: (shifts: Shift[]) => void,
+        onError?: (error: any) => void
     ): Unsubscribe => {
         const startTs = Timestamp.fromDate(start);
         const endTs = Timestamp.fromDate(end);
@@ -278,6 +297,7 @@ export const shiftService = {
             callback(shifts);
         }, (error) => {
             console.error("Error subscribing to my shifts:", error);
+            if (onError) onError(error);
         });
     },
 

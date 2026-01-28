@@ -5,6 +5,7 @@ import { Send, AlertCircle, HelpCircle, Zap, LucideIcon, Plus } from 'lucide-rea
 import { notificationService } from '../../../services/notificationService';
 import { useAuth } from '../../../context/AuthContext';
 import { suggestSupportSolution } from '../../../lib/gemini';
+import { cn } from '../../../lib/utils';
 
 interface NewTicketFormProps {
     onSubmit?: (data: any) => void;
@@ -77,14 +78,38 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
 
         setLoading(true);
         try {
-            await addDoc(collection(db, "tickets"), {
+            console.log('📝 [NewTicketForm] Creating ticket with userId:', user?.uid, 'franchiseId:', user?.franchiseId);
+            const docRef = await addDoc(collection(db, "tickets"), {
                 ...formData,
                 status: 'open',
                 origin: currentPath,
+                userId: user?.uid,
+                franchiseId: user?.franchiseId,
                 createdAt: serverTimestamp(),
                 lastUpdated: serverTimestamp(),
                 messages: []
             });
+            console.log('✅ [NewTicketForm] Ticket created with ID:', docRef.id);
+
+            if (onClose) onClose();
+            else alert("Ticket creado correctamente!");
+
+            // Notify Admin
+            await notificationService.notify(
+                'SUPPORT_TICKET',
+                user?.franchiseId || user?.uid || 'unknown',
+                user?.displayName || 'Franquicia',
+                {
+                    title: `Nuevo Ticket: ${formData.subject}`,
+                    message: `Prioridad: ${formData.priority.toUpperCase()}\nCategoría: ${formData.category}\n\n${formData.description.substring(0, 100)}...`,
+                    priority: formData.priority === 'high' ? 'high' : 'normal',
+                    metadata: {
+                        ticketId: docRef.id,
+                        category: formData.category,
+                        userId: user?.uid
+                    }
+                }
+            );
 
             if (onClose) onClose();
             else alert("Ticket creado correctamente!");
@@ -283,7 +308,7 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
                         />
                     </div>
 
-                    <div className="lg:col-span-5 flex flex-col space-y-1.5 min-h-[150px]">
+            <div className="lg:col-span-5 flex flex-col space-y-1.5 min-h-[150px]">
                         <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-1 font-mono">Evidencia</label>
                         <div className="flex-1 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-lg p-2 flex flex-col items-center justify-center text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group bg-slate-50/30 dark:bg-slate-900/30 min-h-[120px]">
                             <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 dark:text-indigo-400 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
@@ -291,7 +316,7 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
                             </div>
                             <p className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-tight">
                                 <span className="text-indigo-600 dark:text-indigo-400 font-bold block mb-0.5">Adjuntar</span>
-                                PDF/JPG
+                                PDF, JPG o PNG
                             </p>
                         </div>
                     </div>
@@ -301,17 +326,19 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
 
             {/* Ultra-Compact Footer */}
             <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md relative z-20 flex justify-between items-center shrink-0">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider"> Respuesta &lt; 24h</p>
+                <div className="flex items-center gap-2">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Respuesta estimada</p>
+                    <span className="text-indigo-500 dark:text-indigo-400 font-semibold">&lt; 24h</span>
+                </div>
                 <button
                     onClick={handleSubmit}
                     disabled={loading || !formData.subject || formData.description.length < 10}
-                    className={`
-                        px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-sm flex items-center gap-2
-                        ${loading || !formData.subject || formData.description.length < 10
-                            ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
-                            : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-500/20 hover:shadow-indigo-500/30 hover:-translate-y-0.5'
-                        }
-                    `}
+                    className={cn(
+                        "px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-sm flex items-center gap-2",
+                        loading || !formData.subject || formData.description.length < 10
+                            ? "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed"
+                            : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-500/20 hover:shadow-indigo-500/30 hover:-translate-y-0.5"
+                    )}
                 >
                     {loading ? (
                         <>

@@ -94,3 +94,15 @@ firebase deploy --only firestore:rules
 npm run build
 # Verifica que no haya alertas de 'Cycle Dependency'
 ```
+
+### Documentación de API
+
+La especificación completa de la API está disponible en `docs/api/`:
+
+- **OpenAPI 3.1 Spec**: `docs/api/openapi.yaml`
+- **API README**: `docs/api/README.md`
+- **API Design Guide**: `docs/api/API_DESIGN_GUIDE.md`
+- **SDK Generation**: `docs/api/SDK_GENERATION_GUIDE.md`
+- **Postman Collection**: `docs/api/postman_collection.json`
+
+Para generar SDKs desde la especificación OpenAPI, consulta la guía de generación de SDKs.

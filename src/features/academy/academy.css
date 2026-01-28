@@ -1,0 +1,385 @@
+/* Academy Professional Styles - Refined & Compact */
+
+/* Content Protection - Prevent Selection and Copy */
+.protected-content {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+    -moz-user-drag: none;
+    -ms-user-drag: none;
+    user-drag: none;
+}
+
+/* Disable all text selection within protected content */
+.protected-content * {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    pointer-events: none;
+}
+
+/* Allow only interactive elements to be clickable */
+.protected-content button,
+.protected-content a,
+.protected-content input,
+.protected-content select,
+.protected-content textarea,
+.protected-content [role="button"] {
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+/* Optimized Typography for Reading */
+.lesson-content {
+    color: inherit;
+    line-height: 1.7;
+    letter-spacing: -0.005em;
+}
+
+/* Heading Styles with Professional Hierarchy */
+.lesson-content h1,
+.lesson-content h2,
+.lesson-content h3,
+.lesson-content h4,
+.lesson-content h5,
+.lesson-content h6 {
+    font-weight: 700;
+    line-height: 1.25;
+    margin-top: 2em;
+    margin-bottom: 0.75em;
+    scroll-margin-top: 80px;
+    color: inherit;
+}
+
+.lesson-content h1 {
+    font-size: 1.875rem;
+    line-height: 1.2;
+}
+
+.lesson-content h2 {
+    font-size: 1.5rem;
+}
+
+.lesson-content h3 {
+    font-size: 1.25rem;
+}
+
+.lesson-content h4 {
+    font-size: 1.125rem;
+}
+
+/* Paragraph and Text */
+.lesson-content p {
+    margin-bottom: 1.25em;
+    text-align: left;
+    max-width: 60ch;
+}
+
+.lesson-content strong,
+.lesson-content b {
+    font-weight: 600;
+    color: inherit;
+}
+
+.lesson-content em,
+.lesson-content i {
+    font-style: italic;
+}
+
+/* Links */
+.lesson-content a {
+    color: #2563eb;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+    transition: all 0.2s;
+}
+
+.lesson-content a:hover {
+    color: #1d4ed8;
+    text-decoration-thickness: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+    .lesson-content a {
+        color: #3b82f6;
+    }
+
+    .lesson-content a:hover {
+        color: #60a5fa;
+    }
+}
+
+/* Lists */
+.lesson-content ul,
+.lesson-content ol {
+    margin-bottom: 1.25em;
+    padding-left: 1.25em;
+    max-width: 60ch;
+}
+
+.lesson-content ul {
+    list-style-type: disc;
+}
+
+.lesson-content ol {
+    list-style-type: decimal;
+}
+
+.lesson-content li {
+    margin-bottom: 0.4em;
+    line-height: 1.7;
+}
+
+.lesson-content li::marker {
+    color: inherit;
+}
+
+/* Nested Lists */
+.lesson-content ul ul,
+.lesson-content ol ol,
+.lesson-content ul ol,
+.lesson-content ol ul {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+/* Blockquotes */
+.lesson-content blockquote {
+    border-left: 3px solid;
+    padding-left: 0.75em;
+    margin: 1.25em 0;
+    font-style: italic;
+    background: rgba(0, 0, 0, 0.02);
+    padding: 0.75em 1em;
+    border-radius: 0 6px 6px 0;
+}
+
+@media (prefers-color-scheme: dark) {
+    .lesson-content blockquote {
+        background: rgba(255, 255, 255, 0.05);
+    }
+}
+
+/* Code Blocks */
+.lesson-content code {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    font-size: 0.8125em;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0.125em 0.25em;
+    border-radius: 3px;
+    color: inherit;
+}
+
+@media (prefers-color-scheme: dark) {
+    .lesson-content code {
+        background: rgba(255, 255, 255, 0.1);
+    }
+}
+
+.lesson-content pre {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 1em;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 1.25em 0;
+    font-size: 0.8125em;
+    line-height: 1.5;
+}
+
+.lesson-content pre code {
+    background: transparent;
+    padding: 0;
+    color: inherit;
+}
+
+/* Tables */
+.lesson-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.25em 0;
+    font-size: 0.875rem;
+}
+
+.lesson-content th,
+.lesson-content td {
+    padding: 0.5em 0.75em;
+    text-align: left;
+    border-bottom: 1px solid;
+}
+
+.lesson-content th {
+    font-weight: 600;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+@media (prefers-color-scheme: dark) {
+    .lesson-content th {
+        background: rgba(255, 255, 255, 0.05);
+    }
+}
+
+/* Horizontal Rule */
+.lesson-content hr {
+    border: none;
+    border-top: 1px solid;
+    margin: 2.5em 0;
+    opacity: 0.2;
+}
+
+/* Images and Media */
+.lesson-content img,
+.lesson-content video {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    margin: 1.25em 0;
+    display: block;
+}
+
+/* Video Container Professional */
+.video-container {
+    position: relative;
+    width: 100%;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.video-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.05));
+    pointer-events: none;
+    z-index: 1;
+}
+
+.video-container iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* Responsive Video Aspect Ratio */
+.video-aspect-16-9 {
+    aspect-ratio: 16 / 9;
+}
+
+/* Smooth Scroll */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Focus Styles for Accessibility */
+*:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+    *:focus-visible {
+        outline-color: #3b82f6;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    html {
+        scroll-behavior: auto;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .lesson-content {
+        color: #000;
+    }
+
+    .lesson-content a {
+        color: #000;
+        text-decoration: underline;
+    }
+
+    .video-container {
+        display: none;
+    }
+
+    button,
+    .no-print {
+        display: none !important;
+    }
+}
+
+/* Custom Scrollbar for Lesson Content */
+.lesson-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.lesson-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 3px;
+}
+
+.lesson-content::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 3px;
+}
+
+.lesson-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+    .lesson-content::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .lesson-content::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .lesson-content::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+}
+
+/* Selection Color */
+::selection {
+    background: #3b82f6;
+    color: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+    ::selection {
+        background: #60a5fa;
+        color: #0f172a;
+    }
+}
+
+/* Progress Bar Animation */
+@keyframes progressFill {
+    from { width: 0; }
+    to { width: var(--progress-width); }
+}
+
+.progress-animated {
+    animation: progressFill 0.6s ease-out;
+}

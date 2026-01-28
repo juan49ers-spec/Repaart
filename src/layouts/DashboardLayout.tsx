@@ -13,6 +13,7 @@ interface DashboardLayoutProps {
     children?: React.ReactNode;
     isAdmin: boolean;
     isFranchise: boolean;
+    isRider?: boolean;
     viewMode?: string;
     setViewMode?: (mode: string) => void;
     franchiseView?: string;
@@ -32,7 +33,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     targetFranchiseName,
     onExport,
     chatData,
-    outletContext
+    outletContext,
+    isRider
 }) => {
     const {
         isChatOpen,
@@ -49,6 +51,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     const headerProps: HeaderProps = {
         isAdmin,
         isFranchise,
+        isRider,
         targetFranchiseName: targetFranchiseName || undefined,
         onExport,
         onOpenHelp: openHelp
@@ -60,8 +63,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <Header {...headerProps} />
 
             {/* Main Content Area - Fixed Viewport with independent scroll */}
-            <main className="scrollable-area w-full relative z-0 content-safe-bottom">
-                <div className="content-wrapper py-2 md:pt-4 md:pb-8 animate-slide-up mx-auto max-w-[1920px]">
+            <main className="scrollable-area w-full relative z-0 content-safe-bottom @container">
+                <div className="content-wrapper py-2 md:pt-4 md:pb-8 animate-slide-up mx-auto">
                     {/* Pass context to Outlet */}
                     {outletContext ? <Outlet context={{ ...outletContext }} /> : children}
                 </div>

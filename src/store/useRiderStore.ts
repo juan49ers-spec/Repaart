@@ -48,9 +48,18 @@ export const useRiderStore = create<RiderState>((set) => {
             const end = new Date();
             end.setDate(end.getDate() + 30); // Next 30 days
 
-            unsubscribe = shiftService.getMyShifts(riderId, start, end, (shifts) => {
-                set({ myShifts: shifts, isLoading: false });
-            });
+            unsubscribe = shiftService.getMyShifts(
+                riderId,
+                start,
+                end,
+                (shifts) => {
+                    set({ myShifts: shifts, isLoading: false });
+                },
+                (error) => {
+                    console.error("[useRiderStore] Error fetching shifts:", error);
+                    set({ isLoading: false });
+                }
+            );
         }
     };
 });

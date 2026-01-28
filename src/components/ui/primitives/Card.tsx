@@ -18,6 +18,7 @@ export const Card: React.FC<CardProps> = ({ children, className = '', noPadding 
                 shadow-sm hover:shadow-lg 
                 transition-all duration-300 
                 relative overflow-hidden group
+                w-full max-w-screen-xl
                 ${noPadding ? '' : 'p-6'}
                 ${onClick ? 'cursor-pointer hover:-translate-y-0.5' : ''}
                 ${className}

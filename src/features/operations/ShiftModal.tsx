@@ -117,6 +117,19 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
     const endTimeStr = watch('endTime');
     const selectedRiderId = watch('riderId');
 
+    // [NEW] Real-time Duration Calculation
+    const currentDuration = React.useMemo(() => {
+        if (!startDate || !startTimeStr || !endDate || !endTimeStr) return 0;
+        try {
+            const start = new Date(`${startDate}T${startTimeStr}`).getTime();
+            const end = new Date(`${endDate}T${endTimeStr}`).getTime();
+            if (isNaN(start) || isNaN(end) || start >= end) return 0;
+            return (end - start) / (1000 * 60 * 60);
+        } catch (e) {
+            return 0;
+        }
+    }, [startDate, startTimeStr, endDate, endTimeStr]);
+
     // Sync EndDate when StartDate changes (User Convenience)
     useEffect(() => {
         if (startDate) {
@@ -237,26 +250,26 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
 
     return (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2rem] shadow-2xl border border-slate-200/60 dark:border-slate-800/60 flex flex-col overflow-hidden max-h-[85vh] ring-1 ring-black/5">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-lg sm:max-w-xl rounded-[2rem] shadow-2xl border border-slate-200/60 dark:border-slate-800/60 flex flex-col overflow-hidden max-h-[85vh] ring-1 ring-black/5">
 
                 {/* HEADER (Premium Ribbon Look) */}
-                <div className="relative px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800/50">
+                <div className="relative px-5 pt-5 pb-4 md:px-6 md:pt-6 md:pb-4 border-b border-slate-100 dark:border-slate-800/50">
                     <div className="flex justify-between items-start">
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 md:gap-4">
                             <div className={cn(
-                                "p-3 rounded-2xl shadow-inner-sm transition-all duration-300",
+                                "p-2 md:p-2.5 rounded-2xl shadow-inner-sm transition-all duration-300",
                                 initialData
                                     ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400 ring-1 ring-indigo-100 dark:ring-indigo-800/50"
                                     : "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400 ring-1 ring-emerald-100 dark:ring-emerald-800/50"
                             )}>
-                                {initialData ? <Clock className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
+                                {initialData ? <Clock className="w-5 h-5 md:w-6 md:h-6" /> : <Plus className="w-5 h-5 md:w-6 md:h-6" />}
                             </div>
                             <div>
-                                <h2 className="text-xl font-semibold tracking-tight text-slate-800 dark:text-white">
+                                <h2 className="text-base md:text-lg lg:text-xl font-semibold tracking-tight text-slate-800 dark:text-white">
                                     {initialData ? 'Editar Turno' : 'Nuevo Turno'}
                                 </h2>
-                                <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500 mt-1">
-                                    Despacho de Flota • Repaart
+                                <p className="text-[9px] md:text-[10px] font-medium uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500 mt-1">
+                                    Despacho • Repaart
                                 </p>
                             </div>
                         </div>
@@ -300,49 +313,49 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                         <label className="text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">
                             Asignar Rider
                         </label>
-                        <div className="flex flex-wrap gap-4">
-                            {riders.map(r => {
-                                const color = getRiderColor(r.id);
-                                const isSelected = selectedRiderId === r.id;
-                                const isBusy = isRiderBusy(r.id);
-                                return (
-                                    <button
-                                        key={r.id}
-                                        type="button"
-                                        onClick={() => setValue('riderId', r.id)}
-                                        className={cn(
-                                            "group relative flex flex-col items-center gap-2 transition-all p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50",
-                                            isSelected ? "scale-105 bg-indigo-50/50 dark:bg-indigo-900/20" : "hover:scale-105"
-                                        )}
-                                        title={r.fullName + (isBusy ? ' (Ocupado)' : '')}
-                                    >
-                                        <div className={cn(
-                                            "w-14 h-14 rounded-2xl flex items-center justify-center text-base font-bold transition-all relative overflow-hidden shadow-sm",
-                                            color.bg, color.text,
-                                            isSelected
-                                                ? "shadow-[0_0_20px_-5px_rgba(99,102,241,0.5)] ring-2 ring-indigo-500 dark:ring-indigo-400 scale-110"
-                                                : "opacity-60 grayscale-[0.3] hover:grayscale-0 hover:opacity-100 ring-1 ring-slate-100 dark:ring-slate-800",
-                                            isBusy && !isSelected && "opacity-30 grayscale contrast-75"
-                                        )}>
-                                            {getRiderInitials(r.fullName)}
-                                            {isSelected && (
-                                                <div className="absolute right-1.5 top-1.5 w-2 h-2 rounded-full bg-white shadow-sm ring-1 ring-indigo-100" />
+                            <div className="flex flex-wrap gap-3 sm:gap-4">
+                                {riders.map(r => {
+                                    const color = getRiderColor(r.id);
+                                    const isSelected = selectedRiderId === r.id;
+                                    const isBusy = isRiderBusy(r.id);
+                                    return (
+                                        <button
+                                            key={r.id}
+                                            type="button"
+                                            onClick={() => setValue('riderId', r.id)}
+                                            className={cn(
+                                                "group relative flex flex-col items-center gap-2 transition-all p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 min-w-0",
+                                                isSelected ? "scale-105 bg-indigo-50/50 dark:bg-indigo-900/20" : "hover:scale-105"
                                             )}
-                                            {isBusy && (
-                                                <div className="absolute inset-0 bg-rose-500/10 flex items-center justify-center backdrop-blur-[1px]">
-                                                    <div className="w-full h-px bg-rose-500/50 rotate-45" />
-                                                    <div className="absolute w-full h-px bg-rose-500/50 -rotate-45" />
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="flex flex-col items-center gap-0.5">
-                                            <span className={cn(
-                                                "text-[10px] font-bold uppercase tracking-wider text-center break-words max-w-[72px] leading-tight",
-                                                isSelected ? "text-indigo-600 dark:text-indigo-400" : "text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300",
-                                                isBusy && "text-rose-400"
+                                            title={r.fullName + (isBusy ? ' (Ocupado)' : '')}
+                                        >
+                                            <div className={cn(
+                                                "w-12 sm:w-14 h-12 sm:h-14 rounded-2xl flex items-center justify-center text-xs sm:text-base font-bold transition-all relative overflow-hidden shadow-sm shrink-0",
+                                                color.bg, color.text,
+                                                isSelected
+                                                    ? "shadow-[0_0_20px_-5px_rgba(99,102,241,0.5)] ring-2 ring-indigo-500 dark:ring-indigo-400 scale-110"
+                                                    : "opacity-60 grayscale-[0.3] hover:grayscale-0 hover:opacity-100 ring-1 ring-slate-100 dark:ring-slate-800",
+                                                isBusy && !isSelected && "opacity-30 grayscale contrast-75"
                                             )}>
-                                                {r.fullName.split(' ')[0]}
-                                            </span>
+                                                {getRiderInitials(r.fullName)}
+                                                {isSelected && (
+                                                    <div className="absolute right-1.5 top-1.5 w-2 h-2 rounded-full bg-white shadow-sm ring-1 ring-indigo-100" />
+                                                )}
+                                                {isBusy && (
+                                                    <div className="absolute inset-0 bg-rose-500/10 flex items-center justify-center backdrop-blur-[1px]">
+                                                        <div className="w-full h-px bg-rose-500/50 rotate-45" />
+                                                        <div className="absolute w-full h-px bg-rose-500/50 -rotate-45" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex flex-col items-center gap-0.5 min-w-0">
+                                                <span className={cn(
+                                                    "text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-center break-words max-w-[60px] sm:max-w-[72px] leading-tight truncate",
+                                                    isSelected ? "text-indigo-600 dark:text-indigo-400" : "text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300",
+                                                    isBusy && "text-rose-400"
+                                                )}>
+                                                    {r.fullName.split(' ')[0]}
+                                                </span>
                                             {isBusy && (
                                                 <span className="px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-900/30 text-[7px] font-extrabold text-rose-600 dark:text-rose-400 uppercase tracking-wider border border-rose-200 dark:border-rose-800">
                                                     Ocupado
@@ -378,31 +391,50 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                                 </div>
 
                                 {/* Start - End Time Range */}
-                                <div className="flex items-center gap-4">
-                                    <div className="flex-1 relative group">
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors">
-                                            <Clock size={16} />
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex-1 relative group">
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors">
+                                                <Clock size={16} />
+                                            </div>
+                                            <input
+                                                {...register('startTime')}
+                                                type="time"
+                                                className="w-full bg-white dark:bg-slate-800 border-none rounded-2xl pl-12 pr-4 py-4 text-sm font-semibold outline-none ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-emerald-500 shadow-sm transition-all"
+                                            />
                                         </div>
-                                        <input
-                                            {...register('startTime')}
-                                            type="time"
-                                            className="w-full bg-white dark:bg-slate-800 border-none rounded-2xl pl-12 pr-4 py-4 text-sm font-semibold outline-none ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-emerald-500 shadow-sm transition-all"
-                                        />
-                                    </div>
-                                    <div className="text-slate-300 dark:text-slate-700 flex flex-col items-center">
-                                        <ArrowRight size={16} strokeWidth={2.5} />
-                                        <div className="h-4 w-px bg-current mt-1" />
-                                    </div>
-                                    <div className="flex-1 relative group">
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-rose-500 transition-colors">
-                                            <Clock size={16} />
+                                        <div className="text-slate-300 dark:text-slate-700 flex flex-col items-center">
+                                            <ArrowRight size={16} strokeWidth={2.5} />
+                                            <div className="h-4 w-px bg-current mt-1" />
                                         </div>
-                                        <input
-                                            {...register('endTime')}
-                                            type="time"
-                                            className="w-full bg-white dark:bg-slate-800 border-none rounded-2xl pl-12 pr-4 py-4 text-sm font-semibold outline-none ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-rose-500 shadow-sm transition-all"
-                                        />
+                                        <div className="flex-1 relative group">
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-rose-500 transition-colors">
+                                                <Clock size={16} />
+                                            </div>
+                                            <input
+                                                {...register('endTime')}
+                                                type="time"
+                                                className="w-full bg-white dark:bg-slate-800 border-none rounded-2xl pl-12 pr-4 py-4 text-sm font-semibold outline-none ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-rose-500 shadow-sm transition-all"
+                                            />
+                                        </div>
                                     </div>
+
+                                    {/* Duration Indicator */}
+                                    {currentDuration > 0 && (
+                                        <div className="flex justify-center">
+                                            <div className="px-4 py-2 bg-indigo-50/50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100/50 dark:border-indigo-800/30 flex items-center gap-3 animate-in zoom-in-95 duration-200">
+                                                <div className="flex flex-col items-end leading-none">
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-400">Duración</span>
+                                                    <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">{currentDuration.toFixed(1)}h</span>
+                                                </div>
+                                                <div className="w-px h-6 bg-indigo-200/50 dark:bg-indigo-800/50" />
+                                                <div className="flex flex-col items-start leading-none opacity-60">
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Carga</span>
+                                                    <span className="text-sm font-bold text-slate-600 dark:text-slate-300">{Math.round((currentDuration / 8) * 100)}% Jornada</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

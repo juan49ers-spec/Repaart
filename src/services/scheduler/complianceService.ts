@@ -13,9 +13,12 @@ export const ComplianceService = {
      * @param existingShifts The rider's current schedule
      */
     validateShiftRules: (
-        proposedShift: { startAt: string, endAt: string, riderId: string },
-        existingShifts: { startAt: string, endAt: string, riderId: string }[]
+        proposedShift: { startAt: string, endAt: string, riderId: string | null },
+        existingShifts: { startAt: string, endAt: string, riderId: string | null }[]
     ): ComplianceIssue[] => {
+        // If no rider is assigned, there are no personal compliance rules to check (rest, limits, etc.)
+        if (!proposedShift.riderId) return [];
+
         const issues: ComplianceIssue[] = [];
         const pStart = new Date(proposedShift.startAt);
         const pEnd = new Date(proposedShift.endAt);

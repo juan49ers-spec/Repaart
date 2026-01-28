@@ -1,0 +1,511 @@
+/**
+ * Repaart Design Tokens - Premium Design System
+ *
+ * This file contains the foundational design tokens for the entire application.
+ * All values are based on an 8-point grid system and follow WCAG 2.1 AA accessibility standards.
+ */
+
+:root {
+    /* =====================================================
+       TYPOGRAPHY SCALE
+       ===================================================== */
+    --font-display: 'Space Grotesk', system-ui, sans-serif;
+    --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    /* Font Sizes - Modular Scale (Major Third: 1.25) */
+    --font-size-xs: 0.75rem;    /* 12px */
+    --font-size-sm: 0.875rem;   /* 14px */
+    --font-size-base: 1rem;      /* 16px - Base */
+    --font-size-lg: 1.125rem;    /* 18px */
+    --font-size-xl: 1.25rem;     /* 20px */
+    --font-size-2xl: 1.5625rem;  /* 25px */
+    --font-size-3xl: 1.953125rem;/* 31.25px */
+    --font-size-4xl: 2.44140625rem;/* 39.0625px */
+    --font-size-5xl: 3.0517578125rem;/* 48.828125px */
+
+    /* Line Heights */
+    --line-height-tight: 1.1;
+    --line-height-snug: 1.25;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.625;
+    --line-height-loose: 2;
+
+    /* Font Weights */
+    --font-weight-light: 300;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-black: 900;
+
+    /* Letter Spacing */
+    --letter-spacing-tight: -0.025em;
+    --letter-spacing-normal: 0;
+    --letter-spacing-wide: 0.025em;
+
+    /* =====================================================
+       SPACING SYSTEM (8-point grid)
+       ===================================================== */
+    --space-0: 0;
+    --space-px: 0.0625rem;    /* 1px */
+    --space-0-5: 0.125rem;     /* 2px */
+    --space-1: 0.25rem;       /* 4px */
+    --space-2: 0.5rem;        /* 8px */
+    --space-3: 0.75rem;       /* 12px */
+    --space-4: 1rem;          /* 16px */
+    --space-5: 1.25rem;       /* 20px */
+    --space-6: 1.5rem;        /* 24px */
+    --space-7: 1.75rem;       /* 28px */
+    --space-8: 2rem;          /* 32px */
+    --space-10: 2.5rem;        /* 40px */
+    --space-12: 3rem;         /* 48px */
+    --space-14: 3.5rem;        /* 56px */
+    --space-16: 4rem;         /* 64px */
+    --space-20: 5rem;         /* 80px */
+    --space-24: 6rem;         /* 96px */
+    --space-32: 8rem;         /* 128px */
+    --space-40: 10rem;        /* 160px */
+    --space-48: 12rem;        /* 192px */
+    --space-56: 14rem;        /* 224px */
+    --space-64: 16rem;        /* 256px */
+
+    /* Spacing for components */
+    --spacing-xs: var(--space-1);
+    --spacing-sm: var(--space-2);
+    --spacing-md: var(--space-4);
+    --spacing-lg: var(--space-6);
+    --spacing-xl: var(--space-8);
+    --spacing-2xl: var(--space-12);
+
+    /* Border Radius */
+    --radius-none: 0;
+    --radius-sm: 0.25rem;      /* 4px */
+    --radius-md: 0.375rem;     /* 6px */
+    --radius-lg: 0.5rem;       /* 8px */
+    --radius-xl: 0.75rem;      /* 12px */
+    --radius-2xl: 1rem;        /* 16px */
+    --radius-3xl: 1.5rem;      /* 24px */
+    --radius-full: 9999px;
+
+    /* =====================================================
+       COLOR SYSTEM - Premium Brand Colors
+       ===================================================== */
+    /* Primary Brand - Indigo/Violet */
+    --color-primary-50: #eef2ff;
+    --color-primary-100: #e0e7ff;
+    --color-primary-200: #c7d2fe;
+    --color-primary-300: #a5b4fc;
+    --color-primary-400: #818cf8;
+    --color-primary-500: #6366f1;  /* Brand Primary */
+    --color-primary-600: #4f46e5;  /* Darker shade */
+    --color-primary-700: #4338ca;
+    --color-primary-800: #3730a3;
+    --color-primary-900: #312e81;
+    --color-primary-950: #1e1b4b;
+
+    /* Secondary Brand - Violet/Amethyst */
+    --color-secondary-50: #faf5ff;
+    --color-secondary-100: #f3e8ff;
+    --color-secondary-200: #e9d5ff;
+    --color-secondary-300: #d9b9ff;
+    --color-secondary-400: #c084fc;
+    --color-secondary-500: #a855f7;  /* Brand Secondary */
+    --color-secondary-600: #9333ea;
+    --color-secondary-700: #7e22ce;
+    --color-secondary-800: #6b21a8;
+    --color-secondary-900: #581c87;
+
+    /* Accent - Pink/Rose */
+    --color-accent-50: #fdf2f8;
+    --color-accent-100: #fce7f3;
+    --color-accent-200: #fbcfe8;
+    --color-accent-300: #f9a5d5;
+    --color-accent-400: #f472b6;
+    --color-accent-500: #ec4899;  /* Brand Accent */
+    --color-accent-600: #db2777;
+    --color-accent-700: #be185d;
+    --color-accent-800: #9d174d;
+    --color-accent-900: #831843;
+
+    /* Success - Emerald */
+    --color-success-50: #ecfdf5;
+    --color-success-100: #d1fae5;
+    --color-success-500: #10b981;  /* Success Primary */
+    --color-success-600: #059669;
+    --color-success-700: #047857;
+
+    /* Warning - Amber */
+    --color-warning-50: #fffbeb;
+    --color-warning-100: #fef3c7;
+    --color-warning-500: #f59e0b;  /* Warning Primary */
+    --color-warning-600: #d97706;
+    --color-warning-700: #b45309;
+
+    /* Error - Rose */
+    --color-error-50: #fef2f2;
+    --color-error-100: #fee2e2;
+    --color-error-500: #ef4444;  /* Error Primary */
+    --color-error-600: #dc2626;
+    --color-error-700: #b91c1c;
+
+    /* =====================================================
+       NEUTRAL COLORS - Slate Scale
+       ===================================================== */
+    --color-slate-50: #f8fafc;
+    --color-slate-100: #f1f5f9;
+    --color-slate-200: #e2e8f0;
+    --color-slate-300: #cbd5e1;
+    --color-slate-400: #94a3b8;
+    --color-slate-500: #64748b;
+    --color-slate-600: #475569;
+    --color-slate-700: #334155;
+    --color-slate-800: #1e293b;
+    --color-slate-900: #0f172a;
+    --color-slate-950: #020617;
+
+    /* =====================================================
+       SEMANTIC COLORS
+       ===================================================== */
+    /* Backgrounds */
+    --color-bg-primary: #ffffff;
+    --color-bg-secondary: #f8fafc;
+    --color-bg-tertiary: #f1f5f9;
+    --color-bg-inverse: #0f172a;
+
+    /* Text */
+    --color-text-primary: #0f172a;
+    --color-text-secondary: #475569;
+    --color-text-tertiary: #94a3b8;
+    --color-text-inverse: #ffffff;
+    --color-text-muted: #64748b;
+
+    /* Borders */
+    --color-border-primary: #e2e8f0;
+    --color-border-secondary: #cbd5e1;
+    --color-border-tertiary: #94a3b8;
+
+    /* =====================================================
+       SHADOWS & ELEVATION
+       ===================================================== */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+    /* Shadow Colors */
+    --shadow-color-sm: rgba(0, 0, 0, 0.05);
+    --shadow-color-md: rgba(0, 0, 0, 0.1);
+    --shadow-color-lg: rgba(0, 0, 0, 0.15);
+    --shadow-color-xl: rgba(0, 0, 0, 0.2);
+
+    /* Inner Shadows */
+    --shadow-inset-sm: inset 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-inset-md: inset 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+
+    /* =====================================================
+       GRADIENTS
+       ===================================================== */
+    --gradient-primary: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-700));
+    --gradient-secondary: linear-gradient(135deg, var(--color-secondary-500), var(--color-secondary-700));
+    --gradient-accent: linear-gradient(135deg, var(--color-accent-500), var(--color-accent-700));
+    --gradient-hero: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-secondary-500) 100%);
+    --gradient-mesh: radial-gradient(at 0% 0%, var(--color-primary-200) 0px, transparent 50%),
+                    radial-gradient(at 100% 100%, var(--color-secondary-200) 0px, transparent 50%);
+    --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+
+    /* =====================================================
+       ANIMATION TIMING
+       ===================================================== */
+    --duration-instant: 150ms;
+    --duration-fast: 200ms;
+    --duration-normal: 300ms;
+    --duration-slow: 500ms;
+    --duration-slower: 700ms;
+
+    /* Animation Easing */
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --ease-elastic: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+
+    /* =====================================================
+       Z-INDEX SCALE
+       ===================================================== */
+    --z-base: 0;
+    --z-dropdown: 1000;
+    --z-sticky: 1020;
+    --z-fixed: 1030;
+    --z-modal-backdrop: 1040;
+    --z-modal: 1050;
+    --z-popover: 1060;
+    --z-tooltip: 1070;
+    --z-toast: 1080;
+    --z-notification: 1100;
+    --z-skip-link: 9999;
+}
+
+/* =====================================================
+   DARK MODE OVERRIDES
+   ===================================================== */
+:root[data-theme='dark'] {
+    /* Backgrounds */
+    --color-bg-primary: #0f172a;
+    --color-bg-secondary: #1e293b;
+    --color-bg-tertiary: #1e293b;
+    --color-bg-inverse: #f8fafc;
+
+    /* Text */
+    --color-text-primary: #f8fafc;
+    --color-text-secondary: #e2e8f0;
+    --color-text-tertiary: #94a3b8;
+    --color-text-inverse: #0f172a;
+    --color-text-muted: #64748b;
+
+    /* Borders */
+    --color-border-primary: #334155;
+    --color-border-secondary: #475569;
+    --color-border-tertiary: #64748b;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+
+    /* Gradient for Dark Mode */
+    --gradient-glass: linear-gradient(135deg, rgba(15, 23, 42, 0.3), rgba(15, 23, 42, 0.1));
+}
+
+/* =====================================================
+   RESPONSIVE TYPOGRAPHY
+   ===================================================== */
+:root {
+    /* Fluid Typography */
+    --font-size-fluid-sm: clamp(0.875rem, 2vw + 0.5rem, 1rem);
+    --font-size-fluid-base: clamp(1rem, 2vw + 1rem, 1.125rem);
+    --font-size-fluid-lg: clamp(1.125rem, 2.5vw + 1rem, 1.5rem);
+    --font-size-fluid-xl: clamp(1.25rem, 3vw + 1rem, 1.75rem);
+}
+
+/* =====================================================
+   ACCESSIBILITY TOKENS
+   ===================================================== */
+:root {
+    /* Focus States */
+    --focus-ring-width: 2px;
+    --focus-ring-color: var(--color-primary-500);
+    --focus-ring-offset: 2px;
+
+    /* Minimum Touch Targets (44px for mobile) */
+    --touch-target-min: 44px;
+
+    /* Contrast Colors (WCAG AA: 4.5:1 for normal text) */
+    --contrast-high: var(--color-text-primary);
+    --contrast-medium: var(--color-text-secondary);
+    --contrast-low: var(--color-text-tertiary);
+
+    /* Disabled States */
+    --color-bg-disabled: var(--color-slate-100);
+    --color-text-disabled: var(--color-slate-400);
+    --color-border-disabled: var(--color-slate-300);
+
+    /* Interactive States */
+    --color-bg-hover: var(--color-slate-50);
+    --color-bg-active: var(--color-primary-50);
+    --color-border-hover: var(--color-primary-200);
+    --color-border-active: var(--color-primary-400);
+}
+
+/* =====================================================
+   RESPONSIVE & FLUID TOKENS
+   ===================================================== */
+:root {
+    /* Container Query Breakpoints */
+    --container-sm: 300px;
+    --container-md: 600px;
+    --container-lg: 900px;
+    --container-xl: 1200px;
+    --container-2xl: 1500px;
+
+    /* Fluid Spacing */
+    --spacing-fluid-sm: clamp(var(--space-1), 2vw, var(--space-2));
+    --spacing-fluid-md: clamp(var(--space-2), 3vw, var(--space-4));
+    --spacing-fluid-lg: clamp(var(--space-4), 4vw, var(--space-6));
+    --spacing-fluid-xl: clamp(var(--space-6), 5vw, var(--space-8));
+
+    /* Fluid Typography */
+    --font-fluid-h1: clamp(var(--font-size-2xl), 5vw + 1rem, var(--font-size-4xl));
+    --font-fluid-h2: clamp(var(--font-size-xl), 4vw + 1rem, var(--font-size-3xl));
+    --font-fluid-h3: clamp(var(--font-size-lg), 3vw + 1rem, var(--font-size-2xl));
+    --font-fluid-body: clamp(var(--font-size-sm), 2vw + 0.5rem, var(--font-size-base));
+    --font-fluid-small: clamp(var(--font-size-xs), 1.5vw + 0.5rem, var(--font-size-sm));
+
+    /* Safe Area for iPhone X+ */
+    --safe-area-inset-left: env(safe-area-inset-left);
+    --safe-area-inset-right: env(safe-area-inset-right);
+    --safe-area-inset-top: env(safe-area-inset-top);
+    --safe-area-inset-bottom: env(safe-area-inset-bottom);
+}
+
+/* =====================================================
+   OFFLINE STATE STYLES
+   ===================================================== */
+:root {
+    --offline-bg: #fef2f2;
+    --offline-border: #fca5a5;
+    --offline-text: #991b1b;
+    --offline-icon: #dc2626;
+}
+
+body.offline {
+    --color-bg-primary: var(--offline-bg);
+    --color-text-primary: var(--offline-text);
+    --color-border-primary: var(--offline-border);
+}
+
+body.offline .offline-only {
+    display: block;
+}
+
+body:not(.offline) .offline-only {
+    display: none;
+}
+
+/* =====================================================
+   CONTAINER QUERY STYLES
+   ===================================================== */
+@container (min-width: 300px) {
+    --container-font-size: var(--font-size-sm);
+    --container-spacing: var(--space-2);
+    --container-grid-columns: 1;
+}
+
+@container (min-width: 600px) {
+    --container-font-size: var(--font-size-base);
+    --container-spacing: var(--space-4);
+    --container-grid-columns: 2;
+}
+
+@container (min-width: 900px) {
+    --container-font-size: var(--font-size-lg);
+    --container-spacing: var(--space-6);
+    --container-grid-columns: 3;
+}
+
+@container (min-width: 1200px) {
+    --container-font-size: var(--font-size-xl);
+    --container-spacing: var(--space-8);
+    --container-grid-columns: 4;
+}
+
+/* =====================================================
+   UTILITY CLASSES
+   ===================================================== */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+.focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+}
+
+/* Skip Navigation Link */
+.skip-to-content {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--color-primary-500);
+    color: var(--color-text-inverse);
+    padding: var(--space-2) var(--space-3);
+    z-index: var(--z-skip-link);
+    border-radius: var(--radius-md);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: none;
+    transition: top var(--duration-fast);
+}
+
+.skip-to-content:focus {
+    top: 0;
+}
+
+/* =====================================================
+   COMPONENT-SPECIFIC TOKENS
+   ===================================================== */
+:root {
+    /* Buttons */
+    --btn-padding-x: var(--space-4);
+    --btn-padding-y: var(--space-2);
+    --btn-padding-sm-x: var(--space-3);
+    --btn-padding-sm-y: var(--space-1-5);
+    --btn-radius: var(--radius-md);
+    --btn-radius-sm: var(--radius-sm);
+    --btn-radius-lg: var(--radius-lg);
+    --btn-shadow: var(--shadow-md);
+    --btn-shadow-hover: var(--shadow-lg);
+
+    /* Cards */
+    --card-padding: var(--space-6);
+    --card-radius: var(--radius-xl);
+    --card-shadow: var(--shadow-sm);
+    --card-shadow-hover: var(--shadow-md);
+    --card-bg: var(--color-bg-primary);
+    --card-border: var(--color-border-primary);
+
+    /* Inputs */
+    --input-padding-x: var(--space-3);
+    --input-padding-y: var(--space-2);
+    --input-radius: var(--radius-md);
+    --input-border: var(--color-border-primary);
+    --input-bg: var(--color-bg-primary);
+    --input-focus-border: var(--color-primary-500);
+    --input-focus-ring: 0 0 0 2px var(--color-primary-200);
+
+    /* Modals */
+    --modal-padding: var(--space-8);
+    --modal-radius: var(--radius-2xl);
+    --modal-shadow: var(--shadow-2xl);
+    --modal-max-width: 90vw;
+
+    /* Tables */
+    --table-cell-padding: var(--space-3) var(--space-4);
+    --table-header-bg: var(--color-bg-secondary);
+    --table-row-hover-bg: var(--color-bg-secondary);
+    --table-border-color: var(--color-border-secondary);
+    --table-stripe-bg: var(--color-slate-50);
+
+    /* Alerts/Notifications */
+    --alert-padding: var(--space-4);
+    --alert-radius: var(--radius-lg);
+    --alert-info-bg: #eff6ff;
+    --alert-info-text: #1e40af;
+    --alert-success-bg: #d1fae5;
+    --alert-success-text: #065f46;
+    --alert-warning-bg: #fef3c7;
+    --alert-warning-text: #92400e;
+    --alert-error-bg: #fee2e2;
+    --alert-error-text: #991b1b;
+}

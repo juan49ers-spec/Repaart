@@ -1,7 +1,65 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
-/* High-Density Workstation Components - GLASSMORPHISM UPDATE */
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+
+  --color-indigo-50: #f0f4f8;
+  --color-indigo-100: #d9e2ec;
+  --color-indigo-200: #bcccdc;
+  --color-indigo-300: #9fb3c8;
+  --color-indigo-400: #829ab1;
+  --color-indigo-500: #627d98;
+  --color-indigo-600: #486581;
+  --color-indigo-700: #334e68;
+  --color-indigo-800: #243b53;
+  --color-indigo-900: #102a43;
+  --color-indigo-950: #0a1c2e;
+}
+
+/* ============================================== */
+/* GLASSMORPHISM SYSTEM V2 - ENHANCED      */
+/* ============================================== */
+
+/* Multi-layer Glass System V2 */
+.glass-premium-v2 {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.dark .glass-premium-v2 {
+  background: rgba(30, 41, 59, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Glass with Glow */
+.glass-glow {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow:
+    0 0 40px rgba(99, 102, 241, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.dark .glass-glow {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  box-shadow:
+    0 0 40px rgba(99, 102, 241, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Legacy Glass Classes (Maintained) */
 .workstation-card {
   @apply bg-white/80 dark:bg-slate-900/60 border border-white/60 dark:border-white/5 rounded-3xl transition-all duration-300;
   backdrop-filter: blur(24px) saturate(140%);
@@ -45,6 +103,108 @@
   @apply flex items-center justify-between py-2 px-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors cursor-pointer;
 }
 
+/* ============================================== */
+/* GLOW EFFECTS SYSTEM                     */
+/* ============================================== */
+
+/* Primary Glow */
+.glow-primary {
+  box-shadow:
+    0 0 20px rgba(99, 102, 241, 0.3),
+    0 0 40px rgba(99, 102, 241, 0.1);
+}
+
+/* Secondary Glow */
+.glow-secondary {
+  box-shadow:
+    0 0 20px rgba(139, 92, 246, 0.3),
+    0 0 40px rgba(139, 92, 246, 0.1);
+}
+
+/* Success Glow */
+.glow-success {
+  box-shadow:
+    0 0 20px rgba(16, 185, 129, 0.3),
+    0 0 40px rgba(16, 185, 129, 0.1);
+}
+
+/* Danger Glow */
+.glow-danger {
+  box-shadow:
+    0 0 20px rgba(239, 68, 68, 0.3),
+    0 0 40px rgba(239, 68, 68, 0.1);
+}
+
+/* ============================================== */
+/* SHIMMER LOADING EFFECT                   */
+/* ============================================== */
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+
+  100% {
+    left: 100%;
+  }
+}
+
+/* Shimmer for Dark Mode */
+.dark .shimmer::after {
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent);
+}
+
+/* ============================================== */
+/* GRADIENT MESH BACKGROUND                 */
+/* ============================================== */
+
+.gradient-mesh {
+  background:
+    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(239, 68, 68, 0.1) 0px, transparent 50%);
+  animation: gradient-mesh 15s ease-in-out infinite;
+}
+
+@keyframes gradient-mesh {
+
+  0%,
+  100% {
+    background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  }
+
+  50% {
+    background-size: 150% 150%, 150% 150%, 150% 150%, 150% 150%;
+  }
+}
+
+/* ============================================== */
+/* PREMIUM ANIMATIONS RE-ACTIVATED       */
+/* ============================================== */
+
 /* Mechanical/Rigid Animations (Repaart Style) */
 .mechanical-press {
   @apply transition-transform duration-100 ease-out active:scale-[0.97] active:brightness-90;
@@ -81,7 +241,167 @@
   }
 }
 
-/* Viewport & Scroll Management */
+/* Aurora - Smooth Gradient Flow - REACTIVATED */
+.animate-aurora-slow {
+  animation: aurora-slow 20s ease-in-out infinite;
+  opacity: 0.8;
+}
+
+.animate-aurora-slower {
+  animation: aurora-slower 30s ease-in-out infinite;
+  opacity: 0.7;
+}
+
+.animate-aurora-reverse {
+  animation: aurora-reverse 25s ease-in-out infinite;
+  opacity: 0.8;
+}
+
+@keyframes aurora-slow {
+  0% {
+    background-position: 0% 50%;
+    opacity: 0.8;
+  }
+
+  50% {
+    background-position: 100% 50%;
+    opacity: 1;
+  }
+
+  100% {
+    background-position: 0% 50%;
+    opacity: 0.8;
+  }
+}
+
+@keyframes aurora-slower {
+
+  0%,
+  100% {
+    background-position: 0% 0%;
+  }
+
+  50% {
+    background-position: 100% 100%;
+  }
+}
+
+@keyframes aurora-reverse {
+  0% {
+    background-position: 100% 50%;
+  }
+
+  50% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Haptic - Subtle Shake Feedback - REACTIVATED */
+.animate-haptic {
+  animation: haptic 0.4s ease-in-out;
+}
+
+@keyframes haptic {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20%,
+  60% {
+    transform: translateX(-2px);
+  }
+
+  40%,
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+/* Zigzag - Energy Pulse - REACTIVATED */
+.animate-zigzag {
+  animation: zigzag 0.6s ease-in-out infinite;
+}
+
+@keyframes zigzag {
+
+  0%,
+  100% {
+    transform: skewX(0deg);
+    opacity: 1;
+  }
+
+  25% {
+    transform: skewX(-2deg);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: skewX(2deg);
+    opacity: 1;
+  }
+
+  75% {
+    transform: skewX(-1deg);
+    opacity: 0.9;
+  }
+}
+
+/* Orb - Glowing Sphere - REACTIVATED */
+.animate-orb {
+  animation: orb 3s ease-in-out infinite;
+  opacity: 0.8;
+}
+
+@keyframes orb {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.6;
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+  }
+
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+    box-shadow: 0 0 40px rgba(99, 102, 241, 0.6);
+  }
+}
+
+/* ============================================== */
+/* REDUCED MOTION SUPPORT                  */
+/* ============================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .animate-aurora-slow,
+  .animate-aurora-slower,
+  .animate-aurora-reverse,
+  .animate-orb,
+  .animate-haptic,
+  .animate-zigzag {
+    animation: none !important;
+  }
+}
+
+/* ============================================== */
+/* VIEWPORT & SCROLL MANAGEMENT              */
+/* ============================================== */
+
 .viewport-fixed {
   height: 100vh;
   height: 100dvh;
@@ -112,6 +432,10 @@
 .scrollable-area::-webkit-scrollbar-thumb:hover {
   @apply bg-slate-300 dark:bg-slate-700;
 }
+
+/* ============================================== */
+/* LUXURY SHADOWS                        */
+/* ============================================== */
 
 .luxury-shadow-sm {
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -144,6 +468,10 @@
     transform: rotate(360deg);
   }
 }
+
+/* ============================================== */
+/* DESIGN TOKENS - THEME                   */
+/* ============================================== */
 
 @theme {
   --color-brand-50: oklch(0.97 0.01 291.07);
@@ -200,31 +528,48 @@ body {
   --warning: #f59e0b;
   --danger: #ef4444;
 
-  /* Workstation Scale (High Density) */
-  --font-size-xs: 0.75rem;
-  /* 12px */
-  --font-size-sm: 0.8125rem;
-  /* 13px */
-  --font-size-base: 0.875rem;
-  /* 14px */
-  --font-size-lg: 1rem;
-  /* 16px */
-  --font-size-xl: 1.125rem;
-  /* 18px */
+  /* Glow Colors */
+  --glow-primary: rgba(99, 102, 241, 0.3);
+  --glow-secondary: rgba(139, 92, 246, 0.3);
+  --glow-success: rgba(16, 185, 129, 0.3);
+  --glow-danger: rgba(239, 68, 68, 0.3);
+
+  /* Glass Backgrounds */
+  --glass-light: rgba(255, 255, 255, 0.65);
+  --glass-heavy: rgba(255, 255, 255, 0.8);
+
+  /* Workstation Scale (High Density) - Modernized Fluid Tokens */
+  --font-size-xs: clamp(0.7rem, 0.65rem + 0.15vw, 0.75rem);
+  --font-size-sm: clamp(0.75rem, 0.7rem + 0.25vw, 0.8125rem);
+  --font-size-base: clamp(0.8125rem, 0.75rem + 0.35vw, 0.875rem);
+  --font-size-lg: clamp(0.875rem, 0.8rem + 0.5vw, 1.125rem);
+  --font-size-xl: clamp(1.125rem, 1rem + 1vw, 1.5rem);
+  --font-size-2xl: clamp(1.5rem, 1.25rem + 2vw, 2.25rem);
+  --font-size-3xl: clamp(2rem, 1.5rem + 4vw, 3.5rem);
 }
 
 .dark {
-  /* Dark Mode Colors - True Black OLED Style */
+  /* Dark Mode Colors - Enhanced Contrast (WCAG AA) */
   --bg-primary: #000000;
   /* Absolute Black for OLED */
   --bg-card: #1c1c1e;
   /* iOS System Gray 6 */
-  --text-primary: #f2f2f7;
-  /* iOS Label Color */
-  --text-secondary: #aeaeb2;
-  /* iOS Secondary Label */
+  --text-primary: #f1f5f9;
+  /* Enhanced contrast from #f2f2f7 */
+  --text-secondary: #94a3b8;
+  /* Enhanced contrast from #aeaeb2 */
   --border: #2c2c2e;
   /* iOS Separator */
+
+  /* Glass Backgrounds */
+  --glass-light: rgba(30, 41, 59, 0.45);
+  --glass-heavy: rgba(15, 23, 42, 0.6);
+
+  /* Glow Colors */
+  --glow-primary: rgba(99, 102, 241, 0.3);
+  --glow-secondary: rgba(139, 92, 246, 0.3);
+  --glow-success: rgba(16, 185, 129, 0.3);
+  --glow-danger: rgba(239, 68, 68, 0.3);
 }
 
 body {
@@ -245,15 +590,18 @@ body {
   -webkit-overflow-scrolling: touch;
   /* Momentum scrolling */
 
-  /* SF Pro uses double-story 'a', so we keep Inter defaults. 
-     ss01 (open digits) or cv05 (l with tail) are optional preferences. 
+  /* SF Pro uses double-story 'a', so we keep Inter defaults.
+     ss01 (open digits) or cv05 (l with tail) are optional preferences.
      We stick to defaults for maximum resemblance to standard SF Pro. */
   font-feature-settings: 'calt' 1;
   letter-spacing: -0.012em;
   /* Slightly tighter for that Apple feel */
 }
 
-/* Safe Area Utilities */
+/* ============================================== */
+/* SAFE AREA UTILITIES - ENHANCED          */
+/* ============================================== */
+
 .pt-safe {
   padding-top: env(safe-area-inset-top);
 }
@@ -270,6 +618,14 @@ body {
   margin-bottom: env(safe-area-inset-bottom);
 }
 
+.pl-safe {
+  padding-left: env(safe-area-inset-left);
+}
+
+.pr-safe {
+  padding-right: env(safe-area-inset-right);
+}
+
 .h-safe {
   height: env(safe-area-inset-top);
 }
@@ -282,7 +638,33 @@ body {
   min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
 }
 
-/* Hide scrollbar utility */
+/* All Safe Areas */
+.safe-all {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+.safe-all-margin {
+  margin: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* Fixed Safe Area Positioning */
+.fixed-safe {
+  position: fixed;
+  top: env(safe-area-inset-top);
+  left: env(safe-area-inset-left);
+  right: env(safe-area-inset-right);
+  bottom: env(safe-area-inset-bottom);
+}
+
+/* Bottom Safe Area for Navigation */
+.bottom-nav-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+}
+
+/* ============================================== */
+/* HIDE SCROLLBAR UTILITY                  */
+/* ============================================== */
+
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -292,7 +674,10 @@ body {
   scrollbar-width: none;
 }
 
-/* Apple Typography Extensions */
+/* ============================================== */
+/* APPLE TYPOGRAPHY EXTENSIONS              */
+/* ============================================== */
+
 .text-apple-h1 {
   font-size: var(--font-size-3xl);
   @apply font-bold tracking-tighter leading-tight text-slate-900 dark:text-white;
@@ -310,54 +695,6 @@ body {
 
 .text-apple-sub {
   @apply text-xs font-semibold uppercase tracking-widest text-slate-500;
-}
-
-/* Hyper-Cockpit V3 FX - DISABLED FOR FLUIDITY */
-.animate-orb {
-  animation: none;
-  opacity: 0.5;
-}
-
-.animate-haptic {
-  animation: none;
-}
-
-.animate-zigzag {
-  animation: none;
-}
-
-.desktop-glass-container {
-  @apply bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden;
-}
-
-.workstation-table-row {
-  @apply h-10 border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors;
-}
-
-.workstation-label {
-  @apply text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500;
-}
-
-.ruby-button {
-  @apply bg-ruby-600 hover:bg-ruby-700 text-white font-black uppercase tracking-widest text-[10px] px-6 py-3 rounded-2xl transition-all duration-300 active:scale-95;
-  box-shadow: 0 8px 20px -6px rgba(225, 29, 72, 0.5);
-}
-
-.glow-ruby {
-  @apply relative overflow-hidden;
-}
-
-.glow-ruby::after {
-  content: '';
-  @apply absolute inset-0 bg-gradient-to-tr from-ruby-600/20 to-transparent opacity-0 transition-opacity duration-500;
-}
-
-.glow-ruby:hover::after {
-  @apply opacity-100;
-}
-
-.neon-glow-ruby {
-  box-shadow: 0 0 20px rgba(225, 29, 72, 0.2);
 }
 
 /* Custom Scrollbar for Light Mode */
@@ -379,282 +716,8 @@ body {
   background: rgba(148, 163, 184, 0.8);
 }
 
-/* Aurora Animation - DISABLED */
-.animate-aurora-slow {
-  animation: none;
-}
-
-.animate-aurora-slower {
-  animation: none;
-}
-
-.animate-aurora-reverse {
-  animation: none;
-}
-
-.mask-marquee {
-  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-}
-
-/* Smooth Marquee */
-@keyframes marquee {
-  0% {
-    transform: translateX(0);
-  }
-
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
-.animate-marquee {
-  animation: marquee 30s linear infinite;
-  will-change: transform;
-}
-
-/* Responsive Apple-style Typography */
-h1,
-.text-apple-h1 {
-  font-size: var(--font-size-4xl);
-  letter-spacing: -0.025em;
-  font-weight: 700;
-  line-height: 1.1;
-}
-
-h2,
-.text-apple-h2 {
-  font-size: var(--font-size-3xl);
-  letter-spacing: -0.015em;
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-h3 {
-  font-size: var(--font-size-2xl);
-  font-weight: 600;
-  line-height: 1.3;
-}
-
-/* iOS Input Zoom Prevention */
-input,
-textarea,
-select {
-  font-size: 16px !important;
-  /* Force 16px to prevent iOS zoom */
-}
-
-@media (min-width: 768px) {
-
-  input,
-  textarea,
-  select {
-    font-size: 14px !important;
-    /* Revert on desktop if needed */
-  }
-}
-
-/* Mobile Safe Area Handling - Enhanced */
-.safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-.safe-top {
-  padding-top: env(safe-area-inset-top);
-}
-
-/* iOS-style Dock Blur */
-.ios-dock {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(25px) saturate(180%);
-  -webkit-backdrop-filter: blur(25px) saturate(180%);
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.dark .ios-dock {
-  background: rgba(20, 20, 20, 0.75);
-  /* Not fully black for glass effect */
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Smooth Scrolling for Layouts */
-html,
-body {
-  scroll-behavior: smooth;
-  overscroll-behavior-y: none;
-}
-
 /* ============================================== */
-/* MOBILE-FIRST APP UTILITIES (Glovo/Apple Style) */
-/* ============================================== */
-
-/* Native Touch Behavior */
-* {
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-
-button,
-a,
-[role="button"] {
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-/* Floating Dock Navigation (Glovo Style) */
-/* Floating Dock Navigation (Glovo Style) - Now Flush Bottom */
-.tab-dock {
-  position: fixed;
-  bottom: 0px;
-  left: 0;
-  right: 0;
-  z-index: 50;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-radius: 0;
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.08);
-  border-top: 1px solid rgba(255, 255, 255, 0.5);
-  padding-bottom: calc(4px + env(safe-area-inset-bottom));
-  overflow: visible;
-  /* To allow FAB to pop out */
-}
-
-.dark .tab-dock {
-  background: rgba(15, 23, 42, 0.85);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
-}
-
-/* Tab Item Pill - Compact for 6 items */
-.tab-item {
-  @apply flex-1 flex flex-col items-center justify-center py-2 px-0 transition-all duration-200 min-w-0 overflow-hidden;
-}
-
-.tab-item-active {
-  @apply text-blue-600 dark:text-blue-400;
-}
-
-.tab-item-inactive {
-  @apply text-slate-400 dark:text-slate-500;
-}
-
-.tab-pill {
-  @apply px-2 py-1.5 rounded-2xl transition-all duration-200 flex items-center justify-center;
-}
-
-.tab-pill-active {
-  @apply bg-blue-100 dark:bg-blue-500/20;
-}
-
-/* Mobile Card System */
-.card-mobile {
-  @apply bg-white dark:bg-slate-900 rounded-3xl p-5;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-
-.dark .card-mobile {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-/* Touch Feedback */
-.touch-feedback {
-  @apply transition-transform duration-150 active:scale-95;
-}
-
-.touch-feedback-subtle {
-  @apply transition-transform duration-150 active:scale-[0.98];
-}
-
-/* Mobile Typography */
-.text-mobile-title {
-  @apply text-2xl font-bold tracking-tight text-slate-900 dark:text-white;
-}
-
-.text-mobile-subtitle {
-  @apply text-lg font-semibold text-slate-700 dark:text-slate-200;
-}
-
-.text-mobile-body {
-  @apply text-base text-slate-600 dark:text-slate-400;
-}
-
-.text-mobile-caption {
-  @apply text-xs uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500;
-}
-
-/* Big Numbers (Apple Finance Style) */
-.text-stat-large {
-  @apply text-5xl font-black tracking-tighter tabular-nums text-slate-900 dark:text-white;
-  line-height: 1;
-}
-
-.text-stat-medium {
-  @apply text-3xl font-black tracking-tight tabular-nums text-slate-800 dark:text-slate-100;
-  line-height: 1.1;
-}
-
-/* Mobile Layout Helpers */
-.mobile-container {
-  @apply max-w-lg mx-auto w-full px-4;
-}
-
-.mobile-section {
-  @apply py-6 space-y-4;
-}
-
-/* Layout Container Utilities */
-.content-wrapper {
-  @apply mx-auto w-full px-4 sm:px-6 lg:px-8;
-  max-width: 1536px;
-  /* Matches 2xl breakpoint */
-}
-
-/* Content Safe Padding (for floating nav) */
-.content-safe-bottom {
-  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
-}
-
-/* Animated Page Transitions */
-@keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-slide-up {
-  animation: slide-up 0.3s ease-out forwards;
-}
-
-/* Pull Indicator (for refreshes) */
-.pull-indicator {
-  @apply w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mb-2;
-}
-
-/* Category Bubbles (Glovo Style) */
-.category-bubble {
-  @apply flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-200;
-  @apply bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700;
-  @apply transition-transform duration-150 active:scale-95;
-}
-
-.category-bubble-icon {
-  @apply w-12 h-12 rounded-full flex items-center justify-center;
-  @apply bg-gradient-to-br from-blue-500 to-indigo-600 text-white;
-}
-
-.category-bubble-label {
-  @apply text-xs font-bold text-slate-600 dark:text-slate-300 text-center;
-}
-
-/* ============================================== */
-/* LOGO ANIMATIONS - SPECTACULAR FX               */
+/* LOGO ANIMATIONS - SPECTACULAR FX       */
 /* ============================================== */
 
 /* 1. Draw-in Animation (SVG Stroke) */
@@ -754,4 +817,753 @@ a,
 
 .logo-cinematic {
   animation: logo-breathe 4s ease-in-out infinite;
+}
+
+/* ============================================== */
+/* RUBY BUTTON STYLES                     */
+/* ============================================== */
+
+.ruby-button {
+  @apply bg-ruby-600 hover:bg-ruby-700 text-white font-black uppercase tracking-widest text-[10px] px-6 py-3 rounded-2xl transition-all duration-300 active:scale-95;
+  box-shadow: 0 8px 20px -6px rgba(225, 29, 72, 0.5);
+}
+
+.glow-ruby {
+  @apply relative overflow-hidden;
+}
+
+.glow-ruby::after {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-tr from-ruby-600/20 to-transparent opacity-0 transition-opacity duration-500;
+}
+
+.glow-ruby:hover::after {
+  @apply opacity-100;
+}
+
+.neon-glow-ruby {
+  box-shadow: 0 0 20px rgba(225, 29, 72, 0.2);
+}
+
+/* ============================================== */
+/* RESPONSIVE UTILITIES - FLUID              */
+/* ============================================== */
+
+/* Fluid Font Sizes */
+.text-fluid-xs {
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+}
+
+.text-fluid-sm {
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+}
+
+.text-fluid-base {
+  font-size: clamp(1rem, 3vw, 1.125rem);
+}
+
+.text-fluid-lg {
+  font-size: clamp(1.125rem, 4vw, 1.25rem);
+}
+
+.text-fluid-xl {
+  font-size: clamp(1.25rem, 5vw, 1.5rem);
+}
+
+.text-fluid-2xl {
+  font-size: clamp(1.5rem, 6vw, 2rem);
+}
+
+.text-fluid-3xl {
+  font-size: clamp(2rem, 7vw, 2.5rem);
+}
+
+/* Fluid Spacing */
+.padding-fluid {
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.gap-fluid {
+  gap: clamp(0.5rem, 2vw, 1rem);
+}
+
+/* ============================================== */
+/* TOUCH-FRIENDLY ELEMENTS                */
+/* ============================================== */
+
+/* Minimum Touch Target Sizes */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Large Touch Targets */
+.touch-target-lg {
+  min-width: 48px;
+  min-height: 48px;
+}
+
+/* Input Touch Optimization */
+input,
+textarea,
+select {
+  min-height: 48px;
+  padding: 0.75rem 1rem;
+  font-size: 16px;
+  /* Prevent iOS zoom */
+}
+
+@media (min-width: 768px) {
+
+  input,
+  textarea,
+  select {
+    min-height: 40px;
+    padding: 0.5rem 0.75rem;
+    font-size: 14px;
+  }
+}
+
+/* ============================================== */
+/* FLUID GRID SYSTEM                      */
+/* ============================================== */
+
+/* Fluid Grid */
+.grid-fluid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: clamp(1rem, 3vw, 2rem);
+}
+
+/* Responsive Grid with Fallbacks */
+.grid-responsive {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-responsive {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .grid-responsive {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ============================================== */
+/* FLEXIBLE WIDTHS                          */
+/* ============================================== */
+
+/* Responsive Width Pattern */
+.w-responsive {
+  width: 100%;
+  max-width: 100%;
+}
+
+.w-responsive-lg {
+  width: 100%;
+  max-width: 1024px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.w-responsive-xl {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Container Responsive */
+.container-responsive {
+  width: 100%;
+  max-width: 1536px;
+  margin: 0 auto;
+  padding-left: clamp(1rem, 3vw, 2rem);
+  padding-right: clamp(1rem, 3vw, 2rem);
+}
+
+/* ============================================== */
+/* MOBILE-FIRST HIDE/SHOW PATTERNS          */
+/* ============================================== */
+
+/* Hide on Mobile */
+.hide-mobile {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .hide-mobile {
+    display: block;
+  }
+}
+
+/* Show Only on Mobile */
+.show-mobile-only {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .show-mobile-only {
+    display: none;
+  }
+}
+
+/* Hide on Desktop */
+.hide-desktop {
+  display: block;
+}
+
+@media (min-width: 1024px) {
+  .hide-desktop {
+    display: none;
+  }
+}
+
+/* ============================================== */
+/* ORIENTATION HANDLING                      */
+/* ============================================== */
+
+/* Portrait Styles */
+@media (orientation: portrait) {
+  .portrait-only {
+    display: block;
+  }
+
+  .landscape-only {
+    display: none;
+  }
+}
+
+/* Landscape Styles */
+@media (orientation: landscape) {
+  .landscape-only {
+    display: block;
+  }
+
+  .portrait-only {
+    display: none;
+  }
+}
+
+/* ============================================== */
+/* DESKTOP GLASS CONTAINER                 */
+/* ============================================== */
+
+.desktop-glass-container {
+  @apply bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden;
+}
+
+.workstation-table-row {
+  @apply h-10 border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors;
+}
+
+.workstation-label {
+  @apply text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500;
+}
+
+/* ============================================== */
+/* MASK MARQUEE                            */
+/* ============================================== */
+
+.mask-marquee {
+  -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+}
+
+/* Smooth Marquee */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+  will-change: transform;
+}
+
+/* ============================================== */
+/* RESPONSIVE APPLE-STYLE TYPOGRAPHY        */
+/* ============================================== */
+
+h1,
+.text-apple-h1 {
+  font-size: var(--font-size-4xl);
+  letter-spacing: -0.025em;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+h2,
+.text-apple-h2 {
+  font-size: var(--font-size-3xl);
+  letter-spacing: -0.015em;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+h3 {
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* ============================================== */
+/* SMOOTH SCROLLING FOR LAYOUTS           */
+/* ============================================== */
+
+html,
+body {
+  scroll-behavior: smooth;
+  overscroll-behavior-y: none;
+}
+
+/* ============================================== */
+/* MOBILE-FIRST APP UTILITIES              */
+/* ============================================== */
+
+/* Native Touch Behavior */
+* {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+[role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ============================================== */
+/* FLOATING DOCK NAVIGATION (Glovo Style) */
+/* ============================================== */
+
+.tab-dock {
+  position: fixed;
+  bottom: 0px;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 0;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.5);
+  padding-bottom: calc(4px + env(safe-area-inset-bottom));
+  overflow: visible;
+  /* To allow FAB to pop out */
+}
+
+.dark .tab-dock {
+  background: rgba(15, 23, 42, 0.85);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Tab Item Pill - Compact for 6 items */
+.tab-item {
+  @apply flex-1 flex flex-col items-center justify-center py-2 px-0 transition-all duration-200 min-w-0 overflow-hidden;
+}
+
+.tab-item-active {
+  @apply text-blue-600 dark:text-blue-400;
+}
+
+.tab-item-inactive {
+  @apply text-slate-400 dark:text-slate-500;
+}
+
+.tab-pill {
+  @apply px-2 py-1.5 rounded-2xl transition-all duration-200 flex items-center justify-center;
+}
+
+.tab-pill-active {
+  @apply bg-blue-100 dark:bg-blue-500/20;
+}
+
+/* ============================================== */
+/* MOBILE CARD SYSTEM                       */
+/* ============================================== */
+
+.card-mobile {
+  @apply bg-white dark:bg-slate-900 rounded-3xl p-5;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.dark .card-mobile {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================== */
+/* TOUCH FEEDBACK                          */
+/* ============================================== */
+
+.touch-feedback {
+  @apply transition-transform duration-150 active:scale-95;
+}
+
+.touch-feedback-subtle {
+  @apply transition-transform duration-150 active:scale-[0.98];
+}
+
+/* ============================================== */
+/* MOBILE TYPOGRAPHY                       */
+/* ============================================== */
+
+.text-mobile-title {
+  @apply text-2xl font-bold tracking-tight text-slate-900 dark:text-white;
+}
+
+.text-mobile-subtitle {
+  @apply text-lg font-semibold text-slate-700 dark:text-slate-200;
+}
+
+.text-mobile-body {
+  @apply text-base text-slate-600 dark:text-slate-400;
+}
+
+.text-mobile-caption {
+  @apply text-xs uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500;
+}
+
+/* ============================================== */
+/* BIG NUMBERS (Apple Finance Style)        */
+/* ============================================== */
+
+.text-stat-large {
+  @apply text-5xl font-black tracking-tighter tabular-nums text-slate-900 dark:text-white;
+  line-height: 1;
+}
+
+.text-stat-medium {
+  @apply text-3xl font-black tracking-tight tabular-nums text-slate-800 dark:text-slate-100;
+  line-height: 1.1;
+}
+
+/* ============================================== */
+/* MOBILE LAYOUT HELPERS                  */
+/* ============================================== */
+
+.mobile-container {
+  @apply max-w-lg mx-auto w-full px-4;
+}
+
+.mobile-section {
+  @apply py-6 space-y-4;
+}
+
+/* ============================================== */
+/* LAYOUT CONTAINER UTILITIES              */
+/* ============================================== */
+
+.content-wrapper {
+  @apply mx-auto w-full px-4 sm:px-6 lg:px-8;
+  max-width: 1536px;
+  /* Matches 2xl breakpoint */
+}
+
+/* Content Safe Padding (for floating nav) */
+.content-safe-bottom {
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+}
+
+/* ============================================== */
+/* ANIMATED PAGE TRANSITIONS              */
+/* ============================================== */
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+/* ============================================== */
+/* PULL INDICATOR (for refreshes)        */
+/* ============================================== */
+
+.pull-indicator {
+  @apply w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mb-2;
+}
+
+/* ============================================== */
+/* CATEGORY BUBBLES (Glovo Style)          */
+/* ============================================== */
+
+.category-bubble {
+  @apply flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-200;
+  @apply bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700;
+  @apply transition-transform duration-150 active:scale-95;
+}
+
+.category-bubble-icon {
+  @apply w-12 h-12 rounded-full flex items-center justify-center;
+  @apply bg-gradient-to-br from-blue-500 to-indigo-600 text-white;
+}
+
+.category-bubble-label {
+  @apply text-xs font-bold text-slate-600 dark:text-slate-300 text-center;
+}
+
+/* ============================================== */
+/* ANIMATED PAGE TRANSITIONS              */
+/* ============================================== */
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+/* ============================================== */
+/* PULL INDICATOR (for refreshes)        */
+/* ============================================== */
+
+.pull-indicator {
+  @apply w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mb-2;
+}
+
+/* ============================================== */
+/* CATEGORY BUBBLES (Glovo Style)          */
+/* ============================================== */
+
+.category-bubble {
+  @apply flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-200;
+  @apply bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700;
+  @apply transition-transform duration-150 active:scale-95;
+}
+
+.category-bubble-icon {
+  @apply w-12 h-12 rounded-full flex items-center justify-center;
+  @apply bg-gradient-to-br from-blue-500 to-indigo-600 text-white;
+}
+
+.category-bubble-label {
+  @apply text-xs font-bold text-slate-600 dark:text-slate-300 text-center;
+}
+
+/* ============================================== */
+/* ANIMATED PAGE TRANSITIONS              */
+/* ============================================== */
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+/* ============================================== */
+/* PULL INDICATOR (for refreshes)        */
+/* ============================================== */
+
+.pull-indicator {
+  @apply w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mb-2;
+}
+
+/* ============================================== */
+/* CATEGORY BUBBLES (Glovo Style)          */
+/* ============================================== */
+
+.category-bubble {
+  @apply flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-200;
+  @apply bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700;
+  @apply transition-transform duration-150 active:scale-95;
+}
+
+.category-bubble-icon {
+  @apply w-12 h-12 rounded-full flex items-center justify-center;
+  @apply bg-gradient-to-br from-blue-500 to-indigo-600 text-white;
+}
+
+.category-bubble-label {
+  @apply text-xs font-bold text-slate-600 dark:text-slate-300 text-center;
+}
+
+/* ============================================== */
+/* ANIMATED PAGE TRANSITIONS              */
+/* ============================================== */
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+/* ============================================== */
+/* PULL INDICATOR (for refreshes)        */
+/* ============================================== */
+
+.pull-indicator {
+  @apply w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mb-2;
+}
+
+/* ============================================== */
+/* CATEGORY BUBBLES (Glovo Style)          */
+/* ============================================== */
+
+.category-bubble {
+  @apply flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-200;
+  @apply bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700;
+  @apply transition-transform duration-150 active:scale-95;
+}
+
+.category-bubble-icon {
+  @apply w-12 h-12 rounded-full flex items-center justify-center;
+  @apply bg-gradient-to-br from-blue-500 to-indigo-600 text-white;
+}
+
+.category-bubble-label {
+  @apply text-xs font-bold text-slate-600 dark:text-slate-300 text-center;
+}
+
+/* ============================================== */
+/* ANIMATED PAGE TRANSITIONS              */
+/* ============================================== */
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+/* ============================================== */
+/* PULL INDICATOR (for refreshes)        */
+/* ============================================== */
+
+.pull-indicator {
+  @apply w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mb-2;
+}
+
+/* ============================================== */
+/* CATEGORY BUBBLES (Glovo Style)          */
+/* ============================================== */
+
+.category-bubble {
+  @apply flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-200;
+  @apply bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700;
+  @apply transition-transform duration-150 active:scale-95;
+}
+
+.category-bubble-icon {
+  @apply w-12 h-12 rounded-full flex items-center justify-center;
+  @apply bg-gradient-to-br from-blue-500 to-indigo-600 text-white;
+}
+
+.category-bubble-label {
+  @apply text-xs font-bold text-slate-600 dark:text-slate-300 text-center;
+}
+
+/* ============================================== */
+/* ACADEMY TYPOGRAPHY SYSTEM                */
+/* ============================================== */
+
+.lesson-content {
+  @apply text-slate-700 dark:text-slate-300;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+.lesson-content p {
+  @apply mb-6;
+}
+
+.lesson-content h1 {
+  @apply text-3xl font-bold mb-8 text-slate-900 dark:text-white;
+}
+
+.lesson-content h2 {
+  @apply text-2xl font-bold mt-10 mb-6 text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-800 pb-2;
+}
+
+.lesson-content h3 {
+  @apply text-xl font-bold mt-8 mb-4 text-slate-800 dark:text-slate-100;
+}
+
+.lesson-content ul {
+  @apply list-disc list-inside mb-6 space-y-2 pl-4;
+}
+
+.lesson-content ol {
+  @apply list-decimal list-inside mb-6 space-y-2 pl-4;
+}
+
+.lesson-content strong {
+  @apply font-bold text-slate-900 dark:text-white;
+}
+
+.lesson-content blockquote {
+  @apply border-l-4 border-indigo-500 pl-6 italic my-8 text-slate-600 dark:text-slate-400;
+}
+
+.lesson-content a {
+  @apply text-indigo-600 dark:text-indigo-400 underline decoration-indigo-500/30 hover:decoration-indigo-500 transition-all;
 }

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronLeft, ChevronRight, Sun, Moon, Save, Loader2, BadgeCheck, XCircle, PenLine, Bike } from 'lucide-react'; // Cleaned imports
+import { ChevronLeft, ChevronRight, Sun, Moon, Save, Loader2, BadgeCheck, XCircle, PenLine, Bike } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { getRiderInitials } from '../../utils/colorPalette';
 import { toLocalDateString, toLocalISOString, toLocalISOStringWithOffset } from '../../utils/dateUtils';
@@ -16,6 +16,7 @@ import { SchedulerGuideModal } from './SchedulerGuideModal';
 import ConfirmationModal from '../../components/ui/feedback/ConfirmationModal';
 import { SheriffReportModal } from './SheriffReportModal';
 import { Shift } from '../../schemas/scheduler';
+import { ShiftInput } from '../../services/shiftService';
 
 import { useWeeklySchedule } from '../../hooks/useWeeklySchedule';
 import { useAuth } from '../../context/AuthContext';
@@ -52,6 +53,10 @@ const DeliveryScheduler: React.FC<{
     const [showPrime, setShowPrime] = useState(false);
     const [isPublishing, setIsPublishing] = useState(false);
 
+    // --- DRAFT MODE STATE ---
+    const [localShifts, setLocalShifts] = useState<Shift[]>([]);
+    const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+    const hasUnsavedChanges = localShifts.length > 0 || deletedIds.size > 0;
 
     // --- SHERIFF & MAGIC AI STATE ---
     const [isSheriffOpen, setIsSheriffOpen] = useState(false);
@@ -67,11 +72,10 @@ const DeliveryScheduler: React.FC<{
             costEfficiency: number;
         };
     } | null>(null);
-    // Legacy state used by inline status bar display (TODO: migrate to SheriffReportModal only)
     const [sheriffResult, setSheriffResult] = useState<{
         score?: number;
-        status?: string;
-        feedback?: string;
+        status?: 'optimal' | 'warning' | 'critical';
+        feedback?: string[];
         details?: {
             totalHours: number;
             overtimeCount: number;
@@ -87,25 +91,193 @@ const DeliveryScheduler: React.FC<{
     const [overtimeDetails, setOvertimeDetails] = useState<{ current: number, projected: number, limit: number, riderName: string } | null>(null);
 
     const [isGuideOpen, setIsGuideOpen] = useState(false);
-
-
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingShift, setEditingShift] = useState<Shift | null>(null);
 
     // --- DATA HOOKS ---
+    const { riders: rosterRiders, fetchRiders } = useFleetStore();
+    const { vehicles, fetchVehicles } = useVehicleStore();
     const { weekData, loading, motos, riders } = useWeeklySchedule(safeFranchiseId, readOnly, selectedDate);
 
     // --- DND SENSORS ---
-    const sensors = useSensors(
-        useSensor(PointerSensor, {
-            activationConstraint: {
-                distance: 8, // Prevent accidental drags
-            },
-        })
-    );
-    const [activeDragShift, setActiveDragShift] = useState<any | null>(null);
+    const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+    const [activeDragShift, setActiveDragShift] = useState<Shift | null>(null);
+
+    const simpleRiders = useMemo(() => rosterRiders.map(r => ({ id: String(r.id), fullName: r.fullName, name: r.fullName })), [rosterRiders]);
+
+    const days = useMemo(() => {
+        const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
+        return Array.from({ length: 7 }).map((_, i) => {
+            const date = addDays(new Date(start), i);
+            const iso = toLocalDateString(date);
+            return {
+                date,
+                dateObj: date,
+                isoDate: iso,
+                dayName: format(date, 'EEEE', { locale: es }),
+                dayNum: format(date, 'd'),
+                label: format(date, 'EEEE d', { locale: es }),
+                shortLabel: format(date, 'EEE', { locale: es }),
+                isToday: toLocalDateString(new Date()) === iso
+            };
+        });
+    }, [selectedDate]);
+
+    // --- DATA MEMOIZATIONS (Ordered for dependency flow) ---
+    const mergedShifts = useMemo(() => {
+        const remote = weekData?.shifts || [];
+        const filtered = remote.filter(s => !deletedIds.has(String(s.id || s.shiftId)));
+        const final = [...filtered];
+
+        localShifts.forEach(ls => {
+            const idx = final.findIndex(s => String(s.id || s.shiftId) === String(ls.id || ls.shiftId));
+            if (idx >= 0) {
+                final[idx] = ls;
+            } else {
+                final.push(ls);
+            }
+        });
+        return final;
+    }, [weekData, localShifts, deletedIds]);
+
+    const isFiltered = useCallback((startStr: string, endStr: string) => {
+        if (!showLunch && !showDinner && !showPrime) return true;
+
+        const start = new Date(startStr);
+        const end = new Date(endStr);
+        const startMin = start.getHours() * 60 + start.getMinutes();
+        const endMin = end.getHours() * 60 + end.getMinutes();
+        // Handle midnight wrap or multi-day shifts for visual filtering
+        const crossesMidnight = end.getTime() > start.getTime() && end.getDate() !== start.getDate();
+        const adjustedEndMin = crossesMidnight ? 1440 : (endMin === 0 ? 1440 : endMin);
+
+        if (showPrime) {
+            const p1Start = 720, p1End = 990;
+            const p2Start = 1200, p2End = 1440;
+            const overlapP1 = startMin < p1End && adjustedEndMin > p1Start;
+            const overlapP2 = startMin < p2End && adjustedEndMin > p2Start;
+            if (overlapP1 || overlapP2) return true;
+        }
+
+        let visible = false;
+        if (showLunch) {
+            const lStart = 720;
+            const lEnd = 990;
+            if (startMin < lEnd && adjustedEndMin > lStart) visible = true;
+        }
+        if (showDinner && !visible) {
+            const dStart = 1200;
+            const dEnd = 1440;
+            if (startMin < dEnd && adjustedEndMin > dStart) visible = true;
+        }
+        return visible;
+    }, [showLunch, showDinner, showPrime]);
+
+    const processRiderShifts = useCallback((shifts: Shift[]) => {
+        if (!shifts.length) return [];
+        const sorted = [...shifts].sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+
+        const visualBlocks: {
+            startAt: string;
+            endAt: string;
+            ids: string[];
+            shifts: Shift[];
+            type: 'confirmed' | 'request' | 'draft';
+            isNew?: boolean;
+        }[] = [];
+        let currentBlock: any = null;
+
+        sorted.forEach((s) => {
+            const sStart = new Date(s.startAt);
+            if (currentBlock &&
+                Math.abs(differenceInMinutes(sStart, new Date(currentBlock.endAt))) < 15) {
+                currentBlock.endAt = s.endAt;
+                currentBlock.ids.push(String(s.id));
+                currentBlock.shifts.push(s);
+            } else {
+                if (currentBlock) visualBlocks.push(currentBlock);
+                currentBlock = {
+                    startAt: s.startAt,
+                    endAt: s.endAt,
+                    ids: [String(s.id)],
+                    shifts: [s],
+                    type: s.isConfirmed ? 'confirmed' : s.changeRequested ? 'request' : 'draft',
+                    isNew: s.isNew
+                };
+            }
+        });
+        if (currentBlock) visualBlocks.push(currentBlock);
+        return visualBlocks;
+    }, []);
+
+    const ridersGrid = useMemo(() => {
+        const activeRiders = rosterRiders.filter(r => r.status === 'active' || r.status === 'on_route');
+        const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
+        const weekEnd = addDays(new Date(weekStart), 7);
+        const weekStartTs = weekStart.getTime();
+        const weekEndTs = weekEnd.getTime();
+
+        return activeRiders.map(rider => {
+            const riderIdStr = String(rider.id);
+            const allRiderShifts = mergedShifts.filter(s => String(s.riderId) === riderIdStr);
+            const displayedShifts = allRiderShifts.filter(s => isFiltered(s.startAt, s.endAt));
+            const visualBlocks = processRiderShifts(displayedShifts);
+
+            const totalHoursCount = allRiderShifts.reduce((acc, s) => {
+                const start = new Date(s.startAt);
+                if (start.getTime() < weekStartTs || start.getTime() >= weekEndTs) return acc;
+                const end = new Date(s.endAt);
+                return acc + (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+            }, 0);
+
+            return {
+                ...rider,
+                totalWeeklyHours: totalHoursCount,
+                visualBlocks,
+                shifts: displayedShifts
+            };
+        }).sort((a, b) => a.fullName.localeCompare(b.fullName));
+    }, [rosterRiders, mergedShifts, isFiltered, selectedDate, processRiderShifts]);
+
+    const totalWeeklyCost = useMemo(() => {
+        return ridersGrid.reduce((total, rider) => {
+            // Approx 12€/hour cost + 30% social security simulated
+            return total + (rider.totalWeeklyHours * 12 * 1.30);
+        }, 0);
+    }, [ridersGrid]);
+
+    const totalHours = ridersGrid.reduce((acc, r) => acc + r.totalWeeklyHours, 0);
+
+    const coverage = useMemo(() => {
+        const res: Record<string, number[]> = {};
+        days.forEach(d => res[d.isoDate] = Array(24).fill(0));
+        mergedShifts.forEach(s => {
+            const sStart = new Date(s.startAt);
+            const sEnd = new Date(s.endAt);
+
+            // Loop through each hour between start and end
+            const temp = new Date(sStart);
+            temp.setMinutes(0, 0, 0); // Start of the hour
+
+            while (temp.getTime() < sEnd.getTime()) {
+                const dateIso = toLocalDateString(temp);
+                const hour = temp.getHours();
+
+                // If the shift covers at least part of this hour
+                if (res[dateIso]) {
+                    res[dateIso][hour]++;
+                }
+                temp.setHours(temp.getHours() + 1);
+            }
+        });
+        return res;
+    }, [days, mergedShifts]);
+
+    const dayViewMinWidth = 1400;
 
     const handleDragStart = (event: DragStartEvent) => {
         const { active } = event;
-        setActiveDragShift(active.data.current?.shift);
+        setActiveDragShift(active.data.current?.shift as Shift);
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -115,33 +287,19 @@ const DeliveryScheduler: React.FC<{
         if (!over) return;
         if (readOnly) return;
 
-        const activeShift = active.data.current?.shift;
-        const { dateIso, riderId, hour } = over.data.current || {};
+        const activeShift = active.data.current?.shift as Shift;
+        const { dateIso, riderId } = over.data.current || {};
 
         if (activeShift && dateIso && riderId) {
-            // Calculate new start/end times
-            const durationMs = new Date(activeShift.endAt).getTime() - new Date(activeShift.startAt).getTime();
-            const originalStart = new Date(activeShift.startAt);
-            const newStart = parseISO(dateIso);
+            // [FIX] Find the rider name for the new riderId to keep it in sync
+            const targetRider = rosterRiders.find((r: any) => String(r.id) === String(riderId));
 
-            if (hour !== undefined) {
-                // Day View Snapping - 15 min precision to match the new 15-min grid structure
-                const h = Math.floor(hour);
-                const m = Math.round((hour % 1) * 4) * 15;
-                newStart.setHours(h, m, 0, 0);
-            } else {
-                // Weekly View: Keep original minutes
-                newStart.setHours(originalStart.getHours(), originalStart.getMinutes(), 0, 0);
-            }
-
-            const newEnd = new Date(newStart.getTime() + durationMs);
-
-            // Create updated draft shift
             saveShift({
                 ...activeShift,
-                riderId: riderId,
-                startAt: toLocalISOString(newStart),
-                endAt: toLocalISOString(newEnd),
+                startAt: dateIso + activeShift.startAt.slice(10),
+                endAt: dateIso + activeShift.endAt.slice(10),
+                riderId: String(riderId),
+                riderName: targetRider?.fullName || activeShift.riderName,
                 date: dateIso
             });
         }
@@ -155,14 +313,8 @@ const DeliveryScheduler: React.FC<{
         }
     };
 
-    // --- DRAFT MODE STATE ---
-    const [localShifts, setLocalShifts] = useState<any[]>([]);
-    const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
-    const hasUnsavedChanges = localShifts.length > 0 || deletedIds.size > 0;
 
-    // --- STORES ---
-    const { riders: rosterRiders, fetchRiders } = useFleetStore();
-    const { vehicles, fetchVehicles } = useVehicleStore();
+    // --- MERGE LOGIC REMOVED FROM HERE (MOVED UP) ---
 
     useEffect(() => {
         if (safeFranchiseId) {
@@ -171,16 +323,18 @@ const DeliveryScheduler: React.FC<{
         }
     }, [fetchRiders, fetchVehicles, safeFranchiseId]);
 
+    // Moved up to fix declaration order
+
     // --- ACTIONS ---
-    const saveShift = async (shiftData: any) => {
+    const saveShift = useCallback(async (shiftData: Partial<Shift>) => {
         if (readOnly) {
             alert("Modo solo lectura: No se pueden guardar cambios.");
             return;
         }
 
         // VALIDATION: Check for Overlaps
-        const newStart = new Date(shiftData.startAt).getTime();
-        const newEnd = new Date(shiftData.endAt).getTime();
+        const newStart = new Date(shiftData.startAt!).getTime();
+        const newEnd = new Date(shiftData.endAt!).getTime();
         const existingId = shiftData.id || shiftData.shiftId;
 
         // Check local + remote (mergedShifts covers both)
@@ -206,12 +360,12 @@ const DeliveryScheduler: React.FC<{
         // --- REASSIGNMENT NOTIFICATIONS ---
         // If we are editing an existing shift and the rider has changed
         if (editingShift && editingShift.riderId !== shiftData.riderId) {
-            const timeStr = `${format(new Date(shiftData.startAt), 'HH:mm')} - ${format(new Date(shiftData.endAt), 'HH:mm')}`;
-            const dateStr = format(new Date(shiftData.startAt), 'dd/MM');
+            const timeStr = `${format(new Date(shiftData.startAt!), 'HH:mm')} - ${format(new Date(shiftData.endAt!), 'HH:mm')}`;
+            const dateStr = format(new Date(shiftData.startAt!), 'dd/MM');
 
             // 1. Notify Original Rider (if it was an amber shift/change request)
             if (editingShift.changeRequested) {
-                await notificationService.notifyFranchise(editingShift.riderId, {
+                await notificationService.notifyFranchise(editingShift.riderId as string, {
                     title: 'Solicitud de Cambio Procesada',
                     message: `Tu solicitud para el turno del ${dateStr} (${timeStr}) ha sido aceptada y el turno reasignado.`,
                     type: 'SYSTEM',
@@ -219,7 +373,7 @@ const DeliveryScheduler: React.FC<{
                 });
             } else {
                 // Regular reassignment
-                await notificationService.notifyFranchise(editingShift.riderId, {
+                await notificationService.notifyFranchise(editingShift.riderId as string, {
                     title: 'Turno Eliminado/Reasignado',
                     message: `El turno del ${dateStr} (${timeStr}) ha sido asignado a otro rider.`,
                     type: 'SYSTEM',
@@ -228,7 +382,7 @@ const DeliveryScheduler: React.FC<{
             }
 
             // 2. Notify New Rider
-            await notificationService.notifyFranchise(shiftData.riderId, {
+            await notificationService.notifyFranchise(shiftData.riderId!, {
                 title: 'Nuevo Turno Asignado',
                 message: `Se te ha asignado un nuevo turno para el ${dateStr} de ${timeStr}.`,
                 type: 'shift_confirmed',
@@ -238,13 +392,23 @@ const DeliveryScheduler: React.FC<{
 
         const isNewToken = !existingId || (typeof existingId === 'string' && existingId.startsWith('draft-'));
 
-        const finalShift = {
+        // [FIX] Get current rider name if not provided
+        const finalRiderId = String(shiftData.riderId!);
+        const currentRider = simpleRiders.find(r => String(r.id) === finalRiderId);
+
+        const finalShift: Shift = {
             ...shiftData,
             id: existingId || `draft-${crypto.randomUUID()}`,
             isDraft: true,
             isNew: isNewToken,
             changeRequested: false, // Reset change requested if reassigned or edited
-            changeReason: null
+            changeReason: null,
+            franchiseId: safeFranchiseId,
+            riderId: finalRiderId,
+            riderName: currentRider?.fullName || shiftData.riderName || 'Rider',
+            startAt: shiftData.startAt!,
+            endAt: shiftData.endAt!,
+            date: shiftData.date || toLocalDateString(new Date(shiftData.startAt!))
         };
 
         setLocalShifts(prev => {
@@ -253,7 +417,7 @@ const DeliveryScheduler: React.FC<{
         });
 
         setIsModalOpen(false); // Ensure modal closes
-    };
+    }, [readOnly, mergedShifts, editingShift, safeFranchiseId, setIsModalOpen, simpleRiders]);
 
     const deleteShift = useCallback((shiftId: string) => {
         if (readOnly) {
@@ -271,7 +435,7 @@ const DeliveryScheduler: React.FC<{
             });
             setLocalShifts(prev => prev.filter(s => String(s.id) !== shiftIdStr));
         }
-    }, [readOnly]);
+    }, [readOnly, setLocalShifts, setDeletedIds]);
 
     const handlePublish = async () => {
         if (!safeFranchiseId || isPublishing || readOnly) return;
@@ -281,22 +445,23 @@ const DeliveryScheduler: React.FC<{
                 await shiftService.deleteShift(id);
             }
             for (const s of localShifts) {
-                const inputData = {
+                const shiftData: ShiftInput = {
                     franchiseId: safeFranchiseId,
-                    riderId: s.riderId,
-                    riderName: s.riderName || rosterRiders.find(r => r.id === s.riderId)?.fullName || 'Rider',
+                    riderId: String(s.riderId),
+                    riderName: s.riderName || rosterRiders.find((r: any) => String(r.id) === String(s.riderId))?.fullName || 'Rider',
                     motoId: s.motoId || null,
                     motoPlate: s.motoPlate || '',
                     startAt: s.startAt,
-                    endAt: s.endAt
+                    endAt: s.endAt,
+                    isConfirmed: s.isConfirmed
                 };
 
-                const isTrulyNew = (typeof s.id === 'string' && s.id.startsWith('draft-')) || !weekData?.shifts?.some(rs => rs.id === s.id);
+                const isTrulyNew = (typeof s.id === 'string' && s.id.startsWith('draft-')) || !(weekData?.shifts || []).some(rs => rs.id === s.id);
 
                 if (isTrulyNew) {
-                    await shiftService.createShift(inputData);
+                    await shiftService.createShift(shiftData as ShiftInput);
                 } else {
-                    await shiftService.updateShift(s.id, inputData);
+                    await shiftService.updateShift(String(s.id), shiftData as Partial<ShiftInput>);
                 }
             }
 
@@ -321,8 +486,9 @@ const DeliveryScheduler: React.FC<{
             setLocalShifts([]);
             setDeletedIds(new Set());
             // alert("✅ Calendario publicado exitosamente.");
-        } catch (error: any) {
-            console.error(error);
+        } catch (error) {
+            const err = error as Error;
+            console.error(err);
             alert("Error al publicar.");
         } finally {
             setIsPublishing(false);
@@ -355,9 +521,9 @@ const DeliveryScheduler: React.FC<{
 
         const score = Math.max(0, 100 - (overtimeRiders.length * 5) - (underRiders.length * 2));
 
-        setSheriffData({
+        const report = {
             score,
-            status: score > 90 ? 'optimal' : score > 70 ? 'warning' : 'critical',
+            status: (score > 90 ? 'optimal' : score > 70 ? 'warning' : 'critical') as 'optimal' | 'warning' | 'critical',
             feedback: insights,
             details: {
                 totalHours,
@@ -366,13 +532,16 @@ const DeliveryScheduler: React.FC<{
                 coverageScore,
                 costEfficiency
             }
-        });
+        };
+
+        setSheriffData(report);
+        setSheriffResult(report);
         setIsSheriffOpen(true);
     };
 
 
 
-    const handleCreateShifts = async (shifts: Partial<any>[]) => {
+    const handleCreateShifts = async (shifts: Partial<Shift>[]) => {
         if (readOnly) return;
         setLocalShifts(prev => {
             const newShifts = [...prev];
@@ -395,7 +564,7 @@ const DeliveryScheduler: React.FC<{
                         startAt: s.startAt!,
                         endAt: s.endAt!,
                         date: s.date!
-                    } as any);
+                    } as Shift);
                 }
             });
             return newShifts;
@@ -404,26 +573,10 @@ const DeliveryScheduler: React.FC<{
     };
 
     // --- EVENT SIMULATION ---
-    const days = useMemo(() => {
-        const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
-        return Array.from({ length: 7 }).map((_, i) => {
-            const date = addDays(start, i);
-            return {
-                date,
-                dateObj: date,
-                isoDate: toLocalDateString(date),
-                label: format(date, 'EEEE d', { locale: es }),
-                shortLabel: format(date, 'EEE', { locale: es })
-            };
-        });
-    }, [selectedDate]);
+    // --- DAYS REMOVED FROM HERE (MOVED UP) ---
 
-    // --- GRID CALCULATION ---
-    const mergedShifts = useMemo(() => {
-        const remote = weekData?.shifts || [];
-        const liveRemote = remote.filter(s => !deletedIds.has(String(s.id || s.shiftId)));
-        return [...liveRemote, ...localShifts];
-    }, [weekData?.shifts, localShifts, deletedIds]);
+    // --- LIQUID FLOW & DRAG AND DROP ---
+    // mergedShifts moved up to fix declaration order
 
 
 
@@ -477,160 +630,20 @@ const DeliveryScheduler: React.FC<{
     // Note: dayCols was previously used for flattened slot iteration, now replaced by dayStructure
     // Kept this comment for reference in case legacy code needs it
 
-    // --- RENDER HELPERS ---
-    const dayViewMinWidth = useMemo(() => {
-        // [MOD] Cambiado a 0 para permitir que el grid sea fluido y quepa en pantalla sin scroll
-        return 0;
-    }, []);
-    const processRiderShifts = (shifts: any[]) => {
-        if (!shifts.length) return [];
-        // Sort by start time
-        const sorted = [...shifts].sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+    // --- HELPERS REMOVED FROM HERE (MOVED UP) ---
 
-        const visualBlocks: any[] = [];
-        let currentBlock: any = null;
-
-        sorted.forEach((s) => {
-            const sStart = new Date(s.startAt);
-            new Date(s.endAt);
-
-            // Check adjacency (gap < 15 mins counts as continuous)
-            if (currentBlock &&
-                Math.abs(differenceInMinutes(sStart, new Date(currentBlock.endAt))) < 15) {
-                // Merge visual
-                currentBlock.endAt = s.endAt;
-                currentBlock.ids.push(s.id);
-                currentBlock.shifts.push(s);
-            } else {
-                if (currentBlock) visualBlocks.push(currentBlock);
-                currentBlock = {
-                    startAt: s.startAt,
-                    endAt: s.endAt,
-                    ids: [s.id],
-                    shifts: [s],
-                    type: s.isConfirmed ? 'confirmed' : s.changeRequested ? 'request' : 'draft',
-                    isNew: s.isNew
-                };
-            }
-        });
-        if (currentBlock) visualBlocks.push(currentBlock);
-        return visualBlocks;
-    };
-
-    // --- PRIME HELPERS ---
-    const isFiltered = useCallback((startStr: string, endStr: string) => {
-        // If no filter active, show all
-        if (!showLunch && !showDinner && !showPrime) return true;
-
-        const start = new Date(startStr);
-        const end = new Date(endStr);
-        // Start/End in minutes of day
-        const startMin = start.getHours() * 60 + start.getMinutes();
-        const endMin = end.getHours() * 60 + end.getMinutes();
-        // Handle midnight wrap (simple assumption for visual filtering)
-        const adjustedEndMin = endMin === 0 ? 1440 : endMin;
-
-        // Logic: Shift must overlap with the active ranges
-        // Overlap Condition: (ShiftStart < RangeEnd) AND (ShiftEnd > RangeStart)
-
-        if (showPrime) {
-            // Prime ranges: 12:00-16:30 (720-990) AND 20:00-24:00 (1200-1440)
-            const p1Start = 720, p1End = 990;
-            const p2Start = 1200, p2End = 1440;
-
-            const overlapP1 = startMin < p1End && adjustedEndMin > p1Start;
-            const overlapP2 = startMin < p2End && adjustedEndMin > p2Start;
-
-            if (overlapP1 || overlapP2) return true;
-        }
-
-        let visible = false;
-
-        if (showLunch) {
-            const lStart = 720;
-            const lEnd = 990;
-            // Overlap: Start < RangeEnd && End > RangeStart
-            if (startMin < lEnd && adjustedEndMin > lStart) visible = true;
-        }
-
-        if (showDinner && !visible) {
-            const dStart = 1200;
-            const dEnd = 1440;
-            // Special case: If shift goes past midnight, endMin might be small, but here we assume day view context logic or shifts split at midnight.
-            // If split at midnight, adjustedEndMin handle 24:00.
-            if (startMin < dEnd && adjustedEndMin > dStart) visible = true;
-        }
-
-        return visible;
-    }, [showLunch, showDinner, showPrime]);
-
-    const ridersGrid = useMemo(() => {
-        const activeRiders = rosterRiders.filter(r => r.status === 'active' || r.status === 'on_route');
-        return activeRiders.map(rider => {
-            const allRiderShifts = mergedShifts.filter(s => s.riderId === rider.id);
-
-            // APPLY FILTERS
-            const displayedShifts = allRiderShifts.filter(s => isFiltered(s.startAt, s.endAt));
-
-            const visualBlocks = processRiderShifts(displayedShifts);
-
-            const totalHours = displayedShifts.reduce((acc, s) => {
-                const start = new Date(s.startAt);
-                const end = new Date(s.endAt);
-                const duration = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-                return acc + duration;
-            }, 0);
-
-            return {
-                ...rider,
-                totalWeeklyHours: totalHours,
-                visualBlocks,
-                shifts: displayedShifts
-            };
-
-        }).sort((a, b) => a.fullName.localeCompare(b.fullName));
-    }, [rosterRiders, mergedShifts, isFiltered]);
-
-    // 2. Real-time Cost Calculation (Simulation)
-    const totalWeeklyCost = useMemo(() => {
-        return ridersGrid.reduce((total, rider) => {
-            // Approx 12€/hour cost + 30% social security simulated
-            return total + (rider.totalWeeklyHours * 12 * 1.30);
-        }, 0);
-    }, [ridersGrid]);
-
-    const totalHours = ridersGrid.reduce((acc, r) => acc + r.totalWeeklyHours, 0);
-
-    const coverage = useMemo(() => {
-        const res: Record<string, number[]> = {};
-        days.forEach(d => res[d.isoDate] = Array(24).fill(0));
-        mergedShifts.forEach(s => {
-            const date = toLocalDateString(new Date(s.startAt));
-            if (res[date]) {
-                const sStart = new Date(s.startAt);
-                const sEnd = new Date(s.endAt);
-                const start = sStart.getHours();
-                const end = sEnd.getHours();
-                const realEnd = (end === 0 && sEnd.getMinutes() === 0) ? 24 : end;
-                for (let h = start; h < realEnd; h++) {
-                    if (h >= 0 && h < 24) res[date][h]++;
-                }
-            }
-        });
-        return res;
-    }, [days, mergedShifts]);
 
 
 
 
 
     // --- CONTEXT MENU STATE ---
-    const [contextMenu, setContextMenu] = useState<{ x: number, y: number, shift: any } | null>(null);
+    const [contextMenu, setContextMenu] = useState<{ x: number, y: number, shift: Shift } | null>(null);
 
-    const handleContextMenu = (e: React.MouseEvent, shift: any) => {
+    const handleContextMenu = (e: React.MouseEvent, shift: Shift) => {
         e.preventDefault(); // Prevent native browser menu
         const sId = shift.id || shift.shiftId;
-        setSelectedShiftId(sId); // Also select on right click
+        setSelectedShiftId(sId || null); // Also select on right click
         setContextMenu({
             x: e.clientX,
             y: e.clientY,
@@ -665,24 +678,10 @@ const DeliveryScheduler: React.FC<{
 
         saveShift(newShiftData);
     }, [saveShift]);
-
-    const handleValidateShift = (shift: any) => {
-        // Just save it with confirmed flag - simplified for now
-        // In a real app this might need a specific API endpoint or status field update
-        const updatedShift = {
-            ...shift,
-            isConfirmed: true,
-            isDraft: false // Usually validating means it's no longer draft if it was
-        };
-        saveShift(updatedShift);
-    };
-
     // --- RENDER HELPERS ---
     // Pass handleContextMenu to DraggableShift via a wrapper or prop if possible.
     // Since DraggableShift is inside the map, we need to attach the handler there.
 
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingShift, setEditingShift] = useState<any | null>(null);
     const [selectedDateForNew, setSelectedDateForNew] = useState<string | null>(null);
     const [prefillHour, setPrefillHour] = useState<number | undefined>(undefined);
     const [isQuickFillOpen, setIsQuickFillOpen] = useState(false);
@@ -750,13 +749,12 @@ const DeliveryScheduler: React.FC<{
         setPendingShiftParams(null);
     };
 
-    const handleEditShift = (shift: any) => {
+    const handleEditShift = (shift: Shift) => {
         if (readOnly) return;
         setEditingShift(shift);
         setIsModalOpen(true);
     };
 
-    const simpleRiders = useMemo(() => rosterRiders.map(r => ({ id: r.id, fullName: r.fullName, name: r.fullName })), [rosterRiders]);
 
     // --- KEYBOARD SHORTCUTS & SELECTION ---
     const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null);
@@ -824,7 +822,7 @@ const DeliveryScheduler: React.FC<{
     if (isMobile) {
         return <MobileAgendaView
             days={days}
-            visualEvents={mergedShifts.reduce((acc: any, s: any) => {
+            visualEvents={mergedShifts.reduce((acc: Record<string, any[]>, s: Shift) => {
                 // Apply Filters to Mobile View as well
                 if (!isFiltered(s.startAt, s.endAt)) return acc;
 
@@ -1012,7 +1010,11 @@ const DeliveryScheduler: React.FC<{
                                         </p>
                                     </div>
                                 </div>
-                                <button onClick={() => setSheriffResult(null)} className="p-1 hover:bg-black/5 rounded-full transition-colors">
+                                <button
+                                    onClick={() => setSheriffResult(null)}
+                                    className="p-1 hover:bg-black/5 rounded-full transition-colors"
+                                    title="Cerrar reporte"
+                                >
                                     <XCircle size={20} className="opacity-40 hover:opacity-100" />
                                 </button>
                             </div>
@@ -1063,7 +1065,7 @@ const DeliveryScheduler: React.FC<{
                         {/* HEADER - Floating Glass Effect */}
                         <div className="flex-none flex w-full border-b border-indigo-100 bg-white/95 backdrop-blur-sm z-30 h-10 shadow-sm sticky top-0">
                             {/* CORNER (Riders Label) */}
-                            <div className="w-40 lg:w-40 xl:w-44 flex-none border-r border-slate-200 bg-slate-50 flex items-center px-4 sticky left-0 z-[60] shadow-[4px_0_24px_-4px_rgba(0,0,0,0.1)]">
+                            <div className="w-52 lg:w-52 xl:w-64 flex-none border-r border-slate-200 bg-slate-50 flex items-center px-4 sticky left-0 z-[60] shadow-[4px_0_24px_-4px_rgba(0,0,0,0.1)]">
                                 <span className="text-xs uppercase font-medium tracking-widest text-slate-400">Riders</span>
                             </div>
 
@@ -1074,13 +1076,13 @@ const DeliveryScheduler: React.FC<{
                                         const isHighVolume = ['vie', 'sáb', 'dom', 'fri', 'sat', 'sun'].some(day => d.shortLabel.toLowerCase().includes(day));
                                         return (
                                             <div key={d.isoDate} className={cn(
-                                                "flex-1 border-r border-slate-200 flex items-center justify-center gap-1 min-w-[100px] last:border-r-0 relative overflow-hidden",
+                                                "flex-1 border-r border-slate-200 flex items-center justify-center gap-1 min-w-[80px] md:min-w-[100px] last:border-r-0 relative overflow-hidden",
                                                 isHighVolume ? "bg-indigo-50/40" : ""
                                             )}>
                                                 {isHighVolume && (
                                                     <div className="absolute top-0 right-0 w-3 h-3 bg-rose-500 rounded-bl-full z-10 opacity-80" title="Volumen Alto" />
                                                 )}
-                                                <span className={cn("text-xs font-medium uppercase tracking-wide truncate", isToday(d.dateObj) ? "text-indigo-600" : (isHighVolume ? "text-slate-700 font-medium" : "text-slate-400"))}>{d.shortLabel}</span>
+                                                <span className={cn("text-xs font-medium uppercase tracking-wide truncate px-1", isToday(d.dateObj) ? "text-indigo-600" : (isHighVolume ? "text-slate-700 font-medium" : "text-slate-400"))}>{d.shortLabel}</span>
                                                 <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-xs font-normal shrink-0", isToday(d.dateObj) ? "bg-indigo-600 text-white shadow-sm" : "text-slate-400")}>
                                                     {format(d.dateObj, 'd')}
                                                 </div>
@@ -1088,7 +1090,7 @@ const DeliveryScheduler: React.FC<{
                                         );
                                     })
                                 ) : (
-                                    <div className="flex-1 flex relative" style={{ minWidth: `${dayViewMinWidth}px` }}>
+                                    <div className="flex-1 flex transition-all" style={{ minWidth: `${dayViewMinWidth}px` }}>
                                         {/* Timeline Header Day View - 24h with 15-min intervals */}
                                         {dayStructure.map((hObj) => {
                                             return (
@@ -1142,24 +1144,23 @@ const DeliveryScheduler: React.FC<{
                                 <div
                                     key={rider.id}
                                     className={cn(
-                                        "flex-1 flex w-full border-b border-indigo-50 transition-all duration-200 group relative",
+                                        "flex-1 flex w-full border-b border-indigo-50 transition-all duration-200 group relative min-h-[64px]",
                                         "hover:z-20 overflow-visible"
                                     )}
-                                    style={{ minHeight: '64px' }}
                                 >
                                     <div className="absolute inset-0 pointer-events-none bg-indigo-50/0 group-hover:bg-indigo-50/30 transition-colors z-20 border-y border-transparent group-hover:border-indigo-200/50" />
                                     <div className="absolute top-1/2 left-0 w-full h-px bg-slate-100 z-0 pointer-events-none border-t border-dashed border-slate-200/50" />
 
                                     {/* RIDER META (LEFT COL) - Sticky */}
                                     <div className={cn(
-                                        "w-40 lg:w-40 xl:w-44 flex-none border-r border-slate-200 flex items-center px-4 py-1 relative transition-colors sticky left-0 z-[60] shadow-[4px_0_24px_-4px_rgba(0,0,0,0.1)]",
+                                        "w-full md:w-52 lg:w-52 xl:w-64 flex-none border-r border-slate-200 flex items-center px-4 py-1 relative transition-colors sticky left-0 z-[60] shadow-[4px_0_24px_-4px_rgba(0,0,0,0.1)]",
                                         index % 2 === 0 ? "bg-white group-hover:bg-[#F8FAFC]" : "bg-[#F8FAFC] group-hover:bg-[#F8FAFC]"
                                     )}>
                                         <div className="flex items-center gap-3 w-full">
                                             <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-xs font-medium text-white shadow-sm shrink-0 ring-1 ring-white/50 transition-transform group-hover:scale-105", getRiderColor(rider.id).bg)}>
                                                 {getRiderInitials(rider.fullName)}
                                             </div>
-                                            <div className="min-w-0 flex-1 flex flex-col justify-center gap-1">
+                                            <div className="min-w-0 flex-1 flex flex-col justify-center gap-1 overflow-hidden">
                                                 <p className="text-sm font-normal text-slate-700 truncate group-hover:text-indigo-700 transition-colors">{rider.fullName}</p>
                                                 <div className="flex items-center gap-2 xl:gap-1">
                                                     <span className="text-[10px] xl:text-[9.5px] font-normal text-slate-400 bg-slate-100 px-2 xl:px-1.5 py-0.5 xl:py-0 rounded-full border border-slate-200/50 whitespace-nowrap flex items-center gap-1">
@@ -1184,7 +1185,7 @@ const DeliveryScheduler: React.FC<{
                                     <div className="flex-1 flex min-w-0 relative" >
                                         {viewMode === 'week' ? (
                                             days.map(d => {
-                                                const dayShifts = rider.shifts.filter((s: any) => toLocalDateString(new Date(s.startAt)) === d.isoDate);
+                                                const dayShifts = (rider.shifts as Shift[]).filter((s: Shift) => toLocalDateString(new Date(s.startAt)) === d.isoDate);
                                                 const visualBlocks = processRiderShifts(dayShifts);
                                                 const isCurrentDay = d.isoDate === toLocalDateString(new Date());
 
@@ -1270,7 +1271,7 @@ const DeliveryScheduler: React.FC<{
                                                     ))}
                                                 </div>
                                                 <div className="relative w-full h-full z-10 pointer-events-none">
-                                                    {rider.shifts.filter((s: any) => toLocalDateString(new Date(s.startAt)) === toLocalDateString(selectedDate)).map((shift: any) => {
+                                                    {(rider.shifts as Shift[]).filter((s: Shift) => toLocalDateString(new Date(s.startAt)) === toLocalDateString(selectedDate)).map((shift: Shift) => {
                                                         const start = new Date(shift.startAt);
                                                         const end = new Date(shift.endAt);
                                                         const startMin = start.getHours() * 60 + start.getMinutes();
@@ -1312,32 +1313,61 @@ const DeliveryScheduler: React.FC<{
 
                         {/* FOOTER */}
                         <div className="bg-white border-t border-slate-200 flex items-stretch shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.02)] z-30 min-h-[40px] flex-none sticky bottom-0">
-                            <div className="w-40 lg:w-40 xl:w-48 flex-none flex items-center px-4 border-r border-slate-200 bg-slate-50/90 backdrop-blur-sm sticky left-0 z-40 shadow-[4px_0_24px_-4px_rgba(0,0,0,0.1)]">
+                            <div className="w-52 lg:w-52 xl:w-64 flex-none flex items-center px-4 border-r border-slate-200 bg-slate-50/90 backdrop-blur-sm sticky left-0 z-40 shadow-[4px_0_24px_-4px_rgba(0,0,0,0.1)]">
                                 <span className="text-xs font-normal text-slate-500 uppercase tracking-wider flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full bg-indigo-500" /> Riders / Turno
                                 </span>
                             </div>
                             <div className="flex-1 flex min-w-0">
-                                {days.map(d => {
-                                    const counts = coverage[d.isoDate] || Array(24).fill(0);
-                                    const noonCount = counts[14] || 0;
-                                    const nightCount = counts[21] || 0;
-                                    return (
-                                        <div key={d.isoDate} className="flex-1 border-r border-slate-100 last:border-r-0 flex justify-center items-center py-2 min-w-[100px]">
-                                            <div className="flex items-center gap-4 opacity-100">
-                                                <div className="flex items-center gap-1.5" title="Mediodía (14:00)">
-                                                    <Sun className="w-5 h-5 text-amber-500" />
-                                                    <span className="text-sm font-normal text-slate-600 w-5 text-center">{noonCount}</span>
-                                                </div>
-                                                <div className="w-px h-4 bg-slate-200" />
-                                                <div className="flex items-center gap-1.5" title="Noche (21:00)">
-                                                    <Moon className="w-5 h-5 text-indigo-500" />
-                                                    <span className="text-sm font-normal text-slate-600 w-5 text-center">{nightCount}</span>
+                                {viewMode === 'week' ? (
+                                    days.map(d => {
+                                        const counts = coverage[d.isoDate] || Array(24).fill(0);
+                                        const noonCount = counts[14] || 0;
+                                        const nightCount = counts[21] || 0;
+                                        return (
+                                            <div key={d.isoDate} className="flex-1 border-r border-slate-100 last:border-r-0 flex justify-center items-center py-2 min-w-[100px]">
+                                                <div className="flex items-center gap-4 opacity-100">
+                                                    <div className="flex items-center gap-1.5" title="Mediodía (14:00)">
+                                                        <Sun className="w-5 h-5 text-amber-500" />
+                                                        <span className="text-sm font-normal text-slate-600 w-5 text-center">{noonCount}</span>
+                                                    </div>
+                                                    <div className="w-px h-4 bg-slate-200" />
+                                                    <div className="flex items-center gap-1.5" title="Noche (21:00)">
+                                                        <Moon className="w-5 h-5 text-indigo-500" />
+                                                        <span className="text-sm font-normal text-slate-600 w-5 text-center">{nightCount}</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
+                                        );
+                                    })
+                                ) : (
+                                    <div className="flex-1 flex items-center px-6 py-2" style={{ minWidth: `${dayViewMinWidth}px` }}>
+                                        {(() => {
+                                            const iso = toLocalDateString(selectedDate);
+                                            const counts = coverage[iso] || Array(24).fill(0);
+                                            const noonCount = counts[14] || 0;
+                                            const nightCount = counts[21] || 0;
+                                            return (
+                                                <div className="flex items-center gap-8">
+                                                    <div className="flex items-center gap-2">
+                                                        <Sun className="w-5 h-5 text-amber-500 shrink-0" />
+                                                        <span className="text-xs font-medium text-slate-500 uppercase tracking-tight">Mediodía:</span>
+                                                        <span className="text-sm font-bold text-slate-700">{noonCount}</span>
+                                                    </div>
+                                                    <div className="w-px h-4 bg-slate-200" />
+                                                    <div className="flex items-center gap-2">
+                                                        <Moon className="w-5 h-5 text-indigo-500 shrink-0" />
+                                                        <span className="text-xs font-medium text-slate-500 uppercase tracking-tight">Noche:</span>
+                                                        <span className="text-sm font-bold text-slate-700">{nightCount}</span>
+                                                    </div>
+                                                    <div className="ml-auto text-[10px] text-slate-400 font-medium italic">
+                                                        Cobertura para el {format(selectedDate, 'd MMMM', { locale: es })}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -1349,12 +1379,19 @@ const DeliveryScheduler: React.FC<{
                             isOpen={isModalOpen}
                             onClose={() => setIsModalOpen(false)}
                             onSave={saveShift}
-                            onDelete={deleteShift}
-                            initialData={editingShift}
+                            onDelete={(sId) => deleteShift(sId)}
+                            initialData={editingShift ? {
+                                shiftId: String(editingShift.id),
+                                riderId: editingShift.riderId,
+                                startAt: editingShift.startAt,
+                                endAt: editingShift.endAt,
+                                changeRequested: editingShift.changeRequested,
+                                changeReason: editingShift.changeReason
+                            } : null}
                             selectedDate={selectedDateForNew || toLocalDateString(selectedDate)}
                             prefillHour={prefillHour}
                             riders={simpleRiders}
-                            motos={vehicles.map(v => ({ id: (v.id || 'none') as string, licensePlate: (v.plate || '') as string, model: (v.model || '') as string }))}
+                            motos={vehicles.map(v => ({ id: String(v.id || 'none'), licensePlate: String(v.plate || ''), model: String(v.model || '') }))}
                             existingShifts={mergedShifts}
                         />
                     )
@@ -1413,12 +1450,19 @@ const DeliveryScheduler: React.FC<{
                         <ShiftContextMenu
                             x={contextMenu.x}
                             y={contextMenu.y}
-                            shift={contextMenu.shift}
+                            shift={contextMenu.shift as any}
                             onClose={() => setContextMenu(null)}
-                            onValidate={() => handleValidateShift(contextMenu.shift)}
-                            onDuplicate={() => handleDuplicateShift(contextMenu.shift)}
-                            onEdit={() => handleEditShift(contextMenu.shift)}
-                            onDelete={() => deleteShift(contextMenu.shift.id)}
+                            onValidate={(s) => {
+                                setLocalShifts(prev => prev.map(ls =>
+                                    String(ls.id) === String(s.id) ? { ...ls, isConfirmed: true } : ls
+                                ));
+                            }}
+                            onDuplicate={(s) => handleDuplicateShift(s as Shift)}
+                            onEdit={() => {
+                                setEditingShift(contextMenu.shift as Shift);
+                                setIsModalOpen(true);
+                            }}
+                            onDelete={(s) => deleteShift(String(s.id))}
                         />
 
                     )
@@ -1454,34 +1498,6 @@ const DeliveryScheduler: React.FC<{
                 />
 
             </DndContext >
-            {/* OVERTIME CONFIRMATION MODAL (INTERACTIVE) */}
-            < ConfirmationModal
-                isOpen={isOvertimeConfirmOpen}
-                onClose={() => {
-                    setIsOvertimeConfirmOpen(false);
-                    setPendingShiftParams(null);
-                }}
-                onConfirm={confirmOvertimeShift}
-                title="⚠️ Alerta de Overtime"
-                message={
-                    overtimeDetails ? (
-                        <div className="space-y-2 text-sm text-slate-600" >
-                            <p>
-                                El rider <span className="font-bold text-slate-900">{overtimeDetails.riderName}</span> ya acumula <span className="font-bold">{overtimeDetails.current.toFixed(1)}h</span>.
-                            </p>
-                            <p>
-                                Con este turno, pasará a <span className="font-bold text-rose-600">{overtimeDetails.projected.toFixed(1)}h</span>, superando su límite de contrato ({overtimeDetails.limit}h).
-                            </p>
-                            <p className="pt-2 italic text-xs">
-                                ¿Deseas aplicar una excepción de manager y proceder?
-                            </p>
-                        </div>
-                    ) : "Rider en overtime."
-                }
-                confirmText="Sí, crear igualmente"
-                cancelText="Cancelar"
-                variant="warning"
-            />
 
             {/* SHERIFF REPORT MODAL (AUDIT 3.0) */}
             < SheriffReportModal
@@ -1489,9 +1505,8 @@ const DeliveryScheduler: React.FC<{
                 onClose={() => setIsSheriffOpen(false)}
                 data={sheriffData}
             />
-        </div >
+        </div>
     );
 };
-
 
 export default DeliveryScheduler;

@@ -1,17 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Settings, LogOut, ChevronDown, KeyRound } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Settings, LogOut, ChevronDown, KeyRound, Bell } from 'lucide-react';
+import { useNavigate, NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useNotificationBadge } from '../../features/layouts/hooks/useNotificationBadge';
+import { cn } from '../../lib/utils';
 
 interface UserMenuProps {
     placement?: 'top' | 'bottom' | 'right';
+    isFranchise?: boolean;
+    isRider?: boolean;
 }
 
-const UserMenu: React.FC<UserMenuProps> = ({ placement = 'bottom' }) => {
+const UserMenu: React.FC<UserMenuProps> = ({ placement = 'bottom', isFranchise = false, isRider = false }) => {
     const { user, logout, resetPassword } = useAuth();
     const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+    const { unreadCount, hasUnread } = useNotificationBadge();
 
     // Close on click outside
     useEffect(() => {
@@ -39,10 +44,8 @@ const UserMenu: React.FC<UserMenuProps> = ({ placement = 'bottom' }) => {
     };
 
     const handleResetPassword = async () => {
-        // ... (keep existing implementation or assume it's same)
         setIsOpen(false);
         if (user?.email) {
-            /* ... */
             try {
                 await resetPassword(user.email);
                 alert(`Correo de recuperación enviado a ${user.email}`);
@@ -71,24 +74,33 @@ const UserMenu: React.FC<UserMenuProps> = ({ placement = 'bottom' }) => {
                     <img
                         src={user?.photoURL || `https://ui-avatars.com/api/?name=${user?.email}&background=random`}
                         alt="Profile"
-                        className="w-10 h-10 rounded-full border border-slate-200 dark:border-white/10 shadow-sm object-cover transition-transform group-hover:scale-105"
+                        className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-white/10 shadow-sm object-cover transition-transform group-hover:scale-105"
                     />
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full shadow-sm" />
+                    
+                    {/* Notification Badge */}
+                    {hasUnread && (
+                        <div className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[22px] h-[22px] px-1.5 bg-rose-500 border-2 border-white dark:border-slate-900 rounded-full shadow-lg">
+                            <span className="text-[10px] font-bold text-white">
+                                {unreadCount > 9 ? '9+' : unreadCount}
+                            </span>
+                        </div>
+                    )}
                 </div>
                 <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {/* Premium Dropdown */}
             {isOpen && (
-                <div className={`
-                    absolute right-0 w-64
-                    bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl
-                    rounded-[20px] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)]
-                    border border-slate-100 dark:border-white/10
-                    py-2.5 z-[9999]
-                    animate-in fade-in zoom-in-95 duration-200
-                    ${getMenuPositionClass()}
-                `}>
+                <div className={cn(
+                    "absolute right-0 w-72",
+                    "bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl",
+                    "rounded-[20px] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)]",
+                    "border border-slate-100 dark:border-white/10",
+                    "py-2.5 z-[9999]",
+                    "animate-in fade-in zoom-in-95 duration-200",
+                    getMenuPositionClass()
+                )}>
+                    {/* User Info */}
                     <div className="px-5 py-4 border-b border-slate-50 dark:border-white/5">
                         <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
                             {user?.displayName || (user?.email?.split('@')[0]) || 'Usuario'}
@@ -98,7 +110,27 @@ const UserMenu: React.FC<UserMenuProps> = ({ placement = 'bottom' }) => {
                         </p>
                     </div>
 
-                    <div className="px-2 py-2 flex flex-col gap-1">
+                    {/* Menu Items */}
+                    <div className="px-2 py-2 flex flex-col gap-0.5">
+                        {/* Notifications Link */}
+                        {(isFranchise || isRider) && (
+                            <NavLink
+                                to="/notifications"
+                                onClick={() => setIsOpen(false)}
+                                className="w-full text-left px-3 py-2.5 text-sm text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-blue-600 dark:hover:text-blue-400 flex items-center justify-between transition-all rounded-xl font-medium active:scale-[0.98]"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <Bell className="w-4 h-4 opacity-70" />
+                                    <span>Notificaciones</span>
+                                </div>
+                                {hasUnread && (
+                                    <div className="flex items-center justify-center min-w-[20px] h-5 bg-rose-500 text-white text-[10px] font-bold rounded-full px-1.5">
+                                        {unreadCount > 9 ? '9+' : unreadCount}
+                                    </div>
+                                )}
+                            </NavLink>
+                        )}
+
                         <button
                             onClick={() => handleNavigation('/profile')}
                             className="w-full text-left px-3 py-2.5 text-sm text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-blue-600 dark:hover:text-blue-400 flex items-center transition-all rounded-xl font-medium active:scale-[0.98]"

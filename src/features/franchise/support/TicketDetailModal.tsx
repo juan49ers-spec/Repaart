@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, ShieldCheck, Clock, Paperclip, CheckCircle } from 'lucide-react';
+import { X, Send, Clock, Paperclip, CheckCircle, AlertTriangle, User, Download, FileText } from 'lucide-react';
 import { db } from '../../../lib/firebase';
-import { doc, updateDoc, arrayUnion, onSnapshot, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { doc, updateDoc, onSnapshot, serverTimestamp, Timestamp, collection, query, orderBy, addDoc } from 'firebase/firestore';
+import SharedMessage, { Message, formatRelativeTime, getStatusBadgeStyle } from '../../../components/support/SharedMessage';
+import { cn } from '../../../lib/utils';
+import { useAuth } from '../../../context/AuthContext';
 
-interface Message {
-    id: string;
-    text: string;
-    sender: 'user' | 'support' | 'system';
-    timestamp?: string | any;
-    createdAt?: number;
+interface TicketDetailModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    ticketId: string | null;
 }
 
 interface Ticket {
@@ -17,65 +18,101 @@ interface Ticket {
     priority: 'low' | 'medium' | 'high';
     status: 'open' | 'resolved' | 'closed' | 'investigating' | 'pending_user';
     description: string;
+    category?: string;
+    email?: string;
     createdAt?: Timestamp;
     lastUpdated?: Timestamp;
-    messages: Message[];
-}
-
-interface TicketDetailModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    ticketId: string | null;
+    attachmentUrl?: string;
+    attachmentName?: string;
 }
 
 const TicketDetailModal: React.FC<TicketDetailModalProps> = ({ isOpen, onClose, ticketId }) => {
+    const { user } = useAuth();
     const [ticket, setTicket] = useState<Ticket | null>(null);
+    const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [sending, setSending] = useState(false);
+    const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // 1. Fetch Ticket
     useEffect(() => {
         if (!isOpen || !ticketId) return;
-        const unsubscribe = onSnapshot(doc(db, "tickets", ticketId), (docSnap) => {
+
+        // Listen to ticket document
+        const ticketUnsubscribe = onSnapshot(doc(db, "tickets", ticketId), (docSnap) => {
             if (docSnap.exists()) {
                 setTicket({ id: docSnap.id, ...docSnap.data() } as Ticket);
             }
         });
-        return () => unsubscribe();
+
+        // Listen to messages subcollection
+        const messagesQuery = query(
+            collection(db, "tickets", ticketId, "messages"),
+            orderBy("createdAt", "asc")
+        );
+        const messagesUnsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+            const msgs = snapshot.docs
+                .map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        text: data.text || '',
+                        senderRole: data.senderRole || 'user',
+                        senderName: data.senderRole === 'admin' ? 'Soporte' : (data.senderName || undefined),
+                        isInternal: data.isInternal || false,
+                        createdAt: data.createdAt,
+                        timestamp: data.createdAt,
+                        attachmentUrl: data.attachmentUrl,
+                        attachmentName: data.attachmentName
+                    } as Message;
+                })
+                .filter(msg => !msg.isInternal); // Safety: Never show internal notes to franchise
+            setMessages(msgs);
+        });
+
+        return () => {
+            ticketUnsubscribe();
+            messagesUnsubscribe();
+        };
     }, [isOpen, ticketId]);
 
-    // 2. Auto-scroll
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [ticket?.messages]);
+    }, [messages]);
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newMessage.trim() || sending || !ticketId) return;
         setSending(true);
         try {
-            const messageData: Message = {
-                id: Date.now().toString(),
+            const messageData = {
                 text: newMessage,
-                sender: 'user',
-                timestamp: new Date().toISOString(),
-                createdAt: Date.now()
+                senderId: user?.uid,
+                senderRole: 'user',
+                senderName: user?.displayName || 'Franquicia',
+                createdAt: serverTimestamp(),
+                timestamp: Date.now(),
+                isInternal: false
             };
+
+            // Save to messages subcollection
+            await addDoc(collection(db, "tickets", ticketId, "messages"), messageData);
+
+            // Update ticket
             await updateDoc(doc(db, "tickets", ticketId), {
-                messages: arrayUnion(messageData),
                 lastUpdated: serverTimestamp(),
-                status: 'open' // Reabrir si escribe de nuevo
+                status: 'open'
             });
+
             setNewMessage('');
         } catch (error) {
             console.error("Error sending message:", error);
+            alert('Error al enviar el mensaje');
         } finally {
             setSending(false);
         }
     };
 
-    // --- MEJORA: Handler para resolver ticket ---
     const handleResolve = async () => {
         if (!ticketId) return;
         if (!confirm("¿Estás seguro de que quieres cerrar este ticket?")) return;
@@ -86,123 +123,147 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({ isOpen, onClose, 
             });
         } catch (error) {
             console.error("Error resolving ticket:", error);
+            alert('Error al resolver el ticket');
         }
     };
 
+    const getPriorityStyle = (priority: string) => {
+        const styles: Record<string, { bg: string; text: string; border: string; icon: React.ElementType }> = {
+            high: { bg: 'bg-rose-50 dark:bg-rose-500/10', text: 'text-rose-600 dark:text-rose-400', border: 'border-rose-100 dark:border-rose-500/20', icon: AlertTriangle },
+            medium: { bg: 'bg-amber-50 dark:bg-amber-500/10', text: 'text-amber-600 dark:text-amber-400', border: 'border-amber-100 dark:border-amber-500/20', icon: Clock },
+            low: { bg: 'bg-emerald-50 dark:bg-emerald-500/10', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-100 dark:border-emerald-500/20', icon: CheckCircle }
+        };
+        return styles[priority] || styles.low;
+    };
+
+    const getStatusLabel = (status: string): string => {
+        const labels: Record<string, string> = {
+            open: 'Abierto',
+            resolved: 'Resuelto',
+            closed: 'Cerrado',
+            investigating: 'Revisando',
+            pending_user: 'Pendiente Info'
+        };
+        return labels[status] || status;
+    };
+
     if (!isOpen) return null;
-    if (!ticket) return null; // Or loader
+    if (!ticket) return null;
+
+    const ticketStatus = getStatusBadgeStyle(ticket.status);
+    const priorityStyle = getPriorityStyle(ticket.priority);
+    const PriorityIcon = priorityStyle.icon;
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/40 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden relative transition-colors">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden relative transition-colors">
 
-                {/* --- HEADER --- */}
-                <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/90 backdrop-blur-md z-10">
-                    <div className="flex items-center gap-4">
-                        {/* Priority Icon */}
-                        <div className={`p - 3 rounded - xl border transition - colors ${ticket.priority === 'high'
-                                ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-500 dark:text-rose-400 border-rose-100 dark:border-rose-500/20' :
-                                ticket.priority === 'medium'
-                                    ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400 border-amber-100 dark:border-amber-500/20' :
-                                    'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border-indigo-100 dark:border-indigo-500/20'
-                            } `}>
-                            <ShieldCheck className="w-6 h-6" />
+                {/* HEADER */}
+                <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/90 backdrop-blur-md shrink-0">
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className={cn(
+                            "p-2.5 rounded-xl border transition-all shrink-0",
+                            priorityStyle.bg,
+                            priorityStyle.text,
+                            priorityStyle.border
+                        )}>
+                            <PriorityIcon className="w-5 h-5" />
                         </div>
 
-                        {/* Title & Meta */}
-                        <div>
-                            <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-3">
-                                {ticket.subject}
-                                <span className="text-[10px] px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-black uppercase tracking-widest">
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                                <h2 className="text-lg font-bold text-slate-900 dark:text-white truncate leading-tight">
+                                    {ticket.subject}
+                                </h2>
+                                <span className="text-[10px] px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-semibold uppercase tracking-widest whitespace-nowrap flex-shrink-0">
                                     #{ticket.id.slice(-6)}
                                 </span>
-                            </h2>
-                            <div className="flex items-center gap-4 text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-bold uppercase tracking-widest">
-                                <span className="flex items-center gap-1.5">
-                                    <Clock className="w-3.5 h-3.5" />
-                                    {ticket.createdAt?.seconds ? new Date(ticket.createdAt.seconds * 1000).toLocaleDateString() : 'Reciente'}
+                            </div>
+                            <div className="flex items-center gap-2 text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider">
+                                <span className={cn("px-2 py-0.5 rounded-lg border font-semibold", ticketStatus.bg, ticketStatus.text, ticketStatus.border)}>
+                                    {getStatusLabel(ticket.status)}
                                 </span>
-                                {ticket.status === 'resolved' && (
-                                    <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                                        <CheckCircle className="w-3.5 h-3.5" /> RESUELTO
-                                    </span>
-                                )}
-                                <span className="text-slate-200 dark:text-slate-800">•</span>
-                                <span className="text-indigo-500 dark:text-indigo-400">Canal: App Móvil</span>
+                                <span className="text-slate-200 dark:text-slate-700">•</span>
+                                <span className={cn("px-2 py-0.5 rounded-lg border font-semibold uppercase", priorityStyle.bg, priorityStyle.text, priorityStyle.border)}>
+                                    {ticket.priority === 'high' ? 'Alta' : ticket.priority === 'medium' ? 'Media' : 'Baja'}
+                                </span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        {/* MEJORA: Botón Resolver (Solo si está abierto) */}
-                        {ticket.status !== 'resolved' && (
+                    <div className="flex items-center gap-2 shrink-0">
+                        {ticket.status !== 'resolved' && ticket.status !== 'closed' && (
                             <button
                                 onClick={handleResolve}
-                                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest shadow-sm hover:shadow-md"
+                                className="hidden sm:flex items-center gap-2 px-3.5 py-2 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 rounded-xl transition-all text-[10px] font-semibold uppercase tracking-wider shadow-sm hover:shadow-md active:scale-95"
                             >
-                                <CheckCircle className="w-4 h-4" />
-                                Marcar Resuelto
+                                <CheckCircle className="w-3.5 h-3.5" />
+                                <span>Resolver</span>
                             </button>
                         )}
 
                         <button
                             onClick={onClose}
-                            className="p-2.5 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 rounded-xl transition-all group border border-transparent hover:border-rose-100 dark:hover:border-rose-500/20"
-                            title="Cerrar modal"
+                            className="p-2.5 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-all border border-transparent hover:border-rose-100 dark:hover:border-rose-500/20 active:scale-95"
+                            title="Cerrar"
                         >
-                            <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
+                            <X className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
 
-                {/* --- CHAT BODY --- */}
-                <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-slate-50/30 dark:bg-slate-950 scroll-smooth">
-                    {/* Mensaje Inicial */}
-                    <div className="flex justify-start">
-                        <div className="max-w-[85%]">
-                            <div className="flex items-center gap-2 mb-2 ml-1">
-                                <span className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest border-l-2 border-indigo-500 pl-2">Descripción Inicial del Caso</span>
+                {/* CHAT BODY */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50 dark:bg-slate-950">
+                    {/* Original Ticket Description */}
+                    <div className="flex justify-start mb-8">
+                        <div className="max-w-[90%] md:max-w-[80%]">
+                            <div className="flex items-center gap-2 mb-2 px-1">
+                                <div className="w-6 h-6 rounded-lg bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center">
+                                    <User className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                                </div>
+                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-wider border-l-2 border-indigo-500 pl-2">
+                                    Descripción Inicial
+                                </span>
+                                <span className="text-[10px] font-medium text-slate-400 dark:text-slate-600 uppercase tracking-wide ml-auto">
+                                    {formatRelativeTime(ticket.createdAt)}
+                                </span>
                             </div>
-                            <div className="p-5 rounded-2xl rounded-tl-sm bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-sm leading-relaxed shadow-sm transition-colors">
+                            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-sm leading-relaxed shadow-sm">
                                 {ticket.description}
+                                {ticket.attachmentUrl && (
+                                    <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                        <a
+                                            href={ticket.attachmentUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 rounded-xl text-[10px] font-semibold uppercase tracking-wider transition-all shadow-sm hover:shadow-md active:scale-95"
+                                        >
+                                            <FileText className="w-4 h-4" />
+                                            {ticket.attachmentName || 'Ver Archivo'}
+                                            <Download className="w-3.5 h-3.5" />
+                                        </a>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
 
-                    {/* Mensajes */}
-                    {ticket.messages && ticket.messages.map((msg, index) => {
-                        const isUser = msg.sender === 'user';
-                        const timestamp = msg.createdAt
-                            ? new Date(msg.createdAt)
-                            : (msg.timestamp ? new Date(msg.timestamp) : new Date());
-
-                        return (
-                            <div key={index} className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate -in fade -in slide -in -from - bottom - 2 duration - 300`}>
-                                <div className={`max - w - [85 %] ${isUser ? 'order-1' : 'order-2'} `}>
-                                    <div className={`flex items - center gap - 3 mb - 1.5 ${isUser ? 'justify-end mr-1' : 'ml-1'} `}>
-                                        <span className={`text - [10px] font - black uppercase tracking - widest ${isUser ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-600'} `}>{isUser ? 'Tú' : 'Soporte HQ'}</span>
-                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-600">{timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                    </div>
-                                    <div className={`p - 4 rounded - 2xl text - sm shadow - md leading - relaxed transition - all ${isUser
-                                            ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 dark:from-indigo-600 dark:to-blue-700 text-white rounded-tr-sm border border-indigo-500/20 shadow-indigo-500/10'
-                                            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-tl-sm border border-slate-200 dark:border-slate-700'
-                                        } `}>
-                                        {msg.text}
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })}
+                    {/* Messages */}
+                    <div className="space-y-6">
+                        {messages.map((msg) => (
+                            <SharedMessage key={msg.id} msg={msg} />
+                        ))}
+                    </div>
                     <div ref={messagesEndRef} />
                 </div>
 
-                {/* --- FOOTER --- */}
-                {ticket.status === 'resolved' ? (
-                    <div className="p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center gap-4 animate-in slide-in-from-bottom-4 transition-colors">
-                        <div className="flex items-center gap-3 px-6 py-2.5 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl border border-emerald-100 dark:border-emerald-500/20 shadow-sm">
-                            <CheckCircle className="w-5 h-5 text-emerald-500" />
-                            <p className="text-emerald-800 dark:text-emerald-400 text-sm font-black uppercase tracking-widest">
-                                El equipo ha marcado este caso como resuelto.
+                {/* FOOTER */}
+                {ticket.status === 'resolved' || ticket.status === 'closed' ? (
+                    <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col items-center justify-center gap-3 shrink-0 animate-in slide-in-from-bottom-4 transition-colors">
+                        <div className="flex items-center gap-2.5 px-5 py-2.5 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl border border-emerald-100 dark:border-emerald-500/20 shadow-sm">
+                            <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                            <p className="text-sm font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">
+                                Ticket Resuelto
                             </p>
                         </div>
                         <button
@@ -213,51 +274,77 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({ isOpen, onClose, 
                                     lastUpdated: serverTimestamp()
                                 });
                             }}
-                            className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 uppercase tracking-[0.2em] border-b-2 border-indigo-100 dark:border-indigo-500/20 hover:border-indigo-500 pb-1 transition-all"
+                            className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 uppercase tracking-wider border-b-2 border-transparent hover:border-indigo-500 pb-0.5 transition-all"
                         >
-                            ¿Necesitas más ayuda? Reabrir Ticket
+                            ¿Necesitas más ayuda? Reabrir ticket
                         </button>
                     </div>
                 ) : (
-                    <div className="p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 transition-colors">
-                        <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto flex items-end gap-3">
-                            <button
-                                type="button"
-                                className="p-3.5 text-slate-400 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
-                                title="Adjuntar archivo"
-                            >
-                                <Paperclip className="w-5 h-5" />
-                            </button>
-                            <div className="flex-1 relative group">
-                                <textarea
-                                    value={newMessage}
-                                    onChange={(e) => setNewMessage(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' && !e.shiftKey) {
-                                            e.preventDefault();
-                                            handleSendMessage(e);
-                                        }
-                                    }}
-                                    placeholder="Escribe tu mensaje aquí..."
-                                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-2xl py-4 px-5 pr-14 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 resize-none h-[60px] min-h-[60px] max-h-[150px] scrollbar-hide placeholder:text-slate-400 dark:placeholder:text-slate-700 font-medium transition-all"
-                                />
-                                <div className="absolute right-3 bottom-3 flex items-center gap-2">
-                                    {/* Send Indicator dots if needed */}
+                    <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors shrink-0">
+                        <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
+                            <div className="flex items-end gap-3">
+                                <button
+                                    type="button"
+                                    className="p-3 text-slate-400 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 shrink-0"
+                                    title="Adjuntar archivo"
+                                >
+                                    <Paperclip className="w-5 h-5" />
+                                </button>
+                                <div className="flex-1 relative group">
+                                    <textarea
+                                        value={newMessage}
+                                        onChange={(e) => {
+                                            setNewMessage(e.target.value);
+                                            setIsTyping(e.target.value.length > 0);
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                e.preventDefault();
+                                                handleSendMessage(e);
+                                            }
+                                        }}
+                                        placeholder="Escribe tu respuesta aquí..."
+                                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-xl py-3.5 px-4 pr-12 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 resize-none h-[60px] min-h-[60px] max-h-[150px] placeholder:text-slate-400 dark:placeholder:text-slate-700 font-medium transition-all shadow-sm"
+                                    />
+                                    <div className="absolute right-3 bottom-3 flex items-center gap-1.5">
+                                        {isTyping && (
+                                            <div className="flex gap-0.5">
+                                                <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce delay-typing-1" />
+                                                <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce delay-typing-2" />
+                                                <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce delay-typing-3" />
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
+                                <button
+                                    type="submit"
+                                    disabled={!newMessage.trim() || sending}
+                                    className={cn(
+                                        "h-[52px] w-[52px] rounded-xl flex items-center justify-center transition-all shrink-0",
+                                        !newMessage.trim() || sending
+                                            ? "bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-700 cursor-not-allowed"
+                                            : "bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/20 hover:shadow-xl hover:shadow-indigo-500/30 hover:-translate-y-0.5 active:scale-95"
+                                    )}
+                                    title="Enviar mensaje"
+                                >
+                                    {sending ? (
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    ) : (
+                                        <Send className="w-5 h-5" />
+                                    )}
+                                </button>
                             </div>
-                            <button
-                                type="submit"
-                                disabled={!newMessage.trim() || sending}
-                                className={`h - [60px] w - [60px] rounded - 2xl flex items - center justify - center transition - all ${!newMessage.trim() || sending
-                                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-700 cursor-not-allowed'
-                                        : 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-xl shadow-indigo-500/20 hover:scale-[1.05] active:scale-95'
-                                    } `}
-                                title="Enviar mensaje"
-                            >
-                                <Send className={`w - 6 h - 6 ${sending ? 'animate-pulse' : ''} `} />
-                            </button>
+                            <div className="flex items-center justify-between mt-2">
+                                <p className="text-[10px] font-medium text-slate-400 dark:text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                                    <span>Enter para enviar</span>
+                                    <span className="text-slate-300 dark:text-slate-700">•</span>
+                                    <span>Shift+Enter para nueva línea</span>
+                                </p>
+                                <span className="text-[10px] font-semibold text-indigo-500 dark:text-indigo-400">
+                                    {newMessage.length}/500
+                                </span>
+                            </div>
                         </form>
-                        <p className="mt-3 text-center text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest">Presiona Enter para enviar</p>
                     </div>
                 )}
             </div>

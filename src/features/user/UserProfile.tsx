@@ -1,5 +1,5 @@
-import React, { useState, Suspense, lazy, type FC, useRef } from 'react';
-import { User, Lock, Bell, LogOut, CheckCircle, AlertTriangle, Camera, Mail, Sparkles } from 'lucide-react'; import { useAuth } from '../../context/AuthContext';
+import { useState, Suspense, lazy, type FC, useRef, type ChangeEvent, type ElementType } from 'react';
+import { User, Lock, Bell, LogOut, CheckCircle, AlertTriangle, Camera, Mail, Sparkles, Shield } from 'lucide-react'; import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/ui/inputs/Button';
 import { updateProfile } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -34,7 +34,7 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
     const isAdmin = roleConfig?.role === 'admin';
 
     // --- AVATAR UPLOAD LOGIC ---
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file || !user) return;
 
@@ -122,7 +122,7 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
                                 {user.photoURL ? (
                                     <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-slate-100 text-4xl font-black text-slate-300">
+                                    <div className="w-full h-full flex items-center justify-center bg-slate-100 text-3xl md:text-4xl font-black text-slate-300">
                                         {user.email?.charAt(0).toUpperCase()}
                                     </div>
                                 )}
@@ -133,27 +133,28 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
                                     }
                                 </div>
                             </div>
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                className="hidden"
-                                accept="image/*"
-                                title="Subir avatar"
-                                onChange={handleFileChange}
-                            />
+
                             {/* Status Indicator */}
-                            <div className="absolute bottom-2 right-2 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full shadow-lg" title="Online"></div>
+                            <div className="absolute bottom-2 right-2 w-5 h-5 md:w-6 md:h-6 bg-emerald-500 border-4 border-white rounded-full shadow-lg" title="Online"></div>
                         </div>
 
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            className="hidden"
+                            accept="image/*"
+                        />
+
                         {/* User Identity */}
-                        <div className="flex-1 text-center md:text-left space-y-2">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100/50 backdrop-blur-sm shadow-sm mb-2">
-                                <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-                                <span className="text-xs font-bold text-indigo-700 uppercase tracking-widest">
-                                    {roleConfig?.role === 'admin' ? 'Administrador Global' : 'Franquiciado'}
+                        <div className="flex-1 text-center md:text-left space-y-1 md:space-y-2">
+                            <div className="inline-flex items-center gap-1.5 md:gap-2 px-2.5 py-1 md:px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100/50 backdrop-blur-sm shadow-sm mb-2">
+                                <Sparkles className="w-3 md:w-3.5 h-3 md:h-3.5 text-indigo-500" />
+                                <span className="text-[10px] md:text-xs font-bold text-indigo-700 uppercase tracking-widest">
+                                    {roleConfig?.role === 'admin' ? 'Admin Global' : 'Franquiciado'}
                                 </span>
                             </div>
-                            <h1 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">
+                            <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-800 tracking-tight">
                                 {user.displayName || 'Usuario'}
                             </h1>
                             <div className="flex items-center justify-center md:justify-start gap-4 text-slate-500 font-medium">
@@ -203,6 +204,14 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
                             icon={Bell}
                             label="Alertas"
                         />
+                        {isAdmin && (
+                            <TabButton
+                                active={activeTab === 'admin'}
+                                onClick={() => setActiveTab('admin')}
+                                icon={Shield}
+                                label="Gestión"
+                            />
+                        )}
                     </div>
                 </div>
 
@@ -230,7 +239,6 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
                         {activeTab === 'notifications' && (
                             <NotificationsTab
                                 user={user}
-                                showMessage={showMessage}
                             />
                         )}
 
@@ -249,7 +257,7 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
 interface TabButtonProps {
     active: boolean;
     onClick: () => void;
-    icon: React.ElementType;
+    icon: ElementType;
     label: string;
 }
 

@@ -1,14 +1,15 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { adminNavItems, franchiseNavItems } from '../constants/navigation';
+import { adminNavItems, franchiseNavItems, riderNavItems } from '../constants/navigation';
 
 interface NavigationSidebarProps {
     isAdmin: boolean;
     isFranchise: boolean;
+    isRider?: boolean;
 }
 
-const NavigationSidebar: React.FC<NavigationSidebarProps> = ({ isAdmin, isFranchise }) => {
-    const navItems = isAdmin ? adminNavItems : isFranchise ? franchiseNavItems : [];
+const NavigationSidebar: React.FC<NavigationSidebarProps> = ({ isAdmin, isFranchise, isRider }) => {
+    const navItems = isAdmin ? adminNavItems : isFranchise ? franchiseNavItems : isRider ? riderNavItems : [];
 
     // Mapeo semántico inspirado en Flyder OS
     const sections = [

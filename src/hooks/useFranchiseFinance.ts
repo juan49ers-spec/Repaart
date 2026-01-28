@@ -50,7 +50,7 @@ export const useFranchiseFinance = ({ franchiseId, month, tariffs }: FranchiseFi
 
             return data || DEFAULT_MONTH_DATA;
         },
-        enabled: !!user && !!franchiseId && !!month,
+        enabled: !!user && !!franchiseId && !!month && user.role !== 'rider',
         staleTime: 1000 * 60 * 5, // 5 Minutes Stale Time (Reduces flickering)
         refetchOnWindowFocus: true,
     });
@@ -84,7 +84,7 @@ export const useFranchiseFinance = ({ franchiseId, month, tariffs }: FranchiseFi
             // Fetch 12 months back from the selected month to ensure full year coverage
             return financeService.getFinancialTrend(franchiseId, 12, month);
         },
-        enabled: !!franchiseId,
+        enabled: !!franchiseId && user?.role !== 'rider',
         staleTime: 1000 * 60 * 10 // 10 minutes
     });
 

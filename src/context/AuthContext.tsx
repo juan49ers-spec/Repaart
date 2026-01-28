@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { auth, db } from "../lib/firebase";
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from "firebase/auth";
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User, type UserCredential } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { logAction, AUDIT_ACTIONS } from "../lib/audit";
 
@@ -26,7 +26,7 @@ export interface AuthContextType {
     user: AuthUser | null;
     roleConfig: RoleConfig | null;
     isAdmin: boolean;
-    login: (email: string, password: string) => Promise<any>;
+    login: (email: string, password: string) => Promise<UserCredential & { user: AuthUser }>;
     logout: () => Promise<void>;
     assignRole: (
         targetUid: string,
@@ -72,6 +72,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+            setLoading(true);
             if (typeof getDoc !== 'function') console.error("CRITICAL: getDoc is not a function");
             try {
                 if (currentUser) {
@@ -137,13 +138,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const login = async (email: string, password: string) => {
         const result = await signInWithEmailAndPassword(auth, email, password);
+
+        // Recuperamos el perfil inmediatamente para que el componente Login pueda navegar con información
+        const configRef = doc(db, "users", result.user.uid);
+        const configSnap = await getDoc(configRef);
+
+        const enhancedUser = result.user as AuthUser;
+        if (configSnap.exists()) {
+            const data = configSnap.data() as RoleConfig;
+            enhancedUser.role = data.role;
+            enhancedUser.franchiseId = data.franchiseId;
+            enhancedUser.status = data.status;
+        }
+
         logAction(result.user, AUDIT_ACTIONS.LOGIN_SUCCESS, { method: 'email_password' });
-        return result;
+        return { ...result, user: enhancedUser };
     };
 
     const logout = async (): Promise<void> => {
         if (user) {
-            logAction(user, AUDIT_ACTIONS.LOGOUT);
+            await logAction(user, AUDIT_ACTIONS.LOGOUT);
         }
         return signOut(auth);
     };

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp, addDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp, addDoc, limit, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { logAction, AUDIT_ACTIONS } from '../lib/audit';
 import { sendTicketReplyEmail } from '../lib/email';
@@ -65,7 +65,11 @@ export const useSupportManager = (currentUser: any) => {
 
     // --- REAL-TIME TICKETS ---
     useEffect(() => {
-        const q = query(collection(db, "tickets"), orderBy("createdAt", "desc"));
+        const q = query(
+            collection(db, "tickets"),
+            orderBy("createdAt", "desc"),
+            limit(50)
+        );
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const t = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ticket));
             setTickets(t);
@@ -203,19 +207,20 @@ export const useSupportManager = (currentUser: any) => {
 
     const handleDeleteTicket = useCallback(async (id: string) => {
         try {
-            await updateDoc(doc(db, "tickets", id), { deleted: true }); // Soft delete first? 
             // The user said "elimina todos los tickets", usually they mean hard delete in these types of apps.
             // I'll do a hard delete as it's cleaner for "starting over".
-            await import('firebase/firestore').then(async ({ deleteDoc, writeBatch, getDocs }) => {
-                // Delete messages first
-                const msgsSnap = await getDocs(collection(db, "tickets", id, "messages"));
-                const batch = writeBatch(db);
-                msgsSnap.forEach(mDoc => batch.delete(mDoc.ref));
-                await batch.commit();
+            // 1. Prepare batch
+            const batch = writeBatch(db);
 
-                // Delete ticket
-                await deleteDoc(doc(db, "tickets", id));
-            });
+            // 2. Queue messages for deletion
+            const msgsSnap = await getDocs(collection(db, "tickets", id, "messages"));
+            msgsSnap.forEach(mDoc => batch.delete(mDoc.ref));
+
+            // 3. Queue ticket for deletion
+            batch.delete(doc(db, "tickets", id));
+
+            // 4. Commit all at once
+            await batch.commit();
 
             if (currentUser) {
                 logAction(currentUser, AUDIT_ACTIONS.TICKET_UPDATE, { ticketId: id, action: 'deleted' });

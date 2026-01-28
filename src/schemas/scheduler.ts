@@ -41,7 +41,9 @@ export const ShiftSchema = z.object({
     swapRequested: z.boolean().optional(),
     changeRequested: z.boolean().optional(),
     changeReason: z.string().nullable().optional(),
+    date: z.string().optional(),
     franchiseId: z.string().optional(),
+    isNew: z.boolean().optional(),
 });
 
 export const WeekDataSchema = z.object({

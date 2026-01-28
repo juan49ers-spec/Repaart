@@ -37,10 +37,7 @@ const Academy = lazyWithRetry(() => import('./features/academy/Academy'));
 const AdminFranchiseView = lazyWithRetry(() => import('./features/admin/AdminFranchiseView'));
 const KanbanBoard = lazyWithRetry(() => import('./features/admin/kanban/KanbanBoard'));
 const RidersView = lazyWithRetry(() => import('./features/fleet/RidersView'));
-const AcademyAdminView = lazyWithRetry(() => import('./features/academy/admin/AcademyAdminView').then(module => ({ default: module.AcademyAdminView })));
-const LessonEditor = lazyWithRetry(() => import('./features/academy/admin/LessonEditor'));
-const QuizEditor = lazyWithRetry(() => import('./features/academy/admin/QuizEditor').then(module => ({ default: module.QuizEditor })));
-const IsolatedSeederPage = lazyWithRetry(() => import('./features/academy/admin/IsolatedSeederPage').then(module => ({ default: module.IsolatedSeederPage })));
+const AcademyAdmin = lazyWithRetry(() => import('./features/academy/admin/AcademyAdmin'));
 
 import { useFranchiseFinance } from './hooks/useFranchiseFinance';
 import { useVersionCheck } from './hooks/useVersionCheck';
@@ -50,7 +47,11 @@ import { RiderLayout } from './layouts/RiderLayout';
 
 const RiderScheduleView = lazyWithRetry(() => import('./features/rider/schedule/RiderScheduleView'));
 const RiderProfileView = lazyWithRetry(() => import('./features/rider/profile/RiderProfileView').then(module => ({ default: module.RiderProfileView })));
-const RiderHomeView = lazyWithRetry(() => import('./features/rider/home/RiderHomeView').then(module => ({ default: module.RiderHomeView })));
+const RiderHomeView = lazyWithRetry(() => import('./features/rider/home/RiderHomeView'));
+const RiderPersonalDataView = lazyWithRetry(() => import('./features/rider/profile/RiderPersonalDataView').then(module => ({ default: module.RiderPersonalDataView })));
+const RiderNotificationsView = lazyWithRetry(() => import('./features/rider/profile/RiderNotificationsView').then(module => ({ default: module.RiderNotificationsView })));
+const RiderSecurityView = lazyWithRetry(() => import('./features/rider/profile/RiderSecurityView').then(module => ({ default: module.RiderSecurityView })));
+const RiderAvailabilityView = lazyWithRetry(() => import('./features/rider/profile/RiderAvailabilityView'));
 
 function App() {
     const { user, loading: authLoading, roleConfig, logout, isAdmin, impersonatedFranchiseId } = useAuth();
@@ -134,7 +135,8 @@ function App() {
         sidebarData: currentData, onCalculate: handleUpdate, readOnly: false,
         saving,
         // isChatOpen, setIsChatOpen, -> Handled by Store (DashboardLayout uses store)
-        chatData: { report }
+        chatData: { report },
+        isRider: roleConfig?.role === 'rider'
     };
 
     // Context to be exposed via Outlet
@@ -202,7 +204,11 @@ function App() {
                     } />
                     <Route path="academy" element={
                         <RequireRole allowedRoles={['admin', 'franchise']}>
-                            {/* Academy is ALLOWED for Pending users */}
+                            <Academy />
+                        </RequireRole>
+                    } />
+                    <Route path="academy/:moduleId" element={
+                        <RequireRole allowedRoles={['admin', 'franchise']}>
                             <Academy />
                         </RequireRole>
                     } />
@@ -283,14 +289,6 @@ function App() {
                         </ProtectedRoute>
                     } />
 
-                    <Route path="admin/seed-academy" element={
-                        <ProtectedRoute requireAdmin={true}>
-                            <React.Suspense fallback={<DashboardSkeleton />}>
-                                <IsolatedSeederPage />
-                            </React.Suspense>
-                        </ProtectedRoute>
-                    } />
-
                     {/* ADMIN FINANCE DETAIL */}
                     <Route path="admin/franchise/:franchiseId" element={
                         <ProtectedRoute requireAdmin={true}>
@@ -301,17 +299,7 @@ function App() {
                     {/* ADMIN ACADEMY STUDIO */}
                     <Route path="admin/academy" element={
                         <ProtectedRoute requireAdmin={true}>
-                            <AcademyAdminView />
-                        </ProtectedRoute>
-                    } />
-                    <Route path="admin/academy/module/:moduleId" element={
-                        <ProtectedRoute requireAdmin={true}>
-                            <LessonEditor />
-                        </ProtectedRoute>
-                    } />
-                    <Route path="admin/academy/quiz/:moduleId" element={
-                        <ProtectedRoute requireAdmin={true}>
-                            <QuizEditor />
+                            <AcademyAdmin />
                         </ProtectedRoute>
                     } />
 
@@ -330,7 +318,11 @@ function App() {
                     <Route index element={<Navigate to="dashboard" replace />} />
                     <Route path="dashboard" element={<RiderHomeView />} />
                     <Route path="schedule" element={<RiderScheduleView />} />
+                    <Route path="availability" element={<RiderAvailabilityView />} />
                     <Route path="profile" element={<RiderProfileView />} />
+                    <Route path="profile/personal" element={<RiderPersonalDataView />} />
+                    <Route path="profile/notifications" element={<RiderNotificationsView />} />
+                    <Route path="profile/security" element={<RiderSecurityView />} />
                 </Route>
             </Routes>
 

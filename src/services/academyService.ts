@@ -1,319 +1,227 @@
-import { db } from '../lib/firebase';
+import { db, storage } from '../lib/firebase';
 import {
-    collection, getDocs, query, where, addDoc, doc, updateDoc, setDoc,
-    serverTimestamp, deleteDoc, Timestamp, FieldValue, writeBatch
+    collection, getDocs, getDoc, query, where, addDoc, doc, updateDoc,
+    serverTimestamp, deleteDoc, Timestamp, FieldValue, orderBy
 } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const COLLECTIONS = {
-    COURSES: 'academy_courses',
+    MODULES: 'academy_modules',
     LESSONS: 'academy_lessons',
-    QUIZZES: 'academy_quizzes',
-    PROGRESS: 'academy_progress',
-    RESULTS: 'quiz_results',
-    ENCYCLOPEDIA_CATEGORIES: 'academy_encyclopedia_categories',
-    ENCYCLOPEDIA_ARTICLES: 'academy_encyclopedia_articles'
+    PROGRESS: 'academy_progress'
 };
 
-// --- TYPES ---
-
-export interface AcademyCourse {
+export interface AcademyModule {
     id?: string;
     title: string;
     description: string;
-    icon?: string;
-    category: string;
-    duration?: string;
-    level?: 'beginner' | 'intermediate' | 'advanced';
-    status: 'active' | 'draft' | 'archived';
-    lessonCount?: number;
-    order?: number;
+    thumbnail_url?: string;
+    order: number;
+    status: 'draft' | 'active';
     created_at?: Timestamp | FieldValue;
     updated_at?: Timestamp | FieldValue;
 }
 
-export interface Lesson {
+export interface AcademyLesson {
     id?: string;
-    moduleId: string; // Links to Course.id
+    module_id: string;
     title: string;
-    content: string; // HTML/Markdown
-    videoUrl?: string;
-    customThumbnail?: string;
-    duration?: number; // Duration in seconds
-    chapters?: { time: number; label: string }[];
-    resources?: { title: string; url: string; type: 'pdf' | 'link' }[];
+    content: string;
+    content_type: 'text' | 'video';
+    video_url?: string;
+    duration: number;
     order: number;
-    isPublished?: boolean;
-    createdAt?: Timestamp | FieldValue;
-    updatedAt?: Timestamp | FieldValue;
+    status: 'draft' | 'published';
+    created_at?: Timestamp | FieldValue;
+    updated_at?: Timestamp | FieldValue;
 }
 
-export interface QuizQuestion {
-    id: string;
-    text: string;
-    options: string[];
-    correctAnswer: number; // Index
-}
-
-export interface Quiz {
+export interface AcademyProgress {
     id?: string;
-    moduleId: string;
-    questions: QuizQuestion[];
-    passingScore: number;
-    createdAt?: Timestamp | FieldValue;
-    updatedAt?: Timestamp | FieldValue;
-}
-
-export interface UserProgress {
-    id?: string;
-    userId: string;
-    moduleId: string;
-    completedLessons?: string[]; // Lesson IDs
-    quizScore?: number;
+    user_id: string;
+    module_id: string;
+    completed_lessons: string[];
     status: 'not_started' | 'in_progress' | 'completed';
-    lastAccessed?: Timestamp | FieldValue;
-    createdAt?: Timestamp | FieldValue;
-    updatedAt?: Timestamp | FieldValue;
+    completed_at?: Timestamp | FieldValue;
+    created_at?: Timestamp | FieldValue;
+    updated_at?: Timestamp | FieldValue;
 }
-
-export interface EncyclopediaCategory {
-    id?: string;
-    title: string;
-    icon: string;
-    description: string;
-    order?: number;
-}
-
-export interface EncyclopediaArticle {
-    id?: string;
-    categoryId: string;
-    title: string;
-    content: string;
-    order?: number;
-    updatedAt?: Timestamp | FieldValue;
-}
-
-// --- SEEDER INTERFACES ---
-export interface SeederQuizQuestion {
-    question: string;
-    options: string[];
-    correctAnswer: number;
-}
-export interface SeederLesson {
-    title: string;
-    content: string;
-    order: number;
-    quiz?: {
-        questions: SeederQuizQuestion[];
-    };
-}
-export interface SeederModule {
-    title: string;
-    description: string;
-    duration: string;
-    order: number;
-    lessons: SeederLesson[];
-}
-export interface EncyclopediaArticleImport {
-    title: string;
-    content: string;
-}
-export interface EncyclopediaCategoryImport {
-    title: string;
-    description: string;
-    icon: string;
-    articles: EncyclopediaArticleImport[];
-}
-
-// --- SERVICE ---
 
 export const academyService = {
-    // --- COURSES (Admin Managed) ---
-
-    /**
-     * Fetch all available courses (Admin/Public)
-     */
-    getAllCourses: async (): Promise<AcademyCourse[]> => {
+    getAllModules: async (status?: 'draft' | 'active' | 'all'): Promise<AcademyModule[]> => {
         try {
-            const q = query(collection(db, COLLECTIONS.COURSES), where('status', '==', 'active'));
+            let q;
+            if (status && status !== 'all') {
+                q = query(
+                    collection(db, COLLECTIONS.MODULES),
+                    where('status', '==', status),
+                    orderBy('order', 'asc')
+                );
+            } else {
+                q = query(
+                    collection(db, COLLECTIONS.MODULES),
+                    orderBy('order', 'asc')
+                );
+            }
             const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AcademyCourse));
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AcademyModule));
         } catch (error) {
-            console.error("Error fetching courses:", error);
+            console.error("Error fetching modules:", error);
             throw error;
         }
     },
 
-    /**
-     * Create/Update Course (Admin Only)
-     */
-    saveCourse: async (courseData: AcademyCourse): Promise<string> => {
+    getModuleById: async (moduleId: string): Promise<AcademyModule | null> => {
         try {
-            if (courseData.id) {
-                const docRef = doc(db, COLLECTIONS.COURSES, courseData.id);
-                // Clean data for update
-                const data = { ...courseData };
-                delete data.id;
-
-                await updateDoc(docRef, {
-                    ...data,
-                    updated_at: serverTimestamp()
-                });
-                return courseData.id;
-            } else {
-                const docRef = await addDoc(collection(db, COLLECTIONS.COURSES), {
-                    ...courseData,
-                    status: 'active',
-                    created_at: serverTimestamp(),
-                    updated_at: serverTimestamp()
-                });
-                return docRef.id;
+            const docRef = doc(db, COLLECTIONS.MODULES, moduleId);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const module = { id: docSnap.id, ...docSnap.data() } as AcademyModule;
+                return module;
             }
+            return null;
         } catch (error) {
-            console.error("Error saving course:", error);
+            console.error("Error fetching module:", error);
             throw error;
         }
     },
 
-    /**
-     * Delete Course (Admin Only)
-     */
-    deleteCourse: async (courseId: string): Promise<void> => {
-        await deleteDoc(doc(db, COLLECTIONS.COURSES, courseId));
-    },
-
-    /**
-     * Delete All Courses (Batched)
-     */
-    deleteAllCourses: async (): Promise<void> => {
-        const q = query(collection(db, COLLECTIONS.COURSES));
-        const snapshot = await getDocs(q);
-        const batch = writeBatch(db);
-
-        snapshot.docs.forEach(doc => {
-            batch.delete(doc.ref);
-        });
-
-        await batch.commit();
-    },
-
-    // --- LESSONS (New) ---
-
-    saveLesson: async (lessonData: Lesson): Promise<string> => {
+    createModule: async (moduleData: Omit<AcademyModule, 'id'>): Promise<string> => {
         try {
-            if (lessonData.id) {
-                const docRef = doc(db, COLLECTIONS.LESSONS, lessonData.id);
-                const data = { ...lessonData };
-                delete data.id;
-
-                await updateDoc(docRef, {
-                    ...data,
-                    updatedAt: serverTimestamp()
-                });
-                return lessonData.id;
-            } else {
-                const docRef = await addDoc(collection(db, COLLECTIONS.LESSONS), {
-                    ...lessonData,
-                    createdAt: serverTimestamp()
-                });
-                return docRef.id;
-            }
+            const docRef = await addDoc(collection(db, COLLECTIONS.MODULES), {
+                ...moduleData,
+                created_at: serverTimestamp(),
+                updated_at: serverTimestamp()
+            });
+            return docRef.id;
         } catch (error) {
-            console.error("Error saving lesson:", error);
+            console.error("Error creating module:", error);
+            throw error;
+        }
+    },
+
+    updateModule: async (moduleId: string, moduleData: Partial<AcademyModule>): Promise<void> => {
+        try {
+            const docRef = doc(db, COLLECTIONS.MODULES, moduleId);
+            await updateDoc(docRef, {
+                ...moduleData,
+                updated_at: serverTimestamp()
+            });
+        } catch (error) {
+            console.error("Error updating module:", error);
+            throw error;
+        }
+    },
+
+    deleteModule: async (moduleId: string): Promise<void> => {
+        try {
+            await deleteDoc(doc(db, COLLECTIONS.MODULES, moduleId));
+        } catch (error) {
+            console.error("Error deleting module:", error);
+            throw error;
+        }
+    },
+
+    getLessonsByModule: async (moduleId: string, status?: 'draft' | 'published' | 'all'): Promise<AcademyLesson[]> => {
+        try {
+            let q;
+            if (status && status !== 'all') {
+                q = query(
+                    collection(db, COLLECTIONS.LESSONS),
+                    where('module_id', '==', moduleId),
+                    where('status', '==', status),
+                    orderBy('order', 'asc')
+                );
+            } else {
+                q = query(
+                    collection(db, COLLECTIONS.LESSONS),
+                    where('module_id', '==', moduleId),
+                    orderBy('order', 'asc')
+                );
+            }
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AcademyLesson));
+        } catch (error) {
+            console.error("Error fetching lessons:", error);
+            throw error;
+        }
+    },
+
+    createLesson: async (lessonData: Omit<AcademyLesson, 'id'>): Promise<string> => {
+        try {
+            const docRef = await addDoc(collection(db, COLLECTIONS.LESSONS), {
+                ...lessonData,
+                created_at: serverTimestamp(),
+                updated_at: serverTimestamp()
+            });
+            return docRef.id;
+        } catch (error) {
+            console.error("[academyService.createLesson] Error creating lesson:", error);
+            throw error;
+        }
+    },
+
+    updateLesson: async (lessonId: string, lessonData: Partial<AcademyLesson>): Promise<void> => {
+        try {
+            const docRef = doc(db, COLLECTIONS.LESSONS, lessonId);
+            await updateDoc(docRef, {
+                ...lessonData,
+                updated_at: serverTimestamp()
+            });
+        } catch (error) {
+            console.error("Error updating lesson:", error);
             throw error;
         }
     },
 
     deleteLesson: async (lessonId: string): Promise<void> => {
-        await deleteDoc(doc(db, COLLECTIONS.LESSONS, lessonId));
-    },
-
-    // --- QUIZZES ---
-
-    saveQuiz: async (moduleId: string, quizData: Partial<Quiz>): Promise<string> => {
         try {
-            // Check if quiz exists for module
-            const q = query(collection(db, COLLECTIONS.QUIZZES), where('moduleId', '==', moduleId));
-            const snap = await getDocs(q);
-
-            if (!snap.empty) {
-                const id = snap.docs[0].id;
-                await updateDoc(doc(db, COLLECTIONS.QUIZZES, id), { ...quizData, updatedAt: serverTimestamp() });
-                return id;
-            } else {
-                const ref = await addDoc(collection(db, COLLECTIONS.QUIZZES), {
-                    moduleId,
-                    ...quizData,
-                    createdAt: serverTimestamp()
-                });
-                return ref.id;
-            }
+            await deleteDoc(doc(db, COLLECTIONS.LESSONS, lessonId));
         } catch (error) {
-            console.error("Error saving quiz:", error);
+            console.error("Error deleting lesson:", error);
             throw error;
         }
     },
 
-    deleteQuiz: async (quizId: string): Promise<void> => {
-        await deleteDoc(doc(db, COLLECTIONS.QUIZZES, quizId));
-    },
-
-    saveQuizResult: async (userId: string, moduleId: string, score: number, answers: Record<string, unknown>): Promise<void> => {
+    getUserProgress: async (userId: string, moduleId: string): Promise<AcademyProgress | null> => {
         try {
-            await addDoc(collection(db, COLLECTIONS.RESULTS), {
-                userId, moduleId, score, answers, completedAt: serverTimestamp()
-            });
-        } catch (error) {
-            console.error("Error saving result:", error);
-            throw error;
-        }
-    },
-
-    // --- PROGRESS (User/Franchise Scope) ---
-
-    getUserProgress: async (userId: string): Promise<Record<string, UserProgress>> => {
-        try {
-            const q = query(collection(db, COLLECTIONS.PROGRESS), where('userId', '==', userId));
+            const q = query(
+                collection(db, COLLECTIONS.PROGRESS),
+                where('user_id', '==', userId),
+                where('module_id', '==', moduleId)
+            );
             const snapshot = await getDocs(q);
-            // Return map: { courseId: { progress... } }
-            const progressMap: Record<string, UserProgress> = {};
-            snapshot.docs.forEach(doc => {
-                const data = doc.data() as Omit<UserProgress, 'id'>;
-                // moduleId maps to courseId in this context
-                if (data.moduleId) {
-                    progressMap[data.moduleId] = { id: doc.id, ...data };
-                }
-            });
-            return progressMap;
+            if (!snapshot.empty) {
+                return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as AcademyProgress;
+            }
+            return null;
         } catch (error) {
             console.error("Error fetching progress:", error);
             throw error;
         }
     },
 
-    updateProgress: async (userId: string, moduleId: string, progressData: Partial<UserProgress>): Promise<void> => {
+    createProgress: async (progressData: Omit<AcademyProgress, 'id'>): Promise<string> => {
         try {
-            const q = query(
-                collection(db, COLLECTIONS.PROGRESS),
-                where('userId', '==', userId),
-                where('moduleId', '==', moduleId)
-            );
-            const snapshot = await getDocs(q);
+            const docRef = await addDoc(collection(db, COLLECTIONS.PROGRESS), {
+                ...progressData,
+                created_at: serverTimestamp(),
+                updated_at: serverTimestamp()
+            });
+            return docRef.id;
+        } catch (error) {
+            console.error("Error creating progress:", error);
+            throw error;
+        }
+    },
 
-            if (!snapshot.empty) {
-                const docId = snapshot.docs[0].id;
-                await updateDoc(doc(db, COLLECTIONS.PROGRESS, docId), {
-                    ...progressData,
-                    updatedAt: serverTimestamp()
-                });
-            } else {
-                await addDoc(collection(db, COLLECTIONS.PROGRESS), {
-                    userId,
-                    moduleId,
-                    ...progressData,
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp()
-                });
-            }
+    updateProgress: async (progressId: string, progressData: Partial<AcademyProgress>): Promise<void> => {
+        try {
+            const docRef = doc(db, COLLECTIONS.PROGRESS, progressId);
+            await updateDoc(docRef, {
+                ...progressData,
+                updated_at: serverTimestamp()
+            });
         } catch (error) {
             console.error("Error updating progress:", error);
             throw error;
@@ -324,31 +232,31 @@ export const academyService = {
         try {
             const q = query(
                 collection(db, COLLECTIONS.PROGRESS),
-                where('userId', '==', userId),
-                where('moduleId', '==', moduleId)
+                where('user_id', '==', userId),
+                where('module_id', '==', moduleId)
             );
             const snapshot = await getDocs(q);
 
             if (!snapshot.empty) {
-                const docId = snapshot.docs[0].id;
-                const data = snapshot.docs[0].data() as UserProgress;
-                const completedLessons = data.completedLessons || [];
+                const progressId = snapshot.docs[0].id;
+                const progress = snapshot.docs[0].data() as AcademyProgress;
+                const completedLessons = progress.completed_lessons || [];
 
                 if (!completedLessons.includes(lessonId)) {
-                    await updateDoc(doc(db, COLLECTIONS.PROGRESS, docId), {
-                        completedLessons: [...completedLessons, lessonId],
-                        updatedAt: serverTimestamp()
+                    await updateDoc(doc(db, COLLECTIONS.PROGRESS, progressId), {
+                        completed_lessons: [...completedLessons, lessonId],
+                        status: 'in_progress',
+                        updated_at: serverTimestamp()
                     });
                 }
             } else {
-                // Create new progress record
                 await addDoc(collection(db, COLLECTIONS.PROGRESS), {
-                    userId,
-                    moduleId,
-                    completedLessons: [lessonId],
+                    user_id: userId,
+                    module_id: moduleId,
+                    completed_lessons: [lessonId],
                     status: 'in_progress',
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp()
+                    created_at: serverTimestamp(),
+                    updated_at: serverTimestamp()
                 });
             }
         } catch (error) {
@@ -357,167 +265,15 @@ export const academyService = {
         }
     },
 
-    // --- ENCYCLOPEDIA (New) ---
-
-    getEncyclopediaCategories: async (): Promise<EncyclopediaCategory[]> => {
+    uploadLessonVideo: async (file: File): Promise<string> => {
         try {
-            const q = query(collection(db, COLLECTIONS.ENCYCLOPEDIA_CATEGORIES));
-            const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as EncyclopediaCategory));
+            const filename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+            const fileRef = ref(storage, `academy/videos/${filename}`);
+            const snapshot = await uploadBytes(fileRef, file);
+            return await getDownloadURL(snapshot.ref);
         } catch (error) {
-            console.error("Error fetching encyclopedia categories:", error);
+            console.error("Error uploading video:", error);
             throw error;
-        }
-    },
-
-    getEncyclopediaArticles: async (categoryId: string): Promise<EncyclopediaArticle[]> => {
-        try {
-            const q = query(collection(db, COLLECTIONS.ENCYCLOPEDIA_ARTICLES), where('categoryId', '==', categoryId));
-            const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as EncyclopediaArticle));
-        } catch (error) {
-            console.error("Error fetching encyclopedia articles:", error);
-            throw error;
-        }
-    },
-
-
-    // --- SEEDER (Atomic) ---
-
-    // --- SEEDER (Atomic) ---
-
-    seedAcademyContent: async (modulesData: SeederModule[], encyclopediaData?: EncyclopediaCategoryImport[]): Promise<void> => {
-        // 1. DELETE SEQUENTIALLY (Safer for Client SDK)
-        // Using batch here crashes the client listener due to "Unexpected state".
-        // We delete individually to be safer.
-
-        const [coursesSnap, lessonsSnap, quizzesSnap, encCatsSnap, encArtsSnap] = await Promise.all([
-            getDocs(collection(db, COLLECTIONS.COURSES)),
-            getDocs(collection(db, COLLECTIONS.LESSONS)),
-            getDocs(collection(db, COLLECTIONS.QUIZZES)),
-            getDocs(collection(db, COLLECTIONS.ENCYCLOPEDIA_CATEGORIES)),
-            getDocs(collection(db, COLLECTIONS.ENCYCLOPEDIA_ARTICLES))
-        ]);
-
-        // Helper for throttling
-        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-        // 1. THROTTLED DELETION ( ~100ms per doc)
-        for (const d of coursesSnap.docs) { await deleteDoc(d.ref); await delay(50); }
-        for (const d of lessonsSnap.docs) { await deleteDoc(d.ref); await delay(50); }
-        for (const d of quizzesSnap.docs) { await deleteDoc(d.ref); await delay(50); }
-        for (const d of encCatsSnap.docs) { await deleteDoc(d.ref); await delay(50); }
-        for (const d of encArtsSnap.docs) { await deleteDoc(d.ref); await delay(50); }
-
-        // Cooldown between phases
-        await delay(2000);
-
-        // 2. THROTTLED CREATION
-        // We use setDoc individually with delays instead of a batch.
-
-        // --- ACADEMY COURSES ---
-        for (const moduleData of modulesData) {
-            // New Course Ref
-            const courseRef = doc(collection(db, COLLECTIONS.COURSES));
-            const courseId = courseRef.id;
-
-            const coursePayload: Omit<AcademyCourse, 'id'> = {
-                title: moduleData.title,
-                description: moduleData.description,
-                category: 'General',
-                duration: moduleData.duration,
-                order: moduleData.order,
-                status: 'active',
-                level: 'intermediate',
-                lessonCount: moduleData.lessons ? moduleData.lessons.length : 0,
-                created_at: serverTimestamp(),
-                updated_at: serverTimestamp()
-            };
-            // Write Course
-            await setDoc(courseRef, coursePayload);
-            await delay(100);
-
-            // Lessons
-            if (moduleData.lessons) {
-                for (const lessonData of moduleData.lessons) {
-                    const lessonRef = doc(collection(db, COLLECTIONS.LESSONS));
-
-                    const lessonPayload: Omit<Lesson, 'id'> = {
-                        moduleId: courseId,
-                        title: lessonData.title,
-                        content: lessonData.content,
-                        order: lessonData.order,
-                        createdAt: serverTimestamp(),
-                        updatedAt: serverTimestamp()
-                    };
-                    await setDoc(lessonRef, lessonPayload);
-                    await delay(50);
-                }
-
-                // Aggregate Questions for Module Quiz
-                const allModuleQuestions: QuizQuestion[] = [];
-                moduleData.lessons.forEach((l) => {
-                    if (l.quiz && l.quiz.questions) {
-                        l.quiz.questions.forEach((q) => {
-                            allModuleQuestions.push({
-                                id: Math.random().toString(36).substr(2, 9),
-                                text: `[${l.title}] ${q.question}`,
-                                options: q.options,
-                                correctAnswer: q.correctAnswer
-                            });
-                        });
-                    }
-                });
-
-                if (allModuleQuestions.length > 0) {
-                    const quizRef = doc(collection(db, COLLECTIONS.QUIZZES));
-                    const quizPayload: Omit<Quiz, 'id'> = {
-                        moduleId: courseId,
-                        questions: allModuleQuestions,
-                        passingScore: 70,
-                        createdAt: serverTimestamp(),
-                        updatedAt: serverTimestamp()
-                    };
-                    await setDoc(quizRef, quizPayload);
-                    await delay(100);
-                }
-            }
-        }
-
-        // --- ENCYCLOPEDIA ---
-        if (encyclopediaData) {
-            let catOrder = 1;
-            for (const catData of encyclopediaData) {
-                const catRef = doc(collection(db, COLLECTIONS.ENCYCLOPEDIA_CATEGORIES));
-                const catId = catRef.id;
-
-                const catPayload: Omit<EncyclopediaCategory, 'id'> = {
-                    title: catData.title,
-                    description: catData.description,
-                    icon: catData.icon,
-                    order: catOrder++
-                };
-
-                await setDoc(catRef, catPayload);
-                await delay(100);
-
-                if (catData.articles) {
-                    let artOrder = 1;
-                    for (const artData of catData.articles) {
-                        const artRef = doc(collection(db, COLLECTIONS.ENCYCLOPEDIA_ARTICLES));
-                        const artPayload: Omit<EncyclopediaArticle, 'id'> = {
-                            categoryId: catId,
-                            title: artData.title,
-                            content: artData.content,
-                            order: artOrder++,
-                            updatedAt: serverTimestamp()
-                        };
-                        await setDoc(artRef, artPayload);
-                        await delay(50);
-                    }
-                }
-            }
         }
     }
-
 };

@@ -53,6 +53,8 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const reqs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as RegistrationRequest));
             setPendingRequests(reqs);
+        }, (error) => {
+            console.error("❌ [UserManagementPanel] Registration requests listener error:", error);
         });
         return () => unsubscribe();
     }, [franchiseId, readOnly]);
@@ -82,7 +84,7 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
     // 'maintenance' = DB Tools
     // If franchiseId is present, we FORCE 'riders' view
     // State for tabs
-    const [activeTab, setActiveTab] = useState<'structure' | 'riders'>('riders');
+    const [activeTab, setActiveTab] = useState<'structure' | 'riders'>(franchiseId ? 'riders' : 'structure');
     const [statusFilter, setStatusFilter] = useState('active');
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -91,8 +93,6 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
         users,
         loading,
         error: fetchError,
-        // searchQuery, setSearchQuery, // These are now managed locally
-        // statusFilter, setStatusFilter, // These are now managed locally
         createUser,
         updateUser,
         deleteUser,
@@ -234,7 +234,6 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
             {/* Header Removed - Managed by Parent */}
 
 
-            {/* --- TABS --- */}
             {/* --- TABS --- */}
             <div className="flex gap-2 pb-0 shrink-0 px-0 pt-0 mb-6 border-b border-slate-100 dark:border-slate-800">
                 <button

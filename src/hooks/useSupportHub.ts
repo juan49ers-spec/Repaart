@@ -1,12 +1,18 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { db, storage } from '../lib/firebase';
-import { collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot, updateDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, onSnapshot, updateDoc, doc, orderBy, limit } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { sendTicketCreatedEmail } from '../lib/email';
 import { logAction, AUDIT_ACTIONS } from '../lib/audit';
 import { getSuggestions } from '../lib/knowledgeBase';
 import { type Ticket } from '../types/support';
 export type { Ticket };
+
+export interface KnowledgeArticle {
+    id: string;
+    title: string;
+    category?: string;
+}
 
 export interface CreateTicketParams {
     subject: string;
@@ -30,24 +36,48 @@ export const useSupportHub = (user: any) => {
     const [ticketFilter, setTicketFilter] = useState<'all' | 'open' | 'resolved'>('all');
 
     // Form Assistant
-    const [suggestions, setSuggestions] = useState<any[]>([]);
+    const [suggestions, setSuggestions] = useState<{ id: string; title: string; category: string }[]>([]);
 
     // --- REAL-TIME DATA ---
     useEffect(() => {
         if (!user) return;
 
+        const targetIds = [user.uid];
+        if (user.franchiseId) targetIds.push(user.franchiseId);
+
+        console.log("🔍 [useSupportHub] Fetching tickets for:", targetIds);
+
+        // Try to match both legacy 'uid' and new 'userId'.
+        // Using 'in' operator on 'userId' as it's the new standard from NewTicketForm.
+        const qFilter = targetIds.length === 1
+            ? where("userId", "==", targetIds[0])
+            : where("userId", "in", targetIds);
+
         const q = query(
             collection(db, "tickets"),
-            where("uid", "==", user.uid),
-            orderBy("createdAt", "desc")
+            qFilter,
+            orderBy("createdAt", "desc"),
+            limit(20)
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
+            console.log("✅ [useSupportHub] Tickets snapshot received. Count:", snapshot.docs.length);
             const tickets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ticket));
-            setMyTickets(tickets);
+            // Sort manually if orderBy is disabled
+            const sortedTickets = tickets.sort((a, b) => {
+                const dateA = a.createdAt?.toDate?.() || new Date(0);
+                const dateB = b.createdAt?.toDate?.() || new Date(0);
+                return dateB.getTime() - dateA.getTime();
+            });
+            setMyTickets(sortedTickets);
             setLoadingTickets(false);
         }, (error) => {
-            console.warn("Error fetching my tickets:", error);
+            console.error("❌ [useSupportHub] Firestore error details:", {
+                code: error.code,
+                message: error.message,
+                uid: user.uid,
+                targetIds
+            });
             setLoadingTickets(false);
         });
 
@@ -58,7 +88,12 @@ export const useSupportHub = (user: any) => {
 
     const handleSubjectChange = useCallback((text: string) => {
         if (text.length > 2) {
-            setSuggestions(getSuggestions(text));
+            const matches = getSuggestions(text);
+            setSuggestions(matches.map((m: any) => ({
+                id: m.id || Math.random().toString(),
+                title: m.title || m.subject || '',
+                category: m.category || 'General'
+            })));
         } else {
             setSuggestions([]);
         }
@@ -90,7 +125,7 @@ export const useSupportHub = (user: any) => {
             if (file) {
                 setUploading(true);
                 try {
-                    const storageRef = ref(storage, `tickets/${docRef.id}/${file.name}`);
+                    const storageRef = ref(storage, `tickets / ${docRef.id}/${file.name}`);
                     await uploadBytes(storageRef, file);
                     attachmentUrl = await getDownloadURL(storageRef);
 
@@ -104,23 +139,24 @@ export const useSupportHub = (user: any) => {
                 }
             }
 
-            // 3. Post-Processing
-            logAction(user, AUDIT_ACTIONS.TICKET_CREATED, {
-                ticketId: docRef.id,
-                subject,
-                category,
-                urgency,
-                hasAttachment: !!file
-            });
-
-            sendTicketCreatedEmail({
-                id: docRef.id,
-                email: user.email,
-                subject,
-                message: message + (attachmentUrl && file ? `\n\n[Adjunto: ${file.name}]` : ''),
-                urgency,
-                category
-            }).catch(err => console.warn("Email send failed", err));
+            // 3. Post-Processing & Notifications (Parallelized)
+            Promise.all([
+                logAction(user, AUDIT_ACTIONS.TICKET_CREATED, {
+                    ticketId: docRef.id,
+                    subject,
+                    category,
+                    urgency,
+                    hasAttachment: !!file
+                }),
+                sendTicketCreatedEmail({
+                    id: docRef.id,
+                    email: user.email,
+                    subject,
+                    message: message + (attachmentUrl && file ? `\n\n[Adjunto: ${file.name}]` : ''),
+                    urgency,
+                    category
+                })
+            ]).catch(err => console.warn("Background tasks (Audit/Email) failed partially:", err));
 
             setSuccess(true);
             setFile(null); // Reset file

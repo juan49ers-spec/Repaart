@@ -33,6 +33,7 @@ interface NotificationsProps {
 
 const Notifications: React.FC<NotificationsProps> = ({ isAdmin = false }) => {
     const { user } = useAuth();
+    console.log('👤 [Notifications] User data:', { uid: user?.uid, franchiseId: user?.franchiseId, email: user?.email });
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState<UINotification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -70,7 +71,7 @@ const Notifications: React.FC<NotificationsProps> = ({ isAdmin = false }) => {
                         const data = doc.data() as NotificationPayload;
                         return {
                             id: doc.id,
-                            title: data.title, // In admin_notifications, title is the event title
+                            title: data.title, // In admin_notifications, title is event title
                             message: data.message,
                             read: data.read,
                             createdAt: data.createdAt,
@@ -88,7 +89,7 @@ const Notifications: React.FC<NotificationsProps> = ({ isAdmin = false }) => {
                 });
 
             } else {
-                // --- FRANCHISE STREAM (legacy notifications) ---
+                // --- FRANCHISE/USER STREAM (notifications) ---
                 const targetIds = [user.uid];
                 if (user.franchiseId) targetIds.push(user.franchiseId);
 
@@ -96,11 +97,12 @@ const Notifications: React.FC<NotificationsProps> = ({ isAdmin = false }) => {
                     collection(db, "notifications"),
                     where("userId", "in", targetIds),
                     orderBy("createdAt", "desc"),
-                    limit(20)
+                    limit(50)
                 );
 
                 unsubscribe = onSnapshot(q, (snapshot) => {
                     const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UINotification));
+                    console.log('🔔 [Notifications] Franchise notifications received:', list.length, 'items:', list);
                     setNotifications(list);
                     setUnreadCount(list.filter(n => !n.read).length);
                 }, (error) => {
@@ -114,7 +116,8 @@ const Notifications: React.FC<NotificationsProps> = ({ isAdmin = false }) => {
         return () => {
             if (unsubscribe) unsubscribe();
         };
-    }, [user, isAdmin]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.uid, user?.franchiseId, isAdmin]);
 
 
     const handleNotificationClick = (notification: UINotification) => {
@@ -139,9 +142,16 @@ const Notifications: React.FC<NotificationsProps> = ({ isAdmin = false }) => {
                 navigate('/admin/support');
             }
         } else {
-            if (notification.type === 'shift_change_request' || notification.type === 'incident') {
+            if (notification.type === 'SUPPORT_TICKET' && notification.link) {
+                // For support tickets, navigate to support page
+                if (notification.link.startsWith('/')) {
+                    navigate(notification.link);
+                } else {
+                    window.open(notification.link, '_blank');
+                }
+            } else if (notification.type === 'shift_change_request' || notification.type === 'incident') {
                 // Navigate to scheduler
-                navigate('/operations'); // Or a more specific path if available
+                navigate('/operations');
             } else if (notification.link) {
                 // Use navigate for internal routes, otherwise open in new tab
                 if (notification.link.startsWith('/')) {
@@ -321,16 +331,9 @@ const Notifications: React.FC<NotificationsProps> = ({ isAdmin = false }) => {
                             </div>
                         )}
                     </div>
-
-                    {/* Footer */}
-                    <div className="p-3 bg-white/80 border-t border-slate-100 backdrop-blur-sm text-center">
-                        <button className="text-[10px] font-bold text-slate-400 hover:text-indigo-600 transition-colors uppercase tracking-wider">
-                            Ver todo el historial
-                        </button>
-                    </div>
-                </div >
+                </div>
             )}
-        </div >
+        </div>
     );
 };
 

@@ -90,15 +90,19 @@ export const notificationService = {
                 read: false,
                 createdAt: serverTimestamp()
             };
-            await addDoc(collection(db, 'notifications'), payload);
+            console.log('📨 [notificationService] Sending notification to userId:', userId, 'payload:', payload);
+            const docRef = await addDoc(collection(db, 'notifications'), payload);
+            console.log('✅ [notificationService] Notification saved with ID:', docRef.id);
         } catch (error) {
-            console.error('[NotificationService] Failed to notify franchise:', error);
+            console.error('❌ [NotificationService] Failed to notify franchise:', error);
+            throw error;
         }
     },
 
     /**
-     * Notify about Rider Actions (Shift changes/incidents)
-     */
+      * Notify about Rider Actions (Shift changes/incidents)
+      * Sends notification to both franchise (for admin view) and rider (for rider view)
+      */
     notifyRiderAction: async (
         franchiseId: string,
         riderId: string,
@@ -110,8 +114,25 @@ export const notificationService = {
         }
     ): Promise<void> => {
         try {
-            const payload = {
-                userId: franchiseId, // Mapping franchiseId to userId for UI visibility
+            // Send notification to franchise (admin view)
+            await notificationService.notify(
+                data.type,
+                franchiseId,
+                'REPAART Franchise',
+                {
+                    title: data.title,
+                    message: data.message,
+                    priority: 'normal',
+                    metadata: {
+                        riderId,
+                        relatedShiftId: data.relatedShiftId
+                    }
+                }
+            );
+
+            // Send notification to rider (rider view)
+            const riderPayload = {
+                userId: riderId, // Rider receives notification with their own UID
                 franchiseId,
                 riderId,
                 type: data.type,
@@ -121,8 +142,7 @@ export const notificationService = {
                 read: false,
                 createdAt: serverTimestamp()
             };
-            // According to schema, this goes to 'notifications' collection
-            await addDoc(collection(db, 'notifications'), payload);
+            await addDoc(collection(db, 'notifications'), riderPayload);
         } catch (error) {
             console.error('[NotificationService] Failed to notify rider action:', error);
         }

@@ -37,10 +37,13 @@ export default defineConfig(async ({ mode }) => {
           name: 'Repaart Operativa',
           short_name: 'Repaart',
           description: 'Sistema Operativo para Franquicias de Última Milla',
-          theme_color: '#0f172a',
-          background_color: '#0f172a',
+          theme_color: '#6366f1',
+          background_color: '#ffffff',
           display: 'standalone',
+          orientation: 'portrait-primary',
+          scope: '/',
           start_url: '/',
+          categories: ['business', 'productivity'],
           icons: [
             {
               src: 'pwa-64x64.png',
@@ -64,6 +67,29 @@ export default defineConfig(async ({ mode }) => {
               type: 'image/png',
               purpose: 'maskable'
             }
+          ],
+          shortcuts: [
+            {
+              name: 'Agenda',
+              short_name: 'Agenda',
+              description: 'Acceder a la agenda de turnos',
+              url: '/operations',
+              icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+            },
+            {
+              name: 'Dashboard',
+              short_name: 'Dashboard',
+              description: 'Ver el dashboard principal',
+              url: '/',
+              icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+            },
+            {
+              name: 'Academia',
+              short_name: 'Academia',
+              description: 'Formación para riders',
+              url: '/academy',
+              icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+            }
           ]
         },
         workbox: {
@@ -71,7 +97,55 @@ export default defineConfig(async ({ mode }) => {
           maximumFileSizeToCacheInBytes: 5000000,
           cleanupOutdatedCaches: true,
           clientsClaim: true,
-          skipWaiting: true
+          skipWaiting: true,
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'google-fonts-cache',
+                expiration: {
+                  maxEntries: 10,
+                  maxAgeSeconds: 60 * 60 * 24 * 365
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            },
+            {
+              urlPattern: /^https:\/\/(firestore|storage)\.googleapis\.com\/.*/i,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'firebase-cache',
+                expiration: {
+                  maxEntries: 100,
+                  maxAgeSeconds: 60 * 60 * 24 * 7
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            },
+            {
+              urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'images-cache',
+                expiration: {
+                  maxEntries: 60,
+                  maxAgeSeconds: 60 * 60 * 24 * 30
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            }
+          ]
+        },
+        devOptions: {
+          enabled: true,
+          type: 'module'
         }
       })
     );

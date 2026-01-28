@@ -2,8 +2,7 @@ import React, { useState, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DevToolsPanel from '../../../layouts/components/dev/DevToolsPanel';
 import {
-    LogOut,
-    ShieldCheck
+    LogOut
 } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import FranchiseOnboarding from '../FranchiseOnboarding';
@@ -15,7 +14,7 @@ import { useAuth } from '../../../context/AuthContext';
 import DashboardSkeleton from '../../../components/ui/layout/DashboardSkeleton';
 import ErrorBoundary from '../../../components/ui/feedback/ErrorBoundary';
 import CommandPalette from '../../../components/ui/navigation/CommandPalette';
-import ThemeToggle from '../../../components/ui/buttons/ThemeToggle';
+import PremiumDock from './components/PremiumDock';
 
 // Lazy Components
 const OperationsDashboard = React.lazy(() => import('../../operations/OperationsDashboard'));
@@ -119,28 +118,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
             {/* MAIN COCKPIT VIEW */}
             <div className="relative z-10 mx-auto max-w-[1700px] px-4 md:px-8 py-0">
-
-                {/* GLOBAL ACTION CONTROL - Subtle Integrated Dock */}
+                {/* PREMIUM FLOATING DOCK */}
                 {activeTab !== 'kanban' && (
-                    <div className="flex justify-end items-center gap-3 mb-2 sticky top-20 z-20">
-                        <div className="flex items-center gap-1 p-1 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/60 dark:border-white/5 shadow-xl glass-premium">
-                            <button
-                                onClick={() => setIsGuideOpen(true)}
-                                className="px-4 py-2 hover:bg-white/60 dark:hover:bg-white/10 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
-                            >
-                                Guía
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('audit')}
-                                className="px-5 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2"
-                            >
-                                <ShieldCheck className="w-3.5 h-3.5" />
-                                Auditoría
-                            </button>
-                            <div className="w-px h-5 bg-slate-200 dark:bg-slate-800 mx-1" />
-                            <ThemeToggle />
-                        </div>
-                    </div>
+                    <PremiumDock 
+                        activeTab={activeTab}
+                        onGuideOpen={() => setIsGuideOpen(true)}
+                        onAuditClick={() => setActiveTab('audit')}
+                    />
                 )}
 
                 {/* DYNAMIC CONTENT AREA */}
@@ -162,27 +146,32 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
             </div>
 
-            {/* MODALS - Minimalist Translucent Overlay */}
+            {/* MODALS - Premium Overlay */}
             {showLogoutConfirm && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="glass-premium rounded-[2.5rem] w-full max-w-sm shadow-2xl p-8 text-center animate-in zoom-in-95 duration-300">
-                        <div className="w-20 h-20 bg-ruby-600/10 text-ruby-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-inner ring-1 ring-ruby-600/20">
-                            <LogOut className="w-8 h-8" strokeWidth={3} />
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 dark:bg-black/90 backdrop-blur-xl animate-in fade-in duration-300">
+                    <div className="glass-premium-v2 rounded-[2.5rem] w-full max-w-sm shadow-2xl p-8 text-center animate-in zoom-in-95 duration-300">
+                        <div className="relative w-20 h-20 mx-auto mb-8">
+                            <div className="absolute inset-0 bg-ruby-600/10 rounded-full animate-spin animate-pulse">
+                                <div className="w-8 h-8 rounded-full border-2 border-ruby-500/50 flex items-center justify-center">
+                                    <LogOut className="w-5 h-5 text-white" strokeWidth={2.5} />
+                                </div>
+                            </div>
+                            <div className="absolute inset-0 bg-gradient-to-r from-ruby-600/20 via-ruby-500/5 to-transparent opacity-30 animate-spin" />
                         </div>
-                        <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2 uppercase italic tracking-tight">TERMINATE <span className="text-ruby-600">SESSION</span></h3>
-                        <p className="text-slate-500 dark:text-slate-400 text-[9px] font-bold uppercase tracking-[0.2em] mb-8">Confirm system logout protocol?</p>
+                        <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-4 uppercase italic tracking-tight">TERMINATE <span className="text-ruby-600">SESSION</span></h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">¿Cerrar sesión del sistema?</p>
                         <div className="flex flex-col gap-3">
                             <button
                                 onClick={() => { setShowLogoutConfirm(false); logout(); }}
-                                className="ruby-button w-full mechanical-press"
+                                className="w-full py-4 rounded-2xl bg-ruby-600 hover:bg-ruby-700 text-white font-black uppercase tracking-widest transition-all duration-300 active:scale-95 shadow-lg shadow-ruby-500/50 hover:shadow-ruby-600/70"
                             >
-                                YES, DISCONNECT
+                                CONFIRMAR Y SALIR
                             </button>
                             <button
                                 onClick={() => setShowLogoutConfirm(false)}
-                                className="w-full py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors mechanical-press"
+                                className="w-full py-4 rounded-2xl bg-transparent hover:bg-white/10 dark:hover:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-600 dark:text-slate-400 font-medium transition-all duration-300 active:scale-95"
                             >
-                                CANCEL PROTOCOL
+                                CANCELAR
                             </button>
                         </div>
                     </div>

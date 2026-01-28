@@ -34,8 +34,8 @@ export const useAdminAnnouncements = () => {
             })) as Announcement[];
             setAnnouncements(data);
             setLoading(false);
-        }, () => {
-            // console.warn("Error fetching announcements:", error);
+        }, (error) => {
+            console.warn("❌ [useAdminAnnouncements] Listener error:", error);
             setLoading(false);
         });
 

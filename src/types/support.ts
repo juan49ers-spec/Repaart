@@ -2,7 +2,9 @@ import { Timestamp } from 'firebase/firestore';
 
 export interface Ticket {
     id: string;
-    uid?: string;
+    uid?: string; // Legacy field
+    userId?: string; // User who created the ticket
+    franchiseId?: string; // Franchise ID (may be same as userId for franchise users)
     email?: string;
     subject: string;
     description?: string;
@@ -11,6 +13,7 @@ export interface Ticket {
     priority?: 'low' | 'medium' | 'high' | 'critical';
     urgency?: 'low' | 'medium' | 'high' | 'critical'; // Seems urgency/priority are used interchangeably
     category?: string;
+    origin?: string;
     createdAt?: Timestamp | any;
     lastUpdated?: Timestamp | any;
     read?: boolean;

@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useSupportHub } from '../../hooks/useSupportHub';
+import { useSupportHub, type Ticket } from '../../hooks/useSupportHub';
 import TicketHistory from './support/TicketHistory';
 import NewTicketForm from './support/NewTicketForm';
-
-import UserProfileModal from '../user/UserProfileModal'; // Import modal
+import TicketDetailModal from './support/TicketDetailModal';
+import UserProfileModal from '../user/UserProfileModal';
 import PremiumServicesPanel from './support/PremiumServicesPanel';
-import { Activity, HelpCircle, BadgePercent, Ticket } from 'lucide-react'; // Import icons
+import { Activity, HelpCircle, BadgePercent, Ticket as TicketIcon } from 'lucide-react';
 
 import { useLocation } from 'react-router-dom';
 
@@ -20,6 +20,8 @@ const SupportHub: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'ticket' | 'services'>(() => {
         return (location.state as any)?.activeTab === 'services' ? 'services' : 'ticket';
     });
+
+    const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
 
     // Logic Hook
     const {
@@ -42,16 +44,18 @@ const SupportHub: React.FC = () => {
     // Derived counts for UI badges
     const filteredCount = tickets.length;
 
-
-
     return (
-        <div className="p-4 lg:p-6 min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col gap-6">
+        <div className="p-4 lg:p-6 min-h-screen gradient-mesh flex flex-col gap-6 relative">
 
             {/* Top Bar Actions */}
             <div className="flex flex-col sm:flex-row justify-between items-end sm:items-center shrink-0 gap-4 sm:gap-0">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight leading-none mb-1">Soporte & Ayuda</h1>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-widest pl-0.5">Centro de Control de Incidencias</p>
+                    <h1 className="text-[clamp(1.5rem,1rem+2vw,2.25rem)] font-bold text-slate-900 dark:text-white tracking-tight leading-none mb-1">
+                        Soporte & Ayuda
+                    </h1>
+                    <p className="text-[clamp(0.65rem,0.6rem+0.15vw,0.75rem)] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-widest pl-0.5">
+                        Centro de Control de Incidencias
+                    </p>
                 </div>
             </div>
 
@@ -59,7 +63,7 @@ const SupportHub: React.FC = () => {
             <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
                 {/* LEFT PANEL: History (4 cols) */}
-                <div className="lg:col-span-4 flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden min-h-[400px]">
+                <div className="lg:col-span-4 @container flex flex-col glass-premium-v2 rounded-3xl border border-slate-200/50 dark:border-white/10 shadow-xl overflow-hidden min-h-[400px]">
                     {/* Mini-Dashboard Header */}
                     <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-sm z-10">
                         <div className="flex items-center gap-3 mb-4">
@@ -67,23 +71,24 @@ const SupportHub: React.FC = () => {
                                 <Activity className="w-5 h-5" />
                             </div>
                             <div>
-                                <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Actividad Reciente</h2>
-                                <p className="text-[10px] text-slate-500 font-medium uppercase tracking-widest">Resumen de Soporte</p>
+                                <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Mis Tickets</h2>
+                                <p className="text-[10px] text-slate-500 font-medium uppercase tracking-widest">Historial de Soporte</p>
                             </div>
                         </div>
 
-                        {/* KPI Grid */}
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700/50 shadow-sm">
-                                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Abiertos</div>
-                                <div className="text-xl font-bold text-slate-800 dark:text-white flex items-end gap-1">
-                                    {tickets.filter(t => t.status === 'open' || t.status === 'investigating').length}
-                                    <span className="text-[10px] text-indigo-500 mb-1 font-medium">Activos</span>
+                        {/* KPI Grid - Container-aware */}
+                        <div className="grid grid-cols-1 @md:grid-cols-2 gap-3">
+                            <div className="glass-glow p-3 rounded-2xl border border-indigo-200/50 dark:border-indigo-500/30 shadow-lg relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-12 h-12 bg-indigo-500/10 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-700" />
+                                <div className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wider mb-1 relative z-10">Abiertos</div>
+                                <div className="text-xl font-black text-slate-900 dark:text-white flex items-end gap-1 relative z-10">
+                                    {tickets.filter((t: Ticket) => t.status === 'open' || t.status === 'investigating').length}
+                                    <span className="text-[10px] text-indigo-500 mb-1 font-bold animate-pulse">ACTIVOS</span>
                                 </div>
                             </div>
-                            <div className="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700/50 shadow-sm">
-                                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Total</div>
-                                <div className="text-xl font-bold text-slate-800 dark:text-white flex items-end gap-1">
+                            <div className="bg-white/40 dark:bg-slate-800/40 backdrop-blur-md p-3 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
+                                <div className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mb-1">Total</div>
+                                <div className="text-xl font-black text-slate-800 dark:text-white/90 flex items-end gap-1">
                                     {allTicketsCount}
                                     <span className="text-[10px] text-slate-400 mb-1 font-medium">Histórico</span>
                                 </div>
@@ -99,12 +104,14 @@ const SupportHub: React.FC = () => {
                             setFilter={setTicketFilter}
                             allCount={allTicketsCount}
                             filteredCount={filteredCount}
+                            onSelectTicket={(id) => setSelectedTicketId(id)}
                         />
                     </div>
                 </div>
 
                 {/* RIGHT PANEL: New Ticket Form (8 cols) */}
-                <div className="lg:col-span-8 flex flex-col relative rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 min-h-[600px] overflow-visible">
+                <div className="lg:col-span-8 @container flex flex-col relative rounded-3xl border border-slate-200/50 dark:border-white/10 shadow-2xl glass-premium-v2 min-h-[600px] overflow-visible group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
                     {/* Quick Actions Header */}
                     <div className="absolute top-5 right-6 z-30 flex flex-col items-end gap-2">
@@ -161,7 +168,7 @@ const SupportHub: React.FC = () => {
                                 }
                                 `}
                         >
-                            <Ticket className="w-3.5 h-3.5" />
+                            <TicketIcon className="w-3.5 h-3.5" />
                             <span>Incidencia</span>
                         </button>
                         <button
@@ -178,7 +185,6 @@ const SupportHub: React.FC = () => {
                             <span>Servicios</span>
                         </button>
                     </div>
-
 
                     {/* Content Area */}
                     <div className="flex-1 mt-16 overflow-y-auto custom-scrollbar rounded-b-2xl">
@@ -207,6 +213,13 @@ const SupportHub: React.FC = () => {
                 isOpen={isProfileOpen}
                 onClose={() => setIsProfileOpen(false)}
                 user={user}
+            />
+
+            {/* Ticket Detail Modal */}
+            <TicketDetailModal
+                isOpen={!!selectedTicketId}
+                onClose={() => setSelectedTicketId(null)}
+                ticketId={selectedTicketId}
             />
         </div>
     );

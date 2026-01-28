@@ -76,7 +76,6 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
     className
 }) => {
     const { riderName, riderId, visualStart, visualEnd, motoAssignments, startAt, endAt, isConfirmed: propConfirmed } = event;
-
     // Check if shift is currently active
     const now = new Date();
     const isCurrent = now >= new Date(startAt) && now <= new Date(endAt);
@@ -188,10 +187,20 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
         triggerHaptic('medium');
         const nextState = !isConfirmed;
         setLocalConfirmed(nextState); // Optimistic
+
+        // Debugging logs
+        console.log('[ShiftCard] Attempting to confirm shift:', {
+            shiftId: event.shiftId,
+            riderId: event.riderId,
+            isConfirmed,
+            nextState
+        });
+
         try {
             await shiftService.confirmShift(event.shiftId);
+            console.log('[ShiftCard] Shift confirmed successfully');
         } catch (err) {
-            console.error("Error confirming shift:", err);
+            console.error('[ShiftCard] Error confirming shift:', err);
             setLocalConfirmed(!nextState); // Revert
             alert("Error al guardar la confirmación. Por favor, verifica tu conexión.");
         } finally {

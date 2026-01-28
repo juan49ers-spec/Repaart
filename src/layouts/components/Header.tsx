@@ -2,18 +2,19 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { RepaartLogo } from '../../components/common/RepaartLogo';
 import UserMenu from './UserMenu';
-import { adminNavItems, franchiseNavItems } from '../constants/navigation';
+import { adminNavItems, franchiseNavItems, riderNavItems } from '../constants/navigation';
 
 export interface HeaderProps {
     isAdmin: boolean;
-    isFranchise: boolean;
+    isFranchise?: boolean;
+    isRider?: boolean;
     targetFranchiseName?: string;
     onExport?: () => void;
     onOpenHelp?: (id: string) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ isAdmin, isFranchise }) => {
-    const navItems = isAdmin ? adminNavItems : isFranchise ? franchiseNavItems : [];
+const Header: React.FC<HeaderProps> = ({ isAdmin, isFranchise, isRider }) => {
+    const navItems = isAdmin ? adminNavItems : isFranchise ? franchiseNavItems : isRider ? riderNavItems : [];
 
     return (
         <header className="sticky top-0 z-50 w-full px-4 lg:px-8 py-5 pointer-events-none">
@@ -21,14 +22,14 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, isFranchise }) => {
 
                 {/* LEFT: Hyper-Premium Brand Island */}
                 <div className="pointer-events-auto">
-                    <div className="glass-premium brand-island-glow px-6 py-3 rounded-[24px] shadow-2xl hover:scale-[1.02] active:scale-[0.98] group transition-all duration-500">
-                        <NavLink to="/" className="flex items-center">
+                    <NavLink to="/" className="group">
+                        <div className="glass-premium brand-island-glow px-6 py-3 rounded-[24px] shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-500">
                             <RepaartLogo
                                 className="h-9 lg:h-8 w-auto text-slate-800 dark:text-white transition-all duration-500 group-hover:drop-shadow-[0_0_8px_rgba(225,29,72,0.5)]"
                                 iconOnly={false}
                             />
-                        </NavLink>
-                    </div>
+                        </div>
+                    </NavLink>
                 </div>
 
                 {/* CENTER: Desktop Horizontal Navigation Island */}
@@ -62,7 +63,10 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, isFranchise }) => {
                 {/* RIGHT: User Island */}
                 <div className="pointer-events-auto">
                     <div className="glass-card p-1.5 rounded-full border border-white/20 dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300">
-                        <UserMenu placement="bottom" />
+                        <UserMenu 
+                            isFranchise={isFranchise} 
+                            isRider={isRider}
+                        />
                     </div>
                 </div>
             </div>
