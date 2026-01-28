@@ -76,6 +76,7 @@ const mapDocToFranchise = (doc: QueryDocumentSnapshot<DocumentData>): Franchise 
 
 const COLLECTIONS = {
     USERS: 'users',
+    USER_PREFERENCES: 'user_preferences',
     FRANCHISES: 'franchises'
 };
 
@@ -185,7 +186,7 @@ export const userService = {
             // Remove nested location if it was flattened to avoid duplication/confusion
             if (flatData.location) delete flatData.location;
 
-            const docRef = await addDoc(collection(db, COLLECTIONS.USERS), flatData);
+            const docRef = await addDoc(collection(db, 'franchises'), flatData);
 
             return {
                 success: true,
@@ -199,11 +200,13 @@ export const userService = {
 
     deleteUser: async (uid: string): Promise<void> => {
         try {
-            const docRef = doc(db, COLLECTIONS.USERS, uid);
-            await setDoc(docRef, {
-                status: 'deleted',
-                updatedAt: serverTimestamp()
-            }, { merge: true });
+            const { getFunctions, httpsCallable } = await import('firebase/functions');
+            const { getApp } = await import('firebase/app');
+
+            const functions = getFunctions(getApp());
+            const adminDeleteUser = httpsCallable(functions, 'adminDeleteUser');
+
+            await adminDeleteUser({ uid });
         } catch (error) {
             console.error("Error deleting user:", error);
             throw error;
