@@ -304,8 +304,8 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
     };
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 overflow-y-auto pb-20">
-
+        <div className="flex flex-col h-full bg-slate-50 overflow-y-auto pb-24">
+ 
             <div className="max-w-[1600px] mx-auto w-full px-6 md:px-10 pt-10 relative z-10 flex flex-col gap-10">
 
 
@@ -324,34 +324,51 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                 {/* --- HEADER IDENTITY SECTION --- */}
                 <div className="flex flex-col md:flex-row items-end gap-6 pb-6 border-b border-slate-200/60">
                     {/* Avatar / Logo */}
-                    <div className="relative group cursor-pointer" onClick={() => isSelfProfile && fileInputRef.current?.click()}>
-                        <div className="w-32 h-32 rounded-full border-4 border-white shadow-2xl overflow-hidden bg-white flex items-center justify-center relative">
-                            {watchedUserPhoto ? (
-                                <img src={watchedUserPhoto} alt="Avatar" className="w-full h-full object-cover" />
-                            ) : (
-                                <div className="text-4xl font-black text-slate-300">
-                                    {user?.email?.charAt(0).toUpperCase()}
-                                </div>
-                            )}
+                    {isSelfProfile ? (
+                        <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="relative group cursor-pointer"
+                            aria-label="Cambiar foto de perfil"
+                        >
+                            <div className="w-32 h-32 rounded-full border-4 border-white shadow-2xl overflow-hidden bg-white flex items-center justify-center relative">
+                                {watchedUserPhoto ? (
+                                    <img src={watchedUserPhoto} alt="Foto de perfil" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="text-4xl font-black text-slate-300">
+                                        {user?.email?.charAt(0).toUpperCase()}
+                                    </div>
+                                )}
 
-                            {isSelfProfile && (
                                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-[2px]">
-                                    <Camera className="w-8 h-8 text-white drop-shadow-md" />
+                                    <Camera className="w-8 h-8 text-white drop-shadow-md" aria-hidden="true" />
                                 </div>
-                            )}
+                            </div>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                className="hidden"
+                                accept="image/*"
+                                onChange={handleAvatarChange}
+                                aria-label="Seleccionar imagen de perfil"
+                            />
+                            {/* Online Status Dot */}
+                            <div className="absolute bottom-2 right-2 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full shadow-sm" aria-hidden="true"></div>
+                        </button>
+                    ) : (
+                        <div className="relative">
+                            <div className="w-32 h-32 rounded-full border-4 border-white shadow-2xl overflow-hidden bg-white flex items-center justify-center relative">
+                                {watchedUserPhoto ? (
+                                    <img src={watchedUserPhoto} alt="Foto de perfil" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="text-4xl font-black text-slate-300">
+                                        {user?.email?.charAt(0).toUpperCase()}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="absolute bottom-2 right-2 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full shadow-sm" aria-hidden="true"></div>
                         </div>
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            className="hidden"
-                            accept="image/*"
-                            onChange={handleAvatarChange}
-                            disabled={!isSelfProfile}
-                            title="Cambiar foto de perfil"
-                        />
-                        {/* Online Status Dot */}
-                        <div className="absolute bottom-2 right-2 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full shadow-sm"></div>
-                    </div>
+                    )}
 
                     {/* Text Info */}
                     <div className="flex-1 mb-2">
@@ -359,7 +376,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                             {isSelfProfile ? (watch('userDisplayName') || 'Tu Perfil') : (watch('name') || 'Franquicia')}
                         </h1>
                         <div className="flex items-center gap-3 text-slate-500 font-medium mt-1">
-                            <Mail className="w-4 h-4" />
+                            <Mail className="w-4 h-4" aria-hidden="true" />
                             <span>{user?.email}</span>
                             <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
                                 {isAdmin ? 'Administrador' : 'Franquicia'}
@@ -416,22 +433,35 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
 
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nombre Completo</label>
-                                        <div className="relative group">
-                                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
-                                            <input {...register('userDisplayName')} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm" placeholder="Tu nombre real" />
+                                        <div className="relative group h-12">
+                                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" aria-hidden="true" />
+                                            <input
+                                                {...register('userDisplayName')}
+                                                autoComplete="name"
+                                                inputMode="text"
+                                                className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                                                placeholder="Tu nombre real"
+                                            />
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Teléfono Personal</label>
-                                        <div className="relative group">
-                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
-                                            <input {...register('userPhone')} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm" placeholder="+34 600 000 000" />
+                                        <div className="relative group h-12">
+                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" aria-hidden="true" />
+                                            <input
+                                                {...register('userPhone')}
+                                                type="tel"
+                                                autoComplete="tel"
+                                                inputMode="tel"
+                                                className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                                                placeholder="+34 600 000 000"
+                                            />
                                         </div>
                                     </div>
 
                                     <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl flex items-start gap-3">
-                                        <Lock className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
+                                        <Lock className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" aria-hidden="true" />
                                         <div>
                                             <h4 className="text-sm font-bold text-indigo-900">Seguridad de la Cuenta</h4>
                                             <p className="text-xs text-indigo-700/80 mt-1">Para cambiar tu contraseña o email, contacta con soporte o usa la opción de recuperación en el login.</p>
@@ -447,45 +477,78 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                 {/* NOMBRE COMERCIAL */}
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nombre Comercial</label>
-                                    <div className="relative group">
-                                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-                                        <input {...register('name')} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="Ej: Burger King Centro" />
+                                    <div className="relative group h-12">
+                                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" aria-hidden="true" />
+                                        <input
+                                            {...register('name')}
+                                            autoComplete="organization"
+                                            inputMode="text"
+                                            className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            placeholder="Ej: Burger King Centro"
+                                        />
                                     </div>
                                 </div>
 
                                 {/* RAZON SOCIAL */}
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Razón Social</label>
-                                    <div className="relative group">
-                                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-                                        <input {...register('legalName')} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="Ej: Burger King Spain S.L." />
+                                    <div className="relative group h-12">
+                                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" aria-hidden="true" />
+                                        <input
+                                            {...register('legalName')}
+                                            autoComplete="organization-title"
+                                            inputMode="text"
+                                            className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            placeholder="Ej: Burger King Spain S.L."
+                                        />
                                     </div>
                                 </div>
 
                                 {/* CIF */}
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">CIF / NIF</label>
-                                    <div className="relative group">
-                                        <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-                                        <input {...register('cif')} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="B12345678" />
+                                    <div className="relative group h-12">
+                                        <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" aria-hidden="true" />
+                                        <input
+                                            {...register('cif')}
+                                            autoComplete="off"
+                                            inputMode="text"
+                                            className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            placeholder="B12345678"
+                                        />
                                     </div>
                                 </div>
 
                                 {/* TELEFONO EMPRESA */}
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Teléfono de Contacto (Público)</label>
-                                    <div className="relative group">
-                                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-                                        <input {...register('phone')} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="+34 600 000 000" />
+                                    <div className="relative group h-12">
+                                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" aria-hidden="true" />
+                                        <input
+                                            {...register('phone')}
+                                            type="tel"
+                                            autoComplete="tel"
+                                            inputMode="tel"
+                                            className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            placeholder="+34 600 000 000"
+                                        />
                                     </div>
                                 </div>
 
                                 {/* EMAIL EMPRESA */}
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Email Operativo</label>
-                                    <div className="relative group">
-                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-                                        <input {...register('email')} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="contacto@restaurante.com" />
+                                    <div className="relative group h-12">
+                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" aria-hidden="true" />
+                                        <input
+                                            {...register('email')}
+                                            type="email"
+                                            autoComplete="email"
+                                            inputMode="email"
+                                            spellCheck={false}
+                                            className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            placeholder="contacto@restaurante.com"
+                                        />
                                     </div>
                                 </div>
 
@@ -493,9 +556,15 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                 {/* CIUDAD (LOCALIDAD) */}
                                 <div className="space-y-2 col-span-1 md:col-span-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Localidad (Para el Tiempo)</label>
-                                    <div className="relative group">
-                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-                                        <input {...register('city', { required: true })} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="Ej: Barcelona" />
+                                    <div className="relative group h-12">
+                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" aria-hidden="true" />
+                                        <input
+                                            {...register('city', { required: true })}
+                                            autoComplete="address-level2"
+                                            inputMode="text"
+                                            className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            placeholder="Ej: Barcelona"
+                                        />
                                     </div>
                                     <p className="text-[10px] text-slate-400 ml-1">Escribe solo la ciudad. El sistema asumirá que es en España.</p>
                                 </div>
@@ -503,9 +572,15 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                 {/* DIRECCION */}
                                 <div className="space-y-2 col-span-1 md:col-span-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Dirección Completa</label>
-                                    <div className="relative group">
-                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-                                        <input {...register('address')} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="Calle Ejemplo 123, Ciudad" />
+                                    <div className="relative group h-12">
+                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" aria-hidden="true" />
+                                        <input
+                                            {...register('address')}
+                                            autoComplete="street-address"
+                                            inputMode="text"
+                                            className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            placeholder="Calle Ejemplo 123, Ciudad"
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -529,9 +604,10 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                                 const newMax = newMin + 2;
                                                 appendRate({ min: newMin, max: newMax, price: 0, name: `${newMin}-${newMax} km` });
                                             }}
-                                            className="text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                                            aria-label="Añadir nuevo rango de distancia"
+                                            className="text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-emerald-500/20"
                                         >
-                                            <Plus className="w-3 h-3" /> Añadir Rango
+                                            <Plus className="w-3 h-3" aria-hidden="true" /> Añadir Rango
                                         </button>
                                     </div>
 
@@ -562,22 +638,28 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                                             <input
                                                                 type="number"
                                                                 step="0.1"
+                                                                min="0"
+                                                                inputMode="decimal"
                                                                 {...register(`logisticsRates.${index}.min` as const, { valueAsNumber: true })}
                                                                 className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-2 text-center text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
                                                                 placeholder="0"
+                                                                aria-label={`Distancia mínima para rango ${index + 1}`}
                                                             />
                                                         </div>
-                                                        <span className="text-slate-300 font-bold">-</span>
+                                                        <span className="text-slate-300 font-bold" aria-hidden="true">-</span>
                                                         <div className="relative w-20 md:w-24">
                                                             <input
                                                                 type="number"
                                                                 step="0.1"
+                                                                min="0"
+                                                                inputMode="decimal"
                                                                 {...register(`logisticsRates.${index}.max` as const, { valueAsNumber: true })}
                                                                 className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-2 text-center text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
                                                                 placeholder="Max"
+                                                                aria-label={`Distancia máxima para rango ${index + 1}`}
                                                             />
                                                         </div>
-                                                        <span className="text-xs font-bold text-slate-400 hidden md:inline-block">km</span>
+                                                        <span className="text-xs font-bold text-slate-400 hidden md:inline-block" aria-hidden="true">km</span>
 
                                                         {/* Hidden Name Input */}
                                                         <input type="hidden" {...register(`logisticsRates.${index}.name` as const)} />
@@ -586,13 +668,16 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                                     {/* Price Input */}
                                                     <div className="col-span-4 md:col-span-4 flex items-center justify-end gap-2 pr-4 md:pr-8">
                                                         <div className="relative w-24 md:w-28">
-                                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
+                                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs" aria-hidden="true">€</span>
                                                             <input
                                                                 type="number"
                                                                 step="0.01"
+                                                                min="0"
+                                                                inputMode="decimal"
                                                                 {...register(`logisticsRates.${index}.price` as const, { valueAsNumber: true })}
                                                                 className="w-full bg-white border border-slate-200 rounded-lg py-1.5 pl-6 pr-3 text-right text-sm font-bold text-emerald-600 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
                                                                 placeholder="0.00"
+                                                                aria-label={`Precio para rango ${index + 1}`}
                                                             />
                                                         </div>
                                                     </div>
@@ -602,10 +687,10 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                                         <button
                                                             type="button"
                                                             onClick={() => removeRate(index)}
-                                                            className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                                                            title="Eliminar tarifa"
+                                                            aria-label={`Eliminar rango de tarifas ${index + 1}`}
+                                                            className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus-visible:ring-2 focus-visible:ring-rose-500/20 focus-visible:opacity-100"
                                                         >
-                                                            <Trash2 className="w-4 h-4" />
+                                                            <Trash2 className="w-4 h-4" aria-hidden="true" />
                                                         </button>
                                                     </div>
                                                 </div>
@@ -621,9 +706,10 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                             <button
                                                 type="button"
                                                 onClick={() => appendRate({ min: 0, max: 3, price: 3.50, name: '0-3 km' })}
-                                                className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-95 flex items-center gap-2"
+                                                aria-label="Crear primera tarifa de distancia"
+                                                className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-95 flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-emerald-500/20"
                                             >
-                                                <Plus className="w-4 h-4" /> Crear Primera Tarifa
+                                                <Plus className="w-4 h-4" aria-hidden="true" /> Crear Primera Tarifa
                                             </button>
                                         </div>
                                     )}
@@ -636,15 +722,15 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                 </form>
 
                 {/* FOOTER ACTIONS - Fixed at bottom */}
-                <div className="p-4 border-t border-slate-200 bg-white/90 backdrop-blur-sm flex justify-end shrink-0 fixed bottom-0 left-0 right-0 md:left-64 z-50">
+                <form onSubmit={handleSubmit(onSubmit)} className="fixed bottom-0 left-0 right-0 md:left-64 z-50 p-4 border-t border-slate-200 bg-white/90 backdrop-blur-sm flex justify-end shrink-0">
                     <button
-                        onClick={handleSubmit(onSubmit)}
+                        type="submit"
                         disabled={loading || !isDirty}
-                        className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-blue-500/20"
                     >
-                        <Save className="w-4 h-4" /> {loading ? 'Guardando...' : 'Guardar Cambios'}
+                        <Save className="w-4 h-4" aria-hidden="true" /> {loading ? 'Guardando…' : 'Guardar Cambios'}
                     </button>
-                </div>
+                </form>
             </div>
         </div>
     );

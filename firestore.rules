@@ -58,6 +58,43 @@ service cloud.firestore {
         isNonEmptyString('franchiseId') &&
         incomingData().status in ['active', 'maintenance', 'out_of_service', 'deleted'];
     }
+    
+    function isValidNotification() {
+      return
+        isNonEmptyString('title') &&
+        isNonEmptyString('message') &&
+        isNonEmptyString('userId') &&
+        incomingData().type in ['info', 'success', 'warning', 'error', 'SYSTEM', 'FINANCE_CLOSING', 'RATE_CHANGE', 'SUPPORT_TICKET', 'UNLOCK_REQUEST', 'MONTH_UNLOCKED', 'UNLOCK_REJECTED', 'ALERT', 'PREMIUM_SERVICE_REQUEST', 'shift_confirmed', 'shift_change_request', 'incident', 'SCHEDULE_PUBLISHED'];
+    }
+    
+    function isValidAnnouncement() {
+      return
+        isNonEmptyString('title') &&
+        isNonEmptyString('content') &&
+        incomingData().type in ['news', 'alert', 'poll'] &&
+        incomingData().priority in ['normal', 'high', 'critical'] &&
+        incomingData().targetAudience in ['all', 'specific'];
+    }
+    
+    function isValidTicket() {
+      return
+        isNonEmptyString('uid') &&
+        isNonEmptyString('email') &&
+        isNonEmptyString('subject') &&
+        isNonEmptyString('message') &&
+        incomingData().urgency in ['normal', 'high', 'critical'] &&
+        incomingData().status in ['open', 'in_progress', 'resolved', 'closed'];
+    }
+    
+    function isValidShift() {
+      return
+        isNonEmptyString('franchiseId') &&
+        isNonEmptyString('date') &&
+        isNonEmptyString('startAt') &&
+        isNonEmptyString('endAt') &&
+        incomingData().riderId == null || isNonEmptyString('riderId');
+    }
+
 
     // --- COLLECTION RULES ---
 
@@ -87,7 +124,7 @@ service cloud.firestore {
         isAdmin() || 
         isFranchise() ||
         // Rider can update their own shift if they are assigned to it
-        resource.data.riderId == request.auth.uid
+        (resource.data.riderId == request.auth.uid && isValidShift())
       );
     }
     
@@ -128,7 +165,7 @@ service cloud.firestore {
       );
       
       allow write: if isAuthed() && (isAdmin() || (resource.data.userId == request.auth.uid));
-
+      
       match /messages/{messageId} {
         allow read: if isAuthed() && (
           resource.data.senderId == request.auth.uid ||
@@ -140,6 +177,8 @@ service cloud.firestore {
           isAdmin()
         );
       }
+      
+      allow create: if isAuthed() && isValidTicket();
     }
     
     // RIDER INCIDENTS & CHECKS
@@ -166,8 +205,14 @@ service cloud.firestore {
         isAdmin() ||
         isFranchise()
       );
-
-      allow write: if isAuthed();
+      
+      allow create: if isAuthed() && isValidNotification();
+      
+      allow write: if isAuthed() && (
+        request.auth.uid == resource.data.userId ||
+        isAdmin() ||
+        (isFranchise() && request.auth.uid == getUserData().franchiseId)
+      );
     }
     match /admin_notifications/{notifId} {
       allow read, write: if isAuthed() && (isAdmin() || isFranchise());
@@ -222,7 +267,7 @@ service cloud.firestore {
     // ANNOUNCEMENTS
     match /announcements/{announcementId} {
       allow read: if isAuthed();
-      allow write: if isAuthed() && isAdmin();
+      allow write: if isAuthed() && isAdmin() && isValidAnnouncement();
     }
     
     match /project_tasks/{taskId} {
@@ -281,6 +326,13 @@ service cloud.firestore {
         allow write: if isAuthed() && isAdmin();
     }
     
+    // REGISTRATION REQUESTS
+    match /registration_requests/{requestId} {
+      allow read: if isAdmin();
+      allow create: if isAuthed();
+      allow write: if isAdmin();
+    }
+
     // DEFAULT DENY
     match /{document=**} {
       allow read, write: if false;
