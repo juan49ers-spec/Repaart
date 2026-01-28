@@ -87,12 +87,31 @@ exports.createUserManaged = functions.https.onCall(async (data, context) => {
             disabled: false
         });
         const newUid = userRecord.uid;
-        // 5. Set Custom Claims IMMEDIATE
-        const claims = { role, franchiseId: franchiseId || null };
+        // 5. AUTO-GENERATE FRANCHISE ID (Correlative)
+        let finalFranchiseId = franchiseId || null;
+        if (role === 'franchise') {
+            console.log(`[createUserManaged] Role is franchise, generating sequential ID...`);
+            const counterRef = admin.firestore().collection('metadata').doc('counters');
+            finalFranchiseId = await admin.firestore().runTransaction(async (transaction) => {
+                var _a;
+                const counterSnap = await transaction.get(counterRef);
+                let nextNum = 1;
+                if (counterSnap.exists) {
+                    nextNum = (((_a = counterSnap.data()) === null || _a === void 0 ? void 0 : _a.franchiseCount) || 0) + 1;
+                }
+                transaction.set(counterRef, { franchiseCount: nextNum }, { merge: true });
+                // Format: F-0001
+                const paddedNum = String(nextNum).padStart(4, '0');
+                return `F-${paddedNum}`;
+            });
+            console.log(`[createUserManaged] Generated ID: ${finalFranchiseId}`);
+        }
+        // 6. Set Custom Claims IMMEDIATE
+        const claims = { role, franchiseId: finalFranchiseId };
         await admin.auth().setCustomUserClaims(newUid, claims);
-        // 6. Create Firestore Profile
+        // 7. Create Firestore Profile
         const userProfile = Object.assign({ uid: newUid, email,
-            role, franchiseId: franchiseId || null, status: profileData.status || 'active', createdAt: admin.firestore.FieldValue.serverTimestamp(), updatedAt: admin.firestore.FieldValue.serverTimestamp() }, profileData);
+            role, franchiseId: finalFranchiseId, status: profileData.status || 'active', createdAt: admin.firestore.FieldValue.serverTimestamp(), updatedAt: admin.firestore.FieldValue.serverTimestamp() }, profileData);
         // Clean undefineds
         Object.keys(userProfile).forEach(key => userProfile[key] === undefined && delete userProfile[key]);
         await admin.firestore().collection('users').doc(newUid).set(userProfile);

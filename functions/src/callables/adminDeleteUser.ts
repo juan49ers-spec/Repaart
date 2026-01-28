@@ -49,7 +49,6 @@ export const adminDeleteUser = functions.https.onCall(async (data, context) => {
             await admin.auth().deleteUser(uid);
             console.log(`✅ Usuario ${uid} eliminado de Firebase Auth`);
         } catch (authError: any) {
-            // Si el usuario no existe en Auth, continuar con eliminación de Firestore
             if (authError.code === 'auth/user-not-found') {
                 console.log(`⚠️ Usuario ${uid} no existe en Firebase Auth, continuando...`);
             } else {
@@ -60,12 +59,6 @@ export const adminDeleteUser = functions.https.onCall(async (data, context) => {
         // 2. Eliminar documento de Firestore
         await admin.firestore().collection('users').doc(uid).delete();
         console.log(`✅ Documento de usuario ${uid} eliminado de Firestore`);
-
-        // 3. Eliminar registros relacionados (opcional)
-        // - schedules
-        // - shifts
-        // - incidents
-        // Estos pueden ser limpiados por data retention policies
 
         return { success: true, message: 'Usuario eliminado completamente' };
     } catch (error) {

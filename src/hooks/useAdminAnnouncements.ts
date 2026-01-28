@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
-import { collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp, arrayUnion, updateDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp, arrayUnion, updateDoc, limit } from 'firebase/firestore';
 
 interface Announcement {
     id: string;
@@ -23,7 +23,8 @@ export const useAdminAnnouncements = () => {
     useEffect(() => {
         const q = query(
             collection(db, 'announcements'),
-            orderBy('createdAt', 'desc')
+            orderBy('createdAt', 'desc'),
+            limit(100)
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {

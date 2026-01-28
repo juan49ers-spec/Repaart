@@ -19,7 +19,8 @@ import {
     Briefcase,
     BookOpen,
     Layout,
-    Folder
+    Folder,
+    RefreshCw
 } from 'lucide-react';
 import DocPreviewModal from '../../components/ui/overlays/DocPreviewModal';
 import ConfirmationModal from '../../components/ui/feedback/ConfirmationModal';
@@ -29,6 +30,7 @@ import UserManual from '../common/UserManual/UserManual';
 import RequestsInbox from './resources/RequestsInbox';
 import ServiceManager from './services/ServiceManager';
 import { resourceRequestService } from '../../services/resourceRequestService';
+import { useAuth } from '../../context/AuthContext';
 
 interface Resource {
     id: string;
@@ -67,6 +69,7 @@ const FOLDERS = [
 const MOCK_RESOURCES: Resource[] = [];
 
 const AdminResourcesPanel = () => {
+    const { forceTokenRefresh } = useAuth();
     // Tab State (Global Navigation)
     const [activeTab, setActiveTab] = useState<'vault' | 'guides' | 'manual' | 'requests' | 'services'>('vault');
     const [activeCategory, setActiveCategory] = useState<string>('contracts');
@@ -87,6 +90,11 @@ const AdminResourcesPanel = () => {
         message: '',
         onConfirm: null,
     });
+
+    const handleForceTokenRefresh = async () => {
+        await forceTokenRefresh();
+        alert('Token actualizado. Intenta subir el documento nuevamente.');
+    };
 
     // Fetch resources
     useEffect(() => {
@@ -134,11 +142,14 @@ const AdminResourcesPanel = () => {
             );
         }
 
-        // 3. Sort (Pinned first)
+        // 3. Sort (Pinned first, then by createdAt)
         return filtered.sort((a, b) => {
             if (a.isPinned && !b.isPinned) return -1;
             if (!a.isPinned && b.isPinned) return 1;
-            return 0; // Keep original order (createdAt)
+            // Sort by createdAt descending (newest first)
+            const aTime = a.createdAt?.toMillis() || 0;
+            const bTime = b.createdAt?.toMillis() || 0;
+            return bTime - aTime;
         });
     }, [allResources, activeCategory, searchTerm]);
 
@@ -214,41 +225,52 @@ const AdminResourcesPanel = () => {
                     <p className="hidden md:block text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">Gestión integral de documentación y guías.</p>
                 </div>
 
-                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl overflow-x-auto no-scrollbar whitespace-nowrap">
+                <div className="flex items-center gap-3">
+                    <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl overflow-x-auto no-scrollbar whitespace-nowrap">
+                        <button
+                            onClick={() => setActiveTab('vault')}
+                            className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'vault' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        >
+                            Bóveda Digital
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('guides')}
+                            className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'guides' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        >
+                            Guías Interactivas
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('manual')}
+                            className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'manual' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        >
+                            Manual de Uso
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('requests')}
+                            className={`px-5 py-2 rounded-lg text-sm font-bold transition-all relative flex items-center gap-2 ${activeTab === 'requests' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        >
+                            Solicitudes
+                            {pendingRequestsCount > 0 && (
+                                <span className="flex items-center justify-center bg-rose-500 text-white text-[10px] h-5 min-w-[20px] px-1 rounded-full border-2 border-slate-100 dark:border-slate-800">
+                                    {pendingRequestsCount}
+                                </span>
+                            )}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('services')}
+                            className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'services' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        >
+                            Servicios Premium
+                        </button>
+                    </div>
+
                     <button
-                        onClick={() => setActiveTab('vault')}
-                        className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'vault' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        onClick={handleForceTokenRefresh}
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                        title="Actualizar token de autenticación"
                     >
-                        Bóveda Digital
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('guides')}
-                        className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'guides' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                    >
-                        Guías Interactivas
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('manual')}
-                        className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'manual' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                    >
-                        Manual de Uso
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('requests')}
-                        className={`px-5 py-2 rounded-lg text-sm font-bold transition-all relative flex items-center gap-2 ${activeTab === 'requests' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                    >
-                        Solicitudes
-                        {pendingRequestsCount > 0 && (
-                            <span className="flex items-center justify-center bg-rose-500 text-white text-[10px] h-5 min-w-[20px] px-1 rounded-full border-2 border-slate-100 dark:border-slate-800">
-                                {pendingRequestsCount}
-                            </span>
-                        )}
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('services')}
-                        className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'services' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                    >
-                        Servicios Premium
+                        <RefreshCw className="w-4 h-4" />
+                        <span className="hidden sm:inline">Actualizar Token</span>
                     </button>
                 </div>
             </div>
@@ -511,6 +533,7 @@ const AdminResourcesPanel = () => {
                 isOpen={isUploadModalOpen}
                 onClose={() => setIsUploadModalOpen(false)}
                 onSuccess={() => { /* Reload trigger? */ }}
+                defaultCategory={activeCategory}
             />
 
             <DocPreviewModal

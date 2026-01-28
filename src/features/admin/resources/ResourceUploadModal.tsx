@@ -1,28 +1,35 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { UploadCloud, X, FileText, CheckCircle2, Loader2 } from 'lucide-react';
 import { storage, db } from '../../../lib/firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const PREDEFINED_CATEGORIES = [
-    { id: 'general', label: 'General', color: 'bg-slate-500' },
-    { id: 'manuals', label: 'Manuales', color: 'bg-blue-500' },
-    { id: 'marketing', label: 'Marketing', color: 'bg-pink-500' },
-    { id: 'legal', label: 'Legal / Contratos', color: 'bg-amber-500' },
-    { id: 'hr', label: 'Recursos Humanos', color: 'bg-emerald-500' },
+    { id: 'contracts', label: 'Marco Legal & Contratos', color: 'bg-indigo-500' },
+    { id: 'manuals', label: 'Manuales Operativos', color: 'bg-emerald-500' },
+    { id: 'commercial', label: 'Dossiers Comerciales', color: 'bg-amber-500' },
+    { id: 'marketing', label: 'Activos de Marca', color: 'bg-rose-500' },
+    { id: 'general', label: 'Documentación General', color: 'bg-slate-500' },
 ];
 
 interface ResourceUploadModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: (resourceId?: string) => void;
+    defaultCategory?: string;
 }
 
-const ResourceUploadModal: React.FC<ResourceUploadModalProps> = ({ isOpen, onClose, onSuccess }) => {
+const ResourceUploadModal: React.FC<ResourceUploadModalProps> = ({ isOpen, onClose, onSuccess, defaultCategory = 'general' }) => {
     const [file, setFile] = useState<File | null>(null);
     const [title, setTitle] = useState('');
-    const [category, setCategory] = useState('general');
+    const [category, setCategory] = useState(defaultCategory);
     const [isPinned, setIsPinned] = useState(false);
+
+    useEffect(() => {
+        if (isOpen) {
+            setCategory(defaultCategory);
+        }
+    }, [isOpen]);
 
     // Upload State
     const [uploading, setUploading] = useState(false);
@@ -75,7 +82,20 @@ const ResourceUploadModal: React.FC<ResourceUploadModalProps> = ({ isOpen, onClo
                 },
                 (error) => {
                     console.error("Upload error:", error);
-                    alert("Error al subir: " + error.message);
+
+                    let errorMessage = "Error al subir el archivo";
+
+                    if (error.code === 'storage/unauthorized') {
+                        errorMessage = "No tienes permisos para subir archivos. Verifica que eres administrador.";
+                    } else if (error.code === 'storage/canceled') {
+                        errorMessage = "La subida fue cancelada.";
+                    } else if (error.code === 'storage/unknown') {
+                        errorMessage = "Error desconocido al subir el archivo.";
+                    } else {
+                        errorMessage = `Error: ${error.message || error.code}`;
+                    }
+
+                    alert(errorMessage);
                     setUploading(false);
                 },
                 async () => {
@@ -103,8 +123,9 @@ const ResourceUploadModal: React.FC<ResourceUploadModalProps> = ({ isOpen, onClo
                     setProgress(0);
                 }
             );
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error initiating upload:", error);
+            alert("Error al iniciar la subida: " + (error.message || "Error desconocido"));
             setUploading(false);
         }
     };

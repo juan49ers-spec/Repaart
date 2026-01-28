@@ -1,0 +1,948 @@
+{
+  "info": {
+    "name": "Repaart API",
+    "description": "API RESTful para la plataforma SaaS de gestión logística Repaart",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "repaart-api-v1"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://repaartfinanzas.web.app",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "your-firebase-jwt-token",
+      "type": "string",
+      "description": "Firebase Auth JWT Token"
+    },
+    {
+      "key": "franchiseId",
+      "value": "franchise_abc",
+      "type": "string"
+    },
+    {
+      "key": "month",
+      "value": "2026-01",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Finance API",
+      "item": [
+        {
+          "name": "List Financial Records",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/finance/records?franchiseId={{franchiseId}}&month={{month}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["finance", "records"],
+              "query": [
+                {
+                  "key": "franchiseId",
+                  "value": "{{franchiseId}}"
+                },
+                {
+                  "key": "month",
+                  "value": "{{month}}"
+                }
+              ]
+            },
+            "description": "Obtiene todos los registros financieros de una franquicia filtrados por mes"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Financial Record",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"franchiseId\": \"{{franchiseId}}\",\n  \"type\": \"income\",\n  \"amount\": 1500.00,\n  \"category\": \"delivery_revenue\",\n  \"description\": \"Weekly delivery revenue\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/finance/records",
+              "host": ["{{baseUrl}}"],
+              "path": ["finance", "records"]
+            },
+            "description": "Crea un nuevo registro financiero (ingreso o gasto)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Record Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"submitted\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/finance/records/:recordId/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["finance", "records", ":recordId", "status"]
+            },
+            "description": "Cambia el estado del registro (draft -> submitted -> approved/rejected)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Monthly Summary",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/finance/summary?franchiseId={{franchiseId}}&month={{month}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["finance", "summary"],
+              "query": [
+                {
+                  "key": "franchiseId",
+                  "value": "{{franchiseId}}"
+                },
+                {
+                  "key": "month",
+                  "value": "{{month}}"
+                }
+              ]
+            },
+            "description": "Obtiene el resumen financiero agregado de un mes específico"
+          },
+          "response": []
+        },
+        {
+          "name": "Lock Financial Month",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/finance/summary/:summaryId/lock",
+              "host": ["{{baseUrl}}"],
+              "path": ["finance", "summary", ":summaryId", "lock"]
+            },
+            "description": "Bloquea un mes para evitar modificaciones (solo Admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Financial Trends",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                  "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/finance/trends?franchiseId={{franchiseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["finance", "trends"],
+              "query": [
+                {
+                  "key": "franchiseId",
+                  "value": "{{franchiseId}}"
+                }
+              ]
+            },
+            "description": "Obtiene las tendencias financieras de los últimos 12 meses"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Fleet API",
+      "item": [
+        {
+          "name": "List Riders",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/fleet/riders?franchiseId={{franchiseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["fleet", "riders"],
+              "query": [
+                {
+                  "key": "franchiseId",
+                  "value": "{{franchiseId}}"
+                }
+              ]
+            },
+            "description": "Obtiene la lista de riders de una franquicia"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Rider",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                  "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"rider@example.com\",\n  \"password\": \"securePass123\",\n  \"fullName\": \"Juan Pérez\",\n  \"franchiseId\": \"{{franchiseId}}\",\n  \"contractHours\": 40,\n  \"phone\": \"+34600123456\",\n  \"licenseType\": \"125cc\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fleet/riders",
+              "host": ["{{baseUrl}}"],
+              "path": ["fleet", "riders"]
+            },
+            "description": "Crea un nuevo rider con autenticación Firebase"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Rider",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                  "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Juan Pérez García\",\n  \"phone\": \"+34600123456\",\n  \"contractHours\": 40\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fleet/riders/:riderId",
+              "host": ["{{baseUrl}}"],
+              "path": ["fleet", "riders", ":riderId"]
+            },
+            "description": "Actualiza la información de un rider existente"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Rider",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                  "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/fleet/riders/:riderId",
+              "host": ["{{baseUrl}}"],
+              "path": ["fleet", "riders", ":riderId"]
+            },
+            "description": "Marca el rider como inactivo (soft delete)"
+          },
+          "response": []
+        },
+        {
+          "name": "List Vehicles",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/fleet/vehicles?franchiseId={{franchiseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["fleet", "vehicles"],
+              "query": [
+                {
+                  "key": "franchiseId",
+                  "value": "{{franchiseId}}"
+                }
+              ]
+            },
+            "description": "Obtiene la lista de vehículos de una franquicia"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Vehicle",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                  "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plate\": \"1234ABC\",\n  \"brand\": \"Yamaha\",\n  \"model\": \"NMAX 155\",\n  \"currentKm\": 5000,\n  \"nextRevisionKm\": 10000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fleet/vehicles?franchiseId={{franchiseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["fleet", "vehicles"],
+              "query": [
+                {
+                  "key": "franchiseId",
+                  "value": "{{franchiseId}}"
+                }
+              ]
+            },
+            "description": "Crea un nuevo vehículo en la flota"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Vehicle",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                  "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentKm\": 7500,\n  \"nextRevisionKm\": 15000,\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/fleet/vehicles/:vehicleId",
+              "host": ["{{baseUrl}}"],
+              "path": ["fleet", "vehicles", ":vehicleId"]
+            },
+            "description": "Actualiza la información de un vehículo"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Vehicle",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/fleet/vehicles/:vehicleId",
+              "host": ["{{baseUrl}}"],
+              "path": ["fleet", "vehicles", ":vehicleId"]
+            },
+            "description": "Elimina un vehículo de la flota"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Academy API",
+      "item": [
+        {
+          "name": "List Courses",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/academy/courses",
+              "host": ["{{baseUrl}}"],
+              "path": ["academy", "courses"]
+            },
+            "description": "Obtiene la lista de cursos activos"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Course",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                  "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Delivery Best Practices\",\n  \"description\": \"Learn how to deliver efficiently\",\n  \"category\": \"Operations\",\n  \"duration\": \"2 hours\",\n  \"level\": \"beginner\",\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/academy/courses",
+              "host": ["{{baseUrl}}"],
+              "path": ["academy", "courses"]
+            },
+            "description": "Crea un nuevo curso en la academia (solo Admin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Lesson",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                  "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"moduleId\": \"course_123\",\n  \"title\": \"Package Handling\",\n  \"content\": \"<h1>Package Handling</h1>\",\n  \"videoUrl\": \"https://storage.googleapis.com/videos/package_handling.mp4\",\n  \"duration\": 900,\n  \"order\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/academy/lessons",
+              "host": ["{{baseUrl}}"],
+              "path": ["academy", "lessons"]
+            },
+            "description": "Crea una nueva lección para un curso"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Progress",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                  "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/academy/progress?userId={{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["academy", "progress"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": "Obtiene el progreso del usuario en todos los cursos"
+          },
+          "response": []
+        },
+        {
+          "name": "Complete Lesson",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"user_abc\",\n  \"moduleId\": \"course_123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/academy/lessons/:lessonId/complete",
+              "host": ["{{baseUrl}}"],
+              "path": ["academy", "lessons", ":lessonId", "complete"]
+            },
+            "description": "Marca una lección como completada para un usuario"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Scheduler API",
+      "item": [
+        {
+          "name": "List Shifts",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/scheduler/shifts?franchiseId={{franchiseId}}&startDate=2026-01-20&endDate=2026-01-26",
+              "host": ["{{baseUrl}}"],
+              "path": ["scheduler", "shifts"],
+              "query": [
+                {
+                  "key": "franchiseId",
+                  "value": "{{franchiseId}}"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2026-01-20"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-01-26"
+                }
+              ]
+            },
+            "description": "Obtiene los turnos de una franquicia en un rango de fechas"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Shift",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                  "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"franchiseId\": \"{{franchiseId}}\",\n  \"riderId\": \"rider_123\",\n  \"riderName\": \"Juan Pérez\",\n  \"motoId\": \"vehicle_456\",\n  \"motoPlate\": \"1234ABC\",\n  \"startAt\": \"2026-01-25T09:00:00Z\",\n  \"endAt\": \"2026-01-25T14:00:00Z\",\n  \"status\": \"scheduled\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/scheduler/shifts",
+              "host": ["{{baseUrl}}"],
+              "path": ["scheduler", "shifts"]
+            },
+            "description": "Crea un nuevo turno en la agenda"
+          },
+          "response": []
+        },
+        {
+          "name": "Start Shift (Clock In)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                  "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/scheduler/shifts/:shiftId/start",
+              "host": ["{{baseUrl}}"],
+              "path": ["scheduler", "shifts", ":shiftId", "start"]
+            },
+            "description": "Marca el inicio del turno (fichar entrada)"
+          },
+          "response": []
+        },
+        {
+          "name": "End Shift (Clock Out)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/scheduler/shifts/:shiftId/end",
+              "host": ["{{baseUrl}}"],
+              "path": ["scheduler", "shifts", ":shiftId", "end"]
+            },
+            "description": "Marca el final del turno (fichar salida)"
+          },
+          "response": []
+        },
+        {
+          "name": "Confirm Shift",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                  "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/scheduler/shifts/:shiftId/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["scheduler", "shifts", ":shiftId", "confirm"]
+            },
+            "description": "El rider confirma que ha visto y aceptado el turno"
+          },
+          "response": []
+        },
+        {
+          "name": "Request Shift Swap",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requested\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/scheduler/shifts/:shiftId/swap",
+              "host": ["{{baseUrl}}"],
+              "path": ["scheduler", "shifts", ":shiftId", "swap"]
+            },
+            "description": "El rider solicita cambiar su turno por otro"
+          },
+          "response": []
+        },
+        {
+          "name": "Request Shift Change",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                  "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requested\": true,\n  \"reason\": \"Personal commitment\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/scheduler/shifts/:shiftId/change",
+              "host": ["{{baseUrl}}"],
+              "path": ["scheduler", "shifts", ":shiftId", "change"]
+            },
+            "description": "El rider solicita cambiar los horarios de su turno"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Week Data",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                  "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/scheduler/weeks/:franchiseId/:weekId",
+              "host": ["{{baseUrl}}"],
+              "path": ["scheduler", "weeks", ":franchiseId", ":weekId"]
+            },
+            "description": "Obtiene los datos de una semana específica (weekId: YYYY_WW)"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

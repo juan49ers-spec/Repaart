@@ -1,0 +1,81 @@
+/**
+ * MANUAL TESTING INSTRUCTIONS - FIRESTORE SECURITY RULES #1
+ * ==================================================
+ *
+ * This script helps you manually test the security fix for ticket messages.
+ *
+ * INSTRUCTIONS:
+ * ------------
+ *
+ * OPTION 1: Test in Firebase Console (EASIEST)
+ * 1. Go to: https://console.firebase.google.com/project/repaartfinanzas/firestore/data
+ * 2. Navigate to: tickets -> [any-ticket-id] -> messages
+ * 3. Create 2 test tickets with different users (if possible)
+ * 4. Try to read messages from tickets you don't own
+ * 5. Expected: PERMISSION DENIED for tickets not owned by you
+ *
+ * OPTION 2: Test in Development App
+ * 1. Start dev server: npm run dev
+ * 2. Login as User A
+ * 3. Create a support ticket
+ * 4. Add a message to the ticket
+ * 5. Logout and Login as User B
+ * 6. Try to access the ticket and read messages
+ * 7. Expected: Should NOT see messages or should get permission error
+ *
+ * OPTION 3: Automated Test (if emulator is running)
+ * 1. Start Firebase emulator: firebase emulators:start
+ * 2. Run: node test-security.js
+ *
+ * SECURITY EXPECTATIONS:
+ * ------------------
+ *
+ * ✅ ALLOWED:
+ * - User can read messages they sent
+ * - User can read messages in their own tickets
+ * - Admin can read ALL messages
+ * - Franchise can read messages from their users
+ *
+ * ❌ BLOCKED (Should get permission-denied):
+ * - User reading messages from another user's ticket
+ * - User adding messages to another user's ticket
+ * - User modifying messages they didn't create
+ *
+ * TEST CHECKLIST:
+ * ---------------
+ *
+ * [ ] User can see their own ticket messages
+ * [ ] User CANNOT see messages from tickets they didn't create
+ * [ ] Admin can see all ticket messages
+ * [ ] Franchise can see messages from their assigned users
+ * [ ] User cannot add messages to other users' tickets
+ * [ ] Permission errors are logged properly
+ */
+
+console.log(`
+╔════════════════════════════════════════════════════════════════╗
+║         FIRESTORE SECURITY RULES TESTING - TICKET MESSAGES                 ║
+╚════════════════════════════════════════════════════════════════╝
+
+📋 Follow the instructions above to test the security rules.
+
+🎯 Expected Behavior:
+  ✅ User can read OWN messages
+  ✅ Admin can read ALL messages  
+  ✅ Franchise can read THEIR USERS' messages
+  ❌ User CANNOT read OTHER USERS' messages (PERMISSION DENIED)
+  ❌ User CANNOT write to OTHER TICKETS (PERMISSION DENIED)
+
+🚀 Quick Test (Dev Server):
+  1. npm run dev
+  2. Create support ticket
+  3. Try to access from another user account
+  4. Verify permission is denied
+
+🔍 Firebase Console Test:
+  1. https://console.firebase.google.com/project/repaartfinanzas/firestore
+  2. Navigate to tickets -> messages
+  3. Try to read messages you don't own
+
+╚════════════════════════════════════════════════════════════════╝
+`);

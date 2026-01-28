@@ -39,7 +39,8 @@ const SeedWeeks: React.FC = () => {
                     endAt: "2025-10-13T23:00:00.000Z",
                     motoId: "moto_zx99",
                     motoPlate: "1234-XYZ",
-                    notes: "Turno seeding"
+                    notes: "Turno seeding",
+                    franchiseId: franchiseId
                 },
                 {
                     shiftId: "uuid_generado_2",
@@ -48,7 +49,8 @@ const SeedWeeks: React.FC = () => {
                     riderName: "Ana Gómez",
                     startAt: "2025-10-13T22:00:00.000Z",
                     endAt: "2025-10-14T02:00:00.000Z",
-                    notes: "Turno cross-midnight"
+                    notes: "Turno cross-midnight",
+                    franchiseId: franchiseId
                 }
             ]
         };

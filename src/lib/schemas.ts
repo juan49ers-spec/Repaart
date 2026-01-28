@@ -18,7 +18,7 @@ const baseUserSchema = z.object({
         .email("Introduce una dirección de correo válida"),
 
     role: z.enum(['admin', 'franchise', 'staff', 'rider', 'user']),
-    franchiseId: z.string().optional(),
+    franchiseId: z.string().optional().or(z.literal('')),
     phoneNumber: z.string().regex(/^\+?[0-9\s-]{6,}$/, "Formato de teléfono inválido").optional().or(z.literal('')),
     pack: z.enum(['basic', 'premium']).default('basic'),
     status: z.enum(['active', 'pending', 'banned']).default('active'),

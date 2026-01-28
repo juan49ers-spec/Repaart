@@ -289,14 +289,50 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                                             <Building className="w-4 h-4 text-slate-400" />
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div className="space-y-1">
-                                                <label className="text-xs text-slate-500">ID de Plaza (City)</label>
-                                                <input {...register('name')} placeholder="Madrid" className="w-full p-2 text-sm border border-slate-200 rounded-md" />
+                                                <label className="text-xs font-medium text-slate-500">ID de Plaza (Ciudad)</label>
+                                                <input
+                                                    {...register('name')}
+                                                    placeholder="Ej. Madrid"
+                                                    className={`w-full p-2 text-sm bg-white dark:bg-slate-900 border rounded-md focus:ring-2 focus:ring-blue-500/20 outline-none transition-all ${errors.name ? 'border-rose-500' : 'border-slate-200 dark:border-slate-800'}`}
+                                                />
+                                                {errors.name && <p className="text-[10px] text-rose-500 font-medium">{errors.name.message as string}</p>}
                                             </div>
                                             <div className="space-y-1">
-                                                <label className="text-xs text-slate-500">ID Único (Firebase)</label>
-                                                <input {...register('franchiseId')} placeholder="MAD01" className="w-full p-2 text-sm border border-slate-200 rounded-md" />
+                                                <label className="text-xs font-medium text-slate-500">ID Único (Identificador)</label>
+                                                <div className="relative">
+                                                    <input
+                                                        {...register('franchiseId')}
+                                                        placeholder={!userToEdit ? "Generado automáticamente" : "Ej. MAD01"}
+                                                        disabled={!userToEdit}
+                                                        className={`w-full p-2 text-sm border rounded-md outline-none transition-all ${!userToEdit ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 cursor-not-allowed border-dashed' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-blue-500/20'}`}
+                                                    />
+                                                    {!userToEdit && (
+                                                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-medium text-slate-400 uppercase tracking-tighter">Sistema</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-medium text-slate-500">Razón Social</label>
+                                                <input
+                                                    {...register('legalName')}
+                                                    placeholder="Ej. Logística S.L."
+                                                    className={`w-full p-2 text-sm bg-white dark:bg-slate-900 border rounded-md focus:ring-2 focus:ring-blue-500/20 outline-none transition-all ${errors.legalName ? 'border-rose-500' : 'border-slate-200 dark:border-slate-800'}`}
+                                                />
+                                                {errors.legalName && <p className="text-[10px] text-rose-500 font-medium">{errors.legalName.message as string}</p>}
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-medium text-slate-500">CIF / NIF</label>
+                                                <input
+                                                    {...register('cif')}
+                                                    placeholder="Ej. B12345678"
+                                                    className={`w-full p-2 text-sm bg-white dark:bg-slate-900 border rounded-md focus:ring-2 focus:ring-blue-500/20 outline-none transition-all ${errors.cif ? 'border-rose-500' : 'border-slate-200 dark:border-slate-800'}`}
+                                                />
+                                                {errors.cif && <p className="text-[10px] text-rose-500 font-medium">{errors.cif.message as string}</p>}
                                             </div>
                                         </div>
 

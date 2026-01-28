@@ -42,7 +42,7 @@ export const ShiftSchema = z.object({
     changeRequested: z.boolean().optional(),
     changeReason: z.string().nullable().optional(),
     date: z.string().optional(),
-    franchiseId: z.string().optional(),
+    franchiseId: z.string(), // Required - every shift must belong to a franchise
     isNew: z.boolean().optional(),
 });
 

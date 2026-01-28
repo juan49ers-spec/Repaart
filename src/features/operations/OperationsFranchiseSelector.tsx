@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { Building2, ChevronDown } from 'lucide-react';
 
@@ -21,25 +21,20 @@ const OperationsFranchiseSelector: React.FC<OperationsFranchiseSelectorProps> = 
     useEffect(() => {
         const loadFranchises = async () => {
             try {
-                // Fetch all franchises (assuming 'franchises' collection holds metadata)
-                // Or fetch from 'users' where role == 'franchise'.
-                // For this architecture, let's assume we can query users_config or franchises.
-                // Let's try fetching from 'franchises' collection directly if it exists,
-                // otherwise fallback to a mocked list or users query.
-
-                // Optimized: Query logic
-                // Phase 4 Task 12 says: Implement AdminFranchiseSelector
-                // We'll use a simple query for now.
-                const snap = await getDocs(collection(db, 'franchises'));
-                const list = snap.docs.map(d => ({
-                    id: d.id,
-                    name: d.data().name || d.data().displayName || `Franquicia ${d.id.substring(0, 4)}`
-                }));
-                // Fallback if empty (e.g. if we only use users_config)
-                if (list.length === 0) {
-                    // Try users_config where role 'franchise'?
-                    // For MVP, if empty, we might just show the current ID to allow manual input or debugging
-                }
+                // Fetch active franchises from users collection
+                const q = query(
+                    collection(db, 'users'),
+                    where('role', '==', 'franchise'),
+                    where('status', '==', 'active')
+                );
+                const snap = await getDocs(q);
+                const list = snap.docs.map(d => {
+                    const data = d.data();
+                    return {
+                        id: data.franchiseId || d.id,
+                        name: data.name || data.displayName || data.email || `Franquicia ${d.id.substring(0, 4)}`
+                    };
+                });
                 setFranchises(list);
             } catch (e) {
                 console.error("Error loading franchises", e);

@@ -15,7 +15,8 @@ import {
     Shield,
     Briefcase,
     BookOpen,
-    Layout
+    Layout,
+    Loader2
 } from 'lucide-react';
 import DocPreviewModal from '../../components/ui/overlays/DocPreviewModal';
 import GuideViewerModal from './components/GuideViewerModal';
@@ -56,16 +57,47 @@ const MOCK_RESOURCES: Resource[] = [];
 import DocumentRequestModal from './components/DocumentRequestModal';
 
 const ResourcesPanel: React.FC = () => {
-    // State
+    const [downloadingFile, setDownloadingFile] = useState<string | null>(null);
     const [dbResources, setDbResources] = useState<Resource[]>([]);
-    const [dbGuides, setDbGuides] = useState<Resource[]>([]); // New state for guides
+    const [dbGuides, setDbGuides] = useState<Resource[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
-    const [activeCategory, setActiveCategory] = useState<string>('manuals'); // Default to manuals to show off guides
+    const [activeCategory, setActiveCategory] = useState<string>('manuals');
     const [previewFile, setPreviewFile] = useState<Resource | null>(null);
-    const [previewGuide, setPreviewGuide] = useState<Resource | null>(null); // New state for guide preview
+    const [previewGuide, setPreviewGuide] = useState<Resource | null>(null);
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+
+    const handleDownload = async (item: Resource, e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        if (!item.url) return;
+
+        setDownloadingFile(item.id);
+        try {
+            const response = await fetch(item.url);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = item.title || item.name || 'archivo';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Error downloading file:', error);
+            const a = document.createElement('a');
+            a.href = item.url;
+            a.download = item.title || item.name || 'archivo';
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } finally {
+            setDownloadingFile(null);
+        }
+    };
 
     // Fetch Resources
     useEffect(() => {
@@ -374,9 +406,22 @@ const ResourcesPanel: React.FC = () => {
 
                                                 <span className="text-[10px] font-mono text-slate-400 mb-4">{formatBytes(item.size)}</span>
 
-                                                <div className="mt-auto pt-4 w-full border-t border-slate-50 dark:border-slate-800 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-300">
-                                                    <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">Visualizar</span>
-                                                    <Eye className="w-4 h-4 text-indigo-500" />
+                                                <div className="mt-auto pt-4 w-full border-t border-slate-50 dark:border-slate-800 flex items-center justify-between gap-2 opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-300">
+                                                    <button
+                                                        onClick={() => handleItemClick(item)}
+                                                        className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-indigo-500 uppercase tracking-wider hover:text-indigo-600 transition-colors"
+                                                    >
+                                                        <Eye className="w-3.5 h-3.5" />
+                                                        Ver
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => handleDownload(item, e)}
+                                                        disabled={downloadingFile === item.id}
+                                                        className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider hover:text-indigo-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        {downloadingFile === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                                                        {downloadingFile === item.id ? '...' : 'Descargar'}
+                                                    </button>
                                                 </div>
                                             </div>
                                         )
@@ -409,15 +454,28 @@ const ResourcesPanel: React.FC = () => {
                                                     <td className="p-4 text-slate-500 font-mono text-xs">{item.isGuide ? 'Guía Interactiva' : formatBytes(item.size)}</td>
                                                     <td className="p-4 text-slate-500">{new Date().toLocaleDateString()}</td>
                                                     <td className="p-4 text-right pr-6">
-                                                        {item.isGuide ? (
-                                                            <button title="Ver" onClick={(e) => { e.stopPropagation(); handleItemClick(item); }} className="text-slate-400 hover:text-indigo-600 transition-colors">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <button
+                                                                title={item.isGuide ? "Ver Guía" : "Visualizar"}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleItemClick(item);
+                                                                }}
+                                                                className="p-2 text-slate-400 hover:text-indigo-600 transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                                                            >
                                                                 <Eye className="w-4 h-4" />
                                                             </button>
-                                                        ) : (
-                                                            <button title="Descargar" className="text-slate-400 hover:text-indigo-600 transition-colors">
-                                                                <Download className="w-4 h-4" />
-                                                            </button>
-                                                        )}
+                                                            {!item.isGuide && (
+                                                                <button
+                                                                    title="Descargar"
+                                                                    onClick={(e) => handleDownload(item, e)}
+                                                                    disabled={downloadingFile === item.id}
+                                                                    className="p-2 text-slate-400 hover:text-indigo-600 transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                >
+                                                                    {downloadingFile === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                                                                </button>
+                                                            )}
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))}

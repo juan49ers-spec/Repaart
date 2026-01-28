@@ -6,12 +6,12 @@ service firebase.storage {
     function isAuthed() {
       return request.auth != null;
     }
-    
+
     // Uses Custom Claims set by 'syncUserRole' Cloud Function
     function isAdmin() {
       return isAuthed() && request.auth.token.role == 'admin';
     }
-    
+
     function isOwner(userId) {
       return isAuthed() && request.auth.uid == userId;
     }

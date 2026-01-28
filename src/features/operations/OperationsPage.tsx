@@ -25,15 +25,18 @@ const OperationsPage = () => {
 
     // Use impersonatedFranchiseId first (admin impersonation mode), then selector, then context
     const activeFranchiseId = impersonatedFranchiseId || (isAdmin ? selectedFranchiseId : (outletContext?.franchiseId || ''));
-
     // Load Franchises if Admin
     useEffect(() => {
         if (isAdmin && !outletContext?.franchiseId) {
             const loadFranchises = async () => {
                 setLoadingFranchises(true);
                 try {
-                    // Fetch franchises (users with role 'franchise')
-                    const q = query(collection(db, 'users'), where('role', '==', 'franchise'));
+                    // Fetch franchises (users with role 'franchise' and status='active')
+                    const q = query(
+                        collection(db, 'users'),
+                        where('role', '==', 'franchise'),
+                        where('status', '==', 'active')
+                    );
                     const snap = await getDocs(q);
                     const list = snap.docs.map(d => {
                         const data = d.data();

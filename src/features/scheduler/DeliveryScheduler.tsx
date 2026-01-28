@@ -365,7 +365,7 @@ const DeliveryScheduler: React.FC<{
 
             // 1. Notify Original Rider (if it was an amber shift/change request)
             if (editingShift.changeRequested) {
-                await notificationService.notifyFranchise(editingShift.riderId as string, {
+                await notificationService.notifyFranchise(editingShift.franchiseId, {
                     title: 'Solicitud de Cambio Procesada',
                     message: `Tu solicitud para el turno del ${dateStr} (${timeStr}) ha sido aceptada y el turno reasignado.`,
                     type: 'SYSTEM',
@@ -373,7 +373,7 @@ const DeliveryScheduler: React.FC<{
                 });
             } else {
                 // Regular reassignment
-                await notificationService.notifyFranchise(editingShift.riderId as string, {
+                await notificationService.notifyFranchise(editingShift.franchiseId, {
                     title: 'Turno Eliminado/Reasignado',
                     message: `El turno del ${dateStr} (${timeStr}) ha sido asignado a otro rider.`,
                     type: 'SYSTEM',
@@ -382,7 +382,7 @@ const DeliveryScheduler: React.FC<{
             }
 
             // 2. Notify New Rider
-            await notificationService.notifyFranchise(shiftData.riderId!, {
+            await notificationService.notifyFranchise(safeFranchiseId, {
                 title: 'Nuevo Turno Asignado',
                 message: `Se te ha asignado un nuevo turno para el ${dateStr} de ${timeStr}.`,
                 type: 'shift_confirmed',
@@ -841,7 +841,7 @@ const DeliveryScheduler: React.FC<{
                 });
                 return acc;
             }, {})}
-            onEditShift={handleEditShift}
+            onEditShift={(shift) => handleEditShift(shift as any)}
             onDeleteShift={deleteShift}
             onAddShift={handleAddShift}
             isRiderMode={true} // Enable Premium HUD/Animations for Admins on Mobile too!

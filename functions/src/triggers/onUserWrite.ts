@@ -22,7 +22,42 @@ export const syncUserRole = functions.firestore.document('users/{userId}').onWri
         const claims = { role, franchiseId: franchiseId || null };
         await admin.auth().setCustomUserClaims(userId, claims);
         console.log(`✅ Claims sincronizados para ${userId}:`, claims);
+
+        // 2. Cascading Deletion: If a franchise is deleted, delete its riders
+        if (role === 'franchise' && newData.status === 'deleted') {
+            console.log(`🚨 Franquicia ${userId} eliminada. Buscando riders para eliminar en cascada...`);
+
+            const ridersSnap = await admin.firestore()
+                .collection('users')
+                .where('franchiseId', '==', userId.toUpperCase()) // Check both cases to be safe
+                .get();
+
+            const ridersSnapLower = await admin.firestore()
+                .collection('users')
+                .where('franchiseId', '==', userId)
+                .get();
+
+            const allRiderDocs = [...ridersSnap.docs, ...ridersSnapLower.docs];
+
+            if (allRiderDocs.length > 0) {
+                const batch = admin.firestore().batch();
+                allRiderDocs.forEach(riderDoc => {
+                    const riderData = riderDoc.data();
+                    if (riderData.status !== 'deleted') {
+                        batch.update(riderDoc.ref, {
+                            status: 'deleted',
+                            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                        });
+                        console.log(`  - Marcando rider ${riderDoc.id} (${riderData.email}) como eliminado.`);
+                    }
+                });
+                await batch.commit();
+                console.log(`✅ Borrado en cascada completado para ${allRiderDocs.length} perfiles.`);
+            } else {
+                console.log(`ℹ️ No se encontraron riders asociados para la franquicia ${userId}.`);
+            }
+        }
     } catch (error) {
-        console.error(`❌ Error sincronizando claims para ${userId}:`, error);
+        console.error(`❌ Error en syncUserRole para ${userId}:`, error);
     }
 });

@@ -305,7 +305,8 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                             motoPlate: null,
                             startAt: toLocalISOStringWithOffset(startD),
                             endAt: toLocalISOStringWithOffset(endD),
-                            notes: `Sheriff Auto-Fix: ${s.reason}`
+                            notes: `Sheriff Auto-Fix: ${s.reason}`,
+                            franchiseId: franchiseId
                         };
                     });
 
@@ -1423,7 +1424,8 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                         shiftId: s.id,
                         riderId: s.riderId!,
                         startAt: s.startAt,
-                        endAt: s.endAt
+                        endAt: s.endAt,
+                        franchiseId: franchiseId
                     }))}
             />
 

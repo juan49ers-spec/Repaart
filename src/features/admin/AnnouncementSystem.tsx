@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAdminAnnouncements } from '../../hooks/useAdminAnnouncements';
 import { db } from '../../lib/firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { Plus, Trash2, Megaphone, AlertTriangle, Info, X, Users, Eye } from 'lucide-react';
 import { Card } from '../../components/ui/primitives/Card';
 import Button from '../../components/ui/inputs/Button';
@@ -46,10 +46,20 @@ const AnnouncementSystem = () => {
     React.useEffect(() => {
         const loadFranchises = async () => {
             try {
-                const snap = await getDocs(collection(db, "users_config"));
-                const list = snap.docs
-                    .map(d => ({ id: d.id, ...d.data() } as FranchiseUser))
-                    .filter(u => u.role === 'franchise');
+                // Use users collection with role='franchise' and status='active' filter
+                const q = query(
+                    collection(db, "users"),
+                    where('role', '==', 'franchise'),
+                    where('status', '==', 'active')
+                );
+                const snap = await getDocs(q);
+                const list = snap.docs.map(d => {
+                    const data = d.data();
+                    return {
+                        id: d.id,
+                        ...data
+                    } as FranchiseUser;
+                });
                 setFranchises(list);
             } catch (e) {
                 console.error("Error loading franchises", e);

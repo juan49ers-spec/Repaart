@@ -106,23 +106,28 @@ export const franchiseService = {
     },
 
     /**
-     * Get ALL franchises (from users collection where role='franchise')
+     * Get ALL franchises (from users collection where role='franchise' and status='active')
      */
     getAllFranchises: async (): Promise<Result<FranchiseMetadata[], FranchiseError>> => {
         try {
-            // Query users with role='franchise' instead of separate franchises collection
+            // Query users with role='franchise' and active status
+            // Only include active franchises to show in dashboard
             const colRef = collection(db, 'users');
-            const q = query(colRef, where('role', '==', 'franchise'));
+            const q = query(
+                colRef,
+                where('role', '==', 'franchise'),
+                where('status', '==', 'active')
+            );
             const snapshot = await getDocs(q);
 
             const franchises = snapshot.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => {
                 const data = doc.data();
                 return {
-                    id: data.franchiseId || doc.id, // Use franchiseId field or doc ID as fallback
+                    id: data.franchiseId || doc.id,
                     name: data.name || data.displayName || data.email || 'Franquicia Sin Nombre',
                     location: data.address || data.location || 'Sin dirección',
                     status: data.status || 'active',
-                    uid: doc.id, // User UID for compatibility
+                    uid: doc.id,
                     ...data
                 } as FranchiseMetadata;
             });

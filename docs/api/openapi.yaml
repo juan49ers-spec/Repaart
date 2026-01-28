@@ -1,0 +1,1939 @@
+openapi: 3.1.0
+info:
+  title: Repaart API
+  description: |
+    API RESTful para la plataforma SaaS de gestión logística Repaart.
+    
+    Esta API permite gestionar finanzas, flota, académica y programación de turnos
+    para franquicias y administradores.
+    
+    ## Características
+    - Arquitectura RESTful
+    - Autenticación Firebase Auth
+    - Autorización basada en roles (Admin, Franchise, Rider)
+    - Validación de esquemas con Zod
+    - Timestamps en formato ISO 8601
+    
+    ## Roles y Permisos
+    - **Admin**: Acceso global a todas las franquicias
+    - **Franchise**: Acceso solo a su propia franquicia
+    - **Rider**: Acceso solo a sus propios turnos y progresos
+  
+  version: 1.0.0
+  contact:
+    name: Repaart Team
+    email: support@repaart.com
+  license:
+    name: Proprietary
+    url: https://repaart.com/terms
+
+servers:
+  - url: https://repaartfinanzas.web.app
+    description: Production server
+  - url: http://localhost:5173
+    description: Development server
+
+tags:
+  - name: Finance
+    description: Gestión financiera de franquicias
+  - name: Fleet
+    description: Gestión de flota (riders y vehículos)
+  - name: Academy
+    description: Gestión de la academia y enciclopedia
+  - name: Scheduler
+    description: Gestión de turnos y programación semanal
+
+paths:
+  /finance/records:
+    get:
+      tags:
+        - Finance
+      summary: Listar registros financieros
+      description: |
+        Obtiene todos los registros financieros de una franquicia filtrados por mes.
+        Los registros incluyen ingresos, gastos y notas.
+      operationId: listFinanceRecords
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: franchiseId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: ID de la franquicia
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}$'
+            example: "2026-01"
+          description: Mes en formato YYYY-MM
+      responses:
+        '200':
+          description: Lista de registros financieros
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FinancialRecord'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Finance
+      summary: Crear registro financiero
+      description: |
+        Crea un nuevo registro financiero (ingreso o gasto).
+        El registro se crea en estado 'draft' por defecto.
+      operationId: createFinanceRecord
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordInput'
+      responses:
+        '201':
+          description: Registro creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialRecord'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /finance/records/{recordId}:
+    put:
+      tags:
+        - Finance
+      summary: Actualizar registro financiero
+      description: |
+        Actualiza un registro financiero existente.
+        Solo se pueden editar registros en estado 'draft' o 'submitted'.
+      operationId: updateFinanceRecord
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: recordId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  format: float
+                category:
+                  type: string
+                description:
+                  type: string
+                type:
+                  $ref: '#/components/schemas/RecordType'
+      responses:
+        '200':
+          description: Registro actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialRecord'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Finance
+      summary: Eliminar registro financiero
+      description: |
+        Elimina un registro financiero.
+        Solo se pueden eliminar registros en estado 'draft'.
+      operationId: deleteFinanceRecord
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: recordId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Registro eliminado
+        '400':
+          description: No se puede eliminar un registro que no está en estado 'draft'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /finance/records/{recordId}/status:
+    patch:
+      tags:
+        - Finance
+      summary: Actualizar estado del registro
+      description: |
+        Cambia el estado del registro (draft -> submitted -> approved/rejected).
+        - Franchise puede cambiar de draft a submitted
+        - Admin puede cambiar de submitted a approved/rejected
+      operationId: updateRecordStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: recordId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  $ref: '#/components/schemas/RecordStatus'
+      responses:
+        '200':
+          description: Estado actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialRecord'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /finance/summary:
+    get:
+      tags:
+        - Finance
+      summary: Obtener resumen financiero mensual
+      description: |
+        Obtiene el resumen financiero agregado de un mes específico.
+        Incluye totales de ingresos, gastos, márgenes y KPIs.
+      operationId: getMonthlySummary
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: franchiseId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}$'
+      responses:
+        '200':
+          description: Resumen mensual
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthlyData'
+        '404':
+          description: No existe resumen para el mes especificado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /finance/summary/{summaryId}/lock:
+    post:
+      tags:
+        - Finance
+      summary: Bloquear mes financiero
+      description: |
+        Bloquea un mes para evitar modificaciones.
+        Solo el Admin puede bloquear meses.
+      operationId: lockFinancialMonth
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: summaryId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Mes bloqueado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthlyData'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /finance/trends:
+    get:
+      tags:
+        - Finance
+      summary: Obtener tendencias financieras
+      description: |
+        Obtiene las tendencias financieras de los últimos 12 meses.
+        Útil para análisis y dashboards.
+      operationId: getFinancialTrends
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: franchiseId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tendencias financieras
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TrendItem'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /fleet/riders:
+    get:
+      tags:
+        - Fleet
+      summary: Listar riders
+      description: |
+        Obtiene la lista de riders de una franquicia.
+        Si no se especifica franchiseId, retorna todos los riders (solo Admin).
+      operationId: listRiders
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: franchiseId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: ID de la franquicia (opcional para Admin)
+      responses:
+        '200':
+          description: Lista de riders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Rider'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Fleet
+      summary: Crear rider
+      description: |
+        Crea un nuevo rider con autenticación Firebase.
+        Envía credenciales de acceso al email proporcionado.
+      operationId: createRider
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - fullName
+                - franchiseId
+                - contractHours
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 6
+                fullName:
+                  type: string
+                  minLength: 2
+                franchiseId:
+                  type: string
+                contractHours:
+                  type: integer
+                  minimum: 0
+                phone:
+                  type: string
+                licenseType:
+                  type: string
+                  enum: ['49cc', '125cc']
+                  default: '125cc'
+      responses:
+        '201':
+          description: Rider creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rider'
+        '400':
+          description: Email ya existe o datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /fleet/riders/{riderId}:
+    put:
+      tags:
+        - Fleet
+      summary: Actualizar rider
+      description: |
+        Actualiza la información de un rider existente.
+      operationId: updateRider
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: riderId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullName:
+                  type: string
+                phone:
+                  type: string
+                contractHours:
+                  type: integer
+                licenseType:
+                  type: string
+                status:
+                  type: string
+                  enum: ['active', 'inactive', 'deleted']
+      responses:
+        '200':
+          description: Rider actualizado
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Fleet
+      summary: Desactivar rider
+      description: |
+        Marca el rider como inactivo (soft delete).
+      operationId: deleteRider
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: riderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Rider desactivado
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /fleet/vehicles:
+    get:
+      tags:
+        - Fleet
+      summary: Listar vehículos
+      description: |
+        Obtiene la lista de vehículos de una franquicia.
+      operationId: listVehicles
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: franchiseId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de vehículos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Vehicle'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Fleet
+      summary: Crear vehículo
+      description: |
+        Crea un nuevo vehículo en la flota.
+        El vehículo se crea en estado 'active'.
+      operationId: createVehicle
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: franchiseId
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVehicleInput'
+      responses:
+        '201':
+          description: Vehículo creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /fleet/vehicles/{vehicleId}:
+    put:
+      tags:
+        - Fleet
+      summary: Actualizar vehículo
+      description: |
+        Actualiza la información de un vehículo.
+        Si el vehículo alcanza el kilometraje de revisión,
+        se marca automáticamente como 'maintenance'.
+      operationId: updateVehicle
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vehicleId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                plate:
+                  type: string
+                brand:
+                  type: string
+                model:
+                  type: string
+                currentKm:
+                  type: integer
+                  minimum: 0
+                nextRevisionKm:
+                  type: integer
+                  minimum: 0
+                status:
+                  $ref: '#/components/schemas/VehicleStatus'
+      responses:
+        '200':
+          description: Vehículo actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Fleet
+      summary: Eliminar vehículo
+      description: |
+        Elimina un vehículo de la flota.
+      operationId: deleteVehicle
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vehicleId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Vehículo eliminado
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /academy/courses:
+    get:
+      tags:
+        - Academy
+      summary: Listar cursos
+      description: |
+        Obtiene la lista de cursos activos.
+      operationId: listCourses
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de cursos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AcademyCourse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Academy
+      summary: Crear curso
+      description: |
+        Crea un nuevo curso en la academia.
+        Requiere rol de Admin.
+      operationId: createCourse
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcademyCourse'
+      responses:
+        '201':
+          description: Curso creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademyCourse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /academy/courses/{courseId}:
+    put:
+      tags:
+        - Academy
+      summary: Actualizar curso
+      description: |
+        Actualiza un curso existente.
+      operationId: updateCourse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                status:
+                  type: string
+                  enum: ['active', 'draft', 'archived']
+      responses:
+        '200':
+          description: Curso actualizado
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Academy
+      summary: Eliminar curso
+      description: |
+        Elimina un curso y todas sus lecciones asociadas.
+      operationId: deleteCourse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Curso eliminado
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /academy/lessons:
+    post:
+      tags:
+        - Academy
+      summary: Crear lección
+      description: |
+        Crea una nueva lección para un curso.
+      operationId: createLesson
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Lesson'
+      responses:
+        '201':
+          description: Lección creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /academy/lessons/{lessonId}:
+    delete:
+      tags:
+        - Academy
+      summary: Eliminar lección
+      description: |
+        Elimina una lección específica.
+      operationId: deleteLesson
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: lessonId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Lección eliminada
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /academy/quizzes:
+    post:
+      tags:
+        - Academy
+      summary: Crear quiz
+      description: |
+        Crea o actualiza un quiz para un módulo.
+      operationId: createQuiz
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Quiz'
+      responses:
+        '201':
+          description: Quiz creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quiz'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /academy/progress:
+    get:
+      tags:
+        - Academy
+      summary: Obtener progreso del usuario
+      description: |
+        Obtiene el progreso del usuario en todos los cursos.
+      operationId: getUserProgress
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Progreso del usuario
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/UserProgress'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      tags:
+        - Academy
+      summary: Actualizar progreso
+      description: |
+        Actualiza el progreso de un usuario en un módulo.
+      operationId: updateProgress
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - moduleId
+              properties:
+                userId:
+                  type: string
+                moduleId:
+                  type: string
+                completedLessons:
+                  type: array
+                  items:
+                    type: string
+                quizScore:
+                  type: integer
+                  minimum: 0
+                  maximum: 100
+                status:
+                  type: string
+                  enum: ['not_started', 'in_progress', 'completed']
+      responses:
+        '200':
+          description: Progreso actualizado
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /academy/lessons/{lessonId}/complete:
+    post:
+      tags:
+        - Academy
+      summary: Marcar lección como completada
+      description: |
+        Marca una lección como completada para un usuario.
+      operationId: completeLesson
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: lessonId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - moduleId
+              properties:
+                userId:
+                  type: string
+                moduleId:
+                  type: string
+      responses:
+        '200':
+          description: Lección marcada como completada
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /scheduler/shifts:
+    get:
+      tags:
+        - Scheduler
+      summary: Listar turnos
+      description: |
+        Obtiene los turnos de una franquicia en un rango de fechas.
+      operationId: listShifts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: franchiseId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Fecha de inicio (YYYY-MM-DD)
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Fecha de fin (YYYY-MM-DD)
+        - name: riderId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filtrar por rider (opcional)
+      responses:
+        '200':
+          description: Lista de turnos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Shift'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Scheduler
+      summary: Crear turno
+      description: |
+        Crea un nuevo turno en la agenda.
+      operationId: createShift
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShiftInput'
+      responses:
+        '201':
+          description: Turno creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /scheduler/shifts/{shiftId}:
+    put:
+      tags:
+        - Scheduler
+      summary: Actualizar turno
+      description: |
+        Actualiza la información de un turno existente.
+      operationId: updateShift
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: shiftId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShiftInput'
+      responses:
+        '200':
+          description: Turno actualizado
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Scheduler
+      summary: Eliminar turno
+      description: |
+        Elimina un turno de la agenda.
+      operationId: deleteShift
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: shiftId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Turno eliminado
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /scheduler/shifts/{shiftId}/start:
+    post:
+      tags:
+        - Scheduler
+      summary: Iniciar turno (Clock In)
+      description: |
+        Marca el inicio del turno (fichar entrada).
+        El rider confirma el inicio del turno.
+      operationId: startShift
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: shiftId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Turno iniciado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /scheduler/shifts/{shiftId}/end:
+    post:
+      tags:
+        - Scheduler
+      summary: Finalizar turno (Clock Out)
+      description: |
+        Marca el final del turno (fichar salida).
+        El rider confirma el final del turno.
+      operationId: endShift
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: shiftId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Turno finalizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /scheduler/shifts/{shiftId}/confirm:
+    post:
+      tags:
+        - Scheduler
+      summary: Confirmar turno
+      description: |
+        El rider confirma que ha visto y aceptado el turno.
+      operationId: confirmShift
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: shiftId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Turno confirmado
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /scheduler/shifts/{shiftId}/swap:
+    patch:
+      tags:
+        - Scheduler
+      summary: Solicitar intercambio de turno
+      description: |
+        El rider solicita cambiar su turno por otro.
+      operationId: requestSwap
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: shiftId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - requested
+              properties:
+                requested:
+                  type: boolean
+                  description: true para solicitar, false para cancelar solicitud
+      responses:
+        '200':
+          description: Solicitud de intercambio actualizada
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /scheduler/shifts/{shiftId}/change:
+    patch:
+      tags:
+        - Scheduler
+      summary: Solicitar cambio de turno
+      description: |
+        El rider solicita cambiar los horarios de su turno.
+      operationId: requestChange
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: shiftId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - requested
+              properties:
+                requested:
+                  type: boolean
+                reason:
+                  type: string
+                  description: Motivo del cambio
+      responses:
+        '200':
+          description: Solicitud de cambio actualizada
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /scheduler/weeks/{franchiseId}/{weekId}:
+    get:
+      tags:
+        - Scheduler
+      summary: Obtener semana
+      description: |
+        Obtiene los datos de una semana específica.
+        El weekId sigue el formato YYYY_WW (semana ISO).
+      operationId: getWeek
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: franchiseId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: weekId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}_\d{2}$'
+          description: ID de semana (ej: 2026_04)
+      responses:
+        '200':
+          description: Datos de la semana
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeekData'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags:
+        - Scheduler
+      summary: Guardar semana
+      description: |
+        Guarda o actualiza los datos de una semana.
+      operationId: saveWeek
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: franchiseId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: weekId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WeekData'
+      responses:
+        '200':
+          description: Semana guardada
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Token JWT de Firebase Auth.
+        Incluye el token en el header Authorization: Bearer <token>
+
+  schemas:
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          example: "Los datos proporcionados son inválidos"
+        details:
+          type: object
+          additionalProperties: true
+
+    FinancialRecord:
+      type: object
+      required:
+        - id
+        - franchiseId
+        - type
+        - amount
+        - status
+      properties:
+        id:
+          type: string
+          description: ID único del registro
+        franchiseId:
+          type: string
+          description: ID de la franquicia
+        type:
+          $ref: '#/components/schemas/RecordType'
+        amount:
+          type: number
+          format: float
+          description: Monto del registro
+        category:
+          type: string
+          description: Categoría del registro
+        description:
+          type: string
+          description: Descripción detallada
+        status:
+          $ref: '#/components/schemas/RecordStatus'
+        createdAt:
+          type: string
+          format: date-time
+          description: Fecha de creación (ISO 8601)
+        updatedAt:
+          type: string
+          format: date-time
+          description: Fecha de actualización (ISO 8601)
+
+    RecordInput:
+      type: object
+      required:
+        - franchiseId
+        - type
+        - amount
+      properties:
+        franchiseId:
+          type: string
+        type:
+          $ref: '#/components/schemas/RecordType'
+        amount:
+          type: number
+          format: float
+          minimum: 0
+        category:
+          type: string
+        description:
+          type: string
+
+    RecordType:
+      type: string
+      enum: ['income', 'expense']
+      description: |
+        income: Ingreso o ingreso
+        expense: Gasto o expense
+
+    RecordStatus:
+      type: string
+      enum: ['draft', 'submitted', 'approved', 'rejected']
+      description: |
+        draft: Borrador, puede ser editado por franquicia
+        submitted: Enviado a aprobación, pendiente de admin
+        approved: Aprobado por admin, bloqueado
+        rejected: Rechazado por admin, requiere correcciones
+
+    MonthlyData:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID del documento de resumen
+        franchiseId:
+          type: string
+        month:
+          type: string
+          pattern: '^\d{4}-\d{2}$'
+        totalIncome:
+          type: number
+          format: float
+          description: Total de ingresos
+        totalExpense:
+          type: number
+          format: float
+          description: Total de gastos
+        netProfit:
+          type: number
+          format: float
+          description: Beneficio neto (ingresos - gastos)
+        margin:
+          type: number
+          format: float
+          description: Margen de beneficio (%)
+        status:
+          type: string
+          enum: ['draft', 'submitted', 'locked']
+        lockedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TrendItem:
+      type: object
+      properties:
+        month:
+          type: string
+          pattern: '^\d{4}-\d{2}$'
+        income:
+          type: number
+          format: float
+        expense:
+          type: number
+          format: float
+        profit:
+          type: number
+          format: float
+        margin:
+          type: number
+          format: float
+
+    Rider:
+      type: object
+      required:
+        - id
+        - email
+        - fullName
+        - franchiseId
+        - status
+      properties:
+        id:
+          type: string
+          description: ID único del rider (Firebase UID)
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+          description: Nombre completo del rider
+        phone:
+          type: string
+          description: Número de teléfono
+        franchiseId:
+          type: string
+        status:
+          type: string
+          enum: ['active', 'inactive', 'deleted']
+        contractHours:
+          type: integer
+          description: Horas de contrato semanales
+        licenseType:
+          type: string
+          enum: ['49cc', '125cc']
+        metrics:
+          type: object
+          properties:
+            totalDeliveries:
+              type: integer
+            rating:
+              type: number
+              format: float
+            efficiency:
+              type: number
+              format: float
+            joinedAt:
+              type: string
+              format: date-time
+        avatarUrl:
+          type: string
+          format: uri
+
+    Vehicle:
+      type: object
+      required:
+        - id
+        - franchiseId
+        - plate
+      properties:
+        id:
+          type: string
+        franchiseId:
+          type: string
+        plate:
+          type: string
+          description: Matrícula del vehículo
+        brand:
+          type: string
+          description: Marca del vehículo
+        model:
+          type: string
+          description: Modelo del vehículo
+        currentKm:
+          type: integer
+          minimum: 0
+          description: Kilometraje actual
+        nextRevisionKm:
+          type: integer
+          minimum: 0
+          description: Kilometraje de próxima revisión
+        status:
+          $ref: '#/components/schemas/VehicleStatus'
+        type:
+          type: string
+          enum: ['vehicle', 'moto']
+          default: 'vehicle'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    VehicleStatus:
+      type: string
+      enum: ['active', 'maintenance', 'out_of_service']
+      description: |
+        active: Disponible para uso
+        maintenance: En mantenimiento, bloqueado
+        out_of_service: Fuera de servicio
+
+    CreateVehicleInput:
+      type: object
+      required:
+        - plate
+        - brand
+        - model
+      properties:
+        plate:
+          type: string
+          minLength: 1
+        brand:
+          type: string
+          minLength: 1
+        model:
+          type: string
+          minLength: 1
+        currentKm:
+          type: integer
+          minimum: 0
+          default: 0
+        nextRevisionKm:
+          type: integer
+          minimum: 0
+          default: 5000
+        type:
+          type: string
+          enum: ['vehicle', 'moto']
+          default: 'vehicle'
+
+    AcademyCourse:
+      type: object
+      required:
+        - title
+        - description
+        - category
+        - status
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        icon:
+          type: string
+        category:
+          type: string
+        duration:
+          type: string
+        level:
+          type: string
+          enum: ['beginner', 'intermediate', 'advanced']
+        status:
+          type: string
+          enum: ['active', 'draft', 'archived']
+        lessonCount:
+          type: integer
+          minimum: 0
+        order:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Lesson:
+      type: object
+      required:
+        - moduleId
+        - title
+        - content
+        - order
+      properties:
+        id:
+          type: string
+        moduleId:
+          type: string
+          description: ID del curso al que pertenece
+        title:
+          type: string
+        content:
+          type: string
+          description: Contenido en HTML o Markdown
+        videoUrl:
+          type: string
+          format: uri
+        customThumbnail:
+          type: string
+          format: uri
+        duration:
+          type: integer
+          description: Duración en segundos
+        chapters:
+          type: array
+          items:
+            type: object
+            properties:
+              time:
+                type: integer
+              label:
+                type: string
+        resources:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+              url:
+                type: string
+                format: uri
+              type:
+                type: string
+                enum: ['pdf', 'link']
+        order:
+          type: integer
+          minimum: 0
+        isPublished:
+          type: boolean
+          default: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    QuizQuestion:
+      type: object
+      required:
+        - id
+        - text
+        - options
+        - correctAnswer
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        options:
+          type: array
+          items:
+            type: string
+          minItems: 2
+        correctAnswer:
+          type: integer
+          minimum: 0
+          description: Índice de la opción correcta
+
+    Quiz:
+      type: object
+      required:
+        - moduleId
+        - questions
+        - passingScore
+      properties:
+        id:
+          type: string
+        moduleId:
+          type: string
+          description: ID del curso
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuizQuestion'
+        passingScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Puntuación mínima para aprobar
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UserProgress:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        moduleId:
+          type: string
+          description: ID del curso
+        completedLessons:
+          type: array
+          items:
+            type: string
+          description: IDs de lecciones completadas
+        quizScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        status:
+          type: string
+          enum: ['not_started', 'in_progress', 'completed']
+        lastAccessed:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Shift:
+      type: object
+      required:
+        - id
+        - franchiseId
+        - startAt
+        - endAt
+        - date
+      properties:
+        id:
+          type: string
+        shiftId:
+          type: string
+        franchiseId:
+          type: string
+        riderId:
+          type: string
+          nullable: true
+        riderName:
+          type: string
+        motoId:
+          type: string
+          nullable: true
+        motoPlate:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+          description: Hora de inicio (ISO 8601)
+        endAt:
+          type: string
+          format: date-time
+          description: Hora de fin (ISO 8601)
+        date:
+          type: string
+          format: date
+          description: Fecha del turno (YYYY-MM-DD)
+        status:
+          type: string
+          enum: ['scheduled', 'active', 'completed']
+          default: 'scheduled'
+        actualStart:
+          type: string
+          format: date-time
+          nullable: true
+        actualEnd:
+          type: string
+          format: date-time
+          nullable: true
+        isConfirmed:
+          type: boolean
+          default: false
+        swapRequested:
+          type: boolean
+          default: false
+        changeRequested:
+          type: boolean
+          default: false
+        changeReason:
+          type: string
+          nullable: true
+        isDraft:
+          type: boolean
+          default: false
+
+    ShiftInput:
+      type: object
+      required:
+        - franchiseId
+        - startAt
+        - endAt
+      properties:
+        franchiseId:
+          type: string
+        riderId:
+          type: string
+          nullable: true
+        riderName:
+          type: string
+        motoId:
+          type: string
+          nullable: true
+        motoPlate:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: ['scheduled', 'active', 'completed']
+        isConfirmed:
+          type: boolean
+        swapRequested:
+          type: boolean
+        changeRequested:
+          type: boolean
+        changeReason:
+          type: string
+          nullable: true
+
+    WeekData:
+      type: object
+      required:
+        - id
+        - startDate
+        - status
+      properties:
+        id:
+          type: string
+          description: ID de semana (YYYY_WW)
+        startDate:
+          type: string
+          format: date
+          description: Fecha de inicio de semana (YYYY-MM-DD)
+        status:
+          type: string
+          enum: ['draft', 'published', 'locked']
+        metrics:
+          type: object
+          properties:
+            totalHours:
+              type: number
+              format: float
+            activeRiders:
+              type: integer
+            motosInUse:
+              type: integer
+        shifts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Shift'
+
+  responses:
+    BadRequest:
+      description: Solicitud incorrecta
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "VALIDATION_ERROR"
+            message: "Los datos proporcionados son inválidos"
+            details:
+              field: "amount"
+              constraint: "must be positive"
+
+    Unauthorized:
+      description: No autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "UNAUTHORIZED"
+            message: "Token de autenticación inválido o expirado"
+
+    Forbidden:
+      description: Prohibido
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "FORBIDDEN"
+            message: "No tienes permisos para realizar esta acción"
+
+    NotFound:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "NOT_FOUND"
+            message: "El recurso solicitado no existe"
+
+    InternalServerError:
+      description: Error interno del servidor
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "INTERNAL_ERROR"
+            message: "Ocurrió un error inesperado en el servidor"
