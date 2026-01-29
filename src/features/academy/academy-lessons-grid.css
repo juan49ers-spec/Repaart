@@ -1,0 +1,174 @@
+/* ===================================
+   ACADEMY - LESSONS GRID STYLES
+   =================================== */
+
+.academy-lessons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+@media (max-width: 640px) {
+    .academy-lessons-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+    .academy-lessons-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
+/* Lesson Card States */
+.academy-lessons-grid > div.disabled {
+    pointer-events: none;
+}
+
+/* Empty State */
+.academy-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    background: white;
+    border: 2px dashed rgb(229, 231, 235);
+    border-radius: 1rem;
+}
+
+.dark .academy-empty-state {
+    background: rgb(30, 41, 59);
+    border-color: rgb(51, 65, 85);
+}
+
+.academy-empty-icon {
+    width: 4rem;
+    height: 4rem;
+    color: rgb(209, 213, 219);
+    margin-bottom: 1rem;
+}
+
+.dark .academy-empty-icon {
+    color: rgb(71, 85, 105);
+}
+
+.academy-empty-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: rgb(71, 85, 105);
+    margin-bottom: 0.5rem;
+}
+
+.dark .academy-empty-title {
+    color: rgb(148, 163, 184);
+}
+
+.academy-empty-description {
+    font-size: 0.875rem;
+    color: rgb(156, 163, 175);
+}
+
+.dark .academy-empty-description {
+    color: rgb(107, 114, 128);
+}
+
+/* Lesson Detail Container */
+.academy-lesson-detail {
+    max-width: 5xl;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+@media (min-width: 1024px) {
+    .academy-lesson-detail {
+        max-width: 1280px;
+    }
+}
+
+/* Mobile Header */
+.academy-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: white;
+    border-bottom: 1px solid rgb(229, 231, 235);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+}
+
+.dark .academy-mobile-header {
+    background: rgb(30, 41, 59);
+    border-bottom-color: rgb(51, 65, 85);
+}
+
+@media (min-width: 1024px) {
+    .academy-mobile-header {
+        display: none;
+    }
+}
+
+/* Sidebar Improvements */
+.academy-lessons-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow-y: auto;
+    max-height: calc(100vh - 300px);
+    padding-right: 0.5rem;
+}
+
+.academy-lessons-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.academy-lessons-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.academy-lessons-list::-webkit-scrollbar-thumb {
+    background: rgb(209, 213, 219);
+    border-radius: 3px;
+}
+
+.dark .academy-lessons-list::-webkit-scrollbar-thumb {
+    background: rgb(71, 85, 105);
+}
+
+.academy-lesson-item {
+    border: none;
+    background: transparent;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+
+.academy-lesson-item:hover:not(.disabled) {
+    background: rgb(249, 250, 251);
+}
+
+.dark .academy-lesson-item:hover:not(.disabled) {
+    background: rgb(30, 41, 59);
+}
+
+.academy-lesson-item.active {
+    background: rgb(239, 246, 255);
+    border-left: 3px solid rgb(59, 130, 246);
+}
+
+.dark .academy-lesson-item.active {
+    background: rgb(30, 58, 138);
+}
+
+.academy-lesson-item.completed {
+    opacity: 0.8;
+}
+
+.academy-lesson-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

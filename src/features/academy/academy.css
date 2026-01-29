@@ -1,5 +1,74 @@
 /* Academy Professional Styles - Refined & Compact */
 
+/* Section Header Styles */
+.academy-section-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.95) 0%, rgba(248, 250, 252, 0.8) 100%);
+    backdrop-filter: blur(8px);
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+    .academy-section-header {
+        background: linear-gradient(180deg, rgba(2, 6, 23, 0.95) 0%, rgba(2, 6, 23, 0.8) 100%);
+    }
+}
+
+/* Video Section */
+.academy-video-section {
+    background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+    .academy-video-section {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    }
+}
+
+/* Content Section */
+.academy-content-section {
+    background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 2px solid rgba(59, 130, 246, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+    .academy-content-section {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border-color: rgba(59, 130, 246, 0.2);
+    }
+}
+
+/* Separator Line */
+.academy-separator {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
+    margin: 1.5rem 0;
+}
+
+/* Action Bar Sticky */
+.academy-action-bar {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(12px);
+    border: 2px solid rgba(59, 130, 246, 0.2);
+    box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.1), 0 4px 8px -2px rgba(0, 0, 0, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+    .academy-action-bar {
+        background: rgba(30, 41, 59, 0.98);
+        border-color: rgba(59, 130, 246, 0.3);
+    }
+}
+
 /* Content Protection - Prevent Selection and Copy */
 .protected-content {
     -webkit-user-select: none;

@@ -1,0 +1,248 @@
+/* ===================================
+   ACADEMY - LESSON DETAIL STYLES
+   =================================== */
+
+/* Header */
+.academy-lesson-header {
+    padding: 1rem 0;
+    margin-bottom: 1rem;
+}
+
+.academy-lesson-back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 1px solid rgb(229, 231, 235);
+    border-radius: 0.75rem;
+    color: rgb(71, 85, 105);
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all 0.2s ease-out;
+}
+
+.academy-lesson-back-button:hover {
+    background: rgb(249, 250, 251);
+    border-color: rgb(209, 213, 219);
+    color: rgb(37, 99, 235);
+}
+
+.dark .academy-lesson-back-button {
+    background: rgb(30, 41, 59);
+    border-color: rgb(51, 65, 85);
+    color: rgb(148, 163, 184);
+}
+
+.dark .academy-lesson-back-button:hover {
+    background: rgb(30, 41, 59);
+    border-color: rgb(71, 85, 105);
+    color: rgb(96, 165, 250);
+}
+
+/* Title */
+.academy-lesson-title-large {
+    font-size: 1.875rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: rgb(15, 23, 42);
+    margin-bottom: 1.5rem;
+}
+
+.dark .academy-lesson-title-large {
+    color: rgb(255, 255, 255);
+}
+
+@media (max-width: 640px) {
+    .academy-lesson-title-large {
+        font-size: 1.5rem;
+    }
+}
+
+/* Lesson Tabs Toggle */
+.academy-lesson-tabs {
+    background: rgb(243, 244, 246);
+    border: 1px solid rgb(229, 231, 235);
+    border-radius: 0.75rem;
+    padding: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.dark .academy-lesson-tabs {
+    background: rgb(30, 41, 59);
+    border-color: rgb(51, 65, 85);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.academy-lesson-tabs button {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    border: none;
+    background: transparent;
+    color: rgb(107, 114, 128);
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease-out;
+    white-space: nowrap;
+}
+
+.dark .academy-lesson-tabs button {
+    color: rgb(148, 163, 184);
+}
+
+.academy-lesson-tabs button:hover {
+    background: rgb(229, 231, 235);
+    color: rgb(71, 85, 105);
+}
+
+.dark .academy-lesson-tabs button:hover {
+    background: rgb(51, 65, 85);
+    color: rgb(203, 213, 225);
+}
+
+.academy-lesson-tabs button.active {
+    background: white;
+    color: rgb(37, 99, 235);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dark .academy-lesson-tabs button.active {
+    background: rgb(51, 65, 85);
+    color: rgb(96, 165, 250);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Video Section */
+.academy-video-section {
+    margin-bottom: 1.5rem;
+}
+
+.academy-video-section.expanded {
+    animation: expandSection 0.3s ease-out forwards;
+}
+
+@keyframes expandSection {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.academy-video-section .relative {
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.dark .academy-video-section .relative {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+}
+
+/* Content Section */
+.academy-content-section {
+    margin-bottom: 1.5rem;
+}
+
+.academy-content-section.expanded {
+    animation: expandSection 0.3s ease-out forwards;
+}
+
+.academy-content-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.academy-content-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgb(59, 130, 246) 0%, rgb(147, 51, 234) 100%);
+    border-radius: 0.75rem;
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+}
+
+/* Action Bar */
+.academy-action-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    padding: 1rem 0;
+    background: linear-gradient(to top, rgb(249, 250, 251) 0%, rgba(249, 250, 251, 0) 100%);
+}
+
+.dark .academy-action-bar {
+    background: linear-gradient(to top, rgb(2, 6, 23) 0%, rgba(2, 6, 23, 0) 100%);
+}
+
+/* Lesson Content */
+.academy-lesson-content {
+    line-height: 1.75;
+}
+
+.academy-lesson-content p {
+    margin-bottom: 1rem;
+}
+
+.academy-lesson-content h2,
+.academy-lesson-content h3 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-weight: 700;
+    color: rgb(15, 23, 42);
+}
+
+.dark .academy-lesson-content h2,
+.dark .academy-lesson-content h3 {
+    color: rgb(255, 255, 255);
+}
+
+.academy-lesson-content ul,
+.academy-lesson-content ol {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+}
+
+.academy-lesson-content li {
+    margin-bottom: 0.5rem;
+}
+
+.academy-lesson-content code {
+    background: rgb(243, 244, 246);
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.dark .academy-lesson-content code {
+    background: rgb(30, 41, 59);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .academy-lesson-tabs {
+        width: 100%;
+    }
+
+    .academy-lesson-tabs button {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8125rem;
+    }
+}
