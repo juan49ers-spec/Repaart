@@ -42,3 +42,6 @@ firebase-debug.log*
 *.tsbuildinfo
 vite.config.d.ts
 build_log.txt
+
+# Service Account
+service-account.json
