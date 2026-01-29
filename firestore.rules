@@ -276,17 +276,20 @@ service cloud.firestore {
     
     // ACADEMY SYSTEM
     match /academy_modules/{moduleId} {
-      allow read: if isAuthed();
-      allow write: if isAuthed() && isAdmin();
+      allow read: if true;
+      allow write: if isAdmin() || isFranchise();
     }
     match /academy_lessons/{lessonId} {
-      allow read: if isAuthed();
-      allow write: if isAuthed() && isAdmin();
+      allow read: if true;
+      allow write: if isAdmin() || isFranchise();
     }
     match /academy_progress/{progressId} {
-      allow read: if isAuthed() && (isAdmin() || resource.data.user_id == request.auth.uid);
-      allow create: if isAuthed();
-      allow update: if isAuthed() && (isAdmin() || resource.data.user_id == request.auth.uid);
+      allow read: if isAuthed();
+      allow write: if isAuthed() && (
+        isAdmin() || 
+        (resource == null && request.resource.data.user_id == request.auth.uid) ||
+        (resource != null && resource.data.user_id == request.auth.uid)
+      );
     }
     match /quiz_results/{resultId} {
       allow read: if isAuthed() && (isAdmin() || resource.data.userId == request.auth.uid);

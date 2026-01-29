@@ -253,6 +253,38 @@
                     "order": "ASCENDING"
                 }
             ]
+        },
+        {
+            "collectionGroup": "academy_lessons",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "module_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "order",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "academy_lessons",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "module_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "order",
+                    "order": "ASCENDING"
+                }
+            ]
         }
     ],
     "fieldOverrides": []

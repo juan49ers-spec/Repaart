@@ -43,6 +43,14 @@ service firebase.storage {
        allow read, write: if isAuthed();
     }
 
+    // 4. Academy Videos
+    // Path: academy/videos/{filename}
+    // Public read, Authed write.
+    match /academy/videos/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuthed();
+    }
+
     // Default Deny
     match /{allPaths=**} {
       allow read, write: if false; 
