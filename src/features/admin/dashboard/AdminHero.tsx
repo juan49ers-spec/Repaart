@@ -26,7 +26,6 @@ const AdminHero: FC<AdminHeroProps> = ({
     onOpenSimulator,
     onNavigate
 }) => {
-    console.log('DEBUG: AdminHero mounted');
     return (
         <div className="relative rounded-3xl bg-gradient-to-br from-blue-900 to-blue-800 p-6 md:p-10 shadow-2xl text-white overflow-hidden border border-blue-500/20">
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end">

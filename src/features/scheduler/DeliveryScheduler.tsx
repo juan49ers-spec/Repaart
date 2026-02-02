@@ -850,7 +850,7 @@ const DeliveryScheduler: React.FC<{
     }
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 relative overflow-hidden font-sans">
+        <div className="flex flex-col h-full bg-slate-50 relative overflow-hidden font-sans @container">
             <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
@@ -863,7 +863,7 @@ const DeliveryScheduler: React.FC<{
                     totalCost={totalWeeklyCost}
                     hoursCount={totalHours}
                     sheriffScore={sheriffResult?.score || null}
-                    hasChanges={false} // TODO: Track changes
+                    hasChanges={hasUnsavedChanges}
                     onAutoFill={() => setIsQuickFillOpen(true)}
                     onOpenGuide={() => setIsGuideOpen(true)}
                 />

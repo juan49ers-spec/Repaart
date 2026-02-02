@@ -168,22 +168,55 @@ export default defineConfig(async ({ mode }) => {
     build: {
       rollupOptions: {
         output: {
-          manualChunks: {
+          manualChunks: (id) => {
             // Firebase bundle
-            'vendor-firebase': [
-              'firebase/app',
-              'firebase/firestore',
-              'firebase/auth',
-              'firebase/storage'
-            ],
+            if (id.includes('firebase')) {
+              return 'vendor-firebase';
+            }
             // Charts library
-            'vendor-charts': ['recharts'],
-            // UI libraries (icons only)
-            'vendor-ui': ['lucide-react'],
-            // Google AI
-            'vendor-ai': ['@google/generative-ai'],
-            // Email service
-            'vendor-email': ['@emailjs/browser']
+            if (id.includes('recharts')) {
+              return 'vendor-charts';
+            }
+            // React libraries
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'vendor-react';
+            }
+            // Icons
+            if (id.includes('lucide-react') || id.includes('@ant-design/icons')) {
+              return 'vendor-icons';
+            }
+            // Google AI - lazy
+            if (id.includes('@google/generative-ai')) {
+              return 'vendor-ai';
+            }
+            // Email service - lazy
+            if (id.includes('@emailjs/browser')) {
+              return 'vendor-email';
+            }
+            // Video players - lazy
+            if (id.includes('react-player') || id.includes('hls') || id.includes('dash')) {
+              return 'vendor-video';
+            }
+            // PDF generation - lazy
+            if (id.includes('jspdf') || id.includes('html2canvas')) {
+              return 'vendor-pdf';
+            }
+            // Framer Motion - lazy
+            if (id.includes('framer-motion')) {
+              return 'vendor-motion';
+            }
+            // DnD kit - lazy
+            if (id.includes('@dnd-kit')) {
+              return 'vendor-dnd';
+            }
+            // QR scanner - lazy
+            if (id.includes('@yudiel/react-qr-scanner')) {
+              return 'vendor-qr';
+            }
+            // Confetti - lazy
+            if (id.includes('canvas-confetti')) {
+              return 'vendor-confetti';
+            }
           }
         }
       }

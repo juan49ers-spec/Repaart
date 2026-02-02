@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './editor-styles.css';
 import { toast } from 'react-hot-toast';
@@ -10,8 +10,9 @@ import {
     Loader2,
     Clock
 } from 'lucide-react';
-import ReactPlayer from 'react-player';
 import { AcademyLesson } from '../../../../services/academyService';
+
+const ReactPlayer = lazy(() => import('react-player'));
 
 interface LessonEditorModalProps {
     isOpen: boolean;
@@ -422,14 +423,16 @@ const LessonEditorModal: React.FC<LessonEditorModalProps> = ({
                                         />
                                         {youtubeId && (
                                             <div className="mt-3 rounded-lg overflow-hidden shadow-sm">
-                                                <ReactPlayer
-                                                    src={`https://www.youtube.com/watch?v=${youtubeId}`}
-                                                    width="100%"
-                                                    height="250px"
-                                                    controls={false}
-                                                    muted
-                                                    playing={false}
-                                                />
+                                                <Suspense fallback={<div className="w-full h-[250px] bg-slate-100 dark:bg-slate-800 animate-pulse rounded-lg" />}>
+                                                    <ReactPlayer
+                                                        src={`https://www.youtube.com/watch?v=${youtubeId}`}
+                                                        width="100%"
+                                                        height="250px"
+                                                        controls={false}
+                                                        muted
+                                                        playing={false}
+                                                    />
+                                                </Suspense>
                                             </div>
                                         )}
                                     </div>

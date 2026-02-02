@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../../context/AuthContext';
 import { financeService } from '../../../services/financeService';
 import type { FinancialRecord } from '../../../types/finance';
 import {
@@ -17,6 +18,7 @@ interface AuditModal {
 }
 
 const AdminFinanceInbox: React.FC = () => {
+    const { user } = useAuth();
     const [records, setRecords] = useState<FinancialRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [auditModal, setAuditModal] = useState<AuditModal>({ isOpen: false, record: null, type: null });
@@ -48,7 +50,7 @@ const AdminFinanceInbox: React.FC = () => {
 
         try {
             if (auditModal.type === 'approve') {
-                await financeService.updateStatus(auditModal.record.id, 'approved', 'ADMIN_UID'); // TODO: Pass real Admin UID
+                await financeService.updateStatus(auditModal.record.id, 'approved', user?.uid || 'UNKNOWN');
             } else {
                 if (!rejectionReason.trim()) return alert("Debes indicar un motivo de rechazo");
                 await financeService.updateStatus(auditModal.record.id, 'rejected', undefined, rejectionReason);

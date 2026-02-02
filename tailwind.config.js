@@ -199,12 +199,17 @@ export default {
                 'ultra-slow': '20s',
             },
             container: {
-                'xs': '20rem',
-                'sm': '24rem',
-                'md': '28rem',
-                'lg': '32rem',
-                'xl': '36rem',
-                '2xl': '42rem',
+                'xs': '20rem',      // 320px - iPhone SE
+                'sm': '24rem',      // 384px - Small mobile
+                'md': '28rem',      // 448px - Mobile
+                'lg': '32rem',      // 512px - Large mobile
+                'xl': '36rem',      // 576px - Tablet portrait
+                '2xl': '42rem',     // 672px - Tablet landscape
+                '3xl': '48rem',     // 768px - Small desktop
+                '4xl': '56rem',     // 896px - Desktop
+                '5xl': '64rem',     // 1024px - Large desktop
+                '6xl': '72rem',     // 1152px - Extra large
+                '7xl': '80rem',     // 1280px - Ultra wide
             },
             /* Touch Target Sizes */
             minWidth: {
@@ -233,7 +238,27 @@ export default {
                 'square': '1/1',
                 'portrait': '3/4',
             },
+            /* Container Query Orientations */
+            containerType: {
+                'size': 'size',
+                'inline-size': 'inline-size',
+            },
         },
     },
-    plugins: [require('@tailwindcss/container-queries')],
+    plugins: [
+        require('@tailwindcss/container-queries'),
+        // Plugin personalizado para orientaciones de container queries
+        function({ addVariant }) {
+            // Portrait: cuando el contenedor es más alto que ancho
+            addVariant('@portrait', '@container (orientation: portrait)');
+            // Landscape: cuando el contenedor es más ancho que alto
+            addVariant('@landscape', '@container (orientation: landscape)');
+            // Square: cuando el contenedor es casi cuadrado
+            addVariant('@square', '@container (min-aspect-ratio: 0.9) and (max-aspect-ratio: 1.1)');
+            // Wide: para contenedores muy anchos
+            addVariant('@wide', '@container (min-aspect-ratio: 2/1)');
+            // Tall: para contenedores muy altos
+            addVariant('@tall', '@container (max-aspect-ratio: 1/2)');
+        }
+    ],
 }

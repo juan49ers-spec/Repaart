@@ -59,10 +59,26 @@ describe('NotificationService', () => {
                 message: 'Rider crashed'
             });
 
-            expect(addDoc).toHaveBeenCalledWith(
-                expect.anything(), // collection reference
+            // First call: notify admin via notificationService.notify
+            expect(addDoc).toHaveBeenNthCalledWith(
+                1,
+                expect.anything(),
                 expect.objectContaining({
-                    userId: 'f1',
+                    franchiseId: 'f1',
+                    franchiseName: 'REPAART Franchise',
+                    type: 'incident',
+                    title: 'Crash',
+                    createdAt: 'MOCK_TIMESTAMP'
+                })
+            );
+
+            // Second call: notify rider directly
+            expect(addDoc).toHaveBeenNthCalledWith(
+                2,
+                expect.anything(),
+                expect.objectContaining({
+                    userId: 'r1',
+                    franchiseId: 'f1',
                     riderId: 'r1',
                     type: 'incident',
                     title: 'Crash',

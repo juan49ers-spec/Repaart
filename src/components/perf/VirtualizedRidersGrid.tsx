@@ -80,7 +80,7 @@ export const VirtualizedRidersGrid: React.FC<VirtualizedRidersGridProps> = ({
     });
 
     return (
-        <div className="flex-1 overflow-y-auto bg-slate-50/50" ref={parentRef}>
+        <div className="flex-1 overflow-y-auto bg-slate-50/50 @container" ref={parentRef}>
             <div
                 style={{
                     height: `${rowVirtualizer.getTotalSize()}px`,
@@ -106,7 +106,7 @@ export const VirtualizedRidersGrid: React.FC<VirtualizedRidersGridProps> = ({
                         >
                             <div className="flex h-full border-b border-slate-100/80 items-center transition-all duration-200 group/row">
                                 {/* Rider Info Side */}
-                                <div className="w-full md:w-56 shrink-0 border-r border-slate-100/80 p-2 flex items-center gap-3 sticky left-0 z-30 bg-white/80 backdrop-blur-md min-w-0">
+                                <div className="w-full @md:w-56 shrink-0 border-r border-slate-100/80 p-2 flex items-center gap-3 sticky left-0 z-30 bg-white/80 backdrop-blur-md min-w-0">
                                     <div className="relative">
                                         <div className={`
                                             w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-white shadow-sm ring-1 ring-slate-100 transition-transform group-hover/row:scale-105
