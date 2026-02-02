@@ -1,7 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Button } from 'antd';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { ErrorLogger } from '../services/errorLogger';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -51,23 +51,18 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     console.error('Error ID:', errorId);
     console.groupEnd();
 
-    // Send to Sentry
-    if (typeof window !== 'undefined' && (window as any).Sentry) {
-      (window as any).Sentry.captureException(error, {
-        contexts: {
-          react: {
-            componentStack: errorInfo.componentStack,
-          },
-        },
-        tags: {
-          errorBoundary: true,
-          errorId,
-        },
-        extra: {
-          hasError: true,
-        },
-      });
-    }
+    // Log to ErrorLogger (Sentry)
+    ErrorLogger.logError(error, {
+      context: {
+        componentStack: errorInfo.componentStack,
+        errorBoundary: true,
+        errorId,
+      },
+      tags: {
+        errorBoundary: 'true',
+        errorId,
+      },
+    });
 
     // Call custom error handler
     if (this.props.onError) {
@@ -168,22 +163,21 @@ function DefaultErrorUI({
         )}
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button
-            type="primary"
-            icon={<RefreshCw className="w-4 h-4" />}
+          <button
             onClick={handleReload}
-            className="flex-1"
+            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
           >
+            <RefreshCw className="w-4 h-4" />
             Recargar página
-          </Button>
+          </button>
           
-          <Button
-            icon={<Home className="w-4 h-4" />}
+          <button
             onClick={handleGoHome}
-            className="flex-1"
+            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-white font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
           >
+            <Home className="w-4 h-4" />
             Ir al inicio
-          </Button>
+          </button>
         </div>
 
         <p className="text-xs text-slate-500 dark:text-slate-500 text-center mt-6">
@@ -270,20 +264,18 @@ export class AsyncErrorBoundary extends Component<
     console.error('Error ID:', errorId);
     console.groupEnd();
 
-    // Send to Sentry
-    if (typeof window !== 'undefined' && (window as any).Sentry) {
-      (window as any).Sentry.captureException(error, {
-        contexts: {
-          react: {
-            componentStack: errorInfo.componentStack,
-          },
-        },
-        tags: {
-          asyncErrorBoundary: true,
-          errorId,
-        },
-      });
-    }
+    // Log to ErrorLogger (Sentry)
+    ErrorLogger.logError(error, {
+      context: {
+        componentStack: errorInfo.componentStack,
+        asyncErrorBoundary: true,
+        errorId,
+      },
+      tags: {
+        asyncErrorBoundary: 'true',
+        errorId,
+      },
+    });
 
     // Call custom error handler
     if (this.props.onError) {

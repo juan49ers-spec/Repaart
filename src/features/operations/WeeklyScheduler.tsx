@@ -52,6 +52,7 @@ interface VisualEvent extends Shift {
     changeRequested?: boolean;
     changeReason?: string | null;
     layout?: any;
+    isConflict?: boolean;
 }
 
 interface ShiftEvent extends VisualEvent {
@@ -82,7 +83,9 @@ const ShiftPill: React.FC<{
     // --- NEW VISUAL LOGIC: Status Borders + Neutral Backgrounds ---
     const getBaseStyle = () => {
         // 1. Critical Errors (Conflicts) -> Red Border
-        // TODO: Pass 'isConflict' prop if available. For now, assuming standard logic.
+        if (event.isConflict) {
+            return "bg-red-50 border-l-[3px] border-l-red-500 border-t border-b border-r border-red-200 text-red-700";
+        }
 
         // 2. Change Requested -> Amber Border
         if (changeRequested) {

@@ -1,7 +1,7 @@
 import { db, storage } from '../lib/firebase';
 import {
     collection, getDocs, getDoc, query, where, addDoc, doc, updateDoc,
-    serverTimestamp, deleteDoc, Timestamp, FieldValue, orderBy
+    serverTimestamp, deleteDoc, Timestamp, FieldValue, orderBy, limit
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
@@ -188,7 +188,8 @@ export const academyService = {
             const q = query(
                 collection(db, COLLECTIONS.PROGRESS),
                 where('user_id', '==', userId),
-                where('module_id', '==', moduleId)
+                where('module_id', '==', moduleId),
+                limit(1)
             );
             const snapshot = await getDocs(q);
             if (!snapshot.empty) {
@@ -228,12 +229,13 @@ export const academyService = {
         }
     },
 
-    markLessonComplete: async (userId: string, moduleId: string, lessonId: string): Promise<void> => {
+        markLessonComplete: async (userId: string, moduleId: string, lessonId: string): Promise<void> => {
         try {
             const q = query(
                 collection(db, COLLECTIONS.PROGRESS),
                 where('user_id', '==', userId),
-                where('module_id', '==', moduleId)
+                where('module_id', '==', moduleId),
+                limit(1)
             );
             const snapshot = await getDocs(q);
 

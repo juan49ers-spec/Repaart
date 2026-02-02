@@ -9,6 +9,7 @@ interface OptimizedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElem
   quality?: number;
   format?: 'webp' | 'avif' | 'jpeg' | 'png';
   lazy?: boolean;
+  priority?: boolean;
   placeholder?: 'blur' | 'empty';
   blurData?: string;
   onLoad?: () => void;
@@ -41,6 +42,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   quality = 85,
   format = 'webp',
   lazy = true,
+  priority = false,
   placeholder = 'empty',
   blurData,
   onLoad,
@@ -66,8 +68,9 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   };
 
   useEffect(() => {
-    if (!lazy && imgRef.current) {
-      imgRef.current.src = imgRef.current.src;
+    // Trigger image load when lazy changes to false
+    if (!lazy && imgRef.current && imgRef.current.dataset.src) {
+      imgRef.current.src = imgRef.current.dataset.src;
     }
   }, [lazy]);
 
@@ -104,8 +107,9 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
         height={height}
         srcSet={generateSrcSet(src, widths, format)}
         sizes={sizes}
-        loading={lazy ? 'lazy' : 'eager'}
-        decoding="async"
+        loading={priority ? 'eager' : (lazy ? 'lazy' : 'eager')}
+        fetchPriority={priority ? 'high' : 'auto'}
+        decoding={priority ? 'sync' : 'async'}
         onLoad={handleLoad}
         onError={handleError}
         className={`

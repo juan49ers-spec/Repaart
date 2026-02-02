@@ -21,7 +21,6 @@ interface FranchiseDirectoryProps {
 }
 
 const FranchiseDirectory: FC<FranchiseDirectoryProps> = ({ franchises, onSelectFranchise, setSelectedScorecard }) => {
-    console.log('DEBUG: FranchiseDirectory mounted');
     return (
         <div className="space-y-4">
             {/* TABLE: Hidden on Mobile, Visible on Desktop */}

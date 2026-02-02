@@ -18,7 +18,6 @@ interface PowerMetricsProps {
 }
 
 const PowerMetrics: FC<PowerMetricsProps> = ({ stats }) => {
-    console.log('DEBUG: PowerMetrics mounted');
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg transition-all group relative">
