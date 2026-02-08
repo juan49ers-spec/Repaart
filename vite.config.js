@@ -93,7 +93,9 @@ export default defineConfig(async ({ mode }) => {
           ]
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+          // Do NOT cache JS files - they must always be fresh
+          // This fixes mobile cache issues where old broken JS was served
+          globPatterns: ['**/*.{css,html,ico,png,svg,woff2}'],
           maximumFileSizeToCacheInBytes: 5000000,
           cleanupOutdatedCaches: true,
           clientsClaim: true,
