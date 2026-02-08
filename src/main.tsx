@@ -12,6 +12,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { registerServiceWorker, checkConnectivity } from './services/pwaService';
 
+
 // --- SERVICE WORKER REGISTRATION ---
 
 const PWAWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {

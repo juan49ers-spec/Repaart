@@ -165,58 +165,65 @@ export default defineConfig(async ({ mode }) => {
       '__APP_VERSION__': JSON.stringify(appVersion)
     },
     plugins,
+    // CRITICAL: Force all modules to use the same React instance
+    // This prevents "Cannot read createContext" errors caused by
+    // multiple React copies being bundled
+    resolve: {
+      dedupe: [
+        'react',
+        'react-dom',
+        'react-router-dom',
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime'
+      ]
+    },
     build: {
       rollupOptions: {
         output: {
           manualChunks: (id) => {
-            // Firebase bundle
-            if (id.includes('firebase')) {
-              return 'vendor-firebase';
-            }
-            // Charts library
-            if (id.includes('recharts')) {
-              return 'vendor-charts';
-            }
-            // React libraries
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+            // Normalize path separators for Windows compatibility
+            const normalizedId = id.replace(/\\/g, '/');
+
+            // CRITICAL: React MUST be in a single chunk to prevent
+            // "Cannot read createContext" errors. This rule MUST be FIRST.
+            if (
+              normalizedId.includes('node_modules/react/') ||
+              normalizedId.includes('node_modules/react-dom/') ||
+              normalizedId.includes('node_modules/react-router') ||
+              normalizedId.includes('node_modules/scheduler/') ||
+              normalizedId.includes('react/jsx-runtime') ||
+              normalizedId.includes('react/jsx-dev-runtime')
+            ) {
               return 'vendor-react';
             }
-            // Icons
-            if (id.includes('lucide-react') || id.includes('@ant-design/icons')) {
-              return 'vendor-icons';
+            // Firebase bundle - does NOT depend on React
+            if (normalizedId.includes('firebase')) {
+              return 'vendor-firebase';
             }
-            // Google AI - lazy
-            if (id.includes('@google/generative-ai')) {
+            // Google AI - does NOT depend on React
+            if (normalizedId.includes('@google/generative-ai')) {
               return 'vendor-ai';
             }
-            // Email service - lazy
-            if (id.includes('@emailjs/browser')) {
+            // Email service - does NOT depend on React
+            if (normalizedId.includes('@emailjs/browser')) {
               return 'vendor-email';
             }
-            // Video players - lazy
-            if (id.includes('react-player') || id.includes('hls') || id.includes('dash')) {
-              return 'vendor-video';
-            }
-            // PDF generation - lazy
-            if (id.includes('jspdf') || id.includes('html2canvas')) {
+            // PDF generation - does NOT depend on React
+            if (normalizedId.includes('jspdf') || normalizedId.includes('html2canvas')) {
               return 'vendor-pdf';
             }
-            // Framer Motion - lazy
-            if (id.includes('framer-motion')) {
-              return 'vendor-motion';
-            }
-            // DnD kit - lazy
-            if (id.includes('@dnd-kit')) {
-              return 'vendor-dnd';
-            }
-            // QR scanner - lazy
-            if (id.includes('@yudiel/react-qr-scanner')) {
-              return 'vendor-qr';
-            }
-            // Confetti - lazy
-            if (id.includes('canvas-confetti')) {
+            // Confetti - does NOT depend on React
+            if (normalizedId.includes('canvas-confetti')) {
               return 'vendor-confetti';
             }
+            // HLS/Dash streaming libs - do NOT depend on React
+            if (normalizedId.includes('hls.js') || normalizedId.includes('dashjs')) {
+              return 'vendor-streaming';
+            }
+            // NOTE: The following ARE chunked but in the main bundle because
+            // they depend on React and must load AFTER React:
+            // - recharts, react-player, framer-motion, @dnd-kit
+            // - lucide-react, @ant-design/icons, @yudiel/react-qr-scanner
           }
         }
       }
