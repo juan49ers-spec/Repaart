@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, Sun, Moon, BadgeCheck, Save, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sun, Moon, BadgeCheck, Save, Loader2, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '../../../lib/utils';
@@ -20,6 +20,7 @@ interface SchedulerHeaderProps {
     hasUnsavedChanges: boolean;
     isPublishing: boolean;
     onPublish: () => void;
+    onCreateShift: () => void;
     readOnly?: boolean;
 }
 
@@ -39,6 +40,7 @@ export const SchedulerHeader: React.FC<SchedulerHeaderProps> = ({
     hasUnsavedChanges,
     isPublishing,
     onPublish,
+    onCreateShift,
     readOnly
 }) => {
     return (
@@ -93,6 +95,17 @@ export const SchedulerHeader: React.FC<SchedulerHeaderProps> = ({
 
                 {/* Right: Actions */}
                 <div className="flex items-center gap-2">
+                    {!readOnly && (
+                        <button
+                            onClick={onCreateShift}
+                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg shadow-sm hover:shadow-md transition-all flex items-center gap-1.5"
+                            title="Crear nuevo turno"
+                        >
+                            <Plus size={14} />
+                            <span className="hidden sm:inline">Crear Turno</span>
+                        </button>
+                    )}
+
                     {viewMode === 'day' && (
                         <button
                             onClick={() => {

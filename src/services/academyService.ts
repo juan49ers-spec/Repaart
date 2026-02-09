@@ -297,6 +297,35 @@ export const academyService = {
         }
     },
 
+    unmarkLessonComplete: async (userId: string, moduleId: string, lessonId: string): Promise<void> => {
+        try {
+            const q = query(
+                collection(db, COLLECTIONS.PROGRESS),
+                where('user_id', '==', userId),
+                where('module_id', '==', moduleId),
+                limit(1)
+            );
+            const snapshot = await getDocs(q);
+
+            if (!snapshot.empty) {
+                const progressId = snapshot.docs[0].id;
+                const progress = snapshot.docs[0].data() as AcademyProgress;
+                const completedLessons = progress.completed_lessons || [];
+
+                if (completedLessons.includes(lessonId)) {
+                    await updateDoc(doc(db, COLLECTIONS.PROGRESS, progressId), {
+                        completed_lessons: completedLessons.filter(id => id !== lessonId),
+                        status: 'in_progress',
+                        updated_at: serverTimestamp()
+                    });
+                }
+            }
+        } catch (error) {
+            console.error("Error unmarking lesson complete:", error);
+            throw error;
+        }
+    },
+
     uploadLessonVideo: async (file: File): Promise<string> => {
         try {
             const filename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;

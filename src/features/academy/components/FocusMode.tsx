@@ -25,6 +25,11 @@ export const FocusMode: React.FC<FocusModeProps> = ({ isActive, onToggle, childr
 
   return (
     <>
+      {/* Contenido normal - siempre visible */}
+      <div className={isActive ? 'hidden' : 'block'}>
+        {children}
+      </div>
+
       {/* Botón para activar modo focus */}
       {!isActive && (
         <motion.button
@@ -39,6 +44,7 @@ export const FocusMode: React.FC<FocusModeProps> = ({ isActive, onToggle, childr
         </motion.button>
       )}
 
+      {/* Modo Focus - pantalla completa */}
       <AnimatePresence>
         {isActive && (
           <motion.div
@@ -119,7 +125,7 @@ export const FocusMode: React.FC<FocusModeProps> = ({ isActive, onToggle, childr
               </div>
             </motion.div>
 
-            {/* Contenido */}
+            {/* Contenido en modo focus */}
             <div className={`max-w-4xl mx-auto px-6 py-12 ${
               isDark ? 'text-slate-200' : 'text-slate-800'
             }`}>

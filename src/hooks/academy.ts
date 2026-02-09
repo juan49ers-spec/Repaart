@@ -85,37 +85,82 @@ export const useAcademyLessons = (moduleId: string | null, status?: 'draft' | 'p
     return { lessons, loading, error, refetch: fetchLessons };
 };
 
+export const useAcademyAllLessons = (modules: AcademyModule[], status?: 'draft' | 'published' | 'all') => {
+    const [lessons, setLessons] = useState<AcademyLesson[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+
+    const fetchAllLessons = useCallback(async () => {
+        if (modules.length === 0) {
+            setLessons([]);
+            setLoading(false);
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const allLessonsPromises = modules.map(async (module) => {
+                if (!module.id) return [];
+                try {
+                    const data = await academyService.getLessonsByModule(module.id, status);
+                    return data;
+                } catch (err) {
+                    console.error(`Error fetching lessons for module ${module.id}:`, err);
+                    return [];
+                }
+            });
+
+            const allLessonsArrays = await Promise.all(allLessonsPromises);
+            const allLessons = allLessonsArrays.flat();
+            setLessons(allLessons);
+        } catch (err) {
+            setError(err as Error);
+        } finally {
+            setLoading(false);
+        }
+    }, [modules, status]);
+
+    useEffect(() => {
+        fetchAllLessons();
+    }, [fetchAllLessons]);
+
+    return { lessons, loading, error, refetch: fetchAllLessons };
+};
+
 export const useAcademyProgress = (userId: string | null, moduleId: string | null) => {
     const [progress, setProgress] = useState<AcademyProgress | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
-    useEffect(() => {
-        if (!userId || !moduleId) {
+    const fetchProgress = useCallback(async (userIdParam?: string, moduleIdParam?: string) => {
+        const targetUserId = userIdParam || userId;
+        const targetModuleId = moduleIdParam || moduleId;
+
+        if (!targetUserId || !targetModuleId) {
             setProgress(null);
             setLoading(false);
             return;
         }
 
-        const fetchProgress = async () => {
-            try {
-                setLoading(true);
-                const data = await academyService.getUserProgress(userId, moduleId);
-                setProgress(data);
-            } catch (err) {
-                setError(err as Error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchProgress();
+        try {
+            setLoading(true);
+            const data = await academyService.getUserProgress(targetUserId, targetModuleId);
+            setProgress(data);
+        } catch (err) {
+            setError(err as Error);
+        } finally {
+            setLoading(false);
+        }
     }, [userId, moduleId]);
 
-    return { progress, loading, error };
+    useEffect(() => {
+        fetchProgress();
+    }, [userId, moduleId, fetchProgress]);
+
+    return { progress, loading, error, refetch: fetchProgress };
 };
 
-export const useMarkLessonComplete = () => {
+export const useMarkLessonComplete = (onProgressUpdate?: (userId: string, moduleId: string) => Promise<void>) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
 
@@ -124,6 +169,10 @@ export const useMarkLessonComplete = () => {
             setLoading(true);
             setError(null);
             await academyService.markLessonComplete(userId, moduleId, lessonId);
+            // Recargar el progreso después de marcar la lección como completada
+            if (onProgressUpdate) {
+                await onProgressUpdate(userId, moduleId);
+            }
         } catch (err) {
             setError(err as Error);
             throw err;
@@ -133,6 +182,30 @@ export const useMarkLessonComplete = () => {
     };
 
     return { markComplete, loading, error };
+};
+
+export const useUnmarkLessonComplete = (onProgressUpdate?: (userId: string, moduleId: string) => Promise<void>) => {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
+
+    const unmarkComplete = async (userId: string, moduleId: string, lessonId: string) => {
+        try {
+            setLoading(true);
+            setError(null);
+            await academyService.unmarkLessonComplete(userId, moduleId, lessonId);
+            // Recargar el progreso después de desmarcar la lección
+            if (onProgressUpdate) {
+                await onProgressUpdate(userId, moduleId);
+            }
+        } catch (err) {
+            setError(err as Error);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { unmarkComplete, loading, error };
 };
 
 export const useCreateModule = () => {

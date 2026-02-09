@@ -156,6 +156,11 @@ export default function DeliveryScheduler(props: DeliverySchedulerProps = {}) {
         setSelectedDate(newDate);
     };
 
+    const handleCreateShift = () => {
+        setEditingShift(null); // No shift data = create mode
+        setIsModalOpen(true);
+    };
+
     const handleDragStart = (event: DragStartEvent) => {
         const { active } = event;
         setActiveDragShift(active.data.current?.shift as Shift);
@@ -266,6 +271,7 @@ export default function DeliveryScheduler(props: DeliverySchedulerProps = {}) {
                     hasUnsavedChanges={hasUnsavedChanges}
                     isPublishing={isPublishing}
                     onPublish={handlePublish}
+                    onCreateShift={handleCreateShift}
                     readOnly={readOnly}
                 />
 

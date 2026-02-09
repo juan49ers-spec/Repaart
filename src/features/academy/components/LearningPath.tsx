@@ -10,6 +10,7 @@ interface LearningPathProps {
   currentModuleId?: string;
   onSelectModule: (moduleId: string) => void;
   onModuleComplete?: (moduleId: string, moduleTitle: string, moduleNumber: number) => void;
+  allProgress?: Record<string, any>;
 }
 
 const gradients = [
@@ -25,22 +26,30 @@ export const LearningPath: React.FC<LearningPathProps> = ({
   completedLessons,
   allLessons,
   currentModuleId,
-  onSelectModule
+  onSelectModule,
+  allProgress
 }) => {
   const getModuleProgress = (moduleId: string) => {
+    // Si hay progreso específico del módulo, usarlo
+    if (allProgress && allProgress[moduleId]) {
+      const moduleLessons = allLessons.filter(l => l.module_id === moduleId);
+      if (moduleLessons.length === 0) return 0;
+      const moduleCompletedLessons = allProgress[moduleId]?.completed_lessons || [];
+      const completed = moduleLessons.filter(l => moduleCompletedLessons.includes(l.id)).length;
+      return Math.round((completed / moduleLessons.length) * 100);
+    }
+
+    // Si no, usar completedLessons (compatibilidad con vista de detalle)
     const moduleLessons = allLessons.filter(l => l.module_id === moduleId);
     if (moduleLessons.length === 0) return 0;
     const completed = moduleLessons.filter(l => completedLessons.includes(l.id)).length;
     return Math.round((completed / moduleLessons.length) * 100);
   };
 
-  const isModuleLocked = (index: number) => {
-    if (index === 0) return false;
-    // Si no hay datos de lecciones, no bloquear (asumir disponible)
-    if (allLessons.length === 0) return false;
-    const prevModule = modules[index - 1];
-    const prevProgress = getModuleProgress(prevModule.id || '');
-    return prevProgress < 100;
+  const isModuleLocked = (_index: number) => {
+    // TEMPORAL: Desactivar bloqueo para diagnosticar problema
+    // El módulo 3 aparece bloqueado porque el módulo 2 no tiene lecciones cargadas
+    return false;
   };
 
   return (

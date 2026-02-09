@@ -5,7 +5,6 @@ import './academy-lesson-detail.css';
 import './academy-lessons-grid.css';
 import ContentProtection from './components/ContentProtection';
 import LearningPath from './components/LearningPath';
-import FocusMode from './components/FocusMode';
 import CelebrationModal from './components/CelebrationModal';
 import LessonNotes from './components/LessonNotes';
 import { EmptyState, LoadingState } from './components/AcademyStates';
@@ -14,10 +13,11 @@ import {
     useAcademyModules,
     useAcademyModule,
     useAcademyLessons,
-    useAcademyProgress,
-    useMarkLessonComplete
+    useAcademyAllLessons,
+    useMarkLessonComplete,
+    useUnmarkLessonComplete
 } from '../../hooks/academy';
-import { AcademyLesson } from '../../services/academyService';
+import { AcademyLesson, academyService } from '../../services/academyService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
 import {
@@ -31,10 +31,10 @@ import {
     Youtube,
     FileText,
     Lock,
-    Sparkles,
     Trophy,
     Target,
-    StickyNote
+    StickyNote,
+    Loader2
 } from 'lucide-react';
 
 const Academy = () => {
@@ -45,7 +45,6 @@ const Academy = () => {
     const [selectedView, setSelectedView] = useState<'video' | 'text'>('video');
     const [showInitialModal, setShowInitialModal] = useState(false);
     const [isVideoExpanded, setIsVideoExpanded] = useState(false);
-    const [focusMode, setFocusMode] = useState(false);
     const [celebration, setCelebration] = useState<{
         isOpen: boolean;
         moduleTitle: string;
@@ -54,30 +53,60 @@ const Academy = () => {
     const [notesOpen, setNotesOpen] = useState(false);
     const videoRef = useRef<HTMLIFrameElement>(null);
 
-    // Temporal: Cargar todos los módulos y filtrar client-side para debug
+    // Cargar todos los módulos y filtrar por status
     const { modules: allModules, loading: modulesLoading } = useAcademyModules('all');
     
-    // Filtrar módulos activos (o sin campo status definido para compatibilidad)
-    const modules = useMemo(() => {
-        console.log('[Academy] Todos los módulos:', allModules);
-        const filtered = allModules.filter(m => m.status === 'active' || !m.status);
-        console.log('[Academy] Módulos filtrados (active):', filtered);
-        return filtered;
-    }, [allModules]);
-    const { module, loading: moduleLoading } = useAcademyModule(moduleId || null);
-    // Temporal: Cargar todas las lecciones y filtrar client-side para debug
-    const { lessons: allLessons, loading: lessonsLoading } = useAcademyLessons(moduleId || null, 'all');
+    // Filtrar solo módulos activos para franquicias (admin ve todos)
+    const visibleModules = useMemo(() => {
+        const isAdmin = user?.role === 'admin' || user?.email?.includes('admin');
+        if (isAdmin) return allModules;
+        // Para franquicias: solo módulos con status 'active'
+        return allModules.filter(m => m.status === 'active');
+    }, [allModules, user]);
     
+    const { module, loading: moduleLoading } = useAcademyModule(moduleId || null);
+    const { lessons: allLessons, loading: lessonsLoading } = useAcademyLessons(moduleId || null, 'all');
+    const { lessons: allModulesLessons } = useAcademyAllLessons(visibleModules, 'published');
+
+    // Log detallado de diagnóstico
+    useEffect(() => {
+        console.log('[Academy] =======================================');
+        console.log('[Academy] DIAGNÓSTICO COMPLETO:');
+        console.log('[Academy] - moduleId actual:', moduleId);
+        console.log('[Academy] - Total lecciones en allModulesLessons:', allModulesLessons.length);
+        console.log('[Academy] - Lecciones por módulo:', 
+            allModulesLessons.reduce((acc, lesson) => {
+                const mid = lesson.module_id || 'sin_modulo';
+                acc[mid] = (acc[mid] || 0) + 1;
+                return acc;
+            }, {} as Record<string, number>)
+        );
+        console.log('[Academy] - allLessons del módulo actual:', allLessons.length);
+        console.log('[Academy] - lessonsLoading:', lessonsLoading);
+        console.log('[Academy] =======================================');
+        
+        if (moduleId && allLessons.length === 0 && !lessonsLoading) {
+            console.warn(`[Academy] ALERTA: Módulo ${moduleId} no tiene lecciones cargadas`);
+            const lessonsForThisModule = allModulesLessons.filter(l => l.module_id === moduleId);
+            console.log('[Academy] Lecciones encontradas en allModulesLessons para este módulo:', lessonsForThisModule);
+        }
+    }, [moduleId, allLessons, lessonsLoading, allModulesLessons]);
+
     // Filtrar lecciones publicadas (o sin campo status definido para compatibilidad)
     const lessons = useMemo(() => {
         console.log('[Academy] Todas las lecciones del módulo:', allLessons);
-        const filtered = allLessons.filter(l => l.status === 'published' || !l.status);
+        console.log('[Academy] Status de las lecciones:', allLessons.map(l => ({ id: l.id, title: l.title, status: l.status })));
+        // Mostrar lecciones publicadas O borradores (para que los admin puedan verlas)
+        const filtered = allLessons.filter(l => l.status === 'published' || l.status === 'draft' || !l.status);
         console.log('[Academy] Lecciones filtradas (published):', filtered);
         return filtered;
     }, [allLessons]);
-    const { progress } = useAcademyProgress(user?.uid || null, moduleId || null);
+
+    const [progress, setProgress] = useState<any>(null);
+    const [allProgress, setAllProgress] = useState<Record<string, any>>({});
     const { markComplete, loading: markingComplete } = useMarkLessonComplete();
-    
+    const { unmarkComplete, loading: unmarkingComplete } = useUnmarkLessonComplete();
+
     // Verificar que el módulo esté activo para franquicias
     const activeModule = useMemo(() => {
         if (!module) return null;
@@ -106,19 +135,84 @@ const Academy = () => {
         return null;
     }, [lessons, selectedLessonId, completedLessons]);
 
+    // Cargar progreso cuando cambian el usuario o el módulo
+    useEffect(() => {
+        const fetchProgress = async () => {
+            if (user?.uid && moduleId) {
+                // Cargar progreso del módulo específico
+                try {
+                    const data = await academyService.getUserProgress(user.uid, moduleId);
+                    console.log('[Academy] Progreso cargado:', data);
+                    setProgress(data);
+                } catch (error) {
+                    console.error('Error fetching progress:', error);
+                }
+            } else if (user?.uid && !moduleId && visibleModules.length > 0) {
+                // Cargar progreso de TODOS los módulos visibles para la vista principal
+                try {
+                    const progressPromises = visibleModules.map(async (module) => {
+                        if (!module.id) return { [`module-${Math.random()}`]: null };
+                        try {
+                            const data = await academyService.getUserProgress(user.uid, module.id);
+                            return { [module.id]: data };
+                        } catch (error) {
+                            console.error(`Error fetching progress for module ${module.id}:`, error);
+                            return { [module.id]: null };
+                        }
+                    });
+
+                    const results = await Promise.all(progressPromises);
+                    const allProgressData = results.reduce((acc: any, curr: any) => ({ ...acc, ...curr }), {});
+                    console.log('[Academy] Progreso de todos los módulos cargado:', allProgressData);
+                    setAllProgress(allProgressData);
+                } catch (error) {
+                    console.error('Error fetching all progress:', error);
+                }
+            }
+        };
+        fetchProgress();
+    }, [user?.uid, moduleId, allModules]);
+
     const handleLessonComplete = async (lessonId: string) => {
         if (!user?.uid || !moduleId) return;
+
         try {
             await markComplete(user.uid, moduleId, lessonId);
+
+            // Forzar re-fetch del progreso después de marcar la lección como completada
+            const newProgress = await academyService.getUserProgress(user.uid, moduleId);
+            setProgress(newProgress);
         } catch (error) {
             console.error('Error marking lesson complete:', error);
+        }
+    };
+
+    const handleLessonUncomplete = async (lessonId: string) => {
+        if (!user?.uid || !moduleId) return;
+
+        try {
+            await unmarkComplete(user.uid, moduleId, lessonId);
+
+            // Forzar re-fetch del progreso después de desmarcar la lección
+            const newProgress = await academyService.getUserProgress(user.uid, moduleId);
+            setProgress(newProgress);
+        } catch (error) {
+            console.error('Error unmarking lesson complete:', error);
         }
     };
 
     const getProgressPercentage = () => {
         if (lessons.length === 0) return 0;
         const completedCount = lessons.filter(l => completedLessons.includes(l.id!)).length;
-        return Math.round((completedCount / lessons.length) * 100);
+        const percentage = Math.round((completedCount / lessons.length) * 100);
+        console.log('[Academy] Cálculo de progreso:', {
+            lessonsLength: lessons.length,
+            completedCount,
+            percentage,
+            completedLessons,
+            lessons: lessons.map(l => ({ id: l.id, title: l.title }))
+        });
+        return percentage;
     };
 
     const handleBackToModules = () => {
@@ -225,11 +319,13 @@ const Academy = () => {
     }
 
     if (!moduleId) {
-        const totalModules = modules.length;
-        const completedModules = modules.filter(m => {
-            const moduleLessons = allLessons.filter(l => l.module_id === m.id);
-            const moduleCompletedLessons = moduleLessons.filter(l => completedLessons.includes(l.id || ''));
-            return moduleLessons.length > 0 && moduleCompletedLessons.length === moduleLessons.length;
+        const totalModules = visibleModules.length;
+        const completedModules = visibleModules.filter(m => {
+            const moduleLessons = allModulesLessons.filter(l => l.module_id === m.id);
+            const moduleProgress = allProgress[m.id || ''];
+            const moduleCompletedLessons = moduleProgress?.completed_lessons || [];
+            const moduleCompletedCount = moduleLessons.filter(l => l.id && moduleCompletedLessons.includes(l.id)).length;
+            return moduleLessons.length > 0 && moduleCompletedCount === moduleLessons.length;
         }).length;
         const globalProgress = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
 
@@ -251,42 +347,20 @@ const Academy = () => {
                     >
                         {/* Badge de bienvenida */}
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.2 }}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-full shadow-lg mb-6"
-                        >
-                            <Sparkles className="w-4 h-4 text-amber-500" />
-                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                ¡Comienza tu viaje de aprendizaje!
-                            </span>
-                        </motion.div>
+                        initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.2 }}
+                            >
+                            </motion.div>
 
-                        {/* Título principal */}
+                            {/* Título principal */}
                         <motion.h1 
                             className="text-5xl sm:text-6xl font-black text-slate-900 dark:text-white mb-6 tracking-tight"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.3 }}
                         >
-                            <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 bg-clip-text text-transparent">
-                                Tu Ruta de
-                            </span>
-                            <br />
-                            <span className="text-slate-900 dark:text-white">Aprendizaje</span>
                         </motion.h1>
-
-                        {/* Subtítulo */}
-                        <motion.p 
-                            className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-8 leading-relaxed"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.4 }}
-                        >
-                            Completa cada módulo para desbloquear el siguiente.
-                            <br className="hidden sm:block" />
-                            Tu progreso se guarda automáticamente.
-                        </motion.p>
 
                         {/* Stats globales */}
                         <motion.div
@@ -345,11 +419,11 @@ const Academy = () => {
                     </motion.div>
 
                     {/* Learning Path */}
-                    {modules.length > 0 ? (
+                    {visibleModules.length > 0 ? (
                         <LearningPath
-                            modules={modules}
+                            modules={visibleModules}
                             completedLessons={completedLessons}
-                            allLessons={allLessons
+                            allLessons={allModulesLessons
                                 .filter((l): l is AcademyLesson & { id: string; module_id: string } =>
                                     typeof l.id === 'string' && typeof l.module_id === 'string'
                                 )
@@ -357,6 +431,7 @@ const Academy = () => {
                             }
                             currentModuleId={activeModule?.id}
                             onSelectModule={handleSelectModule}
+                            allProgress={allProgress}
                         />
                     ) : (
                         <EmptyState />
@@ -409,7 +484,7 @@ const Academy = () => {
     const hasText = !!currentLesson?.content && currentLesson.content.trim().length > 0;
 
     return (
-        <div className="academy-container h-screen flex flex-col lg:flex-row">
+        <div className="academy-container h-screen flex flex-col lg:flex-row" key={progress?.completed_lessons?.join(',') || 'no-progress'}>
             {/* Initial Selection Modal */}
             <AnimatePresence>
                 {showInitialModal && (
@@ -569,7 +644,7 @@ const Academy = () => {
 
                     <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950">
                         {!selectedLessonId ? (
-                            <div className="max-w-6xl mx-auto py-6 px-4">
+                            <div className="max-w-6xl mx-auto px-4 pt-1">
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -579,7 +654,7 @@ const Academy = () => {
                                     <h1 className="academy-title">{activeModule.title}</h1>
                                     <p className="academy-description">{activeModule.description}</p>
 
-                                    <div className="flex flex-wrap items-center gap-3 mt-4">
+                                    <div className="flex flex-wrap items-center gap-3 mt-2">
                                         <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-full border border-blue-200 dark:border-blue-800">
                                             <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                                             <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">{lessons.length} lecciones</span>
@@ -714,25 +789,41 @@ const Academy = () => {
                                             className="col-span-full"
                                         >
                                             <div className="academy-empty-state">
-                                                <BookOpen className="academy-empty-icon" />
-                                                <p className="academy-empty-title">No hay lecciones</p>
-                                                <p className="academy-empty-description">El contenido se agregará pronto</p>
+                                                {lessonsLoading ? (
+                                                    <>
+                                                        <Loader2 className="academy-empty-icon animate-spin" />
+                                                        <p className="academy-empty-title">Cargando lecciones...</p>
+                                                        <p className="academy-empty-description">Por favor espera un momento</p>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <BookOpen className="academy-empty-icon" />
+                                                        <p className="academy-empty-title">No hay lecciones disponibles</p>
+                                                        <p className="academy-empty-description">
+                                                            Este módulo aún no tiene contenido publicado.
+                                                            <br />
+                                                            <span className="text-xs text-slate-400 mt-2 block">
+                                                                Módulo ID: {moduleId}
+                                                            </span>
+                                                        </p>
+                                                    </>
+                                                )}
                                             </div>
                                         </motion.div>
                                     )}
                                 </div>
                             </div>
                         ) : (
-                            <FocusMode isActive={focusMode} onToggle={() => setFocusMode(!focusMode)}>
                             <div className="academy-lesson-detail">
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.4 }}
-                                    className="h-full flex flex-col"
-                                >
-                            {/* Header */}
-                            <div className="academy-lesson-header flex justify-between items-center">
+                                <div className="max-w-6xl mx-auto px-4 pt-2">
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.4 }}
+                                        className="h-full flex flex-col"
+                                    >
+                                        {/* Header */}
+                                        <div className="academy-lesson-header flex justify-between items-center mb-4">
                                 <button
                                     onClick={handleBackToLessons}
                                     className="academy-lesson-back-button"
@@ -943,24 +1034,30 @@ const Academy = () => {
                             <div className="sticky bottom-0 z-10 mt-6 pt-4 pb-2 bg-gradient-to-t from-slate-50 dark:from-slate-950 to-transparent">
                                 <div className="flex items-center gap-3">
                                     <button
-                                        onClick={() => currentLesson?.id && handleLessonComplete(currentLesson?.id)}
-                                        disabled={markingComplete || isCompleted}
+                                        onClick={() => {
+                                            if (currentLesson?.id) {
+                                                if (isCompleted) {
+                                                    handleLessonUncomplete(currentLesson.id);
+                                                } else {
+                                                    handleLessonComplete(currentLesson.id);
+                                                }
+                                            }
+                                        }}
+                                        disabled={markingComplete || unmarkingComplete}
                                         className={cn(
                                             'flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm uppercase tracking-wide transition-all shadow-lg hover:shadow-xl',
                                             isCompleted
-                                                ? 'bg-emerald-600 text-white cursor-default'
+                                                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                                                 : 'bg-blue-600 hover:bg-blue-700 text-white'
                                         )}
                                     >
-                                        <CheckCircle className="w-5 h-5" />
-                                        {isCompleted ? 'Lección Completada' : 'Marcar como Completada'}
+                                        <CheckCircle className={cn("w-5 h-5", isCompleted && "fill-current")} />
+                                        {isCompleted ? '✓ Completada (Click para desmarcar)' : 'Marcar como Completada'}
                                     </button>
                                 </div>
                             </div>
-                            </motion.div>
-                            </div>
-                            
-                            {/* Notes Panel */}
+
+                             {/* Notes Panel */}
                             {currentLesson?.id && (
                                 <LessonNotes
                                     lessonId={currentLesson.id}
@@ -968,8 +1065,10 @@ const Academy = () => {
                                     onClose={() => setNotesOpen(false)}
                                 />
                             )}
-                            </FocusMode>
-                        )}
+                        </motion.div>
+                        </div>
+                    </div>
+                    )}
 
                 {/* Mensaje cuando se intentó acceder a una lección no disponible */}
                 {selectedLessonId && !currentLesson && lessons.length > 0 && (
