@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import {
     useAcademyModules,
     useAcademyLessons,
@@ -108,12 +109,21 @@ const AcademyAdmin = () => {
 
         if (newStatus === 'active') {
             const moduleLessons = lessons.filter(l => l.module_id === module.id);
-            const draftLessons = moduleLessons.filter(l => l.status === 'draft');
+            // Publicar lecciones en draft o sin campo status definido
+            const draftLessons = moduleLessons.filter(l => l.status === 'draft' || !l.status);
+
+            console.log(`[AcademyAdmin] Publicando ${draftLessons.length} lecciones del módulo ${module.title}`);
 
             for (const lesson of draftLessons) {
                 if (lesson.id) {
                     await updateLessonFunc(lesson.id, { status: 'published' });
+                    console.log(`[AcademyAdmin] ✅ Lección publicada: ${lesson.title || lesson.id}`);
                 }
+            }
+
+            // Mostrar notificación al usuario
+            if (draftLessons.length > 0) {
+                toast.success(`${draftLessons.length} lecciones publicadas automáticamente`);
             }
         }
 
