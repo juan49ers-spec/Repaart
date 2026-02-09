@@ -4,6 +4,8 @@ import './academy-minimal.css';
 import './academy-lesson-detail.css';
 import './academy-lessons-grid.css';
 import ContentProtection from './components/ContentProtection';
+import LearningPath from './components/LearningPath';
+import FocusMode from './components/FocusMode';
 import { useAuth } from '../../context/AuthContext';
 import {
     useAcademyModules,
@@ -12,6 +14,7 @@ import {
     useAcademyProgress,
     useMarkLessonComplete
 } from '../../hooks/academy';
+import { AcademyLesson } from '../../services/academyService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
 import {
@@ -35,6 +38,7 @@ const Academy = () => {
     const [selectedView, setSelectedView] = useState<'video' | 'text'>('video');
     const [showInitialModal, setShowInitialModal] = useState(false);
     const [isVideoExpanded, setIsVideoExpanded] = useState(false);
+    const [focusMode, setFocusMode] = useState(false);
     const videoRef = useRef<HTMLIFrameElement>(null);
 
     // Temporal: Cargar todos los módulos y filtrar client-side para debug
@@ -210,83 +214,43 @@ const Academy = () => {
 
     if (!moduleId) {
         return (
-            <div className="academy-container">
-                <div className="academy-header">
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+                <div className="max-w-6xl mx-auto px-4 py-12">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4 }}
+                        className="text-center mb-12"
                     >
-                        <h1 className="academy-title">Academia</h1>
-                        <p className="academy-description">
-                            Plataforma de formación profesional para franquiciados. Mejora tus habilidades y crece con nosotros.
+                        <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-600 rounded-3xl mb-6 shadow-2xl shadow-blue-600/30">
+                            <BookOpen className="w-10 h-10 text-white" />
+                        </div>
+                        <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
+                            Tu Ruta de Aprendizaje
+                        </h1>
+                        <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+                            Completa cada módulo para desbloquear el siguiente. Tu progreso se guarda automáticamente.
                         </p>
                     </motion.div>
-                </div>
 
-                <div className="academy-modules-grid">
-                    <AnimatePresence mode="popLayout">
-                        {modules.map((mod, index) => {
-                            const moduleProgress = progress && progress.module_id === mod.id;
-                            const percentage = moduleProgress ? getProgressPercentage() : 0;
-
-                            return (
-                                <motion.div
-                                    key={mod.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -20 }}
-                                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                                    onClick={() => mod.id ? handleSelectModule(mod.id) : undefined}
-                                    className="academy-module-card"
-                                >
-                                    <div className="academy-module-header">
-                                        <div className="academy-module-icon">
-                                            <BookOpen className="w-6 h-6" />
-                                        </div>
-                                        {percentage > 0 && (
-                                            <span className="academy-module-badge">
-                                                {percentage}%
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    <h2 className="academy-module-title">{mod.title}</h2>
-                                    <p className="academy-module-description">{mod.description}</p>
-
-                                    <div className="academy-module-meta">
-                                        {moduleProgress && percentage > 0 && (
-                                            <div className="academy-module-progress">
-                                                <div className="academy-module-progress-bar">
-                                                    <motion.div
-                                                        className="academy-module-progress-fill"
-                                                        initial={{ width: 0 }}
-                                                        animate={{ width: `${percentage}%` }}
-                                                        transition={{ duration: 0.5 }}
-                                                    />
-                                                </div>
-                                                <span className="text-xs text-slate-600 dark:text-slate-400">
-                                                    {Math.round(lessons.length * (percentage / 100))} de {lessons.length} lecciones
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="academy-module-actions">
-                                        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-colors">
-                                            {percentage > 0 ? 'Continuar' : 'Comenzar'}
-                                        </button>
-                                    </div>
-                                </motion.div>
-                            );
-                        })}
-                    </AnimatePresence>
-
-                    {modules.length === 0 && (
+                    {modules.length > 0 ? (
+                        <LearningPath
+                            modules={modules}
+                            completedLessons={completedLessons}
+                            allLessons={allLessons
+                                .filter((l): l is AcademyLesson & { id: string; module_id: string } =>
+                                    typeof l.id === 'string' && typeof l.module_id === 'string'
+                                )
+                                .map(l => ({ id: l.id, module_id: l.module_id }))
+                            }
+                            currentModuleId={activeModule?.id}
+                            onSelectModule={handleSelectModule}
+                        />
+                    ) : (
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="col-span-full"
+                            className="text-center"
                         >
                             <div className="academy-empty-state">
                                 <BookOpen className="academy-empty-icon" />
@@ -651,6 +615,7 @@ const Academy = () => {
                                 </div>
                             </div>
                         ) : (
+                            <FocusMode isActive={focusMode} onToggle={() => setFocusMode(!focusMode)}>
                             <div className="academy-lesson-detail">
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
@@ -878,6 +843,7 @@ const Academy = () => {
                             </div>
                             </motion.div>
                             </div>
+                            </FocusMode>
                         )}
 
                 {/* Mensaje cuando se intentó acceder a una lección no disponible */}
