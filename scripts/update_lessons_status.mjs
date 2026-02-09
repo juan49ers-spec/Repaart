@@ -3,16 +3,15 @@
 
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, updateDoc, doc } from 'firebase/firestore';
-import { config } from 'dotenv';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Cargar variables de entorno desde .env.local
+// Cargar variables de entorno desde .env
 try {
-  const envPath = join(__dirname, '..', '.env.local');
+  const envPath = join(__dirname, '..', '.env');
   const envContent = readFileSync(envPath, 'utf8');
   const envVars = envContent.split('\n').reduce((acc, line) => {
     const match = line.match(/^([^=]+)=(.*)$/);
@@ -23,9 +22,9 @@ try {
   }, {});
   
   Object.assign(process.env, envVars);
-  console.log('✅ Variables de entorno cargadas desde .env.local');
+  console.log('✅ Variables de entorno cargadas desde .env');
 } catch (e) {
-  console.log('⚠️  No se pudo cargar .env.local, usando variables de entorno del sistema');
+  console.log('⚠️  No se pudo cargar .env, usando variables de entorno del sistema');
 }
 
 const firebaseConfig = {

@@ -131,7 +131,8 @@ const AcademyAdmin = () => {
         await refetchLessons();
     };
 
-    const handleReorderModules = async (reorderedModules: AcademyModule[]) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _handleReorderModules = async (reorderedModules: AcademyModule[]) => {
         // TODO: Implementar en V2 con drag & drop completo
         try {
             setIsSaving(true);

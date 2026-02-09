@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { AcademyModule } from '../../../services/academyService';
-import { CheckCircle, Lock, ChevronRight } from 'lucide-react';
+import { CheckCircle, Lock, Sparkles, Play, Trophy } from 'lucide-react';
 
 interface LearningPathProps {
   modules: AcademyModule[];
@@ -10,6 +10,14 @@ interface LearningPathProps {
   currentModuleId?: string;
   onSelectModule: (moduleId: string) => void;
 }
+
+const gradients = [
+  'from-rose-400 via-pink-500 to-purple-600',
+  'from-blue-400 via-indigo-500 to-purple-600',
+  'from-emerald-400 via-teal-500 to-cyan-600',
+  'from-amber-400 via-orange-500 to-red-600',
+  'from-violet-400 via-purple-500 to-fuchsia-600',
+];
 
 export const LearningPath: React.FC<LearningPathProps> = ({
   modules,
@@ -33,125 +41,172 @@ export const LearningPath: React.FC<LearningPathProps> = ({
   };
 
   return (
-    <div className="relative py-8">
-      {/* Línea de progreso vertical */}
-      <div className="absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 w-1 bg-slate-200 dark:bg-slate-700" />
-      
-      <div className="space-y-8">
+    <div className="relative py-12 px-4">
+      {/* Fondo decorativo */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-200 dark:bg-purple-900/20 rounded-full blur-3xl opacity-50" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-200 dark:bg-blue-900/20 rounded-full blur-3xl opacity-50" />
+      </div>
+
+      <div className="max-w-5xl mx-auto space-y-6 relative">
         {modules.map((module, index) => {
           const progress = getModuleProgress(module.id || '');
           const isLocked = isModuleLocked(index);
           const isCompleted = progress === 100;
           const isCurrent = module.id === currentModuleId;
-          const isEven = index % 2 === 0;
+          const gradient = gradients[index % gradients.length];
 
           return (
             <motion.div
               key={module.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className={`relative flex items-center ${isEven ? 'flex-row' : 'flex-row-reverse'} gap-8`}
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ 
+                duration: 0.5, 
+                delay: index * 0.1,
+                type: "spring",
+                stiffness: 100
+              }}
+              whileHover={!isLocked ? { 
+                y: -8, 
+                scale: 1.02,
+                transition: { duration: 0.2 }
+              } : {}}
+              onClick={() => !isLocked && module.id && onSelectModule(module.id)}
+              className={`relative cursor-pointer ${isLocked ? 'opacity-70' : ''}`}
             >
-              {/* Nodo central */}
-              <div className="absolute left-1/2 transform -translate-x-1/2 z-10">
-                <motion.div
-                  whileHover={!isLocked ? { scale: 1.1 } : {}}
-                  className={`w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold shadow-lg ${
-                    isCompleted
-                      ? 'bg-emerald-500 text-white shadow-emerald-500/30'
-                      : isCurrent
-                      ? 'bg-blue-500 text-white shadow-blue-500/30 ring-4 ring-blue-200 dark:ring-blue-900'
-                      : isLocked
-                      ? 'bg-slate-300 dark:bg-slate-600 text-slate-500'
-                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-2 border-slate-300 dark:border-slate-600'
-                  }`}
-                >
-                  {isCompleted ? (
-                    <CheckCircle className="w-8 h-8" />
-                  ) : isLocked ? (
-                    <Lock className="w-6 h-6" />
-                  ) : (
-                    <span>{index + 1}</span>
-                  )}
-                </motion.div>
-              </div>
+              {/* Conector con línea punteada */}
+              {index > 0 && (
+                <div className="absolute -top-6 left-8 w-0.5 h-6 border-l-2 border-dashed border-slate-300 dark:border-slate-600" />
+              )}
 
-              {/* Tarjeta del módulo */}
-              <div className={`w-5/12 ${isEven ? 'text-right pr-8' : 'text-left pl-8'}`}>
-                <motion.div
-                  whileHover={!isLocked ? { y: -5, boxShadow: '0 20px 40px rgba(0,0,0,0.1)' } : {}}
-                  onClick={() => !isLocked && module.id && onSelectModule(module.id)}
-                  className={`bg-white dark:bg-slate-800 rounded-2xl p-6 border-2 transition-all cursor-pointer ${
-                    isCurrent
-                      ? 'border-blue-500 shadow-lg shadow-blue-500/10'
-                      : isCompleted
-                      ? 'border-emerald-200 dark:border-emerald-900/30'
-                      : isLocked
-                      ? 'border-slate-200 dark:border-slate-700 opacity-60'
-                      : 'border-slate-200 dark:border-slate-700 hover:border-blue-300'
-                  }`}
-                >
-                  <div className={`flex items-center gap-3 mb-3 ${isEven ? 'justify-end' : 'justify-start'}`}>
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      Módulo {index + 1}
-                    </span>
-                    {isCompleted && (
-                      <span className="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold rounded-full">
-                        Completado
-                      </span>
-                    )}
-                    {isCurrent && (
-                      <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold rounded-full">
-                        En progreso
-                      </span>
+              <div className={`
+                relative overflow-hidden rounded-3xl
+                ${isCurrent 
+                  ? 'ring-4 ring-offset-4 ring-offset-white dark:ring-offset-slate-900 ring-blue-400 dark:ring-blue-500' 
+                  : ''}
+                ${isCompleted 
+                  ? 'shadow-2xl shadow-emerald-500/20' 
+                  : 'shadow-xl shadow-slate-200/50 dark:shadow-black/20'}
+                transition-all duration-300
+              `}>
+                {/* Fondo con gradiente */}
+                <div className={`
+                  absolute inset-0 bg-gradient-to-br ${gradient} opacity-10 
+                  ${isCompleted ? 'opacity-20' : ''}
+                `} />
+                
+                <div className="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-6 sm:p-8">
+                  <div className="flex items-start gap-5">
+                    {/* Icono/Número del módulo */}
+                    <motion.div 
+                      className={`
+                        relative flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl 
+                        flex items-center justify-center shadow-lg
+                        ${isCompleted 
+                          ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-emerald-500/30' 
+                          : isLocked 
+                            ? 'bg-slate-200 dark:bg-slate-700'
+                            : `bg-gradient-to-br ${gradient} shadow-lg`
+                        }
+                      `}
+                      whileHover={!isLocked ? { rotate: [0, -10, 10, 0], transition: { duration: 0.5 } } : {}}
+                    >
+                      {isCompleted ? (
+                        <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                      ) : isLocked ? (
+                        <Lock className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
+                      ) : (
+                        <span className="text-2xl sm:text-3xl font-black text-white">{index + 1}</span>
+                      )}
+                      
+                      {/* Indicador de sparkle para el actual */}
+                      {isCurrent && !isCompleted && !isLocked && (
+                        <div className="absolute -top-1 -right-1">
+                          <Sparkles className="w-5 h-5 text-yellow-400 animate-pulse" />
+                        </div>
+                      )}
+                    </motion.div>
+
+                    {/* Contenido */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-2 flex-wrap">
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          Módulo {index + 1}
+                        </span>
+                        
+                        {isCompleted && (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-xs font-bold rounded-full">
+                            <CheckCircle className="w-3 h-3" />
+                            Completado
+                          </span>
+                        )}
+                        
+                        {isCurrent && !isCompleted && (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 text-xs font-bold rounded-full">
+                            <Play className="w-3 h-3" />
+                            En progreso
+                          </span>
+                        )}
+                        
+                        {isLocked && (
+                          <span className="px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-xs font-bold rounded-full">
+                            Bloqueado
+                          </span>
+                        )}
+                      </div>
+
+                      <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-2 leading-tight">
+                        {module.title}
+                      </h3>
+                      
+                      <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base mb-4 line-clamp-2">
+                        {module.description}
+                      </p>
+
+                      {/* Barra de progreso */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-slate-500 dark:text-slate-400 font-medium">
+                            {isCompleted ? '¡Módulo completado!' : `${progress}% completado`}
+                          </span>
+                          <span className={`
+                            font-bold
+                            ${isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}
+                          `}>
+                            {progress}%
+                          </span>
+                        </div>
+                        
+                        <div className="h-3 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${progress}%` }}
+                            transition={{ duration: 1, delay: 0.3 + index * 0.1, ease: "easeOut" }}
+                            className={`
+                              h-full rounded-full
+                              ${isCompleted 
+                                ? 'bg-gradient-to-r from-emerald-400 to-emerald-600' 
+                                : `bg-gradient-to-r ${gradient}`
+                              }
+                            `}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Flecha indicadora */}
+                    {!isLocked && (
+                      <motion.div 
+                        className="hidden sm:flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-400"
+                        whileHover={{ x: 5, backgroundColor: "#e2e8f0" }}
+                      >
+                        <Play className="w-5 h-5 ml-1" />
+                      </motion.div>
                     )}
                   </div>
-
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-                    {module.title}
-                  </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">
-                    {module.description}
-                  </p>
-
-                  {/* Barra de progreso */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-500 dark:text-slate-400">Progreso</span>
-                      <span className={`font-bold ${
-                        isCompleted ? 'text-emerald-600' : 'text-blue-600'
-                      }`}>
-                        {progress}%
-                      </span>
-                    </div>
-                    <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progress}%` }}
-                        transition={{ duration: 1, delay: 0.5 }}
-                        className={`h-full rounded-full ${
-                          isCompleted 
-                            ? 'bg-emerald-500' 
-                            : 'bg-gradient-to-r from-blue-500 to-blue-600'
-                        }`}
-                      />
-                    </div>
-                  </div>
-
-                  {!isLocked && (
-                    <div className={`mt-4 flex items-center gap-2 text-sm font-semibold ${
-                      isEven ? 'justify-end' : 'justify-start'
-                    } ${isCompleted ? 'text-emerald-600' : 'text-blue-600'}`}>
-                      <span>{isCompleted ? 'Ver de nuevo' : 'Continuar'}</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </div>
-                  )}
-                </motion.div>
+                </div>
               </div>
-
-              {/* Espacio vacío para el otro lado */}
-              <div className="w-5/12" />
             </motion.div>
           );
         })}

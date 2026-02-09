@@ -1,0 +1,27 @@
+// Este código debe ejecutarse en la consola de Firebase (Firebase Console > Firestore > Reglas de seguridad temporalmente desactivadas O usando Firebase Admin SDK)
+// Alternativa: Usar Firebase CLI con:
+// firebase firestore:documents:update --collection academy_lessons --data '{"status":"published"}' --all
+
+// O desde la consola del navegador en el panel de admin, ejecutar:
+
+async function publishAllLessons() {
+  const lessonsRef = collection(db, 'academy_lessons');
+  const snapshot = await getDocs(lessonsRef);
+  
+  console.log(`Encontradas ${snapshot.docs.length} lecciones`);
+  
+  let count = 0;
+  for (const doc of snapshot.docs) {
+    const data = doc.data();
+    if (!data.status || data.status === 'draft') {
+      await updateDoc(doc.ref, { status: 'published' });
+      console.log(`✅ Publicada: ${data.title || doc.id}`);
+      count++;
+    }
+  }
+  
+  console.log(`Total publicadas: ${count}`);
+}
+
+// Ejecutar:
+publishAllLessons();
