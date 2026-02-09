@@ -1,5 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAutoSave } from '../../../hooks/useAutoSave';
+import { useVersioning } from '../../../hooks/useVersioning';
+import { SortableList } from '../../../components/ui/drag-drop/SortableList';
 import {
     useAcademyModules,
     useAcademyLessons,
@@ -37,6 +40,8 @@ const AcademyAdmin = () => {
     const [editingLesson, setEditingLesson] = useState<AcademyLesson | null>(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [showVersionHistory, setShowVersionHistory] = useState(false);
 
     const { lessons, refetch: refetchLessons } = useAcademyLessons(selectedModule?.id || null, 'all');
 
@@ -102,22 +107,73 @@ const AcademyAdmin = () => {
     const handleToggleModuleStatus = async (module: AcademyModule) => {
         if (!module.id) return;
         const newStatus = module.status === 'active' ? 'draft' : 'active';
-        
+
         await updateModuleFunc(module.id, { status: newStatus });
-        
+
         if (newStatus === 'active') {
             const moduleLessons = lessons.filter(l => l.module_id === module.id);
             const draftLessons = moduleLessons.filter(l => l.status === 'draft');
-            
+
             for (const lesson of draftLessons) {
                 if (lesson.id) {
                     await updateLessonFunc(lesson.id, { status: 'published' });
                 }
             }
         }
-        
+
         await refetchModules();
         await refetchLessons();
+    };
+
+    const handleReorderModules = async (reorderedModules: AcademyModule[]) => {
+        try {
+            setIsSaving(true);
+            for (const module of reorderedModules) {
+                if (module.id) {
+                    await updateModuleFunc(module.id, { order: module.order });
+                }
+            }
+            await refetchModules();
+        } catch (error) {
+            console.error('[AcademyAdmin] Error reordering modules:', error);
+            alert('Error al reordenar módulos');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleDuplicateModule = async (module: AcademyModule) => {
+        if (!module.id) return;
+
+        const newOrder = modules.length + 1;
+        const duplicatedModule = await createModule({
+            title: `${module.title} (copia)`,
+            description: module.description,
+            order: newOrder,
+            status: 'draft'
+        });
+
+        if (duplicatedModule) {
+            const moduleLessons = lessons.filter(l => l.module_id === module.id);
+
+            for (const lesson of moduleLessons) {
+                if (selectedModule?.id) {
+                    await createLessonFunc({
+                        module_id: duplicatedModule.id!,
+                        title: lesson.title,
+                        content: lesson.content,
+                        content_type: lesson.content_type,
+                        video_url: lesson.video_url,
+                        duration: lesson.duration,
+                        order: lesson.order,
+                        status: 'draft'
+                    });
+                }
+            }
+
+            await refetchModules();
+            await refetchLessons();
+        }
     };
 
     const handleCreateLesson = async () => {
@@ -364,10 +420,18 @@ const AcademyAdmin = () => {
                                             onEdit={() => setEditingModule(module)}
                                             onToggleStatus={() => handleToggleModuleStatus(module)}
                                             onDelete={() => module.id && handleDeleteModule(module.id)}
+                                            onDuplicate={() => handleDuplicateModule(module)}
                                         />
                                     </motion.div>
                                 ))}
                             </div>
+
+                            {isSaving && (
+                                <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-50">
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Guardando cambios...
+                                </div>
+                            )}
 
                             {modules.length === 0 && (
                                 <div className="col-span-full text-center py-16 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">

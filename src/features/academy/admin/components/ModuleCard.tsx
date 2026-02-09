@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Edit3, Eye, EyeOff, Trash2, Lock, ChevronRight } from 'lucide-react';
+import { BookOpen, Edit3, Eye, EyeOff, Trash2, Lock, ChevronRight, Copy } from 'lucide-react';
 import { AcademyModule } from '../../../../services/academyService';
 import { cn } from '../../../../lib/utils';
 import { motion } from 'framer-motion';
@@ -11,6 +11,7 @@ interface ModuleCardProps {
     onEdit: () => void;
     onToggleStatus: () => void;
     onDelete: () => void;
+    onDuplicate?: () => void;
 }
 
 const getStatusStyles = (status: string) => {
@@ -37,7 +38,8 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
     onSelect,
     onEdit,
     onToggleStatus,
-    onDelete
+    onDelete,
+    onDuplicate
 }) => {
     const statusStyles = getStatusStyles(module.status || 'draft');
 
@@ -141,6 +143,22 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
                         >
                             <Edit3 className="w-3.5 h-3.5 group-hover/btn:text-blue-600 dark:group-hover/btn:text-blue-400 transition-colors" />
                         </button>
+
+                        {onDuplicate && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDuplicate();
+                                }}
+                                className={cn(
+                                    "p-1.5 rounded-md transition-all group/btn",
+                                    "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
+                                )}
+                                title="Duplicar módulo"
+                            >
+                                <Copy className="w-3.5 h-3.5 group-hover/btn:text-emerald-600 dark:group-hover/btn:text-emerald-400 transition-colors" />
+                            </button>
+                        )}
 
                         <button
                             onClick={(e) => {
