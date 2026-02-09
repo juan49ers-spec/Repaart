@@ -53,6 +53,8 @@ const DeliveryScheduler: React.FC<{
     const [showDinner, setShowDinner] = useState(false);
     const [showPrime, setShowPrime] = useState(false);
     const [isPublishing, setIsPublishing] = useState(false);
+    const [riderSearchQuery, setRiderSearchQuery] = useState('');
+    const [compactMode, setCompactMode] = useState(false);
 
     // --- DRAFT MODE STATE ---
     const [localShifts, setLocalShifts] = useState<Shift[]>([]);
@@ -193,7 +195,18 @@ const DeliveryScheduler: React.FC<{
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
     const [activeDragShift, setActiveDragShift] = useState<Shift | null>(null);
 
-    const simpleRiders = useMemo(() => rosterRiders.map(r => ({ id: String(r.id), fullName: r.fullName, name: r.fullName })), [rosterRiders]);
+    // Filter riders based on search query
+    const filteredRiders = useMemo(() => {
+        if (!riderSearchQuery.trim()) return rosterRiders;
+        const query = riderSearchQuery.toLowerCase();
+        return rosterRiders.filter(r => 
+            r.fullName?.toLowerCase().includes(query) ||
+            r.email?.toLowerCase().includes(query) ||
+            r.phone?.includes(query)
+        );
+    }, [rosterRiders, riderSearchQuery]);
+
+    const simpleRiders = useMemo(() => filteredRiders.map(r => ({ id: String(r.id), fullName: r.fullName, name: r.fullName })), [filteredRiders]);
 
     const days = useMemo(() => {
         const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
@@ -301,7 +314,7 @@ const DeliveryScheduler: React.FC<{
     }, []);
 
     const ridersGrid = useMemo(() => {
-        const activeRiders = rosterRiders.filter(r => r.status === 'active' || r.status === 'on_route');
+        const activeRiders = filteredRiders.filter(r => r.status === 'active' || r.status === 'on_route');
         const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
         const weekEnd = addDays(new Date(weekStart), 7);
         const weekStartTs = weekStart.getTime();
@@ -327,7 +340,7 @@ const DeliveryScheduler: React.FC<{
                 shifts: displayedShifts
             };
         }).sort((a, b) => a.fullName.localeCompare(b.fullName));
-    }, [rosterRiders, mergedShifts, isFiltered, selectedDate, processRiderShifts]);
+    }, [filteredRiders, mergedShifts, isFiltered, selectedDate, processRiderShifts]);
 
     const totalWeeklyCost = useMemo(() => {
         return ridersGrid.reduce((total, rider) => {
@@ -991,6 +1004,48 @@ const DeliveryScheduler: React.FC<{
                                 <button onClick={() => setViewMode('day')} className={cn("px-4 py-1.5 text-xs font-medium uppercase rounded-md transition-all", viewMode === 'day' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600")}>Día</button>
                                 <button onClick={() => setViewMode('week')} className={cn("px-4 py-1.5 text-xs font-medium uppercase rounded-md transition-all", viewMode === 'week' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600")}>Semana</button>
                             </div>
+
+                            <div className="h-6 w-px bg-slate-200 mx-2" />
+
+                            {/* Rider Search */}
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    placeholder="Buscar rider..."
+                                    value={riderSearchQuery}
+                                    onChange={(e) => setRiderSearchQuery(e.target.value)}
+                                    className="w-40 px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                />
+                                {riderSearchQuery && (
+                                    <button
+                                        onClick={() => setRiderSearchQuery('')}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                    >
+                                        <XCircle size={14} />
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Compact Mode Toggle */}
+                            <button
+                                onClick={() => setCompactMode(!compactMode)}
+                                title={compactMode ? "Modo expandido" : "Modo compacto"}
+                                className={cn(
+                                    "px-3 py-1.5 text-xs font-normal rounded-lg border flex items-center gap-1.5 transition-all",
+                                    compactMode
+                                        ? "bg-indigo-100 border-indigo-300 text-indigo-700 shadow-sm"
+                                        : "bg-white border-slate-200 hover:bg-slate-50 text-slate-600"
+                                )}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    {compactMode ? (
+                                        <><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></>
+                                    ) : (
+                                        <><path d="M4 6h16M4 12h16M4 18h16"/></>
+                                    )}
+                                </svg>
+                                <span className="hidden sm:inline">{compactMode ? 'Compacto' : 'Normal'}</span>
+                            </button>
                         </div>
 
                         {/* Right: Actions */}
@@ -1265,7 +1320,8 @@ const DeliveryScheduler: React.FC<{
                                 <div
                                     key={rider.id}
                                     className={cn(
-                                        "flex-1 flex w-full border-b border-indigo-50 transition-all duration-200 group relative min-h-[64px]",
+                                        "flex-1 flex w-full border-b border-indigo-50 transition-all duration-200 group relative",
+                                        compactMode ? "min-h-[40px]" : "min-h-[64px]",
                                         "hover:z-20 overflow-visible"
                                     )}
                                 >
