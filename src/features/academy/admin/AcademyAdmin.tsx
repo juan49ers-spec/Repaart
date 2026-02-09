@@ -39,6 +39,7 @@ const AcademyAdmin = () => {
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    // setIsSaving is used by future drag & drop implementation and other async operations
 
     const { lessons, refetch: refetchLessons } = useAcademyLessons(selectedModule?.id || null, 'all');
 
@@ -77,6 +78,7 @@ const AcademyAdmin = () => {
 
     const handleUpdateModule = async (moduleData: Partial<AcademyModule>) => {
         if (!editingModule?.id) return;
+        setIsSaving(true);
         try {
             const dataToUpdate = { ...moduleData };
             delete dataToUpdate.id;
@@ -88,6 +90,8 @@ const AcademyAdmin = () => {
         } catch (error) {
             console.error('[AcademyAdmin] Error al actualizar módulo:', error);
             alert('Error al guardar el módulo');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -129,25 +133,6 @@ const AcademyAdmin = () => {
 
         await refetchModules();
         await refetchLessons();
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const _handleReorderModules = async (reorderedModules: AcademyModule[]) => {
-        // TODO: Implementar en V2 con drag & drop completo
-        try {
-            setIsSaving(true);
-            for (const module of reorderedModules) {
-                if (module.id) {
-                    await updateModuleFunc(module.id, { order: module.order });
-                }
-            }
-            await refetchModules();
-        } catch (error) {
-            console.error('[AcademyAdmin] Error reordering modules:', error);
-            alert('Error al reordenar módulos');
-        } finally {
-            setIsSaving(false);
-        }
     };
 
     const handleDuplicateModule = async (module: AcademyModule) => {

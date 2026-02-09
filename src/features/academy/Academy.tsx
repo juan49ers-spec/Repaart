@@ -7,7 +7,7 @@ import ContentProtection from './components/ContentProtection';
 import LearningPath from './components/LearningPath';
 import FocusMode from './components/FocusMode';
 import CelebrationModal from './components/CelebrationModal';
-import { ModuleSkeleton, EmptyState, LoadingState } from './components/AcademyStates';
+import { EmptyState, LoadingState } from './components/AcademyStates';
 import { useAuth } from '../../context/AuthContext';
 import {
     useAcademyModules,
