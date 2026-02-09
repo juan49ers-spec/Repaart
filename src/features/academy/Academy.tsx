@@ -37,11 +37,19 @@ const Academy = () => {
     const [isVideoExpanded, setIsVideoExpanded] = useState(false);
     const videoRef = useRef<HTMLIFrameElement>(null);
 
-    const { modules, loading: modulesLoading } = useAcademyModules();
+    const { modules, loading: modulesLoading } = useAcademyModules('active');
     const { module, loading: moduleLoading } = useAcademyModule(moduleId || null);
     const { lessons, loading: lessonsLoading } = useAcademyLessons(moduleId || null, 'published');
     const { progress } = useAcademyProgress(user?.uid || null, moduleId || null);
     const { markComplete, loading: markingComplete } = useMarkLessonComplete();
+    
+    // Verificar que el módulo esté activo para franquicias
+    const activeModule = useMemo(() => {
+        if (!module) return null;
+        // Si el módulo no está activo, no mostrarlo
+        if (module.status !== 'active') return null;
+        return module;
+    }, [module]);
 
     const completedLessons = useMemo(() => progress?.completed_lessons || [], [progress]);
     const lessonsInOrder = useMemo(() => {
@@ -282,12 +290,19 @@ const Academy = () => {
         );
     }
 
-    if (!module) {
+    if (!activeModule) {
         return (
             <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center">
                 <div className="text-center">
                     <BookOpen className="w-16 h-16 text-slate-400 dark:text-slate-600 mx-auto mb-4" />
-                    <p className="text-lg font-semibold text-slate-600 dark:text-slate-400">Módulo no encontrado</p>
+                    <p className="text-lg font-semibold text-slate-600 dark:text-slate-400">Módulo no encontrado o no disponible</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-500 mt-2">Este módulo no está publicado o ha sido desactivado</p>
+                    <button
+                        onClick={handleBackToModules}
+                        className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-colors"
+                    >
+                        Volver a módulos
+                    </button>
                 </div>
             </div>
         );
@@ -376,8 +391,8 @@ const Academy = () => {
                                 <ArrowLeft className="w-4 h-4" />
                                 <span>Volver a módulos</span>
                             </button>
-                            <h2 className="academy-sidebar-title">{module.title}</h2>
-                            <p className="academy-sidebar-description line-clamp-2">{module.description}</p>
+                            <h2 className="academy-sidebar-title">{activeModule.title}</h2>
+                            <p className="academy-sidebar-description line-clamp-2">{activeModule.description}</p>
                         </div>
 
                         <div className="academy-sidebar-progress">
@@ -466,8 +481,8 @@ const Academy = () => {
                                     transition={{ duration: 0.4 }}
                                     className="academy-lesson-header"
                                 >
-                                    <h1 className="academy-title">{module.title}</h1>
-                                    <p className="academy-description">{module.description}</p>
+                                    <h1 className="academy-title">{activeModule.title}</h1>
+                                    <p className="academy-description">{activeModule.description}</p>
 
                                     <div className="flex flex-wrap items-center gap-3 mt-4">
                                         <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-full border border-blue-200 dark:border-blue-800">
