@@ -52,11 +52,19 @@ export const academyService = {
         try {
             let q;
             if (status && status !== 'all') {
-                q = query(
-                    collection(db, COLLECTIONS.MODULES),
-                    where('status', '==', status),
-                    orderBy('order', 'asc')
-                );
+                try {
+                    q = query(
+                        collection(db, COLLECTIONS.MODULES),
+                        where('status', '==', status),
+                        orderBy('order', 'asc')
+                    );
+                } catch (indexError) {
+                    console.warn("[academyService] Índice compuesto no encontrado, usando filtro client-side");
+                    q = query(
+                        collection(db, COLLECTIONS.MODULES),
+                        orderBy('order', 'asc')
+                    );
+                }
             } else {
                 q = query(
                     collection(db, COLLECTIONS.MODULES),
@@ -64,9 +72,16 @@ export const academyService = {
                 );
             }
             const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AcademyModule));
+            let modules = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AcademyModule));
+            
+            // Filtro client-side si es necesario
+            if (status && status !== 'all') {
+                modules = modules.filter(m => m.status === status);
+            }
+            
+            return modules;
         } catch (error) {
-            console.error("Error fetching modules:", error);
+            console.error("[academyService] Error fetching modules:", error);
             throw error;
         }
     },

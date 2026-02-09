@@ -37,7 +37,16 @@ const Academy = () => {
     const [isVideoExpanded, setIsVideoExpanded] = useState(false);
     const videoRef = useRef<HTMLIFrameElement>(null);
 
-    const { modules, loading: modulesLoading } = useAcademyModules('active');
+    // Temporal: Cargar todos los módulos y filtrar client-side para debug
+    const { modules: allModules, loading: modulesLoading } = useAcademyModules('all');
+    
+    // Filtrar módulos activos (o sin campo status definido para compatibilidad)
+    const modules = useMemo(() => {
+        console.log('[Academy] Todos los módulos:', allModules);
+        const filtered = allModules.filter(m => m.status === 'active' || !m.status);
+        console.log('[Academy] Módulos filtrados (active):', filtered);
+        return filtered;
+    }, [allModules]);
     const { module, loading: moduleLoading } = useAcademyModule(moduleId || null);
     const { lessons, loading: lessonsLoading } = useAcademyLessons(moduleId || null, 'published');
     const { progress } = useAcademyProgress(user?.uid || null, moduleId || null);
