@@ -9,6 +9,7 @@ interface LearningPathProps {
   allLessons: { module_id: string; id: string }[];
   currentModuleId?: string;
   onSelectModule: (moduleId: string) => void;
+  onModuleComplete?: (moduleId: string, moduleTitle: string, moduleNumber: number) => void;
 }
 
 const gradients = [

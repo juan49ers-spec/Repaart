@@ -6,6 +6,8 @@ import './academy-lessons-grid.css';
 import ContentProtection from './components/ContentProtection';
 import LearningPath from './components/LearningPath';
 import FocusMode from './components/FocusMode';
+import CelebrationModal from './components/CelebrationModal';
+import { ModuleSkeleton, EmptyState, LoadingState } from './components/AcademyStates';
 import { useAuth } from '../../context/AuthContext';
 import {
     useAcademyModules,
@@ -42,6 +44,11 @@ const Academy = () => {
     const [showInitialModal, setShowInitialModal] = useState(false);
     const [isVideoExpanded, setIsVideoExpanded] = useState(false);
     const [focusMode, setFocusMode] = useState(false);
+    const [celebration, setCelebration] = useState<{
+        isOpen: boolean;
+        moduleTitle: string;
+        moduleNumber: number;
+    }>({ isOpen: false, moduleTitle: '', moduleNumber: 0 });
     const videoRef = useRef<HTMLIFrameElement>(null);
 
     // Temporal: Cargar todos los módulos y filtrar client-side para debug
@@ -206,10 +213,9 @@ const Academy = () => {
 
     if (modulesLoading) {
         return (
-            <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-12 h-12 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">Cargando...</p>
+            <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-slate-950 dark:via-purple-950/20 dark:to-slate-900">
+                <div className="max-w-6xl mx-auto px-4 py-8 sm:py-16">
+                    <LoadingState />
                 </div>
             </div>
         );
@@ -350,18 +356,16 @@ const Academy = () => {
                             onSelectModule={handleSelectModule}
                         />
                     ) : (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="text-center py-20"
-                        >
-                            <div className="inline-flex items-center justify-center w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-3xl mb-6">
-                                <BookOpen className="w-12 h-12 text-slate-400" />
-                            </div>
-                            <p className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Módulos próximamente</p>
-                            <p className="text-slate-500 dark:text-slate-400">El contenido se agregará pronto</p>
-                        </motion.div>
+                        <EmptyState />
                     )}
+                    
+                    {/* Celebration Modal */}
+                    <CelebrationModal
+                        isOpen={celebration.isOpen}
+                        onClose={() => setCelebration({ ...celebration, isOpen: false })}
+                        moduleTitle={celebration.moduleTitle}
+                        moduleNumber={celebration.moduleNumber}
+                    />
                 </div>
             </div>
         );
