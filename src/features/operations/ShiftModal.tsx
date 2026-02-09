@@ -157,6 +157,67 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
         });
     };
 
+    // [SMART SUGGESTIONS] Calculate rider suggestions based on availability and workload
+    const riderSuggestions = React.useMemo(() => {
+        if (!startDate || !startTimeStr || !endTimeStr) return [];
+        
+        // Calculate duration of the shift being created
+        let shiftDuration = 0;
+        try {
+            const start = new Date(`${startDate}T${startTimeStr}`).getTime();
+            const end = new Date(`${startDate}T${endTimeStr}`).getTime();
+            if (!isNaN(start) && !isNaN(end) && end > start) {
+                shiftDuration = (end - start) / (1000 * 60 * 60);
+            }
+        } catch (e) {
+            shiftDuration = 0;
+        }
+        
+        // Get week start (Monday)
+        const currentDate = new Date(startDate);
+        const dayOfWeek = currentDate.getDay();
+        const diff = currentDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+        const weekStart = new Date(currentDate.setDate(diff));
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 7);
+
+        return riders
+            .map(rider => {
+                // Calculate total hours for this rider in the current week
+                const weeklyHours = existingShifts
+                    .filter(s => {
+                        if (s.riderId !== rider.id) return false;
+                        const shiftDate = new Date(s.startAt);
+                        return shiftDate >= weekStart && shiftDate < weekEnd;
+                    })
+                    .reduce((total, s) => {
+                        const start = new Date(s.startAt).getTime();
+                        const end = new Date(s.endAt).getTime();
+                        return total + (end - start) / (1000 * 60 * 60);
+                    }, 0);
+
+                // Check availability (no overlap)
+                const isAvailable = !isRiderBusy(rider.id);
+                
+                // Calculate if rider would exceed 40h limit
+                const wouldExceedLimit = (weeklyHours + shiftDuration) > 40;
+
+                return {
+                    ...rider,
+                    weeklyHours,
+                    isAvailable,
+                    wouldExceedLimit
+                };
+            })
+            .filter(r => r.isAvailable) // Only show available riders
+            .sort((a, b) => {
+                // Sort by: available first, then by fewer hours
+                if (a.wouldExceedLimit && !b.wouldExceedLimit) return 1;
+                if (!a.wouldExceedLimit && b.wouldExceedLimit) return -1;
+                return a.weeklyHours - b.weeklyHours;
+            });
+    }, [riders, existingShifts, startDate, startTimeStr, endTimeStr, isRiderBusy]);
+
     // Reset form when opening
     useEffect(() => {
         if (isOpen) {
@@ -305,6 +366,72 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                             </div>
                             <p className="font-medium italic text-slate-600 dark:text-slate-300 bg-white/40 dark:bg-black/20 p-3 rounded-xl border border-amber-100 dark:border-amber-900/20">
                                 &quot;{initialData.changeReason || 'Sin motivo especificado'}&quot;
+                            </p>
+                        </div>
+                    )}
+
+                    {/* SMART SUGGESTIONS */}
+                    {!initialData && riderSuggestions.length > 0 && (
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <label className="text-[10px] font-semibold uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                                    </svg>
+                                    Sugerencias Inteligentes
+                                </label>
+                                <span className="text-[9px] text-slate-400">
+                                    {riderSuggestions.length} disponibles
+                                </span>
+                            </div>
+                            <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-thin">
+                                {riderSuggestions.slice(0, 5).map((rider) => {
+                                    const color = getRiderColor(rider.id);
+                                    const isSelected = selectedRiderId === rider.id;
+                                    return (
+                                        <button
+                                            key={rider.id}
+                                            type="button"
+                                            onClick={() => setValue('riderId', rider.id)}
+                                            className={cn(
+                                                "flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border transition-all hover:scale-105",
+                                                isSelected 
+                                                    ? "bg-emerald-50 border-emerald-300 ring-2 ring-emerald-500/20" 
+                                                    : "bg-white border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/30",
+                                                rider.wouldExceedLimit && "border-amber-200 bg-amber-50/30"
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "w-8 h-8 rounded-xl flex items-center justify-center text-[10px] font-bold",
+                                                color.bg, color.text
+                                            )}>
+                                                {getRiderInitials(rider.fullName)}
+                                            </div>
+                                            <div className="text-left">
+                                                <p className="text-[11px] font-semibold text-slate-700 truncate max-w-[80px]">
+                                                    {rider.fullName.split(' ')[0]}
+                                                </p>
+                                                <div className="flex items-center gap-1">
+                                                    <span className={cn(
+                                                        "text-[9px] font-medium",
+                                                        rider.weeklyHours > 35 ? "text-amber-600" : "text-emerald-600"
+                                                    )}>
+                                                        {rider.weeklyHours.toFixed(1)}h
+                                                    </span>
+                                                    <span className="text-[9px] text-slate-400">/ sem</span>
+                                                </div>
+                                            </div>
+                                            {rider.wouldExceedLimit && (
+                                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center text-[8px] text-white font-bold" title="Cerca del límite">
+                                                    !
+                                                </span>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            <p className="text-[9px] text-slate-400 italic">
+                                Ordenados por disponibilidad y carga de trabajo (menos horas primero)
                             </p>
                         </div>
                     )}
