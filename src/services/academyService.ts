@@ -126,12 +126,21 @@ export const academyService = {
         try {
             let q;
             if (status && status !== 'all') {
-                q = query(
-                    collection(db, COLLECTIONS.LESSONS),
-                    where('module_id', '==', moduleId),
-                    where('status', '==', status),
-                    orderBy('order', 'asc')
-                );
+                try {
+                    q = query(
+                        collection(db, COLLECTIONS.LESSONS),
+                        where('module_id', '==', moduleId),
+                        where('status', '==', status),
+                        orderBy('order', 'asc')
+                    );
+                } catch (indexError) {
+                    console.warn("[academyService] Índice compuesto no encontrado, usando filtro client-side", indexError);
+                    q = query(
+                        collection(db, COLLECTIONS.LESSONS),
+                        where('module_id', '==', moduleId),
+                        orderBy('order', 'asc')
+                    );
+                }
             } else {
                 q = query(
                     collection(db, COLLECTIONS.LESSONS),
@@ -140,9 +149,15 @@ export const academyService = {
                 );
             }
             const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AcademyLesson));
+            let lessons = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AcademyLesson));
+            
+            if (status && status !== 'all') {
+                lessons = lessons.filter(l => l.status === status);
+            }
+            
+            return lessons;
         } catch (error) {
-            console.error("Error fetching lessons:", error);
+            console.error("[academyService] Error fetching lessons:", error);
             throw error;
         }
     },

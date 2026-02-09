@@ -102,8 +102,22 @@ const AcademyAdmin = () => {
     const handleToggleModuleStatus = async (module: AcademyModule) => {
         if (!module.id) return;
         const newStatus = module.status === 'active' ? 'draft' : 'active';
+        
         await updateModuleFunc(module.id, { status: newStatus });
+        
+        if (newStatus === 'active') {
+            const moduleLessons = lessons.filter(l => l.module_id === module.id);
+            const draftLessons = moduleLessons.filter(l => l.status === 'draft');
+            
+            for (const lesson of draftLessons) {
+                if (lesson.id) {
+                    await updateLessonFunc(lesson.id, { status: 'published' });
+                }
+            }
+        }
+        
         await refetchModules();
+        await refetchLessons();
     };
 
     const handleCreateLesson = async () => {
