@@ -1,9 +1,9 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 interface RequireActiveStatusProps {
-    children: React.ReactNode;
+    children?: React.ReactNode;
 }
 
 /**
@@ -28,7 +28,7 @@ export const RequireActiveStatus: React.FC<RequireActiveStatusProps> = ({ childr
     }
 
     // ACTIVE: Allow access
-    return <>{children}</>;
+    return children ? <>{children}</> : <Outlet />;
 };
 
 export default RequireActiveStatus;

@@ -1,0 +1,40 @@
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90mC:/Users/Usuario/.gemini/antigravity/playground/repaart[39m
+
+stderr | src/features/rider/schedule/__tests__/SmartStartButton.test.tsx > SmartStartButton Component > Error Handling > should show error when GPS fails
+SmartStart Error: Error: GPS Error
+    at C:/Users/Usuario/.gemini/antigravity/playground/repaart/src/features/rider/schedule/__tests__/SmartStartButton.test.tsx:238:54
+    at file:///C:/Users/Usuario/.gemini/antigravity/playground/repaart/node_modules/@vitest/runner/dist/index.js:145:11
+    at file:///C:/Users/Usuario/.gemini/antigravity/playground/repaart/node_modules/@vitest/runner/dist/index.js:915:26
+    at file:///C:/Users/Usuario/.gemini/antigravity/playground/repaart/node_modules/@vitest/runner/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///C:/Users/Usuario/.gemini/antigravity/playground/repaart/node_modules/@vitest/runner/dist/index.js:1209:10)
+    at file:///C:/Users/Usuario/.gemini/antigravity/playground/repaart/node_modules/@vitest/runner/dist/index.js:1653:37
+    at Traces.$ (file:///C:/Users/Usuario/.gemini/antigravity/playground/repaart/node_modules/vitest/dist/chunks/traces.CCmnQaNT.js:142:27)
+    at trace (file:///C:/Users/Usuario/.gemini/antigravity/playground/repaart/node_modules/vitest/dist/chunks/test.B8ej_ZHS.js:239:21)
+    at runTest (file:///C:/Users/Usuario/.gemini/antigravity/playground/repaart/node_modules/@vitest/runner/dist/index.js:1653:12)
+
+stderr | src/features/rider/schedule/__tests__/SmartStartButton.test.tsx > SmartStartButton Component > Error Handling > should show error when franchise location fails
+SmartStart Error: Error: No se pudo verificar la ubicaci├│n de la base.
+    at handleStart (C:/Users/Usuario/.gemini/antigravity/playground/repaart/src/features/rider/schedule/components/SmartStartButton.tsx:55:23)
+
+stderr | src/features/rider/schedule/__tests__/SmartStartButton.test.tsx > SmartStartButton Component > Error Handling > should reset to idle after error timeout
+SmartStart Error: Error: GPS Error
+    at C:/Users/Usuario/.gemini/antigravity/playground/repaart/src/features/rider/schedule/__tests__/SmartStartButton.test.tsx:268:54
+    at file:///C:/Users/Usuario/.gemini/antigravity/playground/repaart/node_modules/@vitest/runner/dist/index.js:145:11
+    at file:///C:/Users/Usuario/.gemini/antigravity/playground/repaart/node_modules/@vitest/runner/dist/index.js:915:26
+    at file:///C:/Users/Usuario/.gemini/antigravity/playground/repaart/node_modules/@vitest/runner/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///C:/Users/Usuario/.gemini/antigravity/playground/repaart/node_modules/@vitest/runner/dist/index.js:1209:10)
+    at file:///C:/Users/Usuario/.gemini/antigravity/playground/repaart/node_modules/@vitest/runner/dist/index.js:1653:37
+    at Traces.$ (file:///C:/Users/Usuario/.gemini/antigravity/playground/repaart/node_modules/vitest/dist/chunks/traces.CCmnQaNT.js:142:27)
+    at trace (file:///C:/Users/Usuario/.gemini/antigravity/playground/repaart/node_modules/vitest/dist/chunks/test.B8ej_ZHS.js:239:21)
+    at runTest (file:///C:/Users/Usuario/.gemini/antigravity/playground/repaart/node_modules/@vitest/runner/dist/index.js:1653:12)
+
+ [32mÔ£ô[39m src/features/rider/schedule/__tests__/SmartStartButton.test.tsx [2m([22m[2m16 tests[22m[2m)[22m[32m 292[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m16 passed[39m[22m[90m (16)[39m
+[2m   Start at [22m 12:11:06
+[2m   Duration [22m 1.72s[2m (transform 138ms, setup 139ms, import 245ms, tests 292ms, environment 817ms)[22m
+

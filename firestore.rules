@@ -81,8 +81,10 @@ service cloud.firestore {
         isNonEmptyString('uid') &&
         isNonEmptyString('email') &&
         isNonEmptyString('subject') &&
+        isNonEmptyString('subject') &&
         isNonEmptyString('message') &&
-        incomingData().urgency in ['normal', 'high', 'critical'] &&
+        incomingData().priority in ['low', 'normal', 'high'] &&
+        incomingData().category in ['technical', 'billing', 'question', 'skills'] &&
         incomingData().status in ['open', 'in_progress', 'resolved', 'closed'];
     }
     
@@ -329,11 +331,42 @@ service cloud.firestore {
         allow write: if isAuthed() && isAdmin();
     }
     
+    // ORDERS HISTORY (Flyder)
+    match /orders/{orderId} {
+      allow read: if isAuthed() && (
+        isAdmin() ||
+        isFranchise()
+      );
+      allow create: if isAuthed() && isAdmin();
+      allow update, delete: if isAuthed() && isAdmin();
+      
+      // Allow list for admins and franchises
+      allow list: if isAuthed() && (isAdmin() || isFranchise());
+    }
+
     // REGISTRATION REQUESTS
     match /registration_requests/{requestId} {
       allow read: if isAdmin();
       allow create: if isAuthed();
       allow write: if isAdmin();
+    }
+
+    // STORES
+    match /stores/{storeId} {
+      allow get: if isAuthed() && (isAdmin() || resource.data.franchiseId.lower() == request.auth.uid.lower());
+      allow list: if isAuthed() && (isAdmin() || isFranchise());
+      allow create: if isAuthed() && (isAdmin() || isFranchise());
+      allow update: if isAuthed() && (isAdmin() || resource.data.franchiseId == request.auth.uid);
+      allow delete: if isAuthed() && isAdmin();
+    }
+
+    // RIDERS
+    match /riders/{riderId} {
+      allow get: if isAuthed() && (isAdmin() || resource.data.franchiseId.lower() == request.auth.uid.lower());
+      allow list: if isAuthed() && (isAdmin() || isFranchise());
+      allow create: if isAuthed() && (isAdmin() || isFranchise());
+      allow update: if isAuthed() && (isAdmin() || resource.data.franchiseId == request.auth.uid);
+      allow delete: if isAuthed() && isAdmin();
     }
 
     // DEFAULT DENY

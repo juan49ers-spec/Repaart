@@ -135,7 +135,7 @@ exports.archiveOldAuditLogs = functions.https.onCall(async (data, context) => {
     }
 });
 exports.scheduledDataRetention = functions.pubsub
-    .schedule('0 2 * *')
+    .schedule('0 1 * * 0')
     .timeZone('UTC')
     .onRun(async (context) => {
     try {

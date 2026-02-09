@@ -19,6 +19,7 @@ export interface Rider {
     franchiseId?: string;
     contractHours?: number;
     licenseType?: '49cc' | '125cc';
+    skills?: string[];
 }
 
 interface FleetState {

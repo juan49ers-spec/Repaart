@@ -60,6 +60,18 @@ export type WeekMetrics = z.infer<typeof WeekMetricsSchema>;
 export type Shift = z.infer<typeof ShiftSchema>;
 export type WeekData = z.infer<typeof WeekDataSchema>;
 
+// Input type for creating/updating shifts (subset of Shift without generated fields)
+export type ShiftInput = {
+    franchiseId: string;
+    riderId: string;
+    riderName?: string | null;
+    motoId?: string | null;
+    motoPlate?: string;
+    startAt: string;
+    endAt: string;
+    isConfirmed?: boolean;
+};
+
 // Re-export strict types associated with brands for internal usage
 export interface WeekDocument extends WeekData {
     id: string; // Firestore ID corresponds to WeekId logic, but raw standard string in DB

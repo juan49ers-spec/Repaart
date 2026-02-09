@@ -1,5 +1,24 @@
 import { Timestamp } from 'firebase/firestore';
-import type { FinancialRecord, MonthlyData } from '../../types/finance';
+import type { FinancialRecord, MonthlyData, FinanceError } from '../../types/finance';
+
+export const formatFinanceError = (error: FinanceError): string => {
+    switch (error.type) {
+        case 'PERMISSION_DENIED':
+            return `Permiso denegado para franquicia: ${error.franchiseId}`;
+        case 'VALIDATION_ERROR':
+            return `Error de validación en ${error.field}: ${error.message}`;
+        case 'NOT_FOUND':
+            return `Recurso no encontrado (ID: ${error.franchiseId})`;
+        case 'NETWORK_ERROR':
+            return `Error de red: ${error.cause ? (error.cause as Error).message : 'Desconocido'}`;
+        case 'INVALID_FORMAT':
+            return `Formato inválido en ${error.field}. Esperado: ${error.expected}, Recibido: ${error.received}`;
+        case 'UNKNOWN_ERROR':
+            return `Error desconocido: ${error.message}`;
+        default:
+            return 'Ha ocurrido un error inesperado.';
+    }
+};
 
 // Normalize dates from various formats (Date, string, Timestamp, Firebase Timestamp)
 const normalizeDate = (date: Date | string | Timestamp | { toDate: () => Date }): Date => {

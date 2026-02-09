@@ -4,13 +4,14 @@ import { db } from '../../lib/firebase';
 // Types
 export interface SupportTicket {
     id?: string;
+    userId: string; // ID of the user who created the ticket
     franchiseId: string;
     franchiseName: string;
     subject: string;
     message: string;
     status: 'open' | 'in_progress' | 'resolved';
     priority: 'low' | 'normal' | 'high';
-    category: 'technical' | 'billing' | 'question';
+    category: 'technical' | 'billing' | 'question' | 'skills';
     createdAt: Timestamp;
     updatedAt: Timestamp;
     replies?: SupportReply[];
@@ -54,6 +55,16 @@ export const supportService = {
         const q = query(
             collection(db, 'support_tickets'),
             where('franchiseId', '==', franchiseId),
+            orderBy('updatedAt', 'desc')
+        );
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SupportTicket));
+    },
+
+    async getRiderTickets(userId: string) {
+        const q = query(
+            collection(db, 'support_tickets'),
+            where('userId', '==', userId),
             orderBy('updatedAt', 'desc')
         );
         const snapshot = await getDocs(q);

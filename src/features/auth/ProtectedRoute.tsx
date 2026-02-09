@@ -1,15 +1,26 @@
 import { type FC, type ReactNode } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 interface ProtectedRouteProps {
-    children: ReactNode;
+    children?: ReactNode;
     requireAdmin?: boolean;
 }
 
 const ProtectedRoute: FC<ProtectedRouteProps> = ({ children, requireAdmin = false }) => {
-    const { user, roleConfig, loading } = useAuth();
+    const { user, roleConfig, loading, isAdmin } = useAuth();
     const location = useLocation();
+
+    // DEBUG LOGS
+    console.debug('[ProtectedRoute] Evaluating:', {
+        hasUser: !!user,
+        userEmail: user?.email,
+        hasRoleConfig: !!roleConfig,
+        role: roleConfig?.role,
+        isAdmin,
+        requireAdmin,
+        loading
+    });
 
     // 1. FASE DE CARGA: Esperamos a Firebase Auth Y al perfil de Firestore
     if (loading) {
@@ -29,22 +40,15 @@ const ProtectedRoute: FC<ProtectedRouteProps> = ({ children, requireAdmin = fals
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    // 3. FASE DE INTEGRIDAD (NUEVO): ¿Tenemos los datos críticos?
-    // Si el usuario está logueado pero no tiene rol/config, algo falló en la DB o está incompleto.
-    // Lo enviamos a una pantalla de "Completar Perfil" o "Error" en lugar de romper la app.
-    if (!roleConfig && !user.email?.includes('admin')) {
-        // Nota: Excluimos al super-admin inicial que podría no tener perfil en DB aún
-        console.warn('⚠️ Usuario autenticado pero sin perfil en DB. Redirigiendo...');
-        return <Navigate to="/login" replace />;
-    }
-
-    // 4. FASE DE AUTORIZACIÓN: ¿Tiene permisos de Admin?
-    if (requireAdmin && roleConfig?.role !== 'admin') {
+    // 3. FASE DE AUTORIZACIÓN: ¿Tiene permisos de Admin?
+    // Usamos isAdmin calculado en AuthContext en lugar de roleConfig?.role
+    if (requireAdmin && !isAdmin) {
+        console.warn('[ProtectedRoute] Admin access denied for:', user.email, 'isAdmin:', isAdmin);
         return <Navigate to="/profile" replace />;
     }
 
     // ✅ PASE SEGURO: Todo cargado y verificado.
-    return <>{children}</>;
+    return children ? <>{children}</> : <Outlet />;
 };
 
 export default ProtectedRoute;

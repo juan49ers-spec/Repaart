@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { useRiderStore } from '../../../store/useRiderStore';
 import { useRiderPreferences } from '../hooks/useRiderPreferences';
-import { User, LogOut, ChevronRight, Bell, Shield, HelpCircle, Clock, Calendar, Smartphone, Volume2, Loader2 } from 'lucide-react';
+import { User, LogOut, ChevronRight, Bell, Shield, HelpCircle, Clock, Calendar, Smartphone, Volume2, Loader2, Award } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import RiderStatsOverview from './components/RiderStatsOverview';
 import RiderHeader from './components/RiderHeader';
 import RiderTabs, { RiderTab } from './components/RiderTabs';
 import RiderQuickActions, { QuickAction } from './components/RiderQuickActions';
 import RiderPreferences, { NotificationPreference } from './components/RiderPreferences';
+import RiderSupport from './components/RiderSupport';
 
 export const RiderProfileView: React.FC = () => {
     const { user, logout } = useAuth();
@@ -35,14 +36,14 @@ export const RiderProfileView: React.FC = () => {
 
             return () => clearTimeout(timeoutId);
         }
-    }, [user, fetchMyShifts, isLoading]);
+    }, [user, fetchMyShifts]);
 
     const handleNavigation = (path: string) => {
         navigate(path);
     };
 
     const handleSupport = () => {
-        window.open('mailto:soporte@repaart.com', '_blank');
+        setActiveTab('soporte');
     };
 
     const handleLogout = async () => {
@@ -54,6 +55,7 @@ export const RiderProfileView: React.FC = () => {
 
     const tabs: RiderTab[] = [
         { id: 'perfil', label: 'Perfil', icon: User },
+        { id: 'soporte', label: 'Soporte y Habilidades', icon: Award },
         { id: 'notificaciones', label: 'Notificaciones', icon: Bell },
         { id: 'seguridad', label: 'Seguridad', icon: Shield },
     ];
@@ -90,98 +92,105 @@ export const RiderProfileView: React.FC = () => {
     return (
         <div className="h-[calc(100vh-64px)] flex flex-col overflow-y-auto scroll-smooth pb-32">
             <div className="flex-1 px-6 py-8 space-y-8">
-                {isLoading && !loadTimeout && (
-                    <div className="flex items-center justify-center py-20">
-                        <div className="relative">
-                            <Loader2 className="animate-spin text-emerald-500" size={48} />
-                            <div className="absolute inset-0 bg-emerald-500/10 blur-xl rounded-full" />
-                        </div>
+                {/* Always Show Header & Tabs */}
+                <div className="text-center relative">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl" />
+                    <div className="relative">
+                        <RiderHeader
+                            displayName={user?.displayName || undefined}
+                            photoURL={user?.photoURL || undefined}
+                            role={user?.role}
+                            onEditProfile={() => handleNavigation("/rider/profile/personal")}
+                            onSettings={() => handleNavigation("/rider/profile/security")}
+                        />
                     </div>
-                )}
+                </div>
 
-                {loadError && (
-                    <div className="flex items-center justify-center py-20 px-6">
-                        <div className="text-center">
-                            <p className="text-rose-500 font-bold mb-2">{loadError}</p>
-                            <button
-                                onClick={() => {
-                                    setLoadError(null);
-                                    setLoadTimeout(false);
-                                    if (user?.uid) fetchMyShifts(user.uid);
-                                }}
-                                className="px-6 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-all duration-300 hover:scale-105 active:scale-95"
-                            >
-                                Reintentar
-                            </button>
-                        </div>
-                    </div>
-                )}
+                <RiderTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
-                {!isLoading && !loadError && (
+                {/* Content based on Active Tab */}
+                {activeTab === 'perfil' && (
                     <>
-                        {/* Header Area */}
-                        <div className="text-center relative">
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl" />
-                            <div className="relative">
-                                <RiderHeader
-                                    displayName={user?.displayName || undefined}
-                                    photoURL={user?.photoURL || undefined}
-                                    role={user?.role}
-                                    onEditProfile={() => handleNavigation("/rider/profile/personal")}
-                                    onSettings={() => handleNavigation("/rider/profile/security")}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Navigation Tabs */}
-                        <RiderTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
-
-                        {/* OPERATIONS SUMMARY */}
-                        <div className="relative">
-                            <RiderStatsOverview myShifts={myShifts} />
-                        </div>
-
-                        {/* Quick Actions */}
-                        {quickActions.length > 0 && (
-                            <div>
-                                <RiderQuickActions actions={quickActions} />
+                        {/* Loading / Error State for Shifts only affects Profile Dashboard */}
+                        {isLoading && !loadTimeout && (
+                            <div className="flex items-center justify-center py-10">
+                                <Loader2 className="animate-spin text-emerald-500" size={32} />
                             </div>
                         )}
 
-                        {/* Preferences */}
-                        {activeTab === 'notificaciones' && (
-                            <div>
-                                {preferencesLoading ? (
-                                    <div className="flex items-center justify-center py-10">
-                                        <Loader2 className="animate-spin text-emerald-500" size={24} />
+                        {loadError && (
+                            <div className="flex items-center justify-center py-6 px-4">
+                                <div className="text-center">
+                                    <p className="text-rose-500 font-bold mb-2 text-sm">{loadError}</p>
+                                    <button
+                                        onClick={() => {
+                                            setLoadError(null);
+                                            setLoadTimeout(false);
+                                            if (user?.uid) fetchMyShifts(user.uid);
+                                        }}
+                                        className="px-4 py-1.5 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-all text-xs uppercase font-bold tracking-wider"
+                                    >
+                                        Reintentar
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {!isLoading && !loadError && (
+                            <>
+                                {/* OPERATIONS SUMMARY */}
+                                <div className="relative">
+                                    <RiderStatsOverview myShifts={myShifts} />
+                                </div>
+
+                                {/* Quick Actions */}
+                                {quickActions.length > 0 && (
+                                    <div>
+                                        <RiderQuickActions actions={quickActions} />
                                     </div>
-                                ) : (
-                                    <RiderPreferences preferences={preferences} />
                                 )}
-                            </div>
+
+                                {/* Menu Sections */}
+                                <div className="space-y-6">
+                                    {/* Account Settings */}
+                                    <div className="space-y-3">
+                                        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-2">Configuración de cuenta</h3>
+                                        <div className="bg-slate-900/40 border border-white/10 rounded-[2rem] overflow-hidden backdrop-blur-md shadow-2xl">
+                                            <MenuItem icon={<User size={20} />} label="Datos Personales" onClick={() => handleNavigation("/rider/profile/personal")} />
+                                            <MenuItem icon={<Bell size={20} />} label="Notificaciones" onClick={() => handleNavigation("/rider/profile/notifications")} />
+                                            <MenuItem icon={<Shield size={20} />} label="Seguridad y Acceso" onClick={() => handleNavigation("/rider/profile/security")} />
+                                        </div>
+                                    </div>
+
+                                    {/* Support & Others */}
+                                    <div className="space-y-3">
+                                        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-2">Soporte</h3>
+                                        <div className="bg-slate-900/40 border border-white/10 rounded-[2rem] overflow-hidden backdrop-blur-md shadow-2xl">
+                                            <MenuItem icon={<HelpCircle size={20} />} label="Centro de Ayuda" onClick={handleSupport} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
                         )}
-
-                        {/* Menu Sections */}
-                        <div className="space-y-6">
-                            {/* Account Settings */}
-                            <div className="space-y-3">
-                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-2">Configuración de cuenta</h3>
-                                <div className="bg-slate-900/40 border border-white/10 rounded-[2rem] overflow-hidden backdrop-blur-md shadow-2xl">
-                                    <MenuItem icon={<User size={20} />} label="Datos Personales" onClick={() => handleNavigation("/rider/profile/personal")} />
-                                    <MenuItem icon={<Bell size={20} />} label="Notificaciones" onClick={() => handleNavigation("/rider/profile/notifications")} />
-                                    <MenuItem icon={<Shield size={20} />} label="Seguridad y Acceso" onClick={() => handleNavigation("/rider/profile/security")} />
-                                </div>
-                            </div>
-
-                            {/* Support & Others */}
-                            <div className="space-y-3">
-                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-2">Soporte</h3>
-                                <div className="bg-slate-900/40 border border-white/10 rounded-[2rem] overflow-hidden backdrop-blur-md shadow-2xl">
-                                    <MenuItem icon={<HelpCircle size={20} />} label="Centro de Ayuda" onClick={handleSupport} />
-                                </div>
-                            </div>
-                        </div>
                     </>
+                )}
+
+                {/* Support Tab (Includes Skills) */}
+                {activeTab === 'soporte' && (
+                    <RiderSupport skills={(user as any)?.skills || []} />
+                )}
+
+                {/* Preferences */}
+                {activeTab === 'notificaciones' && (
+                    <div>
+                        {preferencesLoading ? (
+                            <div className="flex items-center justify-center py-10">
+                                <Loader2 className="animate-spin text-emerald-500" size={24} />
+                            </div>
+                        ) : (
+                            <RiderPreferences preferences={preferences} />
+                        )}
+                    </div>
                 )}
             </div>
 

@@ -1,0 +1,1528 @@
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90mC:/Users/Usuario/.gemini/antigravity/playground/repaart[39m
+
+stderr | src/features/franchise/__tests__/ResourcesPanel.test.tsx > ResourcesPanel Integration > should render resources and guides after loading
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | src/features/admin/__tests__/AdminResourcesPanel.test.tsx > AdminResourcesPanel Integration > should render loading state initially
+An update to AdminResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | src/features/franchise/__tests__/ResourcesPanel.test.tsx > ResourcesPanel Integration > should filter by folder/category
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ [32mÔ£ô[39m src/features/franchise/__tests__/ResourcesPanel.test.tsx[2m > [22mResourcesPanel Integration[2m > [22mshould render loading state initially[32m 180[2mms[22m[39m
+ [32mÔ£ô[39m src/features/franchise/__tests__/ResourcesPanel.test.tsx[2m > [22mResourcesPanel Integration[2m > [22mshould render resources and guides after loading[32m 64[2mms[22m[39m
+stderr | src/features/franchise/__tests__/ResourcesPanel.test.tsx > ResourcesPanel Integration > should search resources
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | src/features/admin/__tests__/AdminResourcesPanel.test.tsx > AdminResourcesPanel Integration > should switch tabs
+An update to AdminResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ [32mÔ£ô[39m src/features/admin/__tests__/AdminResourcesPanel.test.tsx[2m > [22mAdminResourcesPanel Integration[2m > [22mshould render loading state initially[32m 178[2mms[22m[39m
+ [32mÔ£ô[39m src/features/admin/__tests__/AdminResourcesPanel.test.tsx[2m > [22mAdminResourcesPanel Integration[2m > [22mshould render vault by default and fetch resources[32m 50[2mms[22m[39m
+ [32mÔ£ô[39m src/features/admin/__tests__/AdminResourcesPanel.test.tsx[2m > [22mAdminResourcesPanel Integration[2m > [22mshould switch tabs[32m 27[2mms[22m[39m
+stderr | src/features/franchise/__tests__/ResourcesPanel.test.tsx > ResourcesPanel Integration > should toggle between grid and list view
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ [32mÔ£ô[39m src/features/franchise/__tests__/ResourcesPanel.test.tsx[2m > [22mResourcesPanel Integration[2m > [22mshould filter by folder/category[32m 57[2mms[22m[39m
+ [32mÔ£ô[39m src/features/franchise/__tests__/ResourcesPanel.test.tsx[2m > [22mResourcesPanel Integration[2m > [22mshould search resources[32m 32[2mms[22m[39m
+stderr | src/features/admin/__tests__/AdminResourcesPanel.test.tsx > AdminResourcesPanel Integration > should open upload modal
+An update to AdminResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | src/features/franchise/__tests__/ResourcesPanel.test.tsx > ResourcesPanel Integration > should open preview modal when clicking a resource
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | src/features/franchise/__tests__/ResourcesPanel.test.tsx > ResourcesPanel Integration > should open guide viewer when clicking a guide
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+stderr | src/features/franchise/__tests__/ResourcesPanel.test.tsx > ResourcesPanel Integration > should handle file download
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to ResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ [32mÔ£ô[39m src/features/franchise/__tests__/ResourcesPanel.test.tsx[2m > [22mResourcesPanel Integration[2m > [22mshould toggle between grid and list view[32m 69[2mms[22m[39m
+ [31m├ù[39m src/features/franchise/__tests__/ResourcesPanel.test.tsx[2m > [22mResourcesPanel Integration[2m > [22mshould open preview modal when clicking a resource[32m 20[2mms[22m[39m
+[31m   ÔåÆ Unable to find an element with the text: Manual de Usuario. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"flex flex-col md:flex-row h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden"[31m
+    [36m>[31m
+      [36m<aside[31m
+        [33mclass[31m=[32m"hidden md:flex w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col pt-6 pb-4"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"px-6 mb-8"[31m
+        [36m>[31m
+          [36m<h2[31m
+            [33mclass[31m=[32m"text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"w-6 h-6 text-indigo-600 dark:text-indigo-400"[31m
+              [33mdata-testid[31m=[32m"folderopen-icon"[31m
+            [36m/>[31m
+            [0mRecursos[0m
+          [36m</h2>[31m
+          [36m<p[31m
+            [33mclass[31m=[32m"text-xs text-slate-500 mt-1 font-medium pl-8"[31m
+          [36m>[31m
+            [0mB├│veda Digital Operativa[0m
+          [36m</p>[31m
+        [36m</div>[31m
+        [36m<nav[31m
+          [33mclass[31m=[32m"flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar"[31m
+        [36m>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-4 h-4 text-slate-400 group-hover:text-slate-600"[31m
+                [33mdata-testid[31m=[32m"shield-icon"[31m
+              [36m/>[31m
+              [0mMarco Legal & Contratos[0m
+            [36m</div>[31m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200 dark:ring-indigo-800"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-4 h-4 text-indigo-600"[31m
+                [33mdata-testid[31m=[32m"bookopen-icon"[31m
+              [36m/>[31m
+              [0mManuales Interactivos[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"w-1.5 h-1.5 rounded-full bg-indigo-500"[31m
+            [36m/>[31m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-4 h-4 text-slate-400 group-hover:text-slate-600"[31m
+                [33mdata-testid[31m=[32m"briefcase-icon"[31m
+              [36m/>[31m
+              [0mDossiers Comerciales[0m
+            [36m</div>[31m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-4 h-4 text-slate-400 group-hover:text-slate-600"[31m
+                [33mdata-testid[31m=[32m"layout-icon"[31m
+              [36m/>[31m
+              [0mActivos de Marca[0m
+            [36m</div>[31m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-4 h-4 text-slate-400 group-hover:text-slate-600"[31m
+                [33mdata-testid[31m=[32m"folder-icon"[31m
+              [36m/>[31m
+              [0mDocumentaci├│n General[0m
+            [36m</div>[31m
+          [36m</button>[31m
+        [36m</nav>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"p-4 mt-auto"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"bg-slate-50 dark:bg-slate-800/10 rounded-xl p-4 border border-slate-100 dark:border-slate-800 mb-4"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"w-4 h-4 text-indigo-600 dark:text-indigo-400"[31m
+                  [33mdata-testid[31m=[32m"shield-icon"[31m
+                [36m/>[31m
+              [36m</div>[31m
+              [36m<div>[31m
+                [36m<h4[31m
+                  [33mclass[31m=[32m"font-bold text-xs text-slate-700 dark:text-slate-300"[31m
+                [36m>[31m
+                  [0mDocumentaci├│n Segura[0m
+                [36m</h4>[31m
+                [36m<p[31m
+                  [33mclass[31m=[32m"text-[10px] text-slate-400"[31m
+                [36m>[31m
+                  [0mEncriptado E2E[0m
+                [36m</p>[31m
+              [36m</div>[31m
+            [36m</div>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-4 text-white relative overflow-hidden shadow-lg"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"absolute top-0 right-0 p-3 opacity-10"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-20 h-20"[31m
+                [33mdata-testid[31m=[32m"shield-icon"[31m
+              [36m/>[31m
+            [36m</div>[31m
+            [36m<h4[31m
+              [33mclass[31m=[32m"font-bold text-sm relative z-10"[31m
+            [3...[39m
+ [31m├ù[39m src/features/franchise/__tests__/ResourcesPanel.test.tsx[2m > [22mResourcesPanel Integration[2m > [22mshould open guide viewer when clicking a guide[32m 13[2mms[22m[39m
+[31m   ÔåÆ Unable to find an element with the text: Gu├¡a de Inicio R├ípido. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"flex flex-col md:flex-row h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden"[31m
+    [36m>[31m
+      [36m<aside[31m
+        [33mclass[31m=[32m"hidden md:flex w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col pt-6 pb-4"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"px-6 mb-8"[31m
+        [36m>[31m
+          [36m<h2[31m
+            [33mclass[31m=[32m"text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"w-6 h-6 text-indigo-600 dark:text-indigo-400"[31m
+              [33mdata-testid[31m=[32m"folderopen-icon"[31m
+            [36m/>[31m
+            [0mRecursos[0m
+          [36m</h2>[31m
+          [36m<p[31m
+            [33mclass[31m=[32m"text-xs text-slate-500 mt-1 font-medium pl-8"[31m
+          [36m>[31m
+            [0mB├│veda Digital Operativa[0m
+          [36m</p>[31m
+        [36m</div>[31m
+        [36m<nav[31m
+          [33mclass[31m=[32m"flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar"[31m
+        [36m>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-4 h-4 text-slate-400 group-hover:text-slate-600"[31m
+                [33mdata-testid[31m=[32m"shield-icon"[31m
+              [36m/>[31m
+              [0mMarco Legal & Contratos[0m
+            [36m</div>[31m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200 dark:ring-indigo-800"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-4 h-4 text-indigo-600"[31m
+                [33mdata-testid[31m=[32m"bookopen-icon"[31m
+              [36m/>[31m
+              [0mManuales Interactivos[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"w-1.5 h-1.5 rounded-full bg-indigo-500"[31m
+            [36m/>[31m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-4 h-4 text-slate-400 group-hover:text-slate-600"[31m
+                [33mdata-testid[31m=[32m"briefcase-icon"[31m
+              [36m/>[31m
+              [0mDossiers Comerciales[0m
+            [36m</div>[31m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-4 h-4 text-slate-400 group-hover:text-slate-600"[31m
+                [33mdata-testid[31m=[32m"layout-icon"[31m
+              [36m/>[31m
+              [0mActivos de Marca[0m
+            [36m</div>[31m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-4 h-4 text-slate-400 group-hover:text-slate-600"[31m
+                [33mdata-testid[31m=[32m"folder-icon"[31m
+              [36m/>[31m
+              [0mDocumentaci├│n General[0m
+            [36m</div>[31m
+          [36m</button>[31m
+        [36m</nav>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"p-4 mt-auto"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"bg-slate-50 dark:bg-slate-800/10 rounded-xl p-4 border border-slate-100 dark:border-slate-800 mb-4"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"w-4 h-4 text-indigo-600 dark:text-indigo-400"[31m
+                  [33mdata-testid[31m=[32m"shield-icon"[31m
+                [36m/>[31m
+              [36m</div>[31m
+              [36m<div>[31m
+                [36m<h4[31m
+                  [33mclass[31m=[32m"font-bold text-xs text-slate-700 dark:text-slate-300"[31m
+                [36m>[31m
+                  [0mDocumentaci├│n Segura[0m
+                [36m</h4>[31m
+                [36m<p[31m
+                  [33mclass[31m=[32m"text-[10px] text-slate-400"[31m
+                [36m>[31m
+                  [0mEncriptado E2E[0m
+                [36m</p>[31m
+              [36m</div>[31m
+            [36m</div>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-4 text-white relative overflow-hidden shadow-lg"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"absolute top-0 right-0 p-3 opacity-10"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-20 h-20"[31m
+                [33mdata-testid[31m=[32m"shield-icon"[31m
+              [36m/>[31m
+            [36m</div>[31m
+            [36m<h4[31m
+              [33mclass[31m=[32m"font-bold text-sm relative z-10"[31m
+            [3...[39m
+ [31m├ù[39m src/features/franchise/__tests__/ResourcesPanel.test.tsx[2m > [22mResourcesPanel Integration[2m > [22mshould open request modal[32m 15[2mms[22m[39m
+[31m   ÔåÆ Unable to find an element by: [data-testid="doc-request-modal"]
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"flex flex-col md:flex-row h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden"[31m
+    [36m>[31m
+      [36m<aside[31m
+        [33mclass[31m=[32m"hidden md:flex w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col pt-6 pb-4"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"px-6 mb-8"[31m
+        [36m>[31m
+          [36m<h2[31m
+            [33mclass[31m=[32m"text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"w-6 h-6 text-indigo-600 dark:text-indigo-400"[31m
+              [33mdata-testid[31m=[32m"folderopen-icon"[31m
+            [36m/>[31m
+            [0mRecursos[0m
+          [36m</h2>[31m
+          [36m<p[31m
+            [33mclass[31m=[32m"text-xs text-slate-500 mt-1 font-medium pl-8"[31m
+          [36m>[31m
+            [0mB├│veda Digital Operativa[0m
+          [36m</p>[31m
+        [36m</div>[31m
+        [36m<nav[31m
+          [33mclass[31m=[32m"flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar"[31m
+        [36m>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-4 h-4 text-slate-400 group-hover:text-slate-600"[31m
+                [33mdata-testid[31m=[32m"shield-icon"[31m
+              [36m/>[31m
+              [0mMarco Legal & Contratos[0m
+            [36m</div>[31m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200 dark:ring-indigo-800"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-4 h-4 text-indigo-600"[31m
+                [33mdata-testid[31m=[32m"bookopen-icon"[31m
+              [36m/>[31m
+              [0mManuales Interactivos[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"w-1.5 h-1.5 rounded-full bg-indigo-500"[31m
+            [36m/>[31m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-4 h-4 text-slate-400 group-hover:text-slate-600"[31m
+                [33mdata-testid[31m=[32m"briefcase-icon"[31m
+              [36m/>[31m
+              [0mDossiers Comerciales[0m
+            [36m</div>[31m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-4 h-4 text-slate-400 group-hover:text-slate-600"[31m
+                [33mdata-testid[31m=[32m"layout-icon"[31m
+              [36m/>[31m
+              [0mActivos de Marca[0m
+            [36m</div>[31m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-4 h-4 text-slate-400 group-hover:text-slate-600"[31m
+                [33mdata-testid[31m=[32m"folder-icon"[31m
+              [36m/>[31m
+              [0mDocumentaci├│n General[0m
+            [36m</div>[31m
+          [36m</button>[31m
+        [36m</nav>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"p-4 mt-auto"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"bg-slate-50 dark:bg-slate-800/10 rounded-xl p-4 border border-slate-100 dark:border-slate-800 mb-4"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"w-4 h-4 text-indigo-600 dark:text-indigo-400"[31m
+                  [33mdata-testid[31m=[32m"shield-icon"[31m
+                [36m/>[31m
+              [36m</div>[31m
+              [36m<div>[31m
+                [36m<h4[31m
+                  [33mclass[31m=[32m"font-bold text-xs text-slate-700 dark:text-slate-300"[31m
+                [36m>[31m
+                  [0mDocumentaci├│n Segura[0m
+                [36m</h4>[31m
+                [36m<p[31m
+                  [33mclass[31m=[32m"text-[10px] text-slate-400"[31m
+                [36m>[31m
+                  [0mEncriptado E2E[0m
+                [36m</p>[31m
+              [36m</div>[31m
+            [36m</div>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-4 text-white relative overflow-hidden shadow-lg"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"absolute top-0 right-0 p-3 opacity-10"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-20 h-20"[31m
+                [33mdata-testid[31m=[32m"shield-icon"[31m
+              [36m/>[31m
+            [36m</div>[31m
+            [36m<h4[31m
+              [33mclass[31m=[32m"font-bold text-sm relative z-10"[31m
+            [3...[39m
+ [31m├ù[39m src/features/franchise/__tests__/ResourcesPanel.test.tsx[2m > [22mResourcesPanel Integration[2m > [22mshould handle file download[32m 17[2mms[22m[39m
+[31m   ÔåÆ Unable to find an element with the text: Descargar. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"flex flex-col md:flex-row h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden"[31m
+    [36m>[31m
+      [36m<aside[31m
+        [33mclass[31m=[32m"hidden md:flex w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col pt-6 pb-4"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"px-6 mb-8"[31m
+        [36m>[31m
+          [36m<h2[31m
+            [33mclass[31m=[32m"text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"w-6 h-6 text-indigo-600 dark:text-indigo-400"[31m
+              [33mdata-testid[31m=[32m"folderopen-icon"[31m
+            [36m/>[31m
+            [0mRecursos[0m
+          [36m</h2>[31m
+          [36m<p[31m
+            [33mclass[31m=[32m"text-xs text-slate-500 mt-1 font-medium pl-8"[31m
+          [36m>[31m
+            [0mB├│veda Digital Operativa[0m
+          [36m</p>[31m
+        [36m</div>[31m
+        [36m<nav[31m
+          [33mclass[31m=[32m"flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar"[31m
+        [36m>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-4 h-4 text-slate-400 group-hover:text-slate-600"[31m
+                [33mdata-testid[31m=[32m"shield-icon"[31m
+              [36m/>[31m
+              [0mMarco Legal & Contratos[0m
+            [36m</div>[31m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200 dark:ring-indigo-800"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-4 h-4 text-indigo-600"[31m
+                [33mdata-testid[31m=[32m"bookopen-icon"[31m
+              [36m/>[31m
+              [0mManuales Interactivos[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"w-1.5 h-1.5 rounded-full bg-indigo-500"[31m
+            [36m/>[31m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-4 h-4 text-slate-400 group-hover:text-slate-600"[31m
+                [33mdata-testid[31m=[32m"briefcase-icon"[31m
+              [36m/>[31m
+              [0mDossiers Comerciales[0m
+            [36m</div>[31m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-4 h-4 text-slate-400 group-hover:text-slate-600"[31m
+                [33mdata-testid[31m=[32m"layout-icon"[31m
+              [36m/>[31m
+              [0mActivos de Marca[0m
+            [36m</div>[31m
+          [36m</button>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-4 h-4 text-slate-400 group-hover:text-slate-600"[31m
+                [33mdata-testid[31m=[32m"folder-icon"[31m
+              [36m/>[31m
+              [0mDocumentaci├│n General[0m
+            [36m</div>[31m
+          [36m</button>[31m
+        [36m</nav>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"p-4 mt-auto"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"bg-slate-50 dark:bg-slate-800/10 rounded-xl p-4 border border-slate-100 dark:border-slate-800 mb-4"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-3"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"w-4 h-4 text-indigo-600 dark:text-indigo-400"[31m
+                  [33mdata-testid[31m=[32m"shield-icon"[31m
+                [36m/>[31m
+              [36m</div>[31m
+              [36m<div>[31m
+                [36m<h4[31m
+                  [33mclass[31m=[32m"font-bold text-xs text-slate-700 dark:text-slate-300"[31m
+                [36m>[31m
+                  [0mDocumentaci├│n Segura[0m
+                [36m</h4>[31m
+                [36m<p[31m
+                  [33mclass[31m=[32m"text-[10px] text-slate-400"[31m
+                [36m>[31m
+                  [0mEncriptado E2E[0m
+                [36m</p>[31m
+              [36m</div>[31m
+            [36m</div>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-4 text-white relative overflow-hidden shadow-lg"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"absolute top-0 right-0 p-3 opacity-10"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"w-20 h-20"[31m
+                [33mdata-testid[31m=[32m"shield-icon"[31m
+              [36m/>[31m
+            [36m</div>[31m
+            [36m<h4[31m
+              [33mclass[31m=[32m"font-bold text-sm relative z-10"[31m
+            [3...[39m
+stderr | src/features/admin/__tests__/AdminResourcesPanel.test.tsx > AdminResourcesPanel Integration > should handle token refresh
+An update to AdminResourcesPanel inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ [32mÔ£ô[39m src/features/admin/__tests__/AdminResourcesPanel.test.tsx[2m > [22mAdminResourcesPanel Integration[2m > [22mshould filter resources by category in vault[32m 43[2mms[22m[39m
+ [32mÔ£ô[39m src/features/admin/__tests__/AdminResourcesPanel.test.tsx[2m > [22mAdminResourcesPanel Integration[2m > [22mshould open upload modal[32m 18[2mms[22m[39m
+ [32mÔ£ô[39m src/features/admin/__tests__/AdminResourcesPanel.test.tsx[2m > [22mAdminResourcesPanel Integration[2m > [22mshould handle deletion confirmation[32m 31[2mms[22m[39m
+ [32mÔ£ô[39m src/features/admin/__tests__/AdminResourcesPanel.test.tsx[2m > [22mAdminResourcesPanel Integration[2m > [22mshould handle toggling pin[32m 42[2mms[22m[39m
+ [32mÔ£ô[39m src/features/admin/__tests__/AdminResourcesPanel.test.tsx[2m > [22mAdminResourcesPanel Integration[2m > [22mshould handle token refresh[32m 12[2mms[22m[39m
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ» Failed Tests 4 ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»
+
+ FAIL  src/features/franchise/__tests__/ResourcesPanel.test.tsx > ResourcesPanel Integration > should open preview modal when clicking a resource
+TestingLibraryElementError: Unable to find an element with the text: Manual de Usuario. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="flex flex-col md:flex-row h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden"
+    >
+      <aside
+        class="hidden md:flex w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col pt-6 pb-4"
+      >
+        <div
+          class="px-6 mb-8"
+        >
+          <h2
+            class="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2"
+          >
+            <div
+              class="w-6 h-6 text-indigo-600 dark:text-indigo-400"
+              data-testid="folderopen-icon"
+            />
+            Recursos
+          </h2>
+          <p
+            class="text-xs text-slate-500 mt-1 font-medium pl-8"
+          >
+            B├│veda Digital Operativa
+          </p>
+        </div>
+        <nav
+          class="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar"
+        >
+          <button
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-4 h-4 text-slate-400 group-hover:text-slate-600"
+                data-testid="shield-icon"
+              />
+              Marco Legal & Contratos
+            </div>
+          </button>
+          <button
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200 dark:ring-indigo-800"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-4 h-4 text-indigo-600"
+                data-testid="bookopen-icon"
+              />
+              Manuales Interactivos
+            </div>
+            <div
+              class="w-1.5 h-1.5 rounded-full bg-indigo-500"
+            />
+          </button>
+          <button
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-4 h-4 text-slate-400 group-hover:text-slate-600"
+                data-testid="briefcase-icon"
+              />
+              Dossiers Comerciales
+            </div>
+          </button>
+          <button
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-4 h-4 text-slate-400 group-hover:text-slate-600"
+                data-testid="layout-icon"
+              />
+              Activos de Marca
+            </div>
+          </button>
+          <button
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-4 h-4 text-slate-400 group-hover:text-slate-600"
+                data-testid="folder-icon"
+              />
+              Documentaci├│n General
+            </div>
+          </button>
+        </nav>
+        <div
+          class="p-4 mt-auto"
+        >
+          <div
+            class="bg-slate-50 dark:bg-slate-800/10 rounded-xl p-4 border border-slate-100 dark:border-slate-800 mb-4"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg"
+              >
+                <div
+                  class="w-4 h-4 text-indigo-600 dark:text-indigo-400"
+                  data-testid="shield-icon"
+                />
+              </div>
+              <div>
+                <h4
+                  class="font-bold text-xs text-slate-700 dark:text-slate-300"
+                >
+                  Documentaci├│n Segura
+                </h4>
+                <p
+                  class="text-[10px] text-slate-400"
+                >
+                  Encriptado E2E
+                </p>
+              </div>
+            </div>
+          </div>
+          <div
+            class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-4 text-white relative overflow-hidden shadow-lg"
+          >
+            <div
+              class="absolute top-0 right-0 p-3 opacity-10"
+            >
+              <div
+                class="w-20 h-20"
+                data-testid="shield-icon"
+              />
+            </div>
+            <h4
+              class="font-bold text-sm relative z-10"
+            [3...
+ ÔØ» Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ÔØ» node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ÔØ» node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ÔØ» node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ÔØ» src/features/franchise/__tests__/ResourcesPanel.test.tsx:276:32
+    274|         triggerSnapshots();
+    275| 
+    276|         fireEvent.click(screen.getByText('Manual de Usuario'));
+       |                                ^
+    277|         expect(screen.getByTestId('doc-preview-modal')).toBeInTheDocumÔÇª
+    278|     });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[1/4]ÔÄ»
+
+ FAIL  src/features/franchise/__tests__/ResourcesPanel.test.tsx > ResourcesPanel Integration > should open guide viewer when clicking a guide
+TestingLibraryElementError: Unable to find an element with the text: Gu├¡a de Inicio R├ípido. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="flex flex-col md:flex-row h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden"
+    >
+      <aside
+        class="hidden md:flex w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col pt-6 pb-4"
+      >
+        <div
+          class="px-6 mb-8"
+        >
+          <h2
+            class="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2"
+          >
+            <div
+              class="w-6 h-6 text-indigo-600 dark:text-indigo-400"
+              data-testid="folderopen-icon"
+            />
+            Recursos
+          </h2>
+          <p
+            class="text-xs text-slate-500 mt-1 font-medium pl-8"
+          >
+            B├│veda Digital Operativa
+          </p>
+        </div>
+        <nav
+          class="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar"
+        >
+          <button
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-4 h-4 text-slate-400 group-hover:text-slate-600"
+                data-testid="shield-icon"
+              />
+              Marco Legal & Contratos
+            </div>
+          </button>
+          <button
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200 dark:ring-indigo-800"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-4 h-4 text-indigo-600"
+                data-testid="bookopen-icon"
+              />
+              Manuales Interactivos
+            </div>
+            <div
+              class="w-1.5 h-1.5 rounded-full bg-indigo-500"
+            />
+          </button>
+          <button
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-4 h-4 text-slate-400 group-hover:text-slate-600"
+                data-testid="briefcase-icon"
+              />
+              Dossiers Comerciales
+            </div>
+          </button>
+          <button
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-4 h-4 text-slate-400 group-hover:text-slate-600"
+                data-testid="layout-icon"
+              />
+              Activos de Marca
+            </div>
+          </button>
+          <button
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-4 h-4 text-slate-400 group-hover:text-slate-600"
+                data-testid="folder-icon"
+              />
+              Documentaci├│n General
+            </div>
+          </button>
+        </nav>
+        <div
+          class="p-4 mt-auto"
+        >
+          <div
+            class="bg-slate-50 dark:bg-slate-800/10 rounded-xl p-4 border border-slate-100 dark:border-slate-800 mb-4"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg"
+              >
+                <div
+                  class="w-4 h-4 text-indigo-600 dark:text-indigo-400"
+                  data-testid="shield-icon"
+                />
+              </div>
+              <div>
+                <h4
+                  class="font-bold text-xs text-slate-700 dark:text-slate-300"
+                >
+                  Documentaci├│n Segura
+                </h4>
+                <p
+                  class="text-[10px] text-slate-400"
+                >
+                  Encriptado E2E
+                </p>
+              </div>
+            </div>
+          </div>
+          <div
+            class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-4 text-white relative overflow-hidden shadow-lg"
+          >
+            <div
+              class="absolute top-0 right-0 p-3 opacity-10"
+            >
+              <div
+                class="w-20 h-20"
+                data-testid="shield-icon"
+              />
+            </div>
+            <h4
+              class="font-bold text-sm relative z-10"
+            [3...
+ ÔØ» Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ÔØ» node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ÔØ» node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ÔØ» node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ÔØ» src/features/franchise/__tests__/ResourcesPanel.test.tsx:286:32
+    284|         triggerSnapshots();
+    285| 
+    286|         fireEvent.click(screen.getByText('Gu├¡a de Inicio R├ípido'));
+       |                                ^
+    287|         expect(screen.getByTestId('guide-viewer-modal')).toBeInTheDocuÔÇª
+    288|     });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[2/4]ÔÄ»
+
+ FAIL  src/features/franchise/__tests__/ResourcesPanel.test.tsx > ResourcesPanel Integration > should open request modal
+TestingLibraryElementError: Unable to find an element by: [data-testid="doc-request-modal"]
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="flex flex-col md:flex-row h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden"
+    >
+      <aside
+        class="hidden md:flex w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col pt-6 pb-4"
+      >
+        <div
+          class="px-6 mb-8"
+        >
+          <h2
+            class="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2"
+          >
+            <div
+              class="w-6 h-6 text-indigo-600 dark:text-indigo-400"
+              data-testid="folderopen-icon"
+            />
+            Recursos
+          </h2>
+          <p
+            class="text-xs text-slate-500 mt-1 font-medium pl-8"
+          >
+            B├│veda Digital Operativa
+          </p>
+        </div>
+        <nav
+          class="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar"
+        >
+          <button
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-4 h-4 text-slate-400 group-hover:text-slate-600"
+                data-testid="shield-icon"
+              />
+              Marco Legal & Contratos
+            </div>
+          </button>
+          <button
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200 dark:ring-indigo-800"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-4 h-4 text-indigo-600"
+                data-testid="bookopen-icon"
+              />
+              Manuales Interactivos
+            </div>
+            <div
+              class="w-1.5 h-1.5 rounded-full bg-indigo-500"
+            />
+          </button>
+          <button
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-4 h-4 text-slate-400 group-hover:text-slate-600"
+                data-testid="briefcase-icon"
+              />
+              Dossiers Comerciales
+            </div>
+          </button>
+          <button
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-4 h-4 text-slate-400 group-hover:text-slate-600"
+                data-testid="layout-icon"
+              />
+              Activos de Marca
+            </div>
+          </button>
+          <button
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-4 h-4 text-slate-400 group-hover:text-slate-600"
+                data-testid="folder-icon"
+              />
+              Documentaci├│n General
+            </div>
+          </button>
+        </nav>
+        <div
+          class="p-4 mt-auto"
+        >
+          <div
+            class="bg-slate-50 dark:bg-slate-800/10 rounded-xl p-4 border border-slate-100 dark:border-slate-800 mb-4"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg"
+              >
+                <div
+                  class="w-4 h-4 text-indigo-600 dark:text-indigo-400"
+                  data-testid="shield-icon"
+                />
+              </div>
+              <div>
+                <h4
+                  class="font-bold text-xs text-slate-700 dark:text-slate-300"
+                >
+                  Documentaci├│n Segura
+                </h4>
+                <p
+                  class="text-[10px] text-slate-400"
+                >
+                  Encriptado E2E
+                </p>
+              </div>
+            </div>
+          </div>
+          <div
+            class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-4 text-white relative overflow-hidden shadow-lg"
+          >
+            <div
+              class="absolute top-0 right-0 p-3 opacity-10"
+            >
+              <div
+                class="w-20 h-20"
+                data-testid="shield-icon"
+              />
+            </div>
+            <h4
+              class="font-bold text-sm relative z-10"
+            [3...
+ ÔØ» Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ÔØ» node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ÔØ» node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ÔØ» node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ÔØ» src/features/franchise/__tests__/ResourcesPanel.test.tsx:293:23
+    291|         render(<ResourcesPanel />);
+    292|         fireEvent.click(screen.getByText('Solicitar Documento'));
+    293|         expect(screen.getByTestId('doc-request-modal')).toBeInTheDocumÔÇª
+       |                       ^
+    294|     });
+    295| 
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[3/4]ÔÄ»
+
+ FAIL  src/features/franchise/__tests__/ResourcesPanel.test.tsx > ResourcesPanel Integration > should handle file download
+TestingLibraryElementError: Unable to find an element with the text: Descargar. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="flex flex-col md:flex-row h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden"
+    >
+      <aside
+        class="hidden md:flex w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col pt-6 pb-4"
+      >
+        <div
+          class="px-6 mb-8"
+        >
+          <h2
+            class="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2"
+          >
+            <div
+              class="w-6 h-6 text-indigo-600 dark:text-indigo-400"
+              data-testid="folderopen-icon"
+            />
+            Recursos
+          </h2>
+          <p
+            class="text-xs text-slate-500 mt-1 font-medium pl-8"
+          >
+            B├│veda Digital Operativa
+          </p>
+        </div>
+        <nav
+          class="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar"
+        >
+          <button
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-4 h-4 text-slate-400 group-hover:text-slate-600"
+                data-testid="shield-icon"
+              />
+              Marco Legal & Contratos
+            </div>
+          </button>
+          <button
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200 dark:ring-indigo-800"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-4 h-4 text-indigo-600"
+                data-testid="bookopen-icon"
+              />
+              Manuales Interactivos
+            </div>
+            <div
+              class="w-1.5 h-1.5 rounded-full bg-indigo-500"
+            />
+          </button>
+          <button
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-4 h-4 text-slate-400 group-hover:text-slate-600"
+                data-testid="briefcase-icon"
+              />
+              Dossiers Comerciales
+            </div>
+          </button>
+          <button
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-4 h-4 text-slate-400 group-hover:text-slate-600"
+                data-testid="layout-icon"
+              />
+              Activos de Marca
+            </div>
+          </button>
+          <button
+            class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="w-4 h-4 text-slate-400 group-hover:text-slate-600"
+                data-testid="folder-icon"
+              />
+              Documentaci├│n General
+            </div>
+          </button>
+        </nav>
+        <div
+          class="p-4 mt-auto"
+        >
+          <div
+            class="bg-slate-50 dark:bg-slate-800/10 rounded-xl p-4 border border-slate-100 dark:border-slate-800 mb-4"
+          >
+            <div
+              class="flex items-center gap-3"
+            >
+              <div
+                class="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg"
+              >
+                <div
+                  class="w-4 h-4 text-indigo-600 dark:text-indigo-400"
+                  data-testid="shield-icon"
+                />
+              </div>
+              <div>
+                <h4
+                  class="font-bold text-xs text-slate-700 dark:text-slate-300"
+                >
+                  Documentaci├│n Segura
+                </h4>
+                <p
+                  class="text-[10px] text-slate-400"
+                >
+                  Encriptado E2E
+                </p>
+              </div>
+            </div>
+          </div>
+          <div
+            class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-4 text-white relative overflow-hidden shadow-lg"
+          >
+            <div
+              class="absolute top-0 right-0 p-3 opacity-10"
+            >
+              <div
+                class="w-20 h-20"
+                data-testid="shield-icon"
+              />
+            </div>
+            <h4
+              class="font-bold text-sm relative z-10"
+            [3...
+ ÔØ» Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ÔØ» node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ÔØ» node_modules/@testing-library/dom/dist/query-helpers.js:109:15
+ ÔØ» src/features/franchise/__tests__/ResourcesPanel.test.tsx:302:39
+    300|         triggerSnapshots();
+    301| 
+    302|         const downloadButton = screen.getAllByText('Descargar')[0];
+       |                                       ^
+    303|         fireEvent.click(downloadButton);
+    304| 
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[4/4]ÔÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m4 failed[39m[22m[2m | [22m[1m[32m13 passed[39m[22m[90m (17)[39m
+[2m   Start at [22m 13:21:37
+[2m   Duration [22m 2.45s[2m (transform 586ms, setup 334ms, import 894ms, tests 872ms, environment 2.20s)[22m
+

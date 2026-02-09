@@ -32,14 +32,12 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.onIncidentCreated = void 0;
 const functions = __importStar(require("firebase-functions/v1"));
 const nodemailer = __importStar(require("nodemailer"));
-// Config check safe access
-const gmailEmail = (_a = functions.config().gmail) === null || _a === void 0 ? void 0 : _a.email;
-const gmailPassword = (_b = functions.config().gmail) === null || _b === void 0 ? void 0 : _b.password;
+const gmailEmail = process.env.GMAIL_EMAIL;
+const gmailPassword = process.env.GMAIL_PASSWORD;
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -53,7 +51,7 @@ exports.onIncidentCreated = functions.firestore.document('incidents/{incidentId}
         return;
     const mailOptions = {
         from: 'Repaart App <noreply@repaart.com>',
-        to: 'admin@repaart.com', // Ideally configurable
+        to: 'admin@repaart.com',
         subject: `🚨 Nueva Incidencia: ${incidentData.type || 'General'}`,
         html: `
             <h1>Nueva Incidencia Registrada</h1>
@@ -70,7 +68,7 @@ exports.onIncidentCreated = functions.firestore.document('incidents/{incidentId}
             console.log('📧 Email de incidencia enviado.');
         }
         else {
-            console.log('⚠️ No hay credenciales de Gmail configuradas (functions.config().gmail). Email no enviado.');
+            console.log('⚠️ No hay credenciales de Gmail configuradas. Email no enviado.');
         }
     }
     catch (error) {

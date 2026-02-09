@@ -72,6 +72,7 @@ const SupportDashboard = () => {
         const fName = (user as any).franchiseName || 'Mi Franquicia';
 
         await supportService.createTicket({
+            userId: user?.uid || '',
             franchiseId: fId,
             franchiseName: fName,
             subject: newTicket.subject,

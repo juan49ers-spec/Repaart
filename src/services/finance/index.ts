@@ -4,8 +4,12 @@ import { financeRecords } from './records';
 import { financeSummary } from './summary';
 import { financeInbox } from './inbox';
 import { getFinancialTrend } from './trends';
+import { formatFinanceError } from './helpers';
 
 export const financeService = {
+    // Helpers
+    formatFinanceError,
+
     // Records
     subscribeToRecords: financeRecords.subscribeToRecords,
     addRecord: financeRecords.addRecord,

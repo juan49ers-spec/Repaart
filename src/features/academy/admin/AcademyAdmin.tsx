@@ -1,8 +1,5 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAutoSave } from '../../../hooks/useAutoSave';
-import { useVersioning } from '../../../hooks/useVersioning';
-import { SortableList } from '../../../components/ui/drag-drop/SortableList';
 import {
     useAcademyModules,
     useAcademyLessons,
@@ -41,7 +38,6 @@ const AcademyAdmin = () => {
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [isSaving, setIsSaving] = useState(false);
-    const [showVersionHistory, setShowVersionHistory] = useState(false);
 
     const { lessons, refetch: refetchLessons } = useAcademyLessons(selectedModule?.id || null, 'all');
 
@@ -126,6 +122,7 @@ const AcademyAdmin = () => {
     };
 
     const handleReorderModules = async (reorderedModules: AcademyModule[]) => {
+        // TODO: Implementar en V2 con drag & drop completo
         try {
             setIsSaving(true);
             for (const module of reorderedModules) {
@@ -554,6 +551,7 @@ const AcademyAdmin = () => {
                     onChange={handleLessonDataChange}
                     onSave={handleUpdateLesson}
                     onDelete={handleDeleteLesson}
+                    onToggleStatus={editingLesson ? () => handleToggleLessonStatus(editingLesson) : undefined}
                 />
             </div>
         </div>

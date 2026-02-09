@@ -1,9 +1,8 @@
 import * as functions from 'firebase-functions/v1';
 import * as nodemailer from 'nodemailer';
 
-// Config check safe access
-const gmailEmail = functions.config().gmail?.email;
-const gmailPassword = functions.config().gmail?.password;
+const gmailEmail = process.env.GMAIL_EMAIL;
+const gmailPassword = process.env.GMAIL_PASSWORD;
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -19,7 +18,7 @@ export const onIncidentCreated = functions.firestore.document('incidents/{incide
 
     const mailOptions = {
         from: 'Repaart App <noreply@repaart.com>',
-        to: 'admin@repaart.com', // Ideally configurable
+        to: 'admin@repaart.com',
         subject: `🚨 Nueva Incidencia: ${incidentData.type || 'General'}`,
         html: `
             <h1>Nueva Incidencia Registrada</h1>
@@ -36,7 +35,7 @@ export const onIncidentCreated = functions.firestore.document('incidents/{incide
             await transporter.sendMail(mailOptions);
             console.log('📧 Email de incidencia enviado.');
         } else {
-            console.log('⚠️ No hay credenciales de Gmail configuradas (functions.config().gmail). Email no enviado.');
+            console.log('⚠️ No hay credenciales de Gmail configuradas. Email no enviado.');
         }
     } catch (error) {
         console.error('❌ Error enviando email de incidencia:', error);

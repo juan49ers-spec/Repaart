@@ -1,0 +1,93 @@
+
+import mysql from 'mysql2/promise';
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+import fs from 'fs';
+import path from 'path';
+
+// Constants
+const SERVICE_ACCOUNT_PATH = 'c:/Users/Usuario/.gemini/antigravity/playground/repaart/service-account.json';
+
+// Initialize Firebase
+const serviceAccount = JSON.parse(fs.readFileSync(SERVICE_ACCOUNT_PATH, 'utf8'));
+initializeApp({
+    credential: cert(serviceAccount)
+});
+const db = getFirestore();
+
+async function sync() {
+    const dbConfig = {
+        host: 'api.flyder.app',
+        user: 'repaart_dashboard',
+        password: 'KvPJHf4R48US7iK',
+        database: 'flyder_prod',
+        port: 3306
+    };
+
+    console.log('--- STARTING FLYDER SYNC ---');
+    
+    try {
+        const connection = await mysql.createConnection(dbConfig);
+        console.log('Connected to Flyder MySQL.');
+
+        // 1. Sync Businesses -> Franchises
+        console.log('Syncing Businesses...');
+        const [businesses] = await connection.query('SELECT id, name FROM businesses');
+        for (const b of businesses) {
+            const franchiseRef = db.collection('franchises').doc(`flyder_${b.id}`);
+            await franchiseRef.set({
+                name: b.name,
+                flyderBusinessId: b.id,
+                updatedAt: new Date(),
+                isFlyderManaged: true
+            }, { merge: true });
+        }
+        console.log(`Synced ${businesses.length} businesses.`);
+
+        // 2. Sync Riders -> Users
+        console.log('Syncing Riders...');
+        const [riders] = await connection.query('SELECT id, name, surname, phone, email, business_id FROM riders LIMIT 50');
+        for (const r of riders) {
+            const userRef = db.collection('users').doc(`flyder_rider_${r.id}`);
+            await userRef.set({
+                firstName: r.name,
+                lastName: r.surname,
+                phone: r.phone,
+                email: r.email,
+                flyderId: r.id,
+                flyderBusinessId: r.business_id,
+                role: 'rider',
+                updatedAt: new Date(),
+                isFlyderManaged: true
+            }, { merge: true });
+        }
+        console.log(`Synced ${riders.length} riders (sample).`);
+
+        // 3. Sync Shifts -> Time Tracking
+        console.log('Syncing Shifts...');
+        const [shifts] = await connection.query('SELECT * FROM shifts WHERE start_at > DATE_SUB(NOW(), INTERVAL 1 DAY)');
+        for (const s of shifts) {
+            const shiftRef = db.collection('time_tracking').doc(`flyder_shift_${s.id}`);
+            await shiftRef.set({
+                flyderId: s.id,
+                riderId: `flyder_rider_${s.rider_id}`,
+                businessId: s.business_id,
+                startAt: s.start_at,
+                endAt: s.end_at,
+                duration: s.duration,
+                status: s.status,
+                updatedAt: new Date(),
+                isFlyderManaged: true
+            }, { merge: true });
+        }
+        console.log(`Synced ${shifts.length} recent shifts.`);
+
+        await connection.end();
+        console.log('--- SYNC COMPLETED SUCCESSFULLY ---');
+
+    } catch (err) {
+        console.error('Sync failed:', err);
+    }
+}
+
+sync();

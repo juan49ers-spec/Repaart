@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { financeService } from '../services/financeService';
 import { calculateMonthlyRevenue, calculateExpenses, analyzeFinancialHealth, DEFAULT_MONTH_DATA, type MonthlyData, type FinancialReport, type FinancialAnalysis } from '../lib/finance';
 import { useAuth } from '../context/AuthContext';
@@ -60,21 +61,21 @@ export const useFranchiseFinance = ({ franchiseId, month, tariffs }: FranchiseFi
     const currentData = (rawData || DEFAULT_MONTH_DATA) as MonthlyData;
 
     // A. Operational Data (From useFinancialPulse)
-    const operations = {
+    const operations = useMemo(() => ({
         totalOperationalHours: Number(currentData.totalOperationalHours || 0),
         totalShiftsCount: Number(currentData.totalShiftsCount || 0),
         // Add other operational fields here as needed
-    };
+    }), [currentData]);
 
     // B. Accounting Data (From useDashboardData)
-    const revenue = calculateMonthlyRevenue(currentData, tariffs);
-    const orders = Number(currentData.orders || 0);
+    const revenue = useMemo(() => calculateMonthlyRevenue(currentData, tariffs), [currentData, tariffs]);
+    const orders = useMemo(() => Number(currentData.orders || 0), [currentData]);
 
     // Calculate expenses breakdown and taxes
-    const report = calculateExpenses(revenue, orders, currentData);
+    const report = useMemo(() => calculateExpenses(revenue, orders, currentData), [revenue, orders, currentData]);
 
     // AI/Algo Analysis
-    const analysis = analyzeFinancialHealth(report.breakdown, revenue);
+    const analysis = useMemo(() => analyzeFinancialHealth(report.breakdown, revenue), [report.breakdown, revenue]);
 
     // 3. FETCH TREND DATA (Updated to be month-relative and fetch 12 months for YTD support)
     const { data: trendData } = useQuery({

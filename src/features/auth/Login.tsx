@@ -9,9 +9,10 @@ import { logAction, AUDIT_ACTIONS } from '../../lib/audit';
 import { useToast } from '../../hooks/useToast';
 import riderImage from '../../assets/login-hero.png';
 import repaartLogoFull from '../../assets/repaart-logo-full.png';
-// import logoTransparent from '../../assets/repaart-logo-final-transparent.png';
 import yamimotoLogo from '../../assets/YamimotoCapa-1.png';
 import flyderTransparent from '../../assets/flyder-logo-new-transparent.png';
+
+import { OptimizedImage } from '../../components/ui/media/OptimizedImage';
 
 const Login: FC = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -123,10 +124,11 @@ const Login: FC = () => {
                             <div className="space-y-5 animate-slide-up">
                                 {/* Name */}
                                 <div className="group">
-                                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5 ml-1">
+                                    <label htmlFor="name" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5 ml-1">
                                         Nombre completo
                                     </label>
                                     <input
+                                        id="name"
                                         type="text"
                                         placeholder="Ej. Juan Pérez"
                                         value={name}
@@ -138,11 +140,12 @@ const Login: FC = () => {
 
                                 {/* Role */}
                                 <div className="group">
-                                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5 ml-1">
+                                    <label htmlFor="role" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5 ml-1">
                                         Tipo de cuenta
                                     </label>
                                     <div className="relative">
                                         <select
+                                            id="role"
                                             aria-label="Selecciona tu rol"
                                             value={role}
                                             onChange={(e) => setRole(e.target.value as 'admin' | 'franchise' | 'rider')}
@@ -162,10 +165,11 @@ const Login: FC = () => {
 
                         {/* Email */}
                         <div className="group">
-                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5 ml-1">
+                            <label htmlFor="email" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5 ml-1">
                                 Correo electrónico
                             </label>
                             <input
+                                id="email"
                                 type="email"
                                 placeholder="nombre@empresa.com"
                                 value={email}
@@ -177,11 +181,12 @@ const Login: FC = () => {
 
                         {/* Password */}
                         <div className="group">
-                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5 ml-1">
+                            <label htmlFor="password" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5 ml-1">
                                 Contraseña
                             </label>
                             <div className="relative">
                                 <input
+                                    id="password"
                                     type={showPassword ? 'text' : 'password'}
                                     placeholder="••••••••"
                                     value={password}
@@ -193,6 +198,7 @@ const Login: FC = () => {
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
                                     className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors p-1"
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                                 >
                                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                 </button>
@@ -247,10 +253,11 @@ const Login: FC = () => {
             {/* RIGHT SIDE - IMAGE (Desktop Only) */}
             <div className="hidden lg:block lg:w-[55%] relative overflow-hidden bg-slate-900">
                 <div className="absolute inset-0 opacity-40 mix-blend-overlay z-10 bg-slate-900"></div>
-                <img
+                <OptimizedImage
                     src={riderImage}
                     alt="Repaart Operations"
-                    className="absolute inset-0 w-full h-full object-cover object-center opacity-90 scale-105"
+                    className="absolute inset-0 w-full h-full opacity-90 scale-105"
+                    priority={true}
                 />
 
                 {/* Dark Overlay for Text Contrast */}

@@ -1,9 +1,9 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 interface RequireRoleProps {
-    children: React.ReactNode;
+    children?: React.ReactNode;
     allowedRoles: string[];
 }
 
@@ -43,17 +43,17 @@ export const RequireRole: React.FC<RequireRoleProps> = ({ children, allowedRoles
         // 🛡️ Smart Redirect to avoid infinite loops
         if (['rider'].includes(userRole)) {
             // If already at rider app, don't redirect (let 404/Not Found handle if specific path bad)
-            if (location.pathname.startsWith('/rider')) return children as any;
+            if (location.pathname.startsWith('/rider')) return children ? <>{children}</> : <Outlet />;
             return <Navigate to="/rider/schedule" replace />;
         }
 
         // If role is missing or unauthorized for dashboard, send to profile (Safe Zone)
-        if (location.pathname === '/profile') return children as any;
+        if (location.pathname === '/profile') return children ? <>{children}</> : <Outlet />;
         return <Navigate to="/profile" replace />;
     }
 
     // 3. Authorized
-    return <>{children}</>;
+    return children ? <>{children}</> : <Outlet />;
 };
 
 export default RequireRole;

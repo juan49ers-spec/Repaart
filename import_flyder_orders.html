@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Importar Pedidos Flyder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+        }
+        button:hover {
+            background: #dc2626;
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .progress {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 Importar Pedidos de Flyder</h1>
+        <p>Este script importará los pedidos desde <code>flyder_orders_export.json</code> a tu base de datos Firestore.</p>
+        
+        <button id="importBtn" onclick="importOrders()">
+            🚀 Importar Pedidos
+        </button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script type="module">
+        // Firebase SDK
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, doc, setDoc, batch } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Configuración Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0vTiufm9bWbzXzWwqy2sEuIZLNxYiVdg",
+            authDomain: "repaartfinanzas.firebaseapp.com",
+            projectId: "repaartfinanzas",
+            storageBucket: "repaartfinanzas.firebasestorage.app",
+            messagingSenderId: "263883873106",
+            appId: "1:263883873106:web:9860e5519848f48533788b"
+        };
+
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function importOrders() {
+            const btn = document.getElementById('importBtn');
+            const result = document.getElementById('result');
+            
+            btn.disabled = true;
+            btn.textContent = '⏳ Cargando datos...';
+            result.style.display = 'none';
+
+            try {
+                // Cargar el JSON exportado
+                const response = await fetch('../flyder_orders_export.json');
+                const orders = await response.json();
+                
+                btn.textContent = `🔄 Importando ${orders.length} pedidos...`;
+                result.className = 'progress';
+                result.style.display = 'block';
+                result.textContent = `⏳ Procesando ${orders.length} pedidos...`;
+
+                // Importar usando batch (max 500 operaciones)
+                let count = 0;
+                let errors = 0;
+                let batches = 0;
+
+                for (let i = 0; i < orders.length; i += 500) {
+                    const batch = writeBatch(db);
+                    const chunk = orders.slice(i, i + 500);
+                    
+                    for (const order of chunk) {
+                        try {
+                            const docRef = doc(db, 'orders', order.id);
+                            batch.set(docRef, order, { merge: true });
+                            count++;
+                        } catch (e) {
+                            errors++;
+                        }
+                    }
+                    
+                    await batch.commit();
+                    batches++;
+                    result.textContent = `✅ Procesados ${count}/${orders.length} pedidos... (Batch ${batches})`;
+                }
+
+                // Mostrar resultado
+                result.className = count > 0 ? 'success' : 'error';
+                result.innerHTML = `
+                    <strong>✅ Importación completada</strong><br><br>
+                    📊 Total importados: ${count}<br>
+                    ❌ Errores: ${errors}<br><br>
+                    <a href="http://localhost:5173" target="_blank" style="color: #065f46; font-weight: bold;">
+                        🔗 Refrescar la aplicación para ver los pedidos
+                    </a>
+                `;
+
+                btn.textContent = '✅ Importación completada';
+
+            } catch (error) {
+                result.className = 'error';
+                result.style.display = 'block';
+                result.textContent = `❌ Error: ${error.message}`;
+                btn.disabled = false;
+                btn.textContent = '🔄 Reintentar';
+            }
+        }
+
+        // Hacer disponible globalmente
+        window.importOrders = importOrders;
+    </script>
+</body>
+</html>

@@ -8,7 +8,9 @@ import {
     Trash2,
     FileText,
     Loader2,
-    Clock
+    Clock,
+    Eye,
+    Globe
 } from 'lucide-react';
 import { AcademyLesson } from '../../../../services/academyService';
 import { useAutoSave } from '../../../../hooks/useAutoSave';
@@ -24,6 +26,7 @@ interface LessonEditorModalProps {
     onSave: (data: Partial<AcademyLesson>) => Promise<void>;
     onChange: (data: Partial<AcademyLesson>) => void;
     onDelete: (id: string) => Promise<void>;
+    onToggleStatus?: () => void;
 }
 
 const RichTextEditor: React.FC<{
@@ -215,7 +218,8 @@ const LessonEditorModal: React.FC<LessonEditorModalProps> = ({
     onClose,
     onSave,
     onChange,
-    onDelete
+    onDelete,
+    onToggleStatus
 }) => {
     const [title, setTitle] = useState(lesson?.title || '');
     const [videoUrl, setVideoUrl] = useState(lesson?.video_url || '');
@@ -243,15 +247,16 @@ const LessonEditorModal: React.FC<LessonEditorModalProps> = ({
         enabled: isOpen && !!lesson?.id
     });
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
-        if (lesson) {
+        if (lesson && lesson.id) {
             setTitle(lesson.title || '');
             setVideoUrl(lesson.video_url || '');
             setContent(lesson.content || '');
             setDuration(lesson.duration || 10);
             setContentType(lesson.content_type === 'video' ? 'video' : 'text');
         }
-    }, [lesson]);
+    }, [lesson?.id]);
 
     const extractYouTubeId = (url: string) => {
         const regex = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/;
@@ -356,13 +361,41 @@ const LessonEditorModal: React.FC<LessonEditorModalProps> = ({
                                     </p>
                                 )}
                             </div>
-                            <button
-                                onClick={onClose}
-                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-400 transition-colors"
-                                aria-label="Cerrar modal"
-                            >
-                                <X className="w-5 h-5 text-slate-500" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                                {/* Botón de Publicar/Despublicar */}
+                                {lesson?.id && onToggleStatus && (
+                                    <button
+                                        onClick={() => {
+                                            onToggleStatus();
+                                            toast.success(lesson.status === 'published' ? 'Lección desactivada' : 'Lección publicada');
+                                        }}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all ${
+                                            lesson.status === 'published'
+                                                ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50'
+                                                : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/50'
+                                        }`}
+                                    >
+                                        {lesson.status === 'published' ? (
+                                            <>
+                                                <Globe className="w-3.5 h-3.5" />
+                                                <span>Publicado</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Eye className="w-3.5 h-3.5" />
+                                                <span>Publicar</span>
+                                            </>
+                                        )}
+                                    </button>
+                                )}
+                                <button
+                                    onClick={onClose}
+                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-400 transition-colors"
+                                    aria-label="Cerrar modal"
+                                >
+                                    <X className="w-5 h-5 text-slate-500" />
+                                </button>
+                            </div>
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">

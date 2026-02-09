@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { Loader2 } from "lucide-react";
 import { auth, db } from "../lib/firebase";
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User, type UserCredential, getIdTokenResult } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
@@ -12,24 +13,24 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 // Helper para obtener custom claims del token con caching
 const getCustomClaims = async (user: User, forceRefresh = false): Promise<any> => {
     if (!user || !user.uid) return null;
-    
+
     const now = Date.now();
-    
+
     // Si hay caché válida y no forzamos refresh, usar cache
     if (!forceRefresh && userCache?.uid === user.uid && cacheExpiry && now < cacheExpiry) {
         console.debug("[Auth] Using cached claims for:", user.uid);
         return userCache.claims;
     }
-    
+
     try {
         // Obtener custom claims del token (es más rápido que fetch del documento)
         const idTokenResult = await getIdTokenResult(user, forceRefresh);
         const claims = idTokenResult.claims;
-        
+
         // Actualizar cache
         userCache = { uid: user.uid, claims, data: userCache?.data || null };
         cacheExpiry = now + CACHE_DURATION;
-        
+
         console.debug("[Auth] Custom claims from token:", claims);
         return claims;
     } catch (error) {
@@ -41,7 +42,7 @@ const getCustomClaims = async (user: User, forceRefresh = false): Promise<any> =
 // Helper para obtener datos del usuario con caching
 const getUserData = async (user: User, forceRefresh = false): Promise<RoleConfig | null> => {
     if (!user || !user.uid) return null;
-    
+
     // Primero intentar obtener desde custom claims (más rápido)
     const claims = await getCustomClaims(user, forceRefresh);
     if (claims && claims.role && claims.franchiseId) {
@@ -52,17 +53,17 @@ const getUserData = async (user: User, forceRefresh = false): Promise<RoleConfig
             pack: claims.pack
         };
     }
-    
+
     // Si no hay custom claims, hacer fetch del documento users (fallback)
     try {
         const configRef = doc(db, "users", user.uid);
         const configSnap = await getDoc(configRef);
-        
+
         let userData: RoleConfig | null = null;
-        
+
         if (configSnap.exists()) {
             userData = configSnap.data() as RoleConfig;
-            
+
             // Actualizar cache en memoria
             userCache = {
                 uid: user.uid,
@@ -70,7 +71,7 @@ const getUserData = async (user: User, forceRefresh = false): Promise<RoleConfig
                 data: userData
             };
         }
-        
+
         return userData;
     } catch (error) {
         console.error("[Auth] Error fetching user data:", error);
@@ -83,14 +84,14 @@ const updateCustomClaims = async (user: User, claims: Record<string, any>): Prom
     try {
         // Actualizar documento users (fuente de verdad)
         await setDoc(doc(db, "users", user.uid), claims, { merge: true });
-        
+
         // Forzar refresh del token para obtener nuevos custom claims
         await user.getIdToken(true);
-        
+
         // Invalidar cache local
         userCache = null;
         cacheExpiry = null;
-        
+
         console.info("[Auth] Custom claims updated and token refreshed");
     } catch (error) {
         console.error("[Auth] Error updating custom claims:", error);
@@ -145,6 +146,8 @@ interface AuthProviderProps {
 // CONTEXT
 // =====================================================
 
+console.log("[AuthContext] 📁 Module Loaded");
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -157,6 +160,7 @@ export const useAuth = (): AuthContextType => {
 };
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+    console.log("[AuthProvider] 🏗️ Rendering Provider...");
     const [user, setUser] = useState<AuthUser | null>(null);
     const [roleConfig, setRoleConfig] = useState<RoleConfig | null>(null);
     const [loading, setLoading] = useState(true);
@@ -171,10 +175,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             try {
                 if (currentUser) {
                     console.debug(`[Auth] User detected: ${currentUser.email}, fetching profile...`);
-                    
+
                     // 🚀 NUEVO: Obtenemos datos CON CACHING de custom claims
                     const userData = await getUserData(currentUser);
-                    
+
                     let finalConfig: RoleConfig | null = null;
 
                     if (userData) {
@@ -285,11 +289,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         // 🚀 NUEVO: Actualizar documento y custom claims (usando updateCustomClaims)
         await setDoc(doc(db, "users", targetUid), payload, { merge: true });
-        
+
         if (user && targetUid === user.uid) {
             // 🚀 NUEVO: Actualizar custom claims y forzar refresh del token
             await updateCustomClaims(user, { role, franchiseId });
-            
+
             const newConfig: RoleConfig = { ...roleConfig, role, franchiseId: franchiseId || undefined };
             setRoleConfig(newConfig);
             // Actualizamos también el helper
@@ -351,9 +355,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // 📦 EXPORTAMOS EL PAQUETE COMPLETO
     const value: AuthContextType = {
-        user,           // El usuario (ahora con .role inyectado)
-        roleConfig,     // La config pura
-        isAdmin,        // ✅ El booleano mágico para abrir puertas
+        user,
+        roleConfig,
+        isAdmin,
         login,
         logout,
         assignRole,
@@ -368,9 +372,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         forceTokenRefresh
     };
 
+    if (loading) {
+        return (
+            <div className="h-screen w-screen flex flex-col items-center justify-center bg-slate-950 text-white">
+                <Loader2 className="animate-spin text-emerald-500 mb-4" size={48} />
+                <p className="text-slate-400 font-medium animate-pulse tracking-wide text-sm">
+                    INICIANDO SISTEMA...
+                </p>
+            </div>
+        );
+    }
+
     return (
         <AuthContext.Provider value={value}>
-            {!loading && children}
+            {children}
         </AuthContext.Provider>
     );
 };

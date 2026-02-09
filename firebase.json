@@ -7,7 +7,26 @@
     "rules": "storage.rules"
   },
   "functions": {
-    "source": "functions"
+    "source": "functions",
+    "env": [
+      {
+        "variable": "FLYDER_HOST",
+        "value": "api.flyder.app"
+      },
+      {
+        "variable": "FLYDER_USER",
+        "value": "repaart_dashboard"
+      },
+      {
+        "variable": "FLYDER_PASSWORD",
+        "value": "KvPJHf4R48US7iK",
+        "input": false
+      },
+      {
+        "variable": "FLYDER_DATABASE",
+        "value": "flyder_prod"
+      }
+    ]
   },
   "hosting": {
     "public": "dist",

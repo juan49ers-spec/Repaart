@@ -14,6 +14,7 @@ import DashboardSkeleton from './components/ui/layout/DashboardSkeleton';
 import Login from './features/auth/Login';
 import NotFound from './layouts/pages/NotFound';
 import WeeklyScheduler from './features/operations/WeeklyScheduler';
+import AdminFlyderDashboard from './features/admin/flyder/AdminFlyderDashboard';
 
 // Page Components
 import DashboardSwitcher from './layouts/components/DashboardSwitcher';
@@ -300,6 +301,13 @@ function App() {
                     <Route path="admin/academy" element={
                         <ProtectedRoute requireAdmin={true}>
                             <AcademyAdmin />
+                        </ProtectedRoute>
+                    } />
+
+                    {/* ADMIN FLYDER DASHBOARD - Hyper-Vision Module */}
+                    <Route path="admin/flyder" element={
+                        <ProtectedRoute requireAdmin={true}>
+                            <AdminFlyderDashboard franchiseId={targetFranchiseId || undefined} />
                         </ProtectedRoute>
                     } />
 

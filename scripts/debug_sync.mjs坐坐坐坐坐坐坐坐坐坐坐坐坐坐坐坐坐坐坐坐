@@ -1,0 +1,54 @@
+
+import mysql from 'mysql2/promise';
+import { initializeApp, cert, getApp } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+import fs from 'fs';
+
+const SERVICE_ACCOUNT_PATH = 'c:/Users/Usuario/.gemini/antigravity/playground/repaart/service-account.json';
+
+let fbApp;
+try {
+    fbApp = getApp();
+} catch (e) {
+    const serviceAccount = JSON.parse(fs.readFileSync(SERVICE_ACCOUNT_PATH, 'utf8'));
+    fbApp = initializeApp({ credential: cert(serviceAccount) });
+}
+const db = getFirestore();
+
+async function debugSync() {
+    const connection = await mysql.createConnection({
+        host: 'api.flyder.app',
+        user: 'repaart_dashboard',
+        password: 'KvPJHf4R48US7iK',
+        database: 'flyder_prod',
+        port: 3306
+    });
+
+    try {
+        console.log('Testing Shifts Query...');
+        const [shifts] = await connection.query('SELECT * FROM shifts LIMIT 10');
+        console.log(`Found ${shifts.length} test shifts.`);
+        
+        for (const s of shifts) {
+            console.log(`Syncing shift ${s.id}...`);
+            await db.collection('time_tracking').doc(`debug_shift_${s.id}`).set({
+                flyderId: s.id,
+                test: true,
+                updatedAt: new Date()
+            });
+        }
+        console.log('Shifts sync test passed.');
+
+        console.log('Testing Orders Query...');
+        const [orders] = await connection.query('SELECT id, sku FROM orders LIMIT 10');
+        console.log(`Found ${orders.length} test orders.`);
+        console.log('Orders sync test passed.');
+
+    } catch (err) {
+        console.error('DEBUG SYNC FAILED:', err);
+    } finally {
+        await connection.end();
+    }
+}
+
+debugSync();

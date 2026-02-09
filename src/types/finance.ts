@@ -151,4 +151,5 @@ export type FinanceError =
     | { type: 'VALIDATION_ERROR'; field: string; message: string }
     | { type: 'NOT_FOUND'; franchiseId: string; month?: string }
     | { type: 'NETWORK_ERROR'; cause: Error }
-    | { type: 'INVALID_FORMAT'; field: string; expected: string; received: string };
+    | { type: 'INVALID_FORMAT'; field: string; expected: string; received: string }
+    | { type: 'UNKNOWN_ERROR'; message: string; cause?: unknown };

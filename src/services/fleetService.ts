@@ -47,7 +47,8 @@ const mapDocToRider = (docSnap: QueryDocumentSnapshot<DocumentData>): Rider => {
             joinedAt: data.metrics?.joinedAt?.toDate?.().toISOString() || data.metrics?.joinedAt || data.createdAt?.toDate?.().toISOString() || new Date().toISOString()
         },
         franchiseId: data.franchiseId,
-        avatarUrl: data.photoURL
+        avatarUrl: data.photoURL,
+        skills: data.skills || []
     };
 };
 

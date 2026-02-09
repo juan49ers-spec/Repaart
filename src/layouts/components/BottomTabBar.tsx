@@ -8,7 +8,8 @@ import {
     GraduationCap,
     Settings,
     MoreHorizontal,
-    X
+    X,
+    Zap
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useNotificationBadge } from '../../features/layouts/hooks/useNotificationBadge';
@@ -32,6 +33,7 @@ const BottomTabBar: FC<{ isAdmin?: boolean; isFranchise?: boolean; isRider?: boo
 
     const adminTabs: TabItem[] = [
         { path: '/dashboard', label: 'Finanzas', icon: Activity },
+        { path: '/admin/flyder', label: 'Flyder', icon: Zap },
         { path: '/admin/resources', label: 'Recursos', icon: FileText },
         { path: 'menu', label: 'Más', icon: MoreHorizontal, isMenu: true, subItems: [
             { label: 'Soporte', icon: LifeBuoy, path: '/admin/support' },

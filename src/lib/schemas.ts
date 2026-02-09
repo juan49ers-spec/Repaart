@@ -100,3 +100,52 @@ export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type FinanceInput = z.infer<typeof financeSchema>;
 export type UserRole = 'admin' | 'franchise' | 'staff' | 'rider' | 'user';
 
+// --- Phase 3: New Schemas ---
+
+export const shiftSchema = z.object({
+    franchiseId: z.string().min(1, "Franchise ID is required"),
+    riderId: z.string().min(1, "Rider ID is required"),
+    vehicleId: z.string().optional(),
+    startTime: z.date(),
+    endTime: z.date(),
+    status: z.enum(['scheduled', 'active', 'completed', 'cancelled']).default('scheduled'),
+    notes: z.string().max(500).optional()
+}).refine(data => data.endTime > data.startTime, {
+    message: "La hora de fin debe ser posterior a la de inicio",
+    path: ["endTime"]
+});
+
+export const ticketSchema = z.object({
+    userId: z.string().min(1),
+    franchiseId: z.string().optional(),
+    subject: z.string().min(5, "El asunto debe tener al menos 5 caracteres").max(100),
+    description: z.string().min(10, "La descripción debe ser detallada (min 10 caracteres)"),
+    priority: z.enum(['low', 'medium', 'high', 'critical']).default('medium'),
+    category: z.enum(['technical', 'billing', 'operational', 'other']).default('technical'),
+    status: z.enum(['open', 'in_progress', 'resolved', 'closed']).default('open')
+});
+
+export const fleetAssetSchema = z.object({
+    franchiseId: z.string().min(1),
+    name: z.string().min(2, "El nombre del vehículo es obligatorio"), // e.g., "Moto 01"
+    plate: z.string().regex(/^[0-9]{4}[A-Z]{3}$/, "Matrícula inválida (Ej: 1234ABC)").optional().or(z.literal('')),
+    type: z.enum(['moto_125', 'moto_50', 'car', 'bicycle', 'electric_scooter']).default('moto_125'),
+    status: z.enum(['active', 'maintenance', 'out_of_service']).default('active'),
+    nextMaintenanceDate: z.date().optional(),
+    mileage: z.number().min(0).optional()
+});
+
+export const announcementSchema = z.object({
+    title: z.string().min(5, "Título obligatorio"),
+    content: z.string().min(10, "Contenido obligatorio"),
+    priority: z.enum(['normal', 'high', 'critical']).default('normal'),
+    targetAudience: z.enum(['all', 'franchise', 'rider']).default('all'),
+    expiresAt: z.date().optional()
+});
+
+export type ShiftInput = z.infer<typeof shiftSchema>;
+export type TicketInput = z.infer<typeof ticketSchema>;
+export type FleetAssetInput = z.infer<typeof fleetAssetSchema>;
+export type AnnouncementInput = z.infer<typeof announcementSchema>;
+
+

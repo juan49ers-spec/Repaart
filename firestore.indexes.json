@@ -1,7 +1,49 @@
 {
     "indexes": [
         {
-            "collectionGroup": "weeks",
+            "collectionGroup": "academy_lessons",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "module_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "order",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "ASCENDING"
+                }
+            ],
+            "density": "SPARSE_ALL"
+        },
+        {
+            "collectionGroup": "academy_lessons",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "module_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "order",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "ASCENDING"
+                }
+            ],
+            "density": "SPARSE_ALL"
+        },
+        {
+            "collectionGroup": "admin_notifications",
             "queryScope": "COLLECTION",
             "fields": [
                 {
@@ -9,13 +51,60 @@
                     "order": "ASCENDING"
                 },
                 {
-                    "fieldPath": "startDate",
+                    "fieldPath": "read",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
                     "order": "DESCENDING"
                 }
-            ]
+            ],
+            "density": "SPARSE_ALL"
         },
         {
-            "collectionGroup": "weeks",
+            "collectionGroup": "admin_notifications",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "type",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "DESCENDING"
+                }
+            ],
+            "density": "SPARSE_ALL"
+        },
+        {
+            "collectionGroup": "document_requests",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "franchiseId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "DESCENDING"
+                }
+            ],
+            "density": "SPARSE_ALL"
+        },
+        {
+            "collectionGroup": "document_requests",
             "queryScope": "COLLECTION",
             "fields": [
                 {
@@ -23,10 +112,15 @@
                     "order": "ASCENDING"
                 },
                 {
-                    "fieldPath": "startDate",
+                    "fieldPath": "createdAt",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
                     "order": "ASCENDING"
                 }
-            ]
+            ],
+            "density": "SPARSE_ALL"
         },
         {
             "collectionGroup": "financial_data",
@@ -44,105 +138,8 @@
                     "fieldPath": "__name__",
                     "order": "DESCENDING"
                 }
-            ]
-        },
-        {
-            "collectionGroup": "financial_records",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "franchiseId",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "date",
-                    "order": "ASCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "work_shifts",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "franchiseId",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "startAt",
-                    "order": "ASCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "work_shifts",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "riderId",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "startAt",
-                    "order": "ASCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "work_shifts",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "franchiseId",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "date",
-                    "order": "ASCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "tickets",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "uid",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "createdAt",
-                    "order": "DESCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "document_requests",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "franchiseId",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "createdAt",
-                    "order": "DESCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "document_requests",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "status",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "createdAt",
-                    "order": "ASCENDING"
-                }
-            ]
+            ],
+            "density": "SPARSE_ALL"
         },
         {
             "collectionGroup": "financial_records",
@@ -155,61 +152,16 @@
                 {
                     "fieldPath": "date",
                     "order": "DESCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "notifications",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "userId",
-                    "order": "ASCENDING"
                 },
                 {
-                    "fieldPath": "createdAt",
+                    "fieldPath": "__name__",
                     "order": "DESCENDING"
                 }
-            ]
+            ],
+            "density": "SPARSE_ALL"
         },
         {
-            "collectionGroup": "notifications",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "userId",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "read",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "createdAt",
-                    "order": "DESCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "notifications",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "userId",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "type",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "createdAt",
-                    "order": "DESCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "admin_notifications",
+            "collectionGroup": "financial_records",
             "queryScope": "COLLECTION",
             "fields": [
                 {
@@ -217,28 +169,53 @@
                     "order": "ASCENDING"
                 },
                 {
-                    "fieldPath": "read",
+                    "fieldPath": "date",
                     "order": "ASCENDING"
                 },
                 {
-                    "fieldPath": "createdAt",
-                    "order": "DESCENDING"
+                    "fieldPath": "__name__",
+                    "order": "ASCENDING"
                 }
-            ]
+            ],
+            "density": "SPARSE_ALL"
         },
         {
-            "collectionGroup": "admin_notifications",
+            "collectionGroup": "financial_records",
             "queryScope": "COLLECTION",
             "fields": [
                 {
-                    "fieldPath": "type",
+                    "fieldPath": "status",
                     "order": "ASCENDING"
                 },
                 {
-                    "fieldPath": "createdAt",
-                    "order": "DESCENDING"
+                    "fieldPath": "date",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "ASCENDING"
                 }
-            ]
+            ],
+            "density": "SPARSE_ALL"
+        },
+        {
+            "collectionGroup": "financial_summaries",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "franchiseId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "month",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "ASCENDING"
+                }
+            ],
+            "density": "SPARSE_ALL"
         },
         {
             "collectionGroup": "fleet_assets",
@@ -251,40 +228,211 @@
                 {
                     "fieldPath": "status",
                     "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "ASCENDING"
                 }
-            ]
+            ],
+            "density": "SPARSE_ALL"
         },
         {
-            "collectionGroup": "academy_lessons",
+            "collectionGroup": "notifications",
             "queryScope": "COLLECTION",
             "fields": [
                 {
-                    "fieldPath": "module_id",
+                    "fieldPath": "userId",
                     "order": "ASCENDING"
                 },
                 {
-                    "fieldPath": "order",
-                    "order": "ASCENDING"
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "DESCENDING"
                 }
-            ]
+            ],
+            "density": "SPARSE_ALL"
         },
         {
-            "collectionGroup": "academy_lessons",
+            "collectionGroup": "notifications",
             "queryScope": "COLLECTION",
             "fields": [
                 {
-                    "fieldPath": "module_id",
+                    "fieldPath": "userId",
                     "order": "ASCENDING"
                 },
+                {
+                    "fieldPath": "read",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "DESCENDING"
+                }
+            ],
+            "density": "SPARSE_ALL"
+        },
+        {
+            "collectionGroup": "notifications",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "userId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "type",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "DESCENDING"
+                }
+            ],
+            "density": "SPARSE_ALL"
+        },
+        {
+            "collectionGroup": "tickets",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "uid",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "DESCENDING"
+                }
+            ],
+            "density": "SPARSE_ALL"
+        },
+        {
+            "collectionGroup": "users",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "franchiseId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "role",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "ASCENDING"
+                }
+            ],
+            "density": "SPARSE_ALL"
+        },
+        {
+            "collectionGroup": "weeks",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "franchiseId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "startDate",
+                    "order": "DESCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "DESCENDING"
+                }
+            ],
+            "density": "SPARSE_ALL"
+        },
+        {
+            "collectionGroup": "weeks",
+            "queryScope": "COLLECTION",
+            "fields": [
                 {
                     "fieldPath": "status",
                     "order": "ASCENDING"
                 },
                 {
-                    "fieldPath": "order",
+                    "fieldPath": "startDate",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
                     "order": "ASCENDING"
                 }
-            ]
+            ],
+            "density": "SPARSE_ALL"
+        },
+        {
+            "collectionGroup": "work_shifts",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "franchiseId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "date",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "ASCENDING"
+                }
+            ],
+            "density": "SPARSE_ALL"
+        },
+        {
+            "collectionGroup": "work_shifts",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "franchiseId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "startAt",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "ASCENDING"
+                }
+            ],
+            "density": "SPARSE_ALL"
+        },
+        {
+            "collectionGroup": "work_shifts",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "riderId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "startAt",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "__name__",
+                    "order": "ASCENDING"
+                }
+            ],
+            "density": "SPARSE_ALL"
         }
     ],
     "fieldOverrides": []

@@ -49,11 +49,20 @@ const AdminFinanceInbox: React.FC = () => {
         if (!auditModal.record) return;
 
         try {
+            let result;
             if (auditModal.type === 'approve') {
-                await financeService.updateStatus(auditModal.record.id, 'approved', user?.uid || 'UNKNOWN');
+                result = await financeService.updateStatus(auditModal.record.id, 'approved', user?.uid || 'UNKNOWN');
             } else {
                 if (!rejectionReason.trim()) return alert("Debes indicar un motivo de rechazo");
-                await financeService.updateStatus(auditModal.record.id, 'rejected', undefined, rejectionReason);
+                result = await financeService.updateStatus(auditModal.record.id, 'rejected', undefined, rejectionReason);
+            }
+
+            if (!result.success) {
+                if (!result.success) {
+                    alert(`Error: ${financeService.formatFinanceError(result.error)}`);
+                    return;
+                }
+                return;
             }
 
             // Refresh list

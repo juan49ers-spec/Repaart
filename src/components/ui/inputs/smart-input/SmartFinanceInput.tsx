@@ -58,6 +58,8 @@ const SmartFinanceInput: FC<SmartFinanceInputProps> = ({
                 inputMode="decimal" // Mobile numeric keyboard hints
                 disabled={disabled}
                 placeholder={placeholder}
+                aria-invalid={error ? "true" : "false"}
+                aria-describedby={error ? `${name}-error` : undefined}
                 className={`
           border p-2 rounded-md transition-colors focus:outline-none focus:ring-2
           ${error ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'}
@@ -86,7 +88,7 @@ const SmartFinanceInput: FC<SmartFinanceInputProps> = ({
 
             {/* Safe Error Rendering */}
             {error && (
-                <span className="text-xs text-red-500 animate-pulse">
+                <span id={`${name}-error`} className="text-xs text-red-500 animate-pulse" role="alert">
                     {error.message?.toString() || "Error inválido"}
                 </span>
             )}

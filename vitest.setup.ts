@@ -1,11 +1,21 @@
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
+import { vi, expect } from 'vitest';
 import { TextEncoder, TextDecoder } from 'util';
+
+vi.mock('lucide-react', () => ({
+  Loader2: () => null,
+  Eye: () => null,
+  EyeOff: () => null,
+  // Add other icons as needed, or use a proxy
+  default: new Proxy({}, {
+    get: () => () => null
+  })
+}));
 
 // Polyfills for Firebase/Firestore in JSDOM
 if (typeof global.TextEncoder === 'undefined') {
-    (global as any).TextEncoder = TextEncoder;
-    (global as any).TextDecoder = TextDecoder;
+  (global as any).TextEncoder = TextEncoder;
+  (global as any).TextDecoder = TextDecoder;
 }
 
 // Ensure jest global is available for legacy mocks if any
@@ -28,11 +38,11 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
-  constructor() {}
-  disconnect() {}
-  observe() {}
+  constructor() { }
+  disconnect() { }
+  observe() { }
   takeRecords() {
     return [];
   }
-  unobserve() {}
+  unobserve() { }
 } as any;
