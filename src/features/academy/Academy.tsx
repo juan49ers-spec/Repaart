@@ -48,7 +48,16 @@ const Academy = () => {
         return filtered;
     }, [allModules]);
     const { module, loading: moduleLoading } = useAcademyModule(moduleId || null);
-    const { lessons, loading: lessonsLoading } = useAcademyLessons(moduleId || null, 'published');
+    // Temporal: Cargar todas las lecciones y filtrar client-side para debug
+    const { lessons: allLessons, loading: lessonsLoading } = useAcademyLessons(moduleId || null, 'all');
+    
+    // Filtrar lecciones publicadas (o sin campo status definido para compatibilidad)
+    const lessons = useMemo(() => {
+        console.log('[Academy] Todas las lecciones del módulo:', allLessons);
+        const filtered = allLessons.filter(l => l.status === 'published' || !l.status);
+        console.log('[Academy] Lecciones filtradas (published):', filtered);
+        return filtered;
+    }, [allLessons]);
     const { progress } = useAcademyProgress(user?.uid || null, moduleId || null);
     const { markComplete, loading: markingComplete } = useMarkLessonComplete();
     
