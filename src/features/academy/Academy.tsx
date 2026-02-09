@@ -27,7 +27,10 @@ import {
     ChevronLeft,
     Youtube,
     FileText,
-    Lock
+    Lock,
+    Sparkles,
+    Trophy,
+    Target
 } from 'lucide-react';
 
 const Academy = () => {
@@ -213,26 +216,126 @@ const Academy = () => {
     }
 
     if (!moduleId) {
+        const totalModules = modules.length;
+        const completedModules = modules.filter(m => {
+            const moduleLessons = allLessons.filter(l => l.module_id === m.id);
+            const moduleCompletedLessons = moduleLessons.filter(l => completedLessons.includes(l.id || ''));
+            return moduleLessons.length > 0 && moduleCompletedLessons.length === moduleLessons.length;
+        }).length;
+        const globalProgress = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
+
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-                <div className="max-w-6xl mx-auto px-4 py-12">
+            <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-slate-950 dark:via-purple-950/20 dark:to-slate-900">
+                {/* Background Decorations */}
+                <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-300/30 dark:bg-purple-600/10 rounded-full blur-3xl" />
+                    <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-300/30 dark:bg-pink-600/10 rounded-full blur-3xl" />
+                </div>
+
+                <div className="relative max-w-6xl mx-auto px-4 py-8 sm:py-16">
+                    {/* Header */}
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4 }}
-                        className="text-center mb-12"
+                        transition={{ duration: 0.6, ease: "easeOut" }}
+                        className="text-center mb-16"
                     >
-                        <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-600 rounded-3xl mb-6 shadow-2xl shadow-blue-600/30">
-                            <BookOpen className="w-10 h-10 text-white" />
-                        </div>
-                        <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
-                            Tu Ruta de Aprendizaje
-                        </h1>
-                        <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-                            Completa cada módulo para desbloquear el siguiente. Tu progreso se guarda automáticamente.
-                        </p>
+                        {/* Badge de bienvenida */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-full shadow-lg mb-6"
+                        >
+                            <Sparkles className="w-4 h-4 text-amber-500" />
+                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                ¡Comienza tu viaje de aprendizaje!
+                            </span>
+                        </motion.div>
+
+                        {/* Título principal */}
+                        <motion.h1 
+                            className="text-5xl sm:text-6xl font-black text-slate-900 dark:text-white mb-6 tracking-tight"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                        >
+                            <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 bg-clip-text text-transparent">
+                                Tu Ruta de
+                            </span>
+                            <br />
+                            <span className="text-slate-900 dark:text-white">Aprendizaje</span>
+                        </motion.h1>
+
+                        {/* Subtítulo */}
+                        <motion.p 
+                            className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-8 leading-relaxed"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.4 }}
+                        >
+                            Completa cada módulo para desbloquear el siguiente.
+                            <br className="hidden sm:block" />
+                            Tu progreso se guarda automáticamente.
+                        </motion.p>
+
+                        {/* Stats globales */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.5 }}
+                            className="flex flex-wrap justify-center gap-6"
+                        >
+                            <div className="flex items-center gap-3 px-6 py-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-lg">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                                    <BookOpen className="w-6 h-6 text-white" />
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-2xl font-black text-slate-900 dark:text-white">{totalModules}</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide">Módulos</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 px-6 py-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-lg">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
+                                    <Trophy className="w-6 h-6 text-white" />
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-2xl font-black text-slate-900 dark:text-white">{completedModules}</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide">Completados</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 px-6 py-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-lg">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                                    <Target className="w-6 h-6 text-white" />
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-2xl font-black text-slate-900 dark:text-white">{globalProgress}%</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide">Progreso</p>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        {/* Barra de progreso global */}
+                        <motion.div
+                            initial={{ opacity: 0, scaleX: 0 }}
+                            animate={{ opacity: 1, scaleX: 1 }}
+                            transition={{ delay: 0.6, duration: 0.8 }}
+                            className="max-w-md mx-auto mt-8"
+                        >
+                            <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${globalProgress}%` }}
+                                    transition={{ delay: 0.8, duration: 1, ease: "easeOut" }}
+                                    className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 rounded-full"
+                                />
+                            </div>
+                        </motion.div>
                     </motion.div>
 
+                    {/* Learning Path */}
                     {modules.length > 0 ? (
                         <LearningPath
                             modules={modules}
@@ -250,15 +353,13 @@ const Academy = () => {
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="text-center"
+                            className="text-center py-20"
                         >
-                            <div className="academy-empty-state">
-                                <BookOpen className="academy-empty-icon" />
-                                <p className="academy-empty-title">Módulos próximamente</p>
-                                <p className="academy-empty-description">
-                                    El contenido se agregará pronto
-                                </p>
+                            <div className="inline-flex items-center justify-center w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-3xl mb-6">
+                                <BookOpen className="w-12 h-12 text-slate-400" />
                             </div>
+                            <p className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Módulos próximamente</p>
+                            <p className="text-slate-500 dark:text-slate-400">El contenido se agregará pronto</p>
                         </motion.div>
                     )}
                 </div>
