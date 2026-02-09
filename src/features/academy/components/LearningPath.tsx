@@ -36,6 +36,8 @@ export const LearningPath: React.FC<LearningPathProps> = ({
 
   const isModuleLocked = (index: number) => {
     if (index === 0) return false;
+    // Si no hay datos de lecciones, no bloquear (asumir disponible)
+    if (allLessons.length === 0) return false;
     const prevModule = modules[index - 1];
     const prevProgress = getModuleProgress(prevModule.id || '');
     return prevProgress < 100;
