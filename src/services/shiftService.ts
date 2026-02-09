@@ -41,6 +41,11 @@ export interface Shift {
     changeRequested?: boolean;
     changeReason?: string | null;
     isDraft?: boolean;
+    // Fields for Recurring Shifts
+    isRecurring?: boolean;
+    recurringGroupId?: string;  // ID that links all shifts in the series
+    recurringPattern?: 'daily' | 'weekly' | 'monthly';
+    recurringEndDate?: string;  // ISO date when recurrence ends
 }
 
 export interface ShiftInput {
@@ -56,6 +61,7 @@ export interface ShiftInput {
     swapRequested?: boolean;
     changeRequested?: boolean;
     changeReason?: string | null;
+    isDraft?: boolean;
 }
 
 // =====================================================
@@ -130,7 +136,8 @@ export const shiftService = {
             endAt: Timestamp.fromDate(new Date(shiftData.endAt)),
             createdAt: serverTimestamp(),
             type: 'standard',
-            status: 'scheduled'
+            status: 'scheduled',
+            isDraft: shiftData.isDraft ?? false
         };
         await addDoc(collection(db, COLLECTION), payload);
     },
@@ -344,5 +351,289 @@ export const shiftService = {
                 isDraft: data.isDraft || false
             };
         });
+    },
+
+    // =====================================================
+    // WEEK TEMPLATES (PLANTILLAS DE SEMANA)
+    // =====================================================
+
+    /**
+     * Save current week as template
+     */
+    saveWeekTemplate: async (
+        franchiseId: string,
+        templateName: string,
+        templateType: 'verano' | 'invierno' | 'especial',
+        shifts: any[]
+    ): Promise<string> => {
+        if (!franchiseId) throw new Error('Franchise ID is required');
+        
+        const templateData = {
+            franchiseId,
+            name: templateName,
+            type: templateType,
+            shifts: shifts.map(s => ({
+                startAt: s.startAt,
+                endAt: s.endAt,
+                riderId: s.riderId,
+                riderName: s.riderName,
+                motoId: s.motoId,
+                motoPlate: s.motoPlate,
+                date: s.date
+            })),
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        };
+
+        const docRef = await addDoc(collection(db, 'week_templates'), templateData);
+        return docRef.id;
+    },
+
+    /**
+     * Get all templates for a franchise
+     */
+    getWeekTemplates: async (franchiseId: string): Promise<Array<{
+        id: string;
+        name: string;
+        type: 'verano' | 'invierno' | 'especial';
+        shifts: any[];
+        createdAt: Date;
+    }>> => {
+        if (!franchiseId) return [];
+
+        const q = query(
+            collection(db, 'week_templates'),
+            where('franchiseId', '==', franchiseId)
+        );
+
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                name: data.name,
+                type: data.type,
+                shifts: data.shifts || [],
+                createdAt: data.createdAt?.toDate() || new Date()
+            };
+        }).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    },
+
+    /**
+     * Apply template to a specific week
+     */
+    applyWeekTemplate: async (
+        franchiseId: string,
+        templateId: string,
+        targetWeekStart: Date,
+        mode: 'overwrite' | 'fill_only' = 'fill_only'
+    ): Promise<number> => {
+        if (!franchiseId || !templateId) throw new Error('Franchise ID and Template ID are required');
+
+        // Get template
+        const templateRef = doc(db, 'week_templates', templateId);
+        const templateDoc = await getDoc(templateRef);
+        
+        if (!templateDoc.exists()) {
+            throw new Error('Template not found');
+        }
+
+        const template = templateDoc.data();
+        const templateShifts = template.shifts || [];
+
+        // Calculate day offset
+        const weekStart = new Date(targetWeekStart);
+        weekStart.setHours(0, 0, 0, 0);
+
+        // Get existing shifts for the week if in fill_only mode
+        let existingShifts: Shift[] = [];
+        if (mode === 'fill_only') {
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            existingShifts = await shiftService.getShiftsInRange(franchiseId, weekStart, weekEnd);
+        }
+
+        let appliedCount = 0;
+
+        // Apply each shift from template
+        for (const templateShift of templateShifts) {
+            const originalDate = new Date(templateShift.date);
+            const dayOfWeek = originalDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+            
+            // Calculate target date
+            const targetDate = new Date(weekStart);
+            targetDate.setDate(weekStart.getDate() + dayOfWeek);
+
+            // Check if there's already a shift for this rider on this day (fill_only mode)
+            if (mode === 'fill_only') {
+                const hasExistingShift = existingShifts.some(s => 
+                    s.riderId === templateShift.riderId &&
+                    new Date(s.date).toDateString() === targetDate.toDateString()
+                );
+                if (hasExistingShift) continue;
+            }
+
+            // Parse times
+            const originalStart = new Date(templateShift.startAt);
+            const originalEnd = new Date(templateShift.endAt);
+            
+            const startHours = originalStart.getHours();
+            const startMinutes = originalStart.getMinutes();
+            const endHours = originalEnd.getHours();
+            const endMinutes = originalEnd.getMinutes();
+
+            // Create new shift
+            const newStartAt = new Date(targetDate);
+            newStartAt.setHours(startHours, startMinutes, 0, 0);
+            
+            const newEndAt = new Date(targetDate);
+            newEndAt.setHours(endHours, endMinutes, 0, 0);
+
+            await shiftService.createShift({
+                franchiseId,
+                riderId: templateShift.riderId,
+                riderName: templateShift.riderName,
+                motoId: templateShift.motoId,
+                motoPlate: templateShift.motoPlate,
+                startAt: toLocalISOString(newStartAt),
+                endAt: toLocalISOString(newEndAt),
+                isDraft: true // Start as draft so they can review before publishing
+            });
+
+            appliedCount++;
+        }
+
+        return appliedCount;
+    },
+
+    /**
+     * Delete a template
+     */
+    deleteWeekTemplate: async (templateId: string): Promise<void> => {
+        if (!templateId) throw new Error('Template ID is required');
+        await deleteDoc(doc(db, 'week_templates', templateId));
+    },
+
+    // =====================================================
+    // RECURRING SHIFTS (TURNOS RECURRENTES)
+    // =====================================================
+
+    /**
+     * Create a recurring shift series
+     */
+    createRecurringShift: async (
+        baseShift: ShiftInput,
+        pattern: 'daily' | 'weekly' | 'monthly',
+        occurrences: number,
+        franchiseId: string
+    ): Promise<string[]> => {
+        if (!franchiseId || occurrences <= 0) throw new Error('Invalid parameters');
+
+        const groupId = `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const createdIds: string[] = [];
+        const baseDate = new Date(baseShift.startAt);
+
+        for (let i = 0; i < occurrences; i++) {
+            const shiftDate = new Date(baseDate);
+            
+            if (pattern === 'daily') {
+                shiftDate.setDate(shiftDate.getDate() + i);
+            } else if (pattern === 'weekly') {
+                shiftDate.setDate(shiftDate.getDate() + (i * 7));
+            } else if (pattern === 'monthly') {
+                shiftDate.setMonth(shiftDate.getMonth() + i);
+            }
+
+            const startTime = new Date(baseShift.startAt);
+            const endTime = new Date(baseShift.endAt);
+            
+            const newStartAt = new Date(shiftDate);
+            newStartAt.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
+            
+            const newEndAt = new Date(shiftDate);
+            newEndAt.setHours(endTime.getHours(), endTime.getMinutes(), 0, 0);
+
+            const payload = {
+                franchiseId,
+                riderId: baseShift.riderId ?? null,
+                riderName: baseShift.riderName ?? 'Sin asignar',
+                motoId: baseShift.motoId ?? null,
+                motoPlate: baseShift.motoPlate ?? '',
+                startAt: Timestamp.fromDate(newStartAt),
+                endAt: Timestamp.fromDate(newEndAt),
+                createdAt: serverTimestamp(),
+                type: 'standard',
+                status: 'scheduled',
+                isDraft: baseShift.isDraft ?? false,
+                isRecurring: true,
+                recurringGroupId: groupId,
+                recurringPattern: pattern,
+                recurringEndDate: toLocalISOString(new Date(shiftDate.setDate(shiftDate.getDate() + (pattern === 'daily' ? 1 : pattern === 'weekly' ? 7 : 30))))
+            };
+
+            const docRef = await addDoc(collection(db, COLLECTION), payload);
+            createdIds.push(docRef.id);
+        }
+
+        return createdIds;
+    },
+
+    /**
+     * Get all shifts in a recurring series
+     */
+    getRecurringShifts: async (groupId: string): Promise<Shift[]> => {
+        if (!groupId) return [];
+
+        const q = query(
+            collection(db, COLLECTION),
+            where('recurringGroupId', '==', groupId)
+        );
+
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => {
+            const data = doc.data() as DocumentData;
+            const getTs = (keyCamel: string, keySnake: string) => data[keyCamel] || data[keySnake];
+            const startVal = getTs('startAt', 'start_time');
+            const endVal = getTs('endAt', 'end_time');
+
+            return {
+                id: doc.id,
+                shiftId: doc.id,
+                startAt: startVal ? (startVal.toDate ? toLocalISOString(startVal.toDate()) : startVal) : '',
+                endAt: endVal ? (endVal.toDate ? toLocalISOString(endVal.toDate()) : endVal) : '',
+                date: startVal ? (startVal.toDate ? toLocalDateString(startVal.toDate()) : toLocalDateString(new Date(startVal))) : '',
+                riderId: data.riderId ?? data.rider_id ?? '',
+                riderName: data.riderName ?? data.rider_name ?? 'Sin asignar',
+                motoId: data.motoId ?? data.vehicle_id ?? null,
+                motoPlate: data.motoPlate ?? data.vehicle_plate ?? '',
+                franchiseId: data.franchiseId ?? data.franchise_id,
+                status: data.status || 'scheduled',
+                isConfirmed: (data.isConfirmed === true || data.is_confirmed === true),
+                swapRequested: (data.swapRequested === true || data.swap_requested === true),
+                changeRequested: (data.changeRequested === true || data.change_requested === true),
+                changeReason: data.changeReason || data.change_reason || null,
+                isDraft: data.isDraft || false,
+                isRecurring: data.isRecurring || false,
+                recurringGroupId: data.recurringGroupId,
+                recurringPattern: data.recurringPattern,
+                recurringEndDate: data.recurringEndDate
+            };
+        });
+    },
+
+    /**
+     * Delete all shifts in a recurring series
+     */
+    deleteRecurringSeries: async (groupId: string): Promise<void> => {
+        if (!groupId) throw new Error('Group ID is required');
+
+        const q = query(
+            collection(db, COLLECTION),
+            where('recurringGroupId', '==', groupId)
+        );
+
+        const snapshot = await getDocs(q);
+        const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
     }
 };

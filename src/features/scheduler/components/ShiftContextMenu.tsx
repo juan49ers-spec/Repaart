@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useEffect, useRef } from 'react';
-import { Check, Copy, Trash2, Edit, X } from 'lucide-react';
+import { Check, Copy, Trash2, Edit, X, Repeat } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
 interface ContextMenuShift {
@@ -21,6 +21,7 @@ interface ShiftContextMenuProps {
     onDuplicate: (shift: ContextMenuShift) => void;
     onEdit: (shift: ContextMenuShift) => void;
     onDelete: (shift: ContextMenuShift) => void;
+    onMakeRecurring?: (shift: ContextMenuShift) => void;
 }
 
 export const ShiftContextMenu: React.FC<ShiftContextMenuProps> = ({
@@ -31,7 +32,8 @@ export const ShiftContextMenu: React.FC<ShiftContextMenuProps> = ({
     onValidate,
     onDuplicate,
     onEdit,
-    onDelete
+    onDelete,
+    onMakeRecurring
 }) => {
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -104,6 +106,16 @@ export const ShiftContextMenu: React.FC<ShiftContextMenuProps> = ({
                     <Copy size={16} />
                     Duplicar (Día Siguiente)
                 </button>
+
+                {onMakeRecurring && (
+                    <button
+                        onClick={() => { onMakeRecurring(shift); onClose(); }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors text-left"
+                    >
+                        <Repeat size={16} />
+                        Hacer Recurrente
+                    </button>
+                )}
 
                 <button
                     onClick={() => { onEdit(shift); onClose(); }}

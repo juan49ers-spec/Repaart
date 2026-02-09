@@ -15,6 +15,7 @@ import { ShiftContextMenu } from './components/ShiftContextMenu';
 import { SchedulerGuideModal } from './SchedulerGuideModal';
 import ConfirmationModal from '../../components/ui/feedback/ConfirmationModal';
 import { SheriffReportModal } from './SheriffReportModal';
+import { RecurringShiftModal } from './components/RecurringShiftModal';
 import { Shift } from '../../schemas/scheduler';
 import { ShiftInput } from '../../services/shiftService';
 
@@ -93,6 +94,95 @@ const DeliveryScheduler: React.FC<{
     const [isGuideOpen, setIsGuideOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingShift, setEditingShift] = useState<Shift | null>(null);
+
+    // --- WEEK TEMPLATES STATE ---
+    const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+    const [templateMode, setTemplateMode] = useState<'save' | 'load'>('save');
+    const [templateName, setTemplateName] = useState('');
+    const [templateType, setTemplateType] = useState<'verano' | 'invierno' | 'especial'>('verano');
+    const [savedTemplates, setSavedTemplates] = useState<Array<{
+        id: string;
+        name: string;
+        type: 'verano' | 'invierno' | 'especial';
+        shifts: any[];
+        createdAt: Date;
+    }>>([]);
+    const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
+    const [applyMode, setApplyMode] = useState<'overwrite' | 'fill_only'>('fill_only');
+
+    // --- RECURRING SHIFTS STATE ---
+    const [isRecurringModalOpen, setIsRecurringModalOpen] = useState(false);
+    const [selectedShiftForRecurring, setSelectedShiftForRecurring] = useState<Shift | null>(null);
+
+    // Load templates on mount
+    useEffect(() => {
+        if (safeFranchiseId) {
+            loadTemplates();
+        }
+    }, [safeFranchiseId]);
+
+    const loadTemplates = async () => {
+        setIsLoadingTemplates(true);
+        try {
+            const templates = await shiftService.getWeekTemplates(safeFranchiseId);
+            setSavedTemplates(templates);
+        } catch (error) {
+            console.error('Error loading templates:', error);
+        } finally {
+            setIsLoadingTemplates(false);
+        }
+    };
+
+    const saveCurrentWeekAsTemplate = async () => {
+        if (!templateName.trim()) {
+            alert('Por favor, introduce un nombre para la plantilla');
+            return;
+        }
+
+        const shiftsToSave = (weekData?.shifts || []).filter((s): s is Shift => !!s.id);
+        if (shiftsToSave.length === 0) {
+            alert('No hay turnos en la semana actual para guardar');
+            return;
+        }
+
+        try {
+            await shiftService.saveWeekTemplate(
+                safeFranchiseId,
+                templateName.trim(),
+                templateType,
+                shiftsToSave
+            );
+            await loadTemplates();
+            setTemplateName('');
+            setIsTemplateModalOpen(false);
+            alert('Plantilla guardada correctamente');
+        } catch (error) {
+            console.error('Error saving template:', error);
+            alert('Error al guardar la plantilla');
+        }
+    };
+
+    const applyTemplate = async (templateId: string) => {
+        try {
+            const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
+            const appliedCount = await shiftService.applyWeekTemplate(
+                safeFranchiseId,
+                templateId,
+                weekStart,
+                applyMode
+            );
+            
+            if (appliedCount > 0) {
+                alert(`Se aplicaron ${appliedCount} turnos de la plantilla`);
+            } else {
+                alert('No se aplicaron turnos (todos los huecos estaban ocupados)');
+            }
+            setIsTemplateModalOpen(false);
+        } catch (error) {
+            console.error('Error applying template:', error);
+            alert('Error al aplicar la plantilla');
+        }
+    };
 
     // --- DATA HOOKS ---
     const { riders: rosterRiders, fetchRiders } = useFleetStore();
@@ -952,6 +1042,37 @@ const DeliveryScheduler: React.FC<{
 
                             <div className="h-6 w-px bg-slate-200 mx-1" />
 
+                            {!readOnly && (
+                                <>
+                                    <button
+                                        onClick={() => {
+                                            setTemplateMode('save');
+                                            setIsTemplateModalOpen(true);
+                                        }}
+                                        title="Guardar semana actual como plantilla"
+                                        className="px-3 py-1.5 text-xs font-normal rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 flex items-center gap-1.5 transition-all"
+                                    >
+                                        <Save size={14} />
+                                        <span className="hidden sm:inline">Guardar Plantilla</span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            setTemplateMode('load');
+                                            loadTemplates();
+                                            setIsTemplateModalOpen(true);
+                                        }}
+                                        title="Cargar plantilla guardada"
+                                        className="px-3 py-1.5 text-xs font-normal rounded-lg border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center gap-1.5 transition-all"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                                        <span className="hidden sm:inline">Cargar Plantilla</span>
+                                    </button>
+                                </>
+                            )}
+
+                            <div className="h-6 w-px bg-slate-200 mx-1" />
+
                             <button
                                 onClick={handleAuditoria}
                                 className={cn("px-3 py-1.5 text-xs font-normal rounded-lg border flex items-center gap-1.5 transition-all",
@@ -1463,6 +1584,10 @@ const DeliveryScheduler: React.FC<{
                                 setIsModalOpen(true);
                             }}
                             onDelete={(s) => deleteShift(String(s.id))}
+                            onMakeRecurring={(s) => {
+                                setSelectedShiftForRecurring(s as Shift);
+                                setIsRecurringModalOpen(true);
+                            }}
                         />
 
                     )
@@ -1504,6 +1629,199 @@ const DeliveryScheduler: React.FC<{
                 isOpen={isSheriffOpen}
                 onClose={() => setIsSheriffOpen(false)}
                 data={sheriffData}
+            />
+
+            {/* WEEK TEMPLATES MODAL */}
+            {isTemplateModalOpen && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+                        {/* Header */}
+                        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                            <h3 className="font-bold text-slate-900">
+                                {templateMode === 'save' ? '💾 Guardar Plantilla' : '📋 Cargar Plantilla'}
+                            </h3>
+                            <button
+                                onClick={() => setIsTemplateModalOpen(false)}
+                                className="p-1 hover:bg-slate-200 rounded-full transition-colors"
+                            >
+                                <XCircle size={20} className="text-slate-400" />
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 overflow-y-auto flex-1">
+                            {templateMode === 'save' ? (
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                                            Nombre de la plantilla
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={templateName}
+                                            onChange={(e) => setTemplateName(e.target.value)}
+                                            placeholder="Ej: Semana Tipo Verano"
+                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                                            Tipo de plantilla
+                                        </label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {[
+                                                { id: 'verano', label: '☀️ Verano', color: 'bg-amber-100 text-amber-700 border-amber-300' },
+                                                { id: 'invierno', label: '❄️ Invierno', color: 'bg-blue-100 text-blue-700 border-blue-300' },
+                                                { id: 'especial', label: '⭐ Especial', color: 'bg-purple-100 text-purple-700 border-purple-300' }
+                                            ].map((type) => (
+                                                <button
+                                                    key={type.id}
+                                                    onClick={() => setTemplateType(type.id as any)}
+                                                    className={`px-3 py-2 rounded-lg border text-sm font-medium transition-all ${
+                                                        templateType === type.id
+                                                            ? type.color + ' ring-2 ring-offset-1'
+                                                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                                                    }`}
+                                                >
+                                                    {type.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-slate-50 p-3 rounded-lg text-sm text-slate-600">
+                                        <p>Se guardarán <strong>{weekData?.shifts?.length || 0} turnos</strong> de la semana actual.</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {isLoadingTemplates ? (
+                                        <div className="text-center py-8">
+                                            <Loader2 className="w-8 h-8 animate-spin mx-auto text-slate-400 mb-2" />
+                                            <p className="text-sm text-slate-500">Cargando plantillas...</p>
+                                        </div>
+                                    ) : savedTemplates.length === 0 ? (
+                                        <div className="text-center py-8 text-slate-500">
+                                            <p>No tienes plantillas guardadas.</p>
+                                            <p className="text-sm mt-1">Guarda una semana como plantilla primero.</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="space-y-2">
+                                                {savedTemplates.map((template) => (
+                                                    <div
+                                                        key={template.id}
+                                                        className="p-4 border border-slate-200 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/50 transition-all cursor-pointer group"
+                                                        onClick={() => applyTemplate(template.id)}
+                                                    >
+                                                        <div className="flex items-center justify-between">
+                                                            <div>
+                                                                <h4 className="font-semibold text-slate-900">{template.name}</h4>
+                                                                <p className="text-xs text-slate-500 mt-1">
+                                                                    {template.type === 'verano' && '☀️ Verano'}
+                                                                    {template.type === 'invierno' && '❄️ Invierno'}
+                                                                    {template.type === 'especial' && '⭐ Especial'}
+                                                                    {' • '}
+                                                                    {template.shifts.length} turnos
+                                                                    {' • '}
+                                                                    {template.createdAt.toLocaleDateString()}
+                                                                </p>
+                                                            </div>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    if (confirm('¿Eliminar esta plantilla?')) {
+                                                                        shiftService.deleteWeekTemplate(template.id).then(() => loadTemplates());
+                                                                    }
+                                                                }}
+                                                                className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-red-500 transition-all"
+                                                                title="Eliminar plantilla"
+                                                            >
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            <div className="border-t border-slate-200 pt-4">
+                                                <label className="block text-sm font-medium text-slate-700 mb-2">
+                                                    Modo de aplicación
+                                                </label>
+                                                <div className="space-y-2">
+                                                    <label className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="radio"
+                                                            name="applyMode"
+                                                            checked={applyMode === 'fill_only'}
+                                                            onChange={() => setApplyMode('fill_only')}
+                                                            className="text-indigo-600"
+                                                        />
+                                                        <span className="text-sm text-slate-700">Solo llenar huecos vacíos (recomendado)</span>
+                                                    </label>
+                                                    <label className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="radio"
+                                                            name="applyMode"
+                                                            checked={applyMode === 'overwrite'}
+                                                            onChange={() => setApplyMode('overwrite')}
+                                                            className="text-indigo-600"
+                                                        />
+                                                        <span className="text-sm text-slate-700">Sobrescribir toda la semana</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-2">
+                            <button
+                                onClick={() => setIsTemplateModalOpen(false)}
+                                className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            {templateMode === 'save' && (
+                                <button
+                                    onClick={saveCurrentWeekAsTemplate}
+                                    disabled={!templateName.trim()}
+                                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    Guardar Plantilla
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* RECURRING SHIFTS MODAL */}
+            <RecurringShiftModal
+                isOpen={isRecurringModalOpen}
+                onClose={() => {
+                    setIsRecurringModalOpen(false);
+                    setSelectedShiftForRecurring(null);
+                }}
+                onSuccess={() => {
+                    // Refresh the schedule
+                    console.log('Turnos recurrentes creados exitosamente');
+                }}
+                baseShift={selectedShiftForRecurring ? {
+                    franchiseId: safeFranchiseId,
+                    riderId: selectedShiftForRecurring.riderId,
+                    riderName: selectedShiftForRecurring.riderName || 'Sin asignar',
+                    motoId: selectedShiftForRecurring.motoId,
+                    motoPlate: selectedShiftForRecurring.motoPlate || '',
+                    startAt: selectedShiftForRecurring.startAt,
+                    endAt: selectedShiftForRecurring.endAt,
+                    isDraft: true
+                } : null}
+                franchiseId={safeFranchiseId}
             />
         </div>
     );
