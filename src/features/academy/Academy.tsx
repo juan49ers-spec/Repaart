@@ -57,8 +57,12 @@ const Academy = () => {
     }, [lessons]);
 
     const currentLesson = useMemo(() => {
-        if (selectedLessonId && lessons.some(l => l.id === selectedLessonId)) {
-            return lessons.find(l => l.id === selectedLessonId) || null;
+        if (selectedLessonId) {
+            const foundLesson = lessons.find(l => l.id === selectedLessonId);
+            if (foundLesson) {
+                return foundLesson;
+            }
+            return null;
         }
         if (lessons.length > 0) {
             const firstUncompleted = lessons.find(l => !completedLessons.includes(l.id!));
@@ -102,12 +106,13 @@ const Academy = () => {
 
     const handleSelectLesson = (lessonId: string) => {
         const lesson = lessons.find(l => l.id === lessonId);
-        if (!lesson) return;
+        if (!lesson) {
+            return;
+        }
 
         const hasVideo = lesson.video_url && lesson.video_url.trim().length > 0;
         const hasText = lesson.content && lesson.content.trim().length > 0;
 
-        // Reset video expanded state when changing lessons
         setIsVideoExpanded(false);
 
         // Always show modal if lesson has both video and text
@@ -857,7 +862,28 @@ const Academy = () => {
                             </div>
                         )}
 
-                {!currentLesson && !selectedLessonId && (
+                {/* Mensaje cuando se intentó acceder a una lección no disponible */}
+                {selectedLessonId && !currentLesson && lessons.length > 0 && (
+                    <div className="h-full flex items-center justify-center px-4">
+                        <div className="text-center max-w-md">
+                            <Lock className="w-16 h-16 text-amber-500 dark:text-amber-600 mx-auto mb-4" />
+                            <p className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-2">
+                                Lección no disponible
+                            </p>
+                            <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
+                                Esta lección no está publicada o ha sido desactivada temporalmente.
+                            </p>
+                            <button
+                                onClick={() => setSelectedLessonId(null)}
+                                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-colors"
+                            >
+                                Ver lecciones disponibles
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {!currentLesson && !selectedLessonId && lessons.length === 0 && (
                     <div className="h-full flex items-center justify-center px-4">
                         <div className="text-center">
                             <BookOpen className="w-16 h-16 text-slate-400 dark:text-slate-600 mx-auto mb-4" />
