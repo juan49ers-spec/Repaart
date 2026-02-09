@@ -7,6 +7,7 @@ import ContentProtection from './components/ContentProtection';
 import LearningPath from './components/LearningPath';
 import FocusMode from './components/FocusMode';
 import CelebrationModal from './components/CelebrationModal';
+import LessonNotes from './components/LessonNotes';
 import { EmptyState, LoadingState } from './components/AcademyStates';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -32,7 +33,8 @@ import {
     Lock,
     Sparkles,
     Trophy,
-    Target
+    Target,
+    StickyNote
 } from 'lucide-react';
 
 const Academy = () => {
@@ -49,6 +51,7 @@ const Academy = () => {
         moduleTitle: string;
         moduleNumber: number;
     }>({ isOpen: false, moduleTitle: '', moduleNumber: 0 });
+    const [notesOpen, setNotesOpen] = useState(false);
     const videoRef = useRef<HTMLIFrameElement>(null);
 
     // Temporal: Cargar todos los módulos y filtrar client-side para debug
@@ -729,13 +732,21 @@ const Academy = () => {
                                     className="h-full flex flex-col"
                                 >
                             {/* Header */}
-                            <div className="academy-lesson-header">
+                            <div className="academy-lesson-header flex justify-between items-center">
                                 <button
                                     onClick={handleBackToLessons}
                                     className="academy-lesson-back-button"
                                 >
                                     <ArrowLeft className="w-4 h-4" />
                                     Volver a lecciones
+                                </button>
+                                
+                                <button
+                                    onClick={() => setNotesOpen(true)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 transition-all"
+                                >
+                                    <StickyNote className="w-4 h-4" />
+                                    Mis Notas
                                 </button>
                             </div>
 
@@ -948,6 +959,15 @@ const Academy = () => {
                             </div>
                             </motion.div>
                             </div>
+                            
+                            {/* Notes Panel */}
+                            {currentLesson?.id && (
+                                <LessonNotes
+                                    lessonId={currentLesson.id}
+                                    isOpen={notesOpen}
+                                    onClose={() => setNotesOpen(false)}
+                                />
+                            )}
                             </FocusMode>
                         )}
 
