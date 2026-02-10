@@ -604,31 +604,32 @@ Basándome en tus datos actuales:
     return (
         <>
             {/* Floating Button */}
-            <motion.button
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                    if (externalIsOpen === undefined) {
+            {/* Floating Button - Solo visible en modo independiente (sin control externo) */}
+            {externalIsOpen === undefined && (
+                <motion.button
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
                         setInternalIsOpen(true);
-                    }
-                    setHasUnreadInsights(false);
-                }}
-                className={cn(
-                    "fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-full shadow-2xl transition-all",
-                    "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-indigo-500/30",
-                    (isOpen || externalIsOpen !== undefined) && "hidden"
-                )}
-            >
-                <Bot className="w-5 h-5" />
-                <span className="font-medium text-sm">Tu Asesor IA</span>
-                {hasUnreadInsights && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center text-[10px] font-bold animate-pulse">
-                        {insights.filter(i => i.type === 'critical' || i.type === 'warning').length || 1}
-                    </span>
-                )}
-            </motion.button>
+                        setHasUnreadInsights(false);
+                    }}
+                    className={cn(
+                        "fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-full shadow-2xl transition-all",
+                        "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-indigo-500/30",
+                        isOpen && "hidden"
+                    )}
+                >
+                    <Bot className="w-5 h-5" />
+                    <span className="font-medium text-sm">Tu Asesor IA</span>
+                    {hasUnreadInsights && (
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center text-[10px] font-bold animate-pulse">
+                            {insights.filter(i => i.type === 'critical' || i.type === 'warning').length || 1}
+                        </span>
+                    )}
+                </motion.button>
+            )}
 
             {/* Chat Window */}
             <AnimatePresence>
