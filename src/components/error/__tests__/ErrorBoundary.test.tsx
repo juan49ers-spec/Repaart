@@ -2,6 +2,12 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ErrorBoundary } from '../ErrorBoundary';
 
+// Mock lucide-react icons
+vi.mock('lucide-react', () => ({
+  AlertTriangle: (props: any) => <div data-testid="alert-triangle-icon" {...props} />,
+  RefreshCw: (props: any) => <div data-testid="refresh-icon" {...props} />,
+}));
+
 // Componente que lanza error
 const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
   if (shouldThrow) {

@@ -3,6 +3,26 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import DashboardLayout from '../DashboardLayout';
 
+// Mock lucide-react icons (needed for pageHelpData)
+vi.mock('lucide-react', () => ({
+  LayoutDashboard: (props: any) => <div data-testid="layout-dashboard-icon" {...props} />,
+  Activity: (props: any) => <div data-testid="activity-icon" {...props} />,
+  Users: (props: any) => <div data-testid="users-icon" {...props} />,
+  LayoutGrid: (props: any) => <div data-testid="layout-grid-icon" {...props} />,
+  Wallet: (props: any) => <div data-testid="wallet-icon" {...props} />,
+  GraduationCap: (props: any) => <div data-testid="graduation-cap-icon" {...props} />,
+  Settings: (props: any) => <div data-testid="settings-icon" {...props} />,
+  Bell: (props: any) => <div data-testid="bell-icon" {...props} />,
+  Shield: (props: any) => <div data-testid="shield-icon" {...props} />,
+  FileText: (props: any) => <div data-testid="file-text-icon" {...props} />,
+  Target: (props: any) => <div data-testid="target-icon" {...props} />,
+  HelpCircle: (props: any) => <div data-testid="help-circle-icon" {...props} />,
+  BookOpen: (props: any) => <div data-testid="book-open-icon" {...props} />,
+  Clock: (props: any) => <div data-testid="clock-icon" {...props} />,
+  UserCircle: (props: any) => <div data-testid="user-circle-icon" {...props} />,
+  MessageSquare: (props: any) => <div data-testid="message-square-icon" {...props} />,
+}));
+
 // Mock the dependencies
 vi.mock('../../store/useAppStore', () => ({
   useAppStore: () => ({

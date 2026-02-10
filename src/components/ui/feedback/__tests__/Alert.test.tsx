@@ -2,6 +2,15 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Alert } from '../Alert';
 
+// Mock lucide-react icons
+vi.mock('lucide-react', () => ({
+  X: (props: any) => <div data-testid="x-icon" {...props} />,
+  Info: (props: any) => <div data-testid="info-icon" {...props} />,
+  CheckCircle: (props: any) => <div data-testid="check-icon" {...props} />,
+  AlertTriangle: (props: any) => <div data-testid="alert-triangle-icon" {...props} />,
+  AlertCircle: (props: any) => <div data-testid="alert-circle-icon" {...props} />,
+}));
+
 describe('Alert', () => {
   it('should render alert with message', () => {
     render(

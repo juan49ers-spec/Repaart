@@ -3,6 +3,13 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import RiderHeader from '../RiderHeader';
 
+// Mock lucide-react icons
+vi.mock('lucide-react', () => ({
+  User: (props: any) => <div data-testid="user-icon" {...props} />,
+  Settings: (props: any) => <div data-testid="settings-icon" {...props} />,
+  Edit3: (props: any) => <div data-testid="edit-icon" {...props} />,
+}));
+
 describe('RiderHeader', () => {
     const defaultProps = {
         displayName: 'John Doe',
