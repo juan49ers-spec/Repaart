@@ -604,7 +604,7 @@ Basándome en tus datos actuales:
     return (
         <>
             {/* Floating Button */}
-            {/* Floating Button - Solo visible en modo independiente (sin control externo) */}
+            {/* Floating Button - SOLO en modo independiente (sin control externo desde header) */}
             {externalIsOpen === undefined && (
                 <motion.button
                     initial={{ scale: 0 }}
@@ -617,12 +617,12 @@ Basándome en tus datos actuales:
                     }}
                     className={cn(
                         "fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-full shadow-2xl transition-all",
-                        "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-indigo-500/30",
+                        "bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-emerald-500/30",
                         isOpen && "hidden"
                     )}
                 >
                     <Bot className="w-5 h-5" />
-                    <span className="font-medium text-sm">Tu Asesor IA</span>
+                    <span className="font-medium text-sm">Asesor IA</span>
                     {hasUnreadInsights && (
                         <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center text-[10px] font-bold animate-pulse">
                             {insights.filter(i => i.type === 'critical' || i.type === 'warning').length || 1}
