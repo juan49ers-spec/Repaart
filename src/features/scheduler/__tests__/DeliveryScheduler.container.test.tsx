@@ -2,6 +2,20 @@ import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import DeliveryScheduler from '../DeliveryScheduler';
 
+// Mock lucide-react icons
+vi.mock('lucide-react', () => ({
+  ChevronLeft: (props: any) => <div data-testid="chevron-left" {...props} />,
+  ChevronRight: (props: any) => <div data-testid="chevron-right" {...props} />,
+  Sun: (props: any) => <div data-testid="sun-icon" {...props} />,
+  Moon: (props: any) => <div data-testid="moon-icon" {...props} />,
+  Save: (props: any) => <div data-testid="save-icon" {...props} />,
+  Loader2: (props: any) => <div data-testid="loader-icon" {...props} />,
+  BadgeCheck: (props: any) => <div data-testid="badge-check-icon" {...props} />,
+  XCircle: (props: any) => <div data-testid="x-circle-icon" {...props} />,
+  PenLine: (props: any) => <div data-testid="penline-icon" {...props} />,
+  Bike: (props: any) => <div data-testid="bike-icon" {...props} />,
+}));
+
 // Mock all dependencies
 vi.mock('../../../context/AuthContext', () => ({
   useAuth: () => ({

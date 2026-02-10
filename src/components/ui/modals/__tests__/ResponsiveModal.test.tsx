@@ -2,6 +2,11 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ResponsiveModal } from '../ResponsiveModal';
 
+// Mock lucide-react icons
+vi.mock('lucide-react', () => ({
+  X: (props: any) => <div data-testid="x-icon" {...props} />
+}));
+
 describe('ResponsiveModal Container Queries', () => {
   const defaultProps = {
     isOpen: true,
