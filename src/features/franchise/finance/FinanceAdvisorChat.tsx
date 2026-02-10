@@ -271,7 +271,7 @@ RESPUESTA:`;
                     setHasUnreadInsights(false);
                 }}
                 className={cn(
-                    "fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-2xl transition-all",
+                    "fixed top-24 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-2xl transition-all",
                     "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-indigo-500/30",
                     isOpen && "hidden"
                 )}
@@ -292,7 +292,7 @@ RESPUESTA:`;
                         initial={{ opacity: 0, y: 20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                        className="fixed bottom-6 right-6 z-50 w-[400px] max-w-[calc(100vw-48px)] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden"
+                        className="fixed top-24 right-6 z-50 w-[400px] max-w-[calc(100vw-48px)] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden max-h-[calc(100vh-120px)] flex flex-col"
                     >
                         {/* Header */}
                         <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 flex items-center justify-between">
@@ -339,7 +339,7 @@ RESPUESTA:`;
                         </div>
 
                         {/* Messages */}
-                        <div className="h-[350px] overflow-y-auto p-4 space-y-4 bg-slate-50/50">
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 min-h-0">
                             {messages.map((message) => (
                                 <div
                                     key={message.id}
