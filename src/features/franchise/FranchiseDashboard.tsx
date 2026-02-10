@@ -4,6 +4,7 @@ import { useOutletContext } from 'react-router-dom';
 // Components
 import DashboardSkeleton from '../../components/ui/layout/DashboardSkeleton';
 import FranchiseDashboardView, { BreakdownItem, DashboardTrendItem } from './FranchiseDashboardView';
+import FinanceAdvisorChat from './finance/FinanceAdvisorChat';
 
 import { AuthUser, useAuth } from '../../context/AuthContext';
 import { useFranchiseFinance } from '../../hooks/useFranchiseFinance';
@@ -105,43 +106,63 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
     }));
 
     return (
-        <FranchiseDashboardView
-            franchiseId={activeFranchiseId}
-            effectiveMonth={effectiveMonth}
-            readOnly={effectiveReadOnly}
+        <>
+            <FranchiseDashboardView
+                franchiseId={activeFranchiseId}
+                effectiveMonth={effectiveMonth}
+                readOnly={effectiveReadOnly}
 
-            // Metrics
-            revenue={revenue}
-            orders={orders}
-            totalExpenses={totalExpenses}
-            totalHours={totalHours}
-            revenueTrend={revenueTrend}
+                // Metrics
+                revenue={revenue}
+                orders={orders}
+                totalExpenses={totalExpenses}
+                totalHours={totalHours}
+                revenueTrend={revenueTrend}
 
-            // Data
-            report={report}
-            rawData={rawData}
-            trendData={trendData}
-            formattedTrendData={formattedTrendData}
-            fullExpenseBreakdown={fullExpenseBreakdown}
+                // Data
+                report={report}
+                rawData={rawData}
+                trendData={trendData}
+                formattedTrendData={formattedTrendData}
+                fullExpenseBreakdown={fullExpenseBreakdown}
 
-            // State
-            isWizardOpen={isWizardOpen}
-            setIsWizardOpen={setIsWizardOpen}
-            isSimulatorOpen={isSimulatorOpen}
-            setIsSimulatorOpen={setIsSimulatorOpen}
-            isHistoryView={isHistoryView}
-            setIsHistoryView={setIsHistoryView}
-            drillDown={drillDown}
-            setDrillDown={setDrillDown}
-            isLegendOpen={isLegendOpen}
-            setIsLegendOpen={setIsLegendOpen}
-            showGuide={showGuide}
-            setShowGuide={setShowGuide}
+                // State
+                isWizardOpen={isWizardOpen}
+                setIsWizardOpen={setIsWizardOpen}
+                isSimulatorOpen={isSimulatorOpen}
+                setIsSimulatorOpen={setIsSimulatorOpen}
+                isHistoryView={isHistoryView}
+                setIsHistoryView={setIsHistoryView}
+                drillDown={drillDown}
+                setDrillDown={setDrillDown}
+                isLegendOpen={isLegendOpen}
+                setIsLegendOpen={setIsLegendOpen}
+                showGuide={showGuide}
+                setShowGuide={setShowGuide}
 
-            // Handlers
-            onMonthChange={effectiveSetMonth}
-            onUpdateFinance={handleUpdate}
-        />
+                // Handlers
+                onMonthChange={effectiveSetMonth}
+                onUpdateFinance={handleUpdate}
+            />
+            
+            {/* AI Finance Advisor Chat */}
+            {!loading && accounting && (
+                <FinanceAdvisorChat
+                    financialData={{
+                        revenue: revenue || 0,
+                        expenses: totalExpenses || 0,
+                        netProfit: report?.netProfit || 0,
+                        orders: orders || 0,
+                        margin: report?.metrics?.profitMargin || 0,
+                        month: effectiveMonth,
+                        breakdown: fullExpenseBreakdown,
+                        metrics: report?.metrics
+                    }}
+                    trendData={formattedTrendData}
+                    month={effectiveMonth}
+                />
+            )}
+        </>
     );
 };
 
