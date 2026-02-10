@@ -44,6 +44,9 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
     const effectiveMonth = propId ? localMonth : selectedMonth;
     const effectiveSetMonth = propId ? setLocalMonth : (context?.setSelectedMonth || (() => { }));
 
+    // AI Advisor State
+    const [isAdvisorOpen, setIsAdvisorOpen] = useState(false);
+
     // --- UNIFIED FINANCE HOOK ---
     const {
         accounting,
@@ -131,6 +134,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
                 setIsWizardOpen={setIsWizardOpen}
                 isSimulatorOpen={isSimulatorOpen}
                 setIsSimulatorOpen={setIsSimulatorOpen}
+                setIsAdvisorOpen={setIsAdvisorOpen}
                 isHistoryView={isHistoryView}
                 setIsHistoryView={setIsHistoryView}
                 drillDown={drillDown}
@@ -160,6 +164,8 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
                     }}
                     trendData={formattedTrendData}
                     month={effectiveMonth}
+                    isOpen={isAdvisorOpen}
+                    onClose={() => setIsAdvisorOpen(false)}
                 />
             )}
         </>

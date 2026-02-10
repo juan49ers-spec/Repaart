@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PlayCircle, ChevronLeft, ChevronRight, Lock, Banknote, Activity, Target } from 'lucide-react';
+import { PlayCircle, ChevronLeft, ChevronRight, Lock, Banknote, Activity, Target, Bot } from 'lucide-react';
 import { formatMoney, FinancialReport, MonthlyData } from '../../lib/finance';
 
 // Components
@@ -51,6 +51,7 @@ export interface FranchiseDashboardViewProps {
     setIsWizardOpen: (open: boolean) => void;
     isSimulatorOpen: boolean;
     setIsSimulatorOpen: (open: boolean) => void;
+    setIsAdvisorOpen: (open: boolean) => void;
     isHistoryView: boolean;
     setIsHistoryView: (view: boolean) => void;
     drillDown: string | null;
@@ -81,6 +82,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
     setIsWizardOpen,
     isSimulatorOpen,
     setIsSimulatorOpen,
+    setIsAdvisorOpen,
     isHistoryView,
     setIsHistoryView,
     isLegendOpen,
@@ -185,6 +187,15 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                         >
                             <PlayCircle className="w-4 h-4" />
                             <span>Simulación</span>
+                        </button>
+
+                        {/* AI Advisor */}
+                        <button
+                            onClick={() => setIsAdvisorOpen(true)}
+                            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all mechanical-press shadow-lg shadow-indigo-500/20 border border-indigo-400/50"
+                        >
+                            <Bot className="w-4 h-4" />
+                            <span>Tu Asesor</span>
                         </button>
 
                         {/* Help Protocol */}
