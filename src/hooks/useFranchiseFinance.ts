@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { financeService } from '../services/financeService';
 import { calculateMonthlyRevenue, calculateExpenses, analyzeFinancialHealth, DEFAULT_MONTH_DATA, type MonthlyData, type FinancialReport, type FinancialAnalysis, type TariffConfig } from '../lib/finance';
 import type { TrendItem } from '../types/finance';
@@ -27,10 +27,10 @@ export interface FranchiseFinanceHook {
     analysis: FinancialAnalysis;
     loading: boolean;
     isFetching: boolean;
+    isRealTime: boolean;
     error: Error | null;
     updateFinance: (data: Partial<MonthlyData>) => Promise<void>;
     isSaving: boolean;
-    refetch: () => void;
 }
 
 export const useFranchiseFinance = ({ franchiseId, month, tariffs }: FranchiseFinanceParams): FranchiseFinanceHook => {
@@ -38,28 +38,47 @@ export const useFranchiseFinance = ({ franchiseId, month, tariffs }: FranchiseFi
     const queryClient = useQueryClient();
     const queryKey = ['franchise-finance', franchiseId, month];
 
-    // 1. FETCH DATA
-    const { data: rawData, isLoading, isFetching, error, refetch } = useQuery({
-        queryKey,
-        queryFn: async () => {
-            if (!franchiseId || !month) return DEFAULT_MONTH_DATA;
-            const data = await financeService.getFinancialData(franchiseId, month);
+    // 1. REAL-TIME DATA SYNC
+    // Instead of useQuery, we use a subscription effect for the active month
+    const [rawData, setRawData] = React.useState<MonthlyData>(DEFAULT_MONTH_DATA);
+    const [isLoading, setIsLoading] = React.useState(true);
+    const [error, setError] = React.useState<Error | null>(null);
 
-            // Filter out deleted records (Consistency enhancement)
-            if (data?.status === 'deleted') {
-                return DEFAULT_MONTH_DATA;
+    React.useEffect(() => {
+        if (!franchiseId || !month || !user || user.role === 'rider') {
+            setRawData(DEFAULT_MONTH_DATA);
+            setIsLoading(false);
+            return;
+        }
+
+        setIsLoading(true);
+
+        const unsubscribe = financeService.subscribeToFinancialData(
+            franchiseId,
+            month,
+            (data) => {
+                // Filter out deleted records
+                if (data?.status === 'deleted') {
+                    setRawData(DEFAULT_MONTH_DATA);
+                } else {
+                    setRawData(data || DEFAULT_MONTH_DATA);
+                }
+                setIsLoading(false);
+                setError(null);
+            },
+            (err) => {
+                console.error("Real-time sync error:", err);
+                setError(err);
+                setIsLoading(false);
             }
+        );
 
-            return data || DEFAULT_MONTH_DATA;
-        },
-        enabled: !!user && !!franchiseId && !!month && user.role !== 'rider',
-        staleTime: 1000 * 60 * 5, // 5 Minutes Stale Time (Reduces flickering)
-        refetchOnWindowFocus: true,
-    });
+        return () => unsubscribe();
+    }, [franchiseId, month, user]);
 
     // 2. CALCULATE DERIVED STATE
     // Combine Accounting & Operational logic
-    const currentData = (rawData || DEFAULT_MONTH_DATA) as MonthlyData;
+    const currentData = rawData;
 
     // A. Operational Data (From useFinancialPulse)
     const operations = useMemo(() => ({
@@ -134,12 +153,12 @@ export const useFranchiseFinance = ({ franchiseId, month, tariffs }: FranchiseFi
 
         // Meta
         loading: isLoading,
-        isFetching,
+        isFetching: isLoading, // Compatible alias
+        isRealTime: true, // Indicator for UI
         error,
 
         // Actions
         updateFinance: saveMutation.mutateAsync,
-        isSaving: saveMutation.isPending,
-        refetch // Expose refetch
+        isSaving: saveMutation.isPending
     };
 };

@@ -4,6 +4,8 @@ import { PlayCircle, ChevronLeft, ChevronRight, Lock, Banknote, Activity, Target
 import { formatMoney, FinancialReport, MonthlyData } from '../../lib/finance';
 import type { TrendItem } from '../../types/finance';
 import type { FinancialRecord } from './finance/types';
+import { TaxCalculations } from '../../hooks/useTaxCalculations';
+import FinancialSyncStatus from './components/FinancialSyncStatus';
 
 // Components
 import TaxVaultWidget from './finance/TaxVaultWidget';
@@ -42,6 +44,8 @@ export interface FranchiseDashboardViewProps {
     franchiseId?: string;
     effectiveMonth: string;
     readOnly: boolean;
+    isRealTime?: boolean;
+    lastUpdated?: Date;
     revenue: number;
     orders: number;
     totalExpenses: number;
@@ -52,6 +56,7 @@ export interface FranchiseDashboardViewProps {
     trendData: TrendItem[];
     formattedTrendData: DashboardTrendItem[];
     fullExpenseBreakdown: BreakdownItem[];
+    taxes?: TaxCalculations;
     isWizardOpen: boolean;
     setIsWizardOpen: (open: boolean) => void;
     isSimulatorOpen: boolean;
@@ -67,12 +72,15 @@ export interface FranchiseDashboardViewProps {
     setShowGuide: (show: boolean) => void;
     onMonthChange: (month: string) => void;
     onUpdateFinance: (data: Partial<MonthlyData>) => Promise<void>;
+    monthlyInvoicedAmount?: number;
 }
 
 const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
     franchiseId,
     effectiveMonth,
     readOnly,
+    isRealTime = false,
+    lastUpdated,
     revenue,
     orders,
     totalExpenses,
@@ -83,6 +91,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
     trendData,
     formattedTrendData,
     fullExpenseBreakdown,
+    taxes,
     isWizardOpen,
     setIsWizardOpen,
     isSimulatorOpen,
@@ -95,7 +104,8 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
     showGuide,
     setShowGuide,
     onMonthChange,
-    onUpdateFinance
+    onUpdateFinance,
+    monthlyInvoicedAmount
 }: FranchiseDashboardViewProps) => {
     const { user } = useAuth();
     const [monthlyGoal, setMonthlyGoal] = useState(16000);
@@ -186,7 +196,14 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                         </div>
                     </div>
 
+
                     <div className="flex flex-wrap items-center gap-3">
+                        {/* Real-Time Status */}
+                        <FinancialSyncStatus
+                            isRealTime={isRealTime}
+                            lastUpdated={lastUpdated}
+                        />
+
                         {/* Simulation Tool */}
                         <button
                             onClick={() => setIsSimulatorOpen(true)}
@@ -323,12 +340,10 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                             <ErrorBoundary>
                                 <div className="h-full">
                                     <TaxVaultWidget
-                                        taxes={report?.taxes || {
-                                            ivaRepercutido: 0, ivaSoportado: 0, ivaAPagar: 0, irpfPago: 0, totalReserve: 0, irpfPercent: 20, netProfitPostTax: 0, netProfit: 0, margin: 0, vat: { toPay: 0 }
-                                        }}
+                                        taxes={taxes || null}
                                         minimal
                                         currentMonth={effectiveMonth}
-                                        historicalData={trendData as unknown as MonthlyData[]}
+                                        historicalData={formattedTrendData as any}
                                     />
                                 </div>
                             </ErrorBoundary>
@@ -411,6 +426,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                             }
                         }}
                         initialData={rawData as unknown as Partial<FinancialRecord>}
+                        suggestedIncome={monthlyInvoicedAmount}
                     />
                 )}
 

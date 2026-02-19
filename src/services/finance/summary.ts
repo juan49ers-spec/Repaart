@@ -1,5 +1,5 @@
 import { db } from '../../lib/firebase';
-import { collection, query, where, doc, getDoc, setDoc, updateDoc, getDocs, serverTimestamp, arrayUnion, Timestamp, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, query, where, doc, getDoc, setDoc, updateDoc, getDocs, serverTimestamp, arrayUnion, Timestamp, deleteDoc, writeBatch, onSnapshot } from 'firebase/firestore';
 import type { MonthlyData } from '../../types/finance';
 import { ServiceError, validationError, permissionError } from '../../utils/ServiceError';
 import { mapToMonthlyData } from './helpers';
@@ -27,6 +27,36 @@ export const financeSummary = {
         } catch (error) {
             throw new ServiceError('getFinancialData', { cause: error });
         }
+    },
+
+    /**
+     * Subscribe to monthly financial data (Real-time)
+     */
+    subscribeToFinancialData: (
+        franchiseId: string,
+        month: string,
+        onUpdate: (data: MonthlyData | null) => void,
+        onError: (error: Error) => void
+    ): (() => void) => {
+        if (!franchiseId || !month) return () => { };
+
+        const docId = `${franchiseId}_${month}`;
+        const docRef = doc(db, 'financial_summaries', docId);
+
+        return onSnapshot(
+            docRef,
+            (docSnap) => {
+                if (docSnap.exists()) {
+                    onUpdate(mapToMonthlyData(docSnap, franchiseId));
+                } else {
+                    onUpdate(null);
+                }
+            },
+            (error) => {
+                console.error("Error subscribing to financial data:", error);
+                onError(new ServiceError('subscribeToFinancialData', { cause: error }));
+            }
+        );
     },
 
     /**

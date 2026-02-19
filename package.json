@@ -21,7 +21,9 @@
     "type-check": "tsc --noEmit",
     "preview": "vite preview",
     "seed:encyclopedia": "node scripts/seed-encyclopedia.js",
-    "prepare": "husky"
+    "prepare": "husky",
+    "firebase:emulators": "firebase emulators:start --only functions,firestore,auth,storage",
+    "dev:full": "npm run firebase:emulators"
   },
   "lint-staged": {
     "src/**/*.{js,jsx,ts,tsx}": [

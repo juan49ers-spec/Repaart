@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { UploadCloud, X, FileText, CheckCircle2, Loader2 } from 'lucide-react';
 import { storage, db } from '../../../lib/firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
@@ -23,13 +23,13 @@ const ResourceUploadModal: React.FC<ResourceUploadModalProps> = ({ isOpen, onClo
     const [file, setFile] = useState<File | null>(null);
     const [title, setTitle] = useState('');
     const [category, setCategory] = useState(defaultCategory);
+    const [prevDefaultCategory, setPrevDefaultCategory] = useState(defaultCategory);
     const [isPinned, setIsPinned] = useState(false);
 
-    useEffect(() => {
-        if (isOpen) {
-            setCategory(defaultCategory);
-        }
-    }, [isOpen]);
+    if (defaultCategory !== prevDefaultCategory) {
+        setCategory(defaultCategory);
+        setPrevDefaultCategory(defaultCategory);
+    }
 
     // Upload State
     const [uploading, setUploading] = useState(false);
@@ -121,9 +121,11 @@ const ResourceUploadModal: React.FC<ResourceUploadModalProps> = ({ isOpen, onClo
                     setFile(null);
                     setTitle('');
                     setProgress(0);
+                    setIsPinned(false); // Reset isPinned
                 }
             );
-        } catch (error: any) {
+        } catch (err) {
+            const error = err as Error;
             console.error("Error initiating upload:", error);
             alert("Error al iniciar la subida: " + (error.message || "Error desconocido"));
             setUploading(false);

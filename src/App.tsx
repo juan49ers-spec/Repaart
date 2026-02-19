@@ -40,6 +40,7 @@ const AdminFranchiseView = lazyWithRetry(() => import('./features/admin/AdminFra
 const KanbanBoard = lazyWithRetry(() => import('./features/admin/kanban/KanbanBoard'));
 const RidersView = lazyWithRetry(() => import('./features/fleet/RidersView'));
 const AcademyAdmin = lazyWithRetry(() => import('./features/academy/admin/AcademyAdmin'));
+// InvoicingDashboard moved to FinanceHub
 // const NotificationsPage = lazyWithRetry(() => import('./features/user/NotificationsPage'));
 
 import { useFranchiseFinance } from './hooks/useFranchiseFinance';
@@ -229,6 +230,9 @@ function App() {
                                 <RidersView />
                             </RequireActiveStatus>
                         </RequireRole>
+                    } />
+                    <Route path="invoicing" element={
+                        <Navigate to="/dashboard" replace />
                     } />
                     <Route path="profile" element={<UserProfile />} />
                     <Route path="demo/smart-input" element={<DevSandbox />} />

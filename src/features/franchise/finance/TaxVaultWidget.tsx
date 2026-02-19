@@ -1,16 +1,11 @@
 import React, { useState } from 'react';
 import { formatMoney, MonthlyData } from '../../../lib/finance';
 import { Landmark, Maximize2, Activity } from 'lucide-react';
+import { TaxCalculations } from '../../../hooks/useTaxCalculations';
 import QuarterlyTaxModal from '../dashboard/widgets/QuarterlyTaxModal';
 
 interface TaxVaultWidgetProps {
-    taxes: {
-        ivaRepercutido: number;
-        ivaSoportado: number;
-        ivaAPagar: number;
-        irpfPago: number;
-        totalReserve: number;
-    } | null;
+    taxes: TaxCalculations | null;
     minimal?: boolean;
     currentMonth?: string;
     historicalData?: MonthlyData[];
@@ -21,7 +16,7 @@ const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, hi
 
     if (!taxes) return null;
 
-    const { ivaAPagar, irpfPago, totalReserve } = taxes;
+    const { ivaPayable, irpfPayable, totalTaxLiability } = taxes;
 
     return (
         <div className="workstation-card workstation-scanline p-6 h-full flex flex-col group/card transition-all mechanical-press overflow-hidden">
@@ -40,6 +35,7 @@ const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, hi
                 <button
                     onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}
                     className="p-1.5 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 hover:text-indigo-600 transition-colors"
+                    title="Ver detalle trimestral"
                 >
                     <Maximize2 className="w-3 h-3" />
                 </button>
@@ -49,7 +45,7 @@ const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, hi
             <div className="mb-5">
                 <div className="flex items-baseline gap-1">
                     <span className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight tabular-nums">
-                        {formatMoney(totalReserve)}€
+                        {formatMoney(totalTaxLiability)}€
                     </span>
                     <span className="text-xs font-medium text-slate-400 ml-1">reserva total</span>
                 </div>
@@ -63,12 +59,12 @@ const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, hi
                             <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
                             <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">IVA</span>
                         </div>
-                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 tabular-nums">{formatMoney(ivaAPagar)}€</span>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 tabular-nums">{formatMoney(ivaPayable)}€</span>
                     </div>
                     <div className="h-1.5 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-indigo-500 rounded-full transition-all duration-1000"
-                            style={{ width: `${Math.min((ivaAPagar / (totalReserve || 1)) * 100, 100)}%` } as React.CSSProperties}
+                            style={{ width: `${Math.min((ivaPayable / (totalTaxLiability || 1)) * 100, 100)}%` }}
                         />
                     </div>
                 </div>
@@ -79,12 +75,12 @@ const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, hi
                             <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                             <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">IRPF</span>
                         </div>
-                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 tabular-nums">{formatMoney(irpfPago)}€</span>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 tabular-nums">{formatMoney(irpfPayable)}€</span>
                     </div>
                     <div className="h-1.5 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-amber-500 rounded-full transition-all duration-1000"
-                            style={{ width: `${Math.min((irpfPago / (totalReserve || 1)) * 100, 100)}%` } as React.CSSProperties}
+                            style={{ width: `${Math.min((irpfPayable / (totalTaxLiability || 1)) * 100, 100)}%` }}
                         />
                     </div>
                 </div>
@@ -204,7 +200,7 @@ const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, hi
                         onClose={() => setIsModalOpen(false)}
                         currentMonth={targetMonthStr}
                         historicalData={historicalData}
-                        currentMonthTaxes={showPaymentMode ? undefined : { ivaAPagar, irpfPago }}
+                        currentMonthTaxes={showPaymentMode ? undefined : { ivaAPagar: ivaPayable, irpfPago: irpfPayable }}
                         isPaymentMode={showPaymentMode}
                     />
                 );

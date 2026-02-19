@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useOutletContext } from 'react-router-dom';
 import AdminDashboard from '../../features/admin/dashboard/AdminDashboard';
 import DashboardSkeleton from '../../components/ui/layout/DashboardSkeleton';
-import FranchiseDashboard from '../../features/franchise/FranchiseDashboard';
+import { FinanceHub } from '../../features/finance/FinanceHub';
 
 interface DashboardContext {
     selectedMonth: string;
@@ -39,7 +39,7 @@ const DashboardSwitcher: React.FC = () => {
     // --- FRANCHISE COCKPIT VIEW ---
     // Extracting the Cockpit render logic from the old ViewSwitcher
     return (
-        <FranchiseDashboard />
+        <FinanceHub />
     );
 };
 

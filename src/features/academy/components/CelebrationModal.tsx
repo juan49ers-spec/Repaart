@@ -26,25 +26,32 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
   const [particles, setParticles] = useState<Particle[]>([]);
 
   useEffect(() => {
-    if (isOpen) {
-      // Generar partículas de confeti con valores aleatorios pre-calculados
-      const colors = ['#f472b6', '#a78bfa', '#34d399', '#fbbf24', '#60a5fa'];
-      const newParticles: Particle[] = Array.from({ length: 50 }, (_, i) => ({
-        id: i,
-        x: Math.random() * 100,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        rotation: Math.random() > 0.5 ? 360 : -360,
-        duration: 2 + Math.random() * 2
-      }));
-      setParticles(newParticles);
-
-      // Auto-cerrar después de 5 segundos
-      const timer = setTimeout(() => {
-        onClose();
-      }, 5000);
-
-      return () => clearTimeout(timer);
+    if (!isOpen) {
+      return;
     }
+
+    // Generar partículas de confeti con valores aleatorios pre-calculados
+    const colors = ['#f472b6', '#a78bfa', '#34d399', '#fbbf24', '#60a5fa'];
+    const newParticles: Particle[] = Array.from({ length: 50 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rotation: Math.random() > 0.5 ? 360 : -360,
+      duration: 2 + Math.random() * 2
+    }));
+    // Use requestAnimationFrame to defer the state update and avoid cascading render error
+    requestAnimationFrame(() => {
+      setParticles(newParticles);
+    });
+
+    // Auto-cerrar después de 5 segundos
+    const timer = setTimeout(() => {
+      onClose();
+    }, 5000);
+
+    return () => {
+      clearTimeout(timer);
+    };
   }, [isOpen, onClose]);
 
   return (
@@ -64,18 +71,18 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
           {particles.map((particle) => (
             <motion.div
               key={particle.id}
-              initial={{ 
-                y: -20, 
-                x: `${particle.x}%`, 
+              initial={{
+                y: -20,
+                x: `${particle.x}%`,
                 opacity: 1,
                 rotate: 0
               }}
-              animate={{ 
-                y: typeof window !== 'undefined' ? window.innerHeight + 20 : 1000, 
+              animate={{
+                y: typeof window !== 'undefined' ? window.innerHeight + 20 : 1000,
                 opacity: 0,
                 rotate: particle.rotation
               }}
-              transition={{ 
+              transition={{
                 duration: particle.duration,
                 ease: "linear"
               }}
@@ -95,10 +102,11 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
             <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-8 max-w-md w-full text-center relative overflow-hidden">
               {/* Background decoration */}
               <div className="absolute inset-0 bg-gradient-to-br from-purple-100/50 to-pink-100/50 dark:from-purple-900/20 dark:to-pink-900/20 pointer-events-none" />
-              
+
               {/* Close button */}
               <button
                 onClick={onClose}
+                title="Cerrar"
                 className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors z-10"
               >
                 <X className="w-5 h-5 text-slate-500" />

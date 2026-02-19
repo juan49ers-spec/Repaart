@@ -10,7 +10,7 @@ import UserManagementPanel from './users/UserManagementPanel';
 // Lazy load heavy components
 const DeliveryScheduler = lazy(() => import('../scheduler/DeliveryScheduler'));
 const FleetManager = lazy(() => import('../operations/FleetManager'));
-const FranchiseDashboard = lazy(() => import('../franchise/FranchiseDashboard'));
+const FinanceHub = lazy(() => import('../finance/FinanceHub').then(module => ({ default: module.FinanceHub })));
 
 
 // =====================================================
@@ -165,7 +165,12 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
                     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         {/* KPI SECTION */}
                         <Suspense fallback={<div className="h-64 bg-white/50 rounded-xl animate-pulse" />}>
-                            <FranchiseDashboard franchiseId={franchiseId} readOnly={true} />
+                            {/* FinanceHub handles context. If it needs franchiseId override, we need to add it. */}
+                            {/* Assuming FinanceHub uses useFranchiseFinance which uses dataHookFranchiseId or params? */}
+                            {/* FinanceHub uses useAuth -> user.franchiseId. */}
+                            {/* AdminFranchiseView provides IMPERSONATION context? No, it's just a view. */}
+                            {/* We need to IMPERSONATE or pass ID to FinanceHub. */}
+                            <FinanceHub />
                         </Suspense>
 
                         {/* HISTORY SECTION */}

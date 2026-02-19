@@ -23,6 +23,7 @@ export const financeService = {
 
     // Summary
     getFinancialData: financeSummary.getFinancialData,
+    subscribeToFinancialData: financeSummary.subscribeToFinancialData,
     updateFinancialData: financeSummary.updateFinancialData,
     fetchClosures: financeSummary.fetchClosures,
     getFinancialYearlyData: financeSummary.getFinancialYearlyData,

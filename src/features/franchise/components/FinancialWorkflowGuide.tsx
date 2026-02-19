@@ -24,22 +24,18 @@ interface FinancialWorkflowGuideProps {
 }
 
 const FinancialWorkflowGuide: React.FC<FinancialWorkflowGuideProps> = ({ isOpen, onClose }) => {
-    if (!isOpen) return null;
-
     const [activeSection, setActiveSection] = useState<
         'inicio' | 'ingresos' | 'gastos' | 'cierre' | 'estados' | 'errores' | 'faq'
     >('inicio');
 
     const scrollRef = useRef<HTMLDivElement | null>(null);
-    const sectionRefs = {
-        inicio: useRef<HTMLDivElement | null>(null),
-        ingresos: useRef<HTMLDivElement | null>(null),
-        gastos: useRef<HTMLDivElement | null>(null),
-        cierre: useRef<HTMLDivElement | null>(null),
-        estados: useRef<HTMLDivElement | null>(null),
-        errores: useRef<HTMLDivElement | null>(null),
-        faq: useRef<HTMLDivElement | null>(null)
-    };
+    const inicioRef = useRef<HTMLDivElement | null>(null);
+    const ingresosRef = useRef<HTMLDivElement | null>(null);
+    const gastosRef = useRef<HTMLDivElement | null>(null);
+    const cierreRef = useRef<HTMLDivElement | null>(null);
+    const estadosRef = useRef<HTMLDivElement | null>(null);
+    const erroresRef = useRef<HTMLDivElement | null>(null);
+    const faqRef = useRef<HTMLDivElement | null>(null);
 
     const sections = useMemo(() => {
         return [
@@ -61,9 +57,21 @@ const FinancialWorkflowGuide: React.FC<FinancialWorkflowGuideProps> = ({ isOpen,
         return () => window.removeEventListener('keydown', onKeyDown);
     }, [onClose]);
 
+    if (!isOpen) return null;
+
+
     const scrollTo = (key: typeof activeSection) => {
         setActiveSection(key);
-        sectionRefs[key].current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const refMap = {
+            inicio: inicioRef,
+            ingresos: ingresosRef,
+            gastos: gastosRef,
+            cierre: cierreRef,
+            estados: estadosRef,
+            errores: erroresRef,
+            faq: faqRef
+        };
+        refMap[key].current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
     return (
@@ -192,7 +200,7 @@ const FinancialWorkflowGuide: React.FC<FinancialWorkflowGuideProps> = ({ isOpen,
 
                         <div ref={scrollRef} className="min-h-0 overflow-y-auto p-4 md:p-8">
                             <div className="max-w-3xl mx-auto space-y-10">
-                                <div ref={sectionRefs.inicio} className="scroll-mt-6">
+                                <div ref={inicioRef} className="scroll-mt-6">
                                     <div className="rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
                                         <div className="p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white">
                                             <div className="flex items-center justify-between gap-4">
@@ -267,7 +275,7 @@ const FinancialWorkflowGuide: React.FC<FinancialWorkflowGuideProps> = ({ isOpen,
                                     </div>
                                 </div>
 
-                                <div ref={sectionRefs.ingresos} className="scroll-mt-6">
+                                <div ref={ingresosRef} className="scroll-mt-6">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-500/20">
@@ -338,7 +346,7 @@ const FinancialWorkflowGuide: React.FC<FinancialWorkflowGuideProps> = ({ isOpen,
                                     </div>
                                 </div>
 
-                                <div ref={sectionRefs.gastos} className="scroll-mt-6">
+                                <div ref={gastosRef} className="scroll-mt-6">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-300 border border-rose-100 dark:border-rose-500/20">
@@ -406,7 +414,7 @@ const FinancialWorkflowGuide: React.FC<FinancialWorkflowGuideProps> = ({ isOpen,
                                     </div>
                                 </div>
 
-                                <div ref={sectionRefs.cierre} className="scroll-mt-6">
+                                <div ref={cierreRef} className="scroll-mt-6">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-500/20">
                                             <CheckCircle className="w-5 h-5" />
@@ -451,7 +459,7 @@ const FinancialWorkflowGuide: React.FC<FinancialWorkflowGuideProps> = ({ isOpen,
                                     </div>
                                 </div>
 
-                                <div ref={sectionRefs.estados} className="scroll-mt-6">
+                                <div ref={estadosRef} className="scroll-mt-6">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10">
                                             <Lock className="w-5 h-5" />
@@ -508,7 +516,7 @@ const FinancialWorkflowGuide: React.FC<FinancialWorkflowGuideProps> = ({ isOpen,
                                     </div>
                                 </div>
 
-                                <div ref={sectionRefs.errores} className="scroll-mt-6">
+                                <div ref={erroresRef} className="scroll-mt-6">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-300 border border-rose-100 dark:border-rose-500/20">
                                             <AlertTriangle className="w-5 h-5" />
@@ -542,7 +550,7 @@ const FinancialWorkflowGuide: React.FC<FinancialWorkflowGuideProps> = ({ isOpen,
                                     </div>
                                 </div>
 
-                                <div ref={sectionRefs.faq} className="scroll-mt-6">
+                                <div ref={faqRef} className="scroll-mt-6">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10">
                                             <HelpCircle className="w-5 h-5" />

@@ -30,10 +30,11 @@ interface FinancialControlCenterProps {
     onClose: () => void;
     onSave?: (data: FinancialRecord) => void;
     initialData?: Partial<FinancialRecord>;
+    suggestedIncome?: number;
 }
 
 const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
-    franchiseId, month, onClose, onSave, initialData
+    franchiseId, month, onClose, onSave, initialData, suggestedIncome
 }) => {
     const { user } = useAuth();
 
@@ -49,7 +50,7 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
     // State
     const [orders, setOrders] = useState<OrderCounts>({});
     const [cancelledOrders, setCancelledOrders] = useState(0);
-    const [totalIncome, setTotalIncome] = useState(0);
+    const [totalIncome, setTotalIncome] = useState(initialData?.revenue || initialData?.totalIncome || suggestedIncome || 0);
     const [totalHours, setTotalHours] = useState(0);
     const [expenses, setExpenses] = useState<ExpenseData>({
         payroll: 0, quota: 0, insurance: 0, fuel: 0, repairs: 0,
@@ -77,6 +78,13 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
             }
         }
     }, [orders, logisticsRates, totalIncome]);
+
+    // React to suggestedIncome changes if no initialData
+    React.useEffect(() => {
+        if (suggestedIncome && (!initialData?.revenue && !initialData?.totalIncome)) {
+            setTotalIncome(suggestedIncome);
+        }
+    }, [suggestedIncome, initialData]);
 
     // Initialize State from Loaded Record
     useEffect(() => {

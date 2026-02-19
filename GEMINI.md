@@ -1,4 +1,5 @@
 # Auditoría Completa de Repaart
+
 ## Documentación de Funcionalidades y Seguridad
 
 ---
@@ -21,9 +22,10 @@
 **Proyecto:** Repaart - Plataforma de Gestión de Flotas de Reparto
 **Tech Stack:** React + TypeScript + Firebase (Firestore, Storage, Auth, Functions)
 **Proyecto Firebase:** repaartfinanzas
-**Hosting:** https://repaartfinanzas.web.app
+**Hosting:** <https://repaartfinanzas.web.app>
 
 **Objetivos Principales:**
+
 - Gestión de turnos de riders
 - Control financiero de franquicias
 - Gestión de flota de vehículos
@@ -36,6 +38,7 @@
 ## 👥 ROLES DE USUARIO
 
 ### 1. **ADMIN** (Administrador Global)
+
 - **Permisos:** Acceso completo a toda la plataforma
 - **Funcionalidades:**
   - Crear/eliminar franquicias
@@ -47,6 +50,7 @@
   - Configuración de tasas y precios
 
 ### 2. **FRANCHISE** (Franquicia)
+
 - **Permisos:** Gestión de su propia franquicia
 - **Funcionalidades:**
   - Ver y editar su información
@@ -59,6 +63,7 @@
   - Gestionar flota de vehículos
 
 ### 3. **RIDER** (Rider/Conductor)
+
 - **Permisos:** Gestión de su cuenta y turnos
 - **Funcionalidades:**
   - Ver su perfil
@@ -70,6 +75,7 @@
   - Ver su historial de checks de vehículos
 
 ### 4. **USER** (Usuario Genérico)
+
 - **Permisos:** Acceso básico
 - **Funcionalidades:**
   - Ver su perfil
@@ -80,12 +86,15 @@
 ## 📦 MÓDULOS Y FUNCIONALIDADES
 
 ### 1. **AUTH** (Autenticación)
+
 **Archivos:**
+
 - `src/features/auth/Login.tsx`
 - `src/features/auth/ProtectedRoute.tsx`
 - `src/context/AuthContext.tsx`
 
 **Funcionalidades:**
+
 - Login con email y contraseña
 - Logout
 - Recuperación de contraseña
@@ -95,12 +104,14 @@
 - Cache de custom claims (5 minutos)
 
 **Seguridad:**
+
 - Verificación de custom claims en cada login
 - Logout forzado si status = 'banned' o 'deleted'
 - Cache en memoria de custom claims
 - Invalidación de cache después de actualizaciones
 
 **Testing:**
+
 - [ ] Login con credenciales correctas
 - [ ] Login con credenciales incorrectas
 - [ ] Logout y re-login
@@ -113,7 +124,9 @@
 ### 2. **ADMIN** (Panel de Administración)
 
 #### 2.1 Dashboard
+
 **Archivos:**
+
 - `src/features/admin/dashboard/AdminDashboard.tsx`
 - `src/features/admin/dashboard/OperationalMetrics.tsx`
 - `src/features/admin/dashboard/TrendsSection.tsx`
@@ -121,6 +134,7 @@
 - `src/features/admin/dashboard/SidebarWidgets.tsx`
 
 **Funcionalidades:**
+
 - Vista de métricas operativas globales
 - Tendencias de negocio
 - Inteligencia de franquicias
@@ -128,19 +142,23 @@
 - Comparativas entre franquicias
 
 **Testing:**
+
 - [ ] Carga correcta de métricas
 - [ ] Visualización de tendencias
 - [ ] Filtros por franquicia
 - [ ] Comparativas de rendimiento
 
 #### 2.2 Gestión de Usuarios
+
 **Archivos:**
+
 - `src/features/admin/users/UserManagementPanel.tsx`
 - `src/features/admin/users/UserTable.tsx`
 - `src/features/admin/users/CreateUserModal.tsx`
 - `src/features/admin/users/RiderCard.tsx`
 
 **Funcionalidades:**
+
 - Listado de todos los usuarios
 - Creación de usuarios (admin, franchise, rider, user)
 - Edición de usuarios
@@ -150,11 +168,13 @@
 - Búsqueda de usuarios
 
 **Seguridad:**
+
 - Solo admin puede eliminar usuarios
 - Admin no puede eliminarse a sí mismo
 - Verificación de permisos antes de cada acción
 
 **Testing:**
+
 - [ ] Listado de usuarios
 - [ ] Creación de cada tipo de usuario
 - [ ] Edición de usuarios
@@ -163,13 +183,16 @@
 - [ ] Filtros y búsqueda
 
 #### 2.3 Gestión de Franquicias
+
 **Archivos:**
+
 - `src/features/admin/AdminFranchiseView.tsx`
 - `src/features/admin/CreateFranchiseModal.tsx`
 - `src/features/admin/dashboard/FranchiseDirectory.tsx`
 - `src/features/admin/dashboard/FranchiseCard.tsx`
 
 **Funcionalidades:**
+
 - Listado de todas las franquicias
 - Creación de nuevas franquicias
 - Vista detallada de cada franquicia
@@ -177,32 +200,40 @@
 - Configuración de tasas
 
 **Testing:**
+
 - [ ] Listado de franquicias
 - [ ] Creación de franquicia
 - [ ] Edición de datos
 - [ ] Configuración de tasas
 
 #### 2.4 Gestión de Recursos
+
 **Archivos:**
+
 - `src/features/admin/AdminResourcesPanel.tsx`
 - `src/features/admin/resources/ResourceUploadModal.tsx`
 
 **Funcionalidades:**
+
 - Subir documentos a Storage
 - Categorización de recursos
 - Eliminación de recursos
 - Preview de documentos
 
 **Testing:**
+
 - [ ] Subida de documentos
 - [ ] Preview de archivos
 - [ ] Eliminación de recursos
 
 #### 2.5 Anuncios
+
 **Archivos:**
+
 - `src/features/admin/AnnouncementSystem.tsx`
 
 **Funcionalidades:**
+
 - Crear anuncios globales
 - Tipos: news, alert, poll
 - Prioridades: normal, high, critical
@@ -210,35 +241,44 @@
 - Programación de anuncios
 
 **Testing:**
+
 - [ ] Creación de anuncio
 - [ ] Visualización por usuarios
 - [ ] Priorización de anuncios
 - [ ] Filtrado por audiencia
 
 #### 2.6 Auditoría
+
 **Archivos:**
+
 - `src/features/admin/AuditPanel.tsx`
 
 **Funcionalidades:**
+
 - Visualización de logs de auditoría
 - Filtros por acción, usuario, fecha
 - Exportación de logs
 
 **Testing:**
+
 - [ ] Visualización de logs
 - [ ] Filtros de búsqueda
 - [ ] Exportación de datos
 
 #### 2.7 Banner Manager
+
 **Archivos:**
+
 - `src/features/admin/BannerManager.tsx`
 
 **Funcionalidades:**
+
 - Gestión de banners promocionales
 - Programación de banners
 - Priorización de banners
 
 **Testing:**
+
 - [ ] Creación de banner
 - [ ] Programación
 - [ ] Visualización en app
@@ -247,28 +287,41 @@
 
 ### 3. **FRANCHISE** (Panel de Franquicia)
 
-#### 3.1 Dashboard
+#### 3.1 Dashboard (Vista Táctica)
+
 **Archivos:**
+
 - `src/features/franchise/FranchiseDashboard.tsx`
-- `src/features/franchise/dashboard/`
+- `src/features/franchise/FranchiseDashboardView.tsx`
+- `src/features/franchise/finance/`
 
 **Funcionalidades:**
-- Vista de métricas de la franquicia
-- Gráficos de ingresos
-- Estado de riders
-- Alertas de la franquicia
+
+- Vista de métricas de la franquicia (Ingresos, Gastos, Beneficios)
+- **Simulador de Escenarios**: Proyecciones financieras interactivas
+- **Hucha Fiscal (TaxVaultWidget)**: Seguimiento de IVA e IRPF en tiempo real
+- **Wizard de Cierre Profesional**: Proceso guiado para cierres mensuales
+- **Guía Operativa**: Documentación integrada para el flujo financiero
+- **Análisis de ROI y Márgenes**: Desglose detallado de rentabilidad
+- Estado de riders y tendencias de ingresos
 
 **Testing:**
-- [ ] Carga de métricas
-- [ ] Visualización de gráficos
-- [ ] Estado de riders
+
+- [ ] Carga de métricas reales y tendencias
+- [ ] Funcionamiento del simulador de escenarios
+- [ ] Cálculo correcto de la Hucha Fiscal con datos de facturación
+- [ ] Flujo completo del Wizard de Cierre
+- [ ] Visualización de desgloses de gastos por categoría (Breakdown)
 
 #### 3.2 Gestión Financiera
+
 **Archivos:**
+
 - `src/features/franchise/FinancialControlCenter.tsx`
 - `src/features/franchise/finance/`
 
 **Funcionalidades:**
+
 - Registro de ingresos y gastos
 - Visualización de resúmenes financieros
 - Cierre mensual
@@ -276,6 +329,7 @@
 - Solicitud de desbloqueo de mes
 
 **Testing:**
+
 - [ ] Registro de ingresos
 - [ ] Registro de gastos
 - [ ] Cierre mensual
@@ -283,28 +337,36 @@
 - [ ] Solicitud de desbloqueo
 
 #### 3.3 Gestión de Recursos
+
 **Archivos:**
+
 - `src/features/franchise/ResourcesPanel.tsx`
 
 **Funcionalidades:**
+
 - Subir documentos (facturas, contratos)
 - Visualización de documentos
 - Solicitud de documentos
 
 **Testing:**
+
 - [ ] Subida de documentos
 - [ ] Visualización
 - [ ] Solicitud de documentos
 
 #### 3.4 Configuración
+
 **Archivos:**
+
 - `src/features/franchise/FranchiseRateConfigurator.tsx`
 
 **Funcionalidades:**
+
 - Configuración de tarifas
 - Personalización de precios
 
 **Testing:**
+
 - [ ] Configuración de tarifas
 - [ ] Guardado de cambios
 
@@ -313,28 +375,35 @@
 ### 4. **OPERATIONS** (Operaciones)
 
 #### 4.1 Dashboard de Operaciones
+
 **Archivos:**
+
 - `src/features/operations/OperationsDashboard.tsx`
 - `src/features/operations/components/`
 - `src/features/operations/intel/`
 
 **Funcionalidades:**
+
 - Vista operativa global
 - Inteligencia de operaciones
 - Gestión de flota
 - Selector de franquicia (modo god view)
 
 **Testing:**
+
 - [ ] Vista operativa
 - [ ] Selector de franquicia
 - [ ] Inteligencia
 
 #### 4.2 Gestión de Flota
+
 **Archivos:**
+
 - `src/features/operations/FleetManager.tsx`
 - `src/features/operations/MotoManagement.tsx`
 
 **Funcionalidades:**
+
 - Listado de vehículos
 - Creación de vehículos
 - Edición de vehículos
@@ -342,6 +411,7 @@
 - Estados: active, maintenance, out_of_service
 
 **Testing:**
+
 - [ ] Listado de vehículos
 - [ ] Creación
 - [ ] Edición
@@ -353,6 +423,7 @@
 ### 5. **SCHEDULER** (Programación de Turnos)
 
 **Archivos:**
+
 - `src/features/scheduler/DeliveryScheduler.tsx`
 - `src/features/scheduler/DraggableShift.tsx`
 - `src/features/scheduler/DroppableCell.tsx`
@@ -360,6 +431,7 @@
 - `src/features/scheduler/SchedulerGuideModal.tsx`
 
 **Funcionalidades:**
+
 - Vista de calendario semanal
 - Arrastrar y soltar turnos
 - Creación de turnos
@@ -369,6 +441,7 @@
 - Reportes de sheriff
 
 **Testing:**
+
 - [ ] Vista de calendario
 - [ ] Drag & drop
 - [ ] Creación de turno
@@ -381,43 +454,55 @@
 ### 6. **RIDER** (Panel de Rider)
 
 #### 6.1 Home
+
 **Archivos:**
+
 - `src/features/rider/home/`
 
 **Funcionalidades:**
+
 - Vista de turnos próximos
 - Resumen de actividad
 - Notificaciones importantes
 
 **Testing:**
+
 - [ ] Carga de turnos
 - [ ] Resumen de actividad
 
 #### 6.2 Schedule (Horarios)
+
 **Archivos:**
+
 - `src/features/rider/schedule/`
 
 **Funcionalidades:**
+
 - Vista de horarios asignados
 - Confirmación de turnos
 - Solicitud de cambios de turno
 
 **Testing:**
+
 - [ ] Visualización de horarios
 - [ ] Confirmación de turno
 - [ ] Solicitud de cambio
 
 #### 6.3 Profile (Perfil)
+
 **Archivos:**
+
 - `src/features/rider/profile/`
 - `src/features/user/UserProfile.tsx`
 
 **Funcionalidades:**
+
 - Visualización de perfil
 - Edición de datos personales
 - Historial de actividad
 
 **Testing:**
+
 - [ ] Visualización de perfil
 - [ ] Edición de datos
 - [ ] Historial de actividad
@@ -427,10 +512,12 @@
 ### 7. **ACADEMY** (Academia)
 
 **Archivos:**
+
 - `src/features/academy/Academy.tsx`
 - `src/features/academy/admin/`
 
 **Funcionalidades:**
+
 - Módulos de formación
 - Lecciones
 - Quiz y evaluaciones
@@ -438,6 +525,7 @@
 - Seguimiento de progreso
 
 **Testing:**
+
 - [ ] Acceso a módulos
 - [ ] Visualización de lecciones
 - [ ] Completar quiz
@@ -448,10 +536,12 @@
 ### 8. **SUPPORT** (Soporte)
 
 **Archivos:**
+
 - `src/features/support/`
 - `src/features/admin/AdminSupportPanel.tsx`
 
 **Funcionalidades:**
+
 - Creación de tickets
 - Mensajería en tiempo real
 - Asignación de tickets
@@ -459,6 +549,7 @@
 - Priorización: normal, high, critical
 
 **Testing:**
+
 - [ ] Creación de ticket
 - [ ] Envío de mensajes
 - [ ] Asignación
@@ -471,9 +562,11 @@
 ### Callable Functions (Llamadas desde frontend)
 
 #### 1. **createUserManaged**
+
 **Archivo:** `functions/src/callables/createUser.ts`
 **Propósito:** Creación de usuarios desde admin panel
 **Parámetros:**
+
 - email: string
 - password: string
 - role: string (admin, franchise, rider, user)
@@ -484,12 +577,14 @@
 - pack?: 'basic' | 'premium' | 'admin'
 
 **Seguridad:**
+
 - Solo usuarios admin pueden llamarla
 - Verifica el rol del llamante
 - Crea usuario en Auth y Firestore
 - Actualiza custom claims
 
 **Testing:**
+
 - [ ] Crear usuario admin
 - [ ] Crear usuario franchise
 - [ ] Crear usuario rider
@@ -498,9 +593,11 @@
 ---
 
 #### 2. **createFranchise**
+
 **Archivo:** `functions/src/callables/createFranchise.ts`
 **Propósito:** Creación de franquicias desde admin panel
 **Parámetros:**
+
 - email: string
 - password: string
 - displayName: string
@@ -512,29 +609,35 @@
 - zipCodes: string[]
 
 **Seguridad:**
+
 - Solo usuarios admin pueden llamarla
 - Verifica el rol del llamante
 - Crea usuario Auth + documento franchise
 
 **Testing:**
+
 - [ ] Crear franquicia
 - [ ] Intento por no-admin (debe fallar)
 
 ---
 
 #### 3. **adminDeleteUser**
+
 **Archivo:** `functions/src/callables/adminDeleteUser.ts`
 **Propósito:** Eliminación completa de usuarios
 **Parámetros:**
+
 - uid: string
 
 **Seguridad:**
+
 - Solo usuarios admin pueden llamarla
 - Verifica el rol del llamante
 - Elimina de Auth y Firestore
 - No permite auto-eliminación
 
 **Testing:**
+
 - [ ] Eliminar usuario rider
 - [ ] Eliminar usuario franchise
 - [ ] Intento de auto-eliminación (debe fallar)
@@ -545,14 +648,17 @@
 ### Triggers (Automáticos)
 
 #### 4. **onUserWrite**
+
 **Archivo:** `functions/src/triggers/onUserWrite.ts`
 **Propósito:** Sincronización de custom claims
 **Trigger:** onCreate, onUpdate de documento users
 **Funcionalidad:**
+
 - Actualiza custom claims en Auth cuando cambia el documento
 - Sincroniza role, franchiseId, status
 
 **Testing:**
+
 - [ ] Cambio de rol → claims actualizados
 - [ ] Cambio de franchiseId → claims actualizados
 - [ ] Cambio de status → claims actualizados
@@ -560,41 +666,50 @@
 ---
 
 #### 5. **onWeekWrite**
+
 **Archivo:** `functions/src/triggers/onWeekWrite.ts`
 **Propósito:** Cálculo de estadísticas semanales
 **Trigger:** onCreate, onUpdate de documento weeks
 **Funcionalidad:**
+
 - Calcula métricas de turnos de la semana
 - Actualiza resúmenes financieros
 
 **Testing:**
+
 - [ ] Creación de semana → stats calculadas
 - [ ] Actualización de semana → stats recalculadas
 
 ---
 
 #### 6. **onIncidentCreated**
+
 **Archivo:** `functions/src/triggers/onIncident.ts`
 **Propósito:** Notificación de incidentes
 **Trigger:** onCreate de documento incidents
 **Funcionalidad:**
+
 - Envía notificación a admin/franchise
 - Registra en logs de auditoría
 
 **Testing:**
+
 - [ ] Creación de incidente → notificación enviada
 
 ---
 
 #### 7. **deleteUserSync**
+
 **Archivo:** `functions/src/triggers/onUserDelete.ts`
 **Propósito:** Limpieza al eliminar usuario de Auth
 **Trigger:** onDelete de Auth user
 **Funcionalidad:**
+
 - Elimina documento users
 - Archiva datos relacionados
 
 **Testing:**
+
 - [ ] Eliminación Auth → documento users eliminado
 
 ---
@@ -602,53 +717,65 @@
 ### Scheduled Functions (Tareas programadas)
 
 #### 8. **archiveOldNotifications**
+
 **Archivo:** `functions/src/callables/dataRetention.ts`
 **Propósito:** Archivar notificaciones antiguas
 **Schedule:** Cada día a las 2 AM
 **Funcionalidad:**
+
 - Archiva notificaciones mayores a 90 días
 - Mantiene base de datos limpia
 
 **Testing:**
+
 - [ ] Ejecución de archive
 - [ ] Notificaciones antiguas archivadas
 
 ---
 
 #### 9. **archiveOldTickets**
+
 **Archivo:** `functions/src/callables/dataRetention.ts`
 **Propósito:** Archivar tickets cerrados
 **Schedule:** Cada día a las 3 AM
 **Funcionalidad:**
+
 - Archiva tickets cerrados mayores a 180 días
 
 **Testing:**
+
 - [ ] Ejecución de archive
 - [ ] Tickets antiguos archivados
 
 ---
 
 #### 10. **archiveOldAuditLogs**
+
 **Archivo:** `functions/src/callables/dataRetention.ts`
 **Propósito:** Archivar logs de auditoría
 **Schedule:** Cada día a las 4 AM
 **Funcionalidad:**
+
 - Archiva logs mayores a 365 días
 
 **Testing:**
+
 - [ ] Ejecución de archive
 - [ ] Logs antiguos archivados
 
 ---
 
 #### 11. **scheduledDataRetention**
+
 **Archivo:** `functions/src/callables/dataRetention.ts`
 **Propósito:** Retención de datos general
 **Schedule:** Cada domingo a las 1 AM
 **Funcionalidad:**
+
 - Ejecuta todas las funciones de retención
 
 **Testing:**
+
 - [ ] Ejecución de retención general
 
 ---
@@ -701,6 +828,7 @@ isValidShift()
 ### Colecciones Protegidas
 
 #### 1. **users**
+
 ```javascript
 match /users/{userId} {
   allow read: if isAuthed() && (
@@ -719,6 +847,7 @@ match /users/{userId} {
 ```
 
 **Testing:**
+
 - [ ] Admin puede leer todos los usuarios
 - [ ] Franquicia puede leer usuarios de su franquicia
 - [ ] Usuario puede leer su propio perfil
@@ -729,6 +858,7 @@ match /users/{userId} {
 ---
 
 #### 2. **work_shifts**
+
 ```javascript
 match /work_shifts/{shiftId} {
   allow read: if isAuthed() && (
@@ -745,6 +875,7 @@ match /work_shifts/{shiftId} {
 ```
 
 **Testing:**
+
 - [ ] Admin puede leer/escribir todos los turnos
 - [ ] Franquicia puede leer/escribir turnos de su franquicia
 - [ ] Rider puede leer/escribir sus propios turnos
@@ -752,6 +883,7 @@ match /work_shifts/{shiftId} {
 ---
 
 #### 3. **financial_records**
+
 ```javascript
 match /financial_records/{recordId} {
   allow read: if isAuthed() && (isAdmin() || isFranchise());
@@ -763,6 +895,7 @@ match /financial_records/{recordId} {
 ```
 
 **Testing:**
+
 - [ ] Admin puede acceder a todos los registros
 - [ ] Franquicia puede acceder a sus registros
 - [ ] Rider no puede acceder a registros financieros
@@ -770,6 +903,7 @@ match /financial_records/{recordId} {
 ---
 
 #### 4. **tickets**
+
 ```javascript
 match /tickets/{ticketId} {
   allow read: if isAuthed() && (
@@ -801,6 +935,7 @@ match /tickets/{ticketId} {
 ```
 
 **Testing:**
+
 - [ ] Admin puede leer todos los tickets
 - [ ] Franquicia puede leer tickets de su franquicia
 - [ ] Usuario puede leer sus propios tickets
@@ -809,6 +944,7 @@ match /tickets/{ticketId} {
 ---
 
 #### 5. **notifications**
+
 ```javascript
 match /notifications/{notificationId} {
   allow get: if isAuthed() && (
@@ -831,6 +967,7 @@ match /notifications/{notificationId} {
 ```
 
 **Testing:**
+
 - [ ] Usuario puede leer sus notificaciones
 - [ ] Franquicia puede leer notificaciones de su franquicia
 - [ ] Admin puede leer todas las notificaciones
@@ -838,6 +975,7 @@ match /notifications/{notificationId} {
 ---
 
 #### 6. **fleet_assets**
+
 ```javascript
 match /fleet_assets/{assetId} {
   allow get: if isAuthed() && (
@@ -858,6 +996,7 @@ match /fleet_assets/{assetId} {
 ```
 
 **Testing:**
+
 - [ ] Admin puede crear/eliminar cualquier vehículo
 - [ ] Franquicia puede crear vehículos de su franquicia
 - [ ] Solo admin puede eliminar vehículos
@@ -865,6 +1004,7 @@ match /fleet_assets/{assetId} {
 ---
 
 #### 7. **audit_logs**
+
 ```javascript
 match /audit_logs/{logId} {
   allow create: if isAuthed();
@@ -874,6 +1014,7 @@ match /audit_logs/{logId} {
 ```
 
 **Testing:**
+
 - [ ] Cualquier usuario puede crear logs
 - [ ] Solo admin puede leer logs
 - [ ] Nadie puede actualizar/eliminar logs
@@ -885,12 +1026,14 @@ match /audit_logs/{logId} {
 ### Tests de Seguridad Crítica
 
 #### Auth & Autorización
+
 - [ ] Login con usuario eliminado → debe fallar
 - [ ] Login con usuario bloqueado → debe fallar
 - [ ] Acceso a rutas protegidas sin login → redirección a login
 - [ ] Intento de modificación de datos sin permisos → error 403
 
 #### Cloud Functions
+
 - [ ] createUserManaged por no-admin → error
 - [ ] createFranchise por no-admin → error
 - [ ] adminDeleteUser por no-admin → error
@@ -899,6 +1042,7 @@ match /audit_logs/{logId} {
 - [ ] onIncidentCreated envía notificación
 
 #### Firestore Rules
+
 - [ ] Admin puede leer/escribir todo
 - [ ] Franquicia solo puede acceder a sus datos
 - [ ] Rider solo puede acceder a sus datos
@@ -908,6 +1052,7 @@ match /audit_logs/{logId} {
 ### Tests Funcionales
 
 #### Admin Panel
+
 - [ ] Dashboard muestra métricas correctas
 - [ ] Creación de usuarios funciona
 - [ ] Eliminación de usuarios funciona
@@ -918,6 +1063,7 @@ match /audit_logs/{logId} {
 - [ ] Auditoría muestra logs correctamente
 
 #### Franchise Panel
+
 - [ ] Dashboard muestra métricas de franquicia
 - [ ] Registro de ingresos funciona
 - [ ] Registro de gastos funciona
@@ -925,11 +1071,13 @@ match /audit_logs/{logId} {
 - [ ] Subida de documentos funciona
 
 #### Operations Panel
+
 - [ ] Vista operativa carga correctamente
 - [ ] Selector de franquicia funciona
 - [ ] Gestión de flota funciona
 
 #### Scheduler
+
 - [ ] Vista de calendario carga correctamente
 - [ ] Drag & drop funciona
 - [ ] Creación de turnos funciona
@@ -937,6 +1085,7 @@ match /audit_logs/{logId} {
 - [ ] Eliminación de turnos funciona
 
 #### Rider Panel
+
 - [ ] Home muestra turnos próximos
 - [ ] Schedule muestra horarios
 - [ ] Confirmación de turno funciona
@@ -944,11 +1093,13 @@ match /audit_logs/{logId} {
 - [ ] Profile carga correctamente
 
 #### Support
+
 - [ ] Creación de ticket funciona
 - [ ] Envío de mensajes funciona
 - [ ] Asignación de ticket funciona
 
 #### Academy
+
 - [ ] Acceso a módulos funciona
 - [ ] Visualización de lecciones funciona
 - [ ] Quiz funciona
@@ -961,6 +1112,7 @@ match /audit_logs/{logId} {
 ### Métricas de Negocio
 
 #### Operativas
+
 - Total de turnos programados
 - Turnos confirmados
 - Turnos pendientes
@@ -969,6 +1121,7 @@ match /audit_logs/{logId} {
 - Vehículos activos
 
 #### Financieras
+
 - Ingresos totales
 - Gastos totales
 - Beneficio neto
@@ -977,6 +1130,7 @@ match /audit_logs/{logId} {
 - Gastos por franquicia
 
 #### Soporte
+
 - Tickets abiertos
 - Tickets en progreso
 - Tickets resueltos
@@ -984,6 +1138,7 @@ match /audit_logs/{logId} {
 - Tiempo de respuesta promedio
 
 #### Academy
+
 - Módulos completados
 - Lecciones completadas
 - Quiz completados
@@ -996,6 +1151,7 @@ match /audit_logs/{logId} {
 ### Tipos de Notificaciones
 
 #### Sistema
+
 - **info**: Información general
 - **success**: Operación exitosa
 - **warning**: Advertencia
@@ -1003,16 +1159,19 @@ match /audit_logs/{logId} {
 - **ALERT**: Alerta de seguridad
 
 #### Financieras
+
 - **FINANCE_CLOSING**: Cierre mensual
 - **RATE_CHANGE**: Cambio de tarifas
 - **MONTH_UNLOCKED**: Mes desbloqueado
 - **UNLOCK_REJECTED**: Solicitud rechazada
 
 #### Soporte
+
 - **SUPPORT_TICKET**: Nuevo ticket
 - **PREMIUM_SERVICE_REQUEST**: Solicitud premium
 
 #### Turnos
+
 - **shift_confirmed**: Turno confirmado
 - **shift_change_request**: Solicitud de cambio
 - **incident**: Incidente reportado
@@ -1021,11 +1180,13 @@ match /audit_logs/{logId} {
 ### Canales de Notificación
 
 #### In-App
+
 - Toast notifications
 - Modal de alertas
 - Panel de notificaciones
 
 #### Email (futuro)
+
 - Confirmaciones
 - Alertas críticas
 - Reportes diarios/semanales
@@ -1037,6 +1198,7 @@ match /audit_logs/{logId} {
 ### Collections Principales
 
 #### users
+
 ```typescript
 {
   uid: string;
@@ -1054,6 +1216,7 @@ match /audit_logs/{logId} {
 ```
 
 #### work_shifts
+
 ```typescript
 {
   id: string;
@@ -1069,6 +1232,7 @@ match /audit_logs/{logId} {
 ```
 
 #### financial_records
+
 ```typescript
 {
   id: string;
@@ -1084,6 +1248,7 @@ match /audit_logs/{logId} {
 ```
 
 #### tickets
+
 ```typescript
 {
   id: string;
@@ -1101,6 +1266,7 @@ match /audit_logs/{logId} {
 ```
 
 #### notifications
+
 ```typescript
 {
   id: string;
@@ -1115,6 +1281,7 @@ match /audit_logs/{logId} {
 ```
 
 #### fleet_assets
+
 ```typescript
 {
   id: string;
@@ -1216,9 +1383,9 @@ match /audit_logs/{logId} {
 
 ### Documentación
 
-- Firebase Docs: https://firebase.google.com/docs
-- React Docs: https://react.dev
-- TypeScript Docs: https://www.typescriptlang.org/docs
+- Firebase Docs: <https://firebase.google.com/docs>
+- React Docs: <https://react.dev>
+- TypeScript Docs: <https://www.typescriptlang.org/docs>
 
 ### Herramientas
 

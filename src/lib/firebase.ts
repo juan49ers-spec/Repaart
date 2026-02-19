@@ -8,7 +8,7 @@ import {
     enableNetwork
 } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import { getFunctions } from "firebase/functions";
+import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -40,10 +40,10 @@ export const storage = getStorage(app);
 
 // Initialize Cloud Functions
 export const functions = getFunctions(app, 'us-central1');
-// Uncomment for local development with Functions emulator
-// if (location.hostname === 'localhost') {
-//   connectFunctionsEmulator(functions, 'localhost', 5001);
-// }
+// Connect to Functions emulator for local development
+if (location.hostname === 'localhost') {
+  connectFunctionsEmulator(functions, 'localhost', 5001);
+}
 
 export const firebaseConfigExport = firebaseConfig;
 

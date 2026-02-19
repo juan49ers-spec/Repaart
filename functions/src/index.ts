@@ -19,6 +19,12 @@ export { adminDeleteUser } from './callables/adminDeleteUser';
 
 // Flyder Integration
 export { getFlyderOrders, getFlyderOrdersStats } from './callables/getFlyderOrders';
+export { syncFlyderHistoricalOrders } from './callables/syncFlyder';
+export { createFranchiseMapping, listFranchiseMappings, createMissingMappings } from './callables/flyderMappings';
+export { getFlyderBusinessesWithOrders, countRepaartOrders, ensureMainFranchisesExist, assignFlyderIdsToFranchises, createMainFlyderFranchises } from './callables/flyderOps';
+
+// Invoicing Module
+export { createRestaurant, getRestaurants, generateInvoice, getInvoices } from './callables/invoicing';
 
 // Push Notifications
 export { subscribeToPush, unsubscribeFromPush, sendPushNotification } from './callables/pushNotifications';

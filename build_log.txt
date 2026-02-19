@@ -1,0 +1,12 @@
+
+> synthetic-sagan@4.1.0 build
+> node scripts/generate-version.mjs && tsc -b && vite build
+
+Generated version.json with version: 1771521811927
+src/features/invoicing/components/CreateInvoiceModal.tsx(2,27): error TS6133: 'useEffect' is declared but its value is never read.
+src/features/invoicing/components/CreateInvoiceModal.tsx(15,13): error TS2339: Property 'userData' does not exist on type 'AuthContextType'.
+src/features/invoicing/components/CreateRestaurantModal.tsx(14,13): error TS2339: Property 'userData' does not exist on type 'AuthContextType'.
+src/features/invoicing/InvoicingDashboard.tsx(10,13): error TS2339: Property 'userData' does not exist on type 'AuthContextType'.
+src/features/invoicing/InvoicingDashboard.tsx(11,42): error TS6133: 'generateInvoice' is declared but its value is never read.
+src/features/invoicing/InvoicingDashboard.tsx(11,59): error TS6133: 'createRestaurant' is declared but its value is never read.
+src/features/invoicing/InvoicingDashboard.tsx(16,12): error TS6133: 'loading' is declared but its value is never read.
