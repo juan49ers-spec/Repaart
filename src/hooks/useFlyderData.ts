@@ -6,7 +6,7 @@ export interface FlyderStats {
   completed: number;
   pending: number;
   cancelled: number;
-  total_revenue: number;
+  total_revenue: number | string;
 }
 
 export const useFlyderData = () => {

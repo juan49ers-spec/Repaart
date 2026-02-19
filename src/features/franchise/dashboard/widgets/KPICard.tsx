@@ -2,6 +2,7 @@ import React from 'react';
 import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip as ChartTooltip } from 'recharts';
 import { AlertTriangle, Target, Receipt, Flame, Clock } from 'lucide-react';
 import { cn } from '../../../../lib/utils';
+import { AnimatedCounter } from '../../../../components/ui/data-display/AnimatedCounter';
 
 interface KPICardProps {
     title: string;
@@ -56,7 +57,7 @@ const KPICard: React.FC<KPICardProps> = ({
     const chartData = trendData?.map((val, i) => ({ i, val })) || [];
 
     return (
-        <div className="workstation-card workstation-scanline p-6 h-full flex flex-col group/card relative overflow-hidden transition-all mechanical-press">
+        <div className="@container workstation-card workstation-scanline p-6 h-full flex flex-col group/card relative overflow-hidden transition-all mechanical-press">
 
             {/* TACTICAL ALERT BANNER */}
             {isCriticalDrop && (
@@ -100,16 +101,19 @@ const KPICard: React.FC<KPICardProps> = ({
             {/* PRIMARY VALUE STATION */}
             <div className="mb-4">
                 <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold text-slate-900 dark:text-white tabular-nums tracking-tight">
-                        {value}
-                    </span>
+                    <AnimatedCounter
+                        value={numericValue || 0}
+                        formatted
+                        duration={1400}
+                        className="text-2xl @[280px]:text-3xl font-bold text-slate-900 dark:text-white tracking-tight"
+                    />
                     <span className="text-xs font-medium text-slate-400 ml-1">unidades</span>
                 </div>
             </div>
 
             {/* RICH CONTEXT STRIP */}
             {(orders !== undefined || totalHours !== undefined || bestDay) && (
-                <div className="grid grid-cols-3 gap-2 mb-5">
+                <div className="grid grid-cols-1 @[280px]:grid-cols-3 gap-2 mb-5">
                     {orders !== undefined && (
                         <div className="bg-slate-50 dark:bg-white/5 p-2 rounded-lg border border-slate-100 dark:border-white/5">
                             <div className="flex items-center gap-1.5 mb-1 opacity-70">
@@ -128,7 +132,7 @@ const KPICard: React.FC<KPICardProps> = ({
                                 <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Media</span>
                             </div>
                             <div className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                                {(numericValue / totalHours).toFixed(1)}€/h
+                                {totalHours && totalHours > 0 ? (numericValue / totalHours).toFixed(1) : '0.0'}€/h
                             </div>
                         </div>
                     )}

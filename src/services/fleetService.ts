@@ -23,6 +23,7 @@ import {
     CreateVehicleInput,
     toVehicleId
 } from '../schemas/fleet';
+import { ServiceError, validationError, notFoundError, permissionError } from '../utils/ServiceError';
 
 const RIDERS_COLLECTION = 'users'; // UNIFIED DATA SOURCE
 const ASSETS_COLLECTION = 'fleet_assets';
@@ -105,9 +106,10 @@ export const fleetService = {
             const riders = querySnapshot.docs.map(mapDocToRider);
 
             return riders.filter(r => r.status !== 'deleted');
+            return riders.filter(r => r.status !== 'deleted');
         } catch (error: unknown) {
             console.error('[FleetService] Error fetching riders:', error);
-            throw error;
+            throw new ServiceError('getRiders', { cause: error });
         }
     },
 
@@ -125,6 +127,8 @@ export const fleetService = {
             callback(riders);
         }, (error) => {
             console.error('[FleetService] Error in riders subscription:', error);
+            // Non-throwing for listeners, but structured log
+            new ServiceError('subscribeToRiders', { cause: error, code: 'NETWORK' });
         });
     },
 
@@ -133,7 +137,7 @@ export const fleetService = {
      */
     createRider: async (riderData: Omit<Rider, 'id' | 'metrics'> & { password?: string; joinedAt?: string; licenseType?: '49cc' | '125cc' }): Promise<Rider> => {
         try {
-            if (!riderData.password) throw new Error("Contraseña requerida para nuevos riders");
+            if (!riderData.password) throw validationError('createRider', "Contraseña requerida para nuevos riders");
 
             const functions = getFunctions();
             const createUserManaged = httpsCallable(functions, 'createUserManaged');
@@ -179,28 +183,36 @@ export const fleetService = {
 
             // Map Cloud Function errors to friendlier UI messages
             if (error.message?.includes('already-exists') || error.code === 'already-exists') {
-                throw new Error('Este email ya está registrado en el sistema.');
+                throw validationError('createRider', 'Este email ya está registrado en el sistema.');
             }
             if (error.message?.includes('permission-denied') || error.code === 'permission-denied') {
-                throw new Error('No tienes permisos para crear este tipo de usuario o para esta franquicia.');
+                throw permissionError('createRider', 'No tienes permisos para crear este tipo de usuario o para esta franquicia.');
             }
 
-            throw error;
+            throw new ServiceError('createRider', { cause: error });
         }
     },
 
     updateRider: async (id: string, data: Partial<Rider>): Promise<void> => {
-        await updateDoc(doc(db, RIDERS_COLLECTION, id), {
-            ...data,
-            updatedAt: serverTimestamp()
-        });
+        try {
+            await updateDoc(doc(db, RIDERS_COLLECTION, id), {
+                ...data,
+                updatedAt: serverTimestamp()
+            });
+        } catch (error) {
+            throw new ServiceError('updateRider', { cause: error });
+        }
     },
 
     deleteRider: async (id: string): Promise<void> => {
-        await updateDoc(doc(db, RIDERS_COLLECTION, id), {
-            status: 'inactive',
-            updatedAt: serverTimestamp()
-        });
+        try {
+            await updateDoc(doc(db, RIDERS_COLLECTION, id), {
+                status: 'inactive',
+                updatedAt: serverTimestamp()
+            });
+        } catch (error) {
+            throw new ServiceError('deleteRider', { cause: error });
+        }
     },
 
     // =====================================================
@@ -219,6 +231,9 @@ export const fleetService = {
         return onSnapshot(q, (snap) => {
             const assets = snap.docs.map(mapDocToVehicle);
             callback(assets);
+        }, (error) => {
+            console.error('[FleetService] Error in fleet subscription:', error);
+            new ServiceError('subscribeToFleet', { cause: error, code: 'NETWORK' });
         });
     },
 
@@ -226,61 +241,74 @@ export const fleetService = {
      * Create a new Vehicle with validation
      */
     createVehicle: async (franchiseId: string, data: CreateVehicleInput): Promise<Vehicle> => {
-        const newRef = doc(collection(db, ASSETS_COLLECTION));
+        try {
+            const newRef = doc(collection(db, ASSETS_COLLECTION));
 
-        const payload = {
-            ...data,
-            franchiseId,
-            status: 'active',
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-        };
+            const payload = {
+                ...data,
+                franchiseId,
+                status: 'active',
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+            };
 
-        await setDoc(newRef, payload);
+            await setDoc(newRef, payload);
 
-        return {
-            id: toVehicleId(newRef.id),
-            ...data,
-            franchiseId,
-            status: 'active',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        } as Vehicle;
+            return {
+                id: toVehicleId(newRef.id),
+                ...data,
+                franchiseId,
+                status: 'active',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            } as Vehicle;
+        } catch (error) {
+            throw new ServiceError('createVehicle', { cause: error });
+        }
     },
 
     /**
      * Update Vehicle details with Predictive Maintenance Logic
      */
     updateVehicle: async (id: string, data: Partial<Vehicle>): Promise<void> => {
-        const ref = doc(db, ASSETS_COLLECTION, id);
-        const snap = await getDoc(ref);
-        if (!snap.exists()) throw new Error("Vehicle not found");
+        try {
+            const ref = doc(db, ASSETS_COLLECTION, id);
+            const snap = await getDoc(ref);
+            if (!snap.exists()) throw notFoundError('updateVehicle', "Vehicle not found");
 
-        const current = snap.data();
-        const newKm = data.currentKm ?? current.currentKm ?? 0;
-        const limitKm = data.nextRevisionKm ?? current.nextRevisionKm ?? 5000;
-        let newStatus = data.status ?? current.status;
+            const current = snap.data();
+            const newKm = data.currentKm ?? current.currentKm ?? 0;
+            const limitKm = data.nextRevisionKm ?? current.nextRevisionKm ?? 5000;
+            let newStatus = data.status ?? current.status;
 
-        // Predictive Maintenance Logic
-        if (newKm >= limitKm && newStatus !== 'maintenance') {
-            newStatus = 'maintenance';
-            await notificationService.notifyFranchise(current.franchiseId, {
-                title: '🚨 MANTENIMIENTO OBLIGATORIO',
-                message: `Vehículo ${current.plate || current.matricula} alcanzó ${limitKm}km. Bloqueado.`,
-                type: 'ALERT',
-                priority: 'high'
+            // Predictive Maintenance Logic
+            if (newKm >= limitKm && newStatus !== 'maintenance') {
+                newStatus = 'maintenance';
+                await notificationService.notifyFranchise(current.franchiseId, {
+                    title: '🚨 MANTENIMIENTO OBLIGATORIO',
+                    message: `Vehículo ${current.plate || current.matricula} alcanzó ${limitKm}km. Bloqueado.`,
+                    type: 'ALERT',
+                    priority: 'high'
+                });
+            }
+
+            await updateDoc(ref, {
+                ...data,
+                status: newStatus,
+                updatedAt: serverTimestamp()
             });
+        } catch (error) {
+            if (error instanceof ServiceError) throw error;
+            throw new ServiceError('updateVehicle', { cause: error });
         }
-
-        await updateDoc(ref, {
-            ...data,
-            status: newStatus,
-            updatedAt: serverTimestamp()
-        });
     },
 
     deleteVehicle: async (id: string): Promise<void> => {
-        await deleteDoc(doc(db, ASSETS_COLLECTION, id));
+        try {
+            await deleteDoc(doc(db, ASSETS_COLLECTION, id));
+        } catch (error) {
+            throw new ServiceError('deleteVehicle', { cause: error });
+        }
     },
 
     // Aliases for backward compatibility
@@ -293,22 +321,31 @@ export const fleetService = {
 
     // Vehicle store compatibility
     async getVehicles(franchiseId: string): Promise<Vehicle[]> {
-        const q = query(collection(db, ASSETS_COLLECTION), where('franchiseId', '==', franchiseId));
-        const snap = await getDocs(q);
-        return snap.docs.map(mapDocToVehicle);
+        try {
+            const q = query(collection(db, ASSETS_COLLECTION), where('franchiseId', '==', franchiseId));
+            const snap = await getDocs(q);
+            return snap.docs.map(mapDocToVehicle);
+        } catch (error) {
+            throw new ServiceError('getVehicles', { cause: error });
+        }
     },
     async createMoto(franchiseId: string, data: Record<string, any>): Promise<Vehicle> {
-        // Standardize input if it uses snake_case (Legacy Vehicle store)
-        const standardized: CreateVehicleInput = {
-            plate: data.matricula || data.plate,
-            brand: data.brand || '',
-            model: data.modelo || data.model,
-            currentKm: data.km_actuales || data.currentKm || 0,
-            nextRevisionKm: data.proxima_revision_km || data.nextRevisionKm || 5000,
-            status: (data.estado === 'activo' ? 'active' : (data.estado === 'mantenimiento' ? 'maintenance' : (data.estado || 'active'))),
-            type: 'vehicle'
-        };
-        return this.createVehicle(franchiseId, standardized);
+        try {
+            // Standardize input if it uses snake_case (Legacy Vehicle store)
+            const standardized: CreateVehicleInput = {
+                plate: data.matricula || data.plate,
+                brand: data.brand || '',
+                model: data.modelo || data.model,
+                currentKm: data.km_actuales || data.currentKm || 0,
+                nextRevisionKm: data.proxima_revision_km || data.nextRevisionKm || 5000,
+                status: (data.estado === 'activo' ? 'active' : (data.estado === 'mantenimiento' ? 'maintenance' : (data.estado || 'active'))),
+                type: 'vehicle'
+            };
+            return await this.createVehicle(franchiseId, standardized);
+        } catch (error) {
+            if (error instanceof ServiceError) throw error;
+            throw new ServiceError('createMoto', { cause: error });
+        }
     }
 };
 

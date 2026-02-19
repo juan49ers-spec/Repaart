@@ -1,7 +1,0 @@
-
-C:\Users\Usuario\.gemini\antigravity\playground\synthetic-sagan\src\features\franchise\dashboard\widgets\MonthlyTrendChart.tsx
-  20:26  warning  Unused eslint-disable directive (no problems were reported from 'react/forbid-component-props')
-
-Ô£û 1 problem (0 errors, 1 warning)
-  0 errors and 1 warning potentially fixable with the `--fix` option.
-

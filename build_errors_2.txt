@@ -1,1 +1,0 @@
-src/features/franchise/FinancialControlCenter.tsx(461,11): error TS6133: 'alerts' is declared but its value is never read.

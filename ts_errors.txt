@@ -1,1 +1,0 @@
-src/features/scheduler/DeliveryScheduler.tsx(682,11): error TS6133: 'handleValidateShift' is declared but its value is never read.

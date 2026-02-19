@@ -10,6 +10,7 @@ import CriticalActionModal from '../../../components/ui/overlays/CriticalActionM
 import CreateUserModal, { CreateUserInput, UpdateUserInput } from './CreateUserModal';
 import { User } from '../../../services/userService';
 import RiderCard from './RiderCard';
+import AuditTool from './AuditTool';
 
 // --- SUB-COMPONENTS (Local for now to keep orchestrator clean) ---
 
@@ -300,6 +301,13 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
                     )}
                 </div>
             </div>
+
+            {/* DEBUG / REPAIR TOOL */}
+            {isGlobalAdmin && (
+                <div className="mb-8">
+                    <AuditTool />
+                </div>
+            )}
 
             {/* PENDING REQUESTS (Global Admin Only) */}
             {pendingRequests.length > 0 && isGlobalAdmin && (

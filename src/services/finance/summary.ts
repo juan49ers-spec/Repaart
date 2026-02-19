@@ -1,8 +1,7 @@
 import { db } from '../../lib/firebase';
 import { collection, query, where, doc, getDoc, setDoc, updateDoc, getDocs, serverTimestamp, arrayUnion, Timestamp, deleteDoc, writeBatch } from 'firebase/firestore';
 import type { MonthlyData } from '../../types/finance';
-import { ok, err, Result } from '../../types/result';
-import type { FinanceError } from '../../types/finance';
+import { ServiceError, validationError, permissionError } from '../../utils/ServiceError';
 import { mapToMonthlyData } from './helpers';
 
 export const financeSummary = {
@@ -13,17 +12,21 @@ export const financeSummary = {
         franchiseId: string,
         month: string
     ): Promise<MonthlyData | null> => {
-        if (!franchiseId || !month) return null;
+        try {
+            if (!franchiseId || !month) return null;
 
-        const docId = `${franchiseId}_${month}`;
-        const docRef = doc(db, 'financial_summaries', docId);
-        const docSnap = await getDoc(docRef);
+            const docId = `${franchiseId}_${month}`;
+            const docRef = doc(db, 'financial_summaries', docId);
+            const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
-            return mapToMonthlyData(docSnap, franchiseId);
+            if (docSnap.exists()) {
+                return mapToMonthlyData(docSnap, franchiseId);
+            }
+
+            return null;
+        } catch (error) {
+            throw new ServiceError('getFinancialData', { cause: error });
         }
-
-        return null;
     },
 
     /**
@@ -33,75 +36,78 @@ export const financeSummary = {
         franchiseId: string,
         month: string,
         data: Partial<MonthlyData>
-    ): Promise<Result<void, FinanceError>> => {
-        if (!franchiseId) {
-            return err({ type: 'PERMISSION_DENIED', franchiseId: franchiseId || 'unknown' });
+    ): Promise<void> => {
+        try {
+            if (!franchiseId) {
+                throw permissionError('updateFinancialData', 'Franchise ID is required');
+            }
+
+            if (!month) {
+                throw validationError('updateFinancialData', 'Month is required');
+            }
+
+            if (!month.match(/^\d{4}-\d{2}$/)) {
+                throw validationError('updateFinancialData', `Invalid format. Expected YYYY-MM, received ${month}`);
+            }
+
+            const docId = `${franchiseId}_${month}`;
+            const docRef = doc(db, 'financial_summaries', docId);
+
+            const existingSnap = await getDoc(docRef);
+            const existing: any = existingSnap.exists() ? existingSnap.data() : {};
+
+            const existingRevenue = Number(existing.totalIncome ?? existing.revenue ?? 0);
+            const existingExpenses = Number(existing.totalExpenses ?? existing.expenses ?? 0);
+            const existingStatus = existing.status;
+            const existingIsLocked = existing.isLocked ?? existing.is_locked ?? false;
+
+            const hasIncome = data.totalIncome !== undefined || data.revenue !== undefined;
+            const hasExpenses = data.totalExpenses !== undefined || data.expenses !== undefined;
+
+            const nextRevenue = Number(hasIncome ? (data.totalIncome ?? data.revenue ?? 0) : existingRevenue);
+            const nextExpenses = Number(hasExpenses ? (data.totalExpenses ?? data.expenses ?? 0) : existingExpenses);
+            const nextProfit = nextRevenue - nextExpenses;
+
+            const nextStatus = (data.status ?? existingStatus ?? 'approved') as any;
+
+            let nextIsLocked = (data.isLocked ?? (data as any).is_locked ?? existingIsLocked) as boolean;
+
+            if (nextStatus === 'open') nextIsLocked = false;
+            else if (['submitted', 'locked', 'unlock_requested', 'approved'].includes(nextStatus)) {
+                nextIsLocked = true;
+            }
+
+            const sanitizedData: any = {
+                ...data,
+                totalIncome: nextRevenue,
+                totalExpenses: nextExpenses,
+                grossIncome: nextRevenue,
+                revenue: nextRevenue,
+                expenses: nextExpenses,
+                profit: nextProfit,
+                isLocked: nextIsLocked,
+                is_locked: nextIsLocked
+            };
+
+            if (data.breakdown !== undefined) {
+                sanitizedData.breakdown = Object.fromEntries(
+                    Object.entries(data.breakdown || {}).map(([k, v]) => [k, Number(v) || 0])
+                );
+            }
+
+            await setDoc(docRef, {
+                ...sanitizedData,
+                franchiseId,
+                franchise_id: franchiseId,
+                month,
+                status: nextStatus,
+                updatedAt: serverTimestamp(),
+                updated_at: serverTimestamp()
+            }, { merge: true });
+        } catch (error) {
+            if (error instanceof ServiceError) throw error;
+            throw new ServiceError('updateFinancialData', { cause: error });
         }
-
-        if (!month) {
-            return err({ type: 'VALIDATION_ERROR', field: 'month', message: 'Month is required' });
-        }
-
-        if (!month.match(/^\d{4}-\d{2}$/)) {
-            return err({ type: 'INVALID_FORMAT', field: 'month', expected: 'YYYY-MM', received: month });
-        }
-
-        const docId = `${franchiseId}_${month}`;
-        const docRef = doc(db, 'financial_summaries', docId);
-
-        const existingSnap = await getDoc(docRef);
-        const existing: any = existingSnap.exists() ? existingSnap.data() : {};
-
-        const existingRevenue = Number(existing.totalIncome ?? existing.revenue ?? 0);
-        const existingExpenses = Number(existing.totalExpenses ?? existing.expenses ?? 0);
-        const existingStatus = existing.status;
-        const existingIsLocked = existing.isLocked ?? existing.is_locked ?? false;
-
-        const hasIncome = data.totalIncome !== undefined || data.revenue !== undefined;
-        const hasExpenses = data.totalExpenses !== undefined || data.expenses !== undefined;
-
-        const nextRevenue = Number(hasIncome ? (data.totalIncome ?? data.revenue ?? 0) : existingRevenue);
-        const nextExpenses = Number(hasExpenses ? (data.totalExpenses ?? data.expenses ?? 0) : existingExpenses);
-        const nextProfit = nextRevenue - nextExpenses;
-
-        const nextStatus = (data.status ?? existingStatus ?? 'approved') as any;
-
-        let nextIsLocked = (data.isLocked ?? (data as any).is_locked ?? existingIsLocked) as boolean;
-
-        if (nextStatus === 'open') nextIsLocked = false;
-        else if (['submitted', 'locked', 'unlock_requested', 'approved'].includes(nextStatus)) {
-            nextIsLocked = true;
-        }
-
-        const sanitizedData: any = {
-            ...data,
-            totalIncome: nextRevenue,
-            totalExpenses: nextExpenses,
-            grossIncome: nextRevenue,
-            revenue: nextRevenue,
-            expenses: nextExpenses,
-            profit: nextProfit,
-            isLocked: nextIsLocked,
-            is_locked: nextIsLocked
-        };
-
-        if (data.breakdown !== undefined) {
-            sanitizedData.breakdown = Object.fromEntries(
-                Object.entries(data.breakdown || {}).map(([k, v]) => [k, Number(v) || 0])
-            );
-        }
-
-        await setDoc(docRef, {
-            ...sanitizedData,
-            franchiseId,
-            franchise_id: franchiseId,
-            month,
-            status: nextStatus,
-            updatedAt: serverTimestamp(),
-            updated_at: serverTimestamp()
-        }, { merge: true });
-
-        return ok(undefined);
     },
 
     /**
@@ -109,23 +115,26 @@ export const financeSummary = {
      */
     fetchClosures: async (
         franchiseId: string
-    ): Promise<Result<MonthlyData[], FinanceError>> => {
-        if (!franchiseId) {
-            return err({ type: 'PERMISSION_DENIED', franchiseId: 'unknown' });
+    ): Promise<MonthlyData[]> => {
+        try {
+            if (!franchiseId) {
+                throw permissionError('fetchClosures', 'Franchise ID is required');
+            }
+
+            const q = query(
+                collection(db, 'financial_summaries'),
+                where('franchiseId', '==', franchiseId)
+            );
+
+            const snapshot = await getDocs(q);
+
+            return snapshot.docs
+                .map(docSnap => mapToMonthlyData(docSnap, franchiseId))
+                .filter(item => item.status !== 'deleted');
+        } catch (error) {
+            if (error instanceof ServiceError) throw error;
+            throw new ServiceError('fetchClosures', { cause: error });
         }
-
-        const q = query(
-            collection(db, 'financial_summaries'),
-            where('franchiseId', '==', franchiseId)
-        );
-
-        const snapshot = await getDocs(q);
-
-        const data = snapshot.docs
-            .map(docSnap => mapToMonthlyData(docSnap, franchiseId))
-            .filter(item => item.status !== 'deleted');
-
-        return ok(data);
     },
 
     /**
@@ -137,23 +146,23 @@ export const financeSummary = {
     ): Promise<MonthlyData[]> => {
         if (!franchiseId) return [];
 
-        const result = await financeSummary.fetchClosures(franchiseId);
+        try {
+            const data = await financeSummary.fetchClosures(franchiseId);
 
-        if (!result.success) {
-            console.error("Error fetching yearly data:", result.error);
-            return [];
+            return data.filter((record: any) => {
+                if (record.month) {
+                    return record.month.startsWith(`${year}-`);
+                }
+                if (record.date) {
+                    const d = record.date instanceof Date ? record.date : (record.date as any).toDate();
+                    return d.getFullYear() === year;
+                }
+                return false;
+            });
+        } catch (error) {
+            console.error('[FinanceSummary] Error fetching yearly data:', error);
+            throw new ServiceError('getFinancialYearlyData', { cause: error });
         }
-
-        return result.data.filter((record: any) => {
-            if (record.month) {
-                return record.month.startsWith(`${year}-`);
-            }
-            if (record.date) {
-                const d = record.date instanceof Date ? record.date : (record.date as any).toDate();
-                return d.getFullYear() === year;
-            }
-            return false;
-        });
     },
 
     /**
@@ -162,28 +171,31 @@ export const financeSummary = {
     unlockMonth: async (
         franchiseId: string,
         month: string
-    ): Promise<Result<void, FinanceError>> => {
-        if (!franchiseId || !month) {
-            return err({ type: 'VALIDATION_ERROR', field: 'month', message: 'Missing args' });
-        }
+    ): Promise<void> => {
+        try {
+            if (!franchiseId || !month) {
+                throw validationError('unlockMonth', 'Missing args');
+            }
 
-        const docId = `${franchiseId}_${month}`;
-        const docRef = doc(db, 'financial_summaries', docId);
+            const docId = `${franchiseId}_${month}`;
+            const docRef = doc(db, 'financial_summaries', docId);
 
-        await updateDoc(docRef, {
-            status: 'open',
-            isLocked: false,
-            is_locked: false,
-            updatedAt: serverTimestamp(),
-            updated_at: serverTimestamp(),
-            statusHistory: arrayUnion({
+            await updateDoc(docRef, {
                 status: 'open',
-                timestamp: Timestamp.now(),
-                action: 'unlocked_by_admin'
-            })
-        });
-
-        return ok(undefined);
+                isLocked: false,
+                is_locked: false,
+                updatedAt: serverTimestamp(),
+                updated_at: serverTimestamp(),
+                statusHistory: arrayUnion({
+                    status: 'open',
+                    timestamp: Timestamp.now(),
+                    action: 'unlocked_by_admin'
+                })
+            });
+        } catch (error) {
+            if (error instanceof ServiceError) throw error;
+            throw new ServiceError('unlockMonth', { cause: error });
+        }
     },
 
     /**
@@ -193,31 +205,37 @@ export const financeSummary = {
         franchiseId: string,
         month: string,
         reason: string
-    ): Promise<Result<void, FinanceError>> => {
-        const docId = `${franchiseId}_${month}`;
-        const docRef = doc(db, 'financial_summaries', docId);
+    ): Promise<void> => {
+        try {
+            const docId = `${franchiseId}_${month}`;
+            const docRef = doc(db, 'financial_summaries', docId);
 
-        await updateDoc(docRef, {
-            status: 'unlock_requested',
-            unlockReason: reason,
-            updatedAt: serverTimestamp(),
-            statusHistory: arrayUnion({
+            await updateDoc(docRef, {
                 status: 'unlock_requested',
-                timestamp: Timestamp.now(),
-                reason: reason,
-                action: 'requested_by_franchise'
-            })
-        });
-
-        return ok(undefined);
+                unlockReason: reason,
+                updatedAt: serverTimestamp(),
+                statusHistory: arrayUnion({
+                    status: 'unlock_requested',
+                    timestamp: Timestamp.now(),
+                    reason: reason,
+                    action: 'requested_by_franchise'
+                })
+            });
+        } catch (error) {
+            throw new ServiceError('requestUnlock', { cause: error });
+        }
     },
 
     /**
      * DELETE SUMMARY BY ID
      */
     deleteSummaryDocument: async (docId: string): Promise<void> => {
-        const docRef = doc(db, 'financial_summaries', docId);
-        await deleteDoc(docRef);
+        try {
+            const docRef = doc(db, 'financial_summaries', docId);
+            await deleteDoc(docRef);
+        } catch (error) {
+            throw new ServiceError('deleteSummaryDocument', { cause: error });
+        }
     },
 
     /**
@@ -260,74 +278,78 @@ export const financeSummary = {
         franchiseId: string,
         monthKey: string
     ): Promise<void> => {
-        console.log(`[Finance] Force Syncing for ${franchiseId} - ${monthKey}`);
+        try {
+            console.log(`[Finance] Force Syncing for ${franchiseId} - ${monthKey}`);
 
-        const [year, month] = monthKey.split('-').map(Number);
-        const startDate = new Date(year, month - 1, 1);
-        const endDate = new Date(year, month, 0);
+            const [year, month] = monthKey.split('-').map(Number);
+            const startDate = new Date(year, month - 1, 1);
+            const endDate = new Date(year, month, 0);
 
-        const q = query(
-            collection(db, 'financial_records'),
-            where('franchise_id', '==', franchiseId),
-            where('date', '>=', startDate),
-            where('date', '<=', endDate)
-        );
+            const q = query(
+                collection(db, 'financial_records'),
+                where('franchise_id', '==', franchiseId),
+                where('date', '>=', startDate),
+                where('date', '<=', endDate)
+            );
 
-        const snap = await getDocs(q);
+            const snap = await getDocs(q);
 
-        let totalIncome = 0;
-        let totalExpenses = 0;
-        let accRevenue = 0;
-        let accExpenses = 0;
-        let accProfit = 0;
-        let accLogisticsOnly = 0;
+            let totalIncome = 0;
+            let totalExpenses = 0;
+            let accRevenue = 0;
+            let accExpenses = 0;
+            let accProfit = 0;
+            let accLogisticsOnly = 0;
 
-        const breakdown: any = {};
+            const breakdown: any = {};
 
-        snap.docs.forEach(doc => {
-            const d = doc.data();
-            if (d.status === 'draft' || d.status === 'rejected') return;
+            snap.docs.forEach(doc => {
+                const d = doc.data();
+                if (d.status === 'draft' || d.status === 'rejected') return;
 
-            const rev = Number(d.revenue || (d.type === 'income' ? d.amount : 0) || 0);
-            const exp = Number(d.expenses || (d.type === 'expense' ? d.amount : 0) || 0);
-            const prof = Number(d.profit || (rev - exp) || 0);
+                const rev = Number(d.revenue || (d.type === 'income' ? d.amount : 0) || 0);
+                const exp = Number(d.expenses || (d.type === 'expense' ? d.amount : 0) || 0);
+                const prof = Number(d.profit || (rev - exp) || 0);
 
-            accRevenue += rev;
-            accExpenses += exp;
-            accProfit += prof;
-            if (d.logisticsIncome) accLogisticsOnly += Number(d.logisticsIncome);
+                accRevenue += rev;
+                accExpenses += exp;
+                accProfit += prof;
+                if (d.logisticsIncome) accLogisticsOnly += Number(d.logisticsIncome);
 
-            totalIncome += rev;
-            totalExpenses += exp;
+                totalIncome += rev;
+                totalExpenses += exp;
 
-            if (d.breakdown) {
-                Object.keys(d.breakdown).forEach(k => {
-                    breakdown[k] = (breakdown[k] || 0) + (Number(d.breakdown[k]) || 0);
-                });
-            }
-        });
+                if (d.breakdown) {
+                    Object.keys(d.breakdown).forEach(k => {
+                        breakdown[k] = (breakdown[k] || 0) + (Number(d.breakdown[k]) || 0);
+                    });
+                }
+            });
 
-        console.log(`[Finance] Recalculated: Income=${totalIncome}, Expenses=${totalExpenses}, Profit=${accProfit}. Docs found: ${snap.size}`);
+            console.log(`[Finance] Recalculated: Income=${totalIncome}, Expenses=${totalExpenses}, Profit=${accProfit}. Docs found: ${snap.size}`);
 
-        const summaryId = `${franchiseId}_${monthKey}`;
-        const summaryRef = doc(db, 'financial_summaries', summaryId);
+            const summaryId = `${franchiseId}_${monthKey}`;
+            const summaryRef = doc(db, 'financial_summaries', summaryId);
 
-        await setDoc(summaryRef, {
-            franchiseId,
-            franchise_id: franchiseId,
-            month: monthKey,
-            status: 'approved',
-            totalIncome,
-            totalExpenses,
-            grossIncome: totalIncome,
-            revenue: accRevenue,
-            expenses: accExpenses,
-            profit: accProfit,
-            logisticsIncome: accLogisticsOnly,
-            breakdown,
-            updatedAt: serverTimestamp(),
-            updated_at: serverTimestamp(),
-            lastForceSync: serverTimestamp()
-        }, { merge: true });
+            await setDoc(summaryRef, {
+                franchiseId,
+                franchise_id: franchiseId,
+                month: monthKey,
+                status: 'approved',
+                totalIncome,
+                totalExpenses,
+                grossIncome: totalIncome,
+                revenue: accRevenue,
+                expenses: accExpenses,
+                profit: accProfit,
+                logisticsIncome: accLogisticsOnly,
+                breakdown,
+                updatedAt: serverTimestamp(),
+                updated_at: serverTimestamp(),
+                lastForceSync: serverTimestamp()
+            }, { merge: true });
+        } catch (error) {
+            throw new ServiceError('recalculateMonthSummary', { cause: error });
+        }
     }
 };

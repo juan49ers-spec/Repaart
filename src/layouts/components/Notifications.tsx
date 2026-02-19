@@ -22,7 +22,8 @@ interface UINotification {
     franchiseName?: string;
     franchiseId?: string;
     priority?: 'low' | 'normal' | 'high';
-    metadata?: any;
+    metadata?: Record<string, unknown>;
+    // Legacy specific
     // Legacy specific
     userId?: string;
 }
@@ -135,8 +136,8 @@ const Notifications: React.FC<NotificationsProps> = ({ isAdmin = false }) => {
                 // Navigate to franchise detail
                 if (notification.metadata?.franchiseId) {
                     navigate(`/admin/franchise/${notification.metadata.franchiseId}`);
-                } else if ((notification as any).franchiseId) {
-                    navigate(`/admin/franchise/${(notification as any).franchiseId}`);
+                } else if (notification.franchiseId) {
+                    navigate(`/admin/franchise/${notification.franchiseId}`);
                 }
             } else if (notification.type === 'SUPPORT_TICKET') {
                 navigate('/admin/support');
@@ -199,7 +200,7 @@ const Notifications: React.FC<NotificationsProps> = ({ isAdmin = false }) => {
     const filteredNotifications = getFilteredNotifications();
 
     return (
-        <div className="relative mr-2" ref={wrapperRef}>
+        <div className="relative" ref={wrapperRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={`
@@ -330,6 +331,19 @@ const Notifications: React.FC<NotificationsProps> = ({ isAdmin = false }) => {
                                 ))}
                             </div>
                         )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="p-3 border-t border-slate-100/50 bg-slate-50/50 text-center">
+                        <button
+                            onClick={() => {
+                                setIsOpen(false);
+                                navigate('/notifications');
+                            }}
+                            className="text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:underline transition-all"
+                        >
+                            Ver todas las notificaciones
+                        </button>
                     </div>
                 </div>
             )}

@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { PlayCircle, ChevronLeft, ChevronRight, Lock, Banknote, Activity, Target, Bot } from 'lucide-react';
 import { formatMoney, FinancialReport, MonthlyData } from '../../lib/finance';
+import type { TrendItem } from '../../types/finance';
+import type { FinancialRecord } from './finance/types';
 
 // Components
 import TaxVaultWidget from './finance/TaxVaultWidget';
@@ -17,6 +20,7 @@ import WidgetLegendModal from './dashboard/WidgetLegendModal';
 import FinancialWorkflowGuide from './components/FinancialWorkflowGuide';
 import { GoalSettingModal } from './components/GoalSettingModal';
 import DynamicBanner from '../../components/common/DynamicBanner';
+import ErrorBoundary from '../../components/ui/feedback/ErrorBoundary';
 import { userService } from '../../services/userService';
 import { useAuth } from '../../context/AuthContext';
 
@@ -24,7 +28,8 @@ export interface DashboardTrendItem {
     month: string;
     revenue: number;
     expenses: number;
-    [key: string]: any;
+    fullDate?: string; // Explicitly add fullDate
+    [key: string]: string | number | undefined;
 }
 
 export interface BreakdownItem {
@@ -44,7 +49,7 @@ export interface FranchiseDashboardViewProps {
     revenueTrend: number;
     report: FinancialReport | null;
     rawData: MonthlyData | null;
-    trendData: any[];
+    trendData: TrendItem[];
     formattedTrendData: DashboardTrendItem[];
     fullExpenseBreakdown: BreakdownItem[];
     isWizardOpen: boolean;
@@ -61,7 +66,7 @@ export interface FranchiseDashboardViewProps {
     showGuide: boolean;
     setShowGuide: (show: boolean) => void;
     onMonthChange: (month: string) => void;
-    onUpdateFinance: (data: any) => Promise<void>;
+    onUpdateFinance: (data: Partial<MonthlyData>) => Promise<void>;
 }
 
 const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
@@ -136,6 +141,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                                     onMonthChange(date.toISOString().slice(0, 7));
                                 }}
                                 className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl transition-all mechanical-press text-slate-500"
+                                aria-label="Mes anterior"
                             >
                                 <ChevronLeft className="w-5 h-5" />
                             </button>
@@ -151,6 +157,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                                     onMonthChange(date.toISOString().slice(0, 7));
                                 }}
                                 className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl transition-all mechanical-press text-slate-500"
+                                aria-label="Mes siguiente"
                             >
                                 <ChevronRight className="w-5 h-5" />
                             </button>
@@ -234,123 +241,157 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
 
                 {/* MAIN COCKPIT GRID */}
                 {!isHistoryView ? (
-                    <div className="space-y-6 animate-in fade-in duration-500">
+                    <motion.div
+                        className="space-y-6"
+                        initial="hidden"
+                        animate="visible"
+                        variants={{
+                            hidden: {},
+                            visible: { transition: { staggerChildren: 0.08 } }
+                        }}
+                    >
 
-                        <DynamicBanner />
+                        <motion.div variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}>
+                            <DynamicBanner />
+                        </motion.div>
 
                         {/* CORE TELEMETRY ROW */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <motion.div
+                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+                            variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
+                        >
                             {/* Revenue Cockpit */}
-                            <div onClick={() => {
-                                if (readOnly) return;
-                                setGoalModalMode('default');
-                                setShowGoalModal(true);
-                            }} className="h-full">
-                                <KPICard
-                                    title="Ingresos Netos"
-                                    value={formatMoney(revenue || 0) + '€'}
-                                    trend={Number(revenueTrend.toFixed(1))}
-                                    trendData={trendData.map((d: any) => d.revenue)}
-                                    icon={<Banknote />}
-                                    color="ruby"
-                                    monthlyGoal={monthlyGoal}
-                                    rawValue={revenue || 0}
-                                    orders={orders}
-                                    totalHours={totalHours}
-                                    bestDay="FRIDAY"
-                                />
-                            </div>
+                            <ErrorBoundary>
+                                <div onClick={() => {
+                                    if (readOnly) return;
+                                    setGoalModalMode('default');
+                                    setShowGoalModal(true);
+                                }} className="h-full">
+                                    <KPICard
+                                        title="Ingresos Netos"
+                                        value={formatMoney(revenue || 0) + '€'}
+                                        trend={Number(revenueTrend.toFixed(1))}
+                                        trendData={trendData.map((d) => d.revenue)}
+                                        icon={<Banknote />}
+                                        color="ruby"
+                                        monthlyGoal={monthlyGoal}
+                                        rawValue={revenue || 0}
+                                        orders={orders}
+                                        totalHours={totalHours}
+                                        bestDay="FRIDAY"
+                                    />
+                                </div>
+                            </ErrorBoundary>
 
                             {/* Net Profit Unit */}
-                            <div className="h-full">
-                                {(() => {
-                                    const currentYear = effectiveMonth.split('-')[0];
-                                    const historicalProfit = formattedTrendData
-                                        .filter((month: any) => {
-                                            const monthKey = month.fullDate || month.month;
-                                            return monthKey && monthKey.startsWith(currentYear) && monthKey !== effectiveMonth;
-                                        })
-                                        .reduce((sum, month) => {
-                                            const opProfit = month.revenue - month.expenses;
-                                            const tax = opProfit > 0 ? opProfit * (rawData?.irpfPercent || 20) / 100 : 0;
-                                            return sum + (opProfit - tax);
-                                        }, 0);
+                            <ErrorBoundary>
+                                <div className="h-full">
+                                    {(() => {
+                                        const currentYear = effectiveMonth.split('-')[0];
+                                        const historicalProfit = formattedTrendData
+                                            .filter((month) => {
+                                                const monthKey = month.fullDate || month.month;
+                                                return monthKey && (monthKey as string).startsWith(currentYear) && monthKey !== effectiveMonth;
+                                            })
+                                            .reduce((sum, month) => {
+                                                const opProfit = month.revenue - month.expenses;
+                                                const tax = opProfit > 0 ? opProfit * (rawData?.irpfPercent || 20) / 100 : 0;
+                                                return sum + (opProfit - tax);
+                                            }, 0);
 
-                                    const currentOpProfit = (revenue || 0) - totalExpenses;
-                                    const currentTax = currentOpProfit > 0 ? currentOpProfit * (rawData?.irpfPercent || 20) / 100 : 0;
-                                    const currentNetProfit = currentOpProfit - currentTax;
-                                    const annualNetProfit = effectiveMonth.startsWith(currentYear) ? historicalProfit + currentNetProfit : historicalProfit;
+                                        const currentOpProfit = (revenue || 0) - totalExpenses;
+                                        const currentTax = currentOpProfit > 0 ? currentOpProfit * (rawData?.irpfPercent || 20) / 100 : 0;
+                                        const currentNetProfit = currentOpProfit - currentTax;
+                                        const annualNetProfit = effectiveMonth.startsWith(currentYear) ? historicalProfit + currentNetProfit : historicalProfit;
 
-                                    return (
-                                        <TakeHomeProfitWidget
-                                            revenue={revenue || 0}
-                                            totalExpenses={totalExpenses}
-                                            irpfPercent={rawData?.irpfPercent || 20}
-                                            trend={trendData.map((d: any) => d.profit || 0)}
-                                            annualNetProfit={annualNetProfit}
-                                            year={currentYear}
-                                            onDetailClick={() => setIsWizardOpen(true)}
-                                        />
-                                    );
-                                })()}
-                            </div>
+                                        return (
+                                            <TakeHomeProfitWidget
+                                                revenue={revenue || 0}
+                                                totalExpenses={totalExpenses}
+                                                irpfPercent={rawData?.irpfPercent || 20}
+                                                trend={trendData.map((d) => d.profit || 0)}
+                                                annualNetProfit={annualNetProfit}
+                                                year={currentYear}
+                                                onDetailClick={() => setIsWizardOpen(true)}
+                                            />
+                                        );
+                                    })()}
+                                </div>
+                            </ErrorBoundary>
 
                             {/* Tax Vault Station */}
-                            <div className="h-full">
-                                <TaxVaultWidget
-                                    taxes={report?.taxes || {
-                                        ivaRepercutido: 0, ivaSoportado: 0, ivaAPagar: 0, irpfPago: 0, totalReserve: 0, irpfPercent: 20, netProfitPostTax: 0, netProfit: 0, margin: 0, vat: { toPay: 0 }
-                                    }}
-                                    minimal
-                                    currentMonth={effectiveMonth}
-                                    historicalData={trendData}
-                                />
-                            </div>
+                            <ErrorBoundary>
+                                <div className="h-full">
+                                    <TaxVaultWidget
+                                        taxes={report?.taxes || {
+                                            ivaRepercutido: 0, ivaSoportado: 0, ivaAPagar: 0, irpfPago: 0, totalReserve: 0, irpfPercent: 20, netProfitPostTax: 0, netProfit: 0, margin: 0, vat: { toPay: 0 }
+                                        }}
+                                        minimal
+                                        currentMonth={effectiveMonth}
+                                        historicalData={trendData as unknown as MonthlyData[]}
+                                    />
+                                </div>
+                            </ErrorBoundary>
 
                             {/* Resource Efficiency */}
-                            <div className="h-full">
-                                <HourlyCostWidget
-                                    totalCost={totalExpenses}
-                                    totalHours={totalHours}
-                                    trend={0}
-                                    laborCost={Number(rawData?.salaries || 0)}
-                                    otherCosts={totalExpenses - Number(rawData?.salaries || 0)}
-                                />
-                            </div>
-                        </div>
+                            <ErrorBoundary>
+                                <div className="h-full">
+                                    <HourlyCostWidget
+                                        totalCost={totalExpenses}
+                                        totalHours={totalHours}
+                                        trend={0}
+                                        laborCost={Number(rawData?.salaries || 0)}
+                                        otherCosts={totalExpenses - Number(rawData?.salaries || 0)}
+                                    />
+                                </div>
+                            </ErrorBoundary>
+                        </motion.div>
 
                         {/* ANALYTICS RADAR LAYER */}
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                            {/* Distribution Radar */}
-                            <div className="lg:col-span-8">
-                                <FinancialAdvisorWidget
-                                    revenue={revenue}
-                                    expenses={totalExpenses}
-                                    margin={revenue > 0 ? ((revenue - totalExpenses) / revenue) * 100 : 0}
-                                    hourlyCost={totalHours > 0 ? totalExpenses / totalHours : 0}
-                                    taxReserve={revenue * 0.21}
-                                    trend={revenueTrend}
-                                />
-                            </div>
+                        <motion.div
+                            className="grid grid-cols-1 lg:grid-cols-12 gap-6"
+                            variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
+                        >
+                            {/* Financial Health Score */}
+                            <ErrorBoundary>
+                                <div className="lg:col-span-5">
+                                    <FinancialAdvisorWidget
+                                        revenue={revenue}
+                                        expenses={totalExpenses}
+                                        margin={revenue > 0 ? ((revenue - totalExpenses) / revenue) * 100 : 0}
+                                        hourlyCost={totalHours > 0 ? totalExpenses / totalHours : 0}
+                                        taxReserve={revenue * 0.21}
+                                        trend={revenueTrend}
+                                        onOpenAdvisor={() => setIsAdvisorOpen(true)}
+                                    />
+                                </div>
+                            </ErrorBoundary>
 
                             {/* Breakdown Terminal */}
-                            <div className="lg:col-span-4 h-full">
-                                <ExpenseBreakdownWidget breakdown={fullExpenseBreakdown} />
-                            </div>
-                        </div>
+                            <ErrorBoundary>
+                                <div className="lg:col-span-7 h-full">
+                                    <ExpenseBreakdownWidget breakdown={fullExpenseBreakdown} />
+                                </div>
+                            </ErrorBoundary>
+                        </motion.div>
 
                         {/* TIMELINE EVOLUTION */}
-                        <div className="workstation-card workstation-scanline p-6">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="h-6 w-1 bg-ruby-600 rounded-full" />
-                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-[.3em] font-mono">evolucion.temporal</h3>
-                            </div>
-                            <div className="h-[300px]">
-                                <RevenueAreaChart data={formattedTrendData} />
-                            </div>
-                        </div>
+                        <ErrorBoundary>
+                            <motion.div
+                                className="workstation-card workstation-scanline p-6"
+                                variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
+                            >
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="h-6 w-1 bg-ruby-600 rounded-full" />
+                                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-[.3em]">Evolución Temporal</h3>
+                                </div>
+                                <div className="h-[300px]">
+                                    <RevenueAreaChart data={formattedTrendData} />
+                                </div>
+                            </motion.div>
+                        </ErrorBoundary>
 
-                    </div>
+                    </motion.div>
                 ) : (
                     <FranchiseHistoryView franchiseId={franchiseId || ''} />
                 )}
@@ -363,13 +404,13 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                         onClose={() => setIsWizardOpen(false)}
                         onSave={async (data) => {
                             try {
-                                await onUpdateFinance(data);
+                                await onUpdateFinance(data as unknown as Partial<MonthlyData>);
                                 setIsWizardOpen(false);
                             } catch (error) {
                                 console.error('Error saving financial data:', error);
                             }
                         }}
-                        initialData={rawData as any}
+                        initialData={rawData as unknown as Partial<FinancialRecord>}
                     />
                 )}
 
@@ -378,7 +419,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                     onClose={() => setIsSimulatorOpen(false)}
                     currentData={{
                         ...report,
-                        revenue: revenue || (report as any)?.totalIncome || 0,
+                        revenue: revenue || report?.revenue || 0,
                         orders: orders || 0,
                         totalExpenses: report?.totalExpenses || 0,
                         fixed: report?.fixed || { total: 0, salaries: 0, renting: 0, insurance: 0, services: 0, quota: 0, other: 0 },

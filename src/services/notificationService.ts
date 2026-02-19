@@ -1,5 +1,6 @@
 import { db } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp, doc, updateDoc, FieldValue, Timestamp } from 'firebase/firestore';
+import { ServiceError } from '../utils/ServiceError';
 
 export type NotificationType = 'FINANCE_CLOSING' | 'RATE_CHANGE' | 'SUPPORT_TICKET' | 'UNLOCK_REQUEST' | 'MONTH_UNLOCKED' | 'UNLOCK_REJECTED' | 'ALERT' | 'PREMIUM_SERVICE_REQUEST' | 'shift_confirmed' | 'shift_change_request' | 'incident' | 'SCHEDULE_PUBLISHED' | 'SYSTEM' | 'DOCUMENT_REQUEST';
 export type NotificationPriority = 'low' | 'normal' | 'high';
@@ -49,8 +50,9 @@ export const notificationService = {
             await addDoc(collection(db, 'admin_notifications'), payload);
             console.log(`[NotificationService] Sent ${type}:`, payload);
         } catch (error) {
+            // Log with ServiceError for context, but don't rethrow to avoid blocking main action
+            new ServiceError('notify', { cause: error });
             console.error('[NotificationService] Failed to send notification:', error);
-            // We don't throw here to avoid blocking the main user action if notification fails
         }
     },
 
@@ -62,6 +64,7 @@ export const notificationService = {
             const docRef = doc(db, 'admin_notifications', notificationId);
             await updateDoc(docRef, { read: true });
         } catch (error) {
+            new ServiceError('markAsRead', { cause: error });
             console.error('[NotificationService] Failed to mark as read:', error);
         }
     },
@@ -94,8 +97,7 @@ export const notificationService = {
             const docRef = await addDoc(collection(db, 'notifications'), payload);
             console.log('✅ [notificationService] Notification saved with ID:', docRef.id);
         } catch (error) {
-            console.error('❌ [NotificationService] Failed to notify franchise:', error);
-            throw error;
+            throw new ServiceError('notifyFranchise', { cause: error });
         }
     },
 
@@ -144,8 +146,9 @@ export const notificationService = {
             };
             await addDoc(collection(db, 'notifications'), riderPayload);
         } catch (error) {
+            new ServiceError('notifyRiderAction', { cause: error });
             console.error('[NotificationService] Failed to notify rider action:', error);
         }
-    }
+    },
 };
 

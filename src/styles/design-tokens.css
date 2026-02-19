@@ -13,16 +13,17 @@
     --font-body: 'IBM Plex Sans', system-ui, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
-    /* Font Sizes - Modular Scale (Major Third: 1.25) */
-    --font-size-xs: 0.75rem;    /* 12px */
-    --font-size-sm: 0.875rem;   /* 14px */
-    --font-size-base: 1rem;      /* 16px - Base */
-    --font-size-lg: 1.125rem;    /* 18px */
-    --font-size-xl: 1.25rem;     /* 20px */
-    --font-size-2xl: 1.5625rem;  /* 25px */
-    --font-size-3xl: 1.953125rem;/* 31.25px */
-    --font-size-4xl: 2.44140625rem;/* 39.0625px */
-    --font-size-5xl: 3.0517578125rem;/* 48.828125px */
+    /* Font Sizes - Fluid Scale (clamp: rem + vw for accessibility)
+       Small sizes stay fixed — fluid only benefits display sizes */
+    --font-size-xs: 0.75rem;                                  /* 12px */
+    --font-size-sm: 0.875rem;                                 /* 14px */
+    --font-size-base: 1rem;                                    /* 16px */
+    --font-size-lg: 1.125rem;                                  /* 18px */
+    --font-size-xl: clamp(1.125rem, 1rem + 0.25vw, 1.25rem);  /* 18→20px */
+    --font-size-2xl: clamp(1.25rem, 1rem + 0.5vw, 1.5625rem); /* 20→25px */
+    --font-size-3xl: clamp(1.5rem, 1.1rem + 1vw, 1.953rem);   /* 24→31px */
+    --font-size-4xl: clamp(1.75rem, 1.2rem + 1.5vw, 2.441rem);/* 28→39px */
+    --font-size-5xl: clamp(2rem, 1.2rem + 2vw, 3.052rem);     /* 32→49px */
 
     /* Line Heights */
     --line-height-tight: 1.1;

@@ -136,10 +136,22 @@ export interface AuthContextType {
     stopImpersonation: () => void;
     // Force refresh token to get latest custom claims
     forceTokenRefresh: () => Promise<void>;
+    // Session Tracking
+    sessionId: string | null;
 }
 
 interface AuthProviderProps {
     children: ReactNode;
+}
+
+// Session Interface
+export interface UserSession {
+    sessionId: string;
+    ip?: string;
+    userAgent: string;
+    lastActive: any; // Firestore Timestamp
+    createdAt: any; // Firestore Timestamp
+    deviceType: 'desktop' | 'mobile' | 'tablet' | 'unknown';
 }
 
 // =====================================================
@@ -353,6 +365,63 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
     };
 
+    // 🕵️ SESSION TRACKING SYSTEM
+    const [sessionId, setSessionId] = useState<string | null>(null);
+
+    // Generar SessionID único por carga de página (tab)
+    useEffect(() => {
+        const storedSession = sessionStorage.getItem('repaart_session_id');
+        if (storedSession) {
+            setSessionId(storedSession);
+        } else {
+            const newSession = crypto.randomUUID();
+            sessionStorage.setItem('repaart_session_id', newSession);
+            setSessionId(newSession);
+        }
+    }, []);
+
+    // Heartbeat: Actualizar lastActive cada minuto
+    useEffect(() => {
+        if (!user || !sessionId) return;
+
+        const updateHeartbeat = async () => {
+            // Dynamic Import to avoid circular dependencies or heavy load if not needed immediately
+            const { serverTimestamp } = await import("firebase/firestore");
+
+            const sessionRef = doc(db, "users", user.uid, "sessions", sessionId);
+            const userAgent = navigator.userAgent;
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(userAgent);
+
+            try {
+                // Upsert session
+                await setDoc(sessionRef, {
+                    sessionId,
+                    userAgent,
+                    deviceType: isMobile ? 'mobile' : 'desktop',
+                    lastActive: serverTimestamp(),
+                    // Solo setear createdAt si no existe (merge: true lo maneja, pero cuidado con overwrite)
+                    // Para createdAt fiable, mejor usar set con merge, pero createdAt solo en el primer set.
+                    // Simplificación: Actualizamos todo, el createdAt lo gestionamos nosotros si queremos
+                    // o confiamos en metadata del doc. Para UI explicita, mejor guardar un field.
+                }, { merge: true });
+
+                // Si es la primera vez (doc no existía), set createdAt
+                // Firestore rules pueden proteger esto, pero por simplicidad frontend:
+                // Lo dejamos así, el 'lastActive' es lo critico.
+            } catch (err) {
+                console.error("[Session] Error updating heartbeat:", err);
+            }
+        };
+
+        // Initial update
+        updateHeartbeat();
+
+        // Interval
+        const interval = setInterval(updateHeartbeat, 60 * 1000); // 1 minuto
+
+        return () => clearInterval(interval);
+    }, [user, sessionId]);
+
     // 📦 EXPORTAMOS EL PAQUETE COMPLETO
     const value: AuthContextType = {
         user,
@@ -369,7 +438,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         impersonatedFranchiseId,
         startImpersonation,
         stopImpersonation,
-        forceTokenRefresh
+
+        forceTokenRefresh,
+        sessionId
     };
 
     if (loading) {

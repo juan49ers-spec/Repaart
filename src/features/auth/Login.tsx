@@ -19,7 +19,7 @@ const Login: FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
-    const [role, setRole] = useState<'admin' | 'franchise' | 'rider'>('rider');
+    const [role] = useState<'rider'>('rider');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
@@ -138,28 +138,8 @@ const Login: FC = () => {
                                     />
                                 </div>
 
-                                {/* Role */}
-                                <div className="group">
-                                    <label htmlFor="role" className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5 ml-1">
-                                        Tipo de cuenta
-                                    </label>
-                                    <div className="relative">
-                                        <select
-                                            id="role"
-                                            aria-label="Selecciona tu rol"
-                                            value={role}
-                                            onChange={(e) => setRole(e.target.value as 'admin' | 'franchise' | 'rider')}
-                                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 text-slate-900 dark:text-white transition-all duration-150 outline-none appearance-none cursor-pointer"
-                                        >
-                                            <option value="rider">Repartidor</option>
-                                            <option value="franchise">Franquicia</option>
-                                            <option value="admin">Administrador</option>
-                                        </select>
-                                        <div className="absolute right-4 top-3.5 pointer-events-none text-slate-400">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                                        </div>
-                                    </div>
-                                </div>
+                                {/* Role Selection REMOVED for public signup - Security Enforcement */}
+                                <input type="hidden" name="role" value="rider" />
                             </div>
                         )}
 

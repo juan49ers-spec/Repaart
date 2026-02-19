@@ -1,4 +1,0 @@
-src/features/scheduler/DeliveryScheduler.tsx(440,25): error TS2322: Type '{ riderId: string | null; startAt: string; endAt: string; franchiseId: string; id?: string | undefined; shiftId?: string | undefined; riderName?: string | null | undefined; motoId?: string | null | undefined; ... 8 more ...; isNew?: boolean | undefined; }' is not assignable to type '{ shiftId: string; riderId?: string | null | undefined; startAt: string; endAt: string; motoAssignments?: { motoId: string; }[] | undefined; changeRequested?: boolean | undefined; changeReason?: string | ... 1 more ... | undefined; }'.
-  Types of property 'shiftId' are incompatible.
-    Type 'string | undefined' is not assignable to type 'string'.
-      Type 'undefined' is not assignable to type 'string'.

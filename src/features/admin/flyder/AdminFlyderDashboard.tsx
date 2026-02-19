@@ -5,6 +5,8 @@ import { BillingDashboard } from './components/BillingDashboard';
 import NetworkDashboard from './components/NetworkDashboard';
 import OrdersDashboard from './components/OrdersDashboard';
 import FlyderOrdersDashboard from './components/FlyderOrdersDashboard';
+import { FlyderSyncPanel } from './components/FlyderSyncPanel';
+import { FlyderFranchiseImport } from './components/FlyderFranchiseImport';
 import {
   Clock,
   TrendingUp,
@@ -12,11 +14,13 @@ import {
   Network,
   Package,
   Database,
+  RefreshCw,
+  Building2,
   Menu,
   X
 } from 'lucide-react';
 
-type TabType = 'time' | 'fleet' | 'billing' | 'network' | 'orders' | 'flyder';
+type TabType = 'time' | 'fleet' | 'billing' | 'network' | 'orders' | 'flyder' | 'sync' | 'import';
 
 interface AdminFlyderDashboardProps {
   franchiseId?: string;
@@ -100,6 +104,28 @@ const TABS: TabConfig[] = [
     activeText: 'text-cyan-900',
     iconBg: 'bg-cyan-100',
     iconText: 'text-cyan-600'
+  },
+  {
+    id: 'sync',
+    label: 'Sincronización',
+    description: 'Importar pedidos históricos',
+    icon: RefreshCw,
+    activeBg: 'bg-indigo-50',
+    activeBorder: 'border-indigo-200',
+    activeText: 'text-indigo-900',
+    iconBg: 'bg-indigo-100',
+    iconText: 'text-indigo-600'
+  },
+  {
+    id: 'import',
+    label: 'Importar Franquicias',
+    description: 'Importar franquicias desde Flyder',
+    icon: Building2,
+    activeBg: 'bg-emerald-50',
+    activeBorder: 'border-emerald-200',
+    activeText: 'text-emerald-900',
+    iconBg: 'bg-emerald-100',
+    iconText: 'text-emerald-600'
   }
 ];
 
@@ -130,6 +156,10 @@ export const AdminFlyderDashboard: React.FC<AdminFlyderDashboardProps> = ({
         return <OrdersDashboard />;
       case 'flyder':
         return <FlyderOrdersDashboard />;
+      case 'sync':
+        return <FlyderSyncPanel />;
+      case 'import':
+        return <FlyderFranchiseImport />;
       default:
         return <TimeControlDashboard franchiseId={franchiseId} />;
     }

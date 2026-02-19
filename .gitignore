@@ -41,7 +41,35 @@ firebase-debug.log*
 *.sw?
 *.tsbuildinfo
 vite.config.d.ts
-build_log.txt
+
+# Source Control Cleanup (Custom)
+functions/lib/
+*_test.txt
+*_output.txt
+*_report.txt
+*_errors.txt
+build_errors*.txt
+ts_errors*.txt
+lint_*.txt
+test_output*.txt
+integration_test_output*.txt
+cleanup.log
+compile_log.txt
+tsc_output.txt
+ts_errors_report*.txt
+untracked_full_list.txt
+
+# Temporary Scripts & Debug
+debug_*.mjs
+probe_*.mjs
+check_*.mjs
+diagnose_*.js
+import_*.html
+*.cjs.map
+*.mjs.map
+generate-franchise-mappings.mjs
+get-repaart-franchises.mjs
+scripts/audit_user.*
 
 # Service Account
 service-account.json

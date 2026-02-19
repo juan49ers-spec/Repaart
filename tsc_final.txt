@@ -1,2 +1,0 @@
-src/features/scheduler/DeliveryScheduler.tsx(441,25): error TS2322: Type '{ isOpen: boolean; onClose: () => void; onSave: (shiftData: Partial<{ riderId: string | null; startAt: string; endAt: string; franchiseId: string; id?: string | undefined; shiftId?: string | undefined; riderName?: string | ... 1 more ... | undefined; ... 9 more ...; isNew?: boolean | undefined; }>) => Promise<...>; ...' is not assignable to type 'IntrinsicAttributes & ShiftModalProps'.
-  Property 'riderName' does not exist on type 'IntrinsicAttributes & ShiftModalProps'.

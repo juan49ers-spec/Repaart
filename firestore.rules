@@ -103,13 +103,35 @@ service cloud.firestore {
     // USERS
     match /users/{userId} {
       allow read: if isAuthed() && (request.auth.uid == userId || isAdmin() || isFranchise());
-      allow create: if false; // Handled by Admin SDK only
+      
+      // CREATE: 
+      // 1. Admin puede crear cualquier usuario (generalmente via Cloud Function, pero esto da respaldo)
+      // 2. Usuario público puede Auto-Registrarse SOLO como 'rider'
+      allow create: if isAuthed() && (
+        isAdmin() || 
+        (request.auth.uid == userId && 
+         request.resource.data.role == 'rider' &&
+         (!request.resource.data.keys().hasAny(['franchiseId', 'admin', 'permissions']))
+        )
+      );
+
+      // UPDATE:
+      // 1. Admin puede todo
+      // 2. Usuario puede editar su perfil PERO NO su rol, status o franchiseId
+      // 3. Franquicia puede editar a sus riders (si franchiseId coincide)
       allow update: if isAuthed() && (
         isAdmin() || 
-        request.auth.uid == userId ||
+        (request.auth.uid == userId && 
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'status', 'franchiseId', 'createdAt'])) ||
         (isFranchise() && resource.data.franchiseId == request.auth.uid)
       );
+      
       allow list: if isAuthed() && (isAdmin() || isFranchise()); 
+    }
+
+    // SESSIONS (Explicit Path to avoid nesting issues)
+    match /users/{userId}/sessions/{sessionId} {
+      allow read, write: if request.auth.uid == userId;
     }
 
     // USER PREFERENCES

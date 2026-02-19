@@ -81,20 +81,27 @@ const FranchiseScorecard: React.FC<FranchiseScorecardProps> = ({ franchise, glob
     if (safetyMargin > 30) { safetyColor = 'text-emerald-500'; safetyLabel = 'SEGURO'; }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden animate-scale-up border border-slate-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-white/20 dark:border-slate-700 ring-1 ring-black/5">
 
                 {/* HEADER */}
-                <div className="bg-gradient-to-r from-slate-900 to-indigo-900 p-6 flex justify-between items-start text-white">
-                    <div>
-                        <h2 className="text-2xl font-bold flex items-center">
-                            <span className="bg-white/20 p-2 rounded-lg mr-3 text-2xl">🏢</span>
+                <div className="relative overflow-hidden bg-slate-900 p-6 flex justify-between items-start text-white">
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-purple-600/20" />
+                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
+
+                    <div className="relative z-10">
+                        <h2 className="text-3xl font-bold flex items-center tracking-tight text-white/95">
+                            <span className="bg-white/10 backdrop-blur-sm p-2.5 rounded-xl mr-4 text-2xl shadow-inner border border-white/10">🏢</span>
                             {franchise.name}
                         </h2>
-                        <p className="text-indigo-200 mt-1 pl-14 opacity-80">{franchise.email}</p>
+                        <p className="text-indigo-200 mt-1 pl-[4.5rem] font-medium tracking-wide opacity-90">{franchise.email}</p>
                     </div>
-                    <button onClick={onClose} className="bg-white/10 hover:bg-white/20 p-2 rounded-full transition text-white">
-                        <X className="w-6 h-6" />
+                    <button
+                        onClick={onClose}
+                        aria-label="Cerrar"
+                        className="relative z-10 bg-white/10 hover:bg-white/20 p-2.5 rounded-full transition-all hover:scale-105 active:scale-95 text-white/90 hover:text-white backdrop-blur-sm border border-white/5"
+                    >
+                        <X className="w-5 h-5" />
                     </button>
                 </div>
 

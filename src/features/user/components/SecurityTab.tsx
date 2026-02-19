@@ -2,6 +2,7 @@ import { useState, type FC } from 'react';
 import { updatePassword, type User } from 'firebase/auth';
 import { Loader, Save, ShieldCheck, KeyRound, AlertOctagon, Check } from 'lucide-react';
 import Button from '../../../components/ui/inputs/Button';
+import { SecurityDashboard } from '../../auth/SecurityDashboard';
 
 interface SecurityTabProps {
     user: User;
@@ -35,9 +36,10 @@ const SecurityTab: FC<SecurityTabProps> = ({ user, logout, showMessage }) => {
             setPasswords({ new: '', confirm: '' });
             showMessage('success', 'Contraseña actualizada. Por favor inicia sesión de nuevo.');
             setTimeout(() => logout(), 2000);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error updating password:", error);
-            showMessage('error', 'Error al cambiar contraseña (Requerido login reciente): ' + (error.message || 'Error desconocido'));
+            const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+            showMessage('error', 'Error al cambiar contraseña (Requerido login reciente): ' + errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -163,6 +165,11 @@ const SecurityTab: FC<SecurityTabProps> = ({ user, logout, showMessage }) => {
                     </div>
                 </div>
 
+            </div>
+
+            {/* --- SESSION MANAGEMENT --- */}
+            <div className="mt-8">
+                <SecurityDashboard />
             </div>
         </div>
     );

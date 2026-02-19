@@ -1,2 +1,0 @@
-src/features/franchise/FinancialControlCenter.tsx(3,54): error TS6133: 'Copy' is declared but its value is never read.
-src/features/franchise/FinancialControlCenter.tsx(803,11): error TS6133: 'handleCopyPreviousMonth' is declared but its value is never read.

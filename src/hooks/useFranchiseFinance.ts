@@ -1,19 +1,20 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { financeService } from '../services/financeService';
-import { calculateMonthlyRevenue, calculateExpenses, analyzeFinancialHealth, DEFAULT_MONTH_DATA, type MonthlyData, type FinancialReport, type FinancialAnalysis } from '../lib/finance';
+import { calculateMonthlyRevenue, calculateExpenses, analyzeFinancialHealth, DEFAULT_MONTH_DATA, type MonthlyData, type FinancialReport, type FinancialAnalysis, type TariffConfig } from '../lib/finance';
+import type { TrendItem } from '../types/finance';
 import { useAuth } from '../context/AuthContext';
 import { logAction, AUDIT_ACTIONS } from '../lib/audit';
 
 interface FranchiseFinanceParams {
     franchiseId?: string;
     month?: string; // YYYY-MM
-    tariffs?: any;
+    tariffs?: TariffConfig;
 }
 
 export interface FranchiseFinanceHook {
     rawData: MonthlyData;
-    trendData: any[]; // Specific Trend type could be added later
+    trendData: TrendItem[];
     operations: {
         totalOperationalHours: number;
         totalShiftsCount: number;
@@ -101,7 +102,7 @@ export const useFranchiseFinance = ({ franchiseId, month, tariffs }: FranchiseFi
         onMutate: async (newData) => {
             await queryClient.cancelQueries({ queryKey });
             const previousData = queryClient.getQueryData(queryKey);
-            queryClient.setQueryData(queryKey, (old: any) => ({ ...old, ...newData }));
+            queryClient.setQueryData(queryKey, (old: MonthlyData | undefined) => ({ ...(old ?? DEFAULT_MONTH_DATA), ...newData }));
             return { previousData };
         },
         onError: (_err, _newData, context) => {

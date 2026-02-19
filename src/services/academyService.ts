@@ -4,6 +4,7 @@ import {
     serverTimestamp, deleteDoc, Timestamp, FieldValue, orderBy, limit
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ServiceError } from '../utils/ServiceError';
 
 const COLLECTIONS = {
     MODULES: 'academy_modules',
@@ -72,17 +73,16 @@ export const academyService = {
                 );
             }
             const snapshot = await getDocs(q);
-            let modules = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AcademyModule));
-            
+            let modules = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as AcademyModule));
+
             // Filtro client-side si es necesario
             if (status && status !== 'all') {
                 modules = modules.filter(m => m.status === status);
             }
-            
+
             return modules;
         } catch (error) {
-            console.error("[academyService] Error fetching modules:", error);
-            throw error;
+            throw new ServiceError('getAllModules', { cause: error });
         }
     },
 
@@ -91,13 +91,11 @@ export const academyService = {
             const docRef = doc(db, COLLECTIONS.MODULES, moduleId);
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
-                const module = { id: docSnap.id, ...docSnap.data() } as AcademyModule;
-                return module;
+                return { id: docSnap.id, ...docSnap.data() } as AcademyModule;
             }
             return null;
         } catch (error) {
-            console.error("Error fetching module:", error);
-            throw error;
+            throw new ServiceError('getModuleById', { cause: error });
         }
     },
 
@@ -110,8 +108,7 @@ export const academyService = {
             });
             return docRef.id;
         } catch (error) {
-            console.error("Error creating module:", error);
-            throw error;
+            throw new ServiceError('createModule', { cause: error });
         }
     },
 
@@ -123,8 +120,7 @@ export const academyService = {
                 updated_at: serverTimestamp()
             });
         } catch (error) {
-            console.error("Error updating module:", error);
-            throw error;
+            throw new ServiceError('updateModule', { cause: error });
         }
     },
 
@@ -132,8 +128,7 @@ export const academyService = {
         try {
             await deleteDoc(doc(db, COLLECTIONS.MODULES, moduleId));
         } catch (error) {
-            console.error("Error deleting module:", error);
-            throw error;
+            throw new ServiceError('deleteModule', { cause: error });
         }
     },
 
@@ -164,16 +159,15 @@ export const academyService = {
                 );
             }
             const snapshot = await getDocs(q);
-            let lessons = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AcademyLesson));
-            
+            let lessons = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as AcademyLesson));
+
             if (status && status !== 'all') {
                 lessons = lessons.filter(l => l.status === status);
             }
-            
+
             return lessons;
         } catch (error) {
-            console.error("[academyService] Error fetching lessons:", error);
-            throw error;
+            throw new ServiceError('getLessonsByModule', { cause: error });
         }
     },
 
@@ -186,8 +180,7 @@ export const academyService = {
             });
             return docRef.id;
         } catch (error) {
-            console.error("[academyService.createLesson] Error creating lesson:", error);
-            throw error;
+            throw new ServiceError('createLesson', { cause: error });
         }
     },
 
@@ -199,8 +192,7 @@ export const academyService = {
                 updated_at: serverTimestamp()
             });
         } catch (error) {
-            console.error("Error updating lesson:", error);
-            throw error;
+            throw new ServiceError('updateLesson', { cause: error });
         }
     },
 
@@ -208,8 +200,7 @@ export const academyService = {
         try {
             await deleteDoc(doc(db, COLLECTIONS.LESSONS, lessonId));
         } catch (error) {
-            console.error("Error deleting lesson:", error);
-            throw error;
+            throw new ServiceError('deleteLesson', { cause: error });
         }
     },
 
@@ -227,8 +218,7 @@ export const academyService = {
             }
             return null;
         } catch (error) {
-            console.error("Error fetching progress:", error);
-            throw error;
+            throw new ServiceError('getUserProgress', { cause: error });
         }
     },
 
@@ -241,8 +231,7 @@ export const academyService = {
             });
             return docRef.id;
         } catch (error) {
-            console.error("Error creating progress:", error);
-            throw error;
+            throw new ServiceError('createProgress', { cause: error });
         }
     },
 
@@ -254,12 +243,11 @@ export const academyService = {
                 updated_at: serverTimestamp()
             });
         } catch (error) {
-            console.error("Error updating progress:", error);
-            throw error;
+            throw new ServiceError('updateProgress', { cause: error });
         }
     },
 
-        markLessonComplete: async (userId: string, moduleId: string, lessonId: string): Promise<void> => {
+    markLessonComplete: async (userId: string, moduleId: string, lessonId: string): Promise<void> => {
         try {
             const q = query(
                 collection(db, COLLECTIONS.PROGRESS),
@@ -292,8 +280,7 @@ export const academyService = {
                 });
             }
         } catch (error) {
-            console.error("Error marking lesson complete:", error);
-            throw error;
+            throw new ServiceError('markLessonComplete', { cause: error });
         }
     },
 
@@ -321,8 +308,7 @@ export const academyService = {
                 }
             }
         } catch (error) {
-            console.error("Error unmarking lesson complete:", error);
-            throw error;
+            throw new ServiceError('unmarkLessonComplete', { cause: error });
         }
     },
 
@@ -333,8 +319,7 @@ export const academyService = {
             const snapshot = await uploadBytes(fileRef, file);
             return await getDownloadURL(snapshot.ref);
         } catch (error) {
-            console.error("Error uploading video:", error);
-            throw error;
+            throw new ServiceError('uploadLessonVideo', { cause: error });
         }
     }
 };

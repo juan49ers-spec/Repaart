@@ -20,6 +20,7 @@ import AdminFlyderDashboard from './features/admin/flyder/AdminFlyderDashboard';
 import DashboardSwitcher from './layouts/components/DashboardSwitcher';
 import UserProfile from './features/user/UserProfile';
 import UserManagementPanel from './features/admin/users/UserManagementPanel';
+import NotificationsPage from './features/user/NotificationsPage';
 import DevSandbox from './pages/DevSandbox';
 
 // Other Panels (Mapped from legacy ViewSwitcher)
@@ -39,6 +40,7 @@ const AdminFranchiseView = lazyWithRetry(() => import('./features/admin/AdminFra
 const KanbanBoard = lazyWithRetry(() => import('./features/admin/kanban/KanbanBoard'));
 const RidersView = lazyWithRetry(() => import('./features/fleet/RidersView'));
 const AcademyAdmin = lazyWithRetry(() => import('./features/academy/admin/AcademyAdmin'));
+// const NotificationsPage = lazyWithRetry(() => import('./features/user/NotificationsPage'));
 
 import { useFranchiseFinance } from './hooks/useFranchiseFinance';
 import { useVersionCheck } from './hooks/useVersionCheck';
@@ -56,6 +58,7 @@ const RiderAvailabilityView = lazyWithRetry(() => import('./features/rider/profi
 
 function App() {
     const { user, loading: authLoading, roleConfig, logout, isAdmin, impersonatedFranchiseId } = useAuth();
+    console.log("[App] Rendering. AuthLoading:", authLoading, "User:", user?.email);
 
     // Global UI State from Store
     const {
@@ -180,6 +183,13 @@ function App() {
                         )}
                     </ProtectedRoute>
                 }>
+                    {/* SHARED ROUTES - Explicitly first */}
+                    <Route path="notifications" element={
+                        <React.Suspense fallback={<div className="p-10 text-center">Cargando Notificaciones...</div>}>
+                            <NotificationsPage />
+                        </React.Suspense>
+                    } />
+
                     <Route index element={
                         ['rider'].includes(user?.role || '')
                             ? <Navigate to="/rider/dashboard" replace />

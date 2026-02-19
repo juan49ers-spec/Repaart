@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, Bot, User, Sparkles, TrendingUp, AlertCircle, AlertTriangle, Lightbulb, Target, TrendingDown, Calendar, DollarSign, PieChart, ArrowRight, BarChart3, Zap, CheckCircle, MessageCircle, PlayCircle } from 'lucide-react';
+import { X, Send, Bot, User, Sparkles, TrendingUp, AlertCircle, AlertTriangle, Lightbulb, Target, TrendingDown, Calendar, DollarSign, PieChart, ArrowRight, BarChart3, Zap, CheckCircle, MessageCircle, PlayCircle, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../../lib/utils';
 import { useAuth } from '../../../context/AuthContext';
@@ -58,12 +58,12 @@ const FinanceAdvisorChat: React.FC<FinanceAdvisorChatProps> = ({
 }) => {
     const [internalIsOpen, setInternalIsOpen] = useState(false);
     const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
-    
+
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [hasUnreadInsights, setHasUnreadInsights] = useState(true);
-    const [activeTab, setActiveTab] = useState<'chat' | 'insights' | 'actions'>('chat');
+    const [activeTab, setActiveTab] = useState<'health' | 'chat' | 'insights' | 'actions'>('health');
     const [insights, setInsights] = useState<Insight[]>([]);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const { user: _user } = useAuth();
@@ -107,7 +107,7 @@ const FinanceAdvisorChat: React.FC<FinanceAdvisorChatProps> = ({
         const revenue = data.revenue || 0;
         const orders = data.orders || 0;
         const avgTicket = data.avgTicket || (orders > 0 ? revenue / orders : 0);
-        
+
         // Comparación con mes anterior
         const prevMonth = trends.length > 1 ? trends[trends.length - 2] : null;
         const prevRevenue = prevMonth?.revenue || 0;
@@ -198,7 +198,7 @@ const FinanceAdvisorChat: React.FC<FinanceAdvisorChatProps> = ({
         const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
         const currentDay = today.getDate();
         const remainingDays = daysInMonth - currentDay;
-        
+
         if (remainingDays > 0 && remainingDays < 10) {
             const dailyAvg = revenue / currentDay;
             const projectedRevenue = dailyAvg * daysInMonth;
@@ -217,9 +217,9 @@ const FinanceAdvisorChat: React.FC<FinanceAdvisorChatProps> = ({
         const margin = data.margin || 0;
         const profit = data.netProfit || 0;
         const revenue = data.revenue || 0;
-        
+
         let greeting = '';
-        
+
         if (currentInsights.some(i => i.type === 'critical')) {
             const criticalCount = currentInsights.filter(i => i.type === 'critical').length;
             greeting = `⚠️ **¡Atención!** He detectado ${criticalCount} ${criticalCount === 1 ? 'problema crítico' : 'problemas críticos'} que requieren tu acción inmediata.\n\n`;
@@ -239,7 +239,7 @@ const FinanceAdvisorChat: React.FC<FinanceAdvisorChatProps> = ({
             greeting += `Este mes llevas **${formatCurrency(revenue)}** en ingresos con un margen del **${margin.toFixed(1)}%**. `;
             greeting += `Estoy aquí para ayudarte a entender tus números y encontrar oportunidades. ¿En qué puedo ayudarte?`;
         }
-        
+
         return greeting;
     };
 
@@ -266,7 +266,7 @@ const FinanceAdvisorChat: React.FC<FinanceAdvisorChatProps> = ({
 
         try {
             const response = await generateAIResponse(inputValue, financialData, trendData || [], messages);
-            
+
             const assistantMessage: Message = {
                 id: (Date.now() + 1).toString(),
                 type: 'assistant',
@@ -279,7 +279,7 @@ const FinanceAdvisorChat: React.FC<FinanceAdvisorChatProps> = ({
             setMessages(prev => [...prev, assistantMessage]);
         } catch (error) {
             console.error('Error getting AI response:', error);
-            
+
             const errorMessage: Message = {
                 id: (Date.now() + 1).toString(),
                 type: 'assistant',
@@ -307,59 +307,29 @@ const FinanceAdvisorChat: React.FC<FinanceAdvisorChatProps> = ({
             trends: trends?.slice(-3) || []
         };
 
-        const prompt = `Eres un asesor financiero experto y empático para franquicias de delivery. Tu objetivo es ayudar a mejorar la rentabilidad del negocio.
+        const prompt = `Eres un asesor financiero senior especializado en franquicias de delivery/reparto. Hablas español de España. Tu rol es analizar datos y dar recomendaciones accionables.
 
-DATOS FINANCIEROS ACTUALES (${context.month}):
+DATOS DEL MES (${context.month}):
 - Ingresos: €${context.revenue?.toFixed(2)}
 - Gastos: €${context.expenses?.toFixed(2)}
 - Beneficio Neto: €${context.netProfit?.toFixed(2)}
 - Margen: ${context.margin?.toFixed(1)}%
 - Pedidos: ${context.orders}
 - Ticket Medio: €${context.avgTicket?.toFixed(2)}
+- Ratio gastos/ingresos: ${context.revenue > 0 ? ((context.expenses / context.revenue) * 100).toFixed(0) : 0}%
 
-Desglose de gastos:
-${JSON.stringify(context.breakdown, null, 2)}
+Desglose gastos: ${JSON.stringify(context.breakdown)}
+Tendencias 3 meses: ${JSON.stringify(context.trends)}
 
-Métricas clave:
-${JSON.stringify(context.metrics, null, 2)}
+PREGUNTA: "${question}"
 
-TENDENCIAS (últimos 3 meses):
-${JSON.stringify(context.trends, null, 2)}
-
-PREGUNTA DEL USUARIO: "${question}"
-
-INSTRUCCIONES:
-1. Responde en español de forma conversacional, empática y motivadora
-2. Usa markdown para destacar números importantes (negritas)
-3. Sé específico con los datos proporcionados
-4. Ofrece consejos prácticos, accionables y numerados cuando sea posible
-5. Mantén un tono profesional pero cercano, como un buen amigo experto
-6. Si detectas problemas, explica por qué ocurren y propone soluciones concretas
-7. Si hay buenas noticias, celebra los logros con entusiasmo genuino
-8. Usa emojis apropiados para hacer la respuesta más amigable
-9. Incluye siempre 3 sugerencias de seguimiento relevantes
-10. Máximo 4-5 párrafos para ser conciso pero completo
-
-EJEMPLOS DE RESPUESTAS:
-
-Si pregunta por el margen:
-"Tu margen del **15.3%** está en el rango óptimo. Esto significa que por cada 100€ que entran, te quedan 15.30€ de beneficio. Para mantenerlo o mejorarlo:
-
-1. **Controla tus costes variables** - el combustible y mantenimiento representan el X% de tus gastos
-2. **Aumenta el ticket medio** - actualmente está en X€, intenta subirlo a 8-9€ con combos
-3. **Optimiza horarios** - concentra riders en las horas punta
-
-¿Quieres que profundice en alguno de estos puntos?"
-
-Si pregunta por proyección:
-"Basándome en tu ritmo actual de X pedidos/día y un ticket medio de X€, proyectas cerrar el mes con aproximadamente **X€** de ingresos. Esto te dejaría un beneficio estimado de **X€**.
-
-Para mejorar esta proyección:
-• Aumenta 2-3 pedidos/día = +X€ al mes
-• Sube ticket medio 0.50€ = +X€ al mes
-• Reduce gastos de combustible un 10% = +X€ al mes
-
-¿Te gustaría que calculemos un escenario específico?"
+REGLAS DE FORMATO:
+1. Español profesional y cercano. Máximo 3 párrafos + 1 lista de acciones
+2. Usa **negritas** solo para cifras clave
+3. Numera las acciones concretas (máx 3)
+4. Termina con una pregunta de seguimiento relevante
+5. NO uses encabezados markdown (##). Usa emojis como separadores visuales
+6. Sé directo: diagnóstico → causa → acción
 
 RESPUESTA:`;
 
@@ -394,18 +364,18 @@ RESPUESTA:`;
 
     const generateLocalResponse = (question: string, context: any) => {
         const q = question.toLowerCase();
-        
+
         if (q.includes('margen') || q.includes('beneficio') || q.includes('ganancia')) {
             return {
                 content: `📊 **Análisis de tu margen**
 
 Tu margen actual es del **${context.margin.toFixed(1)}%**, lo que significa que de cada 100€ que entran, te quedan ${context.margin.toFixed(1)}€ de beneficio.
 
-${context.margin < 10 
-    ? '⚠️ Tu margen está por debajo del óptimo (15-20%). Esto puede deberse a:\n\n1. **Gastos fijos elevados** - Revisa alquiler, seguros y servicios\n2. **Costes variables altos** - Combustible y mantenimiento\n3. **Ticket medio bajo** - Trata de aumentar el valor por pedido\n\n**Recomendación**: Usa el simulador para probar diferentes escenarios y ver cómo afectan a tu margen.'
-    : context.margin > 20 
-        ? '🎉 ¡Excelente! Tu margen está muy por encima de la media. Estás gestionando muy bien:\n\n• Control de costes eficiente\n• Buena productividad por rider\n• Ticket medio saludable\n\n**Consejo**: Mantén este nivel y considera invertir en crecimiento.'
-        : '✅ Tu margen está en rango aceptable, pero hay margen de mejora:\n\n• Optimiza horarios para reducir horas improductivas\n• Negocia mejores tarifas con proveedores\n• Implementa upselling para subir el ticket medio'}
+${context.margin < 10
+                        ? '⚠️ Tu margen está por debajo del óptimo (15-20%). Esto puede deberse a:\n\n1. **Gastos fijos elevados** - Revisa alquiler, seguros y servicios\n2. **Costes variables altos** - Combustible y mantenimiento\n3. **Ticket medio bajo** - Trata de aumentar el valor por pedido\n\n**Recomendación**: Usa el simulador para probar diferentes escenarios y ver cómo afectan a tu margen.'
+                        : context.margin > 20
+                            ? '🎉 ¡Excelente! Tu margen está muy por encima de la media. Estás gestionando muy bien:\n\n• Control de costes eficiente\n• Buena productividad por rider\n• Ticket medio saludable\n\n**Consejo**: Mantén este nivel y considera invertir en crecimiento.'
+                            : '✅ Tu margen está en rango aceptable, pero hay margen de mejora:\n\n• Optimiza horarios para reducir horas improductivas\n• Negocia mejores tarifas con proveedores\n• Implementa upselling para subir el ticket medio'}
 
 ¿Quieres que analice algún aspecto específico?`,
                 suggestions: ['¿Cómo subir mi margen?', 'Análisis detallado de gastos', 'Probar escenario en simulador'],
@@ -416,12 +386,12 @@ ${context.margin < 10
                 }] : []
             };
         }
-        
+
         if (q.includes('gasto') || q.includes('gastar') || q.includes('coste') || q.includes('dinero')) {
             const topExpenses = Object.entries(context.breakdown || {})
                 .sort((a: any, b: any) => b[1] - a[1])
                 .slice(0, 3);
-                
+
             return {
                 content: `💰 **Análisis de tus gastos**
 
@@ -429,9 +399,9 @@ Tus gastos totales este mes son **${formatCurrency(context.expenses)}**.
 
 **Top 3 gastos:**
 ${topExpenses.map(([key, value]: [string, any], idx) => {
-    const percentage = ((value / context.expenses) * 100).toFixed(1);
-    return `${idx + 1}. **${key}**: ${formatCurrency(value)} (${percentage}%)`;
-}).join('\n')}
+                    const percentage = ((value / context.expenses) * 100).toFixed(1);
+                    return `${idx + 1}. **${key}**: ${formatCurrency(value)} (${percentage}%)`;
+                }).join('\n')}
 
 **Distribución recomendada vs actual:**
 • Salarios: Ideal 40-50% | Tuyo: ${((context.breakdown?.salaries || 0) / context.expenses * 100).toFixed(0)}%
@@ -495,10 +465,10 @@ Te quedan **${remainingDays} días** para cerrar el mes.
                     actions: []
                 };
             }
-            
+
             const revenueChange = ((context.revenue - prevMonth.revenue) / prevMonth.revenue * 100);
             const marginChange = ((context.margin - prevMonth.margin) / prevMonth.margin * 100);
-            
+
             return {
                 content: `📊 **Comparativa con ${prevMonth.month || 'mes anterior'}**
 
@@ -513,16 +483,106 @@ Te quedan **${remainingDays} días** para cerrar el mes.
 • Cambio: **${marginChange > 0 ? '+' : ''}${marginChange.toFixed(1)}%**
 
 **Análisis:**
-${revenueChange > 0 && marginChange > 0 
-    ? '🎉 ¡Perfecto! Estás creciendo en ingresos Y mejorando tu rentabilidad. Esto es el holy grail de los negocios.'
-    : revenueChange > 0 && marginChange < 0
-        ? '⚠️ Estás vendiendo más pero ganando menos por cada venta. Revisa tus costes - probablemente hayas aumentado gastos.'
-        : revenueChange < 0 && marginChange > 0
-            ? '💡 Vendes menos pero más rentable. Esto puede ser una estrategia válida a corto plazo, pero necesitas recuperar volumen.'
-            : '🚨 Alerta: Menos ventas y menos rentabilidad. Es momento de tomar acciones correctivas urgentes.'}
+${revenueChange > 0 && marginChange > 0
+                        ? '🎉 ¡Perfecto! Estás creciendo en ingresos Y mejorando tu rentabilidad. Esto es el holy grail de los negocios.'
+                        : revenueChange > 0 && marginChange < 0
+                            ? '⚠️ Estás vendiendo más pero ganando menos por cada venta. Revisa tus costes - probablemente hayas aumentado gastos.'
+                            : revenueChange < 0 && marginChange > 0
+                                ? '💡 Vendes menos pero más rentable. Esto puede ser una estrategia válida a corto plazo, pero necesitas recuperar volumen.'
+                                : '🚨 Alerta: Menos ventas y menos rentabilidad. Es momento de tomar acciones correctivas urgentes.'}
 
 ¿Quieres ver el análisis detallado de qué cambió?`,
                 suggestions: ['¿Por qué cambió el margen?', 'Tendencia últimos 3 meses', 'Comparar gastos'],
+                actions: []
+            };
+        }
+
+        if (q.includes('rider') || q.includes('personal') || q.includes('equipo') || q.includes('plantilla')) {
+            const salaryPct = context.expenses > 0 ? ((context.breakdown?.salaries || 0) / context.expenses * 100) : 0;
+            return {
+                content: `👥 **Análisis de costes de personal**
+
+Los salarios representan el **${salaryPct.toFixed(0)}%** de tus gastos totales (${formatCurrency(context.breakdown?.salaries || 0)}).
+
+${salaryPct > 50 ? '⚠️ Superas el 50% recomendado. Opciones:\n1. **Optimiza turnos** — Elimina horas muertas entre pedidos\n2. **Mixto fijo/variable** — Vincula parte del salario a pedidos entregados\n3. **Cross-training** — Riders polivalentes para cubrir bajas sin contratar' :
+                        '✅ Tu ratio de personal/gastos está dentro del rango saludable (<50%).'}
+
+📊 Referencia del sector: 40-45% de gastos en personal es el benchmark.
+
+¿Quieres que revise la eficiencia por rider?`,
+                suggestions: ['Coste por rider', 'Optimizar turnos', 'Comparar con sector'],
+                actions: []
+            };
+        }
+
+        if (q.includes('ticket') || q.includes('precio') || q.includes('venta media')) {
+            const avgTicket = context.orders > 0 ? context.revenue / context.orders : 0;
+            return {
+                content: `🎫 **Análisis del Ticket Medio**
+
+Tu ticket medio actual es **${formatCurrency(avgTicket)}** con **${context.orders}** pedidos.
+
+**Estrategias para subirlo:**
+1. **Upselling**: Sugiere complementos al pedido (+0.50-1.50€/pedido)
+2. **Combos**: Agrupa productos con descuento aparente (margen real +15%)
+3. **Minimums de pedido**: Establece mínimo de 8-10€ para envío gratuito
+
+**Impacto simulado:**
+• +0.50€/ticket = **${formatCurrency(context.orders * 0.5)}/mes** más
+• +1.00€/ticket = **${formatCurrency(context.orders * 1.0)}/mes** más
+• +2.00€/ticket = **${formatCurrency(context.orders * 2.0)}/mes** más
+
+¿Quieres que simulemos un escenario con ticket más alto?`,
+                suggestions: ['Simular ticket +1€', 'Estrategias de upselling', 'Impacto en margen'],
+                actions: onOpenSimulator ? [{
+                    label: 'Simular escenario',
+                    action: onOpenSimulator,
+                    type: 'primary' as const
+                }] : []
+            };
+        }
+
+        if (q.includes('optimizar') || q.includes('mejorar') || q.includes('consejo') || q.includes('recomendación') || q.includes('qué puedo hacer')) {
+            const topIssues: string[] = [];
+            if (context.margin < 15) topIssues.push('🔴 Margen bajo — necesitas subir precios o cortar costes');
+            if (context.expenses > context.revenue * 0.85) topIssues.push('🔴 Ratio gastos/ingresos peligroso (>85%)');
+            if (context.orders < 20) topIssues.push('🟡 Pocos pedidos — trabaja captación de clientes');
+
+            return {
+                content: `🎯 **Plan de optimización personalizado**
+
+${topIssues.length > 0 ? `**Problemas detectados:**\n${topIssues.join('\n')}\n` : '✅ No detecto problemas graves. Vamos a optimizar lo que ya funciona.\n'}
+**Acciones prioritarias (por impacto):**
+1. **Corto plazo** (esta semana): Revisa los 3 gastos más altos y negocia un 5% de descuento con proveedores
+2. **Medio plazo** (este mes): Implementa combos para subir ticket medio +1€
+3. **Largo plazo** (trimestre): Analiza qué franjas horarias son más rentables y concentra riders ahí
+
+**KPI objetivo para el próximo mes:**
+• Margen: **>15%** (actual: ${context.margin.toFixed(1)}%)
+• Ratio gastos: **<75%** (actual: ${(context.expenses / context.revenue * 100).toFixed(0)}%)
+
+¿Empezamos por alguna acción concreta?`,
+                suggestions: ['Reducir gastos top 3', 'Subir ticket medio', 'Optimizar horarios'],
+                actions: []
+            };
+        }
+
+        if (q.includes('impuesto') || q.includes('iva') || q.includes('fiscal') || q.includes('hacienda') || q.includes('modelo')) {
+            const ivaEstimado = context.revenue * 0.21;
+            return {
+                content: `🏛️ **Estimación fiscal rápida**
+
+📋 **IVA (Modelo 303):**
+• IVA repercutido estimado: **${formatCurrency(ivaEstimado)}**
+• IVA soportado (gastos deducibles): depende de facturas registradas
+• Resultado trimestral estimado: consulta con tu contable
+
+💡 **Consejo:** Reserva siempre el **21%** de tus ingresos para IVA. Actualmente eso serían **${formatCurrency(ivaEstimado)}**.
+
+⚠️ Recuerda: esto es una estimación orientativa. Consulta siempre con un asesor fiscal profesional para las liquidaciones reales.
+
+¿Quieres que te ayude con algún cálculo financiero?`,
+                suggestions: ['Reserva fiscal recomendada', 'Gastos deducibles', 'Proyección trimestral'],
                 actions: []
             };
         }
@@ -536,13 +596,15 @@ Basándome en tus datos actuales:
 • Margen: **${context.margin.toFixed(1)}%**
 • Pedidos: **${context.orders}**
 
-¿Podrías ser más específico sobre qué aspecto te gustaría analizar? Puedo ayudarte con:
+¿Podrías ser más específico? Puedo ayudarte con:
 
-📊 Análisis de margen y rentabilidad
+📊 Margen y rentabilidad
 💰 Desglose y optimización de gastos  
 📈 Proyecciones y escenarios
 📉 Comparativas con meses anteriores
-🎯 Recomendaciones personalizadas
+👥 Costes de personal y riders
+🎫 Ticket medio y pricing
+🏛️ Estimación fiscal
 
 ¿Qué te interesa más?`,
             suggestions: ['Análisis completo', 'Problemas detectados', 'Oportunidades de mejora'],
@@ -552,7 +614,7 @@ Basándome en tus datos actuales:
 
     const generateFollowUpSuggestions = (question: string, _context: any) => {
         const q = question.toLowerCase();
-        
+
         if (q.includes('margen') || q.includes('beneficio')) {
             return ['¿Cómo subir mi margen?', '¿Qué gastos puedo reducir?', 'Proyección para mes que viene'];
         }
@@ -568,7 +630,7 @@ Basándome en tus datos actuales:
         if (q.includes('pedido') || q.includes('venta')) {
             return ['¿Cuántos pedidos necesito?', 'Análisis de ticket medio', 'Optimizar horarios'];
         }
-        
+
         return ['¿Por qué bajó mi beneficio?', '¿Cómo puedo mejorar?', 'Proyección mensual'];
     };
 
@@ -638,7 +700,7 @@ Basándome en tus datos actuales:
                         initial={{ opacity: 0, y: 20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                        className="fixed top-24 right-6 z-50 w-[450px] max-w-[calc(100vw-48px)] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden max-h-[calc(100vh-120px)] flex flex-col"
+                        className="fixed top-24 right-6 z-50 w-[520px] max-w-[calc(100vw-48px)] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden max-h-[calc(100vh-120px)] flex flex-col"
                     >
                         {/* Header */}
                         <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-4">
@@ -665,21 +727,23 @@ Basándome en tus datos actuales:
                                         }
                                     }}
                                     className="p-2 hover:bg-white/20 rounded-full transition-colors"
+                                    aria-label="Cerrar asesor financiero"
                                 >
                                     <X className="w-5 h-5 text-white" />
                                 </button>
                             </div>
-                            
+
                             {/* Tabs */}
                             <div className="flex gap-1 bg-white/10 rounded-lg p-1">
                                 {[
+                                    { id: 'health', label: 'Salud', icon: Heart },
                                     { id: 'chat', label: 'Chat', icon: MessageCircle },
                                     { id: 'insights', label: 'Insights', icon: Lightbulb },
                                     { id: 'actions', label: 'Acciones', icon: Zap }
                                 ].map((tab) => (
                                     <button
                                         key={tab.id}
-                                        onClick={() => setActiveTab(tab.id as any)}
+                                        onClick={() => setActiveTab(tab.id as 'health' | 'chat' | 'insights' | 'actions')}
                                         className={cn(
                                             "flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium transition-all",
                                             activeTab === tab.id
@@ -695,6 +759,132 @@ Basándome en tus datos actuales:
                         </div>
 
                         {/* Content based on active tab */}
+                        {activeTab === 'health' && (() => {
+                            const margin = financialData.margin || 0;
+                            const expRatio = financialData.revenue > 0 ? financialData.expenses / financialData.revenue : 0;
+                            const trendVal = trendData && trendData.length > 1
+                                ? ((financialData.revenue - (trendData[trendData.length - 2]?.revenue || 0)) / (trendData[trendData.length - 2]?.revenue || 1)) * 100
+                                : 0;
+
+                            // Score factors
+                            const factors = [
+                                {
+                                    label: 'Margen de beneficio',
+                                    value: `${margin.toFixed(1)}%`,
+                                    score: margin >= 20 ? 100 : margin >= 15 ? 80 : margin >= 10 ? 60 : margin >= 5 ? 35 : 15,
+                                    weight: '35%',
+                                    benchmark: 'Ideal: >15%',
+                                },
+                                {
+                                    label: 'Tendencia ingresos',
+                                    value: `${trendVal > 0 ? '+' : ''}${trendVal.toFixed(1)}%`,
+                                    score: trendVal > 10 ? 100 : trendVal > 5 ? 85 : trendVal > 0 ? 70 : trendVal > -5 ? 50 : 30,
+                                    weight: '25%',
+                                    benchmark: 'Ideal: >0%',
+                                },
+                                {
+                                    label: 'Ratio gastos/ingresos',
+                                    value: `${(expRatio * 100).toFixed(0)}%`,
+                                    score: expRatio < 0.6 ? 100 : expRatio < 0.7 ? 85 : expRatio < 0.8 ? 65 : expRatio < 0.9 ? 40 : 15,
+                                    weight: '20%',
+                                    benchmark: 'Ideal: <70%',
+                                },
+                                {
+                                    label: 'Reserva fiscal',
+                                    value: formatCurrency(financialData.revenue * 0.21),
+                                    score: 70, // Simplified — reserva is auto-calculated
+                                    weight: '10%',
+                                    benchmark: '21% IVA reservado',
+                                },
+                                {
+                                    label: 'Beneficio neto',
+                                    value: formatCurrency(financialData.netProfit || 0),
+                                    score: (financialData.netProfit || 0) > 5000 ? 100 : (financialData.netProfit || 0) > 2000 ? 75 : (financialData.netProfit || 0) > 0 ? 50 : 10,
+                                    weight: '10%',
+                                    benchmark: 'Ideal: >3.000€',
+                                },
+                            ];
+
+                            const totalScore = Math.round(
+                                factors[0].score * 0.35 +
+                                factors[1].score * 0.25 +
+                                factors[2].score * 0.20 +
+                                factors[3].score * 0.10 +
+                                factors[4].score * 0.10
+                            );
+
+                            const getScoreAttributes = (s: number) => {
+                                if (s >= 70) return { text: 'text-emerald-500', stroke: 'stroke-emerald-500', label: 'Saludable' };
+                                if (s >= 45) return { text: 'text-amber-500', stroke: 'stroke-amber-500', label: 'Mejorable' };
+                                return { text: 'text-rose-500', stroke: 'stroke-rose-500', label: 'En riesgo' };
+                            };
+
+                            const { text: scoreText, stroke: scoreStroke, label: scoreLabelText } = getScoreAttributes(totalScore);
+
+                            return (
+                                <div className="flex-1 overflow-y-auto p-4 bg-slate-50">
+                                    <div className="space-y-4">
+                                        {/* Big Score */}
+                                        <div className="text-center py-4">
+                                            <div className="relative inline-flex items-center justify-center w-28 h-28">
+                                                <svg width={112} height={112} className="transform -rotate-90">
+                                                    <circle cx={56} cy={56} r={48} fill="none" stroke="#e2e8f0" strokeWidth={10} />
+                                                    <circle
+                                                        cx={56} cy={56} r={48} fill="none"
+                                                        stroke="currentColor" strokeWidth={10}
+                                                        strokeDasharray={2 * Math.PI * 48}
+                                                        strokeDashoffset={2 * Math.PI * 48 * (1 - totalScore / 100)}
+                                                        strokeLinecap="round"
+                                                        className={cn("transition-all duration-1000 ease-out", scoreStroke)}
+                                                    />
+                                                </svg>
+                                                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                    <span className={cn("text-3xl font-black tabular-nums", scoreText)}>{totalScore}</span>
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase">/100</span>
+                                                </div>
+                                            </div>
+                                            <p className={cn("mt-2 text-sm font-bold", scoreText)}>{scoreLabelText}</p>
+                                            <p className="text-[11px] text-slate-500 mt-0.5">Score calculado con 5 factores ponderados</p>
+                                        </div>
+
+                                        {/* Factors Breakdown */}
+                                        <div className="space-y-2">
+                                            {factors.map((f, idx) => {
+                                                const barColor = f.score >= 70 ? 'bg-emerald-500' : f.score >= 45 ? 'bg-amber-500' : 'bg-rose-500';
+                                                return (
+                                                    <div key={idx} className="bg-white rounded-xl p-3 border border-slate-100">
+                                                        <div className="flex items-center justify-between mb-1.5">
+                                                            <span className="text-xs font-bold text-slate-700">{f.label}</span>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xs font-mono font-bold text-slate-900">{f.value}</span>
+                                                                <span className="text-[9px] text-slate-400">({f.weight})</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                            <div
+                                                                className={cn('h-full rounded-full transition-all duration-700', barColor)}
+                                                                style={{ width: `${f.score}%` }}
+                                                            />
+                                                        </div>
+                                                        <p className="text-[10px] text-slate-400 mt-1">{f.benchmark}</p>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* CTA to chat */}
+                                        <button
+                                            onClick={() => setActiveTab('chat')}
+                                            className="w-full flex items-center justify-center gap-2 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all"
+                                        >
+                                            <MessageCircle className="w-4 h-4" />
+                                            Pregúntale al Asesor
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })()}
+
                         {activeTab === 'chat' && (
                             <>
                                 {/* Quick Questions */}
@@ -748,17 +938,17 @@ Basándome en tus datos actuales:
                                             </div>
                                             <div className={cn(
                                                 "max-w-[85%] p-3 rounded-2xl text-sm",
-                                                message.type === 'user' 
-                                                    ? "bg-indigo-600 text-white rounded-tr-sm" 
+                                                message.type === 'user'
+                                                    ? "bg-indigo-600 text-white rounded-tr-sm"
                                                     : "bg-white border border-slate-200 rounded-tl-sm shadow-sm"
                                             )}>
-                                                <div 
+                                                <div
                                                     className="prose prose-sm max-w-none leading-relaxed"
                                                     dangerouslySetInnerHTML={{
                                                         __html: message.content.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>').replace(/\n/g, '<br/>')
                                                     }}
                                                 />
-                                                
+
                                                 {/* Actions */}
                                                 {message.actions && message.actions.length > 0 && (
                                                     <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
@@ -779,7 +969,7 @@ Basándome en tus datos actuales:
                                                         ))}
                                                     </div>
                                                 )}
-                                                
+
                                                 {/* Suggestions */}
                                                 {message.suggestions && message.type === 'assistant' && (
                                                     <div className="mt-3 pt-3 border-t border-slate-100 space-y-1.5">
@@ -801,7 +991,7 @@ Basándome en tus datos actuales:
                                             </div>
                                         </motion.div>
                                     ))}
-                                    
+
                                     {isLoading && (
                                         <div className="flex gap-3">
                                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
@@ -833,6 +1023,7 @@ Basándome en tus datos actuales:
                                         <button
                                             onClick={handleSendMessage}
                                             disabled={!inputValue.trim() || isLoading}
+                                            aria-label="Enviar mensaje"
                                             className={cn(
                                                 "p-2.5 rounded-xl transition-all",
                                                 inputValue.trim() && !isLoading
@@ -860,7 +1051,7 @@ Basándome en tus datos actuales:
                                         </h4>
                                         <span className="text-xs text-slate-500">{insights.length} hallazgos</span>
                                     </div>
-                                    
+
                                     {insights.map((insight, idx) => (
                                         <motion.div
                                             key={idx}
@@ -899,7 +1090,7 @@ Basándome en tus datos actuales:
                                             </div>
                                         </motion.div>
                                     ))}
-                                    
+
                                     {insights.length === 0 && (
                                         <div className="text-center py-8 text-slate-400">
                                             <Lightbulb className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -917,7 +1108,7 @@ Basándome en tus datos actuales:
                                         <Zap className="w-4 h-4 text-indigo-500" />
                                         Acciones Recomendadas
                                     </h4>
-                                    
+
                                     {[
                                         {
                                             title: 'Abrir Simulador',

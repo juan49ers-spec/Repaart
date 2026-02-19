@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { RepaartLogo } from '../../components/common/RepaartLogo';
 import UserMenu from './UserMenu';
+import Notifications from './Notifications';
 import { adminNavItems, franchiseNavItems, riderNavItems } from '../constants/navigation';
 
 export interface HeaderProps {
@@ -61,10 +62,14 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, isFranchise, isRider }) => {
                 </div>
 
                 {/* RIGHT: User Island */}
-                <div className="pointer-events-auto">
+                <div className="pointer-events-auto flex items-center gap-3">
                     <div className="glass-card p-1.5 rounded-full border border-white/20 dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300">
-                        <UserMenu 
-                            isFranchise={isFranchise} 
+                        <Notifications isAdmin={isAdmin} />
+                    </div>
+
+                    <div className="glass-card p-1.5 rounded-full border border-white/20 dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300">
+                        <UserMenu
+                            isFranchise={isFranchise}
                             isRider={isRider}
                         />
                     </div>

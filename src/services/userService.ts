@@ -18,6 +18,7 @@ import {
     Franchise,
     toUserId
 } from '../schemas/users';
+import { ServiceError, validationError } from '../utils/ServiceError';
 
 export type { User, Franchise };
 export { toUserId };
@@ -93,8 +94,7 @@ export const userService = {
             }
             return null;
         } catch (error) {
-            console.error("Error fetching user profile:", error);
-            throw error;
+            throw new ServiceError('getUserProfile', { cause: error });
         }
     },
 
@@ -108,8 +108,7 @@ export const userService = {
             }
             return null;
         } catch (error) {
-            console.error("Error fetching user by franchiseId:", error);
-            throw error;
+            throw new ServiceError('getUserByFranchiseId', { cause: error });
         }
     },
 
@@ -121,8 +120,7 @@ export const userService = {
                 updatedAt: serverTimestamp()
             }, { merge: true });
         } catch (error) {
-            console.error("Error updating user:", error);
-            throw error;
+            throw new ServiceError('updateUser', { cause: error });
         }
     },
 
@@ -133,8 +131,7 @@ export const userService = {
                 updatedAt: serverTimestamp()
             }, { merge: true });
         } catch (error) {
-            console.error("Error setting user profile:", error);
-            throw error;
+            throw new ServiceError('setUserProfile', { cause: error });
         }
     },
 
@@ -155,36 +152,37 @@ export const userService = {
             const snapshot = await getDocs(q);
             return snapshot.docs.map(mapDocToUser);
         } catch (error) {
-            console.error("Error fetching users:", error);
-            return [];
+            throw new ServiceError('fetchUsers', { cause: error });
         }
     },
 
     // --- BUSINESS ENTITIES (Franchises) ---
 
-    createFranchise: async (franchiseData: any): Promise<{ success: boolean; data: { id: string } }> => {
-        try {
-            // Validation: Ensure zipCodes are present
-            const zipCodes = franchiseData.location?.zipCodes || franchiseData.zipCodes;
-            if (!zipCodes || !Array.isArray(zipCodes) || zipCodes.length === 0) {
-                throw new Error("Datos incompletos: Faltan códigos postales (zipCodes)");
-            }
+    createFranchise: async (franchiseData: object): Promise<{ success: boolean; data: { id: string } }> => {
+        const data = franchiseData as Record<string, unknown>;
+        // Validation: Ensure zipCodes are present
+        const location = data.location as Record<string, unknown> | undefined;
+        const zipCodes = (location?.zipCodes ?? data.zipCodes) as string[] | undefined;
+        if (!zipCodes || !Array.isArray(zipCodes) || zipCodes.length === 0) {
+            throw validationError('createFranchise', 'Datos incompletos: Faltan códigos postales (zipCodes)');
+        }
 
+        try {
             // Flatten location data for User schema compatibility
             const flatData = {
-                ...franchiseData,
+                ...data,
                 role: 'franchise',
                 status: 'active',
-                isActive: true, // Legacy compatibility
-                zipCodes: zipCodes,
-                city: franchiseData.location?.city || franchiseData.city,
-                address: franchiseData.location?.address || franchiseData.address,
+                isActive: true,
+                zipCodes,
+                city: location?.city ?? data.city,
+                address: location?.address ?? data.address,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             };
 
-            // Remove nested location if it was flattened to avoid duplication/confusion
-            if (flatData.location) delete flatData.location;
+            // Remove nested location to avoid duplication
+            if ('location' in flatData) delete (flatData as Record<string, unknown>).location;
 
             const docRef = await addDoc(collection(db, 'franchises'), flatData);
 
@@ -193,8 +191,7 @@ export const userService = {
                 data: { id: docRef.id }
             };
         } catch (error) {
-            console.error("Error creating franchise:", error);
-            throw error;
+            throw new ServiceError('createFranchise', { cause: error });
         }
     },
 
@@ -208,8 +205,7 @@ export const userService = {
 
             await adminDeleteUser({ uid });
         } catch (error) {
-            console.error("Error deleting user:", error);
-            throw error;
+            throw new ServiceError('deleteUser', { cause: error });
         }
     },
 
@@ -219,8 +215,7 @@ export const userService = {
             const snapshot = await getDocs(q);
             return snapshot.docs.map(mapDocToFranchise);
         } catch (error) {
-            console.error("Error fetching franchises:", error);
-            return [];
+            throw new ServiceError('fetchFranchises', { cause: error });
         }
     }
 };

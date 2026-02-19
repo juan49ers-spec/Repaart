@@ -16,6 +16,7 @@ import {
     getDocs,
     getDoc
 } from 'firebase/firestore';
+import { ServiceError, validationError } from '../utils/ServiceError';
 
 // =====================================================
 // TYPES & INTERFACES
@@ -122,6 +123,8 @@ export const shiftService = {
             callback(shifts);
         }, (error) => {
             console.error("Error subscribing to shifts:", error);
+            // In snapshot listeners, we can't throw, but we can log structured error
+            new ServiceError('subscribeToWeekShifts', { cause: error, code: 'NETWORK' });
         });
     },
 
@@ -139,7 +142,11 @@ export const shiftService = {
             status: 'scheduled',
             isDraft: shiftData.isDraft ?? false
         };
-        await addDoc(collection(db, COLLECTION), payload);
+        try {
+            await addDoc(collection(db, COLLECTION), payload);
+        } catch (error) {
+            throw new ServiceError('createShift', { cause: error });
+        }
     },
 
     updateShift: async (shiftId: string, updates: Partial<ShiftInput>): Promise<void> => {
@@ -172,85 +179,94 @@ export const shiftService = {
         payload.updatedAt = serverTimestamp();
 
         const ref = doc(db, COLLECTION, shiftId);
-        await updateDoc(ref, payload);
+        try {
+            await updateDoc(ref, payload);
+        } catch (error) {
+            throw new ServiceError('updateShift', { cause: error, message: `Failed to update shift ${shiftId}` });
+        }
     },
 
     deleteShift: async (shiftId: string): Promise<void> => {
-        await deleteDoc(doc(db, COLLECTION, shiftId));
+        try {
+            await deleteDoc(doc(db, COLLECTION, shiftId));
+        } catch (error) {
+            throw new ServiceError('deleteShift', { cause: error, message: `Failed to delete shift ${shiftId}` });
+        }
     },
 
     /**
      * Start Shift (Clock In)
      */
     startShift: async (shiftId: string): Promise<void> => {
-        const ref = doc(db, COLLECTION, shiftId);
-        await updateDoc(ref, {
-            status: 'active',
-            actualStart: serverTimestamp(),
-            updatedAt: serverTimestamp()
-        });
+        try {
+            const ref = doc(db, COLLECTION, shiftId);
+            await updateDoc(ref, {
+                status: 'active',
+                actualStart: serverTimestamp(),
+                updatedAt: serverTimestamp()
+            });
+        } catch (error) {
+            throw new ServiceError('startShift', { cause: error });
+        }
     },
 
     /**
      * End Shift (Clock Out)
      */
     endShift: async (shiftId: string): Promise<void> => {
-        const ref = doc(db, COLLECTION, shiftId);
-        await updateDoc(ref, {
-            status: 'completed',
-            actualEnd: serverTimestamp(),
-            updatedAt: serverTimestamp()
-        });
+        try {
+            const ref = doc(db, COLLECTION, shiftId);
+            await updateDoc(ref, {
+                status: 'completed',
+                actualEnd: serverTimestamp(),
+                updatedAt: serverTimestamp()
+            });
+        } catch (error) {
+            throw new ServiceError('endShift', { cause: error });
+        }
     },
 
     /**
       * Confirm Shift (Rider)
       */
     confirmShift: async (shiftId: string): Promise<void> => {
-        console.log(`[ShiftService] Confirming shift ${shiftId} in ${COLLECTION}`);
-
-        // Get the shift document first to debug
-        const shiftRef = doc(db, COLLECTION, shiftId);
-        const shiftDoc = await getDoc(shiftRef);
-        if (shiftDoc.exists()) {
-            const shiftData = shiftDoc.data();
-            console.log('[ShiftService] Current shift data:', {
-                shiftId,
-                riderId: shiftData?.riderId,
-                riderId_type: typeof shiftData?.riderId,
-                riderId_null: shiftData?.riderId === null,
-                isConfirmed: shiftData?.isConfirmed
+        try {
+            const ref = doc(db, COLLECTION, shiftId);
+            await updateDoc(ref, {
+                isConfirmed: true,
+                updatedAt: serverTimestamp()
             });
-        } else {
-            console.warn('[ShiftService] Shift document not found:', shiftId);
+        } catch (error) {
+            throw new ServiceError('confirmShift', { cause: error });
         }
-
-        const ref = doc(db, COLLECTION, shiftId);
-        await updateDoc(ref, {
-            isConfirmed: true,
-            updatedAt: serverTimestamp()
-        });
     },
 
     requestSwap: async (shiftId: string, requested: boolean): Promise<void> => {
-        const ref = doc(db, COLLECTION, shiftId);
-        await updateDoc(ref, {
-            swapRequested: requested,
-            updatedAt: serverTimestamp()
-        });
+        try {
+            const ref = doc(db, COLLECTION, shiftId);
+            await updateDoc(ref, {
+                swapRequested: requested,
+                updatedAt: serverTimestamp()
+            });
+        } catch (error) {
+            throw new ServiceError('requestSwap', { cause: error });
+        }
     },
 
     /**
      * Request Change (Rider)
      */
     requestChange: async (shiftId: string, requested: boolean, reason?: string): Promise<void> => {
-        console.log(`[ShiftService] Requesting change for shift ${shiftId} in ${COLLECTION}. State: ${requested}`);
-        const ref = doc(db, COLLECTION, shiftId);
-        await updateDoc(ref, {
-            changeRequested: requested,
-            changeReason: requested ? (reason || 'Sin motivo') : null,
-            updatedAt: serverTimestamp()
-        });
+        try {
+            const ref = doc(db, COLLECTION, shiftId);
+            await updateDoc(ref, {
+                changeRequested: requested,
+                changeReason: requested ? (reason || 'Sin motivo') : null,
+                updatedAt: serverTimestamp()
+            });
+        } catch (error) {
+            throw new ServiceError('requestChange', { cause: error });
+        }
     },
 
     /**
@@ -304,7 +320,7 @@ export const shiftService = {
             callback(shifts);
         }, (error) => {
             console.error("Error subscribing to my shifts:", error);
-            if (onError) onError(error);
+            if (onError) onError(new ServiceError('getMyShifts', { cause: error, code: 'NETWORK' }));
         });
     },
 
@@ -314,43 +330,46 @@ export const shiftService = {
     getShiftsInRange: async (franchiseId: string, start: Date, end: Date): Promise<Shift[]> => {
         if (!franchiseId) return [];
 
-        const startTs = Timestamp.fromDate(start);
-        const endTs = Timestamp.fromDate(end);
+        try {
+            const startTs = Timestamp.fromDate(start);
+            const endTs = Timestamp.fromDate(end);
 
-        const q = query(
-            collection(db, COLLECTION),
-            where('franchiseId', '==', franchiseId),
-            where('startAt', '>=', startTs),
-            where('startAt', '<=', endTs)
-        );
+            const q = query(
+                collection(db, COLLECTION),
+                where('franchiseId', '==', franchiseId),
+                where('startAt', '>=', startTs),
+                where('startAt', '<=', endTs)
+            );
 
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => {
-            const data = doc.data() as DocumentData;
-            const getTs = (keyCamel: string, keySnake: string) => data[keyCamel] || data[keySnake];
-            const startVal = getTs('startAt', 'start_time');
-            const endVal = getTs('endAt', 'end_time');
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => {
+                const data = doc.data() as DocumentData;
+                const getTs = (keyCamel: string, keySnake: string) => data[keyCamel] || data[keySnake];
+                const startVal = getTs('startAt', 'start_time');
+                const endVal = getTs('endAt', 'end_time');
 
-            return {
-                id: doc.id,
-                shiftId: doc.id,
-                startAt: startVal ? (startVal.toDate ? toLocalISOString(startVal.toDate()) : startVal) : '',
-                endAt: endVal ? (endVal.toDate ? toLocalISOString(endVal.toDate()) : endVal) : '',
-                date: startVal ? (startVal.toDate ? toLocalDateString(startVal.toDate()) : toLocalDateString(new Date(startVal))) : '',
-                riderId: data.riderId ?? data.rider_id ?? '',
-                riderName: data.riderName ?? data.rider_name ?? 'Sin asignar',
-                motoId: data.motoId ?? data.vehicle_id ?? null,
-                motoPlate: data.motoPlate ?? data.vehicle_plate ?? '',
-                franchiseId: data.franchiseId ?? data.franchise_id,
-                status: data.status || 'scheduled',
-                // 🔥 ESTOS SON LOS CAMPOS QUE FALTAN O ESTÁN MAL MAPEADOS 🔥
-                isConfirmed: (data.isConfirmed === true || data.is_confirmed === true),
-                swapRequested: (data.swapRequested === true || data.swap_requested === true),
-                changeRequested: (data.changeRequested === true || data.change_requested === true),
-                changeReason: data.changeReason || data.change_reason || null,
-                isDraft: data.isDraft || false
-            };
-        });
+                return {
+                    id: doc.id,
+                    shiftId: doc.id,
+                    startAt: startVal ? (startVal.toDate ? toLocalISOString(startVal.toDate()) : startVal) : '',
+                    endAt: endVal ? (endVal.toDate ? toLocalISOString(endVal.toDate()) : endVal) : '',
+                    date: startVal ? (startVal.toDate ? toLocalDateString(startVal.toDate()) : toLocalDateString(new Date(startVal))) : '',
+                    riderId: data.riderId ?? data.rider_id ?? '',
+                    riderName: data.riderName ?? data.rider_name ?? 'Sin asignar',
+                    motoId: data.motoId ?? data.vehicle_id ?? null,
+                    motoPlate: data.motoPlate ?? data.vehicle_plate ?? '',
+                    franchiseId: data.franchiseId ?? data.franchise_id,
+                    status: data.status || 'scheduled',
+                    isConfirmed: (data.isConfirmed === true || data.is_confirmed === true),
+                    swapRequested: (data.swapRequested === true || data.swap_requested === true),
+                    changeRequested: (data.changeRequested === true || data.change_requested === true),
+                    changeReason: data.changeReason || data.change_reason || null,
+                    isDraft: data.isDraft || false
+                };
+            });
+        } catch (error) {
+            throw new ServiceError('getShiftsInRange', { cause: error });
+        }
     },
 
     // =====================================================
@@ -366,8 +385,8 @@ export const shiftService = {
         templateType: 'verano' | 'invierno' | 'especial',
         shifts: any[]
     ): Promise<string> => {
-        if (!franchiseId) throw new Error('Franchise ID is required');
-        
+        if (!franchiseId) throw validationError('saveWeekTemplate', 'Franchise ID is required');
+
         const templateData = {
             franchiseId,
             name: templateName,
@@ -385,8 +404,12 @@ export const shiftService = {
             updatedAt: serverTimestamp()
         };
 
-        const docRef = await addDoc(collection(db, 'week_templates'), templateData);
-        return docRef.id;
+        try {
+            const docRef = await addDoc(collection(db, 'week_templates'), templateData);
+            return docRef.id;
+        } catch (error) {
+            throw new ServiceError('saveWeekTemplate', { cause: error });
+        }
     },
 
     /**
@@ -399,24 +422,26 @@ export const shiftService = {
         shifts: any[];
         createdAt: Date;
     }>> => {
-        if (!franchiseId) return [];
+        try {
+            const q = query(
+                collection(db, 'week_templates'),
+                where('franchiseId', '==', franchiseId)
+            );
 
-        const q = query(
-            collection(db, 'week_templates'),
-            where('franchiseId', '==', franchiseId)
-        );
-
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                id: doc.id,
-                name: data.name,
-                type: data.type,
-                shifts: data.shifts || [],
-                createdAt: data.createdAt?.toDate() || new Date()
-            };
-        }).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    name: data.name,
+                    type: data.type,
+                    shifts: data.shifts || [],
+                    createdAt: data.createdAt?.toDate() || new Date()
+                };
+            }).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        } catch (error) {
+            throw new ServiceError('getWeekTemplates', { cause: error });
+        }
     },
 
     /**
@@ -428,14 +453,14 @@ export const shiftService = {
         targetWeekStart: Date,
         mode: 'overwrite' | 'fill_only' = 'fill_only'
     ): Promise<number> => {
-        if (!franchiseId || !templateId) throw new Error('Franchise ID and Template ID are required');
+        if (!franchiseId || !templateId) throw validationError('applyWeekTemplate', 'Franchise ID and Template ID are required');
 
         // Get template
         const templateRef = doc(db, 'week_templates', templateId);
         const templateDoc = await getDoc(templateRef);
-        
+
         if (!templateDoc.exists()) {
-            throw new Error('Template not found');
+            throw new ServiceError('applyWeekTemplate', { code: 'NOT_FOUND', message: 'Template not found' });
         }
 
         const template = templateDoc.data();
@@ -459,14 +484,14 @@ export const shiftService = {
         for (const templateShift of templateShifts) {
             const originalDate = new Date(templateShift.date);
             const dayOfWeek = originalDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
-            
+
             // Calculate target date
             const targetDate = new Date(weekStart);
             targetDate.setDate(weekStart.getDate() + dayOfWeek);
 
             // Check if there's already a shift for this rider on this day (fill_only mode)
             if (mode === 'fill_only') {
-                const hasExistingShift = existingShifts.some(s => 
+                const hasExistingShift = existingShifts.some(s =>
                     s.riderId === templateShift.riderId &&
                     new Date(s.date).toDateString() === targetDate.toDateString()
                 );
@@ -476,7 +501,7 @@ export const shiftService = {
             // Parse times
             const originalStart = new Date(templateShift.startAt);
             const originalEnd = new Date(templateShift.endAt);
-            
+
             const startHours = originalStart.getHours();
             const startMinutes = originalStart.getMinutes();
             const endHours = originalEnd.getHours();
@@ -485,7 +510,7 @@ export const shiftService = {
             // Create new shift
             const newStartAt = new Date(targetDate);
             newStartAt.setHours(startHours, startMinutes, 0, 0);
-            
+
             const newEndAt = new Date(targetDate);
             newEndAt.setHours(endHours, endMinutes, 0, 0);
 
@@ -510,8 +535,12 @@ export const shiftService = {
      * Delete a template
      */
     deleteWeekTemplate: async (templateId: string): Promise<void> => {
-        if (!templateId) throw new Error('Template ID is required');
-        await deleteDoc(doc(db, 'week_templates', templateId));
+        if (!templateId) throw validationError('deleteWeekTemplate', 'Template ID is required');
+        try {
+            await deleteDoc(doc(db, 'week_templates', templateId));
+        } catch (error) {
+            throw new ServiceError('deleteWeekTemplate', { cause: error });
+        }
     },
 
     // =====================================================
@@ -527,54 +556,57 @@ export const shiftService = {
         occurrences: number,
         franchiseId: string
     ): Promise<string[]> => {
-        if (!franchiseId || occurrences <= 0) throw new Error('Invalid parameters');
+        if (!franchiseId || occurrences <= 0) throw validationError('createRecurringShift', 'Invalid parameters');
 
         const groupId = `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         const createdIds: string[] = [];
         const baseDate = new Date(baseShift.startAt);
 
-        for (let i = 0; i < occurrences; i++) {
-            const shiftDate = new Date(baseDate);
-            
-            if (pattern === 'daily') {
-                shiftDate.setDate(shiftDate.getDate() + i);
-            } else if (pattern === 'weekly') {
-                shiftDate.setDate(shiftDate.getDate() + (i * 7));
-            } else if (pattern === 'monthly') {
-                shiftDate.setMonth(shiftDate.getMonth() + i);
+        try {
+            for (let i = 0; i < occurrences; i++) {
+                const shiftDate = new Date(baseDate);
+
+                if (pattern === 'daily') {
+                    shiftDate.setDate(shiftDate.getDate() + i);
+                } else if (pattern === 'weekly') {
+                    shiftDate.setDate(shiftDate.getDate() + (i * 7));
+                } else if (pattern === 'monthly') {
+                    shiftDate.setMonth(shiftDate.getMonth() + i);
+                }
+
+                const startTime = new Date(baseShift.startAt);
+                const endTime = new Date(baseShift.endAt);
+
+                const newStartAt = new Date(shiftDate);
+                newStartAt.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
+
+                const newEndAt = new Date(shiftDate);
+                newEndAt.setHours(endTime.getHours(), endTime.getMinutes(), 0, 0);
+
+                const payload = {
+                    franchiseId,
+                    riderId: baseShift.riderId ?? null,
+                    riderName: baseShift.riderName ?? 'Sin asignar',
+                    motoId: baseShift.motoId ?? null,
+                    motoPlate: baseShift.motoPlate ?? '',
+                    startAt: Timestamp.fromDate(newStartAt),
+                    endAt: Timestamp.fromDate(newEndAt),
+                    createdAt: serverTimestamp(),
+                    type: 'standard',
+                    status: 'scheduled',
+                    isDraft: baseShift.isDraft ?? false,
+                    isRecurring: true,
+                    recurringGroupId: groupId,
+                    recurringPattern: pattern,
+                    recurringEndDate: toLocalISOString(new Date(shiftDate.setDate(shiftDate.getDate() + (pattern === 'daily' ? 1 : pattern === 'weekly' ? 7 : 30))))
+                };
+
+                const docRef = await addDoc(collection(db, COLLECTION), payload);
+                createdIds.push(docRef.id);
             }
-
-            const startTime = new Date(baseShift.startAt);
-            const endTime = new Date(baseShift.endAt);
-            
-            const newStartAt = new Date(shiftDate);
-            newStartAt.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
-            
-            const newEndAt = new Date(shiftDate);
-            newEndAt.setHours(endTime.getHours(), endTime.getMinutes(), 0, 0);
-
-            const payload = {
-                franchiseId,
-                riderId: baseShift.riderId ?? null,
-                riderName: baseShift.riderName ?? 'Sin asignar',
-                motoId: baseShift.motoId ?? null,
-                motoPlate: baseShift.motoPlate ?? '',
-                startAt: Timestamp.fromDate(newStartAt),
-                endAt: Timestamp.fromDate(newEndAt),
-                createdAt: serverTimestamp(),
-                type: 'standard',
-                status: 'scheduled',
-                isDraft: baseShift.isDraft ?? false,
-                isRecurring: true,
-                recurringGroupId: groupId,
-                recurringPattern: pattern,
-                recurringEndDate: toLocalISOString(new Date(shiftDate.setDate(shiftDate.getDate() + (pattern === 'daily' ? 1 : pattern === 'weekly' ? 7 : 30))))
-            };
-
-            const docRef = await addDoc(collection(db, COLLECTION), payload);
-            createdIds.push(docRef.id);
+        } catch (error) {
+            throw new ServiceError('createRecurringShift', { cause: error });
         }
-
         return createdIds;
     },
 
@@ -584,56 +616,64 @@ export const shiftService = {
     getRecurringShifts: async (groupId: string): Promise<Shift[]> => {
         if (!groupId) return [];
 
-        const q = query(
-            collection(db, COLLECTION),
-            where('recurringGroupId', '==', groupId)
-        );
+        try {
+            const q = query(
+                collection(db, COLLECTION),
+                where('recurringGroupId', '==', groupId)
+            );
 
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => {
-            const data = doc.data() as DocumentData;
-            const getTs = (keyCamel: string, keySnake: string) => data[keyCamel] || data[keySnake];
-            const startVal = getTs('startAt', 'start_time');
-            const endVal = getTs('endAt', 'end_time');
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => {
+                const data = doc.data() as DocumentData;
+                const getTs = (keyCamel: string, keySnake: string) => data[keyCamel] || data[keySnake];
+                const startVal = getTs('startAt', 'start_time');
+                const endVal = getTs('endAt', 'end_time');
 
-            return {
-                id: doc.id,
-                shiftId: doc.id,
-                startAt: startVal ? (startVal.toDate ? toLocalISOString(startVal.toDate()) : startVal) : '',
-                endAt: endVal ? (endVal.toDate ? toLocalISOString(endVal.toDate()) : endVal) : '',
-                date: startVal ? (startVal.toDate ? toLocalDateString(startVal.toDate()) : toLocalDateString(new Date(startVal))) : '',
-                riderId: data.riderId ?? data.rider_id ?? '',
-                riderName: data.riderName ?? data.rider_name ?? 'Sin asignar',
-                motoId: data.motoId ?? data.vehicle_id ?? null,
-                motoPlate: data.motoPlate ?? data.vehicle_plate ?? '',
-                franchiseId: data.franchiseId ?? data.franchise_id,
-                status: data.status || 'scheduled',
-                isConfirmed: (data.isConfirmed === true || data.is_confirmed === true),
-                swapRequested: (data.swapRequested === true || data.swap_requested === true),
-                changeRequested: (data.changeRequested === true || data.change_requested === true),
-                changeReason: data.changeReason || data.change_reason || null,
-                isDraft: data.isDraft || false,
-                isRecurring: data.isRecurring || false,
-                recurringGroupId: data.recurringGroupId,
-                recurringPattern: data.recurringPattern,
-                recurringEndDate: data.recurringEndDate
-            };
-        });
+                return {
+                    id: doc.id,
+                    shiftId: doc.id,
+                    startAt: startVal ? (startVal.toDate ? toLocalISOString(startVal.toDate()) : startVal) : '',
+                    endAt: endVal ? (endVal.toDate ? toLocalISOString(endVal.toDate()) : endVal) : '',
+                    date: startVal ? (startVal.toDate ? toLocalDateString(startVal.toDate()) : toLocalDateString(new Date(startVal))) : '',
+                    riderId: data.riderId ?? data.rider_id ?? '',
+                    riderName: data.riderName ?? data.rider_name ?? 'Sin asignar',
+                    motoId: data.motoId ?? data.vehicle_id ?? null,
+                    motoPlate: data.motoPlate ?? data.vehicle_plate ?? '',
+                    franchiseId: data.franchiseId ?? data.franchise_id,
+                    status: data.status || 'scheduled',
+                    isConfirmed: (data.isConfirmed === true || data.is_confirmed === true),
+                    swapRequested: (data.swapRequested === true || data.swap_requested === true),
+                    changeRequested: (data.changeRequested === true || data.change_requested === true),
+                    changeReason: data.changeReason || data.change_reason || null,
+                    isDraft: data.isDraft || false,
+                    isRecurring: data.isRecurring || false,
+                    recurringGroupId: data.recurringGroupId,
+                    recurringPattern: data.recurringPattern,
+                    recurringEndDate: data.recurringEndDate
+                };
+            });
+        } catch (error) {
+            throw new ServiceError('getRecurringShifts', { cause: error });
+        }
     },
 
     /**
      * Delete all shifts in a recurring series
      */
     deleteRecurringSeries: async (groupId: string): Promise<void> => {
-        if (!groupId) throw new Error('Group ID is required');
+        if (!groupId) throw validationError('deleteRecurringSeries', 'Group ID is required');
 
-        const q = query(
-            collection(db, COLLECTION),
-            where('recurringGroupId', '==', groupId)
-        );
+        try {
+            const q = query(
+                collection(db, COLLECTION),
+                where('recurringGroupId', '==', groupId)
+            );
 
-        const snapshot = await getDocs(q);
-        const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
-        await Promise.all(deletePromises);
+            const snapshot = await getDocs(q);
+            const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+            await Promise.all(deletePromises);
+        } catch (error) {
+            throw new ServiceError('deleteRecurringSeries', { cause: error });
+        }
     }
 };

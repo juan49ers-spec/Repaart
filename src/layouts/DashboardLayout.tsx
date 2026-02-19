@@ -57,6 +57,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         onOpenHelp: openHelp
     };
 
+    console.log("[DashboardLayout] Rendering. Children present:", !!children);
+
     return (
         <div className="print:hidden viewport-fixed bg-slate-50 dark:bg-slate-950 font-sans relative transition-colors duration-300">
             <ImpersonationBanner />
@@ -66,7 +68,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <main className="scrollable-area w-full relative z-0 content-safe-bottom @container">
                 <div className="content-wrapper py-2 md:pt-4 md:pb-8 animate-slide-up mx-auto">
                     {/* Pass context to Outlet */}
-                    {outletContext ? <Outlet context={{ ...outletContext }} /> : children}
+                    {children ? children : <Outlet context={outletContext || {}} />}
                 </div>
             </main>
 

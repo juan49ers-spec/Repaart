@@ -34,9 +34,8 @@ describe('FinanceService', () => {
             })
         });
 
-        const result = await financeService.updateFinancialData('F1', '2026-01', { marketing: 10 });
+        await financeService.updateFinancialData('F1', '2026-01', { marketing: 10 });
 
-        expect(result.success).toBe(true);
         expect(setDoc).toHaveBeenCalledTimes(1);
 
         const payload = (setDoc as any).mock.calls[0][1];
@@ -60,9 +59,7 @@ describe('FinanceService', () => {
             })
         });
 
-        const result = await financeService.updateFinancialData('F1', '2026-01', { status: 'open' });
-
-        expect(result.success).toBe(true);
+        await financeService.updateFinancialData('F1', '2026-01', { status: 'open' });
         const payload = (setDoc as any).mock.calls[0][1];
         expect(payload.status).toBe('open');
         expect(payload.isLocked).toBe(false);

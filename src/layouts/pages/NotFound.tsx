@@ -1,8 +1,15 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const NotFound: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // DEBUG: Log the path that wasn't found
+    React.useEffect(() => {
+        console.error("🛑 [NotFound] 404 triggered at:", location.pathname);
+    }, [location]);
+
     return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8">
             <h1 className="text-6xl font-black text-slate-800 mb-4">404</h1>

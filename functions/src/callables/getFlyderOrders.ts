@@ -19,8 +19,24 @@ const getFlyderConnection = async () => {
     user,
     password,
     database,
-    connectTimeout: 10000
+    connectTimeout: 10000,
+    // Configure to return dates as strings instead of Date objects
+    dateStrings: true
   });
+};
+
+const mapFlyderStatusToStandard = (flyderStatus: string): string => {
+  const statusMap: { [key: string]: string } = {
+    'new': 'pending',
+    'processing': 'in_progress',
+    'retrying': 'in_progress',
+    'assigned': 'in_progress',
+    'finished': 'completed',
+    'cancelled': 'cancelled',
+    'exhausted': 'cancelled',
+    'assign_error': 'cancelled'
+  };
+  return statusMap[flyderStatus] || flyderStatus;
 };
 
 export const getFlyderOrders = functions.https.onCall(async (data, context) => {
@@ -55,17 +71,75 @@ export const getFlyderOrders = functions.https.onCall(async (data, context) => {
     const connection = await getFlyderConnection();
 
     try {
-      let query = 'SELECT * FROM orders';
+      let query = `
+        SELECT 
+          o.id,
+          o.sku,
+          o.status,
+          o.cancelled_by,
+          o.cancel_reason,
+          o.cancel_details,
+          o.amount,
+          o.payment_method,
+          o.final_payment_method,
+          o.distance,
+          o.duration,
+          o.scheduled,
+          o.ready_time,
+          o.ready_to_pick_up,
+          o.ready_to_pick_up_time,
+          o.created_at,
+          o.updated_at,
+          o.ext_order_id,
+          o.ext_order_sku,
+          o.ext_order_timestamp,
+          o.order_number,
+          o.customer_name,
+          o.customer_phone,
+          o.customer_addr_street,
+          o.customer_addr_no,
+          o.customer_addr_floor,
+          o.customer_addr_door,
+          o.customer_addr_postal_code,
+          o.customer_addr_prov,
+          o.customer_addr_city,
+          o.customer_addr_other,
+          o.customer_latitude,
+          o.customer_longitude,
+          o.customer_place_id,
+          o.cold,
+          o.size,
+          o.comments,
+          o.details,
+          o.urgent,
+          o.assignment_attempts,
+          o.source,
+          o.source_id,
+          o.store_id,
+          o.shift_id,
+          s.name as store_name,
+          b.id as franchise_id,
+          b.name as franchise_name,
+          r.id as rider_id,
+          r.name as rider_name,
+          r.surname as rider_surname
+        FROM orders o
+        LEFT JOIN stores s ON o.store_id = s.id
+        LEFT JOIN businesses b ON s.business_id = b.id
+        LEFT JOIN services svc ON o.id = svc.order_id
+        LEFT JOIN riders r ON svc.rider_id = r.id
+      `;
+      
       const conditions: string[] = [];
       const params: any[] = [];
 
       if (franchiseId) {
-        conditions.push('franchise_id = ?');
+        conditions.push('b.id = ?');
         params.push(franchiseId);
       }
 
       if (status) {
-        conditions.push('status = ?');
+        conditions.push('o.status = ?');
         params.push(status);
       }
 
@@ -73,19 +147,32 @@ export const getFlyderOrders = functions.https.onCall(async (data, context) => {
         query += ' WHERE ' + conditions.join(' AND ');
       }
 
-      query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+      query += ' ORDER BY o.created_at DESC LIMIT ? OFFSET ?';
       params.push(limit, offset);
 
       console.log('[Flyder] Executing query:', query, 'with params:', params);
 
       const [rows] = await connection.execute(query, params);
 
-      console.log('[Flyder] Query successful, rows:', (rows as any[]).length);
+      const mappedRows = (rows as any[]).map(row => {
+        const riderName = row.rider_name && row.rider_surname 
+          ? `${row.rider_name} ${row.rider_surname}` 
+          : row.rider_name || null;
+        
+        return {
+          ...row,
+          status: mapFlyderStatusToStandard(row.status),
+          total: parseFloat(row.amount) || 0,
+          rider_name: riderName
+        };
+      });
+
+      console.log('[Flyder] Query successful, rows:', mappedRows.length);
 
       return {
         success: true,
-        data: rows,
-        count: (rows as any[]).length
+        data: mappedRows,
+        count: mappedRows.length
       };
     } finally {
       await connection.end();
@@ -135,19 +222,23 @@ export const getFlyderOrdersStats = functions.https.onCall(async (data, context)
       const [stats] = await connection.execute(`
         SELECT
           COUNT(*) as total_orders,
-          COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed,
-          COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending,
-          COUNT(CASE WHEN status = 'cancelled' THEN 1 END) as cancelled,
-          SUM(total) as total_revenue
+          COUNT(CASE WHEN status = 'finished' THEN 1 END) as completed,
+          COUNT(CASE WHEN status IN ('new', 'processing', 'retrying', 'assigned') THEN 1 END) as pending,
+          COUNT(CASE WHEN status IN ('cancelled', 'exhausted', 'assign_error') THEN 1 END) as cancelled,
+          COALESCE(SUM(amount), 0) as total_revenue
         FROM orders
         WHERE created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
       `);
 
       console.log('[Flyder] Stats query successful');
 
+      const statsRow = (stats as any)[0];
       return {
         success: true,
-        stats: (stats as any)[0]
+        stats: {
+          ...statsRow,
+          total_revenue: Number(statsRow.total_revenue || 0)
+        }
       };
     } finally {
       await connection.end();

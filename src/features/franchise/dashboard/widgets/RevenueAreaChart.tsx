@@ -117,24 +117,28 @@ const RevenueAreaChart: React.FC<RevenueAreaChartProps> = ({ data }) => {
                     <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
                         <defs>
                             <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.15} />
-                                <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                                <stop offset="95%" stopColor="#6366f1" stopOpacity={0.05} />
                             </linearGradient>
                         </defs>
                         <XAxis
                             dataKey="month"
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fill: '#94a3b8', fontSize: 8 }}
+                            tick={{ fill: '#94a3b8', fontSize: 9, fontWeight: 500 }}
+                            dy={5}
                         />
                         <YAxis hide />
                         <Tooltip
+                            cursor={{ stroke: '#6366f1', strokeWidth: 1, strokeDasharray: '3 3', strokeOpacity: 0.5 }}
                             content={({ active, payload, label }) => {
                                 if (active && payload && payload.length) {
                                     return (
-                                        <div className="bg-white border border-slate-200 p-2 rounded-lg shadow-lg text-xs">
-                                            <p className="font-bold text-slate-600">{label}</p>
-                                            <p className="text-indigo-600 font-black">{formatMoney(payload[0].value as number)}€</p>
+                                        <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700/50 p-3 rounded-xl shadow-xl text-xs">
+                                            <p className="font-semibold text-slate-500 dark:text-slate-400 mb-1 leading-none">{label}</p>
+                                            <p className="text-indigo-600 dark:text-indigo-400 font-bold text-lg leading-none tracking-tight">
+                                                {formatMoney(payload[0].value as number)}€
+                                            </p>
                                         </div>
                                     );
                                 }
@@ -145,10 +149,10 @@ const RevenueAreaChart: React.FC<RevenueAreaChartProps> = ({ data }) => {
                             type="monotone"
                             dataKey="revenue"
                             stroke="#6366f1"
-                            strokeWidth={2}
+                            strokeWidth={3}
                             fillOpacity={1}
                             fill="url(#colorRevenue)"
-                            animationDuration={1000}
+                            animationDuration={1500}
                         />
                     </AreaChart>
                 </ResponsiveContainer>

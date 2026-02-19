@@ -13,15 +13,13 @@ interface NotificationItem {
     priority?: string;
 }
 
-const NotificationsTab = ({ user }: { user: any }) => {
+const NotificationsTab = ({ user }: { user: { uid: string; franchiseId?: string } }) => {
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (!user?.uid) return;
 
-        setLoading(true);
-        
         const targetIds = [user.uid];
         if (user.franchiseId) targetIds.push(user.franchiseId);
 
@@ -60,7 +58,7 @@ const NotificationsTab = ({ user }: { user: any }) => {
             await updateDoc(doc(db, 'notifications', notificationId), {
                 read: true
             });
-            setNotifications(prev => prev.map(n => 
+            setNotifications(prev => prev.map(n =>
                 n.id === notificationId ? { ...n, read: true } : n
             ));
         } catch (error) {
@@ -98,6 +96,7 @@ const NotificationsTab = ({ user }: { user: any }) => {
             case 'FINANCE_CLOSING': return <div className={`${baseClass} bg-emerald-50 text-emerald-500 border-emerald-100`}><span className="text-lg">💰</span></div>;
             case 'RATE_CHANGE': return <div className={`${baseClass} bg-amber-50 text-amber-500 border-amber-100`}><span className="text-lg">📈</span></div>;
             case 'incident': return <div className={`${baseClass} bg-rose-50 text-rose-600 border-rose-100`}><span className="text-lg">⚠️</span></div>;
+            case 'security': return <div className={`${baseClass} bg-emerald-50 text-emerald-600 border-emerald-100`}><span className="text-lg">🔐</span></div>;
             default: return <div className={`${baseClass} bg-slate-50 text-slate-400 border-slate-100`}><span className="text-lg">🔔</span></div>;
         }
     };
@@ -116,8 +115,8 @@ const NotificationsTab = ({ user }: { user: any }) => {
 
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 {notifications.map((item) => (
-                    <div 
-                        key={item.id} 
+                    <div
+                        key={item.id}
                         onClick={() => markAsRead(item.id)}
                         className={`p-4 flex gap-4 hover:bg-slate-50 transition-colors cursor-pointer ${!item.read ? 'bg-blue-50/30' : ''}`}
                     >

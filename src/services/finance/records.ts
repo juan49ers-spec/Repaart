@@ -3,6 +3,7 @@ import { collection, query, where, addDoc, updateDoc, deleteDoc, onSnapshot, ord
 import type { FinancialRecord, RecordInput, FinanceError } from '../../types/finance';
 import { mapToFinancialRecord, generateMonthKey } from './helpers';
 import { Result, ok, err } from '../../types/result';
+import { ServiceError } from '../../utils/ServiceError';
 
 const COLLECTION = 'financial_records';
 
@@ -26,6 +27,7 @@ export const financeRecords = {
             const records = snapshot.docs.map(docSnap => mapToFinancialRecord(docSnap));
             callback(records);
         }, (error) => {
+            new ServiceError('subscribeToRecords', { cause: error, code: 'NETWORK' });
             console.error("Error subscribing to records:", error);
             callback([]); // Fallback safely
         });
@@ -67,7 +69,8 @@ export const financeRecords = {
             const docRef = await addDoc(collection(db, COLLECTION), dataToSave);
             return ok(docRef.id);
         } catch (error: any) {
-            console.error("Error adding record:", error);
+            const sError = new ServiceError('addRecord', { cause: error });
+            console.error("Error adding record:", sError);
             return err({ type: 'UNKNOWN_ERROR', message: error.message || "Failed to add record", cause: error });
         }
     },
@@ -107,7 +110,8 @@ export const financeRecords = {
             await updateDoc(docRef, updates);
             return ok(undefined);
         } catch (error: any) {
-            console.error("Error updating status:", error);
+            const sError = new ServiceError('updateStatus', { cause: error });
+            console.error("Error updating status:", sError);
             return err({ type: 'UNKNOWN_ERROR', message: error.message || "Failed to update record status", cause: error });
         }
     },
@@ -148,7 +152,8 @@ export const financeRecords = {
             await deleteDoc(docRef);
             return ok(undefined);
         } catch (error: any) {
-            console.error("Error deleting record:", error);
+            const sError = new ServiceError('deleteRecord', { cause: error });
+            console.error("Error deleting record:", sError);
             return err({ type: 'UNKNOWN_ERROR', message: error.message || "Failed to delete record", cause: error });
         }
     },

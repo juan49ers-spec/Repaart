@@ -4,6 +4,7 @@ import { useOutletContext } from 'react-router-dom';
 // Components
 import DashboardSkeleton from '../../components/ui/layout/DashboardSkeleton';
 import FranchiseDashboardView, { BreakdownItem, DashboardTrendItem } from './FranchiseDashboardView';
+import type { TrendItem } from '../../types/finance';
 import FinanceAdvisorChat from './finance/FinanceAdvisorChat';
 
 import { AuthUser, useAuth } from '../../context/AuthContext';
@@ -101,11 +102,11 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
         }));
 
     // Historical Chart Data formatting
-    const formattedTrendData: DashboardTrendItem[] = trendData.map((d: any) => ({
-        month: d.name || d.monthName || d.month || 'Mes',
+    const formattedTrendData: DashboardTrendItem[] = trendData.map((d: TrendItem) => ({
+        month: d.name || d.month || 'Mes',
         fullDate: d.month, // ISO format for logic (YYYY-MM)
         revenue: d.revenue || d.income || 0,
-        expenses: d.expenses || d.totalExpenses || 0
+        expenses: d.expenses || 0
     }));
 
     return (
@@ -148,7 +149,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
                 onMonthChange={effectiveSetMonth}
                 onUpdateFinance={handleUpdate}
             />
-            
+
             {/* AI Finance Advisor Chat */}
             {!loading && accounting && (
                 <FinanceAdvisorChat
