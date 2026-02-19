@@ -2,7 +2,7 @@ import React, { useLayoutEffect, useEffect, useRef } from 'react';
 import { Check, Copy, Trash2, Edit, X, Repeat } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
-interface ContextMenuShift {
+export interface ContextMenuShift {
     id: string;
     isConfirmed?: boolean;
     changeRequested?: boolean;

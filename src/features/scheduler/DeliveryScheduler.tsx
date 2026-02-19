@@ -7,11 +7,12 @@ import { toLocalDateString, toLocalISOString, toLocalISOStringWithOffset } from 
 import ShiftModal from '../../features/operations/ShiftModal';
 import QuickFillModal from '../../features/operations/QuickFillModal';
 import MobileAgendaView from '../../features/operations/MobileAgendaView';
+import { ShiftEvent } from '../../features/operations/ShiftCard';
 import { SchedulerStatusBar } from './SchedulerStatusBar';
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors, closestCenter, DragStartEvent } from '@dnd-kit/core';
 import { DraggableShift } from './DraggableShift';
 import { DroppableCell } from './DroppableCell';
-import { ShiftContextMenu } from './components/ShiftContextMenu';
+import { ShiftContextMenu, ContextMenuShift } from './components/ShiftContextMenu';
 import { SchedulerGuideModal } from './SchedulerGuideModal';
 import ConfirmationModal from '../../components/ui/feedback/ConfirmationModal';
 import { SheriffReportModal } from './SheriffReportModal';
@@ -106,7 +107,7 @@ const DeliveryScheduler: React.FC<{
         id: string;
         name: string;
         type: 'verano' | 'invierno' | 'especial';
-        shifts: any[];
+        shifts: Shift[];
         createdAt: Date;
     }>>([]);
     const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
@@ -115,6 +116,19 @@ const DeliveryScheduler: React.FC<{
     // --- RECURRING SHIFTS STATE ---
     const [isRecurringModalOpen, setIsRecurringModalOpen] = useState(false);
     const [selectedShiftForRecurring, setSelectedShiftForRecurring] = useState<Shift | null>(null);
+
+    // --- DATA HOOKS ---
+    const { riders: rosterRiders } = useFleetStore();
+    const { vehicles, fetchVehicles } = useVehicleStore();
+    const { weekData, loading, motos, riders: weeklyRiders } = useWeeklySchedule(safeFranchiseId, readOnly, selectedDate);
+
+    // Single source of truth: prefer real-time subscription from useWeeklySchedule
+    // Fall back to store riders if weekly riders are empty (e.g., during initial load)
+    const activeRiders = weeklyRiders.length > 0 ? weeklyRiders : rosterRiders;
+
+    // --- DND SENSORS ---
+    const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+    const [activeDragShift, setActiveDragShift] = useState<Shift | null>(null);
 
     // Load templates on mount
     useEffect(() => {
@@ -173,7 +187,7 @@ const DeliveryScheduler: React.FC<{
                 weekStart,
                 applyMode
             );
-            
+
             if (appliedCount > 0) {
                 alert(`Se aplicaron ${appliedCount} turnos de la plantilla`);
             } else {
@@ -186,25 +200,25 @@ const DeliveryScheduler: React.FC<{
         }
     };
 
-    // --- DATA HOOKS ---
-    const { riders: rosterRiders, fetchRiders } = useFleetStore();
-    const { vehicles, fetchVehicles } = useVehicleStore();
-    const { weekData, loading, motos, riders } = useWeeklySchedule(safeFranchiseId, readOnly, selectedDate);
 
-    // --- DND SENSORS ---
-    const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
-    const [activeDragShift, setActiveDragShift] = useState<Shift | null>(null);
 
     // Filter riders based on search query
     const filteredRiders = useMemo(() => {
-        if (!riderSearchQuery.trim()) return rosterRiders;
+        const source = activeRiders.map(r => ({
+            ...r,
+            // Normalize: useWeeklySchedule riders have minimal interface, enrich if needed
+            fullName: r.fullName || (r as { fullName?: string }).fullName || 'Rider',
+            email: (r as { email?: string }).email || '',
+            phone: (r as { phone?: string }).phone || '',
+        }));
+        if (!riderSearchQuery.trim()) return source;
         const query = riderSearchQuery.toLowerCase();
-        return rosterRiders.filter(r => 
+        return source.filter(r =>
             r.fullName?.toLowerCase().includes(query) ||
             r.email?.toLowerCase().includes(query) ||
             r.phone?.includes(query)
         );
-    }, [rosterRiders, riderSearchQuery]);
+    }, [activeRiders, riderSearchQuery]);
 
     const simpleRiders = useMemo(() => filteredRiders.map(r => ({ id: String(r.id), fullName: r.fullName, name: r.fullName })), [filteredRiders]);
 
@@ -288,7 +302,7 @@ const DeliveryScheduler: React.FC<{
             type: 'confirmed' | 'request' | 'draft';
             isNew?: boolean;
         }[] = [];
-        let currentBlock: any = null;
+        let currentBlock: typeof visualBlocks[number] | null = null;
 
         sorted.forEach((s) => {
             const sStart = new Date(s.startAt);
@@ -395,7 +409,7 @@ const DeliveryScheduler: React.FC<{
 
         if (activeShift && dateIso && riderId) {
             // [FIX] Find the rider name for the new riderId to keep it in sync
-            const targetRider = rosterRiders.find((r: any) => String(r.id) === String(riderId));
+            const targetRider = rosterRiders.find((r) => String(r.id) === String(riderId));
 
             saveShift({
                 ...activeShift,
@@ -421,10 +435,9 @@ const DeliveryScheduler: React.FC<{
 
     useEffect(() => {
         if (safeFranchiseId) {
-            fetchRiders(safeFranchiseId);
             fetchVehicles(safeFranchiseId);
         }
-    }, [fetchRiders, fetchVehicles, safeFranchiseId]);
+    }, [fetchVehicles, safeFranchiseId]);
 
     // Moved up to fix declaration order
 
@@ -485,7 +498,7 @@ const DeliveryScheduler: React.FC<{
             }
 
             // 2. Notify New Rider
-            await notificationService.notifyFranchise(safeFranchiseId, {
+            await notificationService.notifyFranchise(String(shiftData.riderId!), {
                 title: 'Nuevo Turno Asignado',
                 message: `Se te ha asignado un nuevo turno para el ${dateStr} de ${timeStr}.`,
                 type: 'shift_confirmed',
@@ -551,7 +564,7 @@ const DeliveryScheduler: React.FC<{
                 const shiftData: ShiftInput = {
                     franchiseId: safeFranchiseId,
                     riderId: String(s.riderId),
-                    riderName: s.riderName || rosterRiders.find((r: any) => String(r.id) === String(s.riderId))?.fullName || 'Rider',
+                    riderName: s.riderName || rosterRiders.find((r) => String(r.id) === String(s.riderId))?.fullName || 'Rider',
                     motoId: s.motoId || null,
                     motoPlate: s.motoPlate || '',
                     startAt: s.startAt,
@@ -925,7 +938,7 @@ const DeliveryScheduler: React.FC<{
     if (isMobile) {
         return <MobileAgendaView
             days={days}
-            visualEvents={mergedShifts.reduce((acc: Record<string, any[]>, s: Shift) => {
+            visualEvents={mergedShifts.reduce((acc: Record<string, ShiftEvent[]>, s: Shift) => {
                 // Apply Filters to Mobile View as well
                 if (!isFiltered(s.startAt, s.endAt)) return acc;
 
@@ -934,17 +947,23 @@ const DeliveryScheduler: React.FC<{
 
                 // Ensure all mandatory fields for ShiftEvent are present
                 acc[d].push({
-                    ...s,
                     shiftId: s.id || s.shiftId || `mob_${Math.random()}`,
                     riderId: s.riderId || 'unassigned',
                     riderName: s.riderName || 'Sin Asignar',
-                    visualDate: d,
+                    startAt: s.startAt,
+                    endAt: s.endAt,
                     visualStart: new Date(s.startAt),
                     visualEnd: new Date(s.endAt),
+                    isConfirmed: s.isConfirmed,
+                    swapRequested: s.swapRequested,
+                    changeRequested: s.changeRequested,
+                    changeReason: s.changeReason,
+                    isDraft: s.isDraft,
+                    franchiseId: s.franchiseId,
                 });
                 return acc;
             }, {})}
-            onEditShift={(shift) => handleEditShift(shift as any)}
+            onEditShift={(shift) => handleEditShift(shift as Shift)}
             onDeleteShift={deleteShift}
             onAddShift={handleAddShift}
             isRiderMode={true} // Enable Premium HUD/Animations for Admins on Mobile too!
@@ -977,7 +996,7 @@ const DeliveryScheduler: React.FC<{
                     onClose={() => setIsQuickFillOpen(false)}
                     franchiseId={safeFranchiseId}
                     weekDays={days}
-                    riders={riders.map(r => ({ id: r.id, name: r.fullName, email: '' }))}
+                    riders={activeRiders.map(r => ({ id: r.id, name: r.fullName, email: '' }))}
                     motos={motos}
                     existingShifts={mergedShifts}
                     onRefresh={() => { }}
@@ -1020,6 +1039,8 @@ const DeliveryScheduler: React.FC<{
                                     <button
                                         onClick={() => setRiderSearchQuery('')}
                                         className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                        title="Limpiar búsqueda"
+                                        aria-label="Limpiar búsqueda"
                                     >
                                         <XCircle size={14} />
                                     </button>
@@ -1039,9 +1060,9 @@ const DeliveryScheduler: React.FC<{
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     {compactMode ? (
-                                        <><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></>
+                                        <><path d="M4 6h16M4 10h16M4 14h16M4 18h16" /></>
                                     ) : (
-                                        <><path d="M4 6h16M4 12h16M4 18h16"/></>
+                                        <><path d="M4 6h16M4 12h16M4 18h16" /></>
                                     )}
                                 </svg>
                                 <span className="hidden sm:inline">{compactMode ? 'Compacto' : 'Normal'}</span>
@@ -1120,7 +1141,7 @@ const DeliveryScheduler: React.FC<{
                                         title="Cargar plantilla guardada"
                                         className="px-3 py-1.5 text-xs font-normal rounded-lg border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center gap-1.5 transition-all"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></svg>
                                         <span className="hidden sm:inline">Cargar Plantilla</span>
                                     </button>
                                 </>
@@ -1627,7 +1648,7 @@ const DeliveryScheduler: React.FC<{
                         <ShiftContextMenu
                             x={contextMenu.x}
                             y={contextMenu.y}
-                            shift={contextMenu.shift as any}
+                            shift={contextMenu.shift as unknown as ContextMenuShift}
                             onClose={() => setContextMenu(null)}
                             onValidate={(s) => {
                                 setLocalShifts(prev => prev.map(ls =>
@@ -1699,6 +1720,8 @@ const DeliveryScheduler: React.FC<{
                             <button
                                 onClick={() => setIsTemplateModalOpen(false)}
                                 className="p-1 hover:bg-slate-200 rounded-full transition-colors"
+                                title="Cerrar"
+                                aria-label="Cerrar modal de plantillas"
                             >
                                 <XCircle size={20} className="text-slate-400" />
                             </button>
@@ -1733,12 +1756,11 @@ const DeliveryScheduler: React.FC<{
                                             ].map((type) => (
                                                 <button
                                                     key={type.id}
-                                                    onClick={() => setTemplateType(type.id as any)}
-                                                    className={`px-3 py-2 rounded-lg border text-sm font-medium transition-all ${
-                                                        templateType === type.id
-                                                            ? type.color + ' ring-2 ring-offset-1'
-                                                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                                                    }`}
+                                                    onClick={() => setTemplateType(type.id as 'verano' | 'invierno' | 'especial')}
+                                                    className={`px-3 py-2 rounded-lg border text-sm font-medium transition-all ${templateType === type.id
+                                                        ? type.color + ' ring-2 ring-offset-1'
+                                                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                                                        }`}
                                                 >
                                                     {type.label}
                                                 </button>
@@ -1794,7 +1816,7 @@ const DeliveryScheduler: React.FC<{
                                                                 className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-red-500 transition-all"
                                                                 title="Eliminar plantilla"
                                                             >
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
                                                             </button>
                                                         </div>
                                                     </div>

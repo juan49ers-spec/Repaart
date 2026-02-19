@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { collection, getDocs, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, getDoc, serverTimestamp, query, where } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import { Button } from '../../../components/ui/primitives/Button';
 import { Card } from '../../../components/ui/primitives/Card';
@@ -18,11 +18,12 @@ export const MigrationPanel: React.FC = () => {
         setStats({ total: 0, migrated: 0, errors: 0 });
 
         try {
-            // 1. Fetch legacy riders
-            const ridersSnapshot = await getDocs(collection(db, 'riders'));
+            // Read from unified /users/ collection (riders have role='rider')
+            const ridersQuery = query(collection(db, 'users'), where('role', '==', 'rider'));
+            const ridersSnapshot = await getDocs(ridersQuery);
             const total = ridersSnapshot.size;
             setStats(prev => ({ ...prev, total }));
-            setLogs(prev => [`🔍 Encontrados ${total} documentos en 'riders'`, ...prev]);
+            setLogs(prev => [`🔍 Encontrados ${total} riders en 'users'`, ...prev]);
 
             for (const riderDoc of ridersSnapshot.docs) {
                 const data = riderDoc.data();
@@ -57,17 +58,19 @@ export const MigrationPanel: React.FC = () => {
                     } else {
                         setLogs(prev => [`ℹ️ Saltado (Ya existe): ${data.email}`, ...prev]);
                     }
-                } catch (err: any) {
+                } catch (err: unknown) {
+                    const errMsg = err instanceof Error ? err.message : String(err);
                     console.error(`Error migrating ${uid}:`, err);
                     setStats(prev => ({ ...prev, errors: prev.errors + 1 }));
-                    setLogs(prev => [`❌ Error con ${data.email}: ${err.message}`, ...prev]);
+                    setLogs(prev => [`❌ Error con ${data.email}: ${errMsg}`, ...prev]);
                 }
             }
             setLogs(prev => ["🏁 Migración completada.", ...prev]);
 
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
             console.error("Migration fatal error:", error);
-            setLogs(prev => [`🔥 Error Fatal: ${error.message}`, ...prev]);
+            setLogs(prev => [`🔥 Error Fatal: ${errorMsg}`, ...prev]);
         } finally {
             setIsLoading(false);
         }
