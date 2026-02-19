@@ -16,8 +16,11 @@ export const createRestaurant = functions.https.onCall(async (data: any, context
         throw new functions.https.HttpsError('invalid-argument', 'Missing required fields');
     }
 
-    // Verificar permisos (Admin o Franquicia dueña)
-    if (context.auth.token.role !== 'admin' && context.auth.uid !== franchiseId) {
+    // Case-insensitive comparison for UID/franchiseId
+    const isAuthorized = context.auth.token.role === 'admin' ||
+                         context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
+
+    if (!isAuthorized) {
         throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
     }
 
@@ -47,7 +50,11 @@ export const getRestaurants = functions.https.onCall(async (data: any, context: 
     const { franchiseId } = data;
     if (!franchiseId) throw new functions.https.HttpsError('invalid-argument', 'Missing franchiseId');
 
-    if (context.auth.token.role !== 'admin' && context.auth.uid !== franchiseId) {
+    // Case-insensitive comparison for UID/franchiseId
+    const isAuthorized = context.auth.token.role === 'admin' ||
+                         context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
+
+    if (!isAuthorized) {
         throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
     }
 
@@ -105,7 +112,11 @@ export const generateInvoice = functions.https.onCall(async (data: CreateInvoice
     const targetCollection = customerCollection || 'restaurants';
 
     // 1. Validations
-    if (context.auth.token.role !== 'admin' && context.auth.uid !== franchiseId) {
+    // Case-insensitive comparison for UID/franchiseId
+    const isAuthorized = context.auth.token.role === 'admin' ||
+                         context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
+
+    if (!isAuthorized) {
         throw new functions.https.HttpsError('permission-denied', 'Only franchise owner can issue invoices');
     }
 
@@ -232,7 +243,12 @@ export const getInvoices = functions.https.onCall(async (data: any, context: Cal
 
     const { franchiseId } = data;
     if (!franchiseId) throw new functions.https.HttpsError('invalid-argument', 'Missing franchiseId');
-    if (context.auth.token.role !== 'admin' && context.auth.uid !== franchiseId) {
+
+    // Case-insensitive comparison for UID/franchiseId
+    const isAuthorized = context.auth.token.role === 'admin' ||
+                         context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
+
+    if (!isAuthorized) {
         throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
     }
 

@@ -10,6 +10,7 @@ import FranchiseDashboardView from './FranchiseDashboardView';
 import FinanceAdvisorChat from './finance/FinanceAdvisorChat';
 import type { TrendItem } from '../../types/finance';
 import { BreakdownItem, DashboardTrendItem } from './FranchiseDashboardView';
+import { FinancialReport, BreakdownItem as FinanceBreakdownItem } from '../../lib/finance';
 import { InvoiceDTO } from '../../types/invoicing';
 
 interface TimestampLike {
@@ -29,7 +30,12 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
         report: contextReport,
         selectedMonth: contextMonth,
         setSelectedMonth
-    } = useOutletContext<any>() || {};
+    } = useOutletContext<{
+        franchiseId?: string;
+        report?: FinancialReport;
+        selectedMonth?: string;
+        setSelectedMonth?: (month: string) => void;
+    }>() || {};
 
     const activeFranchiseId = propFranchiseId || contextFranchiseId;
 
@@ -109,9 +115,9 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
 
     // Expense Breakdown Preparation
     const fullExpenseBreakdown: BreakdownItem[] = useMemo(() => (report?.breakdown || [])
-        .filter(item => item.value > 0)
-        .sort((a, b) => b.value - a.value)
-        .map((item, index) => ({
+        .filter((item: FinanceBreakdownItem) => item.value > 0)
+        .sort((a: FinanceBreakdownItem, b: FinanceBreakdownItem) => b.value - a.value)
+        .map((item: FinanceBreakdownItem, index: number) => ({
             label: item.name,
             amount: item.value,
             color: ['#6366f1', '#f43f5e', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#14b8a6'][index % 8]
@@ -156,15 +162,11 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
                 trendData={trendData}
                 formattedTrendData={formattedTrendData}
                 fullExpenseBreakdown={fullExpenseBreakdown}
-                taxes={{
-                    ...taxes,
-                    suggestedInvoicedIncome: monthlyInvoicedAmount
-                } as any}
+                taxes={taxes}
                 isWizardOpen={isWizardOpen}
                 setIsWizardOpen={setIsWizardOpen}
                 isSimulatorOpen={isSimulatorOpen}
                 setIsSimulatorOpen={setIsSimulatorOpen}
-                isAdvisorOpen={isAdvisorOpen}
                 setIsAdvisorOpen={setIsAdvisorOpen}
                 isHistoryView={isHistoryView}
                 setIsHistoryView={setIsHistoryView}
