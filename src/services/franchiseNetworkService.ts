@@ -5,10 +5,10 @@
  * Franquicias (Business) → Restaurantes (Stores) → Riders
  */
 
-import { 
-  collection, 
-  query, 
-  where, 
+import {
+  collection,
+  query,
+  where,
   getDocs,
   doc,
   getDoc,
@@ -58,7 +58,7 @@ export interface Rider {
   name: string;
   email: string;
   phone?: string;
-  status: 'active' | 'inactive' | 'on_leave';
+  status: 'active' | 'inactive' | 'on_leave' | 'deleted';
   vehicleType?: 'moto' | 'bike' | 'car';
   vehiclePlate?: string;
   createdAt: Timestamp;
@@ -80,7 +80,7 @@ export interface NetworkHierarchy {
 class FranchiseNetworkService {
   private readonly franchisesCollection = 'franchises';
   private readonly storesCollection = 'stores';
-  private readonly ridersCollection = 'riders';
+  private readonly ridersCollection = 'users'; // UNIFIED: riders live in /users/ with role='rider'
 
   /**
    * Obtener todas las franquicias
@@ -89,7 +89,7 @@ class FranchiseNetworkService {
     try {
       const q = query(collection(db, this.franchisesCollection));
       const snapshot = await getDocs(q);
-      
+
       return snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -107,9 +107,9 @@ class FranchiseNetworkService {
     try {
       const docRef = doc(db, this.franchisesCollection, franchiseId);
       const snapshot = await getDoc(docRef);
-      
+
       if (!snapshot.exists()) return null;
-      
+
       return {
         id: snapshot.id,
         ...snapshot.data()
@@ -130,7 +130,7 @@ class FranchiseNetworkService {
         where('franchiseId', '==', franchiseId)
       );
       const snapshot = await getDocs(q);
-      
+
       return snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -148,9 +148,9 @@ class FranchiseNetworkService {
     try {
       const docRef = doc(db, this.storesCollection, storeId);
       const snapshot = await getDoc(docRef);
-      
+
       if (!snapshot.exists()) return null;
-      
+
       return {
         id: snapshot.id,
         ...snapshot.data()
@@ -168,14 +168,18 @@ class FranchiseNetworkService {
     try {
       const q = query(
         collection(db, this.ridersCollection),
-        where('franchiseId', '==', franchiseId)
+        where('franchiseId', '==', franchiseId),
+        where('role', '==', 'rider')
       );
       const snapshot = await getDocs(q);
-      
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Rider[];
+
+      return (snapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          name: doc.data().displayName || doc.data().name || 'Rider',
+        })) as Rider[])
+        .filter(r => r.status !== 'deleted');
     } catch (error) {
       console.error('[FranchiseNetwork] Error getting riders:', error);
       throw error;
@@ -189,14 +193,18 @@ class FranchiseNetworkService {
     try {
       const q = query(
         collection(db, this.ridersCollection),
-        where('storeId', '==', storeId)
+        where('storeId', '==', storeId),
+        where('role', '==', 'rider')
       );
       const snapshot = await getDocs(q);
-      
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Rider[];
+
+      return (snapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          name: doc.data().displayName || doc.data().name || 'Rider',
+        })) as Rider[])
+        .filter(r => r.status !== 'deleted');
     } catch (error) {
       console.error('[FranchiseNetwork] Error getting riders by store:', error);
       throw error;
@@ -210,9 +218,9 @@ class FranchiseNetworkService {
     try {
       const docRef = doc(db, this.ridersCollection, riderId);
       const snapshot = await getDoc(docRef);
-      
+
       if (!snapshot.exists()) return null;
-      
+
       return {
         id: snapshot.id,
         ...snapshot.data()
@@ -255,18 +263,22 @@ class FranchiseNetworkService {
   async searchRiders(searchTerm: string): Promise<Rider[]> {
     try {
       // Nota: Firestore no soporta búsqueda parcial nativa
-      // Esto es una búsqueda simple por prefijo
+      // Búsqueda por prefijo en displayName (campo real en /users/)
       const q = query(
         collection(db, this.ridersCollection),
-        where('name', '>=', searchTerm),
-        where('name', '<=', searchTerm + '\uf8ff')
+        where('role', '==', 'rider'),
+        where('displayName', '>=', searchTerm),
+        where('displayName', '<=', searchTerm + '\uf8ff')
       );
       const snapshot = await getDocs(q);
-      
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Rider[];
+
+      return (snapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          name: doc.data().displayName || doc.data().name || 'Rider',
+        })) as Rider[])
+        .filter(r => r.status !== 'deleted');
     } catch (error) {
       console.error('[FranchiseNetwork] Error searching riders:', error);
       throw error;

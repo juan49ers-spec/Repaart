@@ -85,8 +85,11 @@ export const migrationService = {
             const batch = writeBatch(db);
             let deletedCount = 0;
 
-            const ridersSnap = await getDocs(collection(db, 'riders'));
-            const usersSnap = await getDocs(collection(db, 'users'));
+            // UNIFIED: All riders live in /users/ with role='rider'
+            const usersSnap = await getDocs(query(
+                collection(db, 'users'),
+                where('role', '==', 'rider')
+            ));
 
             const activeRiderIds = new Set<string>();
             const inactiveRiderIds = new Set<string>();
@@ -100,7 +103,6 @@ export const migrationService = {
                 }
             };
 
-            ridersSnap.forEach(process);
             usersSnap.forEach(process);
 
             const collections = ['shifts', 'work_shifts', 'franchise_shifts'];
@@ -168,7 +170,7 @@ export const migrationService = {
             const recordsSnap = await getDocs(collection(db, 'financial_records'));
             recordsSnap.forEach(d => {
                 const data = d.data();
-                const updates: Record<string, any> = {};
+                const updates: Record<string, unknown> = {};
                 const map: Record<string, string> = {
                     franchise_id: 'franchiseId',
                     admin_notes: 'adminNotes',
@@ -182,8 +184,8 @@ export const migrationService = {
                 };
 
                 Object.entries(map).forEach(([oldKey, newKey]) => {
-                    const val = (data as Record<string, any>)[oldKey];
-                    const newVal = (data as Record<string, any>)[newKey];
+                    const val = (data as Record<string, unknown>)[oldKey];
+                    const newVal = (data as Record<string, unknown>)[newKey];
                     if (val !== undefined && newVal === undefined) {
                         updates[newKey] = val;
                         if (!dryRun) updates[oldKey] = deleteField();
@@ -200,7 +202,7 @@ export const migrationService = {
             const summariesSnap = await getDocs(collection(db, 'financial_summaries'));
             summariesSnap.forEach(d => {
                 const data = d.data();
-                const updates: Record<string, any> = {};
+                const updates: Record<string, unknown> = {};
                 const map: Record<string, string> = {
                     franchise_id: 'franchiseId',
                     is_locked: 'isLocked',
@@ -208,8 +210,8 @@ export const migrationService = {
                 };
 
                 Object.entries(map).forEach(([oldKey, newKey]) => {
-                    const val = (data as Record<string, any>)[oldKey];
-                    const newVal = (data as Record<string, any>)[newKey];
+                    const val = (data as Record<string, unknown>)[oldKey];
+                    const newVal = (data as Record<string, unknown>)[newKey];
                     if (val !== undefined && newVal === undefined) {
                         updates[newKey] = val;
                         if (!dryRun) updates[oldKey] = deleteField();
@@ -241,7 +243,7 @@ export const migrationService = {
             const assetsSnap = await getDocs(collection(db, 'fleet_assets'));
             assetsSnap.forEach(d => {
                 const data = d.data();
-                const updates: Record<string, any> = {};
+                const updates: Record<string, unknown> = {};
                 const map: Record<string, string> = {
                     matricula: 'plate',
                     modelo: 'model',
@@ -251,8 +253,8 @@ export const migrationService = {
                 };
 
                 Object.entries(map).forEach(([oldKey, newKey]) => {
-                    const val = (data as Record<string, any>)[oldKey];
-                    const newVal = (data as Record<string, any>)[newKey];
+                    const val = (data as Record<string, unknown>)[oldKey];
+                    const newVal = (data as Record<string, unknown>)[newKey];
                     if (val !== undefined && newVal === undefined) {
                         updates[newKey] = val;
                         if (!dryRun) updates[oldKey] = deleteField();
@@ -284,7 +286,7 @@ export const migrationService = {
             const snap = await getDocs(collection(db, 'users'));
             snap.forEach(d => {
                 const data = d.data();
-                const updates: Record<string, any> = {};
+                const updates: Record<string, unknown> = {};
                 const map: Record<string, string> = {
                     phone: 'phoneNumber',
                     created_at: 'createdAt',
@@ -293,8 +295,8 @@ export const migrationService = {
                 };
 
                 Object.entries(map).forEach(([oldKey, newKey]) => {
-                    const val = (data as Record<string, any>)[oldKey];
-                    const newVal = (data as Record<string, any>)[newKey];
+                    const val = (data as Record<string, unknown>)[oldKey];
+                    const newVal = (data as Record<string, unknown>)[newKey];
                     if (val !== undefined && newVal === undefined) {
                         updates[newKey] = val;
                         if (!dryRun) updates[oldKey] = deleteField();
@@ -326,7 +328,7 @@ export const migrationService = {
             const snap = await getDocs(collection(db, 'franchises'));
             snap.forEach(d => {
                 const data = d.data();
-                const updates: Record<string, any> = {};
+                const updates: Record<string, unknown> = {};
                 const map: Record<string, string> = {
                     active: 'isActive',
                     created_at: 'createdAt',
@@ -334,8 +336,8 @@ export const migrationService = {
                 };
 
                 Object.entries(map).forEach(([oldKey, newKey]) => {
-                    const val = (data as Record<string, any>)[oldKey];
-                    const newVal = (data as Record<string, any>)[newKey];
+                    const val = (data as Record<string, unknown>)[oldKey];
+                    const newVal = (data as Record<string, unknown>)[newKey];
                     if (val !== undefined && newVal === undefined) {
                         updates[newKey] = val;
                         if (!dryRun) updates[oldKey] = deleteField();

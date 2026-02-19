@@ -106,7 +106,6 @@ export const fleetService = {
             const riders = querySnapshot.docs.map(mapDocToRider);
 
             return riders.filter(r => r.status !== 'deleted');
-            return riders.filter(r => r.status !== 'deleted');
         } catch (error: unknown) {
             console.error('[FleetService] Error fetching riders:', error);
             throw new ServiceError('getRiders', { cause: error });
@@ -119,15 +118,15 @@ export const fleetService = {
     subscribeToRiders: (franchiseId: string, callback: (riders: Rider[]) => void) => {
         const q = query(
             collection(db, RIDERS_COLLECTION),
-            where('franchiseId', '==', franchiseId)
+            where('franchiseId', '==', franchiseId),
+            where('role', '==', 'rider')
         );
 
         return onSnapshot(q, (snapshot) => {
             const riders = snapshot.docs.map(mapDocToRider);
-            callback(riders);
+            callback(riders.filter(r => r.status !== 'deleted'));
         }, (error) => {
             console.error('[FleetService] Error in riders subscription:', error);
-            // Non-throwing for listeners, but structured log
             new ServiceError('subscribeToRiders', { cause: error, code: 'NETWORK' });
         });
     },
