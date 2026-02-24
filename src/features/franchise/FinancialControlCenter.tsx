@@ -301,30 +301,45 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
 
                         {step === 3 && (
                             <div key="step-3" className="h-full overflow-y-auto custom-scrollbar pr-2">
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-4">
                                     <FinancialBreakdownChart
                                         stats={stats}
                                         expenses={expenses}
                                     />
 
-                                    <div className="space-y-6">
-                                        <div className="relative bg-emerald-50/80 dark:bg-emerald-900/10 p-8 rounded-3xl border border-emerald-100/50 dark:border-emerald-800/30 overflow-hidden shadow-sm flex flex-col justify-center">
-                                            <div className="relative z-10 flex flex-col h-full justify-center text-center">
-                                                <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400 mb-6">Resultado Final</h3>
-                                                <div className="flex flex-col gap-2 items-center">
-                                                    <div>
-                                                        <p className="text-4xl sm:text-5xl font-black text-emerald-950 dark:text-emerald-100 tracking-tighter tabular-nums drop-shadow-sm">
-                                                            {stats.profit.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
-                                                        </p>
-                                                        <p className="text-[10px] font-bold text-emerald-600/70 dark:text-emerald-400/70 mt-2 uppercase tracking-[0.15em]">Beneficio Neto Estimado</p>
-                                                    </div>
+                                    <div className="flex flex-col gap-4">
+                                        {/* Result Card */}
+                                        <div className="flex-1 bg-white dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-200/60 dark:border-white/5 flex flex-col justify-center text-center">
+                                            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-3">
+                                                Resultado Final
+                                            </p>
+                                            <p className={`text-4xl sm:text-5xl font-black tracking-tighter tabular-nums ${stats.profit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                                                }`}>
+                                                {stats.profit.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                                            </p>
+                                            <p className="text-[10px] font-medium text-slate-400 mt-1 uppercase tracking-wider">
+                                                Beneficio Neto Estimado
+                                            </p>
 
-                                                    <div className="mt-6 pt-6 border-t border-emerald-200/50 dark:border-emerald-800/50 flex justify-between items-center w-full max-w-xs">
-                                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-700/60 dark:text-emerald-500/60">Margen</p>
-                                                        <p className="text-xl font-black text-emerald-600 dark:text-emerald-400">
-                                                            {((stats.profit / (totalIncome || 1)) * 100).toFixed(1)}%
-                                                        </p>
-                                                    </div>
+                                            <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-3 gap-3">
+                                                <div>
+                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Ingresos</p>
+                                                    <p className="text-sm font-black text-slate-700 dark:text-slate-200 tabular-nums">
+                                                        {totalIncome.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Gastos</p>
+                                                    <p className="text-sm font-black text-rose-600 dark:text-rose-400 tabular-nums">
+                                                        -{stats.totalExpenses.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Margen</p>
+                                                    <p className={`text-sm font-black tabular-nums ${(stats.profit / (totalIncome || 1)) * 100 >= 15 ? 'text-emerald-600' : 'text-amber-600'
+                                                        }`}>
+                                                        {((stats.profit / (totalIncome || 1)) * 100).toFixed(1)}%
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>

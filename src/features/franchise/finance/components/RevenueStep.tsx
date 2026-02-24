@@ -64,6 +64,8 @@ export const RevenueStep: React.FC<RevenueStepProps> = ({
         }
     };
 
+    const totalOrders = Object.values(orders).reduce((sum, count) => sum + count, 0);
+
     return (
         <motion.div
             key="step1"
@@ -73,174 +75,195 @@ export const RevenueStep: React.FC<RevenueStepProps> = ({
             transition={{ duration: 0.2 }}
             className="h-full"
         >
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full p-2">
-                {/* Left: Km Breakdown */}
-                <div className="lg:col-span-7 flex flex-col h-full bg-white dark:bg-slate-900/50 rounded-3xl border border-slate-200/60 dark:border-white/5 overflow-hidden shadow-sm">
-                    <div className="px-6 py-5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between bg-slate-50/50 dark:bg-transparent">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl text-indigo-600 dark:text-indigo-400">
-                                <Wallet className="w-5 h-5" strokeWidth={2} />
-                            </div>
-                            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">Desglose por Distancia</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
+                {/* ── Left: Distance Breakdown ── */}
+                <div className="lg:col-span-7 flex flex-col h-full bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200/60 dark:border-white/5 overflow-hidden">
+                    {/* Section Header */}
+                    <div className="px-5 py-3.5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                            <Wallet className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                            <h2 className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">Pedidos por distancia</h2>
                         </div>
                         {hasInvoicedData && (
                             <button
                                 onClick={handleSyncFromInvoices}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-[10px] font-black tracking-widest uppercase transition-all border border-indigo-200/50 dark:border-indigo-500/20"
-                                title="Sincronizar todos los pedidos con las facturas emitidas"
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-wider transition-all border border-indigo-100 dark:border-indigo-500/20"
                             >
-                                <RefreshCw className="w-3.5 h-3.5" strokeWidth={2.5} />
-                                SINCRONIZAR
+                                <RefreshCw className="w-3 h-3" />
+                                Sincronizar
                             </button>
                         )}
                     </div>
 
-                    <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar flex flex-col gap-3">
-                        {activeRanges.map((range, index) => {
-                            const rateInfo = logisticsRates.find(r =>
-                                normalizeRangeKey(r.name || '') === normalizeRangeKey(range) ||
-                                normalizeRangeKey(`${r.min}-${r.max} km`) === normalizeRangeKey(range)
-                            );
-                            return (
-                                <div key={range} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 group transition-colors border border-transparent hover:border-slate-100 dark:hover:border-slate-800">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`
-                                            w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold
-                                            ${index === 0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                                                index === 1 ? 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400' :
-                                                    index === 2 ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400' :
-                                                        index === 3 ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400' :
-                                                            'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400'}
-                                        `}>
-                                            {index + 1}
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">{range}</span>
+                    {/* Rows */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                    <th className="text-left px-5 py-2.5">#</th>
+                                    <th className="text-left py-2.5">Rango</th>
+                                    <th className="text-right py-2.5 pr-1">Tarifa</th>
+                                    {hasInvoicedData && <th className="text-right py-2.5 pr-1">Facturado</th>}
+                                    <th className="text-right py-2.5">Pedidos</th>
+                                    <th className="text-right py-2.5 pr-5">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {activeRanges.map((range, index) => {
+                                    const rateInfo = logisticsRates.find(r =>
+                                        normalizeRangeKey(r.name || '') === normalizeRangeKey(range) ||
+                                        normalizeRangeKey(`${r.min}-${r.max} km`) === normalizeRangeKey(range)
+                                    );
+                                    const count = orders[range] || 0;
+                                    const subtotal = count * (rateInfo?.price || 0);
+
+                                    // Invoice matching
+                                    const invoicedItems = Object.entries(invoicedIncome?.ordersDetail || {});
+                                    const invMatch = invoicedItems.find(([k]) => normalizeRangeKey(k) === normalizeRangeKey(range));
+                                    const invCount = invMatch ? invMatch[1] : undefined;
+                                    const isMatch = invCount !== undefined && count === invCount;
+
+                                    return (
+                                        <tr
+                                            key={range}
+                                            className="border-b border-slate-50 dark:border-slate-800/30 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors"
+                                        >
+                                            {/* Index */}
+                                            <td className="px-5 py-2">
+                                                <span className="w-5 h-5 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                                                    {index + 1}
+                                                </span>
+                                            </td>
+
+                                            {/* Range */}
+                                            <td className="py-2">
+                                                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{range}</span>
+                                            </td>
+
+                                            {/* Rate */}
+                                            <td className="text-right py-2 pr-1">
                                                 {rateInfo && (
-                                                    <span className="text-[10px] font-medium text-indigo-500/70 dark:text-indigo-400/50 bg-indigo-50 dark:bg-indigo-500/5 px-1.5 rounded-full border border-indigo-100/50 dark:border-indigo-500/10 italic">
-                                                        {rateInfo.price}€/ped
+                                                    <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 tabular-nums">
+                                                        {rateInfo.price}€
                                                     </span>
                                                 )}
-                                            </div>
-                                            <span className="text-[9px] font-medium text-slate-400 uppercase tracking-wide">Pedidos</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col items-end gap-1">
-                                        <div className="flex items-center gap-2">
-                                            {hasInvoicedData && activeRanges.length > 0 && (() => {
-                                                const normalizedInvoicedItems = Object.entries(invoicedIncome.ordersDetail || {});
-                                                const invItem = normalizedInvoicedItems.find(([k]) => normalizeRangeKey(k) === normalizeRangeKey(range));
-                                                const invCount = invItem ? invItem[1] : undefined;
+                                            </td>
 
-                                                if (invCount === undefined) {
-                                                    return null;
-                                                }
-                                                const isMatch = (orders[range] || 0) === invCount;
+                                            {/* Invoice Match */}
+                                            {hasInvoicedData && (
+                                                <td className="text-right py-2 pr-1">
+                                                    {invCount !== undefined && (
+                                                        <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold tabular-nums ${isMatch
+                                                            ? 'text-emerald-600 dark:text-emerald-400'
+                                                            : 'text-amber-600 dark:text-amber-400'
+                                                            }`}>
+                                                            {isMatch
+                                                                ? <CheckCircle2 className="w-3 h-3" />
+                                                                : <AlertCircle className="w-3 h-3" />
+                                                            }
+                                                            {invCount}
+                                                        </span>
+                                                    )}
+                                                </td>
+                                            )}
 
-                                                return (
-                                                    <div className={`
-                                                        text-[9px] px-1.5 py-0.5 rounded flex items-center gap-1 font-black uppercase tracking-tighter
-                                                        ${isMatch
-                                                            ? 'bg-emerald-100/80 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                                            : 'bg-amber-100/80 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 animate-pulse'}
-                                                    `}>
-                                                        {isMatch ? <CheckCircle2 className="w-2.5 h-2.5" /> : <AlertCircle className="w-2.5 h-2.5" />}
-                                                        Facturado: {invCount}
-                                                    </div>
-                                                );
-                                            })()}
-                                            <div className="w-16">
+                                            {/* Input */}
+                                            <td className="text-right py-1.5">
                                                 <input
                                                     type="number"
-                                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md text-right text-sm font-bold py-1 px-2 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-mono text-slate-900 dark:text-white"
+                                                    className="w-14 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-md text-right text-xs font-bold py-1.5 px-2 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-mono text-slate-900 dark:text-white"
                                                     value={orders[range] || ''}
                                                     onChange={(e) => setOrders(prev => ({ ...prev, [range]: parseInt(e.target.value) || 0 }))}
                                                     disabled={isLocked}
                                                     placeholder="0"
                                                 />
-                                            </div>
-                                        </div>
-                                        {rateInfo && (orders[range] || 0) > 0 && (
-                                            <span className="text-[10px] font-bold text-slate-400/80 dark:text-slate-500 tabular-nums">
-                                                {formatMoney((orders[range] || 0) * rateInfo.price)}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                        <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center px-2">
-                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.15em]">Total Pedidos</span>
-                            <span className="text-lg font-black text-slate-800 dark:text-white tabular-nums">
-                                {Object.values(orders).reduce((sum, count) => sum + count, 0)}
-                            </span>
-                        </div>
+                                            </td>
+
+                                            {/* Subtotal */}
+                                            <td className="text-right py-2 pr-5">
+                                                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 tabular-nums">
+                                                    {subtotal > 0 ? `${formatMoney(subtotal)}€` : '—'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Total Orders Footer */}
+                    <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/20">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Pedidos</span>
+                        <span className="text-base font-black text-slate-800 dark:text-white tabular-nums">{totalOrders}</span>
                     </div>
                 </div>
 
-                {/* Right: Totals & Adjustments */}
-                <div className="lg:col-span-5 flex flex-col gap-6 h-full">
-                    {/* Ajustes */}
-                    <div className="bg-white dark:bg-slate-900/50 rounded-3xl border border-slate-200/60 dark:border-white/5 p-6 shadow-sm flex-shrink-0">
-                        <div className="flex items-center gap-2 mb-4">
-                            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">Ajustes</h2>
-                        </div>
-                        <ProfessionalInput label="Pedidos Cancelados" value={cancelledOrders} onChange={setCancelledOrders} type="number" size="medium" />
+                {/* ── Right: Totals & Adjustments ── */}
+                <div className="lg:col-span-5 flex flex-col gap-4 h-full">
+                    {/* Cancelled Orders */}
+                    <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200/60 dark:border-white/5 p-5">
+                        <ProfessionalInput
+                            label="Pedidos Cancelados"
+                            value={cancelledOrders}
+                            onChange={setCancelledOrders}
+                            type="number"
+                            size="medium"
+                            disabled={isLocked}
+                        />
                     </div>
 
-                    {/* Total Card */}
-                    <div className="flex-1 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-3xl p-8 border border-indigo-100/50 dark:border-indigo-800/30 flex flex-col justify-center items-center text-center relative overflow-hidden group">
-                        <div className="relative z-10 w-full flex flex-col items-center">
-                            <p className="text-[10px] sm:text-[11px] font-bold text-indigo-600/70 dark:text-indigo-400 uppercase tracking-[0.25em] mb-4">Ingreso Bruto Total</p>
-                            <div className="flex items-baseline justify-center gap-1 mb-8">
-                                <span className="text-5xl sm:text-6xl font-black tabular-nums tracking-tighter text-indigo-950 dark:text-white">
-                                    {Math.floor(totalIncome)}
-                                </span>
-                                <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                                    ,{String(Math.round((totalIncome % 1) * 100)).padStart(2, '0')}€
-                                </span>
-                            </div>
+                    {/* Total Income Card */}
+                    <div className="flex-1 bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200/60 dark:border-white/5 p-6 flex flex-col justify-center items-center text-center">
+                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-3">
+                            Ingreso Bruto Total
+                        </p>
+                        <div className="flex items-baseline justify-center gap-0.5 mb-6">
+                            <span className="text-4xl sm:text-5xl font-black tabular-nums tracking-tighter text-slate-900 dark:text-white">
+                                {Math.floor(totalIncome).toLocaleString('es-ES')}
+                            </span>
+                            <span className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
+                                ,{String(Math.round((totalIncome % 1) * 100)).padStart(2, '0')}€
+                            </span>
+                        </div>
 
-                            {hasInvoicedInconsistency && (
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    className="mb-8 w-full max-w-sm p-4 bg-amber-500/10 backdrop-blur-md border border-amber-500/20 rounded-2xl text-left"
-                                >
-                                    <div className="flex items-start gap-3">
-                                        <div className="mt-0.5 text-amber-500 bg-amber-500/10 p-1.5 rounded-lg"><AlertCircle className="w-4 h-4" /></div>
-                                        <div className="flex-1">
-                                            <p className="text-[11px] font-bold text-amber-400 uppercase tracking-widest mb-1">Discrepancia detectada</p>
-                                            <p className="text-xs text-amber-200/80 leading-relaxed mb-3">
-                                                El total manual no coincide con la base imponible facturada ({formatMoney(invoicedIncome?.subtotal || 0)}).
-                                            </p>
-                                            {hasInvoicedData && !isLocked && (
-                                                <button
-                                                    onClick={handleSyncFromInvoices}
-                                                    className="w-full py-2 px-4 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all active:scale-[0.98]"
-                                                >
-                                                    Sincronizar Facturas
-                                                </button>
-                                            )}
-                                        </div>
+                        {/* Invoice Discrepancy Alert */}
+                        {hasInvoicedInconsistency && hasInvoicedData && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="mb-5 w-full max-w-xs p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 rounded-xl text-left"
+                            >
+                                <div className="flex items-start gap-2.5">
+                                    <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-0.5">Discrepancia</p>
+                                        <p className="text-[11px] text-amber-600 dark:text-amber-300/80 leading-relaxed">
+                                            No coincide con facturación: {formatMoney(invoicedIncome?.subtotal || 0)}€
+                                        </p>
+                                        {!isLocked && (
+                                            <button
+                                                onClick={handleSyncFromInvoices}
+                                                className="mt-2 w-full py-1.5 px-3 bg-amber-100 dark:bg-amber-800/30 hover:bg-amber-200 dark:hover:bg-amber-800/50 text-amber-700 dark:text-amber-300 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all"
+                                            >
+                                                Sincronizar
+                                            </button>
+                                        )}
                                     </div>
-                                </motion.div>
-                            )}
-
-                            <div className="w-full max-w-[240px]">
-                                <label className="block text-[10px] font-bold text-indigo-300/60 uppercase tracking-[0.2em] mb-2">Ajuste Manual (€)</label>
-                                <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">€</span>
-                                    <input
-                                        type="number"
-                                        value={totalIncome}
-                                        onChange={(e) => setTotalIncome(parseFloat(e.target.value) || 0)}
-                                        className="w-full bg-white/5 border border-white/10 hover:border-white/20 text-white font-mono font-bold text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent rounded-2xl py-3 pl-10 pr-4 transition-all placeholder-white/20"
-                                        placeholder="0.00"
-                                    />
                                 </div>
-                            </div>
+                            </motion.div>
+                        )}
+
+                        {/* Manual Adjustment */}
+                        <div className="w-full max-w-[200px]">
+                            <ProfessionalInput
+                                label="Ajuste Manual (€)"
+                                value={totalIncome}
+                                onChange={(v) => setTotalIncome(v)}
+                                prefix="€"
+                                size="medium"
+                                disabled={isLocked}
+                            />
                         </div>
                     </div>
                 </div>
