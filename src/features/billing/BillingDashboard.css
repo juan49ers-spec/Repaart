@@ -1,0 +1,101 @@
+/**
+ * Billing Dashboard Styles - Zen Mode
+ */
+
+.billing-tabs .ant-tabs-nav {
+  margin-bottom: 20px;
+}
+
+.billing-tabs .ant-tabs-tab {
+  padding: 8px 16px !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}
+
+.billing-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #10b981 !important;
+}
+
+.billing-tabs .ant-tabs-ink-bar {
+  background: #10b981 !important;
+}
+
+.billing-wizard-modal .ant-modal-content {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 20px;
+}
+
+.zen-button {
+  border-radius: 16px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.zen-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Custom Scrollbar for sidebars/lists */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+/* PDF Preview Styles */
+.pdf-container {
+  width: 100%;
+  height: 600px;
+}
+
+.pdf-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Nueva Factura button strong pulse animation */
+@keyframes pulse-strong {
+
+  0%,
+  100% {
+    box-shadow: 0 0 30px rgba(79, 70, 229, 0.5);
+    transform: scale(1);
+  }
+
+  50% {
+    box-shadow: 0 0 50px rgba(79, 70, 229, 0.9);
+    transform: scale(1.02);
+  }
+}
+
+/* Nueva Factura button emerald pulse animation */
+@keyframes pulse-emerald {
+
+  0%,
+  100% {
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+    transform: scale(1);
+  }
+
+  50% {
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.7);
+    transform: scale(1.02);
+  }
+}
+
+.animate-pulse-emerald {
+  animation: pulse-emerald 2s ease-in-out infinite;
+}
