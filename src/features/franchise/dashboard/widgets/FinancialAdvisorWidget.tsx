@@ -1,5 +1,5 @@
 import { useMemo, type FC } from 'react';
-import { AlertTriangle, TrendingUp, CheckCircle, Sparkles, TrendingDown, ShieldAlert, Bot, ArrowRight } from 'lucide-react';
+import { AlertTriangle, TrendingUp, CheckCircle, Sparkles, TrendingDown, ShieldAlert, ArrowRight, MessageCircle } from 'lucide-react';
 import { formatMoney } from '../../../../lib/finance';
 import { cn } from '../../../../lib/utils';
 
@@ -19,6 +19,7 @@ interface Alert {
     severity: 'critical' | 'warning' | 'positive';
     label: string;
     detail: string;
+    tip: string;
 }
 
 // ── Score Calculation ──────────────────────────────────────
@@ -29,7 +30,6 @@ function calculateHealthScore(
     taxReserve: number,
     revenue: number
 ): number {
-    // Margen (35%) — ideal >15%, crítico <5%
     const marginScore = margin >= 20 ? 100
         : margin >= 15 ? 80
             : margin >= 10 ? 60
@@ -37,7 +37,6 @@ function calculateHealthScore(
                     : margin >= 0 ? 15
                         : 0;
 
-    // Tendencia ingresos (25%) — positiva es buena
     const trendScore = trend > 10 ? 100
         : trend > 5 ? 85
             : trend > 0 ? 70
@@ -45,14 +44,12 @@ function calculateHealthScore(
                     : trend > -10 ? 30
                         : 10;
 
-    // Ratio gastos/ingresos (20%) — ideal <70%
     const ratioScore = expenseRatio < 0.6 ? 100
         : expenseRatio < 0.7 ? 85
             : expenseRatio < 0.8 ? 65
                 : expenseRatio < 0.9 ? 40
                     : 15;
 
-    // Reserva fiscal (10%) — vs 21% esperado
     const expectedReserve = revenue * 0.21;
     const reserveRatio = expectedReserve > 0 ? taxReserve / expectedReserve : 1;
     const reserveScore = reserveRatio >= 0.8 ? 100
@@ -60,7 +57,6 @@ function calculateHealthScore(
             : reserveRatio >= 0.3 ? 40
                 : 15;
 
-    // Rentabilidad absoluta (10%)
     const profitScore = margin > 0 && revenue > 0
         ? Math.min(100, (revenue * margin / 100 / 3000) * 100)
         : 0;
@@ -85,64 +81,71 @@ function generateAlerts(
 ): Alert[] {
     const alerts: Alert[] = [];
 
-    // Margen crítico
+    // Margen
     if (margin < 5 && revenue > 0) {
         alerts.push({
             id: 'margin-critical',
             severity: 'critical',
-            label: 'Margen crítico',
-            detail: `${margin.toFixed(1)}% — muy por debajo del 15% ideal`,
+            label: 'Ganas muy poco',
+            detail: `De cada 100€ que entran, solo te quedas ${margin.toFixed(1)}€. Lo ideal es quedarte con 15€ o más.`,
+            tip: 'Revisa tus gastos más grandes o sube el precio del reparto.',
         });
     } else if (margin < 15 && margin >= 5) {
         alerts.push({
             id: 'margin-low',
             severity: 'warning',
             label: 'Margen mejorable',
-            detail: `${margin.toFixed(1)}% — objetivo: >15%`,
+            detail: `Te quedas con ${margin.toFixed(1)}€ de cada 100€. Lo ideal sería 15€ o más.`,
+            tip: 'Busca reducir un 5-10% en tu gasto más alto.',
         });
     }
 
-    // Gastos altos
+    // Gastos
     if (expenseRatio > 0.85 && revenue > 0) {
         alerts.push({
             id: 'expenses-high',
             severity: 'critical',
-            label: 'Gastos excesivos',
-            detail: `${(expenseRatio * 100).toFixed(0)}% de los ingresos van a gastos`,
+            label: 'Gastos demasiado altos',
+            detail: `Estás gastando ${(expenseRatio * 100).toFixed(0)} céntimos de cada euro que ganas. Deberías gastar menos de 70.`,
+            tip: 'Mira tus 3 gastos más grandes y negocia con proveedores.',
         });
     } else if (expenseRatio > 0.7) {
         alerts.push({
             id: 'expenses-warning',
             severity: 'warning',
             label: 'Gastos elevados',
-            detail: `${(expenseRatio * 100).toFixed(0)}% del ingreso — ideal: <70%`,
+            detail: `Gastas ${(expenseRatio * 100).toFixed(0)} céntimos de cada euro. Lo ideal es menos de 70.`,
+            tip: 'Revisa si puedes optimizar turnos o reducir combustible.',
         });
     }
 
-    // Coste hora alto
+    // Coste hora
     if (hourlyCost > 22) {
         alerts.push({
             id: 'hourly-high',
             severity: 'warning',
-            label: 'Coste/hora elevado',
-            detail: `${hourlyCost.toFixed(1)}€/h — objetivo: <20€/h`,
+            label: 'Coste por hora alto',
+            detail: `Te cuesta ${hourlyCost.toFixed(1)}€ cada hora de trabajo. Lo habitual es menos de 20€.`,
+            tip: 'Intenta cubrir más pedidos por turno o ajustar horarios.',
         });
     }
 
-    // Tendencia negativa
+    // Tendencia
     if (trend < -10) {
         alerts.push({
             id: 'trend-down',
             severity: 'critical',
-            label: 'Caída de ingresos',
-            detail: `${trend.toFixed(1)}% vs mes anterior`,
+            label: 'Ingresos cayendo',
+            detail: `Estás ingresando un ${Math.abs(trend).toFixed(1)}% menos que el mes pasado.`,
+            tip: 'Analiza si hay menos pedidos o si el ticket medio ha bajado.',
         });
     } else if (trend < -3) {
         alerts.push({
             id: 'trend-slight',
             severity: 'warning',
-            label: 'Ingresos a la baja',
-            detail: `${trend.toFixed(1)}% vs mes anterior`,
+            label: 'Ingresos bajando',
+            detail: `Un ${Math.abs(trend).toFixed(1)}% menos que el mes anterior.`,
+            tip: 'Mantén el ojo en la tendencia para reaccionar a tiempo.',
         });
     }
 
@@ -151,8 +154,9 @@ function generateAlerts(
         alerts.push({
             id: 'losses',
             severity: 'critical',
-            label: 'Pérdidas activas',
-            detail: `-${formatMoney(expenses - revenue)}€ este mes`,
+            label: 'Estás perdiendo dinero',
+            detail: `Este mes llevas ${formatMoney(expenses - revenue)}€ de pérdidas.`,
+            tip: 'Es urgente: reduce gastos o aumenta pedidos esta semana.',
         });
     }
 
@@ -161,8 +165,9 @@ function generateAlerts(
         alerts.push({
             id: 'growth',
             severity: 'positive',
-            label: 'Crecimiento sólido',
-            detail: `+${trend.toFixed(1)}% vs mes anterior`,
+            label: '¡Estás creciendo!',
+            detail: `Ingresas un ${trend.toFixed(1)}% más que el mes pasado.`,
+            tip: 'Buen trabajo. Mantén el ritmo y vigila que el margen no baje.',
         });
     }
 
@@ -170,12 +175,12 @@ function generateAlerts(
         alerts.push({
             id: 'margin-great',
             severity: 'positive',
-            label: 'Excelente margen',
-            detail: `${margin.toFixed(1)}% — por encima del objetivo`,
+            label: '¡Excelente rentabilidad!',
+            detail: `Te quedas con ${margin.toFixed(1)}€ de cada 100€. Estás por encima de la media.`,
+            tip: 'Considera invertir parte del beneficio en crecimiento.',
         });
     }
 
-    // Priorizar: critical > warning > positive
     const priority = { critical: 0, warning: 1, positive: 2 };
     return alerts.sort((a, b) => priority[a.severity] - priority[b.severity]).slice(0, 3);
 }
@@ -209,13 +214,12 @@ const ScoreRing: FC<{ score: number; size?: number }> = ({ score, size = 96 }) =
     };
 
     const colors = getColorClasses(score);
-    const label = score >= 70 ? 'Saludable' : score >= 45 ? 'Mejorable' : 'En riesgo';
+    const label = score >= 70 ? '🟢 Vas bien' : score >= 45 ? '🟡 Puedes mejorar' : '🔴 Necesitas actuar';
 
     return (
         <div className="flex flex-col items-center gap-2">
             <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
                 <svg width={size} height={size} className="transform -rotate-90">
-                    {/* Background track */}
                     <circle
                         cx={center}
                         cy={center}
@@ -224,7 +228,6 @@ const ScoreRing: FC<{ score: number; size?: number }> = ({ score, size = 96 }) =
                         className={cn("transition-colors duration-300", colors.track)}
                         strokeWidth={8}
                     />
-                    {/* Progress arc */}
                     <circle
                         cx={center}
                         cy={center}
@@ -237,7 +240,6 @@ const ScoreRing: FC<{ score: number; size?: number }> = ({ score, size = 96 }) =
                         strokeLinecap="round"
                     />
                 </svg>
-                {/* Center score */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className={cn("text-2xl font-black tabular-nums leading-none", colors.text)}>
                         {score}
@@ -248,7 +250,7 @@ const ScoreRing: FC<{ score: number; size?: number }> = ({ score, size = 96 }) =
                 </div>
             </div>
             <span className={cn(
-                "text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full",
+                "text-[11px] font-bold px-2.5 py-1 rounded-full",
                 colors.text,
                 colors.bg
             )}>
@@ -267,6 +269,7 @@ const AlertBadge: FC<{ alert: Alert }> = ({ alert }) => {
             border: 'border-rose-200 dark:border-rose-800/40',
             text: 'text-rose-700 dark:text-rose-400',
             iconColor: 'text-rose-500',
+            tipBg: 'bg-rose-100/60 dark:bg-rose-900/30',
         },
         warning: {
             icon: AlertTriangle,
@@ -274,6 +277,7 @@ const AlertBadge: FC<{ alert: Alert }> = ({ alert }) => {
             border: 'border-amber-200 dark:border-amber-800/40',
             text: 'text-amber-700 dark:text-amber-400',
             iconColor: 'text-amber-500',
+            tipBg: 'bg-amber-100/60 dark:bg-amber-900/30',
         },
         positive: {
             icon: CheckCircle,
@@ -281,6 +285,7 @@ const AlertBadge: FC<{ alert: Alert }> = ({ alert }) => {
             border: 'border-emerald-200 dark:border-emerald-800/40',
             text: 'text-emerald-700 dark:text-emerald-400',
             iconColor: 'text-emerald-500',
+            tipBg: 'bg-emerald-100/60 dark:bg-emerald-900/30',
         },
     };
 
@@ -288,16 +293,21 @@ const AlertBadge: FC<{ alert: Alert }> = ({ alert }) => {
     const Icon = c.icon;
 
     return (
-        <div className={cn('flex items-start gap-2.5 p-2.5 rounded-lg border', c.bg, c.border)}>
-            <Icon className={cn('w-4 h-4 shrink-0 mt-0.5', c.iconColor)} />
-            <div className="min-w-0 flex-1">
-                <p className={cn('text-xs font-bold leading-tight', c.text)}>
-                    {alert.label}
-                </p>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">
-                    {alert.detail}
-                </p>
+        <div className={cn('flex flex-col gap-1.5 p-2.5 rounded-lg border', c.bg, c.border)}>
+            <div className="flex items-start gap-2.5">
+                <Icon className={cn('w-4 h-4 shrink-0 mt-0.5', c.iconColor)} />
+                <div className="min-w-0 flex-1">
+                    <p className={cn('text-xs font-bold leading-tight', c.text)}>
+                        {alert.label}
+                    </p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">
+                        {alert.detail}
+                    </p>
+                </div>
             </div>
+            <p className={cn('text-[10px] font-medium px-2 py-1 rounded-md ml-6', c.tipBg, c.text)}>
+                💡 {alert.tip}
+            </p>
         </div>
     );
 };
@@ -383,10 +393,10 @@ const FinancialAdvisorWidget: FC<FinancialAdvisorWidgetProps> = ({
             <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/5">
                 <button
                     onClick={onOpenAdvisor}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl text-xs font-bold uppercase tracking-wide transition-all shadow-md shadow-indigo-500/15 hover:shadow-lg hover:shadow-indigo-500/25"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 rounded-xl text-xs font-bold transition-all shadow-sm hover:shadow-md"
                 >
-                    <Bot className="w-4 h-4" />
-                    Abrir Asesor IA
+                    <MessageCircle className="w-4 h-4" />
+                    Pide consejo al Asesor
                     <ArrowRight className="w-3.5 h-3.5 ml-1" />
                 </button>
             </div>
