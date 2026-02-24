@@ -53,7 +53,19 @@ const UserRow: React.FC<UserRowProps> = ({ user, style, onAction, currentUserRol
     const roleBadge = getRoleBadge(user.role || 'user');
 
     return (
-        <div style={style} className="flex items-center border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors px-3 sm:px-4 group relative">
+        <div
+            style={{
+                '--virtual-top': `${style?.top ?? 0}px`,
+                '--virtual-height': `${style?.height ?? 'auto'}`,
+                '--virtual-transform': style?.transform ?? 'none',
+                position: 'absolute',
+                top: 'var(--virtual-top)',
+                height: 'var(--virtual-height)',
+                transform: 'var(--virtual-transform)',
+                width: '100%'
+            } as React.CSSProperties}
+            className="flex items-center border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors px-3 sm:px-4 group relative"
+        >
             {/* User Info & Mobile Stack */}
             <div className="flex-1 flex items-center gap-3 min-w-0">
                 <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold ring-1 ring-inset ${user.role === 'franchise' ? 'bg-amber-500/20 text-amber-400 ring-amber-500/30' : 'bg-indigo-500/20 text-indigo-300 ring-indigo-500/30'}`}>
@@ -222,11 +234,10 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction, currentUserRole,
             <div
                 ref={containerRef}
                 onScroll={handleScroll}
-                className="flex-1 overflow-y-auto relative custom-scrollbar"
-                style={{ height: '100%' }}
+                className="flex-1 overflow-y-auto relative custom-scrollbar h-full text-slate-700 dark:text-slate-300"
             >
                 {/* Responsive wrapper: min-width only on desktop to allow mobile flex behavior */}
-                <div style={{ height: totalContentHeight, position: 'relative' }} className="min-w-full md:min-w-[800px]">
+                <div style={{ '--table-height': `${totalContentHeight}px`, height: 'var(--table-height)', position: 'relative' } as React.CSSProperties} className="min-w-full md:min-w-[800px]">
                     <div style={{ transform: `translateY(${offsetY}px)` }}>
                         {visibleUsers.map((user) => (
                             <UserRow

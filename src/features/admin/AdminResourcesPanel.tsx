@@ -20,17 +20,20 @@ import {
     BookOpen,
     Layout,
     Folder,
-    RefreshCw
+    RefreshCw,
+    Sparkles
 } from 'lucide-react';
 import DocPreviewModal from '../../components/ui/overlays/DocPreviewModal';
 import ConfirmationModal from '../../components/ui/feedback/ConfirmationModal';
 import ResourceUploadModal from './resources/ResourceUploadModal';
+import { resourceRequestService } from '../../services/resourceRequestService';
+import { useAuth } from '../../context/AuthContext';
+import { extractPlaceholders } from './resources/utils/contractUtils';
+import SmartContractWizard from './resources/SmartContractWizard';
 import AdminGuidesPanel from './knowledge/AdminGuidesPanel';
 import UserManual from '../common/UserManual/UserManual';
 import RequestsInbox from './resources/RequestsInbox';
 import ServiceManager from './services/ServiceManager';
-import { resourceRequestService } from '../../services/resourceRequestService';
-import { useAuth } from '../../context/AuthContext';
 
 interface Resource {
     id: string;
@@ -90,6 +93,33 @@ const AdminResourcesPanel = () => {
         message: '',
         onConfirm: null,
     });
+
+    // 🧠 Smart Contract Wizard State
+    const [isWizardOpen, setIsWizardOpen] = useState(false);
+    const [templateContent, setTemplateContent] = useState('');
+
+    const handleOpenWizard = async () => {
+        try {
+            const response = await fetch('/documentacion/PLANTILLA CONTRATO RESTAURANTES.md');
+            if (response.ok) {
+                const text = await response.text();
+                setTemplateContent(text);
+                setIsWizardOpen(true);
+            } else {
+                const fallback = `
+# CONTRATO DE PRESTACIÓN DE SERVICIOS LOGÍSTICOS
+
+En [LOCALIDAD], a [DÍA] de [MES] de 2024.
+
+**REUNIDOS**...
+`;
+                setTemplateContent(fallback);
+                setIsWizardOpen(true);
+            }
+        } catch (e) {
+            console.error("Error loading template:", e);
+        }
+    };
 
     const handleForceTokenRefresh = async () => {
         await forceTokenRefresh();
@@ -345,6 +375,14 @@ const AdminResourcesPanel = () => {
                                     <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" />
                                     Subir Nuevo Recurso
                                 </button>
+
+                                <button
+                                    onClick={handleOpenWizard}
+                                    className="w-full py-3 bg-slate-900 dark:bg-black text-white rounded-xl shadow-lg shadow-slate-900/10 transition-all font-black text-sm flex items-center justify-center gap-2 group border border-slate-800"
+                                >
+                                    <Sparkles className="w-4 h-4 text-indigo-400 group-hover:animate-pulse" />
+                                    Generar Inteligente
+                                </button>
                             </div>
                         </aside>
 
@@ -540,6 +578,14 @@ const AdminResourcesPanel = () => {
                 isOpen={!!previewFile}
                 onClose={() => setPreviewFile(null)}
                 file={previewFile ? { ...previewFile, name: previewFile.title || previewFile.name || '', url: previewFile.url || '' } : null}
+            />
+
+            {/* 🧠 Smart Contract Wizard */}
+            <SmartContractWizard
+                isOpen={isWizardOpen}
+                onClose={() => setIsWizardOpen(false)}
+                templateName="PLANTILLA CONTRATO RESTAURANTES.md"
+                templateContent={templateContent}
             />
 
             <ConfirmationModal

@@ -162,12 +162,12 @@ const TakeHomeProfitWidget: React.FC<TakeHomeProfitWidgetProps> = ({
             <div className="mt-auto pt-4 border-t border-slate-100 dark:border-white/5">
                 <button
                     onClick={(e) => { e.stopPropagation(); setShowYTDModal(true); }}
-                    className="w-full py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-950 rounded-lg text-xs font-bold uppercase tracking-wide hover:bg-ruby-600 dark:hover:bg-ruby-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-sm hover:shadow-lg"
+                    className="w-full py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-950 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-wide hover:bg-ruby-600 dark:hover:bg-ruby-600 hover:text-white transition-all flex items-center justify-center gap-1.5 md:gap-3 shadow-sm hover:shadow-lg px-2"
                 >
-                    <Activity className="w-3.5 h-3.5" />
-                    Informe Anual {year}
-                    <div className="h-3 w-px bg-white/20 dark:bg-slate-900/20" />
-                    <span className={cn("tabular-nums", isProfitable ? 'text-emerald-400 dark:text-emerald-600' : 'text-ruby-400')}>
+                    <Activity className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">Informe Anual {year}</span>
+                    <div className="h-3 w-px bg-white/20 dark:bg-slate-900/20 shrink-0" />
+                    <span className={cn("tabular-nums shrink-0", isProfitable ? 'text-emerald-400 dark:text-emerald-600' : 'text-ruby-400')}>
                         {isProfitable ? '+' : ''}{formatMoney(annualNetProfit || 0)}€
                     </span>
                 </button>

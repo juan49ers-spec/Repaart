@@ -43,7 +43,7 @@ export const FinancialHeader: React.FC<FinancialHeaderProps> = ({ month, step, s
                             {idx > 0 && <div className="w-6 h-px bg-slate-200 dark:bg-slate-700 hidden lg:block" />}
                             <button
                                 role="tab"
-                                aria-selected={isActive}
+                                aria-selected={isActive ? 'true' : 'false'}
                                 onClick={() => !isLocked && setStep(s.id)}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 border-b-2 transition-all text-[10px] font-bold uppercase tracking-wider ${isActive ? activeColor : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
                                     }`}

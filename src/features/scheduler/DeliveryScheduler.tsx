@@ -131,13 +131,7 @@ const DeliveryScheduler: React.FC<{
     const [activeDragShift, setActiveDragShift] = useState<Shift | null>(null);
 
     // Load templates on mount
-    useEffect(() => {
-        if (safeFranchiseId) {
-            loadTemplates();
-        }
-    }, [safeFranchiseId]);
-
-    const loadTemplates = async () => {
+    const loadTemplates = useCallback(async () => {
         setIsLoadingTemplates(true);
         try {
             const templates = await shiftService.getWeekTemplates(safeFranchiseId);
@@ -147,7 +141,13 @@ const DeliveryScheduler: React.FC<{
         } finally {
             setIsLoadingTemplates(false);
         }
-    };
+    }, [safeFranchiseId]);
+
+    useEffect(() => {
+        if (safeFranchiseId) {
+            loadTemplates();
+        }
+    }, [safeFranchiseId, loadTemplates]);
 
     const saveCurrentWeekAsTemplate = async () => {
         if (!templateName.trim()) {
@@ -1288,7 +1288,7 @@ const DeliveryScheduler: React.FC<{
                                         );
                                     })
                                 ) : (
-                                    <div className="flex-1 flex transition-all" style={{ minWidth: `${dayViewMinWidth}px` }}>
+                                    <div className="flex-1 flex transition-all" style={{ '--day-min-width': `${dayViewMinWidth}px`, minWidth: 'var(--day-min-width)' } as React.CSSProperties}>
                                         {/* Timeline Header Day View - 24h with 15-min intervals */}
                                         {dayStructure.map((hObj) => {
                                             return (
@@ -1433,7 +1433,7 @@ const DeliveryScheduler: React.FC<{
                                                 );
                                             })
                                         ) : (
-                                            <div className="w-full h-full relative" style={{ minWidth: `${dayViewMinWidth}px` }}>
+                                            <div className="w-full h-full relative" style={{ '--day-min-width': `${dayViewMinWidth}px`, minWidth: 'var(--day-min-width)' } as React.CSSProperties}>
                                                 {/* Grid Background - Nested Structure */}
                                                 <div className="absolute inset-0 flex pointer-events-none">
                                                     {dayStructure.map((hObj) => (
@@ -1484,7 +1484,12 @@ const DeliveryScheduler: React.FC<{
                                                             <div
                                                                 key={shift.id}
                                                                 className="absolute top-[2px] bottom-[2px] z-20 hover:z-50 transition-all duration-200 ease-out rounded-md overflow-hidden shadow-sm hover:shadow-lg hover:shadow-indigo-500/20 hover:scale-[1.02] hover:brightness-105 cursor-pointer ring-0 hover:ring-1 hover:ring-white/50 pointer-events-auto"
-                                                                style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
+                                                                style={{
+                                                                    '--shift-left': `${leftPct}%`,
+                                                                    '--shift-width': `${widthPct}%`,
+                                                                    left: 'var(--shift-left)',
+                                                                    width: 'var(--shift-width)'
+                                                                } as React.CSSProperties}
                                                             >
                                                                 <DraggableShift
                                                                     shift={shift}
@@ -1540,7 +1545,7 @@ const DeliveryScheduler: React.FC<{
                                         );
                                     })
                                 ) : (
-                                    <div className="flex-1 flex items-center px-6 py-2" style={{ minWidth: `${dayViewMinWidth}px` }}>
+                                    <div className="flex-1 flex items-center px-6 py-2" style={{ '--day-min-width': `${dayViewMinWidth}px`, minWidth: 'var(--day-min-width)' } as React.CSSProperties}>
                                         {(() => {
                                             const iso = toLocalDateString(selectedDate);
                                             const counts = coverage[iso] || Array(24).fill(0);

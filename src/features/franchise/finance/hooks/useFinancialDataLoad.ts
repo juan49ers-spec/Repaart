@@ -126,7 +126,7 @@ export const useFinancialDataLoad = ({ franchiseId, month, initialData, user }: 
 
                 // Calculate operative hours from shifts
                 let totalMin = 0;
-                monthShifts.forEach((shift: any) => {
+                (monthShifts || []).forEach((shift: any) => {
                     const start = new Date(shift.startAt);
                     const end = new Date(shift.endAt);
                     const diffMs = end.getTime() - start.getTime();

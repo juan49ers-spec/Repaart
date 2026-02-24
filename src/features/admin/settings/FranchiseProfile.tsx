@@ -317,25 +317,29 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                 <div className="flex flex-col md:flex-row items-end gap-6 pb-6 border-b border-slate-200/60">
                     {/* Avatar / Logo */}
                     {isSelfProfile ? (
-                        <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="relative group cursor-pointer"
-                            aria-label="Cambiar foto de perfil"
-                        >
-                            <div className="w-32 h-32 rounded-full border-4 border-white shadow-2xl overflow-hidden bg-white flex items-center justify-center relative">
-                                {watchedUserPhoto ? (
-                                    <img src={watchedUserPhoto} alt="Foto de perfil" className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="text-4xl font-black text-slate-300">
-                                        {user?.email?.charAt(0).toUpperCase()}
-                                    </div>
-                                )}
+                        <div className="relative group">
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="relative cursor-pointer"
+                                aria-label="Cambiar foto de perfil"
+                            >
+                                <div className="w-32 h-32 rounded-full border-4 border-white shadow-2xl overflow-hidden bg-white flex items-center justify-center relative">
+                                    {watchedUserPhoto ? (
+                                        <img src={watchedUserPhoto} alt="Foto de perfil" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="text-4xl font-black text-slate-300">
+                                            {user?.email?.charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
 
-                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-[2px]">
-                                    <Camera className="w-8 h-8 text-white drop-shadow-md" aria-hidden="true" />
+                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-[2px]">
+                                        <Camera className="w-8 h-8 text-white drop-shadow-md" aria-hidden="true" />
+                                    </div>
                                 </div>
-                            </div>
+                                {/* Online Status Dot */}
+                                <div className="absolute bottom-2 right-2 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full shadow-sm" aria-hidden="true"></div>
+                            </button>
                             <input
                                 type="file"
                                 ref={fileInputRef}
@@ -344,9 +348,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                 onChange={handleAvatarChange}
                                 aria-label="Seleccionar imagen de perfil"
                             />
-                            {/* Online Status Dot */}
-                            <div className="absolute bottom-2 right-2 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full shadow-sm" aria-hidden="true"></div>
-                        </button>
+                        </div>
                     ) : (
                         <div className="relative">
                             <div className="w-32 h-32 rounded-full border-4 border-white shadow-2xl overflow-hidden bg-white flex items-center justify-center relative">

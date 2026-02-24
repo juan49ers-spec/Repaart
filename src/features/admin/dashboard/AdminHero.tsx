@@ -1,5 +1,5 @@
 import { type FC, type ChangeEvent } from 'react';
-import { DollarSign, Calculator, Store, Plus, Users2, Activity } from 'lucide-react';
+import { DollarSign, Store, Plus, Users2, Activity } from 'lucide-react';
 
 interface Stats {
     franchiseCount?: number;
@@ -14,7 +14,6 @@ interface AdminHeroProps {
     selectedMonth: string;
     onMonthChange: (month: string) => void;
     onManageTariffs: () => void;
-    onOpenSimulator: () => void;
     onNavigate: (target: NavigationTarget) => void;
 }
 
@@ -23,7 +22,6 @@ const AdminHero: FC<AdminHeroProps> = ({
     selectedMonth,
     onMonthChange,
     onManageTariffs,
-    onOpenSimulator,
     onNavigate
 }) => {
     return (
@@ -40,13 +38,6 @@ const AdminHero: FC<AdminHeroProps> = ({
                         >
                             <DollarSign className="w-4 h-4 mr-2" />
                             Tarifas
-                        </button>
-                        <button
-                            onClick={onOpenSimulator}
-                            className="flex items-center bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-100 px-3 py-1.5 rounded-lg border border-indigo-400/30 transition-all text-xs font-bold uppercase tracking-wider"
-                        >
-                            <Calculator className="w-4 h-4 mr-2" />
-                            Simulador
                         </button>
                         <span className="flex items-center"><Store className="w-4 h-4 mr-2 opacity-70" /> {stats?.franchiseCount || 0} Franquicias</span>
                         <button

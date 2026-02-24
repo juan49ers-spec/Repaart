@@ -218,7 +218,7 @@ const ScoreRing: FC<{ score: number; size?: number }> = ({ score, size = 96 }) =
 
     return (
         <div className="flex flex-col items-center gap-2">
-            <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+            <div className="relative flex items-center justify-center" style={{ '--ring-size': `${size}px`, width: 'var(--ring-size)', height: 'var(--ring-size)' } as React.CSSProperties}>
                 <svg width={size} height={size} className="transform -rotate-90">
                     <circle
                         cx={center}
