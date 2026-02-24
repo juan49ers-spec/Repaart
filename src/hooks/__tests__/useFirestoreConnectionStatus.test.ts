@@ -12,11 +12,11 @@ vi.mock('firebase/firestore', async () => {
   };
 });
 
-vi.mock('../lib/firebase', () => ({
+vi.mock('../../lib/firebase', () => ({
   db: {},
 }));
 
-vi.mock('../services/errorLogger', () => ({
+vi.mock('../../services/errorLogger', () => ({
   logMessage: vi.fn(),
 }));
 

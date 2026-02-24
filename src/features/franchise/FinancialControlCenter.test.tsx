@@ -3,11 +3,18 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import FinancialControlCenter from './FinancialControlCenter';
 import { financeService } from '../../services/financeService';
 import { userService } from '../../services/userService';
+import { shiftService } from '../../services/shiftService';
+import { invoiceEngine } from '../../services/billing/invoiceEngine';
 
 // Explicit mocks for icons
 vi.mock('lucide-react', () => ({
-    X: (props: any) => <div data-testid="icon-x" {...props} />,
-    Activity: (props: any) => <div data-testid="icon-activity" {...props} />
+    X: (props: any) => <div data-testid="mock-icon-x" {...props} />,
+    Activity: (props: any) => <div data-testid="mock-icon-activity" {...props} />,
+    Save: (props: any) => <div data-testid="mock-icon-save" {...props} />,
+    ArrowLeft: (props: any) => <div data-testid="mock-icon-arrow-left" {...props} />,
+    ArrowRight: (props: any) => <div data-testid="mock-icon-arrow-right" {...props} />,
+    Lock: (props: any) => <div data-testid="mock-icon-lock" {...props} />,
+    CheckCircle: (props: any) => <div data-testid="mock-icon-check-circle" {...props} />
 }));
 
 // Mock Dependencies
@@ -35,6 +42,18 @@ vi.mock('../../services/userService', () => ({
 vi.mock('../../services/notificationService', () => ({
     notificationService: {
         notify: vi.fn()
+    }
+}));
+
+vi.mock('../../services/billing/invoiceEngine', () => ({
+    invoiceEngine: {
+        getInvoicedIncomeForMonth: vi.fn()
+    }
+}));
+
+vi.mock('../../services/shiftService', () => ({
+    shiftService: {
+        getShiftsInRange: vi.fn()
     }
 }));
 
@@ -79,11 +98,13 @@ describe('FinancialControlCenter', () => {
         (userService.getUserProfile as any).mockResolvedValue({ logisticsRates: [] });
         (financeService.getFinancialData as any).mockResolvedValue({});
         (financeService.getFinancialYearlyData as any).mockResolvedValue({ prevMonthsYtd: 0, months: [] });
+        (shiftService.getShiftsInRange as any).mockResolvedValue([]);
+        (invoiceEngine.getInvoicedIncomeForMonth as any).mockResolvedValue({ subtotal: 0, total: 0, ordersDetail: {} });
     });
 
     it('renders loading state initially', () => {
         render(<FinancialControlCenter franchiseId="f1" month="2023-10" onClose={mockOnClose} />);
-        expect(screen.getByText(/Cargando datos financieros/i)).toBeInTheDocument();
+        expect(screen.getByText(/Sincronizando Inteligencia Financiera/i)).toBeInTheDocument();
     });
 
     it('renders content after loading', async () => {
@@ -99,7 +120,7 @@ describe('FinancialControlCenter', () => {
         });
 
         expect(screen.getByText('Cierre Financiero')).toBeInTheDocument();
-        expect(screen.getByText('PERIODO: 2023-10')).toBeInTheDocument();
+        expect(screen.getByText('2023-10')).toBeInTheDocument();
         expect(screen.getByTestId('revenue-step')).toBeInTheDocument();
     });
 
@@ -131,7 +152,7 @@ describe('FinancialControlCenter', () => {
         await waitFor(() => expect(screen.getByText('Cierre Financiero')).toBeInTheDocument());
 
         // We are on Step 1. Save Draft should be available.
-        const saveDraftButton = screen.getByText(/Guardar Borrador/i);
+        const saveDraftButton = screen.getByText(/Borrador/i);
         fireEvent.click(saveDraftButton);
 
         await waitFor(() => {

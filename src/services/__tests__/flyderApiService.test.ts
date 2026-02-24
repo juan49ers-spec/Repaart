@@ -5,6 +5,29 @@ import { Timestamp } from 'firebase/firestore';
 // Mock fetch global
 global.fetch = vi.fn();
 
+// Mock firebase/firestore
+vi.mock('firebase/firestore', async (importOriginal) => {
+  const actual = await importOriginal();
+  class MockTimestamp {
+    seconds: number;
+    nanoseconds: number;
+    constructor(seconds: number, nanoseconds: number) {
+      this.seconds = seconds;
+      this.nanoseconds = nanoseconds;
+    }
+    static fromDate(date: Date) {
+      return new MockTimestamp(Math.floor(date.getTime() / 1000), 0);
+    }
+    static now() {
+      return new MockTimestamp(Math.floor(Date.now() / 1000), 0);
+    }
+  }
+  return {
+    ...actual as any,
+    Timestamp: MockTimestamp
+  };
+});
+
 describe('FlyderApiService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
