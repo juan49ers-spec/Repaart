@@ -5,9 +5,9 @@
  */
 
 import '@testing-library/jest-dom';
-import { vi, expect } from 'vitest';
+import { vi } from 'vitest';
 import { TextEncoder, TextDecoder } from 'util';
-import React from 'react';
+
 
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
