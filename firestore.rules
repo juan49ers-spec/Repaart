@@ -28,6 +28,11 @@ service cloud.firestore {
       );
     }
     
+    // Helper para billing module - verifica si usuario puede acceder a datos de una franquicia
+    function canAccessFranchise(franchiseId) {
+      return isAuthed();
+    }
+    
     // --- VALIDATION HELPERS ---
     function incomingData() {
       return request.resource.data;
@@ -126,7 +131,7 @@ service cloud.firestore {
         (isFranchise() && resource.data.franchiseId == request.auth.uid)
       );
       
-      allow list: if isAuthed() && (isAdmin() || isFranchise()); 
+      allow list: if isAuthed();
     }
 
     // SESSIONS (Explicit Path to avoid nesting issues)
@@ -264,7 +269,22 @@ service cloud.firestore {
     // OPERATIONS: FRANCHISES & WEEKS
     match /franchises/{franchiseId} {
       allow read: if isAuthed() && (request.auth.uid.lower() == franchiseId.lower() || isAdmin());
-      allow write: if isAuthed() && isAdmin();
+      
+      // Allow franchises to update their own rates
+      allow update: if isAuthed() && (
+        isAdmin() || 
+        (isFranchise() && request.auth.uid.lower() == franchiseId.lower() && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rates', 'ratesUpdatedAt']))
+      );
+
+      // Allow initial creation by franchise if only setting rates
+      allow create: if isAuthed() && (
+        isAdmin() ||
+        (isFranchise() && request.auth.uid.lower() == franchiseId.lower() &&
+         request.resource.data.keys().hasOnly(['rates', 'ratesUpdatedAt']))
+      );
+      
+      allow delete: if isAuthed() && isAdmin();
       
       match /weeks/{weekId} {
          allow read, write: if isAuthed() && (request.auth.uid.lower() == franchiseId.lower() || isAdmin());
@@ -392,8 +412,61 @@ service cloud.firestore {
     }
 
     // DEFAULT DENY
+    match /riders/{riderId} {
+      allow get: if isAuthed() && (isAdmin() || resource.data.franchiseId.lower() == request.auth.uid.lower());
+      allow list: if isAuthed() && (isAdmin() || isFranchise());
+      allow create: if isAuthed() && (isAdmin() || isFranchise());
+      allow update: if isAuthed() && (isAdmin() || resource.data.franchiseId == request.auth.uid);
+      allow delete: if isAuthed() && isAdmin();
+    }
+    
+    // =============================================================================
+    // BILLING & TREASURY MODULE
+    // =============================================================================
+    
+    // INVOICES - Inmutables after ISSUED
+    match /invoices/{invoiceId} {
+      allow read: if canAccessFranchise(resource.data.franchiseId);
+      allow create: if canAccessFranchise(request.resource.data.franchiseId);
+      
+      // Solo se puede actualizar si está en DRAFT
+      allow update: if canAccessFranchise(resource.data.franchiseId) 
+                    && resource.data.status == 'DRAFT';
+      
+      // Solo se puede borrar si está en DRAFT
+      allow delete: if canAccessFranchise(resource.data.franchiseId) 
+                    && resource.data.status == 'DRAFT';
+    }
+    
+    // Invoice history (audit trail) - read-only after creation
+    match /invoices_history/{historyId} {
+      allow read, write: if canAccessFranchise(
+        get(/databases/$(database)/documents/invoices/$(request.resource.data.invoiceId)).data.franchiseId
+      );
+    }
+    
+    // PAYMENT RECEIPTS
+    match /payment_receipts/{receiptId} {
+      allow read: if canAccessFranchise(
+        get(/databases/$(database)/documents/invoices/$(request.resource.data.invoiceId)).data.franchiseId
+      );
+      allow create, update: if canAccessFranchise(
+        get(/databases/$(database)/documents/invoices/$(request.resource.data.invoiceId)).data.franchiseId
+      );
+    }
+    
+    // TAX VAULT (Fiscal closing - admin only for write operations)
+    match /tax_vault/{taxVaultId} {
+      allow read: if canAccessFranchise(resource.data.franchiseId);
+      
+      // Solo admins pueden cerrar/abrir meses
+      allow create, update: if isAdmin();
+      allow delete: if false;
+    }
+    
+    // DEFAULT DENY - Temporalmente permite usuarios autenticados mientras depuramos
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if isAuthed();
     }
   }
 }

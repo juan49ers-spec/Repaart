@@ -16,6 +16,8 @@ export interface Restaurant {
 
     fiscalName: string;
     cif: string;
+    email?: string;
+    phone?: string;
     address: {
         street: string;
         city: string;
@@ -25,7 +27,8 @@ export interface Restaurant {
     };
 
     status: 'active' | 'inactive';
-    tariffId?: string; // Optional custom tariff
+    tariffId?: string;
+    notes?: string;
 
     createdAt: Timestamp;
     updatedAt: Timestamp;

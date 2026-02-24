@@ -10,15 +10,13 @@ import { CreateInvoiceRequest, Invoice, InvoiceLine, Restaurant } from '../types
 export const createRestaurant = functions.https.onCall(async (data: any, context: CallableContext) => {
     if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
 
-    // Validar campos obligatorios
-    const { fiscalName, cif, address, franchiseId } = data;
+    const { fiscalName, cif, address, franchiseId, email, phone, notes } = data;
     if (!fiscalName || !cif || !address || !franchiseId) {
         throw new functions.https.HttpsError('invalid-argument', 'Missing required fields');
     }
 
-    // Case-insensitive comparison for UID/franchiseId
     const isAuthorized = context.auth.token.role === 'admin' ||
-                         context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
+        context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
 
     if (!isAuthorized) {
         throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
@@ -30,7 +28,10 @@ export const createRestaurant = functions.https.onCall(async (data: any, context
             id: restaurantRef.id,
             franchiseId,
             fiscalName,
-            cif,
+            cif: cif.toUpperCase(),
+            email: email || undefined,
+            phone: phone || undefined,
+            notes: notes || undefined,
             address,
             status: 'active',
             createdAt: Timestamp.now(),
@@ -52,7 +53,7 @@ export const getRestaurants = functions.https.onCall(async (data: any, context: 
 
     // Case-insensitive comparison for UID/franchiseId
     const isAuthorized = context.auth.token.role === 'admin' ||
-                         context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
+        context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
 
     if (!isAuthorized) {
         throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
@@ -64,6 +65,65 @@ export const getRestaurants = functions.https.onCall(async (data: any, context: 
         .get();
 
     return { restaurants: snapshot.docs.map(d => d.data()) };
+});
+
+export const updateRestaurant = functions.https.onCall(async (data: any, context: CallableContext) => {
+    if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
+
+    const { id, fiscalName, cif, address, franchiseId, email, phone, notes } = data;
+    if (!id || !fiscalName || !cif || !address || !franchiseId) {
+        throw new functions.https.HttpsError('invalid-argument', 'Missing required fields');
+    }
+
+    const isAuthorized = context.auth.token.role === 'admin' ||
+        context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
+
+    if (!isAuthorized) {
+        throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
+    }
+
+    try {
+        await db.collection('restaurants').doc(id).update({
+            fiscalName,
+            cif: cif.toUpperCase(),
+            email: email || undefined,
+            phone: phone || undefined,
+            notes: notes || undefined,
+            address,
+            updatedAt: Timestamp.now()
+        });
+        return { success: true };
+    } catch (error: any) {
+        throw new functions.https.HttpsError('internal', error.message);
+    }
+});
+
+export const deleteRestaurant = functions.https.onCall(async (data: any, context: CallableContext) => {
+    if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
+
+    const { id, franchiseId } = data;
+    if (!id || !franchiseId) {
+        throw new functions.https.HttpsError('invalid-argument', 'Missing required fields');
+    }
+
+    // Role-based auth
+    const isAuthorized = context.auth.token.role === 'admin' ||
+        context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
+
+    if (!isAuthorized) {
+        throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
+    }
+
+    try {
+        // Soft delete
+        await db.collection('restaurants').doc(id).update({
+            status: 'deleted',
+            updatedAt: Timestamp.now()
+        });
+        return { success: true };
+    } catch (error: any) {
+        throw new functions.https.HttpsError('internal', error.message);
+    }
 });
 
 
@@ -114,7 +174,7 @@ export const generateInvoice = functions.https.onCall(async (data: CreateInvoice
     // 1. Validations
     // Case-insensitive comparison for UID/franchiseId
     const isAuthorized = context.auth.token.role === 'admin' ||
-                         context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
+        context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
 
     if (!isAuthorized) {
         throw new functions.https.HttpsError('permission-denied', 'Only franchise owner can issue invoices');
@@ -126,21 +186,51 @@ export const generateInvoice = functions.https.onCall(async (data: CreateInvoice
 
     try {
         // 2. Data Fetching
-        const [franchiseSnap, customerSnap] = await Promise.all([
+        const [franchiseDocSnap, customerSnap] = await Promise.all([
             db.collection('franchises').doc(franchiseId).get(),
             db.collection(targetCollection).doc(targetCustomerId!).get()
         ]);
 
-        // Fallback for Issuer Data
-        let issuerData = franchiseSnap.exists ? franchiseSnap.data() : undefined;
+        // Fallback for Issuer Data (handle slugs and case-sensitivity)
+        let issuerData = franchiseDocSnap.exists ? franchiseDocSnap.data() : undefined;
+
         if (!issuerData) {
+            // Try direct UID lookup in users
             const userSnap = await db.collection('users').doc(franchiseId).get();
             if (userSnap.exists && userSnap.data()?.role === 'franchise') {
                 issuerData = userSnap.data();
             }
         }
 
-        if (!issuerData) throw new functions.https.HttpsError('not-found', 'Franchise/Issuer not found');
+        if (!issuerData) {
+            // Try searching by franchiseId field (slug) - this is crucial for the "Issuer not found" bug
+            const usersRef = db.collection('users');
+            const querySnap = await usersRef
+                .where('role', '==', 'franchise')
+                .where('franchiseId', '==', franchiseId)
+                .limit(1)
+                .get();
+
+            if (!querySnap.empty) {
+                issuerData = querySnap.docs[0].data();
+            }
+        }
+
+        // Final secondary check: if it's uppercase/lowercase mismatch in the slug field
+        if (!issuerData && franchiseId === franchiseId.toUpperCase()) {
+            const querySnap = await db.collection('users')
+                .where('role', '==', 'franchise')
+                .where('franchiseId', '==', franchiseId.toLowerCase())
+                .limit(1)
+                .get();
+            if (!querySnap.empty) issuerData = querySnap.docs[0].data();
+        }
+
+        if (!issuerData) {
+            console.error(`[Invoicing] Failed to find issuer for franchiseId: ${franchiseId}`);
+            throw new functions.https.HttpsError('not-found', 'Franchise/Issuer not found');
+        }
+
         if (!customerSnap.exists) throw new functions.https.HttpsError('not-found', 'Customer not found');
 
         const customerData = customerSnap.data();
@@ -246,7 +336,7 @@ export const getInvoices = functions.https.onCall(async (data: any, context: Cal
 
     // Case-insensitive comparison for UID/franchiseId
     const isAuthorized = context.auth.token.role === 'admin' ||
-                         context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
+        context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
 
     if (!isAuthorized) {
         throw new functions.https.HttpsError('permission-denied', 'Unauthorized');

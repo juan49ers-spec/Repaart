@@ -24,7 +24,17 @@ export { createFranchiseMapping, listFranchiseMappings, createMissingMappings } 
 export { getFlyderBusinessesWithOrders, countRepaartOrders, ensureMainFranchisesExist, assignFlyderIdsToFranchises, createMainFlyderFranchises } from './callables/flyderOps';
 
 // Invoicing Module
-export { createRestaurant, getRestaurants, generateInvoice, getInvoices } from './callables/invoicing';
+export { createRestaurant, getRestaurants, updateRestaurant, deleteRestaurant, generateInvoice, getInvoices } from './callables/invoicing';
+export { toggleInvoicingModule, getInvoicingModuleStatus } from './callables/invoicingModule';
+
+// Billing & Treasury Module
+export { 
+  generateInvoicePdf,
+  generateRectificationPdf,
+  syncInvoiceToTaxVault,
+  cleanupDraftInvoices,
+  sendPaymentReminders
+} from './billing';
 
 // Push Notifications
 export { subscribeToPush, unsubscribeFromPush, sendPushNotification } from './callables/pushNotifications';

@@ -50,6 +50,21 @@ service firebase.storage {
       allow read: if true;
       allow write: if isAuthed();
     }
+    
+    // 5. Invoice PDFs (Billing & Treasury Module)
+    // Organized by franchise/year-month/invoiceId.pdf
+    match /invoices/{franchiseId}/{year}/{month}/{invoiceId}.pdf {
+      allow read: if isAuthed();
+      allow write: if isAuthed() && 
+                     (isAdmin() || request.auth.token.franchiseId == franchiseId);
+    }
+    
+    // 6. Payment Documents (proofs of payment)
+    match /payments/{franchiseId}/{paymentId}/{filename} {
+      allow read: if isAuthed();
+      allow write: if isAuthed() && 
+                     (isAdmin() || request.auth.token.franchiseId == franchiseId);
+    }
 
     // Default Deny
     match /{allPaths=**} {

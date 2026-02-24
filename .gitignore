@@ -73,3 +73,4 @@ scripts/audit_user.*
 
 # Service Account
 service-account.json
+nul
