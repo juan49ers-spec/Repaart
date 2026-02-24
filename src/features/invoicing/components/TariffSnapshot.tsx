@@ -1,45 +1,43 @@
 
 import React, { useEffect, useState } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import { MapPin } from 'lucide-react';
 import { formatCurrency } from '../../../utils/formatters';
+import { LogisticsRate } from '../../../types/franchise';
 
 interface Props {
     franchiseId: string;
     onConfigure: () => void;
 }
 
-interface Rate {
-    range: string;
-    price: number;
-}
-
 export const TariffSnapshot: React.FC<Props> = ({ franchiseId, onConfigure }) => {
-    const [rates, setRates] = useState<Rate[]>([]);
+    const [rates, setRates] = useState<LogisticsRate[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const loadRates = async () => {
-            try {
-                const docRef = doc(db, 'franchises', franchiseId);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists() && docSnap.data().rates) {
-                    const ratesData = docSnap.data().rates;
-                    const ratesArray = Object.entries(ratesData).map(([range, price]) => ({
-                        range,
-                        price: Number(price)
-                    })).sort((a, b) => parseInt(a.range) - parseInt(b.range));
-                    setRates(ratesArray);
-                }
-            } catch (error) {
-                console.error("Error loading rates snapshot", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+        if (!franchiseId) return;
 
-        if (franchiseId) loadRates();
+        const loadingTimeout = setTimeout(() => setLoading(true), 0);
+        // Real-time listener for "Professional" rates (User Profile)
+        const unsubscribe = onSnapshot(doc(db, 'users', franchiseId), (docSnap) => {
+            if (docSnap.exists() && docSnap.data().logisticsRates) {
+                const loadedRates = docSnap.data().logisticsRates as LogisticsRate[];
+                setRates(loadedRates);
+            } else {
+                // Fallback or empty
+                setRates([]);
+            }
+            setLoading(false);
+        }, (error) => {
+            console.error("Error listening to rates:", error);
+            setLoading(false);
+        });
+
+        return () => {
+            clearTimeout(loadingTimeout);
+            unsubscribe();
+        };
     }, [franchiseId]);
 
     return (
@@ -66,18 +64,21 @@ export const TariffSnapshot: React.FC<Props> = ({ franchiseId, onConfigure }) =>
                     </div>
                 ) : rates.length > 0 ? (
                     rates.map((rate, idx) => (
-                        <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-700/30 rounded-xl border border-slate-100 dark:border-slate-700">
+                        <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-700/30 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-emerald-200 dark:hover:border-emerald-500/30 transition-colors">
                             <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-500 border border-slate-200 dark:border-slate-600">
                                     {idx + 1}
                                 </div>
-                                <span className="font-medium text-slate-700 dark:text-slate-300">{rate.range} km</span>
+                                <span className="font-medium text-slate-700 dark:text-slate-300">
+                                    {rate.name || `${rate.min}-${rate.max} km`}
+                                </span>
                             </div>
-                            <span className="font-bold text-emerald-600">{formatCurrency(rate.price)}</span>
+                            <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(rate.price)}</span>
                         </div>
                     ))
                 ) : (
                     <div className="text-center py-8 text-slate-400">
+                        <MapPin className="w-10 h-10 mx-auto mb-2 opacity-50" />
                         <p>No hay tarifas configuradas</p>
                     </div>
                 )}

@@ -79,8 +79,8 @@ export const useRiderPreferences = () => {
 
     useEffect(() => {
         if (!user?.uid) {
-            setLoading(false);
-            return;
+            const timeoutId = setTimeout(() => setLoading(false), 0);
+            return () => clearTimeout(timeoutId);
         }
 
         const preferencesRef = doc(db, 'user_preferences', user.uid);

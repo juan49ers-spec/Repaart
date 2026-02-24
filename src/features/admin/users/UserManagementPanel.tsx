@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Users, UserPlus, ShieldAlert, Search, Loader2, RefreshCw, Inbox, Check, X, Building } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { useUserManager } from '../../../hooks/useUserManager';
 import { collection, query, where, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
@@ -41,6 +42,7 @@ interface ModalConfig {
 const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId = null, readOnly = false }) => {
     // 1. Usamos el hook con el filtro
     const { user: currentUser } = useAuth();
+    const navigate = useNavigate();
     const toastContext = useToast();
     const toast = toastContext?.toast;
 
@@ -122,6 +124,15 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
 
     const handleAction = (type: string, targetUser: User) => {
         if (readOnly) return; // Guard clause
+
+        console.log('[UserManagementPanel] Action triggered:', type, 'Target user:', {
+            uid: targetUser.uid,
+            id: targetUser.id,
+            email: targetUser.email,
+            role: targetUser.role,
+            franchiseId: targetUser.franchiseId
+        });
+
         if (type === 'delete') {
             setModalConfig({
                 isOpen: true,
@@ -143,6 +154,22 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
                 });
             } else {
                 executeStatusToggle(targetUser);
+            }
+        } else if (type === 'viewFranchise') {
+            // For franchise users, use their UID as the franchise ID
+            // (franchise documents are stored in 'users' collection with role='franchise')
+            const franchiseIdToUse = targetUser.uid;
+
+            console.log('[Admin] Navigating to franchise:', {
+                franchiseIdToUse,
+                user: targetUser
+            });
+
+            if (franchiseIdToUse) {
+                // Navigate to the admin franchise detail route (relative to /, not /dashboard)
+                navigate(`/admin/franchise/${franchiseIdToUse}`);
+            } else {
+                toast?.error('Error: Franquicia sin UID válido. Contacta a soporte.');
             }
         }
     };

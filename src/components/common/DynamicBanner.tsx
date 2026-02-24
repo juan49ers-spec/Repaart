@@ -1,96 +1,111 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useBanner, AnimationStyle, BannerSize } from '../../hooks/useBanner';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, ArrowRight, Star, Zap, Gift, Megaphone } from 'lucide-react';
 
 const colorSchemes = {
     indigo: {
-        gradient: 'from-indigo-600 via-indigo-500 to-purple-600',
-        aurora1: 'bg-indigo-400',
-        aurora2: 'bg-purple-400',
-        aurora3: 'bg-blue-400',
-        glow: 'shadow-indigo-500/30',
-        particle: 'bg-indigo-300',
-        textGlow: 'drop-shadow-[0_0_15px_rgba(129,140,248,0.4)]'
+        bg: 'bg-indigo-950/40',
+        border: 'border-indigo-500/20',
+        hoverBorder: 'group-hover:border-indigo-500/40',
+        glow: 'from-indigo-500/20',
+        iconBg: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+        text: 'text-indigo-50',
+        accentText: 'text-indigo-400',
+        button: 'bg-indigo-500 text-white hover:bg-indigo-400',
+        marqueeText: 'text-indigo-200'
     },
     emerald: {
-        gradient: 'from-emerald-600 via-emerald-500 to-teal-600',
-        aurora1: 'bg-emerald-400',
-        aurora2: 'bg-teal-400',
-        aurora3: 'bg-green-400',
-        glow: 'shadow-emerald-500/30',
-        particle: 'bg-emerald-300',
-        textGlow: 'drop-shadow-[0_0_15px_rgba(52,211,153,0.4)]'
+        bg: 'bg-emerald-950/40',
+        border: 'border-emerald-500/20',
+        hoverBorder: 'group-hover:border-emerald-500/40',
+        glow: 'from-emerald-500/20',
+        iconBg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+        text: 'text-emerald-50',
+        accentText: 'text-emerald-400',
+        button: 'bg-emerald-500 text-white hover:bg-emerald-400',
+        marqueeText: 'text-emerald-200'
     },
     amber: {
-        gradient: 'from-amber-500 via-orange-400 to-amber-600',
-        aurora1: 'bg-amber-400',
-        aurora2: 'bg-orange-400',
-        aurora3: 'bg-yellow-400',
-        glow: 'shadow-amber-500/30',
-        particle: 'bg-amber-300',
-        textGlow: 'drop-shadow-[0_0_15px_rgba(251,191,36,0.4)]'
+        bg: 'bg-amber-950/40',
+        border: 'border-amber-500/20',
+        hoverBorder: 'group-hover:border-amber-500/40',
+        glow: 'from-amber-500/20',
+        iconBg: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+        text: 'text-amber-50',
+        accentText: 'text-amber-400',
+        button: 'bg-amber-500 text-white hover:bg-amber-400',
+        marqueeText: 'text-amber-200'
     },
     rose: {
-        gradient: 'from-rose-600 via-pink-500 to-rose-700',
-        aurora1: 'bg-rose-400',
-        aurora2: 'bg-pink-400',
-        aurora3: 'bg-red-400',
-        glow: 'shadow-rose-500/30',
-        particle: 'bg-rose-300',
-        textGlow: 'drop-shadow-[0_0_15px_rgba(251,113,133,0.4)]'
+        bg: 'bg-rose-950/40',
+        border: 'border-rose-500/20',
+        hoverBorder: 'group-hover:border-rose-500/40',
+        glow: 'from-rose-500/20',
+        iconBg: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+        text: 'text-rose-50',
+        accentText: 'text-rose-400',
+        button: 'bg-rose-500 text-white hover:bg-rose-400',
+        marqueeText: 'text-rose-200'
     },
     slate: {
-        gradient: 'from-slate-800 via-slate-700 to-slate-900',
-        aurora1: 'bg-slate-400',
-        aurora2: 'bg-slate-500',
-        aurora3: 'bg-slate-300',
-        glow: 'shadow-slate-500/30',
-        particle: 'bg-slate-300',
-        textGlow: 'drop-shadow-[0_0_15px_rgba(148,163,184,0.4)]'
+        bg: 'bg-slate-900/60',
+        border: 'border-slate-500/20',
+        hoverBorder: 'group-hover:border-slate-500/40',
+        glow: 'from-slate-500/20',
+        iconBg: 'bg-slate-500/10 text-slate-300 border-slate-500/20',
+        text: 'text-slate-50',
+        accentText: 'text-slate-300',
+        button: 'bg-white text-slate-900 hover:bg-slate-200',
+        marqueeText: 'text-slate-300'
     }
 };
 
 const sizeClasses: Record<BannerSize, string> = {
-    compact: 'py-2.5',
-    normal: 'py-4 sm:py-6',
-    large: 'py-8 sm:py-12'
+    compact: 'py-3 px-5',
+    normal: 'py-5 px-6 sm:px-8',
+    large: 'py-8 px-8 sm:px-10'
 };
 
 const speedClasses = {
-    slow: { marquee: 'animate-[marquee_45s_linear_infinite]', pulse: 'animate-[pulse_4s_ease-in-out_infinite]' },
-    normal: { marquee: 'animate-[marquee_30s_linear_infinite]', pulse: 'animate-[pulse_3s_ease-in-out_infinite]' },
-    fast: { marquee: 'animate-[marquee_15s_linear_infinite]', pulse: 'animate-[pulse_2s_ease-in-out_infinite]' }
+    slow: { marquee: 'animate-[marquee_45s_linear_infinite]', pulse: 'animate-pulse duration-3000' },
+    normal: { marquee: 'animate-[marquee_30s_linear_infinite]', pulse: 'animate-pulse duration-2000' },
+    fast: { marquee: 'animate-[marquee_15s_linear_infinite]', pulse: 'animate-pulse duration-1000' }
 };
 
-const IconComponent = ({ style }: { style: AnimationStyle }) => {
+const IconComponent = ({ style, className }: { style: AnimationStyle, className?: string }) => {
     switch (style) {
-        case 'marquee': return <Megaphone className="w-5 h-5 text-white stroke-[2]" />;
-        case 'wave': return <Zap className="w-5 h-5 text-white stroke-[2]" />;
-        case 'glow': return <Star className="w-5 h-5 text-white stroke-[2]" />;
-        case 'static': return <Gift className="w-5 h-5 text-white stroke-[2]" />;
-        default: return <Sparkles className="w-5 h-5 text-white stroke-[2]" />;
+        case 'marquee': return <Megaphone className={className} strokeWidth={2} />;
+        case 'wave': return <Zap className={className} strokeWidth={2} />;
+        case 'glow': return <Star className={className} strokeWidth={2} />;
+        case 'static': return <Gift className={className} strokeWidth={2} />;
+        default: return <Sparkles className={className} strokeWidth={2} />;
     }
 };
 
 const DynamicBanner: React.FC = () => {
     const { banner, loading } = useBanner();
     const navigate = useNavigate();
+    const bannerRef = useRef<HTMLDivElement>(null);
+    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    const [isHovered, setIsHovered] = useState(false);
 
-    // Generate particles only once using state lazy init to avoid impure render calls
-    const [particles] = React.useState<Array<{ left: number; top: number; duration: number; delay: number; size: number }>>(() => {
-        return [...Array(8)].map(() => ({
-            left: Math.random() * 100,
-            top: Math.random() * 100,
-            duration: 4 + Math.random() * 6,
-            delay: Math.random() * 3,
-            size: 2 + Math.random() * 4
-        }));
-    });
+    useEffect(() => {
+        const updateMousePosition = (ev: MouseEvent) => {
+            if (!bannerRef.current) return;
+            const { left, top } = bannerRef.current.getBoundingClientRect();
+            setMousePosition({ x: ev.clientX - left, y: ev.clientY - top });
+        };
+
+        if (isHovered && bannerRef.current) {
+            window.addEventListener('mousemove', updateMousePosition);
+            return () => window.removeEventListener('mousemove', updateMousePosition);
+        }
+    }, [isHovered]);
 
     if (loading) {
         return (
-            <div className="mb-6 h-20 rounded-3xl bg-slate-900/50 backdrop-blur-xl border border-white/5 animate-pulse" />
+            <div className="mb-6 h-20 rounded-2xl bg-slate-900/20 border border-slate-200/50 dark:border-white/5 animate-pulse" />
         );
     }
 
@@ -98,166 +113,127 @@ const DynamicBanner: React.FC = () => {
         return null;
     }
 
-    const colors = colorSchemes[banner.bgColor] || colorSchemes.indigo;
-    const size = sizeClasses[banner.bannerSize] || sizeClasses.normal;
+    const theme = colorSchemes[banner.bgColor] || colorSchemes.indigo;
+    const padding = sizeClasses[banner.bannerSize] || sizeClasses.normal;
     const speed = speedClasses[banner.animationSpeed] || speedClasses.normal;
 
     const handleClick = () => {
         let url = banner.linkUrl.trim();
-
-        // Detectar si es una URL externa (http, https o empieza por www.)
         const isExternal = url.startsWith('http') || url.startsWith('www.') || url.includes('.com') || url.includes('.es');
 
         if (isExternal) {
-            // Asegurar que tiene protocolo si le falta
             if (!url.startsWith('http')) {
                 url = `https://${url}`;
             }
-            window.open(url, '_blank');
+            window.open(url, '_blank', 'noopener,noreferrer');
         } else {
             navigate(url);
         }
     };
 
-    // Animation-specific classes
-    const getAnimationClasses = () => {
-        switch (banner.animationStyle) {
-            case 'glow':
-                return 'animate-[glow_3s_ease-in-out_infinite_alternate]';
-            case 'wave':
-                return 'animate-[wave_2s_ease-in-out_infinite]';
-            case 'pulse':
-                return speed.pulse;
-            default:
-                return '';
-        }
-    };
+    const hasParticles = banner.showParticles;
+    const isMarquee = banner.animationStyle === 'marquee';
 
     return (
         <div
-            className={`mb-6 relative overflow-hidden rounded-[2rem] cursor-pointer group transition-all duration-700 hover:scale-[1.015] hover:-translate-y-1 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] ${colors.glow} perspective-1000`}
+            ref={bannerRef}
             onClick={handleClick}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            className={`
+                group relative mb-6 w-full overflow-hidden rounded-2xl cursor-pointer
+                bg-[#0A0A0B] ${theme.border} border
+                transition-all duration-500 ease-out shadow-sm hover:shadow-xl
+                ${theme.hoverBorder}
+            `}
         >
-            {/* Gradient Background Layer */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${colors.gradient} ${banner.animationStyle === 'glow' ? 'animate-[gradient-shift_10s_ease_infinite]' : ''} opacity-95 transition-opacity duration-700 group-hover:opacity-100`} />
+            {/* Spotlight Hover Effect */}
+            <div
+                className="pointer-events-none absolute -inset-px opacity-0 transition duration-300 group-hover:opacity-100"
+                style={{
+                    background: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(255,255,255,0.06), transparent 40%)`
+                }}
+            />
 
-            {/* Animated Aurora Orbs */}
-            <div className="absolute inset-0 overflow-hidden">
-                <div className={`absolute -top-10 -left-10 w-32 h-32 ${colors.aurora1} rounded-full blur-3xl opacity-40 ${getAnimationClasses()}`} />
-                <div className={`absolute -top-5 right-20 w-24 h-24 ${colors.aurora2} rounded-full blur-2xl opacity-30 ${getAnimationClasses()} delay-300`} />
-                <div className={`absolute -bottom-5 right-10 w-28 h-28 ${colors.aurora3} rounded-full blur-3xl opacity-30 ${getAnimationClasses()} delay-700`} />
-            </div>
+            {/* Subtle Gradient Glow in background */}
+            <div className={`absolute top-0 right-0 -m-32 h-64 w-64 rounded-full bg-gradient-to-bl ${theme.glow} to-transparent opacity-40 blur-3xl transition-opacity duration-500 group-hover:opacity-60`} />
 
-            {/* Floating Particles */}
-            {banner.showParticles && (
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    {particles.map((p, i) => (
-                        <div
-                            key={i}
-                            className={`absolute bg-white/30 rounded-full blur-[1px]`}
-                            style={{
-                                left: `${p.left}%`,
-                                top: `${p.top}%`,
-                                width: `${p.size}px`,
-                                height: `${p.size}px`,
-                                animation: `float ${p.duration}s ease-in-out infinite`,
-                                animationDelay: `${p.delay}s`
-                            }}
-                        />
-                    ))}
-                </div>
+            {/* Optional Subtle Noise / Particles Replacement */}
+            {hasParticles && (
+                <div className="absolute inset-0 opacity-[0.015] mix-blend-overlay pointer-events-none"
+                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
+                />
             )}
 
-            {/* Grid Pattern Overlay - More Subtle */}
-            <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay"
-                style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M0 38.59V40h1.41l.59-.59.59.59H40V38.59l-.59-.59.59-.59V0h-1.41l-.59.59-.59-.59H0v1.41l.59.59-.59.59v35.18l.59.59-.59.59zM1.41 38l.59.59.59-.59h34.82l.59.59.59-.59V1.41l-.59-.59-.59.59H2.59l-.59-.59-.59.59V38zM2.59 2h34.82l.59.59.59-.59v34.82l-.59.59-.59-.59H2.59l-.59.59-.59-.59V2.59l.59-.59.59.59z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-                }} />
-
-            {/* Top Shine Flare */}
-            <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-white/20 to-transparent pointer-events-none opacity-50" />
-
-            {/* Content - Static or Marquee */}
-            {banner.animationStyle === 'marquee' ? (
-                // Marquee Mode
-                <div className={`relative z-10 ${size} overflow-hidden flex items-center`}>
-                    <div className={`flex gap-32 whitespace-nowrap ${speed.marquee}`}>
-                        {[1, 2, 3, 4].map((i) => (
-                            <div key={i} className="flex items-center gap-10 px-8">
+            {isMarquee ? (
+                // Marquee Layout
+                <div className={`relative z-10 flex items-center overflow-hidden ${padding}`}>
+                    <div className={`flex gap-16 whitespace-nowrap ${speed.marquee}`}>
+                        {[...Array(6)].map((_, i) => (
+                            <div key={i} className="flex items-center gap-6">
                                 {banner.showIcon && (
-                                    <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-2xl border border-white/30 flex items-center justify-center shrink-0 shadow-lg">
-                                        <IconComponent style={banner.animationStyle} />
-                                    </div>
+                                    <IconComponent style="marquee" className={`w-5 h-5 ${theme.accentText} opacity-80`} />
                                 )}
-                                <span className={`text-2xl sm:text-3xl font-black text-white tracking-tighter ${colors.textGlow}`}>
+                                <span className={`text-sm sm:text-base font-semibold tracking-tight ${theme.marqueeText}`}>
                                     {banner.title}
                                 </span>
-                                <span className="text-white/30 font-thin text-3xl">/</span>
-                                <span className="text-lg sm:text-xl text-white/90 font-medium tracking-tight">
-                                    {banner.subtitle}
-                                </span>
-                                <div className="px-6 py-2 bg-white text-indigo-600 rounded-full text-sm font-black shadow-xl ring-4 ring-white/10 group-hover:scale-105 transition-transform">
+                                {banner.subtitle && (
+                                    <>
+                                        <span className="text-white/20 px-2">•</span>
+                                        <span className="text-sm sm:text-base text-white/60 tracking-tight">
+                                            {banner.subtitle}
+                                        </span>
+                                    </>
+                                )}
+                                <span className={`text-sm font-bold ml-4 ${theme.accentText} group-hover:underline decoration-1 underline-offset-4`}>
                                     {banner.linkText}
-                                </div>
+                                </span>
                             </div>
                         ))}
                     </div>
                 </div>
             ) : (
-                // Static/Pulse/Wave/Glow Mode
-                <div className={`relative z-10 px-8 ${size} flex items-center justify-between gap-6`}>
-                    {/* Left: Icon + Text */}
-                    <div className="flex items-center gap-6">
+                // Standard Layout
+                <div className={`relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 ${padding}`}>
+                    <div className="flex items-center gap-4 sm:gap-5">
                         {banner.showIcon && (
-                            <div className={`relative ${banner.animationStyle === 'pulse' ? speed.pulse : ''}`}>
-                                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-[1.25rem] bg-indigo-500/20 backdrop-blur-2xl border border-white/20 flex items-center justify-center shadow-inner">
-                                    <IconComponent style={banner.animationStyle} />
-                                </div>
-                                {banner.animationStyle !== 'static' && (
-                                    <div className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-white rounded-full shadow-lg flex items-center justify-center p-1">
-                                        <div className="w-full h-full bg-indigo-500 rounded-full animate-pulse" />
-                                    </div>
+                            <div className={`
+                                flex items-center justify-center shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full border
+                                ${theme.iconBg} backdrop-blur-md relative
+                            `}>
+                                <IconComponent style={banner.animationStyle} className="w-5 h-5" />
+                                {banner.animationStyle === 'pulse' && (
+                                    <div className={`absolute top-0 right-0 w-2 h-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] ${speed.pulse}`} />
                                 )}
                             </div>
                         )}
-
-                        <div className="flex flex-col">
-                            <h3 className={`text-xl sm:text-3xl font-black text-white tracking-tighter leading-tight ${colors.textGlow} ${banner.animationStyle === 'wave' ? 'animate-[wave-text_2.5s_ease-in-out_infinite]' : ''}`}>
+                        <div className="flex flex-col gap-0.5">
+                            <h3 className={`text-base sm:text-lg font-semibold tracking-tight ${theme.text} ${banner.animationStyle === 'glow' ? 'animate-pulse' : ''} ${banner.animationStyle === 'wave' ? 'translate-y-0 group-hover:-translate-y-0.5 transition-transform duration-300' : ''}`}>
                                 {banner.title}
                             </h3>
-                            <p className="text-sm sm:text-lg text-white/80 font-medium max-w-xl line-clamp-2 mt-0.5 tracking-tight">
-                                {banner.subtitle}
-                            </p>
+                            {banner.subtitle && (
+                                <p className="text-sm text-slate-400 font-medium leading-snug max-w-2xl line-clamp-2">
+                                    {banner.subtitle}
+                                </p>
+                            )}
                         </div>
                     </div>
 
-                    {/* Right: CTA Button */}
-                    <button className="flex items-center gap-2 group/btn px-6 sm:px-8 py-3 rounded-2xl bg-white text-indigo-700 font-black text-sm transition-all hover:bg-indigo-50 hover:shadow-[0_10px_30px_-5px_theme(colors.indigo.500/40)] active:scale-95 shrink-0">
-                        <span>{banner.linkText}</span>
-                        <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                    <button className={`
+                        shrink-0 flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full
+                        text-xs sm:text-sm font-semibold transition-all duration-300
+                        ${theme.button} shadow-sm group-hover:shadow-md
+                    `}>
+                        {banner.linkText}
+                        <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
                     </button>
                 </div>
             )}
 
-            {/* Glass Flare */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none" />
-
-            {/* Bottom Glow */}
-            <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/30 to-transparent opacity-50" />
-
-            {/* CSS Animations */}
             <style>{`
-                @keyframes float {
-                    0%, 100% { transform: translateY(0) translateX(0) scale(1); opacity: 0.6; }
-                    50% { transform: translateY(-30px) translateX(15px) scale(1.2); opacity: 0.2; }
-                }
-                @keyframes wave-text {
-                    0%, 100% { transform: translateY(0) scale(1); }
-                    50% { transform: translateY(-5px) scale(1.02); }
-                }
-                @keyframes gradient-shift {
-                   0%, 100% { background-position: 0% 50%; }
-                   50% { background-position: 100% 50%; }
+                @keyframes marquee {
+                    0% { transform: translateX(0%); }
+                    100% { transform: translateX(-50%); }
                 }
             `}</style>
         </div>

@@ -52,15 +52,12 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   const [hasError, setHasError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(src);
   const imgRef = useRef<HTMLImageElement>(null);
-  const prevSrcRef = useRef(src);
-
-  // Reset state when src changes - done during render to avoid setState in effect
-  if (src !== prevSrcRef.current) {
-    prevSrcRef.current = src;
+  // Reset state when src changes
+  React.useEffect(() => {
     setCurrentSrc(src);
     setIsLoaded(false);
     setHasError(false);
-  }
+  }, [src]);
 
   const handleLoad = () => {
     setIsLoaded(true);
@@ -97,7 +94,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
           )}
           style={{
             backgroundColor: placeholder === 'color' ? placeholderColor : undefined,
-            backgroundImage: placeholder === 'blur' 
+            backgroundImage: placeholder === 'blur'
               ? 'linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%)'
               : undefined,
             backgroundSize: '200% 100%',

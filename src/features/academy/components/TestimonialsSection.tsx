@@ -78,7 +78,7 @@ const TestimonialsSection = ({ testimonials }: TestimonialsSectionProps) => {
                         <Quote className="w-6 h-6 text-blue-200 mb-2" />
 
                         <p className="text-sm lg:text-base leading-relaxed mb-3 text-blue-50">
-                            "{currentTestimonial.content}"
+                            &quot;{currentTestimonial.content}&quot;
                         </p>
 
                         <div className="flex items-start justify-between">

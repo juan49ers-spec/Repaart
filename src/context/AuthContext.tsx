@@ -45,11 +45,14 @@ const getUserData = async (user: User, forceRefresh = false): Promise<RoleConfig
 
     // Primero intentar obtener desde custom claims (más rápido)
     const claims = await getCustomClaims(user, forceRefresh);
-    if (claims && claims.role && claims.franchiseId) {
+
+    // Si tenemos claims válidos, los usamos (franchiseId es opcional para admins)
+    if (claims && claims.role && (claims.role === 'admin' || claims.franchiseId)) {
         return {
             role: claims.role,
-            franchiseId: claims.franchiseId,
-            status: claims.status,
+            franchiseId: claims.franchiseId || undefined,
+            name: (claims.name as string) || undefined,
+            status: claims.status || 'active',
             pack: claims.pack
         };
     }
@@ -105,6 +108,7 @@ const updateCustomClaims = async (user: User, claims: Record<string, any>): Prom
 export interface RoleConfig {
     role?: string;
     franchiseId?: string;
+    name?: string;
     status?: 'active' | 'pending' | 'banned' | 'deleted';
     pack?: 'basic' | 'premium' | 'admin';
     [key: string]: unknown;
@@ -283,8 +287,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     const logout = async (): Promise<void> => {
-        if (user) {
-            await logAction(user, AUDIT_ACTIONS.LOGOUT);
+        try {
+            if (user) {
+                // Log and continue, do not block signOut if audit fails
+                logAction(user, AUDIT_ACTIONS.LOGOUT).catch(err =>
+                    console.error("[Auth] Logout audit log failed:", err)
+                );
+            }
+        } catch (error) {
+            console.error("[Auth] Pre-logout error:", error);
         }
         return signOut(auth);
     };

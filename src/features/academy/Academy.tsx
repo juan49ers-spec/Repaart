@@ -55,7 +55,7 @@ const Academy = () => {
 
     // Cargar todos los módulos y filtrar por status
     const { modules: allModules, loading: modulesLoading } = useAcademyModules('all');
-    
+
     // Filtrar solo módulos activos para franquicias (admin ve todos)
     const visibleModules = useMemo(() => {
         const isAdmin = user?.role === 'admin' || user?.email?.includes('admin');
@@ -63,34 +63,12 @@ const Academy = () => {
         // Para franquicias: solo módulos con status 'active'
         return allModules.filter(m => m.status === 'active');
     }, [allModules, user]);
-    
+
     const { module, loading: moduleLoading } = useAcademyModule(moduleId || null);
     const { lessons: allLessons, loading: lessonsLoading } = useAcademyLessons(moduleId || null, 'all');
     const { lessons: allModulesLessons } = useAcademyAllLessons(visibleModules, 'published');
 
-    // Log detallado de diagnóstico
-    useEffect(() => {
-        console.log('[Academy] =======================================');
-        console.log('[Academy] DIAGNÓSTICO COMPLETO:');
-        console.log('[Academy] - moduleId actual:', moduleId);
-        console.log('[Academy] - Total lecciones en allModulesLessons:', allModulesLessons.length);
-        console.log('[Academy] - Lecciones por módulo:', 
-            allModulesLessons.reduce((acc, lesson) => {
-                const mid = lesson.module_id || 'sin_modulo';
-                acc[mid] = (acc[mid] || 0) + 1;
-                return acc;
-            }, {} as Record<string, number>)
-        );
-        console.log('[Academy] - allLessons del módulo actual:', allLessons.length);
-        console.log('[Academy] - lessonsLoading:', lessonsLoading);
-        console.log('[Academy] =======================================');
-        
-        if (moduleId && allLessons.length === 0 && !lessonsLoading) {
-            console.warn(`[Academy] ALERTA: Módulo ${moduleId} no tiene lecciones cargadas`);
-            const lessonsForThisModule = allModulesLessons.filter(l => l.module_id === moduleId);
-            console.log('[Academy] Lecciones encontradas en allModulesLessons para este módulo:', lessonsForThisModule);
-        }
-    }, [moduleId, allLessons, lessonsLoading, allModulesLessons]);
+
 
     // Filtrar lecciones publicadas (o sin campo status definido para compatibilidad)
     const lessons = useMemo(() => {
@@ -171,7 +149,7 @@ const Academy = () => {
             }
         };
         fetchProgress();
-    }, [user?.uid, moduleId, allModules]);
+    }, [user?.uid, moduleId, visibleModules]);
 
     const handleLessonComplete = async (lessonId: string) => {
         if (!user?.uid || !moduleId) return;
@@ -347,14 +325,14 @@ const Academy = () => {
                     >
                         {/* Badge de bienvenida */}
                         <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.2 }}
-                            >
-                            </motion.div>
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.2 }}
+                        >
+                        </motion.div>
 
-                            {/* Título principal */}
-                        <motion.h1 
+                        {/* Título principal */}
+                        <motion.h1
                             className="text-5xl sm:text-6xl font-black text-slate-900 dark:text-white mb-6 tracking-tight"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -436,7 +414,7 @@ const Academy = () => {
                     ) : (
                         <EmptyState />
                     )}
-                    
+
                     {/* Celebration Modal */}
                     <CelebrationModal
                         isOpen={celebration.isOpen}
@@ -551,524 +529,524 @@ const Academy = () => {
                 )}
             </AnimatePresence>
 
-                    {/* Sidebar - Desktop only */}
-                    <aside className="academy-sidebar">
-                        <div className="academy-sidebar-header">
-                            <button
-                                onClick={handleBackToModules}
-                                className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 text-sm font-semibold mb-3 transition-colors"
+            {/* Sidebar - Desktop only */}
+            <aside className="academy-sidebar">
+                <div className="academy-sidebar-header">
+                    <button
+                        onClick={handleBackToModules}
+                        className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 text-sm font-semibold mb-3 transition-colors"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                        <span>Volver a módulos</span>
+                    </button>
+                    <h2 className="academy-sidebar-title">{activeModule.title}</h2>
+                    <p className="academy-sidebar-description line-clamp-2">{activeModule.description}</p>
+                </div>
+
+                <div className="academy-sidebar-progress">
+                    <div className="academy-sidebar-progress-header">
+                        <span className="academy-sidebar-progress-label">Tu progreso</span>
+                        <span className="academy-sidebar-progress-percentage">{getProgressPercentage()}%</span>
+                    </div>
+                    <div className="academy-sidebar-progress-bar">
+                        <motion.div
+                            className="academy-module-progress-fill"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${getProgressPercentage()}%` }}
+                            transition={{ duration: 0.5 }}
+                        />
+                    </div>
+                </div>
+
+                <div className="academy-lessons-list">
+                    {lessonsInOrder.map((lesson, index) => {
+                        const lessonCompleted = completedLessons.includes(lesson.id!);
+                        const isSelected = currentLesson?.id === lesson.id;
+                        const isLocked = !lessonCompleted && index > 0 && !completedLessons.includes(lessonsInOrder[index - 1].id!);
+                        const hasVideo = lesson.video_url && lesson.video_url.trim().length > 0;
+                        const hasText = lesson.content && lesson.content.trim().length > 0;
+
+                        return (
+                            <motion.button
+                                key={lesson.id}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: index * 0.02 }}
+                                onClick={() => !isLocked && handleSelectLesson(lesson.id!)}
+                                disabled={isLocked}
+                                className={cn(
+                                    'academy-lesson-item w-full text-left',
+                                    isSelected && 'active',
+                                    lessonCompleted && 'completed',
+                                    isLocked && 'disabled'
+                                )}
                             >
-                                <ArrowLeft className="w-4 h-4" />
-                                <span>Volver a módulos</span>
-                            </button>
-                            <h2 className="academy-sidebar-title">{activeModule.title}</h2>
-                            <p className="academy-sidebar-description line-clamp-2">{activeModule.description}</p>
-                        </div>
-
-                        <div className="academy-sidebar-progress">
-                            <div className="academy-sidebar-progress-header">
-                                <span className="academy-sidebar-progress-label">Tu progreso</span>
-                                <span className="academy-sidebar-progress-percentage">{getProgressPercentage()}%</span>
-                            </div>
-                            <div className="academy-sidebar-progress-bar">
-                                <motion.div
-                                    className="academy-module-progress-fill"
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${getProgressPercentage()}%` }}
-                                    transition={{ duration: 0.5 }}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="academy-lessons-list">
-                            {lessonsInOrder.map((lesson, index) => {
-                                const lessonCompleted = completedLessons.includes(lesson.id!);
-                                const isSelected = currentLesson?.id === lesson.id;
-                                const isLocked = !lessonCompleted && index > 0 && !completedLessons.includes(lessonsInOrder[index - 1].id!);
-                                const hasVideo = lesson.video_url && lesson.video_url.trim().length > 0;
-                                const hasText = lesson.content && lesson.content.trim().length > 0;
-
-                                return (
-                                    <motion.button
-                                        key={lesson.id}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: index * 0.02 }}
-                                        onClick={() => !isLocked && handleSelectLesson(lesson.id!)}
-                                        disabled={isLocked}
-                                        className={cn(
-                                            'academy-lesson-item w-full text-left',
-                                            isSelected && 'active',
-                                            lessonCompleted && 'completed',
-                                            isLocked && 'disabled'
-                                        )}
-                                    >
-                                        <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                                            <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
+                                <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
                                                 {isLocked ? 'bg-slate-200 dark:bg-slate-700 text-slate-500' :
                                                  lessonCompleted ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' :
                                                  'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'}">
-                                                {isLocked ? <Lock className="w-4 h-4" /> :
-                                                 lessonCompleted ? <CheckCircle className="w-5 h-5" /> :
-                                                 index + 1}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h4 className="font-semibold text-slate-900 dark:text-white text-sm mb-1 truncate">
-                                                    {lesson.title}
-                                                </h4>
-                                                <div className="flex items-center gap-2 text-xs">
-                                                    {hasVideo && (
-                                                        <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
-                                                            <Youtube className="w-3 h-3" />
-                                                            Video
-                                                        </span>
+                                        {isLocked ? <Lock className="w-4 h-4" /> :
+                                            lessonCompleted ? <CheckCircle className="w-5 h-5" /> :
+                                                index + 1}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-semibold text-slate-900 dark:text-white text-sm mb-1 truncate">
+                                            {lesson.title}
+                                        </h4>
+                                        <div className="flex items-center gap-2 text-xs">
+                                            {hasVideo && (
+                                                <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
+                                                    <Youtube className="w-3 h-3" />
+                                                    Video
+                                                </span>
+                                            )}
+                                            {hasText && (
+                                                <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
+                                                    <FileText className="w-3 h-3" />
+                                                    Texto
+                                                </span>
+                                            )}
+                                            <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                                                <Clock className="w-3 h-3" />
+                                                {lesson.duration}m
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.button>
+                        );
+                    })}
+                </div>
+            </aside>
+
+            <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950">
+                {!selectedLessonId ? (
+                    <div className="max-w-6xl mx-auto px-4 pt-1">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4 }}
+                            className="academy-lesson-header"
+                        >
+                            <h1 className="academy-title">{activeModule.title}</h1>
+                            <p className="academy-description">{activeModule.description}</p>
+
+                            <div className="flex flex-wrap items-center gap-3 mt-2">
+                                <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-full border border-blue-200 dark:border-blue-800">
+                                    <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                    <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">{lessons.length} lecciones</span>
+                                </div>
+                                <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-full border border-emerald-200 dark:border-emerald-800">
+                                    <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                    <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">{getProgressPercentage()} completado</span>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        <div className="academy-lessons-grid">
+                            {lessonsInOrder.map((lesson, index) => {
+                                const lessonCompleted = completedLessons.includes(lesson.id!);
+                                const lessonYtId = lesson.video_url ? extractYouTubeId(lesson.video_url) : null;
+                                const isLocked = !lessonCompleted && index > 0 && !completedLessons.includes(lessonsInOrder[index - 1].id!);
+
+                                return (
+                                    <motion.div
+                                        key={lesson.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.05 }}
+                                        className="h-full"
+                                    >
+                                        <div
+                                            onClick={() => !isLocked && handleSelectLesson(lesson.id!)}
+                                            className={cn(
+                                                'relative bg-white dark:bg-slate-900 rounded-2xl shadow-lg border-2 transition-all overflow-hidden cursor-pointer group',
+                                                isLocked
+                                                    ? 'border-slate-200 dark:border-slate-700 opacity-60'
+                                                    : 'border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-xl'
+                                            )}
+                                        >
+                                            {/* Thumbnail Section */}
+                                            <div className="relative h-40 bg-slate-900 overflow-hidden">
+                                                {lessonYtId ? (
+                                                    <img
+                                                        src={`https://img.youtube.com/vi/${lessonYtId}/hqdefault.jpg`}
+                                                        alt={lesson.title}
+                                                        className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                                                        loading="lazy"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
+                                                        <FileText className="w-16 h-16 text-slate-600" />
+                                                    </div>
+                                                )}
+
+                                                {/* Number Badge */}
+                                                <div className="absolute top-3 left-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg">
+                                                    <span className="text-sm font-bold text-slate-900 dark:text-white">
+                                                        {index + 1}
+                                                    </span>
+                                                </div>
+
+                                                {/* Type Badge */}
+                                                <div className="absolute top-3 right-3 flex gap-2">
+                                                    {lessonYtId && (
+                                                        <div className="bg-red-500/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-lg">
+                                                            <Youtube className="w-4 h-4 text-white" />
+                                                        </div>
                                                     )}
-                                                    {hasText && (
-                                                        <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
-                                                            <FileText className="w-3 h-3" />
-                                                            Texto
-                                                        </span>
+                                                    {lesson.content && lesson.content.trim().length > 0 && (
+                                                        <div className="bg-blue-500/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-lg">
+                                                            <FileText className="w-4 h-4 text-white" />
+                                                        </div>
                                                     )}
-                                                    <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                                                        <Clock className="w-3 h-3" />
+                                                </div>
+
+                                                {/* Completion Badge */}
+                                                {lessonCompleted && (
+                                                    <div className="absolute bottom-3 right-3 bg-emerald-500 px-2 py-1 rounded-lg shadow-lg">
+                                                        <CheckCircle className="w-4 h-4 text-white" />
+                                                    </div>
+                                                )}
+
+                                                {/* Lock Overlay */}
+                                                {isLocked && (
+                                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center">
+                                                        <Lock className="w-10 h-10 text-slate-300" />
+                                                    </div>
+                                                )}
+
+                                                {/* Duration Badge */}
+                                                <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-lg">
+                                                    <div className="flex items-center gap-1.5 text-white text-xs font-semibold">
+                                                        <Clock className="w-3.5 h-3.5" />
                                                         {lesson.duration}m
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Content Section */}
+                                            <div className="p-4">
+                                                <h3 className="font-bold text-slate-900 dark:text-white text-base mb-2 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                                    {lesson.title}
+                                                </h3>
+                                                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                                                    <span className="flex items-center gap-1.5">
+                                                        {lessonCompleted ? (
+                                                            <>
+                                                                <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+                                                                Completado
+                                                            </>
+                                                        ) : isLocked ? (
+                                                            <>
+                                                                <Lock className="w-3.5 h-3.5" />
+                                                                Bloqueado
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Play className="w-3.5 h-3.5" />
+                                                                Disponible
+                                                            </>
+                                                        )}
+                                                    </span>
+                                                    <span>
+                                                        {lessonYtId && lesson.content ? 'Video + Texto' : lessonYtId ? 'Video' : 'Texto'}
                                                     </span>
                                                 </div>
                                             </div>
                                         </div>
-                                    </motion.button>
+                                    </motion.div>
                                 );
                             })}
-                        </div>
-                    </aside>
 
-                    <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950">
-                        {!selectedLessonId ? (
-                            <div className="max-w-6xl mx-auto px-4 pt-1">
+                            {lessons.length === 0 && (
                                 <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.4 }}
-                                    className="academy-lesson-header"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="col-span-full"
                                 >
-                                    <h1 className="academy-title">{activeModule.title}</h1>
-                                    <p className="academy-description">{activeModule.description}</p>
-
-                                    <div className="flex flex-wrap items-center gap-3 mt-2">
-                                        <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-full border border-blue-200 dark:border-blue-800">
-                                            <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                            <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">{lessons.length} lecciones</span>
-                                        </div>
-                                        <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-full border border-emerald-200 dark:border-emerald-800">
-                                            <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                                            <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">{getProgressPercentage()} completado</span>
-                                        </div>
+                                    <div className="academy-empty-state">
+                                        {lessonsLoading ? (
+                                            <>
+                                                <Loader2 className="academy-empty-icon animate-spin" />
+                                                <p className="academy-empty-title">Cargando lecciones...</p>
+                                                <p className="academy-empty-description">Por favor espera un momento</p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <BookOpen className="academy-empty-icon" />
+                                                <p className="academy-empty-title">No hay lecciones disponibles</p>
+                                                <p className="academy-empty-description">
+                                                    Este módulo aún no tiene contenido publicado.
+                                                    <br />
+                                                    <span className="text-xs text-slate-400 mt-2 block">
+                                                        Módulo ID: {moduleId}
+                                                    </span>
+                                                </p>
+                                            </>
+                                        )}
                                     </div>
                                 </motion.div>
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="academy-lesson-detail">
+                        <div className="max-w-6xl mx-auto px-4 pt-2">
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4 }}
+                                className="h-full flex flex-col"
+                            >
+                                {/* Header */}
+                                <div className="academy-lesson-header flex justify-between items-center mb-4">
+                                    <button
+                                        onClick={handleBackToLessons}
+                                        className="academy-lesson-back-button"
+                                    >
+                                        <ArrowLeft className="w-4 h-4" />
+                                        Volver a lecciones
+                                    </button>
 
-                                <div className="academy-lessons-grid">
-                                    {lessonsInOrder.map((lesson, index) => {
-                                        const lessonCompleted = completedLessons.includes(lesson.id!);
-                                        const lessonYtId = lesson.video_url ? extractYouTubeId(lesson.video_url) : null;
-                                        const isLocked = !lessonCompleted && index > 0 && !completedLessons.includes(lessonsInOrder[index - 1].id!);
+                                    <button
+                                        onClick={() => setNotesOpen(true)}
+                                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 transition-all"
+                                    >
+                                        <StickyNote className="w-4 h-4" />
+                                        Mis Notas
+                                    </button>
+                                </div>
 
-                                        return (
-                                            <motion.div
-                                                key={lesson.id}
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: index * 0.05 }}
-                                                className="h-full"
-                                            >
-                                                <div
-                                                    onClick={() => !isLocked && handleSelectLesson(lesson.id!)}
-                                                    className={cn(
-                                                        'relative bg-white dark:bg-slate-900 rounded-2xl shadow-lg border-2 transition-all overflow-hidden cursor-pointer group',
-                                                        isLocked
-                                                            ? 'border-slate-200 dark:border-slate-700 opacity-60'
-                                                            : 'border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-xl'
-                                                    )}
+                                {/* Title */}
+                                <h1 className="academy-lesson-title-large">{currentLesson?.title}</h1>
+
+                                {/* Tabs Toggle */}
+                                {(hasVideo || hasText) && (
+                                    <div className="mb-4">
+                                        <div className="academy-lesson-tabs">
+                                            {hasVideo && (
+                                                <button
+                                                    onClick={() => setSelectedView('video')}
+                                                    className={selectedView === 'video' ? 'active' : ''}
                                                 >
-                                                    {/* Thumbnail Section */}
-                                                    <div className="relative h-40 bg-slate-900 overflow-hidden">
-                                                        {lessonYtId ? (
-                                                            <img
-                                                                src={`https://img.youtube.com/vi/${lessonYtId}/hqdefault.jpg`}
-                                                                alt={lesson.title}
-                                                                className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-                                                                loading="lazy"
-                                                            />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
-                                                                <FileText className="w-16 h-16 text-slate-600" />
-                                                            </div>
-                                                        )}
+                                                    <Youtube className="w-4 h-4" />
+                                                    <span className="ml-2">Video</span>
+                                                </button>
+                                            )}
+                                            {hasText && (
+                                                <button
+                                                    onClick={() => setSelectedView('text')}
+                                                    className={selectedView === 'text' ? 'active' : ''}
+                                                >
+                                                    <FileText className="w-4 h-4" />
+                                                    <span className="ml-2">Contenido</span>
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
 
-                                                        {/* Number Badge */}
-                                                        <div className="absolute top-3 left-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg">
-                                                            <span className="text-sm font-bold text-slate-900 dark:text-white">
-                                                                {index + 1}
-                                                            </span>
+                                {/* Navigation Bar - Above Content */}
+                                <div className="flex items-center justify-between mb-6 px-1">
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={handleNavigatePrevious}
+                                            disabled={lessonsInOrder.findIndex(l => l.id === currentLesson?.id) <= 0}
+                                            className={cn(
+                                                'flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm',
+                                                lessonsInOrder.findIndex(l => l.id === currentLesson?.id) <= 0 && 'opacity-50 cursor-not-allowed'
+                                            )}
+                                        >
+                                            <ChevronLeft className="w-4 h-4" />
+                                            <span className="hidden sm:inline">Anterior</span>
+                                        </button>
+                                        <button
+                                            onClick={handleNavigateNext}
+                                            disabled={lessonsInOrder.findIndex(l => l.id === currentLesson?.id) >= lessonsInOrder.length - 1}
+                                            className={cn(
+                                                'flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm',
+                                                lessonsInOrder.findIndex(l => l.id === currentLesson?.id) >= lessonsInOrder.length - 1 && 'opacity-50 cursor-not-allowed'
+                                            )}
+                                        >
+                                            <span className="hidden sm:inline">Siguiente</span>
+                                            <ChevronRight className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                                            {lessonsInOrder.findIndex(l => l.id === currentLesson?.id) + 1} / {lessonsInOrder.length}
+                                        </div>
+                                        <div className="h-2 w-24 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-blue-600 transition-all duration-300"
+                                                style={{
+                                                    width: `${((lessonsInOrder.findIndex(l => l.id === currentLesson?.id) + 1) / lessonsInOrder.length) * 100}%`
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Video Section */}
+                                {hasVideo && selectedView === 'video' && youtubeId && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="mb-6"
+                                    >
+                                        <div className="relative bg-black rounded-2xl overflow-hidden shadow-2xl cursor-pointer" onClick={() => setIsVideoExpanded(true)}>
+                                            <motion.div
+                                                animate={{
+                                                    height: isVideoExpanded ? 'auto' : '300px'
+                                                }}
+                                                transition={{ duration: 0.4, ease: 'easeInOut' }}
+                                                className="relative overflow-hidden"
+                                            >
+                                                {!isVideoExpanded && (
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10 transition-opacity hover:bg-black/30">
+                                                        <div className="w-20 h-20 bg-white/90 dark:bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center shadow-2xl">
+                                                            <Play className="w-10 h-10 text-red-600 ml-1" />
                                                         </div>
-
-                                                        {/* Type Badge */}
-                                                        <div className="absolute top-3 right-3 flex gap-2">
-                                                            {lessonYtId && (
-                                                                <div className="bg-red-500/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-lg">
-                                                                    <Youtube className="w-4 h-4 text-white" />
-                                                                </div>
-                                                            )}
-                                                            {lesson.content && lesson.content.trim().length > 0 && (
-                                                                <div className="bg-blue-500/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-lg">
-                                                                    <FileText className="w-4 h-4 text-white" />
-                                                                </div>
-                                                            )}
-                                                        </div>
-
-                                                        {/* Completion Badge */}
-                                                        {lessonCompleted && (
-                                                            <div className="absolute bottom-3 right-3 bg-emerald-500 px-2 py-1 rounded-lg shadow-lg">
-                                                                <CheckCircle className="w-4 h-4 text-white" />
-                                                            </div>
-                                                        )}
-
-                                                        {/* Lock Overlay */}
-                                                        {isLocked && (
-                                                            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center">
-                                                                <Lock className="w-10 h-10 text-slate-300" />
-                                                            </div>
-                                                        )}
-
-                                                        {/* Duration Badge */}
-                                                        <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-lg">
-                                                            <div className="flex items-center gap-1.5 text-white text-xs font-semibold">
-                                                                <Clock className="w-3.5 h-3.5" />
-                                                                {lesson.duration}m
-                                                            </div>
-                                                        </div>
+                                                        <p className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white font-bold text-sm">
+                                                            Click para expandir
+                                                        </p>
                                                     </div>
+                                                )}
 
-                                                    {/* Content Section */}
-                                                    <div className="p-4">
-                                                        <h3 className="font-bold text-slate-900 dark:text-white text-base mb-2 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                                            {lesson.title}
-                                                        </h3>
-                                                        <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                                                            <span className="flex items-center gap-1.5">
-                                                                {lessonCompleted ? (
-                                                                    <>
-                                                                        <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                                                                        Completado
-                                                                    </>
-                                                                ) : isLocked ? (
-                                                                    <>
-                                                                        <Lock className="w-3.5 h-3.5" />
-                                                                        Bloqueado
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <Play className="w-3.5 h-3.5" />
-                                                                        Disponible
-                                                                    </>
-                                                                )}
-                                                            </span>
-                                                            <span>
-                                                                {lessonYtId && lesson.content ? 'Video + Texto' : lessonYtId ? 'Video' : 'Texto'}
-                                                            </span>
-                                                        </div>
-                                                    </div>
+                                                <div className="aspect-video">
+                                                    <iframe
+                                                        ref={videoRef}
+                                                        src={`https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1&playsinline=1&showinfo=0&iv_load_policy=3&controls=1&disablekb=1&fs=0&widget_referrer=${encodeURIComponent(window.location.href)}`}
+                                                        title={currentLesson?.title || ''}
+                                                        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                        allowFullScreen
+                                                        className="absolute inset-0 w-full h-full"
+                                                        loading="lazy"
+                                                        sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
+                                                    />
                                                 </div>
                                             </motion.div>
-                                        );
-                                    })}
+                                        </div>
 
-                                    {lessons.length === 0 && (
+                                        {/* Video Info */}
                                         <motion.div
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
-                                            className="col-span-full"
+                                            transition={{ delay: 0.2 }}
+                                            className="mt-4 flex items-center justify-between"
                                         >
-                                            <div className="academy-empty-state">
-                                                {lessonsLoading ? (
-                                                    <>
-                                                        <Loader2 className="academy-empty-icon animate-spin" />
-                                                        <p className="academy-empty-title">Cargando lecciones...</p>
-                                                        <p className="academy-empty-description">Por favor espera un momento</p>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <BookOpen className="academy-empty-icon" />
-                                                        <p className="academy-empty-title">No hay lecciones disponibles</p>
-                                                        <p className="academy-empty-description">
-                                                            Este módulo aún no tiene contenido publicado.
-                                                            <br />
-                                                            <span className="text-xs text-slate-400 mt-2 block">
-                                                                Módulo ID: {moduleId}
-                                                            </span>
-                                                        </p>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="academy-lesson-detail">
-                                <div className="max-w-6xl mx-auto px-4 pt-2">
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.4 }}
-                                        className="h-full flex flex-col"
-                                    >
-                                        {/* Header */}
-                                        <div className="academy-lesson-header flex justify-between items-center mb-4">
-                                <button
-                                    onClick={handleBackToLessons}
-                                    className="academy-lesson-back-button"
-                                >
-                                    <ArrowLeft className="w-4 h-4" />
-                                    Volver a lecciones
-                                </button>
-                                
-                                <button
-                                    onClick={() => setNotesOpen(true)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 transition-all"
-                                >
-                                    <StickyNote className="w-4 h-4" />
-                                    Mis Notas
-                                </button>
-                            </div>
-
-                            {/* Title */}
-                            <h1 className="academy-lesson-title-large">{currentLesson?.title}</h1>
-
-                            {/* Tabs Toggle */}
-                            {(hasVideo || hasText) && (
-                                <div className="mb-4">
-                                    <div className="academy-lesson-tabs">
-                                        {hasVideo && (
-                                            <button
-                                                onClick={() => setSelectedView('video')}
-                                                className={selectedView === 'video' ? 'active' : ''}
-                                            >
-                                                <Youtube className="w-4 h-4" />
-                                                <span className="ml-2">Video</span>
-                                            </button>
-                                        )}
-                                        {hasText && (
-                                            <button
-                                                onClick={() => setSelectedView('text')}
-                                                className={selectedView === 'text' ? 'active' : ''}
-                                            >
-                                                <FileText className="w-4 h-4" />
-                                                <span className="ml-2">Contenido</span>
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Navigation Bar - Above Content */}
-                            <div className="flex items-center justify-between mb-6 px-1">
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={handleNavigatePrevious}
-                                        disabled={lessonsInOrder.findIndex(l => l.id === currentLesson?.id) <= 0}
-                                        className={cn(
-                                            'flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm',
-                                            lessonsInOrder.findIndex(l => l.id === currentLesson?.id) <= 0 && 'opacity-50 cursor-not-allowed'
-                                        )}
-                                    >
-                                        <ChevronLeft className="w-4 h-4" />
-                                        <span className="hidden sm:inline">Anterior</span>
-                                    </button>
-                                    <button
-                                        onClick={handleNavigateNext}
-                                        disabled={lessonsInOrder.findIndex(l => l.id === currentLesson?.id) >= lessonsInOrder.length - 1}
-                                        className={cn(
-                                            'flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm',
-                                            lessonsInOrder.findIndex(l => l.id === currentLesson?.id) >= lessonsInOrder.length - 1 && 'opacity-50 cursor-not-allowed'
-                                        )}
-                                    >
-                                        <span className="hidden sm:inline">Siguiente</span>
-                                        <ChevronRight className="w-4 h-4" />
-                                    </button>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                                        {lessonsInOrder.findIndex(l => l.id === currentLesson?.id) + 1} / {lessonsInOrder.length}
-                                    </div>
-                                    <div className="h-2 w-24 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-blue-600 transition-all duration-300"
-                                            style={{
-                                                width: `${((lessonsInOrder.findIndex(l => l.id === currentLesson?.id) + 1) / lessonsInOrder.length) * 100}%`
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Video Section */}
-                            {hasVideo && selectedView === 'video' && youtubeId && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    transition={{ duration: 0.3 }}
-                                    className="mb-6"
-                                >
-                                    <div className="relative bg-black rounded-2xl overflow-hidden shadow-2xl cursor-pointer" onClick={() => setIsVideoExpanded(true)}>
-                                        <motion.div
-                                            animate={{
-                                                height: isVideoExpanded ? 'auto' : '300px'
-                                            }}
-                                            transition={{ duration: 0.4, ease: 'easeInOut' }}
-                                            className="relative overflow-hidden"
-                                        >
-                                            {!isVideoExpanded && (
-                                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10 transition-opacity hover:bg-black/30">
-                                                    <div className="w-20 h-20 bg-white/90 dark:bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center shadow-2xl">
-                                                        <Play className="w-10 h-10 text-red-600 ml-1" />
-                                                    </div>
-                                                    <p className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white font-bold text-sm">
-                                                        Click para expandir
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                                                    <Youtube className="w-5 h-5 text-red-600 dark:text-red-400" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-semibold text-slate-900 dark:text-white">Video Tutorial</h3>
+                                                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                                                        {currentLesson?.duration} minutos
                                                     </p>
                                                 </div>
+                                            </div>
+                                            {isVideoExpanded && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setIsVideoExpanded(false);
+                                                    }}
+                                                    className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-300 transition-colors"
+                                                >
+                                                    Minimizar
+                                                </button>
                                             )}
-
-                                            <div style={{ aspectRatio: '16/9' }}>
-                                                <iframe
-                                                    ref={videoRef}
-                                                    src={`https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1&playsinline=1&showinfo=0&iv_load_policy=3&controls=1&disablekb=1&fs=0&widget_referrer=${encodeURIComponent(window.location.href)}`}
-                                                    title={currentLesson?.title || ''}
-                                                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                    allowFullScreen
-                                                    className="absolute inset-0 w-full h-full"
-                                                    loading="lazy"
-                                                    sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
-                                                />
-                                            </div>
                                         </motion.div>
-                                    </div>
-
-                                    {/* Video Info */}
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ delay: 0.2 }}
-                                        className="mt-4 flex items-center justify-between"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                                                <Youtube className="w-5 h-5 text-red-600 dark:text-red-400" />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-semibold text-slate-900 dark:text-white">Video Tutorial</h3>
-                                                <p className="text-sm text-slate-500 dark:text-slate-400">
-                                                    {currentLesson?.duration} minutos
-                                                </p>
-                                            </div>
-                                        </div>
-                                        {isVideoExpanded && (
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setIsVideoExpanded(false);
-                                                }}
-                                                className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-300 transition-colors"
-                                            >
-                                                Minimizar
-                                            </button>
-                                        )}
                                     </motion.div>
-                                </motion.div>
-                            )}
+                                )}
 
-                            {/* Video Loading/Error State */}
-                            {hasVideo && selectedView === 'video' && !youtubeId && (
-                                <div className="mb-6 p-8 bg-slate-100 dark:bg-slate-800 rounded-2xl text-center">
-                                    <Youtube className="w-16 h-16 text-slate-400 dark:text-slate-600 mx-auto mb-4" />
-                                    <p className="text-slate-600 dark:text-slate-400 font-medium">
-                                        Video no disponible
-                                    </p>
-                                    <p className="text-sm text-slate-500 dark:text-slate-500 mt-2">
-                                        El URL del video no es válido o no está disponible
-                                    </p>
-                                </div>
-                            )}
-
-                            {/* Content Section */}
-                            {hasText && selectedView === 'text' && currentLesson?.content && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    transition={{ duration: 0.3 }}
-                                    className="mb-6"
-                                >
-                                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
-                                        <div className="p-6 border-b border-slate-200 dark:border-slate-800">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                                                    <FileText className="w-5 h-5 text-white" />
-                                                </div>
-                                                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Contenido de la Lección</h2>
-                                            </div>
-                                        </div>
-                                        <ContentProtection>
-                                            <div className="p-6">
-                                                <div
-                                                    className="prose prose-lg dark:prose-invert max-w-none"
-                                                    dangerouslySetInnerHTML={{ __html: currentLesson.content }}
-                                                />
-                                            </div>
-                                        </ContentProtection>
+                                {/* Video Loading/Error State */}
+                                {hasVideo && selectedView === 'video' && !youtubeId && (
+                                    <div className="mb-6 p-8 bg-slate-100 dark:bg-slate-800 rounded-2xl text-center">
+                                        <Youtube className="w-16 h-16 text-slate-400 dark:text-slate-600 mx-auto mb-4" />
+                                        <p className="text-slate-600 dark:text-slate-400 font-medium">
+                                            Video no disponible
+                                        </p>
+                                        <p className="text-sm text-slate-500 dark:text-slate-500 mt-2">
+                                            El URL del video no es válido o no está disponible
+                                        </p>
                                     </div>
-                                </motion.div>
-                            )}
+                                )}
 
-                            {/* Action Bar */}
-                            <div className="sticky bottom-0 z-10 mt-6 pt-4 pb-2 bg-gradient-to-t from-slate-50 dark:from-slate-950 to-transparent">
-                                <div className="flex items-center gap-3">
-                                    <button
-                                        onClick={() => {
-                                            if (currentLesson?.id) {
-                                                if (isCompleted) {
-                                                    handleLessonUncomplete(currentLesson.id);
-                                                } else {
-                                                    handleLessonComplete(currentLesson.id);
-                                                }
-                                            }
-                                        }}
-                                        disabled={markingComplete || unmarkingComplete}
-                                        className={cn(
-                                            'flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm uppercase tracking-wide transition-all shadow-lg hover:shadow-xl',
-                                            isCompleted
-                                                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                                                : 'bg-blue-600 hover:bg-blue-700 text-white'
-                                        )}
+                                {/* Content Section */}
+                                {hasText && selectedView === 'text' && currentLesson?.content && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="mb-6"
                                     >
-                                        <CheckCircle className={cn("w-5 h-5", isCompleted && "fill-current")} />
-                                        {isCompleted ? '✓ Completada (Click para desmarcar)' : 'Marcar como Completada'}
-                                    </button>
-                                </div>
-                            </div>
+                                        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+                                            <div className="p-6 border-b border-slate-200 dark:border-slate-800">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                                                        <FileText className="w-5 h-5 text-white" />
+                                                    </div>
+                                                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Contenido de la Lección</h2>
+                                                </div>
+                                            </div>
+                                            <ContentProtection>
+                                                <div className="p-6">
+                                                    <div
+                                                        className="prose prose-lg dark:prose-invert max-w-none"
+                                                        dangerouslySetInnerHTML={{ __html: currentLesson.content }}
+                                                    />
+                                                </div>
+                                            </ContentProtection>
+                                        </div>
+                                    </motion.div>
+                                )}
 
-                             {/* Notes Panel */}
-                            {currentLesson?.id && (
-                                <LessonNotes
-                                    lessonId={currentLesson.id}
-                                    isOpen={notesOpen}
-                                    onClose={() => setNotesOpen(false)}
-                                />
-                            )}
-                        </motion.div>
+                                {/* Action Bar */}
+                                <div className="sticky bottom-0 z-10 mt-6 pt-4 pb-2 bg-gradient-to-t from-slate-50 dark:from-slate-950 to-transparent">
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => {
+                                                if (currentLesson?.id) {
+                                                    if (isCompleted) {
+                                                        handleLessonUncomplete(currentLesson.id);
+                                                    } else {
+                                                        handleLessonComplete(currentLesson.id);
+                                                    }
+                                                }
+                                            }}
+                                            disabled={markingComplete || unmarkingComplete}
+                                            className={cn(
+                                                'flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm uppercase tracking-wide transition-all shadow-lg hover:shadow-xl',
+                                                isCompleted
+                                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                            )}
+                                        >
+                                            <CheckCircle className={cn("w-5 h-5", isCompleted && "fill-current")} />
+                                            {isCompleted ? '✓ Completada (Click para desmarcar)' : 'Marcar como Completada'}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Notes Panel */}
+                                {currentLesson?.id && (
+                                    <LessonNotes
+                                        lessonId={currentLesson.id}
+                                        isOpen={notesOpen}
+                                        onClose={() => setNotesOpen(false)}
+                                    />
+                                )}
+                            </motion.div>
                         </div>
                     </div>
-                    )}
+                )}
 
                 {/* Mensaje cuando se intentó acceder a una lección no disponible */}
                 {selectedLessonId && !currentLesson && lessons.length > 0 && (

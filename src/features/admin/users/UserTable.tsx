@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Shield, Trash2, Edit, Building, User as UserIcon } from 'lucide-react';
+import { Shield, Trash2, Edit, Building, User as UserIcon, Settings } from 'lucide-react';
 import { getStatusConfig } from '../../../lib/constants';
 import { formatDate } from '../../../utils/formatDate';
 import { User } from '../../../services/userService';
@@ -8,7 +8,7 @@ import { User } from '../../../services/userService';
 // TYPES & INTERFACES
 // =====================================================
 
-export type UserAction = 'edit' | 'delete' | 'toggleStatus';
+export type UserAction = 'edit' | 'delete' | 'toggleStatus' | 'viewFranchise';
 
 interface UserRowProps {
     user: User;
@@ -122,9 +122,20 @@ const UserRow: React.FC<UserRowProps> = ({ user, style, onAction, currentUserRol
             </div>
 
             {/* Actions */}
-            <div className="w-[60px] flex justify-end">
+            <div className="w-[100px] flex justify-end gap-1">
                 {currentUserRole === 'admin' && !readOnly && (
                     <div className="flex items-center gap-1 opacity-100 transition-opacity">
+                        {/* Ver detalles de franquicia */}
+                        {user.role === 'franchise' && (
+                            <button
+                                onClick={() => onAction('viewFranchise', user)}
+                                className="p-2 text-slate-400 hover:text-emerald-400 rounded-full hover:bg-emerald-500/10 transition-colors md:p-1.5"
+                                title="Ver detalles y módulos"
+                            >
+                                <Settings className="w-4 h-4" />
+                            </button>
+                        )}
+
                         {/* Mobile: Only Edit */}
                         <button
                             onClick={() => onAction('edit', user)}
@@ -202,7 +213,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction, currentUserRole,
                 <div className="w-[100px] hidden sm:block text-xs font-bold text-indigo-300 uppercase tracking-wider">Estado</div>
                 {!franchiseId && <div className="w-[120px] hidden xl:block text-xs font-bold text-indigo-300 uppercase tracking-wider">ID Franq.</div>}
                 <div className="w-[100px] hidden 2xl:block text-xs font-bold text-indigo-300 uppercase tracking-wider">Fecha</div>
-                <div className="w-[60px]" />
+                <div className="w-[100px]" />
             </div>
 
             {/* Virtual Scroll Container */}

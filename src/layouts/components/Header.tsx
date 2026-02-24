@@ -18,7 +18,7 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, isFranchise, isRider }) => {
     const navItems = isAdmin ? adminNavItems : isFranchise ? franchiseNavItems : isRider ? riderNavItems : [];
 
     return (
-        <header className="sticky top-0 z-50 w-full px-4 lg:px-8 py-5 pointer-events-none">
+        <header className="sticky top-0 z-40 w-full px-4 lg:px-8 py-5 pointer-events-none">
             <div className="max-w-[1920px] mx-auto flex items-center justify-between gap-4">
 
                 {/* LEFT: Hyper-Premium Brand Island */}

@@ -63,10 +63,10 @@ function shiftsOverlap(
   
   // Convertir a rangos de tiempo en minutos desde medianoche
   // Para turnos que cruzan medianoche, extendemos el end al día siguiente
-  let s1 = start1;
-  let e1 = end1 < start1 ? end1 + 24 * 60 : end1;
-  let s2 = start2;
-  let e2 = end2 < start2 ? end2 + 24 * 60 : end2;
+  const s1 = start1;
+  const e1 = end1 < start1 ? end1 + 24 * 60 : end1;
+  const s2 = start2;
+  const e2 = end2 < start2 ? end2 + 24 * 60 : end2;
   
   // Verificar solapamiento simple
   // Dos rangos se solapan si: inicio1 < fin2 AND fin1 > inicio2

@@ -22,8 +22,10 @@ export const RiderProfileView: React.FC = () => {
 
     useEffect(() => {
         if (user?.uid) {
-            setLoadError(null);
-            setLoadTimeout(false);
+            const initTimeout = setTimeout(() => {
+                setLoadError(null);
+                setLoadTimeout(false);
+            }, 0);
 
             const timeoutId = setTimeout(() => {
                 if (isLoading) {
@@ -34,7 +36,10 @@ export const RiderProfileView: React.FC = () => {
 
             fetchMyShifts(user.uid);
 
-            return () => clearTimeout(timeoutId);
+            return () => {
+                clearTimeout(initTimeout);
+                clearTimeout(timeoutId);
+            };
         }
     }, [user, fetchMyShifts]);
 

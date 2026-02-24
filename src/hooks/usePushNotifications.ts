@@ -21,21 +21,6 @@ export function usePushNotifications() {
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [subscription, setSubscription] = useState<PushSubscription | null>(null);
 
-  useEffect(() => {
-    // Verificar soporte
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-      setIsSupported(true);
-      
-      // Obtener permiso actual
-      if ('Notification' in window) {
-        setPermission(Notification.permission);
-      }
-      
-      // Verificar suscripción existente
-      checkSubscription();
-    }
-  }, []);
-
   const checkSubscription = async () => {
     try {
       const registration = await navigator.serviceWorker.ready;
@@ -46,9 +31,26 @@ export function usePushNotifications() {
     }
   };
 
+  useEffect(() => {
+    // Verificar soporte
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      setTimeout(() => {
+        setIsSupported(true);
+
+        // Obtener permiso actual
+        if ('Notification' in window) {
+          setPermission(Notification.permission);
+        }
+
+        // Verificar suscripción existente
+        checkSubscription();
+      }, 0);
+    }
+  }, []);
+
   const requestPermission = async (): Promise<NotificationPermission> => {
     if (!('Notification' in window)) return 'denied';
-    
+
     const result = await Notification.requestPermission();
     setPermission(result);
     return result;
@@ -66,7 +68,7 @@ export function usePushNotifications() {
 
       // Obtener service worker
       const registration = await navigator.serviceWorker.ready;
-      
+
       // Suscribirse a push
       const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || '';
       const newSubscription = await registration.pushManager.subscribe({
@@ -75,10 +77,10 @@ export function usePushNotifications() {
       });
 
       setSubscription(newSubscription);
-      
+
       // Enviar suscripción al servidor
       await sendSubscriptionToServer(newSubscription);
-      
+
       return true;
     } catch (error) {
       console.error('Error subscribing to push:', error);
@@ -92,10 +94,10 @@ export function usePushNotifications() {
     try {
       await subscription.unsubscribe();
       setSubscription(null);
-      
+
       // Notificar al servidor
       await removeSubscriptionFromServer(subscription);
-      
+
       return true;
     } catch (error) {
       console.error('Error unsubscribing:', error);
@@ -105,7 +107,7 @@ export function usePushNotifications() {
 
   const showNotification = useCallback((title: string, options?: NotificationOptions) => {
     if (permission !== 'granted') return;
-    
+
     navigator.serviceWorker.ready.then(registration => {
       registration.showNotification(title, {
         icon: '/pwa-192x192.png',
@@ -130,7 +132,7 @@ export function usePushNotifications() {
 function urlBase64ToUint8Array(base64String: string): BufferSource {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64 = (base64String + padding)
-    .replace(/\-/g, '+')
+    .replace(/-/g, '+')
     .replace(/_/g, '/');
 
   const rawData = window.atob(base64);

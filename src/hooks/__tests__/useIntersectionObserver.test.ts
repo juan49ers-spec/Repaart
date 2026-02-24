@@ -13,6 +13,7 @@ class MockIntersectionObserver implements IntersectionObserver {
 
   constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
     this.callback = callback;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     mockObserverInstance = this;
     if (options?.root) this.root = options.root;
     if (options?.rootMargin) this.rootMargin = options.rootMargin;
@@ -87,7 +88,7 @@ describe('useIntersectionObserver', () => {
 
   it('should disconnect observer when triggerOnce is true and element intersects', () => {
     const disconnectSpy = vi.spyOn(MockIntersectionObserver.prototype, 'disconnect');
-    
+
     const { result } = renderHook(() => useIntersectionObserver({ triggerOnce: true }));
 
     const div = document.createElement('div');

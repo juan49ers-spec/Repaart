@@ -44,7 +44,7 @@ const AuditTool = () => {
         try {
             const repairUserFn = httpsCallable(functions, 'repairUser');
             addLog(`📡 Testing connectivity (Ping)...`);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             const response = await repairUserFn({ ping: true });
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const data = response.data as any;

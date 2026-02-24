@@ -1,13 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import {
     FileText,
     Lock,
-    Unlock,
     CheckCircle,
     X,
     Clock,
-    RefreshCw,
-    Bell,
     ShieldAlert,
     Wallet,
     Banknote,
@@ -27,6 +25,17 @@ const FinancialWorkflowGuide: React.FC<FinancialWorkflowGuideProps> = ({ isOpen,
     const [activeSection, setActiveSection] = useState<
         'inicio' | 'ingresos' | 'gastos' | 'cierre' | 'estados' | 'errores' | 'faq'
     >('inicio');
+    const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+
+    const toggleItem = (id: string) => {
+        setCheckedItems(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const progress = useMemo(() => {
+        const total = 4; // Number of critical checklist items
+        const checked = Object.values(checkedItems).filter(Boolean).length;
+        return Math.round((checked / total) * 100);
+    }, [checkedItems]);
 
     const scrollRef = useRef<HTMLDivElement | null>(null);
     const inicioRef = useRef<HTMLDivElement | null>(null);
@@ -44,8 +53,8 @@ const FinancialWorkflowGuide: React.FC<FinancialWorkflowGuideProps> = ({ isOpen,
             { key: 'gastos' as const, title: 'Gastos', icon: PieChart, badge: 'Paso 2' },
             { key: 'cierre' as const, title: 'Confirmación', icon: CheckCircle, badge: 'Checklist' },
             { key: 'estados' as const, title: 'Estados', icon: Lock, badge: 'Control' },
-            { key: 'errores' as const, title: 'Errores típicos', icon: AlertTriangle, badge: 'Evita' },
-            { key: 'faq' as const, title: 'FAQ', icon: HelpCircle, badge: 'Dudas' }
+            { key: 'errores' as const, title: 'Errores comunes', icon: AlertTriangle, badge: 'Evita' },
+            { key: 'faq' as const, title: 'Dudas frecuentes', icon: HelpCircle, badge: 'FAQ' }
         ];
     }, []);
 
@@ -59,8 +68,7 @@ const FinancialWorkflowGuide: React.FC<FinancialWorkflowGuideProps> = ({ isOpen,
 
     if (!isOpen) return null;
 
-
-    const scrollTo = (key: typeof activeSection) => {
+    const scrollTo = (key: 'inicio' | 'ingresos' | 'gastos' | 'cierre' | 'estados' | 'errores' | 'faq') => {
         setActiveSection(key);
         const refMap = {
             inicio: inicioRef,
@@ -77,92 +85,48 @@ const FinancialWorkflowGuide: React.FC<FinancialWorkflowGuideProps> = ({ isOpen,
     return (
         <div className="relative z-[100]">
             <div
-                className="fixed inset-0 bg-slate-900/70 backdrop-blur-md animate-in fade-in duration-200"
+                className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300"
                 onClick={onClose}
             />
 
-            <div className="fixed inset-0 flex items-start justify-start p-4 pt-6 lg:pt-8 pl-4 lg:pl-[88px] pointer-events-none">
+            <div className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
                 <div
                     role="dialog"
                     aria-modal="true"
                     aria-label="Guía de Gestión Financiera"
-                    className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[86vh] overflow-hidden flex flex-col pointer-events-auto animate-in zoom-in-95 duration-200 ring-1 ring-slate-900/10 dark:ring-white/10"
+                    className="bg-white border border-slate-200 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto animate-in zoom-in-95 duration-300"
                 >
-                    <div className="px-6 py-5 border-b border-slate-100 dark:border-white/10 flex items-center justify-between bg-gradient-to-b from-white to-slate-50/60 dark:from-slate-900 dark:to-slate-950/60">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 ring-1 ring-indigo-100 dark:ring-indigo-500/20">
+                    {/* Header */}
+                    <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-white relative z-10">
+                        <div className="flex items-center gap-4">
+                            <div className="p-2 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600">
                                 <FileText className="w-5 h-5" />
                             </div>
                             <div>
-                                <div className="flex items-center gap-2">
-                                    <h2 className="text-lg md:text-xl font-black text-slate-900 dark:text-white tracking-tight">
-                                        Guía de Gestión Financiera
-                                    </h2>
-                                    <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10">
-                                        Cierre mensual sin dudas
-                                    </span>
-                                </div>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                    Lo que entra (Ingresos), lo que sale (Gastos) y lo que te queda (control).
+                                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                                    Guía de Operaciones Financieras
+                                    <span className="text-[10px] font-bold text-indigo-600 px-1.5 py-0.5 rounded bg-indigo-50 border border-indigo-100">v2.0</span>
+                                </h2>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+                                    Protocolo de Cierre Mensual y Sincronización Fiscal
                                 </p>
                             </div>
                         </div>
                         <button
                             onClick={onClose}
-                            title="Cerrar (Esc)"
-                            className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                            aria-label="Cerrar Guía"
+                            className="p-1.5 hover:bg-slate-50 rounded-lg transition-colors text-slate-400 hover:text-slate-600"
                         >
                             <X className="w-5 h-5" />
                         </button>
                     </div>
 
-                    <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[280px_1fr] bg-slate-50/60 dark:bg-slate-950/60">
-                        <div className="hidden lg:flex flex-col border-r border-slate-100 dark:border-white/10 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm">
-                            <div className="p-4">
-                                <div className="grid grid-cols-3 gap-2">
-                                    <div className="rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 p-3">
-                                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-300">
-                                            <Banknote className="w-4 h-4 text-indigo-500" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest">Ingresos</span>
-                                        </div>
-                                        <p className="text-xs font-bold text-slate-900 dark:text-white mt-1">Paso 1</p>
-                                    </div>
-                                    <div className="rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 p-3">
-                                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-300">
-                                            <PieChart className="w-4 h-4 text-rose-500" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest">Gastos</span>
-                                        </div>
-                                        <p className="text-xs font-bold text-slate-900 dark:text-white mt-1">Paso 2</p>
-                                    </div>
-                                    <div className="rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 p-3">
-                                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-300">
-                                            <Lock className="w-4 h-4 text-slate-500" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest">Cierre</span>
-                                        </div>
-                                        <p className="text-xs font-bold text-slate-900 dark:text-white mt-1">OK</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="px-4 pb-4">
-                                <div className="rounded-2xl p-4 bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-xl shadow-indigo-500/20 border border-indigo-500/30">
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-100">Reglas fáciles</p>
-                                        <TrendingUp className="w-4 h-4 text-indigo-100" />
-                                    </div>
-                                    <ul className="mt-3 space-y-2 text-xs font-semibold text-indigo-50/95">
-                                        <li className="flex gap-2"><span className="mt-1 w-1.5 h-1.5 rounded-full bg-white/70" />No cierres si faltan gastos fijos.</li>
-                                        <li className="flex gap-2"><span className="mt-1 w-1.5 h-1.5 rounded-full bg-white/70" />Revisa renting, comisión de Repaart e impuestos.</li>
-                                        <li className="flex gap-2"><span className="mt-1 w-1.5 h-1.5 rounded-full bg-white/70" />Guarda borrador y revisa 2 minutos.</li>
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <div className="px-2 pb-4">
-                                <div className="px-2 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
-                                    Navegación
-                                </div>
-                                <div className="mt-2 flex flex-col gap-1">
+                    <div className="flex-1 min-h-0 flex bg-white">
+                        {/* Sidebar Navigation */}
+                        <div className="w-[240px] hidden lg:flex flex-col border-r border-slate-100 p-4 gap-6 bg-slate-50/50">
+                            <div>
+                                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 px-2">Pasos Principales</h3>
+                                <div className="flex flex-col gap-1">
                                     {sections.map((s) => {
                                         const Icon = s.icon;
                                         const isActive = activeSection === s.key;
@@ -170,441 +134,241 @@ const FinancialWorkflowGuide: React.FC<FinancialWorkflowGuideProps> = ({ isOpen,
                                             <button
                                                 key={s.key}
                                                 onClick={() => scrollTo(s.key)}
-                                                className={[
-                                                    'w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-center justify-between border',
-                                                    isActive
-                                                        ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                                                        : 'bg-white/60 dark:bg-white/5 text-slate-700 dark:text-slate-200 border-slate-100 dark:border-white/10 hover:bg-white hover:dark:bg-white/10'
-                                                ].join(' ')}
+                                                className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${isActive
+                                                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100'
+                                                    : 'bg-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                                                    }`}
                                             >
-                                                <div className="flex items-center gap-2">
-                                                    <div className={[
-                                                        'w-8 h-8 rounded-lg flex items-center justify-center',
-                                                        isActive ? 'bg-white/10' : 'bg-slate-100 dark:bg-white/5'
-                                                    ].join(' ')}>
-                                                        <Icon className="w-4 h-4" />
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-xs font-black tracking-tight">{s.title}</div>
-                                                        <div className={['text-[10px] font-bold uppercase tracking-widest', isActive ? 'text-white/70' : 'text-slate-400'].join(' ')}>
-                                                            {s.badge}
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}`} />
+                                                <span className="text-[11px] font-bold">{s.title}</span>
+                                                {isActive && <CheckCircle className="ml-auto w-3.5 h-3.5 opacity-60" />}
                                             </button>
                                         );
                                     })}
                                 </div>
                             </div>
+
+                            <div className="mt-auto p-4 rounded-xl bg-amber-50 border border-amber-100">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <ShieldAlert className="w-4 h-4 text-amber-600" />
+                                    <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Nota Importante</span>
+                                </div>
+                                <p className="text-[11px] text-amber-800 leading-relaxed font-medium">
+                                    El cierre del periodo fiscal es <span className="font-bold underline">permanente</span>. Verifica todos los datos antes de confirmar.
+                                </p>
+                            </div>
                         </div>
 
-                        <div ref={scrollRef} className="min-h-0 overflow-y-auto p-4 md:p-8">
-                            <div className="max-w-3xl mx-auto space-y-10">
-                                <div ref={inicioRef} className="scroll-mt-6">
-                                    <div className="rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-                                        <div className="p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white">
-                                            <div className="flex items-center justify-between gap-4">
-                                                <div>
-                                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70">Inicio rápido</p>
-                                                    <h3 className="text-xl font-black tracking-tight mt-1">Cierra el mes sin complicarte</h3>
-                                                    <p className="text-sm text-white/80 mt-2 leading-relaxed">
-                                                        En 5 minutos: registra ingresos, completa gastos críticos y confirma el cierre con tranquilidad.
-                                                    </p>
-                                                </div>
-                                                <div className="hidden sm:flex items-center gap-2 bg-white/10 border border-white/10 rounded-xl px-3 py-2">
-                                                    <Clock className="w-4 h-4 text-white/70" />
-                                                    <span className="text-xs font-bold text-white/80">Tiempo: 3–5 min</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="p-6">
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                                <div className="rounded-xl p-4 border border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-white/5">
-                                                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
-                                                        <Banknote className="w-4 h-4 text-indigo-500" />
-                                                        <p className="text-xs font-black uppercase tracking-widest">Paso 1</p>
-                                                    </div>
-                                                    <p className="text-sm font-bold text-slate-900 dark:text-white mt-2">Ingresos</p>
-                                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Pedidos por km + ajuste manual si hace falta.</p>
-                                                </div>
-                                                <div className="rounded-xl p-4 border border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-white/5">
-                                                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
-                                                        <PieChart className="w-4 h-4 text-rose-500" />
-                                                        <p className="text-xs font-black uppercase tracking-widest">Paso 2</p>
-                                                    </div>
-                                                    <p className="text-sm font-bold text-slate-900 dark:text-white mt-2">Gastos</p>
-                                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Gastos de cada mes y gastos puntuales. Prioriza: sueldos, Seguridad Social, renting y comisión Repaart.</p>
-                                                </div>
-                                                <div className="rounded-xl p-4 border border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-white/5">
-                                                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
-                                                        <CheckCircle className="w-4 h-4 text-emerald-500" />
-                                                        <p className="text-xs font-black uppercase tracking-widest">Final</p>
-                                                    </div>
-                                                    <p className="text-sm font-bold text-slate-900 dark:text-white mt-2">Confirmar</p>
-                                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Checklist rápido. Confirma y bloquea el mes.</p>
-                                                </div>
-                                            </div>
+                        {/* Content Area */}
+                        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto bg-white">
+                            <div className="max-w-2xl mx-auto p-8 space-y-12 pb-24">
 
-                                            <div className="mt-6 rounded-2xl border border-indigo-100 dark:border-indigo-500/20 bg-indigo-50/60 dark:bg-indigo-500/10 p-5">
-                                                <div className="flex items-start gap-3">
-                                                    <div className="p-2 rounded-xl bg-white dark:bg-white/10 border border-indigo-100 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-300">
-                                                        <Wallet className="w-5 h-5" />
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <p className="text-xs font-black uppercase tracking-widest text-indigo-700 dark:text-indigo-300">
-                                                            Señal de salud
-                                                        </p>
-                                                        <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-100 mt-1">
-                                                            Si suben ingresos pero no sube “En tu bolsillo”, el problema casi siempre está en 3 sitios:
-                                                        </p>
-                                                        <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                                            <div className="rounded-xl bg-white/70 dark:bg-white/5 border border-indigo-100 dark:border-indigo-500/20 p-3 text-xs font-bold text-indigo-900 dark:text-indigo-100 flex items-center gap-2">
-                                                                <span className="w-2 h-2 rounded-full bg-rose-500" /> Coste por hora
-                                                            </div>
-                                                            <div className="rounded-xl bg-white/70 dark:bg-white/5 border border-indigo-100 dark:border-indigo-500/20 p-3 text-xs font-bold text-indigo-900 dark:text-indigo-100 flex items-center gap-2">
-                                                                <span className="w-2 h-2 rounded-full bg-amber-500" /> Renting + gasolina
-                                                            </div>
-                                                            <div className="rounded-xl bg-white/70 dark:bg-white/5 border border-indigo-100 dark:border-indigo-500/20 p-3 text-xs font-bold text-indigo-900 dark:text-indigo-100 flex items-center gap-2">
-                                                                <span className="w-2 h-2 rounded-full bg-indigo-500" /> Royalty/SS
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                {/* Section: Inicio */}
+                                <section ref={inicioRef} className="scroll-mt-6">
+                                    <div className="relative p-6 rounded-2xl border border-slate-100 bg-slate-50/50 overflow-hidden group">
+                                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                            <Sparkles className="w-16 h-16 text-indigo-600" />
                                         </div>
-                                    </div>
-                                </div>
+                                        <h3 className="text-xl font-bold text-slate-900 tracking-tight mb-2">Resumen de Operaciones</h3>
+                                        <p className="text-sm text-slate-500 leading-relaxed max-w-md">
+                                            Sigue el protocolo de cierre mensual para asegurar la integridad de tus datos financieros y fiscales.
+                                        </p>
 
-                                <div ref={ingresosRef} className="scroll-mt-6">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-500/20">
-                                                <Banknote className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Ingresos (Paso 1)</h3>
-                                                <p className="text-xs text-slate-500 dark:text-slate-400">Cómo rellenar sin “inventarte” números.</p>
-                                            </div>
-                                        </div>
-                                        <button onClick={() => scrollTo('gastos')} className="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-black bg-slate-900 text-white hover:bg-slate-800 transition-colors">
-                                            Siguiente <span className="text-white/70">→</span>
-                                        </button>
-                                    </div>
-
-                                    <div className="mt-4 grid grid-cols-1 gap-3">
-                                        <div className="rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-slate-900 p-5 shadow-sm">
-                                            <p className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Qué introducir</p>
-                                            <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
-                                                <div className="rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 p-4">
-                                                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
-                                                        <Clock className="w-4 h-4 text-indigo-500" />
-                                                        <p className="text-xs font-bold">Pedidos por distancia</p>
-                                                    </div>
-                                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                                                        Rellena los rangos de km. Si no lo sabes exacto, usa el total de pedidos y reparte según tu operativa típica.
-                                                    </p>
-                                                </div>
-                                                <div className="rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 p-4">
-                                                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
-                                                        <RefreshCw className="w-4 h-4 text-indigo-500" />
-                                                        <p className="text-xs font-bold">Ajuste manual</p>
-                                                    </div>
-                                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                                                        Úsalo solo si hay descuadre real (bonus, incidencias positivas, corrección de tarifa).
-                                                    </p>
-                                                </div>
-                                                <div className="rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 p-4">
-                                                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
-                                                        <Bell className="w-4 h-4 text-indigo-500" />
-                                                        <p className="text-xs font-bold">Cancelados</p>
-                                                    </div>
-                                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                                                        Te da contexto operativo. Si sube, revisa rutas, riders y tiempos de espera.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="rounded-2xl border border-emerald-100 dark:border-emerald-500/20 bg-emerald-50/60 dark:bg-emerald-500/10 p-5">
-                                            <div className="flex items-start gap-3">
-                                                <div className="p-2 rounded-xl bg-white/80 dark:bg-white/10 border border-emerald-100 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-300">
-                                                    <Sparkles className="w-5 h-5" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-300">
-                                                        Truco de precisión
-                                                    </p>
-                                                    <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100 mt-1">
-                                                        Cierra “Ingresos” con una regla simple: si el total no te suena, no es el total correcto.
-                                                    </p>
-                                                    <p className="text-xs text-emerald-800/80 dark:text-emerald-200/80 mt-2">
-                                                        Ajusta manualmente solo cuando tengas un motivo concreto (y luego cuadras el gasto/ingreso asociado).
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div ref={gastosRef} className="scroll-mt-6">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-300 border border-rose-100 dark:border-rose-500/20">
-                                                <PieChart className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Gastos (Paso 2)</h3>
-                                                <p className="text-xs text-slate-500 dark:text-slate-400">Donde se gana o se pierde el mes.</p>
-                                            </div>
-                                        </div>
-                                        <button onClick={() => scrollTo('cierre')} className="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-black bg-slate-900 text-white hover:bg-slate-800 transition-colors">
-                                            Checklist <span className="text-white/70">→</span>
-                                        </button>
-                                    </div>
-
-                                    <div className="mt-4 grid grid-cols-1 gap-3">
-                                        <div className="rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-slate-900 p-5 shadow-sm">
-                                            <p className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Prioridad</p>
-                                            <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                <div className="rounded-xl border border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <Wallet className="w-4 h-4 text-rose-500" />
-                                                        <p className="text-xs font-bold text-slate-900 dark:text-white">Gastos que casi siempre están</p>
-                                                    </div>
-                                                    <ul className="mt-3 space-y-2 text-xs text-slate-600 dark:text-slate-300">
-                                                        <li className="flex gap-2"><span className="mt-1 w-1.5 h-1.5 rounded-full bg-rose-500" /> Salarios + Seguridad Social</li>
-                                                        <li className="flex gap-2"><span className="mt-1 w-1.5 h-1.5 rounded-full bg-rose-500" /> Renting (unidades y precio)</li>
-                                                        <li className="flex gap-2"><span className="mt-1 w-1.5 h-1.5 rounded-full bg-rose-500" /> Comisión de Repaart</li>
-                                                        <li className="flex gap-2"><span className="mt-1 w-1.5 h-1.5 rounded-full bg-rose-500" /> Gasolina + Reparaciones</li>
-                                                    </ul>
-                                                </div>
-                                                <div className="rounded-xl border border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <ShieldAlert className="w-4 h-4 text-amber-500" />
-                                                        <p className="text-xs font-bold text-slate-900 dark:text-white">Control de coherencia</p>
-                                                    </div>
-                                                    <ul className="mt-3 space-y-2 text-xs text-slate-600 dark:text-slate-300">
-                                                        <li className="flex gap-2"><span className="mt-1 w-1.5 h-1.5 rounded-full bg-amber-500" /> Si sube renting, revisa unidades</li>
-                                                        <li className="flex gap-2"><span className="mt-1 w-1.5 h-1.5 rounded-full bg-amber-500" /> Si sube gasolina, revisa km/pedidos</li>
-                                                        <li className="flex gap-2"><span className="mt-1 w-1.5 h-1.5 rounded-full bg-amber-500" /> Si sube coste/hora, revisa horas y salarios</li>
-                                                        <li className="flex gap-2"><span className="mt-1 w-1.5 h-1.5 rounded-full bg-amber-500" /> Si te queda menos dinero, no lo arregles “tocando ingresos”</li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="rounded-2xl border border-indigo-100 dark:border-indigo-500/20 bg-indigo-50/60 dark:bg-indigo-500/10 p-5">
-                                            <div className="flex items-start gap-3">
-                                                <div className="p-2 rounded-xl bg-white/80 dark:bg-white/10 border border-indigo-100 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300">
-                                                    <RefreshCw className="w-5 h-5" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-black uppercase tracking-widest text-indigo-700 dark:text-indigo-300">
-                                                        Renting: regla clara
-                                                    </p>
-                                                    <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-100 mt-1">
-                                                        Si pones unidades, pon precio unitario. Si no hay renting ese mes, deja 0 y 0.
-                                                    </p>
-                                                    <p className="text-xs text-indigo-800/80 dark:text-indigo-200/80 mt-2">
-                                                        Si ese mes el renting es 0, déjalo en 0. No hace falta “inventarlo”.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div ref={cierreRef} className="scroll-mt-6">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-500/20">
-                                            <CheckCircle className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Checklist antes de confirmar</h3>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400">30 segundos para evitar un mes “mal cerrado”.</p>
-                                        </div>
-                                    </div>
-                                    <div className="mt-4 rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-slate-900 shadow-sm p-5">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        {/* Visual Stepper */}
+                                        <div className="mt-8 grid grid-cols-4 gap-4 relative px-2">
+                                            <div className="absolute top-5 left-4 right-4 h-0.5 bg-slate-200 z-0" />
+                                            <motion.div
+                                                className="absolute top-5 left-4 h-0.5 bg-indigo-500 z-0"
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${progress}%` }}
+                                                transition={{ duration: 0.7, ease: "easeOut" }}
+                                            />
                                             {[
-                                                { title: 'Ingresos coherentes', desc: '¿El total te “suena” con la operativa real?', icon: Banknote, color: 'indigo' },
-                                                { title: 'Renting correcto', desc: 'Unidades y precio unitario cuadran.', icon: Wallet, color: 'violet' },
-                                                { title: 'Gastos fijos completos', desc: 'Sueldos, Seguridad Social, gestoría/servicios si aplica.', icon: ShieldAlert, color: 'amber' },
-                                                { title: 'Gastos variables', desc: 'Gasolina, reparaciones, incidencias, otros.', icon: PieChart, color: 'rose' }
-                                            ].map((c) => {
-                                                const Icon = c.icon;
-                                                const color =
-                                                    c.color === 'indigo'
-                                                        ? 'border-indigo-100 dark:border-indigo-500/20 bg-indigo-50/60 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300'
-                                                        : c.color === 'violet'
-                                                            ? 'border-violet-100 dark:border-violet-500/20 bg-violet-50/60 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300'
-                                                            : c.color === 'amber'
-                                                                ? 'border-amber-100 dark:border-amber-500/20 bg-amber-50/60 dark:bg-amber-500/10 text-amber-800 dark:text-amber-200'
-                                                                : 'border-rose-100 dark:border-rose-500/20 bg-rose-50/60 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300';
+                                                { label: 'Revisión', icon: Clock, key: 'inicio' as const },
+                                                { label: 'Ingresos', icon: Banknote, key: 'ingresos' as const },
+                                                { label: 'Gastos', icon: PieChart, key: 'gastos' as const },
+                                                { label: 'Cierre', icon: Lock, key: 'cierre' as const }
+                                            ].map((item, idx) => {
+                                                const isDone = progress >= ((idx + 1) / 4) * 100;
+                                                const isActive = activeSection === item.key;
                                                 return (
-                                                    <div key={c.title} className={['rounded-2xl border p-4', color].join(' ')}>
-                                                        <div className="flex items-start gap-3">
-                                                            <div className="p-2 rounded-xl bg-white/70 dark:bg-white/10 border border-white/60 dark:border-white/10">
-                                                                <Icon className="w-4 h-4" />
-                                                            </div>
-                                                            <div>
-                                                                <p className="text-xs font-black uppercase tracking-widest">{c.title}</p>
-                                                                <p className="text-xs mt-2 text-slate-700/80 dark:text-slate-200/80">{c.desc}</p>
-                                                            </div>
+                                                    <button
+                                                        key={item.key}
+                                                        onClick={() => scrollTo(item.key)}
+                                                        className="relative z-10 flex flex-col items-center gap-3 group/step"
+                                                    >
+                                                        <div className={`w-10 h-10 rounded-xl border transition-all duration-500 flex items-center justify-center ${isDone ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100' :
+                                                            isActive ? 'bg-white border-indigo-600 text-indigo-600 shadow-xl shadow-indigo-50' :
+                                                                'bg-white border-slate-200 text-slate-400'
+                                                            }`}>
+                                                            {isDone ? <CheckCircle size={16} strokeWidth={3} /> : <item.icon size={16} />}
                                                         </div>
-                                                    </div>
+                                                        <span className={`text-[10px] font-bold uppercase tracking-tight transition-colors ${isActive ? 'text-indigo-600' : 'text-slate-400'}`}>{item.label}</span>
+                                                    </button>
                                                 );
                                             })}
                                         </div>
                                     </div>
-                                </div>
+                                </section>
 
-                                <div ref={estadosRef} className="scroll-mt-6">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10">
-                                            <Lock className="w-5 h-5" />
+                                {/* Section: Ingresos */}
+                                <section ref={ingresosRef} className="scroll-mt-6">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="h-4 w-1 bg-indigo-600 rounded-full" />
+                                        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest">01_Sincronización_de_Ingresos</h3>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="p-4 rounded-xl border border-slate-100 bg-white hover:border-indigo-100 transition-colors shadow-sm">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <TrendingUp className="w-4 h-4 text-indigo-600" />
+                                                <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">Protocolo</span>
+                                            </div>
+                                            <p className="text-xs text-slate-600 leading-relaxed">
+                                                Sincroniza los pedidos con el servidor. El indicador <span className="text-indigo-600 font-bold">&quot;Match&quot;</span> debe estar activo para asegurar que no falta ningún pedido por facturar.
+                                            </p>
                                         </div>
-                                        <div>
-                                            <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Estados del mes</h3>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400">Qué puedes hacer en cada estado.</p>
+                                        <div className="p-4 rounded-xl border border-slate-100 bg-indigo-50/30 hover:border-indigo-100 transition-colors shadow-sm">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <Sparkles className="w-4 h-4 text-indigo-600" />
+                                                <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">Eficiencia</span>
+                                            </div>
+                                            <p className="text-xs text-slate-600 leading-relaxed">
+                                                Si detectas un margen neto <span className="text-indigo-600 font-bold">&lt; 15%</span>, te recomendamos analizar el ratio de eficiencia por rider en el panel de inteligencia.
+                                            </p>
                                         </div>
                                     </div>
+                                </section>
 
-                                    <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-                                        <div className="rounded-2xl border border-emerald-100 dark:border-emerald-500/20 bg-white dark:bg-slate-900 shadow-sm p-5">
-                                            <div className="flex items-center gap-2">
-                                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                                <p className="text-xs font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-300">Abierto</p>
-                                            </div>
-                                            <p className="text-sm font-bold text-slate-900 dark:text-white mt-2">Editable</p>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Puedes guardar borrador y ajustar datos.</p>
-                                        </div>
-                                        <div className="rounded-2xl border border-amber-100 dark:border-amber-500/20 bg-white dark:bg-slate-900 shadow-sm p-5">
-                                            <div className="flex items-center gap-2">
-                                                <span className="w-2 h-2 rounded-full bg-amber-500" />
-                                                <p className="text-xs font-black uppercase tracking-widest text-amber-800 dark:text-amber-200">Pendiente de abrir</p>
-                                            </div>
-                                            <p className="text-sm font-bold text-slate-900 dark:text-white mt-2">Pendiente</p>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Esperando aprobación para reabrir.</p>
-                                        </div>
-                                        <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-sm p-5">
-                                            <div className="flex items-center gap-2">
-                                                <Lock className="w-4 h-4 text-slate-500" />
-                                                <p className="text-xs font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">Cerrado</p>
-                                            </div>
-                                            <p className="text-sm font-bold text-slate-900 dark:text-white mt-2">Solo lectura</p>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Para modificar, solicita desbloqueo.</p>
-                                        </div>
+                                {/* Section: Gastos */}
+                                <section ref={gastosRef} className="scroll-mt-6">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="h-4 w-1 bg-indigo-600 rounded-full" />
+                                        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest">02_Validación_de_Gastos</h3>
                                     </div>
-
-                                    <div className="mt-3 rounded-2xl border border-indigo-100 dark:border-indigo-500/20 bg-indigo-50/60 dark:bg-indigo-500/10 p-5">
-                                        <div className="flex items-start gap-3">
-                                            <div className="p-2 rounded-xl bg-white/80 dark:bg-white/10 border border-indigo-100 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300">
-                                                <Unlock className="w-5 h-5" />
+                                    <div className="space-y-4">
+                                        <div className="p-5 rounded-2xl border border-slate-100 bg-white shadow-sm">
+                                            <div className="flex items-center justify-between mb-4 border-b border-slate-50 pb-3">
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Registro por Categorías</p>
+                                                <Banknote className="w-4 h-4 text-slate-400" />
                                             </div>
-                                            <div>
-                                                <p className="text-xs font-black uppercase tracking-widest text-indigo-700 dark:text-indigo-300">
-                                                    Cómo corregir un mes cerrado
-                                                </p>
-                                                <ol className="mt-3 space-y-2 text-xs text-indigo-900/90 dark:text-indigo-100/90">
-                                                    <li className="flex gap-2"><span className="mt-1 w-5 h-5 rounded-lg bg-white/70 dark:bg-white/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center text-[10px] font-black">1</span> Solicita desbloqueo y explica el motivo.</li>
-                                                    <li className="flex gap-2"><span className="mt-1 w-5 h-5 rounded-lg bg-white/70 dark:bg-white/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center text-[10px] font-black">2</span> Espera notificación de aprobación/rechazo.</li>
-                                                    <li className="flex gap-2"><span className="mt-1 w-5 h-5 rounded-lg bg-white/70 dark:bg-white/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center text-[10px] font-black">3</span> Si se abre, corrige y vuelve a confirmar cierre.</li>
-                                                </ol>
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                                <div>
+                                                    <p className="text-[11px] font-bold text-indigo-600 mb-2 uppercase">Costes Fijos</p>
+                                                    <ul className="space-y-2 text-[10px] text-slate-500 font-bold">
+                                                        <li className="flex gap-2 items-center"><span className="w-1 h-1 bg-indigo-400 rounded-full" />Salarios + SS</li>
+                                                        <li className="flex gap-2 items-center"><span className="w-1 h-1 bg-indigo-400 rounded-full" />Renting Flota</li>
+                                                        <li className="flex gap-2 items-center"><span className="w-1 h-1 bg-indigo-400 rounded-full" />Comisiones Repaart</li>
+                                                    </ul>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[11px] font-bold text-slate-900 mb-2 uppercase">Variables</p>
+                                                    <ul className="space-y-2 text-[10px] text-slate-500 font-bold">
+                                                        <li className="flex gap-2 items-center"><span className="w-1 h-1 bg-slate-300 rounded-full" />Combustible</li>
+                                                        <li className="flex gap-2 items-center"><span className="w-1 h-1 bg-slate-300 rounded-full" />Mantenimiento</li>
+                                                        <li className="flex gap-2 items-center"><span className="w-1 h-1 bg-slate-300 rounded-full" />Bonus Riders</li>
+                                                    </ul>
+                                                </div>
+                                                <div className="sm:pl-6 sm:border-l border-slate-50">
+                                                    <p className="text-[11px] font-bold text-emerald-600 mb-2 uppercase">Reserva Fiscal</p>
+                                                    <p className="text-[10px] text-slate-500 leading-relaxed font-bold">
+                                                        Se calcula automáticamente según tus facturas. Es recomendable reservar el 21% de los ingresos para el IVA.
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </section>
 
-                                <div ref={erroresRef} className="scroll-mt-6">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-300 border border-rose-100 dark:border-rose-500/20">
-                                            <AlertTriangle className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Errores típicos</h3>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400">Los que más dinero cuestan.</p>
-                                        </div>
+                                {/* Section: Cierre Checklist */}
+                                <section ref={cierreRef} className="scroll-mt-6">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="h-4 w-1 bg-indigo-600 rounded-full" />
+                                        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest">Checklist de Verificación</h3>
                                     </div>
-
-                                    <div className="mt-4 grid grid-cols-1 gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {[
-                                            {
-                                                title: 'Cerrar sin gastos importantes',
-                                                desc: 'Si faltan sueldos, Seguridad Social o renting, parece que te va mejor de lo real.'
-                                            },
-                                            {
-                                                title: 'Usar “Ajuste manual” sin motivo',
-                                                desc: 'Si no hay una razón concreta, mejor revisa los pedidos y el total antes de tocarlo.'
-                                            },
-                                            {
-                                                title: 'Olvidar reparaciones/incidencias',
-                                                desc: 'Son “pequeños” pero suman: mejor meterlos que sorprenderte en banco.'
-                                            }
-                                        ].map((x) => (
-                                            <div key={x.title} className="rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-slate-900 p-5 shadow-sm">
-                                                <p className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">{x.title}</p>
-                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">{x.desc}</p>
-                                            </div>
-                                        ))}
+                                            { id: 'sync', title: 'Sincronización', desc: 'Ingresos mensuales coinciden.', icon: Banknote },
+                                            { id: 'taxes', title: 'Impuestos', desc: 'IVA/IRPF reservados en la hucha.', icon: Wallet },
+                                            { id: 'fixed', title: 'Costes Fijos', desc: 'Todos los gastos registrados.', icon: ShieldAlert },
+                                            { id: 'lock', title: 'Bloqueo Final', desc: 'Confirmación de estado inmutable.', icon: Lock }
+                                        ].map((c) => {
+                                            const Icon = c.icon;
+                                            const isChecked = checkedItems[c.id];
+                                            return (
+                                                <button
+                                                    key={c.id}
+                                                    onClick={() => toggleItem(c.id)}
+                                                    className={`p-4 rounded-xl border-2 text-left transition-all group relative overflow-hidden ${isChecked
+                                                        ? 'bg-indigo-50 border-indigo-600 shadow-md shadow-indigo-100/50'
+                                                        : 'bg-white border-slate-100 hover:border-slate-200'
+                                                        }`}
+                                                >
+                                                    <div className="flex items-center gap-4 relative z-10">
+                                                        <div className={`w-8 h-8 rounded-lg border transition-colors flex items-center justify-center ${isChecked ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-slate-50 border-slate-100 text-slate-400'
+                                                            }`}>
+                                                            {isChecked ? <CheckCircle className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex items-center gap-2">
+                                                                <p className={`text-[11px] font-bold uppercase tracking-tight ${isChecked ? 'text-indigo-600' : 'text-slate-900'}`}>{c.title}</p>
+                                                                {isChecked && <span className="text-[8px] font-bold bg-indigo-100 text-indigo-600 px-1 rounded uppercase">Listo</span>}
+                                                            </div>
+                                                            <p className={`text-[10px] font-medium mt-0.5 ${isChecked ? 'text-indigo-400' : 'text-slate-500'}`}>{c.desc}</p>
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
                                     </div>
-                                </div>
+                                </section>
 
-                                <div ref={faqRef} className="scroll-mt-6">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10">
-                                            <HelpCircle className="w-5 h-5" />
+                                {/* Section: FAQ */}
+                                <section ref={faqRef} className="scroll-mt-6">
+                                    <div className="p-6 rounded-2xl border border-slate-100 bg-slate-50/30">
+                                        <div className="flex items-center gap-2 mb-6">
+                                            <HelpCircle className="w-4 h-4 text-slate-400" />
+                                            <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Dudas Frecuentes</h3>
                                         </div>
-                                        <div>
-                                            <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">FAQ</h3>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400">Respuestas rápidas.</p>
+                                        <div className="space-y-6">
+                                            {[
+                                                { q: 'TIEMPO DE CIERRE', a: 'Debería realizarse antes del día 05 de cada mes.' },
+                                                { q: 'REAPERTURA DEL MES', a: 'Si el mes está bloqueado, requiere una solicitud de desbloqueo a la administración.' },
+                                                { q: 'IMPUESTOS', a: 'Las reservas en el Tax Vault son estimaciones basadas en tus registros directos.' }
+                                            ].map((item, idx) => (
+                                                <div key={idx} className="group">
+                                                    <p className="text-[10px] font-bold text-indigo-600 mb-2 uppercase tracking-wide">¿{item.q}?</p>
+                                                    <p className="text-xs font-medium text-slate-600 leading-relaxed border-l-2 border-indigo-100 pl-4">{item.a}</p>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
-                                    <div className="mt-4 grid grid-cols-1 gap-3">
-                                        {[
-                                            {
-                                                q: '¿Puedo cerrar con datos incompletos?',
-                                                a: 'Sí, pero no es recomendable. Usa “Guardar Borrador” y completa lo crítico antes de confirmar.'
-                                            },
-                                            {
-                                                q: '¿Qué hago si ya confirmé y falta una factura?',
-                                                a: 'Solicita desbloqueo explicando el motivo. Cuando se reabra, corrige y vuelve a cerrar.'
-                                            },
-                                            {
-                                                q: '¿Por qué el desglose no coincide con mi intuición?',
-                                                a: 'Casi siempre es por sueldos/horas, renting, gasolina o la comisión de Repaart. Empieza por esas.'
-                                            }
-                                        ].map((x) => (
-                                            <div key={x.q} className="rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-slate-900 p-5 shadow-sm">
-                                                <p className="text-xs font-black text-slate-900 dark:text-white">{x.q}</p>
-                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">{x.a}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+                                </section>
                             </div>
                         </div>
                     </div>
 
-                    <div className="px-6 py-4 border-t border-slate-100 dark:border-white/10 bg-white dark:bg-slate-900 flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                            <span className="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10">
-                                <Sparkles className="w-4 h-4 text-indigo-500" />
-                                Consejo: usa Esc para cerrar
-                            </span>
+                    {/* Footer */}
+                    <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Sistema Listo</span>
+                            </div>
+                            <div className="hidden sm:block h-3 w-px bg-slate-200" />
+                            <p className="hidden sm:block text-[10px] font-bold text-slate-400 uppercase">Sección: {activeSection}</p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
                             <button
-                                onClick={() => scrollTo('inicio')}
-                                className="px-4 py-2 rounded-xl text-xs font-black bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 dark:hover:bg-white/10 transition-colors"
+                                onClick={onClose}
+                                className="px-5 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition-all active:scale-95 shadow-sm"
                             >
-                                Volver arriba
+                                Entendido
                             </button>
                             <button
                                 onClick={onClose}
-                                className="px-5 py-2 rounded-xl text-xs font-black bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20 active:scale-95"
+                                className="px-5 py-2 rounded-lg bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-100"
                             >
-                                Entendido
+                                Confirmar Protocolo
                             </button>
                         </div>
                     </div>

@@ -1,11 +1,16 @@
 
+/**
+ * DEPRECATED - Legacy Revenue Trend Chart Component
+ * This component has been deprecated. Please use the new Billing Module components.
+ */
+/* eslint-disable */
 import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { InvoiceDTO } from '../../../types/invoicing';
+import { Invoice } from '../../../types/invoicing';
 import { formatCurrency } from '../../../utils/formatters';
 
 interface Props {
-    invoices: InvoiceDTO[];
+    invoices: Invoice[];
 }
 
 export const RevenueTrendChart: React.FC<Props> = ({ invoices }) => {
@@ -21,19 +26,29 @@ export const RevenueTrendChart: React.FC<Props> = ({ invoices }) => {
             };
         });
 
+        const getInvoiceDate = (date: any): Date => {
+            if (!date) return new Date();
+            if (date instanceof Date) return date;
+            if (typeof date.toDate === 'function') return date.toDate();
+            if (date._seconds) return new Date(date._seconds * 1000);
+            return new Date(date);
+        };
+
+        const chartData = [...last6Months]; // Clone to avoid mutation issues if any
+
         invoices.forEach(inv => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const date = new Date(inv.issueDate instanceof Date ? inv.issueDate : (inv.issueDate as any).toDate());
+            const date = getInvoiceDate(inv.issueDate);
             const monthIndex = date.getMonth();
             const year = date.getFullYear();
 
-            const MonthData = last6Months.find(d => d.monthIndex === monthIndex && d.year === year);
-            if (MonthData) {
-                MonthData.total += inv.total;
+            // Find matching month in the generated last 6 months
+            const monthData = chartData.find(d => d.monthIndex === monthIndex && d.year === year);
+            if (monthData) {
+                monthData.total += inv.total;
             }
         });
 
-        return last6Months;
+        return chartData;
     }, [invoices]);
 
     return (

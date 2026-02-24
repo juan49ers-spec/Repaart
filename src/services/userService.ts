@@ -29,8 +29,15 @@ export { toUserId };
 
 const mapDocToUser = (doc: QueryDocumentSnapshot<DocumentData>): User => {
     const data = doc.data();
+    const userId = doc.id;
+
+    // Debug log
+    if (!userId) {
+        console.error('[mapDocToUser] Document ID is missing!', { doc, data });
+    }
+
     return {
-        uid: toUserId(doc.id),
+        uid: toUserId(userId),
         id: data.id || doc.id,
         email: data.email || '',
         displayName: data.displayName || data.name || '',
@@ -47,6 +54,8 @@ const mapDocToUser = (doc: QueryDocumentSnapshot<DocumentData>): User => {
         zipCodes: data.zipCodes || [],
         monthlyRevenueGoal: data.monthlyRevenueGoal || data.goal || 0,
         notifications: data.notifications || {},
+        logisticsRates: data.logisticsRates || [],
+        pricingModel: data.pricingModel || 'standard',
         createdAt: data.createdAt || data.created_at,
         updatedAt: data.updatedAt || data.updated_at
     } as User;

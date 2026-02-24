@@ -235,7 +235,7 @@ function App() {
                         <Navigate to="/dashboard" replace />
                     } />
                     <Route path="profile" element={<UserProfile />} />
-                    <Route path="demo/smart-input" element={<DevSandbox />} />
+                     <Route path="demo/smart-input" element={<DevSandbox />} />
 
                     {/* FRANCHISE SPECIFIC */}
                     <Route path="support" element={

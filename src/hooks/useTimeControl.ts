@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { flyderIntegrationService, FlyderShift, WorkedHoursReport, FleetMetrics } from '../services/flyderIntegrationService';
 
 interface UseTimeControlReturn {
@@ -21,7 +21,7 @@ interface UseTimeControlReturn {
  * ```
  */
 export function useTimeControl(
-  franchiseId: string, 
+  franchiseId: string,
   date: string
 ): UseTimeControlReturn {
   const [shifts, setShifts] = useState<FlyderShift[]>([]);
@@ -33,12 +33,14 @@ export function useTimeControl(
 
   useEffect(() => {
     if (!franchiseId || !date) {
-      setLoading(false);
-      return;
+      const timeoutId = setTimeout(() => setLoading(false), 0);
+      return () => clearTimeout(timeoutId);
     }
 
-    setLoading(true);
-    setError(null);
+    const loadingTimeout = setTimeout(() => {
+      setLoading(true);
+      setError(null);
+    }, 0);
 
     // Iniciar sincronización en tiempo real
     const unsubscribe = flyderIntegrationService.syncShiftsRealtime(
@@ -46,20 +48,21 @@ export function useTimeControl(
       date,
       (updatedShifts) => {
         setShifts(updatedShifts);
-        
+
         // Calcular horas trabajadas
         const hours = flyderIntegrationService.calculateWorkedHours(updatedShifts);
         setWorkedHours(hours);
-        
+
         // Calcular métricas
         const fleetMetrics = flyderIntegrationService.getFleetMetrics(updatedShifts);
         setMetrics(fleetMetrics);
-        
+
         setLoading(false);
       }
     );
 
     return () => {
+      clearTimeout(loadingTimeout);
       unsubscribe();
     };
   }, [franchiseId, date, refreshKey]);
@@ -68,14 +71,10 @@ export function useTimeControl(
     setRefreshKey(prev => prev + 1);
   }, []);
 
-  // Memoizar cálculos para evitar recálculos innecesarios
-  const memoizedWorkedHours = useMemo(() => workedHours, [JSON.stringify(workedHours)]);
-  const memoizedMetrics = useMemo(() => metrics, [JSON.stringify(metrics)]);
-
   return {
     shifts,
-    workedHours: memoizedWorkedHours,
-    metrics: memoizedMetrics,
+    workedHours,
+    metrics,
     loading,
     error,
     refresh

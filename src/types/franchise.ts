@@ -21,3 +21,12 @@ export type FranchiseError =
     | { type: 'NOT_FOUND'; franchiseId: string }
     | { type: 'PERMISSION_DENIED'; franchiseId: string }
     | { type: 'NETWORK_ERROR'; cause: Error };
+
+export interface LogisticsRate {
+    id?: string;
+    min: number;
+    max: number;
+    price: number;
+    name: string;
+}
+

@@ -54,7 +54,6 @@ const RiderShiftHistory: React.FC<RiderShiftHistoryProps> = ({ user, showMessage
     useEffect(() => {
         if (!user?.uid) return;
 
-        setLoading(true);
         const q = query(
             collection(db, 'shift_changes'),
             where('userId', '==', user.uid),
@@ -96,7 +95,7 @@ const RiderShiftHistory: React.FC<RiderShiftHistoryProps> = ({ user, showMessage
                 read: true
             });
 
-            setShiftChanges(prev => prev.map(s => 
+            setShiftChanges(prev => prev.map(s =>
                 s.id === changeId ? { ...s, read: true } : s
             ));
         } catch (error) {
@@ -168,51 +167,46 @@ const RiderShiftHistory: React.FC<RiderShiftHistoryProps> = ({ user, showMessage
                 <div className="flex flex-wrap gap-2 items-center mb-6">
                     <button
                         onClick={() => setFilter('all')}
-                        className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${
-                            filter === 'all'
+                        className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${filter === 'all'
                                 ? 'bg-indigo-600 text-white shadow-md'
                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                        }`}
+                            }`}
                     >
                         Todos
                     </button>
                     <button
                         onClick={() => setFilter('added')}
-                        className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${
-                            filter === 'added'
+                        className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${filter === 'added'
                                 ? 'bg-indigo-600 text-white shadow-md'
                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                        }`}
+                            }`}
                     >
                         Agregados
                     </button>
                     <button
                         onClick={() => setFilter('removed')}
-                        className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${
-                            filter === 'removed'
+                        className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${filter === 'removed'
                                 ? 'bg-indigo-600 text-white shadow-md'
                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                        }`}
+                            }`}
                     >
                         Eliminados
                     </button>
                     <button
                         onClick={() => setFilter('modified')}
-                        className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${
-                            filter === 'modified'
+                        className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${filter === 'modified'
                                 ? 'bg-indigo-600 text-white shadow-md'
                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                        }`}
+                            }`}
                     >
                         Modificados
                     </button>
                     <button
                         onClick={() => setFilter('requested')}
-                        className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${
-                            filter === 'requested'
+                        className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${filter === 'requested'
                                 ? 'bg-indigo-600 text-white shadow-md'
                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                        }`}
+                            }`}
                     >
                         Solicitudes
                     </button>
@@ -242,7 +236,7 @@ const RiderShiftHistory: React.FC<RiderShiftHistoryProps> = ({ user, showMessage
                         <FileText className="w-12 h-12 text-slate-400" />
                         <p className="font-bold text-slate-900 dark:text-white">No hay cambios recientes</p>
                         <p className="text-sm text-slate-500 dark:text-slate-400">
-                            {filter === 'all' 
+                            {filter === 'all'
                                 ? 'No tienes cambios en tus turnos recientes.'
                                 : 'No hay cambios de este tipo.'}
                         </p>
@@ -274,7 +268,7 @@ const RiderShiftHistory: React.FC<RiderShiftHistoryProps> = ({ user, showMessage
                                                 {formatTimeAgo(change.createdAt)}
                                             </span>
                                         </div>
-                                        
+
                                         {change.reason && (
                                             <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
                                                 <span className="font-medium">Motivo:</span> {change.reason}
@@ -313,7 +307,7 @@ const RiderShiftHistory: React.FC<RiderShiftHistoryProps> = ({ user, showMessage
                                                     </div>
                                                 </div>
                                             )}
-                                            
+
                                             {change.newData && (
                                                 <div className="space-y-2">
                                                     <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Datos Nuevos</h4>

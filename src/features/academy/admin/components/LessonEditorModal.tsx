@@ -35,24 +35,22 @@ const RichTextEditor: React.FC<{
     placeholder?: string;
 }> = ({ value, onChange, placeholder }) => {
     const editorRef = useRef<HTMLDivElement>(null);
-    const isInternalChangeRef = useRef(false);
-
     useEffect(() => {
         if (!editorRef.current) return;
 
-        if (!isInternalChangeRef.current) {
-            const normalizedValue = value === '<br>' ? '' : value;
+        const currentValue = editorRef.current.innerHTML;
+        const normalizedValue = value === '<br>' ? '' : value;
+
+        // Only update innerHTML if it actually differs from what's there.
+        // This prevents cursor jumping during rapid typing.
+        if (currentValue !== normalizedValue) {
             editorRef.current.innerHTML = normalizedValue;
         }
-        isInternalChangeRef.current = false;
     }, [value]);
 
     const handleInput = useCallback(() => {
         if (!editorRef.current) return;
-
-        isInternalChangeRef.current = true;
-        const html = editorRef.current.innerHTML;
-        onChange(html);
+        onChange(editorRef.current.innerHTML);
     }, [onChange]);
 
     const handlePaste = useCallback((e: React.ClipboardEvent) => {
@@ -61,13 +59,32 @@ const RichTextEditor: React.FC<{
         document.execCommand('insertText', false, text);
     }, []);
 
-    const execCommand = useCallback((command: string) => {
-        document.execCommand(command, false);
+    const execCommand = useCallback((command: string, arg: string | undefined = undefined) => {
+        document.execCommand(command, false, arg);
         if (editorRef.current) {
-            isInternalChangeRef.current = true;
             onChange(editorRef.current.innerHTML);
         }
+        editorRef.current?.focus();
     }, [onChange]);
+
+    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+        if (e.ctrlKey || e.metaKey) {
+            switch (e.key.toLowerCase()) {
+                case 'b':
+                    e.preventDefault();
+                    execCommand('bold');
+                    break;
+                case 'i':
+                    e.preventDefault();
+                    execCommand('italic');
+                    break;
+                case 'u':
+                    e.preventDefault();
+                    execCommand('underline');
+                    break;
+            }
+        }
+    }, [execCommand]);
 
     return (
         <div className="flex flex-col border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-800 focus-within:ring-2 focus-within:ring-blue-500 transition-all relative">
@@ -191,17 +208,12 @@ const RichTextEditor: React.FC<{
                 contentEditable
                 onInput={handleInput}
                 onPaste={handlePaste}
-                className="min-h-[300px] max-h-[450px] px-4 py-3 text-slate-900 dark:text-white outline-none prose prose-base prose-slate dark:prose-invert max-w-none focus:outline-none overflow-y-auto"
-                style={{
-                    fontSize: '15px',
-                    lineHeight: '1.7',
-                    fontFamily: 'inherit'
-                }}
-                dangerouslySetInnerHTML={{ __html: value }}
+                onKeyDown={handleKeyDown}
+                className="lesson-rich-editor min-h-[300px] max-h-[450px] px-4 py-3 text-slate-900 dark:text-white outline-none prose prose-base prose-slate dark:prose-invert max-w-none focus:outline-none overflow-y-auto"
                 suppressContentEditableWarning={true}
             />
 
-            {placeholder && !value && (
+            {placeholder && (!value || value === '<br>') && (
                 <div className="absolute top-14 left-4 text-slate-400 pointer-events-none text-sm">
                     {placeholder}
                 </div>
@@ -247,16 +259,18 @@ const LessonEditorModal: React.FC<LessonEditorModalProps> = ({
         enabled: isOpen && !!lesson?.id
     });
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (lesson && lesson.id) {
-            setTitle(lesson.title || '');
-            setVideoUrl(lesson.video_url || '');
-            setContent(lesson.content || '');
-            setDuration(lesson.duration || 10);
-            setContentType(lesson.content_type === 'video' ? 'video' : 'text');
+            const timeoutId = setTimeout(() => {
+                setTitle(lesson.title || '');
+                setVideoUrl(lesson.video_url || '');
+                setContent(lesson.content || '');
+                setDuration(lesson.duration || 10);
+                setContentType(lesson.content_type === 'video' ? 'video' : 'text');
+            }, 0);
+            return () => clearTimeout(timeoutId);
         }
-    }, [lesson?.id]);
+    }, [lesson?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const extractYouTubeId = (url: string) => {
         const regex = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/;
@@ -369,11 +383,10 @@ const LessonEditorModal: React.FC<LessonEditorModalProps> = ({
                                             onToggleStatus();
                                             toast.success(lesson.status === 'published' ? 'Lección desactivada' : 'Lección publicada');
                                         }}
-                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all ${
-                                            lesson.status === 'published'
-                                                ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50'
-                                                : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/50'
-                                        }`}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all ${lesson.status === 'published'
+                                            ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50'
+                                            : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/50'
+                                            }`}
                                     >
                                         {lesson.status === 'published' ? (
                                             <>
@@ -442,8 +455,8 @@ const LessonEditorModal: React.FC<LessonEditorModalProps> = ({
                                                 onChange({ content_type: 'text' });
                                             }}
                                             className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all border ${contentType === 'text'
-                                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                                                    : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-300 dark:hover:border-blue-400'
+                                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                                                : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-300 dark:hover:border-blue-400'
                                                 }`}
                                         >
                                             <FileText className="w-4 h-4" />
@@ -469,6 +482,7 @@ const LessonEditorModal: React.FC<LessonEditorModalProps> = ({
                                             min="1"
                                             max="180"
                                             className="flex-1 px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                            aria-label="Duración"
                                         />
                                     </div>
                                 </div>

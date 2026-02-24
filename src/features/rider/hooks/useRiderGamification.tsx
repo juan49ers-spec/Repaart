@@ -111,16 +111,20 @@ const ACHIEVEMENTS: AchievementRule[] = [
 
 export const useRiderGamification = () => {
     const { user } = useAuth();
+    const userId = user?.uid;
     const [gamification, setGamification] = useState<RiderGamification | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!user?.uid) {
-            setLoading(false);
-            return;
+        if (!userId) {
+            const timeoutId = setTimeout(() => {
+                setLoading(false);
+                setGamification(null);
+            }, 0);
+            return () => clearTimeout(timeoutId);
         }
 
-        const gamificationRef = doc(db, 'rider_gamification', user.uid);
+        const gamificationRef = doc(db, 'rider_gamification', userId);
 
         const unsubscribe = onSnapshot(gamificationRef, (docSnapshot) => {
             if (docSnapshot.exists()) {
@@ -128,7 +132,7 @@ export const useRiderGamification = () => {
                 setGamification(data);
             } else {
                 setGamification({
-                    userId: user.uid,
+                    userId: userId,
                     points: 0,
                     level: 1,
                     experience: 0,
@@ -147,46 +151,35 @@ export const useRiderGamification = () => {
         });
 
         return () => unsubscribe();
-    }, [user?.uid]);
+    }, [userId]);
 
     const addPoints = useCallback(async (points: number) => {
-        if (!user?.uid || !gamification) return;
+        if (!userId) return;
 
         try {
-            await updateDoc(doc(db, 'rider_gamification', user.uid), {
+            await updateDoc(doc(db, 'rider_gamification', userId), {
                 points: increment(points),
                 experience: increment(points),
             });
-
-            setGamification(prev => prev ? {
-                ...prev,
-                points: prev.points + points,
-                experience: prev.experience + points,
-            } : null);
         } catch (error) {
             console.error('Error adding points:', error);
         }
-    }, [user?.uid, gamification]);
+    }, [userId]);
 
     const incrementShifts = useCallback(async () => {
-        if (!user?.uid || !gamification) return;
+        if (!userId) return;
 
         try {
-            await updateDoc(doc(db, 'rider_gamification', user.uid), {
+            await updateDoc(doc(db, 'rider_gamification', userId), {
                 totalShifts: increment(1),
             });
-
-            setGamification(prev => prev ? {
-                ...prev,
-                totalShifts: prev.totalShifts + 1,
-            } : null);
         } catch (error) {
             console.error('Error incrementing shifts:', error);
         }
-    }, [user?.uid, gamification]);
+    }, [userId]);
 
     const updateStreak = useCallback(async (workedToday: boolean) => {
-        if (!user?.uid || !gamification) return;
+        if (!userId) return;
 
         try {
             const updates: Record<string, unknown> = {};
@@ -198,11 +191,11 @@ export const useRiderGamification = () => {
                 updates.currentStreak = 0;
             }
 
-            await updateDoc(doc(db, 'rider_gamification', user.uid), updates);
+            await updateDoc(doc(db, 'rider_gamification', userId), updates);
         } catch (error) {
             console.error('Error updating streak:', error);
         }
-    }, [user?.uid]);
+    }, [userId]);
 
     const getCurrentLevel = useCallback(() => {
         return LEVELS.find(l => l.level === gamification?.level) || LEVELS[0];
@@ -225,69 +218,50 @@ export const useRiderGamification = () => {
         return ((gamification.experience - currentLevelExp) / expNeeded) * 100;
     }, [gamification, getNextLevel]);
 
+    // Check for level ups and achievements
+    useEffect(() => {
+        if (!userId || !gamification) return;
 
+        const checkUpdates = async () => {
+            // Check Level Up
+            const currentLevelIndex = LEVELS.findIndex(l => l.level === gamification.level);
+            const nextLevel = LEVELS[currentLevelIndex + 1];
 
-    const checkLevelUp = useCallback(async () => {
-        if (!user?.uid || !gamification) return;
-
-        const currentLevelIndex = LEVELS.findIndex(l => l.level === gamification.level);
-        const nextLevel = LEVELS[currentLevelIndex + 1];
-
-        if (nextLevel && gamification.experience >= nextLevel.required) {
-            try {
-                await updateDoc(doc(db, 'rider_gamification', user.uid), {
-                    level: nextLevel.level,
-                });
-
-                setGamification(prev => prev ? {
-                    ...prev,
-                    level: nextLevel.level,
-                } : null);
-            } catch (error) {
-                console.error('Error updating level:', error);
+            if (nextLevel && gamification.experience >= nextLevel.required) {
+                try {
+                    await updateDoc(doc(db, 'rider_gamification', userId), {
+                        level: nextLevel.level,
+                    });
+                } catch (error) {
+                    console.error('Error updating level:', error);
+                }
             }
-        }
-    }, [user?.uid, gamification]);
 
-    useEffect(() => {
-        if (gamification) {
-            checkLevelUp();
-        }
-    }, [gamification, checkLevelUp]);
+            // Check Achievements
+            const unlocked = ACHIEVEMENTS.filter(achievement =>
+                !gamification.achievementsUnlocked.includes(achievement.id) &&
+                achievement.condition(gamification)
+            );
 
-    const checkAchievements = useCallback(() => {
-        if (!gamification) return;
+            if (unlocked.length > 0) {
+                const newUnlockedIds = unlocked.map(a => a.id);
+                const totalPointsToAdd = unlocked.reduce((acc, a) => acc + a.points, 0);
+                const newBadges = unlocked.map(a => a.badge).filter((b): b is string => !!b);
 
-        const unlocked = ACHIEVEMENTS.filter(achievement =>
-            !gamification.achievementsUnlocked.includes(achievement.id) &&
-            achievement.condition(gamification)
-        );
+                try {
+                    await updateDoc(doc(db, 'rider_gamification', userId), {
+                        achievementsUnlocked: [...gamification.achievementsUnlocked, ...newUnlockedIds],
+                        badges: [...gamification.badges, ...newBadges],
+                        points: increment(totalPointsToAdd),
+                    });
+                } catch (error) {
+                    console.error('Error unlocking achievements:', error);
+                }
+            }
+        };
 
-        if (unlocked.length > 0) {
-            const newUnlockedIds = unlocked.map(a => a.id);
-            const totalPointsToAdd = unlocked.reduce((acc, a) => acc + a.points, 0);
-            const newBadges = unlocked.map(a => a.badge).filter((b): b is string => !!b);
-
-            updateDoc(doc(db, 'rider_gamification', gamification.userId), {
-                achievementsUnlocked: [...gamification.achievementsUnlocked, ...newUnlockedIds],
-                badges: newBadges,
-                points: increment(totalPointsToAdd),
-            });
-
-            setGamification(prev => prev ? {
-                ...prev,
-                achievementsUnlocked: [...prev.achievementsUnlocked, ...newUnlockedIds],
-                badges: newBadges,
-                points: prev.points + totalPointsToAdd,
-            } : null);
-        }
-    }, [gamification]);
-
-    useEffect(() => {
-        if (gamification) {
-            checkAchievements();
-        }
-    }, [gamification, checkAchievements]);
+        checkUpdates();
+    }, [gamification, userId]);
 
     return {
         gamification,

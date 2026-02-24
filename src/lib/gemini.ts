@@ -102,7 +102,7 @@ export const generateGuideContent = async (rawText: string): Promise<{
 } | null> => {
     const API_KEY = import.meta.env.VITE_GOOGLE_AI_KEY || '';
     if (!API_KEY) {
-        throw new Error("Falta la API Key de Gemini (VITE_GOOGLE_AI_KEY).");
+        throw new Error("Falta la API Key de Gemini (VITE_GOOGLE_AI_KEY). Por favor, configúrala en el archivo .env.");
     }
 
     const prompt = `

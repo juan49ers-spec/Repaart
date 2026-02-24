@@ -11,7 +11,7 @@ import FinanceAdvisorChat from './finance/FinanceAdvisorChat';
 import type { TrendItem } from '../../types/finance';
 import { BreakdownItem, DashboardTrendItem } from './FranchiseDashboardView';
 import { FinancialReport, BreakdownItem as FinanceBreakdownItem } from '../../lib/finance';
-import { InvoiceDTO } from '../../types/invoicing';
+import { Invoice } from '../../types/invoicing';
 
 interface TimestampLike {
     _seconds?: number;
@@ -62,7 +62,6 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
         rawData,
         trendData,
         loading,
-        isRealTime,
         updateFinance,
         operations
     } = useFranchiseFinance({
@@ -82,8 +81,8 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
         const fetchInvoices = async () => {
             if (activeFranchiseId) {
                 try {
-                    const invoices: InvoiceDTO[] = await getInvoices(activeFranchiseId);
-                    const currentMonthInvoices = invoices.filter((inv: InvoiceDTO) => {
+                    const invoices: Invoice[] = await getInvoices(activeFranchiseId);
+                    const currentMonthInvoices = invoices.filter((inv: Invoice) => {
                         let date: Date;
                         const issueDate = inv.issueDate as unknown as TimestampLike;
 
@@ -95,11 +94,11 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
                             date = new Date(inv.issueDate as unknown as string);
                         }
 
-                        return date.toISOString().slice(0, 7) === effectiveMonth && inv.status === 'issued';
+                        return date.toISOString().slice(0, 7) === effectiveMonth && inv.status === 'ISSUED';
                     });
 
-                    const total = currentMonthInvoices.reduce((sum: number, inv: InvoiceDTO) => sum + (inv.subtotal || 0), 0);
-                    const totalIva = currentMonthInvoices.reduce((sum: number, inv: InvoiceDTO) => sum + ((inv.total || 0) - (inv.subtotal || 0)), 0);
+                    const total = currentMonthInvoices.reduce((sum: number, inv: Invoice) => sum + (inv.subtotal || 0), 0);
+                    const totalIva = currentMonthInvoices.reduce((sum: number, inv: Invoice) => sum + ((inv.total || 0) - (inv.subtotal || 0)), 0);
 
                     setMonthlyInvoicedAmount(total);
                     setInvoicedIva(totalIva);
@@ -131,14 +130,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
         expenses: d.expenses || 0
     })), [trendData]);
 
-    // Helper for Firestore Timestamp
-    const formatLastUpdated = (ts: unknown): Date | undefined => {
-        if (!ts) return undefined;
-        const t = ts as TimestampLike;
-        if (t.toDate) return t.toDate();
-        if (t._seconds) return new Date(t._seconds * 1000);
-        return new Date(ts as string);
-    };
+
 
     // Trending calculation
     const prevRevenue = trendData.length > 1 ? trendData[trendData.length - 2].revenue || 0 : 0;
@@ -150,8 +142,6 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
                 franchiseId={activeFranchiseId}
                 effectiveMonth={displayedMonth}
                 readOnly={false}
-                isRealTime={isRealTime}
-                lastUpdated={formatLastUpdated(rawData?.lastUpdated)}
                 revenue={revenue}
                 orders={orders}
                 totalExpenses={totalExpenses}
@@ -191,10 +181,10 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
                         orders: orders || 0,
                         margin: report.metrics?.profitMargin || 0,
                         month: displayedMonth,
-                        breakdown: fullExpenseBreakdown,
-                        metrics: report.metrics
+                        breakdown: fullExpenseBreakdown as unknown as Record<string, number>,
+                        metrics: report.metrics as unknown as Record<string, number>
                     }}
-                    trendData={formattedTrendData}
+                    trendData={formattedTrendData as unknown as { [key: string]: unknown; revenue: number; margin: number; }[]}
                     month={displayedMonth}
                     isOpen={isAdvisorOpen}
                     onClose={() => setIsAdvisorOpen(false)}

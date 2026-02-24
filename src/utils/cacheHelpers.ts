@@ -20,7 +20,7 @@ export const cachedFetch = cache(async (url: string, options?: RequestInit) => {
 /**
  * Cache for Firestore document fetching
  */
-export const cachedDocFetch = cache(async (collection: string, docId: string, db: any) => {
+export const cachedDocFetch = cache(async (collection: string, docId: string, db: { doc?: (col: string, id: string) => { get: () => Promise<{ exists: () => boolean; id: string; data: () => Record<string, unknown> }> } }) => {
     const docRef = db && db.doc ? db.doc(collection, docId) : null;
     if (!docRef) {
         throw new Error('Firestore instance not provided');
@@ -33,7 +33,7 @@ export const cachedDocFetch = cache(async (collection: string, docId: string, db
  * Cache for expensive calculations
  * Useful in dashboard widgets that compute the same metrics
  */
-export const cachedCalculation = cache(<T extends any>(fn: () => T): T => {
+export const cachedCalculation = cache(<T,>(fn: () => T): T => {
     return fn();
 });
 

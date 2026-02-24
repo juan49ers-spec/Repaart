@@ -24,15 +24,13 @@ type SectionKey = 'inicio' | 'crear' | 'mover' | 'publicar' | 'colores' | 'probl
 export const SchedulerGuideModal: React.FC<SchedulerGuideModalProps> = ({ isOpen, onClose }) => {
     const [activeSection, setActiveSection] = useState<SectionKey>('inicio');
     const scrollRef = useRef<HTMLDivElement | null>(null);
-    const sectionRefs = {
-        inicio: useRef<HTMLDivElement | null>(null),
-        crear: useRef<HTMLDivElement | null>(null),
-        mover: useRef<HTMLDivElement | null>(null),
-        publicar: useRef<HTMLDivElement | null>(null),
-        colores: useRef<HTMLDivElement | null>(null),
-        problemas: useRef<HTMLDivElement | null>(null),
-        atajos: useRef<HTMLDivElement | null>(null)
-    };
+    const refInicio = useRef<HTMLDivElement | null>(null);
+    const refCrear = useRef<HTMLDivElement | null>(null);
+    const refMover = useRef<HTMLDivElement | null>(null);
+    const refPublicar = useRef<HTMLDivElement | null>(null);
+    const refColores = useRef<HTMLDivElement | null>(null);
+    const refProblemas = useRef<HTMLDivElement | null>(null);
+    const refAtajos = useRef<HTMLDivElement | null>(null);
 
     const sections = useMemo(() => {
         return [
@@ -59,7 +57,16 @@ export const SchedulerGuideModal: React.FC<SchedulerGuideModalProps> = ({ isOpen
 
     const scrollTo = (key: SectionKey) => {
         setActiveSection(key);
-        sectionRefs[key].current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const refMap: Record<SectionKey, React.RefObject<HTMLDivElement | null>> = {
+            inicio: refInicio,
+            crear: refCrear,
+            mover: refMover,
+            publicar: refPublicar,
+            colores: refColores,
+            problemas: refProblemas,
+            atajos: refAtajos
+        };
+        refMap[key].current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
     return (
@@ -212,7 +219,7 @@ export const SchedulerGuideModal: React.FC<SchedulerGuideModalProps> = ({ isOpen
                             </div>
 
                             <div className="max-w-3xl mx-auto space-y-10">
-                                <div ref={sectionRefs.inicio} className="scroll-mt-6">
+                                <div ref={refInicio} className="scroll-mt-6">
                                     <div className="rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
                                         <div className="p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white">
                                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70">Inicio rápido</p>
@@ -250,7 +257,7 @@ export const SchedulerGuideModal: React.FC<SchedulerGuideModalProps> = ({ isOpen
                                     </div>
                                 </div>
 
-                                <div ref={sectionRefs.crear} className="scroll-mt-6">
+                                <div ref={refCrear} className="scroll-mt-6">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-500/20">
                                             <Plus className="w-5 h-5" />
@@ -278,7 +285,7 @@ export const SchedulerGuideModal: React.FC<SchedulerGuideModalProps> = ({ isOpen
                                     </div>
                                 </div>
 
-                                <div ref={sectionRefs.mover} className="scroll-mt-6">
+                                <div ref={refMover} className="scroll-mt-6">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 rounded-xl bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-300 border border-violet-100 dark:border-violet-500/20">
                                             <Copy className="w-5 h-5" />
@@ -307,7 +314,7 @@ export const SchedulerGuideModal: React.FC<SchedulerGuideModalProps> = ({ isOpen
                                     </div>
                                 </div>
 
-                                <div ref={sectionRefs.publicar} className="scroll-mt-6">
+                                <div ref={refPublicar} className="scroll-mt-6">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-500/20">
                                             <Send className="w-5 h-5" />
@@ -335,7 +342,7 @@ export const SchedulerGuideModal: React.FC<SchedulerGuideModalProps> = ({ isOpen
                                     </div>
                                 </div>
 
-                                <div ref={sectionRefs.colores} className="scroll-mt-6">
+                                <div ref={refColores} className="scroll-mt-6">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10">
                                             <ShieldCheck className="w-5 h-5" />
@@ -370,7 +377,7 @@ export const SchedulerGuideModal: React.FC<SchedulerGuideModalProps> = ({ isOpen
                                     </div>
                                 </div>
 
-                                <div ref={sectionRefs.problemas} className="scroll-mt-6">
+                                <div ref={refProblemas} className="scroll-mt-6">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-300 border border-rose-100 dark:border-rose-500/20">
                                             <AlertTriangle className="w-5 h-5" />
@@ -403,7 +410,7 @@ export const SchedulerGuideModal: React.FC<SchedulerGuideModalProps> = ({ isOpen
                                     </div>
                                 </div>
 
-                                <div ref={sectionRefs.atajos} className="scroll-mt-6">
+                                <div ref={refAtajos} className="scroll-mt-6">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10">
                                             <Keyboard className="w-5 h-5" />

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { ArrowLeft, Bike, CalendarDays, Wallet, Users, LucideIcon, LogIn } from 'lucide-react';
+import { ArrowLeft, Bike, CalendarDays, Wallet, Users, LucideIcon, LogIn, FileText, Power } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
 import { franchiseService } from '../../services/franchiseService';
 import { isOk } from '../../types/result';
+import { useInvoicingModule } from '../../hooks/useInvoicingModule';
 import MonthlyHistoryTable from '../franchise/finance/MonthlyHistoryTable';
 import UserManagementPanel from './users/UserManagementPanel';
 
@@ -46,6 +47,7 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
     const navigate = useNavigate();
 
     const { startImpersonation } = useAuth();
+    const { toggleModule, getModuleStatus } = useInvoicingModule();
     const franchiseId = propId || paramId;
     const onBack = propOnBack || (() => navigate('/dashboard'));
 
@@ -53,6 +55,8 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
     const [activeTab, setActiveTab] = useState<TabId>('finance');
     const [franchiseData, setFranchiseData] = useState<FranchiseData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [invoicingEnabled, setInvoicingEnabled] = useState(false);
+    const [togglingInvoicing, setTogglingInvoicing] = useState(false);
 
     // Simplified Tabs
     const TABS: TabConfig[] = [
@@ -77,6 +81,10 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
                         name: result.data.name,
                         status: (result.data as any).status || 'active'
                     } as FranchiseData);
+
+                    // Fetch invoicing module status
+                    const invoicingStatus = await getModuleStatus(franchiseId);
+                    setInvoicingEnabled(invoicingStatus.enabled);
                 } else {
                     console.warn("Franquicia no encontrada en BD, usando ID visual");
                     setFranchiseData({ name: `Franquicia: ${franchiseId}`, status: 'unknown' });
@@ -89,7 +97,27 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
         };
 
         fetchFranchiseDetails();
-    }, [franchiseId]);
+    }, [franchiseId, getModuleStatus]);
+
+    const handleToggleInvoicing = async () => {
+        if (!franchiseId) return;
+        try {
+            setTogglingInvoicing(true);
+            const newState = !invoicingEnabled;
+            console.log('[AdminFranchiseView] Toggling invoicing:', {
+                franchiseId,
+                currentState: invoicingEnabled,
+                newState
+            });
+            await toggleModule(franchiseId, newState);
+            setInvoicingEnabled(newState);
+            console.log('[AdminFranchiseView] Invoicing toggled successfully:', newState);
+        } catch (error) {
+            console.error('Error toggling invoicing module:', error);
+        } finally {
+            setTogglingInvoicing(false);
+        }
+    };
 
     if (!franchiseId) return null;
 
@@ -131,6 +159,21 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
                         >
                             <LogIn size={12} />
                             <span>Entrar</span>
+                        </button>
+
+                        <button
+                            onClick={handleToggleInvoicing}
+                            disabled={togglingInvoicing}
+                            className={`ml-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                invoicingEnabled
+                                    ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600'
+                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-500'
+                            } ${togglingInvoicing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            title={invoicingEnabled ? 'Desactivar módulo de facturación' : 'Activar módulo de facturación'}
+                        >
+                            <FileText size={12} />
+                            <Power size={12} className={invoicingEnabled ? 'text-emerald-600' : 'text-slate-400'} />
+                            <span className="hidden sm:inline">{invoicingEnabled ? 'Facturación ON' : 'Facturación OFF'}</span>
                         </button>
                     </div>
 

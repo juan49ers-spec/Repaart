@@ -59,7 +59,6 @@ const RiderNotifications: React.FC<RiderNotificationsProps> = ({ user, toast }) 
     useEffect(() => {
         if (!user?.uid) return;
 
-        setLoading(true);
         const q = query(
             collection(db, 'notifications'),
             where('userId', '==', user.uid),
@@ -102,7 +101,7 @@ const RiderNotifications: React.FC<RiderNotificationsProps> = ({ user, toast }) 
                 read: true
             });
 
-            setNotifications(prev => prev.map(n => 
+            setNotifications(prev => prev.map(n =>
                 n.id === notificationId ? { ...n, read: true } : n
             ));
             setUnreadCount(prev => Math.max(0, prev - 1));
@@ -114,9 +113,9 @@ const RiderNotifications: React.FC<RiderNotificationsProps> = ({ user, toast }) 
     const markAllAsRead = async () => {
         try {
             const unreadNotifs = notifications.filter(n => !n.read);
-            
+
             await Promise.all(
-                unreadNotifs.map(n => 
+                unreadNotifs.map(n =>
                     updateDoc(doc(db, 'notifications', n.id), { read: true })
                 )
             );
@@ -149,7 +148,7 @@ const RiderNotifications: React.FC<RiderNotificationsProps> = ({ user, toast }) 
 
     const getIcon = (type: string) => {
         const baseClass = "w-8 h-8 rounded-full flex items-center justify-center shrink-0 border shadow-sm";
-        
+
         switch (type) {
             case 'shift_confirmed':
                 return <div className={`${baseClass} bg-emerald-50 text-emerald-600 border-emerald-100`}><CheckCircle size={16} /></div>;
@@ -206,41 +205,37 @@ const RiderNotifications: React.FC<RiderNotificationsProps> = ({ user, toast }) 
                     <div className="flex flex-wrap gap-2">
                         <button
                             onClick={() => setFilter('all')}
-                            className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${
-                                filter === 'all'
+                            className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${filter === 'all'
                                     ? 'bg-indigo-600 text-white shadow-md'
                                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
+                                }`}
                         >
                             Todas
                         </button>
                         <button
                             onClick={() => setFilter('shifts')}
-                            className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${
-                                filter === 'shifts'
+                            className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${filter === 'shifts'
                                     ? 'bg-indigo-600 text-white shadow-md'
                                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
+                                }`}
                         >
                             Turnos
                         </button>
                         <button
                             onClick={() => setFilter('availability')}
-                            className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${
-                                filter === 'availability'
+                            className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${filter === 'availability'
                                     ? 'bg-indigo-600 text-white shadow-md'
                                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
+                                }`}
                         >
                             Disponibilidad
                         </button>
                         <button
                             onClick={() => setFilter('general')}
-                            className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${
-                                filter === 'general'
+                            className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${filter === 'general'
                                     ? 'bg-indigo-600 text-white shadow-md'
                                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
+                                }`}
                         >
                             General
                         </button>
@@ -271,7 +266,7 @@ const RiderNotifications: React.FC<RiderNotificationsProps> = ({ user, toast }) 
                         <Bell className="w-12 h-12 text-slate-400" />
                         <p className="font-bold text-slate-900 dark:text-white">No hay notificaciones</p>
                         <p className="text-sm text-slate-500 dark:text-slate-400">
-                            {filter === 'all' 
+                            {filter === 'all'
                                 ? 'No tienes notificaciones recientes.'
                                 : 'No hay notificaciones en esta categoría.'}
                         </p>

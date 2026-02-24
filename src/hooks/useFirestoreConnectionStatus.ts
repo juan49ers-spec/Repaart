@@ -48,9 +48,10 @@ export function useFirestoreConnectionStatus() {
     window.addEventListener('offline', handleOffline);
 
     // Estado inicial
-    setIsOnline(navigator.onLine);
+    const timeoutId = setTimeout(() => setIsOnline(navigator.onLine), 0);
 
     return () => {
+      clearTimeout(timeoutId);
       unsubscribe();
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);

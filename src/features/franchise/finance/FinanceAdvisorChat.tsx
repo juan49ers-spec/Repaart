@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { X, Send, Bot, User, Sparkles, TrendingUp, AlertCircle, AlertTriangle, Lightbulb, Target, TrendingDown, Calendar, DollarSign, PieChart, ArrowRight, BarChart3, Zap, CheckCircle, MessageCircle, PlayCircle, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../../lib/utils';
-import { useAuth } from '../../../context/AuthContext';
+import { sendMessageToGemini } from '../../../lib/gemini';
 
 interface Message {
     id: string;
@@ -27,13 +27,21 @@ interface FinanceAdvisorChatProps {
         orders: number;
         margin: number;
         month: string;
-        breakdown?: any;
-        metrics?: any;
+        breakdown?: Record<string, number>;
+        metrics?: Record<string, number>;
         avgTicket?: number;
         costPerOrder?: number;
-        historicalData?: any[];
+        historicalData?: Array<{
+            revenue: number;
+            margin: number;
+            [key: string]: unknown;
+        }>;
     };
-    trendData?: any[];
+    trendData?: Array<{
+        revenue: number;
+        margin: number;
+        [key: string]: unknown;
+    }>;
     month: string;
     isOpen?: boolean;
     onClose?: () => void;
@@ -66,41 +74,20 @@ const FinanceAdvisorChat: React.FC<FinanceAdvisorChatProps> = ({
     const [activeTab, setActiveTab] = useState<'health' | 'chat' | 'insights' | 'actions'>('health');
     const [insights, setInsights] = useState<Insight[]>([]);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const { user: _user } = useAuth();
 
-    // Generate proactive insights on mount
-    useEffect(() => {
-        if (financialData) {
-            const generatedInsights = generateProactiveInsights(financialData, trendData || []);
-            setInsights(generatedInsights);
-        }
-    }, [financialData, trendData]);
-
-    // Initial greeting with context
-    useEffect(() => {
-        if (messages.length === 0 && financialData) {
-            const initialMessage = generateSmartGreeting(financialData, insights);
-            setMessages([{
-                id: 'welcome',
-                type: 'assistant',
-                content: initialMessage,
-                timestamp: new Date(),
-                suggestions: [
-                    'Análisis completo del mes',
-                    '¿Cómo comparo con meses anteriores?',
-                    '¿Qué debo mejorar urgentemente?',
-                    'Proyección para fin de mes'
-                ]
-            }]);
-        }
-    }, [financialData, insights]);
-
-    // Auto-scroll to bottom
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
-
-    const generateProactiveInsights = (data: any, trends: any[]): Insight[] => {
+    const generateProactiveInsights = useCallback((
+        data: {
+            revenue: number;
+            netProfit: number;
+            margin: number;
+            orders: number;
+            avgTicket?: number;
+        },
+        trends: Array<{
+            revenue: number;
+            margin: number;
+        }>
+    ): Insight[] => {
         const newInsights: Insight[] = [];
         const margin = data.margin || 0;
         const profit = data.netProfit || 0;
@@ -211,9 +198,17 @@ const FinanceAdvisorChat: React.FC<FinanceAdvisorChatProps> = ({
         }
 
         return newInsights;
-    };
+    }, []);
 
-    const generateSmartGreeting = (data: any, currentInsights: Insight[]) => {
+    const generateSmartGreeting = useCallback((
+        data: {
+            revenue: number;
+            netProfit: number;
+            margin: number;
+            orders: number;
+        },
+        currentInsights: Insight[]
+    ) => {
         const margin = data.margin || 0;
         const profit = data.netProfit || 0;
         const revenue = data.revenue || 0;
@@ -241,7 +236,7 @@ const FinanceAdvisorChat: React.FC<FinanceAdvisorChatProps> = ({
         }
 
         return greeting;
-    };
+    }, []);
 
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('es-ES', {
@@ -249,6 +244,38 @@ const FinanceAdvisorChat: React.FC<FinanceAdvisorChatProps> = ({
             currency: 'EUR'
         }).format(value || 0);
     };
+
+    // Generate proactive insights on mount
+    useEffect(() => {
+        if (financialData) {
+            const generatedInsights = generateProactiveInsights(financialData, trendData || []);
+            setInsights(generatedInsights);
+        }
+    }, [financialData, trendData, generateProactiveInsights]);
+
+    // Initial greeting with context
+    useEffect(() => {
+        if (messages.length === 0 && financialData) {
+            const initialMessage = generateSmartGreeting(financialData, insights);
+            setMessages([{
+                id: 'welcome',
+                type: 'assistant',
+                content: initialMessage,
+                timestamp: new Date(),
+                suggestions: [
+                    'Análisis completo del mes',
+                    '¿Cómo comparo con meses anteriores?',
+                    '¿Qué debo mejorar urgentemente?',
+                    'Proyección para fin de mes'
+                ]
+            }]);
+        }
+    }, [financialData, insights, messages.length, generateSmartGreeting]);
+
+    // Auto-scroll to bottom
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
 
     const handleSendMessage = async () => {
         if (!inputValue.trim() || isLoading) return;
@@ -293,7 +320,12 @@ const FinanceAdvisorChat: React.FC<FinanceAdvisorChatProps> = ({
         }
     };
 
-    const generateAIResponse = async (question: string, data: any, trends: any[], _history: Message[]) => {
+    const generateAIResponse = async (
+        question: string,
+        data: FinanceAdvisorChatProps['financialData'],
+        trends: FinanceAdvisorChatProps['trendData'],
+        _history: Message[]
+    ) => {
         const context = {
             month: data.month,
             revenue: data.revenue,
@@ -334,22 +366,7 @@ REGLAS DE FORMATO:
 RESPUESTA:`;
 
         try {
-            const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + import.meta.env.VITE_GEMINI_API_KEY, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{ text: prompt }]
-                    }]
-                })
-            });
-
-            if (!response.ok) throw new Error('API Error');
-
-            const data = await response.json();
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const text = await sendMessageToGemini(prompt);
             const suggestions = generateFollowUpSuggestions(question, context);
 
             return {
@@ -358,11 +375,26 @@ RESPUESTA:`;
                 actions: []
             };
         } catch (error) {
+            console.error('[FinanceAdvisorChat] AI Generation failed:', error);
             return generateLocalResponse(question, context);
         }
     };
 
-    const generateLocalResponse = (question: string, context: any) => {
+    const generateLocalResponse = (
+        question: string,
+        context: {
+            month: string;
+            revenue: number;
+            expenses: number;
+            netProfit: number;
+            margin: number;
+            orders: number;
+            avgTicket: number;
+            breakdown?: Record<string, number>;
+            metrics?: Record<string, number>;
+            trends: Array<{ revenue: number; margin: number; month?: string }>;
+        }
+    ) => {
         const q = question.toLowerCase();
 
         if (q.includes('margen') || q.includes('beneficio') || q.includes('ganancia')) {
@@ -389,7 +421,7 @@ ${context.margin < 10
 
         if (q.includes('gasto') || q.includes('gastar') || q.includes('coste') || q.includes('dinero')) {
             const topExpenses = Object.entries(context.breakdown || {})
-                .sort((a: any, b: any) => b[1] - a[1])
+                .sort((a, b) => b[1] - a[1])
                 .slice(0, 3);
 
             return {
@@ -398,7 +430,7 @@ ${context.margin < 10
 Tus gastos totales este mes son **${formatCurrency(context.expenses)}**.
 
 **Top 3 gastos:**
-${topExpenses.map(([key, value]: [string, any], idx) => {
+${topExpenses.map(([key, value], idx) => {
                     const percentage = ((value / context.expenses) * 100).toFixed(1);
                     return `${idx + 1}. **${key}**: ${formatCurrency(value)} (${percentage}%)`;
                 }).join('\n')}
@@ -612,7 +644,7 @@ Basándome en tus datos actuales:
         };
     };
 
-    const generateFollowUpSuggestions = (question: string, _context: any) => {
+    const generateFollowUpSuggestions = (question: string, _context: unknown) => {
         const q = question.toLowerCase();
 
         if (q.includes('margen') || q.includes('beneficio')) {
@@ -703,7 +735,7 @@ Basándome en tus datos actuales:
                         className="fixed top-24 right-6 z-50 w-[520px] max-w-[calc(100vw-48px)] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden max-h-[calc(100vh-120px)] flex flex-col"
                     >
                         {/* Header */}
-                        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-4">
+                        <div className="bg-indigo-600 p-4">
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
@@ -738,7 +770,7 @@ Basándome en tus datos actuales:
                                 {[
                                     { id: 'health', label: 'Salud', icon: Heart },
                                     { id: 'chat', label: 'Chat', icon: MessageCircle },
-                                    { id: 'insights', label: 'Insights', icon: Lightbulb },
+                                    { id: 'insights', label: 'Análisis', icon: Lightbulb },
                                     { id: 'actions', label: 'Acciones', icon: Zap }
                                 ].map((tab) => (
                                     <button
@@ -861,9 +893,11 @@ Basándome en tus datos actuales:
                                                             </div>
                                                         </div>
                                                         <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                                            <div
-                                                                className={cn('h-full rounded-full transition-all duration-700', barColor)}
-                                                                style={{ width: `${f.score}%` }}
+                                                            <motion.div
+                                                                initial={{ width: 0 }}
+                                                                animate={{ width: `${f.score}%` }}
+                                                                transition={{ duration: 1, ease: "easeOut" }}
+                                                                className={cn('h-full rounded-full', barColor)}
                                                             />
                                                         </div>
                                                         <p className="text-[10px] text-slate-400 mt-1">{f.benchmark}</p>
@@ -999,9 +1033,9 @@ Basándome en tus datos actuales:
                                             </div>
                                             <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-4 shadow-sm">
                                                 <div className="flex gap-1">
-                                                    <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                                                    <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                                                    <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                                    <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:0ms]" />
+                                                    <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:150ms]" />
+                                                    <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:300ms]" />
                                                 </div>
                                             </div>
                                         </div>
@@ -1014,6 +1048,7 @@ Basándome en tus datos actuales:
                                     <div className="flex gap-2">
                                         <input
                                             type="text"
+                                            id="advisor-chat-input"
                                             value={inputValue}
                                             onChange={(e) => setInputValue(e.target.value)}
                                             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
@@ -1047,7 +1082,7 @@ Basándome en tus datos actuales:
                                     <div className="flex items-center justify-between">
                                         <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                                             <Lightbulb className="w-4 h-4 text-amber-500" />
-                                            Insights Detectados
+                                            Análisis Detectado
                                         </h4>
                                         <span className="text-xs text-slate-500">{insights.length} hallazgos</span>
                                     </div>
@@ -1150,37 +1185,60 @@ Basándome en tus datos actuales:
                                                 handleSendMessage();
                                             }
                                         }
-                                    ].map((action, idx) => (
-                                        <motion.button
-                                            key={idx}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: idx * 0.1 }}
-                                            onClick={action.action}
-                                            className={cn(
-                                                "w-full p-4 rounded-xl border transition-all hover:shadow-md text-left group",
-                                                `bg-${action.color}-50 border-${action.color}-200 hover:border-${action.color}-300`
-                                            )}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className={cn(
-                                                    "w-10 h-10 rounded-lg flex items-center justify-center",
-                                                    `bg-${action.color}-100`
-                                                )}>
-                                                    <action.icon className={cn("w-5 h-5", `text-${action.color}-600`)} />
+                                    ].map((action, idx) => {
+                                        const colorConfigs: Record<string, string> = {
+                                            amber: "bg-amber-50 border-amber-200 hover:border-amber-300 text-amber-800",
+                                            rose: "bg-rose-50 border-rose-200 hover:border-rose-300 text-rose-800",
+                                            indigo: "bg-indigo-50 border-indigo-200 hover:border-indigo-300 text-indigo-800",
+                                            emerald: "bg-emerald-50 border-emerald-200 hover:border-emerald-300 text-emerald-800",
+                                        };
+
+                                        const iconColors: Record<string, string> = {
+                                            amber: "text-amber-600 bg-amber-100",
+                                            rose: "text-rose-600 bg-rose-100",
+                                            indigo: "text-indigo-600 bg-indigo-100",
+                                            emerald: "text-emerald-600 bg-emerald-100",
+                                        };
+
+                                        const textColors: Record<string, string> = {
+                                            amber: "text-amber-600",
+                                            rose: "text-rose-600",
+                                            indigo: "text-indigo-600",
+                                            emerald: "text-emerald-600",
+                                        };
+
+                                        return (
+                                            <motion.button
+                                                key={idx}
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: idx * 0.1 }}
+                                                onClick={action.action}
+                                                className={cn(
+                                                    "w-full p-4 rounded-xl border transition-all hover:shadow-md text-left group",
+                                                    colorConfigs[action.color] || colorConfigs.indigo
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className={cn(
+                                                        "w-10 h-10 rounded-lg flex items-center justify-center",
+                                                        iconColors[action.color] || iconColors.indigo
+                                                    )}>
+                                                        <action.icon className={cn("w-5 h-5", textColors[action.color] || textColors.indigo)} />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <h5 className="font-bold text-sm">
+                                                            {action.title}
+                                                        </h5>
+                                                        <p className={cn("text-xs opacity-80")}>
+                                                            {action.desc}
+                                                        </p>
+                                                    </div>
+                                                    <ArrowRight className={cn("w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity", textColors[action.color] || textColors.indigo)} />
                                                 </div>
-                                                <div className="flex-1">
-                                                    <h5 className={cn("font-bold text-sm", `text-${action.color}-800`)}>
-                                                        {action.title}
-                                                    </h5>
-                                                    <p className={cn("text-xs", `text-${action.color}-600`)}>
-                                                        {action.desc}
-                                                    </p>
-                                                </div>
-                                                <ArrowRight className={cn("w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity", `text-${action.color}-600`)} />
-                                            </div>
-                                        </motion.button>
-                                    ))}
+                                            </motion.button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}

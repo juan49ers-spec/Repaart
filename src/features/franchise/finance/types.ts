@@ -73,12 +73,6 @@ export interface FinancialRecord {
     irpfPercent?: number;
 }
 
-export interface LogisticsRate {
-    name?: string;
-    min?: number;
-    max?: number;
-    price: number;
-}
 
 export const FRANCHISE_CONFIG = {
     packType: 'PREMIUM',

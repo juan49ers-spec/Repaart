@@ -40,14 +40,14 @@ export const CreateTestFranchiseButton: React.FC = () => {
         <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
           <Beaker className="w-6 h-6 text-purple-600" />
         </div>
-        
+
         <div className="flex-1">
           <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
             Franquicia de Test
           </h3>
-          
+
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-            Crea una franquicia especial para los 2,150 pedidos de "Flyder Test Business" (ID: 12).
+            Crea una franquicia especial para los 2,150 pedidos de &quot;Flyder Test Business&quot; (ID: 12).
             Estos son pedidos de prueba que faltan por sincronizar.
           </p>
 
@@ -85,7 +85,7 @@ export const CreateTestFranchiseButton: React.FC = () => {
                 </span>
               </div>
               <p className="text-sm text-green-600">
-                {result.action === 'created' 
+                {result.action === 'created'
                   ? `Franquicia "Flyder Test Business" creada con ID: ${result.franchiseId}`
                   : `La franquicia ya existe con ID: ${result.franchiseId}`
                 }

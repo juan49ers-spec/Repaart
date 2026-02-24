@@ -39,7 +39,7 @@ const AdminOrdersHistory: React.FC = () => {
     setDatePreset(preset);
     const now = new Date();
     let start: Date | undefined;
-    let end: Date | undefined = endOfDay(now);
+    const end: Date | undefined = endOfDay(now);
 
     switch (preset) {
       case 'today':

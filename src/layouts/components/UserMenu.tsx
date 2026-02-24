@@ -35,12 +35,19 @@ const UserMenu: React.FC<UserMenuProps> = ({ placement = 'bottom', isFranchise =
     };
 
     const handleLogout = async () => {
-        if (!window.confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-            return;
+        console.log("[UserMenu] handleLogout triggered");
+        // Eliminamos confirm temporalmente para verificar si es el bloqueador
+        try {
+            setIsOpen(false);
+            console.log("[UserMenu] Calling logout()...");
+            await logout();
+            console.log("[UserMenu] Logout successful, navigating to login...");
+            navigate('/login');
+        } catch (error) {
+            console.error("[UserMenu] Logout error:", error);
+            // Fallback: navegar a login de todos modos si falla la auditoría
+            navigate('/login');
         }
-        setIsOpen(false);
-        await logout();
-        navigate('/login');
     };
 
     const handleResetPassword = async () => {
@@ -76,7 +83,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ placement = 'bottom', isFranchise =
                         alt="Profile"
                         className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-white/10 shadow-sm object-cover transition-transform group-hover:scale-105"
                     />
-                    
+
                     {/* Notification Badge */}
                     {hasUnread && (
                         <div className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[22px] h-[22px] px-1.5 bg-rose-500 border-2 border-white dark:border-slate-900 rounded-full shadow-lg">

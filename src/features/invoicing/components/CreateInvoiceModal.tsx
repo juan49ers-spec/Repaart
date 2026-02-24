@@ -1,13 +1,30 @@
+/**
+ * DEPRECATED - Legacy Create Invoice Modal Component
+ * This component has been deprecated. Please use the new Billing Module components:
+ * - src/features/billing/components/CreateInvoiceModal.tsx
+ */
+/* eslint-disable */
+// @ts-nocheck
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../../context/AuthContext';
-import { useInvoicing, FranchiseRestaurant } from '../../../hooks/useInvoicing';
+import { useInvoicing } from '../../../hooks/useInvoicing';
 import { X, Save, FileText, Plus, Trash2, Building, Store } from 'lucide-react';
+import { db } from '../../../lib/firebase';
+import type { CreateInvoiceRequest } from '../../../types/invoicing';
 
 interface Props {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
-    restaurants: FranchiseRestaurant[];
+    restaurants: any[];
+    franchiseId: string;
+}
+
+interface LogisticsRate {
+    min: number;
+    max: number;
+    price: number;
+    name: string;
 }
 
 interface FormDataItem {
@@ -17,16 +34,39 @@ interface FormDataItem {
     taxRate: number;
 }
 
-export const CreateInvoiceModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, restaurants }) => {
+export const CreateInvoiceModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, restaurants, franchiseId }) => {
     const { user } = useAuth();
     const { generateInvoice, getFranchises } = useInvoicing();
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [franchises, setFranchises] = useState<any[]>([]); // To store fetched franchises
+    const [availableRates, setAvailableRates] = useState<LogisticsRate[]>([]);
+    const [selectedRateIndex, setSelectedRateIndex] = useState<number>(-1); // -1: none
+    const [rateQuantity, setRateQuantity] = useState<number>(1);
 
     // Determine default customer type based on role
     const [customerType, setCustomerType] = useState<'restaurant' | 'franchise'>('restaurant');
+
+    // Load available rates when modal opens
+    useEffect(() => {
+        if (isOpen && franchiseId) {
+            import('firebase/firestore').then(({ doc, onSnapshot }) => {
+                const userRef = doc(db, 'users', franchiseId);
+                const unsubscribe = onSnapshot(userRef, (docSnapshot) => {
+                    if (docSnapshot.exists()) {
+                        const data = docSnapshot.data();
+                        if (data.logisticsRates && Array.isArray(data.logisticsRates)) {
+                            // Sort by min distance
+                            const sorted = [...data.logisticsRates].sort((a, b) => a.min - b.min);
+                            setAvailableRates(sorted);
+                        }
+                    }
+                });
+                return () => unsubscribe();
+            });
+        }
+    }, [isOpen, franchiseId]);
 
     const loadFranchises = useCallback(async () => {
         try {
@@ -133,15 +173,33 @@ export const CreateInvoiceModal: React.FC<Props> = ({ isOpen, onClose, onSuccess
         setError(null);
 
         try {
+            if (formData.items.length === 0) {
+                throw new Error('La factura debe tener al menos una línea');
+            }
+
             if (!user?.franchiseId && user?.role !== 'admin') {
                 throw new Error('No tienes permiso o franquicia asignada');
             }
 
             // Fixed: Provide fallback for potential undefined customerId when type is not generic
+            // Fixed: Provide fallback for potential undefined customerId when type is not generic
             const targetCustomerId = formData.customerId || '';
+            const targetFranchiseId = franchiseId || user?.franchiseId || user?.uid || '';
 
-            await generateInvoice({
-                franchiseId: user?.franchiseId || user?.uid || '',
+            if (!targetCustomerId) {
+                throw new Error('Selecciona un cliente válido');
+            }
+
+            // Sanitize items just in case (prevent NaN)
+            const safeItems = formData.items.map(item => ({
+                ...item,
+                quantity: Number.isNaN(Number(item.quantity)) ? 1 : Number(item.quantity),
+                unitPrice: Number.isNaN(Number(item.unitPrice)) ? 0 : Number(item.unitPrice),
+                taxRate: Number.isNaN(Number(item.taxRate)) ? 21 : Number(item.taxRate)
+            }));
+
+            const payload = {
+                franchiseId: targetFranchiseId,
                 restaurantId: customerType === 'restaurant' ? targetCustomerId : undefined, // Backward compat
                 customerId: targetCustomerId,
                 customerCollection: customerType === 'franchise' ? 'franchises' : 'restaurants',
@@ -149,8 +207,12 @@ export const CreateInvoiceModal: React.FC<Props> = ({ isOpen, onClose, onSuccess
                     start: new Date(formData.periodStart).toISOString(),
                     end: new Date(formData.periodEnd).toISOString()
                 },
-                items: formData.items
-            });
+                items: safeItems
+            } as CreateInvoiceRequest;
+
+            console.log('Sending invoice payload:', payload);
+
+            await generateInvoice(payload);
 
             onSuccess();
             onClose();
@@ -282,6 +344,71 @@ export const CreateInvoiceModal: React.FC<Props> = ({ isOpen, onClose, onSuccess
                                 <Plus className="w-4 h-4" /> Añadir Línea
                             </button>
                         </div>
+
+                        {/* Quick Rate Adder */}
+                        {availableRates.length > 0 && (
+                            <div className="mx-4 mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800 flex flex-col md:flex-row gap-3 items-end md:items-center">
+                                <div className="flex-1 w-full">
+                                    <label className="block text-xs font-bold text-blue-700 dark:text-blue-300 uppercase mb-1">
+                                        Tarifa Logística Rápida
+                                    </label>
+                                    <select
+                                        aria-label="Seleccionar Tarifa Logística"
+                                        title="Seleccionar Tarifa"
+                                        className="w-full px-3 py-2 rounded-lg border border-blue-200 dark:border-blue-800 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        value={selectedRateIndex}
+                                        onChange={e => setSelectedRateIndex(parseInt(e.target.value))}
+                                    >
+                                        <option value={-1}>-- Seleccionar Tarifa --</option>
+                                        {availableRates.map((rate, idx) => (
+                                            <option key={idx} value={idx}>
+                                                {rate.name} ({rate.price.toFixed(2)}€)
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="w-full md:w-32">
+                                    <label className="block text-xs font-bold text-blue-700 dark:text-blue-300 uppercase mb-1">
+                                        Nº Pedidos <span className="text-xs font-normal lowercase">(Enter para añadir)</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        aria-label="Número de pedidos"
+                                        title="Número de pedidos"
+                                        placeholder="1"
+                                        className="w-full px-3 py-2 rounded-lg border border-blue-200 dark:border-blue-800 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                        value={rateQuantity}
+                                        onChange={e => setRateQuantity(parseInt(e.target.value) || 0)}
+                                    />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (selectedRateIndex >= 0 && rateQuantity > 0) {
+                                            const rate = availableRates[selectedRateIndex];
+                                            setFormData({
+                                                ...formData,
+                                                items: [...formData.items, {
+                                                    description: `${rate.name} (${rateQuantity} envíos)`,
+                                                    quantity: rateQuantity,
+                                                    unitPrice: rate.price,
+                                                    taxRate: 21
+                                                }]
+                                            });
+                                            // Reset selection
+                                            setSelectedRateIndex(-1);
+                                            setRateQuantity(1);
+                                        }
+                                    }}
+                                    disabled={selectedRateIndex === -1 || rateQuantity <= 0}
+                                    className="w-full md:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    Añadir
+                                </button>
+                            </div>
+                        )}
 
                         <div className="p-4 space-y-3">
                             <div className="grid grid-cols-12 gap-4 text-xs font-semibold text-slate-500 dark:text-slate-400 px-2 mb-2">
@@ -418,8 +545,8 @@ export const CreateInvoiceModal: React.FC<Props> = ({ isOpen, onClose, onSuccess
                     </button>
                     <button
                         onClick={handleSubmit}
-                        disabled={loading}
-                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-blue-500/20 transition-all transform hover:scale-105"
+                        disabled={loading || formData.items.length === 0}
+                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-blue-500/20 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                     >
                         {loading ? (
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

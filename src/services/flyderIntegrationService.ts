@@ -9,11 +9,11 @@
  */
 
 import { db } from '../lib/firebase';
-import { 
-  collection, 
-  query, 
-  where, 
-  onSnapshot, 
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
   Timestamp
 } from 'firebase/firestore';
 
@@ -109,18 +109,18 @@ export interface RiderMonthlyBilling {
   riderName: string;
   month: string;
   year: number;
-  
+
   // Horas
   totalHours: number;
   hourlyRateGross: number;
   hoursGrossAmount: number;
-  
+
   // Pedidos
   totalOrders: number;
   totalDistance: number;
   kmRate: number;
   ordersGrossAmount: number;
-  
+
   // Totales
   grossTotal: number;
   socialSecurity: number; // Gasto SS (calculado sobre bruto)
@@ -165,14 +165,14 @@ export interface FleetAlert {
 }
 
 class FlyderIntegrationService {
-  private unsubscribeListeners: Map<string, Function> = new Map();
+  private unsubscribeListeners: Map<string, () => void> = new Map();
 
   /**
    * Iniciar sincronización en tiempo real de turnos
    * Escucha cambios en work_shifts y los sincroniza con estado local
    */
   syncShiftsRealtime(
-    franchiseId: string, 
+    franchiseId: string,
     date: string,
     onUpdate: (shifts: FlyderShift[]) => void
   ): () => void {
@@ -276,7 +276,7 @@ class FlyderIntegrationService {
     const uniqueRiders = new Set(shifts.map(s => s.riderId));
     const activeRiders = shifts.filter(s => s.status === 'active').length;
     const completedShifts = shifts.filter(s => s.status === 'completed').length;
-    
+
     const totalHours = shifts.reduce((acc, shift) => {
       if (shift.status === 'completed' || shift.status === 'active') {
         const hours = (shift.endAt.toDate().getTime() - shift.startAt.toDate().getTime()) / (1000 * 60 * 60);
@@ -318,7 +318,7 @@ class FlyderIntegrationService {
 
     shifts.forEach(shift => {
       const scheduledStart = shift.startAt.toDate();
-      
+
       // No show: turno scheduled pero ya pasó la hora de inicio + 15 min
       if (shift.status === 'scheduled' && now > new Date(scheduledStart.getTime() + 15 * 60000)) {
         incidents.push({
@@ -338,7 +338,7 @@ class FlyderIntegrationService {
    * Calcular facturación basada en horas trabajadas
    */
   calculateBilling(
-    workedHours: WorkedHoursReport[], 
+    workedHours: WorkedHoursReport[],
     hourlyRate: number = 10
   ): Array<{
     riderId: string;
@@ -371,7 +371,7 @@ class FlyderIntegrationService {
       if (shift.status === 'completed' || shift.status === 'active') {
         const existing = riderStats.get(shift.riderId);
         const hours = (shift.endAt.toDate().getTime() - shift.startAt.toDate().getTime()) / (1000 * 60 * 60);
-        
+
         if (existing) {
           existing.shifts.push(shift);
           existing.totalHours += hours;
@@ -426,7 +426,7 @@ class FlyderIntegrationService {
     return Array.from(hourlyStats.entries()).map(([hour, stats]) => {
       const avgShifts = stats.shiftCount / (shifts.length || 1);
       let demandLevel: 'low' | 'medium' | 'high' | 'critical' = 'low';
-      
+
       if (avgShifts > 0.8) demandLevel = 'critical';
       else if (avgShifts > 0.5) demandLevel = 'high';
       else if (avgShifts > 0.2) demandLevel = 'medium';
@@ -454,7 +454,7 @@ class FlyderIntegrationService {
 
     shifts.forEach(shift => {
       const existing = franchiseStats.get(shift.franchiseId);
-      const isActiveNow = shift.status === 'active' || 
+      const isActiveNow = shift.status === 'active' ||
         (shift.status === 'scheduled' && shift.startAt.toDate() <= now && shift.endAt.toDate() >= now);
 
       if (existing) {
@@ -491,7 +491,7 @@ class FlyderIntegrationService {
     shifts: FlyderShift[],
     franchiseId?: string
   ): FleetIntelligenceReport {
-    const filteredShifts = franchiseId 
+    const filteredShifts = franchiseId
       ? shifts.filter(s => s.franchiseId === franchiseId)
       : shifts;
 
@@ -502,7 +502,7 @@ class FlyderIntegrationService {
 
     // Generar alertas
     const alerts: FleetAlert[] = [];
-    
+
     // Alerta de saturación
     franchiseCoverage.forEach(fc => {
       if (fc.saturationRisk) {

@@ -24,7 +24,7 @@ import { useWeeklySchedule } from '../../hooks/useWeeklySchedule';
 import { useAuth } from '../../context/AuthContext';
 import { getRiderColor } from '../../utils/riderColors';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
-import { format, startOfWeek, addDays, parseISO, setHours, setMinutes, differenceInMinutes, isToday } from 'date-fns';
+import { format, startOfWeek, addDays, parseISO, setHours, setMinutes, differenceInMinutes, isToday, getISOWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useFleetStore } from '../../store/useFleetStore';
 import { useVehicleStore } from '../../store/useVehicleStore';
@@ -1010,8 +1010,9 @@ const DeliveryScheduler: React.FC<{
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
                                 <button onClick={() => changeWeek(-1)} title={viewMode === 'day' ? "Día anterior" : "Semana anterior"} aria-label={viewMode === 'day' ? "Día anterior" : "Semana anterior"} className="p-1.5 hover:bg-white hover:shadow-sm rounded-md transition-all text-slate-500"><ChevronLeft size={18} /></button>
-                                <span className="px-3 text-sm font-medium text-slate-600 capitalize min-w-[140px] text-center">
+                                <span className="px-3 text-sm font-medium text-slate-600 capitalize min-w-[180px] text-center">
                                     {format(selectedDate, viewMode === 'day' ? 'd MMMM yyyy' : 'MMMM yyyy', { locale: es })}
+                                    <span className="ml-1.5 text-[10px] font-bold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-full uppercase tracking-wider">S{getISOWeek(selectedDate)}</span>
                                 </span>
                                 <button onClick={() => changeWeek(1)} title={viewMode === 'day' ? "Día siguiente" : "Siguiente semana"} aria-label={viewMode === 'day' ? "Día siguiente" : "Siguiente semana"} className="p-1.5 hover:bg-white hover:shadow-sm rounded-md transition-all text-slate-500"><ChevronRight size={18} /></button>
                             </div>
@@ -1307,9 +1308,9 @@ const DeliveryScheduler: React.FC<{
                                                                     isHour ? "" : isHalfHour
                                                                         ? "border-l border-slate-300 border-dashed"
                                                                         : "border-l border-slate-200/60",
-                                                                    // Prime time highlight
-                                                                    ((slot.h >= 12 && slot.h < 16.5) || (slot.h >= 20 && slot.h < 24))
-                                                                        ? "bg-amber-50/20"
+                                                                    // Prime time highlight (conditional)
+                                                                    showPrime && ((slot.h >= 12 && slot.h < 16.5) || (slot.h >= 20 && slot.h < 24))
+                                                                        ? "bg-amber-100/40"
                                                                         : "bg-white"
                                                                 )}
                                                             >
@@ -1456,9 +1457,9 @@ const DeliveryScheduler: React.FC<{
                                                                             isHour ? "" : isHalfHour
                                                                                 ? "border-l border-slate-300 border-dashed"
                                                                                 : "border-l border-slate-200/60",
-                                                                            // Prime time highlight
-                                                                            ((slot.h >= 12 && slot.h < 16.5) || (slot.h >= 20 && slot.h < 24))
-                                                                                ? "bg-amber-50/20"
+                                                                            // Prime time highlight (conditional)
+                                                                            showPrime && ((slot.h >= 12 && slot.h < 16.5) || (slot.h >= 20 && slot.h < 24))
+                                                                                ? "bg-amber-100/40"
                                                                                 : "bg-white"
                                                                         )}
                                                                         hour={slot.h}

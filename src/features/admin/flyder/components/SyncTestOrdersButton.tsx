@@ -36,14 +36,14 @@ export const SyncTestOrdersButton: React.FC = () => {
         <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
           <Beaker className="w-6 h-6 text-purple-600" />
         </div>
-        
+
         <div className="flex-1">
           <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
             Sincronizar Pedidos de Test
           </h3>
-          
+
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-            Sincroniza los 2,150 pedidos faltantes de "Flyder Test Business" (ID: 12).
+            Sincroniza los 2,150 pedidos faltantes de &quot;Flyder Test Business&quot; (ID: 12).
             Estos son los últimos pedidos que faltan para completar los 102,720.
           </p>
 
