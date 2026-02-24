@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import UserManagementPanel from '../../admin/users/UserManagementPanel';
 import BannerManager from '../../admin/BannerManager';
+import AuditTool from '../../admin/users/AuditTool';
 import { Activity, Server, Database } from 'lucide-react';
 
 interface AdminTabProps {
@@ -96,12 +97,17 @@ const AdminTab: React.FC<AdminTabProps> = () => {
                         </div>
                     ) : (
                         <div className="flex-1 overflow-auto p-8">
-                            <div className="max-w-4xl">
-                                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Registro de Seguridad</h3>
-                                <div className="space-y-0 text-sm font-mono border-l-2 border-slate-200 dark:border-slate-800 pl-4 py-2">
-                                    <LogItem time="10:42 PM" text="System verification complete" />
-                                    <LogItem time="10:40 PM" text="Admin session authenticated" />
-                                    <LogItem time="10:38 PM" text="Database backup successful" />
+                            <div className="max-w-4xl space-y-12">
+                                <div>
+                                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Registro de Seguridad</h3>
+                                    <div className="space-y-0 text-sm font-mono border-l-2 border-slate-200 dark:border-slate-800 pl-4 py-2">
+                                        <LogItem time="10:42 PM" text="System verification complete" />
+                                        <LogItem time="10:40 PM" text="Admin session authenticated" />
+                                        <LogItem time="10:38 PM" text="Database backup successful" />
+                                    </div>
+                                </div>
+                                <div className="pt-8 border-t border-slate-200 dark:border-slate-800">
+                                    <AuditTool />
                                 </div>
                             </div>
                         </div>
@@ -114,7 +120,14 @@ const AdminTab: React.FC<AdminTabProps> = () => {
 
 // --- Subcomponents for Clean UI ---
 
-const StatusCard = ({ icon: Icon, title, status, details }: any) => (
+interface StatusCardProps {
+    icon: React.ElementType;
+    title: string;
+    status: string;
+    details: string;
+}
+
+const StatusCard = ({ icon: Icon, title, status, details }: StatusCardProps) => (
     <div className="p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
         <div className="flex items-center gap-3 mb-3">
             <div className="p-2 rounded-lg bg-white dark:bg-slate-700 shadow-sm border border-slate-100 dark:border-slate-600">

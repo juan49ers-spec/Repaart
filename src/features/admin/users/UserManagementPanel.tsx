@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, UserPlus, ShieldAlert, Search, Loader2, RefreshCw, Inbox, Check, X, Building } from 'lucide-react';
+import { UserPlus, ShieldAlert, Search, Loader2, RefreshCw, Inbox, Check, X, Building, Users } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useUserManager } from '../../../hooks/useUserManager';
@@ -10,8 +10,6 @@ import UserTable from './UserTable';
 import CriticalActionModal from '../../../components/ui/overlays/CriticalActionModal';
 import CreateUserModal, { CreateUserInput, UpdateUserInput } from './CreateUserModal';
 import { User } from '../../../services/userService';
-import RiderCard from './RiderCard';
-import AuditTool from './AuditTool';
 
 // --- SUB-COMPONENTS (Local for now to keep orchestrator clean) ---
 
@@ -81,12 +79,10 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
         }
     };
 
-    // --- STATE FOR TABS ---
+    // --- STATE ---
     // 'structure' = Admin + Franchise
-    // 'riders' = Users
-    // 'maintenance' = DB Tools
+    // 'riders' = Users/Riders
     // If franchiseId is present, we FORCE 'riders' view
-    // State for tabs
     const [activeTab, setActiveTab] = useState<'structure' | 'riders'>(franchiseId ? 'riders' : 'structure');
     const [statusFilter, setStatusFilter] = useState('active');
     const [searchQuery, setSearchQuery] = useState('');
@@ -104,16 +100,37 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
     } = useUserManager(currentUser, franchiseId);
 
     // Force "all" on mount/tab switch if needed, but logic below filters client-side from the "all" list
-    // Ideally useUserManager should allow fetching all. We assume it does by default.
+    // -- DYNAMIC COUNTS --
+    const structureCount = users.filter((u: User) => ['admin', 'franchise', 'franchisee'].includes(u.role || 'user')).length;
+    const ridersCount = users.filter((u: User) => ['user', 'rider'].includes(u.role || 'user')).length;
 
-    // --- CLIENT SIDE FILTERING BASED ON TABS ---
+    // --- CLIENT SIDE FILTERING ---
     const filteredUsers = users.filter((u: User) => {
+        // 0. Tab Filter
         const role = u.role || 'user';
-        if (activeTab === 'structure') {
-            return role === 'admin' || role === 'franchise' || role === 'franchisee';
-        } else {
-            return role === 'user' || role === 'rider';
+        if (activeTab === 'structure' && !['admin', 'franchise', 'franchisee'].includes(role)) return false;
+        if (activeTab === 'riders' && !['user', 'rider'].includes(role)) return false;
+
+        // 1. Status Filter
+        if (statusFilter !== 'all' && u.status !== statusFilter) {
+            return false;
         }
+
+        // 2. Search Filter
+        if (searchQuery.trim() !== '') {
+            const query = searchQuery.toLowerCase();
+            const matchesName = u.displayName?.toLowerCase().includes(query);
+            const matchesEmail = u.email?.toLowerCase().includes(query);
+            const matchesRole = u.role?.toLowerCase().includes(query);
+            const matchesId = u.uid?.toLowerCase().includes(query) || u.id?.toLowerCase().includes(query);
+            const matchesFranchise = u.franchiseId?.toLowerCase().includes(query);
+
+            if (!matchesName && !matchesEmail && !matchesRole && !matchesId && !matchesFranchise) {
+                return false;
+            }
+        }
+
+        return true;
     });
 
     const isGlobalAdmin = !franchiseId && currentUser?.role === 'admin';
@@ -236,10 +253,10 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
 
     if (loading) {
         return (
-            <div className="h-screen flex items-center justify-center bg-slate-50">
+            <div className="h-[400px] flex items-center justify-center">
                 <div className="flex flex-col items-center animate-pulse">
                     <Loader2 className="w-10 h-10 text-blue-500 animate-spin mb-4" />
-                    <p className="text-slate-500 font-bold text-lg">Cargando Usuarios...</p>
+                    <p className="text-slate-500 dark:text-slate-400 font-bold text-lg">Cargando Usuarios...</p>
                 </div>
             </div>
         );
@@ -261,24 +278,31 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
         <div className="h-full bg-transparent font-sans text-slate-900 dark:text-slate-100 animate-in fade-in duration-500 flex flex-col p-8 pt-0">
             {/* Header Removed - Managed by Parent */}
 
-
             {/* --- TABS --- */}
-            <div className="flex gap-2 pb-0 shrink-0 px-0 pt-0 mb-6 border-b border-slate-100 dark:border-slate-800">
-                <button
-                    onClick={() => setActiveTab('structure')}
-                    className={`px-4 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${activeTab === 'structure' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}`}
-                >
-                    <Building className="w-4 h-4" />
-                    <span>Estructura de Red</span>
-                </button>
-                <button
-                    onClick={() => setActiveTab('riders')}
-                    className={`px-4 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${activeTab === 'riders' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}`}
-                >
-                    <Users className="w-4 h-4" />
-                    <span>Usuarios Finales</span>
-                </button>
-            </div>
+            {!franchiseId && (
+                <div className="flex gap-2 pb-0 shrink-0 px-0 pt-0 mb-6 border-b border-slate-100 dark:border-slate-800">
+                    <button
+                        onClick={() => setActiveTab('structure')}
+                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${activeTab === 'structure' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}`}
+                    >
+                        <Building className="w-4 h-4" />
+                        <span>Franquicias y Admins</span>
+                        <span className={`ml-1 px-2 py-0.5 text-xs rounded-full font-bold transition-colors ${activeTab === 'structure' ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400'}`}>
+                            {structureCount}
+                        </span>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('riders')}
+                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${activeTab === 'riders' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}`}
+                    >
+                        <Users className="w-4 h-4" />
+                        <span>Riders y Usuarios</span>
+                        <span className={`ml-1 px-2 py-0.5 text-xs rounded-full font-bold transition-colors ${activeTab === 'riders' ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400'}`}>
+                            {ridersCount}
+                        </span>
+                    </button>
+                </div>
+            )}
 
             {/* Toolbar (Simplified - Clean Apple Style) */}
             <div className="flex flex-col lg:flex-row gap-4 mb-6 justify-between items-end lg:items-center px-0 shrink-0">
@@ -322,19 +346,13 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
                         >
                             <UserPlus className="w-3.5 h-3.5" />
                             <span className="hidden sm:inline">
-                                {activeTab === 'structure' ? 'Crear Franquicia' : 'Alta Usuario'}
+                                {isGlobalAdmin && !franchiseId ? (activeTab === 'structure' ? 'Crear Administrador/Franquicia' : 'Alta Rider') : 'Alta Usuario'}
                             </span>
                         </button>
                     )}
                 </div>
             </div>
 
-            {/* DEBUG / REPAIR TOOL */}
-            {isGlobalAdmin && (
-                <div className="mb-8">
-                    <AuditTool />
-                </div>
-            )}
 
             {/* PENDING REQUESTS (Global Admin Only) */}
             {pendingRequests.length > 0 && isGlobalAdmin && (
@@ -378,33 +396,14 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
             )}
 
             {/* Data Layer */}
-            <div className={`flex-1 min-h-0 px-6 pb-6 ${activeTab === 'riders' ? 'overflow-y-auto' : 'overflow-hidden'}`}>
-                {activeTab === 'riders' ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-10">
-                        {filteredUsers.map(user => (
-                            <RiderCard
-                                key={user.uid}
-                                user={user}
-                                onEdit={(u) => handleAction('edit', u)}
-                                onStatusToggle={(u) => handleAction('toggleStatus', u)}
-                            />
-                        ))}
-                        {filteredUsers.length === 0 && (
-                            <div className="col-span-full py-20 text-center text-slate-400">
-                                <Users className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                                <p className="text-lg font-medium">No se encontraron usuarios</p>
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <UserTable
-                        users={filteredUsers}
-                        onAction={handleAction}
-                        currentUserRole={currentUser?.role || 'user'}
-                        readOnly={readOnly}
-                        franchiseId={franchiseId}
-                    />
-                )}
+            <div className={`flex-1 min-h-0 px-6 pb-6 overflow-hidden`}>
+                <UserTable
+                    users={filteredUsers}
+                    onAction={handleAction}
+                    currentUserRole={currentUser?.role || 'user'}
+                    readOnly={readOnly}
+                    franchiseId={franchiseId}
+                />
             </div>
 
             {/* Create / Edit Modal */}

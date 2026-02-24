@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Shield, Trash2, Edit, Building, User as UserIcon, Settings } from 'lucide-react';
+import { Shield, Trash2, Edit, Building, User as UserIcon, Settings, Inbox } from 'lucide-react';
 import { getStatusConfig } from '../../../lib/constants';
 import { formatDate } from '../../../utils/formatDate';
 import { User } from '../../../services/userService';
@@ -53,7 +53,7 @@ const UserRow: React.FC<UserRowProps> = ({ user, style, onAction, currentUserRol
     const roleBadge = getRoleBadge(user.role || 'user');
 
     return (
-        <div style={style} className="flex items-center border-b border-white/5 hover:bg-white/5 transition-colors px-3 sm:px-4 group relative">
+        <div style={style} className="flex items-center border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors px-3 sm:px-4 group relative">
             {/* User Info & Mobile Stack */}
             <div className="flex-1 flex items-center gap-3 min-w-0">
                 <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold ring-1 ring-inset ${user.role === 'franchise' ? 'bg-amber-500/20 text-amber-400 ring-amber-500/30' : 'bg-indigo-500/20 text-indigo-300 ring-indigo-500/30'}`}>
@@ -61,7 +61,7 @@ const UserRow: React.FC<UserRowProps> = ({ user, style, onAction, currentUserRol
                 </div>
                 <div className="flex flex-col min-w-0">
                     <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-white tracking-tight truncate" title={user.displayName}>{user.displayName || 'Usuario Sin Nombre'}</span>
+                        <span className="text-sm font-bold text-slate-900 dark:text-white tracking-tight truncate" title={user.displayName}>{user.displayName || 'Usuario Sin Nombre'}</span>
                         {/* Mobile Role Badge */}
                         <span className={`md:hidden px-1.5 py-0.5 rounded-[4px] text-[9px] font-bold uppercase border flex items-center gap-1 ${roleBadge.bg}`}>
                             {roleBadge.label}
@@ -124,12 +124,12 @@ const UserRow: React.FC<UserRowProps> = ({ user, style, onAction, currentUserRol
             {/* Actions */}
             <div className="w-[100px] flex justify-end gap-1">
                 {currentUserRole === 'admin' && !readOnly && (
-                    <div className="flex items-center gap-1 opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
                         {/* Ver detalles de franquicia */}
                         {user.role === 'franchise' && (
                             <button
                                 onClick={() => onAction('viewFranchise', user)}
-                                className="p-2 text-slate-400 hover:text-emerald-400 rounded-full hover:bg-emerald-500/10 transition-colors md:p-1.5"
+                                className="p-2 text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400 rounded-full hover:bg-emerald-500/10 transition-colors md:p-1.5"
                                 title="Ver detalles y módulos"
                             >
                                 <Settings className="w-4 h-4" />
@@ -139,16 +139,16 @@ const UserRow: React.FC<UserRowProps> = ({ user, style, onAction, currentUserRol
                         {/* Mobile: Only Edit */}
                         <button
                             onClick={() => onAction('edit', user)}
-                            className="p-2 text-slate-400 hover:text-blue-400 rounded-full hover:bg-blue-500/10 transition-colors md:p-1.5"
+                            className="p-2 text-slate-400 hover:text-blue-500 dark:hover:text-blue-400 rounded-full hover:bg-blue-500/10 transition-colors md:p-1.5"
                             title="Editar"
                         >
                             <Edit className="w-4 h-4" />
                         </button>
 
-                        {/* Desktop: All actions (or show more menu on mobile if needed, but keeping simple for now) */}
+                        {/* Desktop: All actions */}
                         <button
                             onClick={() => onAction('delete', user)}
-                            className="hidden md:block p-1.5 text-slate-400 hover:text-rose-400 rounded hover:bg-rose-500/10 transition-colors"
+                            className="hidden md:block p-1.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 rounded hover:bg-rose-500/10 transition-colors"
                             title="Eliminar Usuario"
                         >
                             <Trash2 className="w-4 h-4" />
@@ -197,22 +197,24 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction, currentUserRole,
 
     if (users.length === 0) {
         return (
-            <div className="h-[400px] flex flex-col items-center justify-center text-slate-400 border-0 rounded-xl glass-panel-exec">
-                <p className="font-bold">No se encontraron usuarios</p>
+            <div className="h-[400px] flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 m-4">
+                <Inbox className="w-12 h-12 mb-4 opacity-50" />
+                <p className="font-bold text-slate-700 dark:text-slate-300">No se encontraron usuarios</p>
+                <p className="text-sm mt-2">Prueba ajustando los filtros de búsqueda</p>
             </div>
         );
     }
 
     return (
-        <div className="glass-panel-exec rounded-xl overflow-hidden shadow-lg flex flex-col h-full ring-1 ring-white/10">
+        <div className="bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col h-full">
             {/* Header - Fixed to avoid scroll */}
-            <div className="bg-white/5 border-b border-white/5 flex items-center px-4 h-[40px] shrink-0 backdrop-blur-sm">
-                <div className="flex-1 text-xs font-bold text-indigo-300 uppercase tracking-wider">Usuario</div>
-                <div className="w-[140px] hidden md:block text-xs font-bold text-indigo-300 uppercase tracking-wider">Rol</div>
-                <div className="w-[100px] hidden lg:block text-xs font-bold text-indigo-300 uppercase tracking-wider">Pack</div>
-                <div className="w-[100px] hidden sm:block text-xs font-bold text-indigo-300 uppercase tracking-wider">Estado</div>
-                {!franchiseId && <div className="w-[120px] hidden xl:block text-xs font-bold text-indigo-300 uppercase tracking-wider">ID Franq.</div>}
-                <div className="w-[100px] hidden 2xl:block text-xs font-bold text-indigo-300 uppercase tracking-wider">Fecha</div>
+            <div className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 flex items-center px-4 h-[40px] shrink-0">
+                <div className="flex-1 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Usuario</div>
+                <div className="w-[140px] hidden md:block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Rol</div>
+                <div className="w-[100px] hidden lg:block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pack</div>
+                <div className="w-[100px] hidden sm:block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Estado</div>
+                {!franchiseId && <div className="w-[120px] hidden xl:block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">ID Franq.</div>}
+                <div className="w-[100px] hidden 2xl:block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Fecha</div>
                 <div className="w-[100px]" />
             </div>
 

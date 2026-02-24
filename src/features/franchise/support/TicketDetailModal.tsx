@@ -5,6 +5,7 @@ import { doc, updateDoc, onSnapshot, serverTimestamp, Timestamp, collection, que
 import SharedMessage, { Message, formatRelativeTime, getStatusBadgeStyle } from '../../../components/support/SharedMessage';
 import { cn } from '../../../lib/utils';
 import { useAuth } from '../../../context/AuthContext';
+import { notificationService } from '../../../services/notificationService';
 
 interface TicketDetailModalProps {
     isOpen: boolean;
@@ -15,11 +16,14 @@ interface TicketDetailModalProps {
 interface Ticket {
     id: string;
     subject: string;
-    priority: 'low' | 'medium' | 'high';
+    priority?: 'low' | 'medium' | 'high' | 'critical';
+    urgency?: 'low' | 'medium' | 'high' | 'critical';
     status: 'open' | 'resolved' | 'closed' | 'investigating' | 'pending_user';
-    description: string;
+    description?: string;
+    message?: string;
     category?: string;
     email?: string;
+    displayName?: string;
     createdAt?: Timestamp;
     lastUpdated?: Timestamp;
     attachmentUrl?: string;
@@ -88,7 +92,7 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({ isOpen, onClose, 
             const messageData = {
                 text: newMessage,
                 senderId: user?.uid,
-                senderRole: 'user',
+                senderRole: user?.role || 'franchise',
                 senderName: user?.displayName || 'Franquicia',
                 createdAt: serverTimestamp(),
                 timestamp: Date.now(),
@@ -105,6 +109,19 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({ isOpen, onClose, 
             });
 
             setNewMessage('');
+
+            // Notify admin about new reply from franchise
+            await notificationService.notify(
+                'SUPPORT_TICKET',
+                user?.franchiseId || user?.uid || 'unknown',
+                user?.displayName || 'Franquicia',
+                {
+                    title: `Respuesta en ticket: ${ticket?.subject || 'Sin asunto'}`,
+                    message: newMessage.substring(0, 150) + (newMessage.length > 150 ? '...' : ''),
+                    priority: 'normal',
+                    metadata: { ticketId, userId: user?.uid }
+                }
+            );
         } catch (error) {
             console.error("Error sending message:", error);
             alert('Error al enviar el mensaje');
@@ -150,8 +167,9 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({ isOpen, onClose, 
     if (!isOpen) return null;
     if (!ticket) return null;
 
+    const effectivePriority = ticket.priority || ticket.urgency || 'low';
     const ticketStatus = getStatusBadgeStyle(ticket.status);
-    const priorityStyle = getPriorityStyle(ticket.priority);
+    const priorityStyle = getPriorityStyle(effectivePriority);
     const PriorityIcon = priorityStyle.icon;
 
     return (
@@ -185,7 +203,7 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({ isOpen, onClose, 
                                 </span>
                                 <span className="text-slate-200 dark:text-slate-700">•</span>
                                 <span className={cn("px-2 py-0.5 rounded-lg border font-semibold uppercase", priorityStyle.bg, priorityStyle.text, priorityStyle.border)}>
-                                    {ticket.priority === 'high' ? 'Alta' : ticket.priority === 'medium' ? 'Media' : 'Baja'}
+                                    {effectivePriority === 'high' || effectivePriority === 'critical' ? 'Alta' : effectivePriority === 'medium' ? 'Media' : 'Baja'}
                                 </span>
                             </div>
                         </div>
@@ -229,7 +247,7 @@ const TicketDetailModal: React.FC<TicketDetailModalProps> = ({ isOpen, onClose, 
                                 </span>
                             </div>
                             <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-sm leading-relaxed shadow-sm">
-                                {ticket.description}
+                                {ticket.description || ticket.message || 'Sin descripción'}
                                 {ticket.attachmentUrl && (
                                     <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                                         <a

@@ -128,10 +128,24 @@ export const useSupportManager = (currentUser: any) => {
 
     const handleStatusChange = useCallback(async (id: string, newStatus: string) => {
         try {
+            // Get the current ticket to record previous status
+            const currentTicket = tickets.find(t => t.id === id);
+            const previousStatus = currentTicket?.status || 'unknown';
+
             await updateDoc(doc(db, "tickets", id), {
                 status: newStatus,
+                lastUpdated: serverTimestamp(),
                 ...(newStatus === 'resolved' ? { resolvedAt: serverTimestamp() } : {})
             });
+
+            // Record status change in history subcollection
+            await addDoc(collection(db, "tickets", id, "history"), {
+                status: newStatus,
+                previousStatus,
+                changedBy: currentUser?.email || currentUser?.uid || 'system',
+                changedAt: serverTimestamp()
+            });
+
             if (currentUser) {
                 logAction(currentUser, AUDIT_ACTIONS.TICKET_UPDATE, { ticketId: id, status: newStatus });
             }
@@ -139,7 +153,7 @@ export const useSupportManager = (currentUser: any) => {
             console.error("Error updating status:", error);
             throw new Error("No se pudo actualizar el estado.");
         }
-    }, [currentUser]);
+    }, [currentUser, tickets]);
 
     const handleReply = useCallback(async (e?: React.FormEvent) => {
         if (e) e.preventDefault();

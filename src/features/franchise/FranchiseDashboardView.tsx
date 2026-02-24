@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { PlayCircle, ChevronLeft, ChevronRight, Banknote, Activity, Bot } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Banknote, Activity, Bot } from 'lucide-react';
 import { formatMoney, FinancialReport, MonthlyData } from '../../lib/finance';
 import type { TrendItem } from '../../types/finance';
 import type { FinancialRecord } from './finance/types';
@@ -11,7 +11,7 @@ import { TaxCalculations } from '../../hooks/useTaxCalculations';
 import TaxVaultWidget from './finance/TaxVaultWidget';
 import FinancialControlCenter from './FinancialControlCenter';
 import FranchiseHistoryView from './finance/FranchiseHistoryView';
-import ScenarioSimulator from './finance/ScenarioSimulator';
+
 import ExpenseBreakdownWidget from './dashboard/widgets/ExpenseBreakdownWidget';
 import TakeHomeProfitWidget from './dashboard/widgets/TakeHomeProfitWidget';
 import RevenueAreaChart from './dashboard/widgets/RevenueAreaChart';
@@ -57,8 +57,7 @@ export interface FranchiseDashboardViewProps {
     taxes?: TaxCalculations;
     isWizardOpen: boolean;
     setIsWizardOpen: (open: boolean) => void;
-    isSimulatorOpen: boolean;
-    setIsSimulatorOpen: (open: boolean) => void;
+
     setIsAdvisorOpen: (open: boolean) => void;
     isHistoryView: boolean;
     setIsHistoryView: (view: boolean) => void;
@@ -90,8 +89,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
     taxes,
     isWizardOpen,
     setIsWizardOpen,
-    isSimulatorOpen,
-    setIsSimulatorOpen,
+
     setIsAdvisorOpen,
     isHistoryView,
     setIsHistoryView,
@@ -194,14 +192,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
 
 
                     <div className="flex flex-wrap items-center gap-3">
-                        {/* Simulation Tool */}
-                        <button
-                            onClick={() => setIsSimulatorOpen(true)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-500 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all border border-slate-200"
-                        >
-                            <PlayCircle className="w-3.5 h-3.5" />
-                            <span>Simulación</span>
-                        </button>
+
 
                         {/* AI Advisor */}
                         <button
@@ -246,28 +237,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
                             variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
                         >
-                            {/* Revenue Cockpit */}
-                            <ErrorBoundary>
-                                <div onClick={() => {
-                                    if (readOnly) return;
-                                    setGoalModalMode('default');
-                                    setShowGoalModal(true);
-                                }} className="h-full">
-                                    <KPICard
-                                        title="Ingresos Netos"
-                                        value={formatMoney(revenue || 0) + '€'}
-                                        trend={Number(revenueTrend.toFixed(1))}
-                                        trendData={trendData.map((d) => d.revenue)}
-                                        icon={<Banknote />}
-                                        color="ruby"
-                                        monthlyGoal={monthlyGoal}
-                                        rawValue={revenue || 0}
-                                        orders={orders}
-                                        totalHours={totalHours}
-                                        bestDay="FRIDAY"
-                                    />
-                                </div>
-                            </ErrorBoundary>
+
 
                             {(() => {
                                 // Live Fallbacks for Dashboard before Month Close
@@ -419,22 +389,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                     />
                 )}
 
-                <ScenarioSimulator
-                    isOpen={isSimulatorOpen}
-                    onClose={() => setIsSimulatorOpen(false)}
-                    currentData={{
-                        ...report,
-                        revenue: revenue || report?.revenue || 0,
-                        orders: orders || 0,
-                        totalExpenses: report?.totalExpenses || 0,
-                        fixed: report?.fixed || { total: 0, salaries: 0, renting: 0, insurance: 0, services: 0, quota: 0, other: 0 },
-                        variable: report?.variable || { total: 0, gasoline: 0, repairs: 0, flyderFee: 0, royalty: 0 },
-                        netProfit: report?.netProfit || 0,
-                        taxes: report?.taxes || { ivaRepercutido: 0, ivaSoportado: 0, ivaAPagar: 0, irpfPago: 0, totalReserve: 0, irpfPercent: 20, netProfitPostTax: 0, netProfit: 0, margin: 0, vat: { toPay: 0 } },
-                        metrics: report?.metrics || { avgTicket: 0, costPerOrder: 0, breakEvenOrders: 0, profitMargin: 0, activeRiders: 0, productivity: 0, revenuePerHour: 0, costPerHour: 0, profitPerRider: 0, totalKm: 0, revenuePerKm: 0, costPerKm: 0, dropDensity: 0, safetyMargin: 0, laborRatio: 0, incidentRatio: 0, marketingSpend: 0, incidentCost: 0 },
-                        breakdown: report?.breakdown || []
-                    }}
-                />
+
 
                 {showGoalModal && (
                     <GoalSettingModal

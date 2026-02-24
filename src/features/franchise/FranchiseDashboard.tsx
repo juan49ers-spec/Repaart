@@ -47,7 +47,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
 
     // Tactical UI States (Restored)
     const [isWizardOpen, setIsWizardOpen] = useState(false);
-    const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
+
     const [isHistoryView, setIsHistoryView] = useState(false);
     const [drillDown, setDrillDown] = useState<string | null>(null);
     const [isLegendOpen, setIsLegendOpen] = useState(false);
@@ -155,8 +155,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
                 taxes={taxes}
                 isWizardOpen={isWizardOpen}
                 setIsWizardOpen={setIsWizardOpen}
-                isSimulatorOpen={isSimulatorOpen}
-                setIsSimulatorOpen={setIsSimulatorOpen}
+
                 setIsAdvisorOpen={setIsAdvisorOpen}
                 isHistoryView={isHistoryView}
                 setIsHistoryView={setIsHistoryView}

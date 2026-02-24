@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Phone, Mail, Loader, Save, Briefcase, MapPin, Globe } from 'lucide-react';
+import { Loader, Save } from 'lucide-react';
 import { updateProfile, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
@@ -50,10 +50,10 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ user, showMessage, roleConfig }
                         role_description: data.role_description || (roleConfig?.role === 'admin' ? 'Director de Operaciones Estratégicas' : 'Franquiciado')
                     }));
                 }
-        } catch (error: any) {
-            console.error("Error loading user config:", error);
-        }
-    };
+            } catch (error: any) {
+                console.error("Error loading user config:", error);
+            }
+        };
         loadUserConfig();
     }, [user, roleConfig]);
 
@@ -117,7 +117,6 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ user, showMessage, roleConfig }
                             <div className="group">
                                 <label htmlFor="displayName" className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">Nombre Público</label>
                                 <div className="relative h-12">
-                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" aria-hidden="true" />
                                     <input
                                         type="text"
                                         id="displayName"
@@ -128,15 +127,14 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ user, showMessage, roleConfig }
                                         onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
                                         autoComplete="name"
                                         inputMode="text"
-                                        className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                                        className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all shadow-sm"
                                     />
                                 </div>
-                            </div> 
+                            </div>
 
                             <div className="group">
                                 <label className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">Cargo / Rol</label>
                                 <div className="relative h-12">
-                                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" aria-hidden="true" />
                                     <input
                                         type="text"
                                         title="Cargo o Rol"
@@ -145,16 +143,15 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ user, showMessage, roleConfig }
                                         onChange={(e) => setFormData({ ...formData, role_description: e.target.value })}
                                         autoComplete="organization-title"
                                         inputMode="text"
-                                        className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl font-medium text-slate-600 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                                        className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl font-medium text-slate-600 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all shadow-sm"
                                         placeholder="Ej. Gestor de Operaciones"
                                     />
                                 </div>
-                            </div> 
+                            </div>
 
                             <div className="group">
                                 <label className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">Ubicación</label>
                                 <div className="relative h-12">
-                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" aria-hidden="true" />
                                     <input
                                         type="text"
                                         title="Ubicación"
@@ -163,7 +160,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ user, showMessage, roleConfig }
                                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                         autoComplete="address-level2"
                                         inputMode="text"
-                                        className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl font-medium text-slate-600 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                                        className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl font-medium text-slate-600 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all shadow-sm"
                                         placeholder="Ciudad, País"
                                     />
                                 </div>
@@ -181,7 +178,6 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ user, showMessage, roleConfig }
                             <div className="group md:col-span-2">
                                 <label className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">Correo Electrónico (Principal)</label>
                                 <div className="relative h-12">
-                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" aria-hidden="true" />
                                     <input
                                         type="email"
                                         value={formData.email}
@@ -190,7 +186,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ user, showMessage, roleConfig }
                                         aria-label="Correo Electrónico"
                                         placeholder="email@ejemplo.com"
                                         spellCheck={false}
-                                        className="w-full h-12 pl-10 pr-4 bg-slate-100 border border-slate-200 rounded-xl font-bold text-slate-500 cursor-not-allowed shadow-inner"
+                                        className="w-full h-12 px-4 bg-slate-100 border border-slate-200 rounded-xl font-bold text-slate-500 cursor-not-allowed shadow-inner"
                                     />
                                     <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2" role="status" aria-live="polite">
                                         {user?.emailVerified ? (
@@ -220,7 +216,6 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ user, showMessage, roleConfig }
                             <div className="group">
                                 <label htmlFor="phone" className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">Teléfono Móvil</label>
                                 <div className="relative h-12">
-                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" aria-hidden="true" />
                                     <input
                                         type="tel"
                                         id="phone"
@@ -230,7 +225,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ user, showMessage, roleConfig }
                                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                         autoComplete="tel"
                                         inputMode="tel"
-                                        className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl font-medium text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                                        className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl font-medium text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all shadow-sm"
                                         placeholder="+34 600 000 000"
                                     />
                                 </div>
@@ -239,7 +234,6 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ user, showMessage, roleConfig }
                             <div className="group">
                                 <label className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">Sitio Web / Enlace</label>
                                 <div className="relative h-12">
-                                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" aria-hidden="true" />
                                     <input
                                         type="url"
                                         disabled
@@ -248,7 +242,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ user, showMessage, roleConfig }
                                         placeholder="https://repaartfinanzas.web.app"
                                         value="repaartfinanzas.web.app"
                                         inputMode="url"
-                                        className="w-full h-12 pl-10 pr-4 bg-slate-100 border border-slate-200 rounded-xl font-medium text-slate-400 cursor-not-allowed shadow-inner"
+                                        className="w-full h-12 px-4 bg-slate-100 border border-slate-200 rounded-xl font-medium text-slate-400 cursor-not-allowed shadow-inner"
                                     />
                                 </div>
                             </div>

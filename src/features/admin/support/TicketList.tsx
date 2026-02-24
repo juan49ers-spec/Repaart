@@ -141,7 +141,7 @@ const TicketList = () => {
 
                                 <div className="flex items-center justify-between">
                                     <p className="text-[10px] font-medium text-slate-500 dark:text-slate-500 truncate flex-1 pr-2 uppercase tracking-widest opacity-70">
-                                        {t.email ? t.email.split('@')[0] : 'Sin Email'}
+                                        {t.displayName || (t.email ? t.email.split('@')[0] : 'Sin identificar')}
                                     </p>
                                     <div className="flex items-center gap-2">
                                         <button

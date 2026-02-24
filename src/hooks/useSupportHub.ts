@@ -21,34 +21,36 @@ export interface CreateTicketParams {
     category: string;
 }
 
-export const useSupportHub = (user: any) => {
-    // --- STATE ---
+interface SupportUser {
+    uid: string;
+    email: string | null;
+    role?: string;
+    franchiseId?: string;
+    displayName?: string | null;
+}
+
+export const useSupportHub = (user: SupportUser | null) => {
     const [myTickets, setMyTickets] = useState<Ticket[]>([]);
     const [loadingTickets, setLoadingTickets] = useState(true);
     const [sending, setSending] = useState(false);
     const [success, setSuccess] = useState(false);
-
-    // Upload State (Atomic)
     const [file, setFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
-
-    // Filters & Search
     const [ticketFilter, setTicketFilter] = useState<'all' | 'open' | 'resolved'>('all');
-
-    // Form Assistant
     const [suggestions, setSuggestions] = useState<{ id: string; title: string; category: string }[]>([]);
 
     // --- REAL-TIME DATA ---
     useEffect(() => {
         if (!user) return;
 
+        // Build target IDs: always include uid, add franchiseId if different
         const targetIds = [user.uid];
-        if (user.franchiseId) targetIds.push(user.franchiseId);
+        if (user.franchiseId && user.franchiseId !== user.uid) {
+            targetIds.push(user.franchiseId);
+        }
 
-        console.log("🔍 [useSupportHub] Fetching tickets for:", targetIds);
-
-        // Try to match both legacy 'uid' and new 'userId'.
-        // Using 'in' operator on 'userId' as it's the new standard from NewTicketForm.
+        // Query tickets where userId matches any of our target IDs
+        // This covers: tickets created by this user, or tickets linked to their franchise
         const qFilter = targetIds.length === 1
             ? where("userId", "==", targetIds[0])
             : where("userId", "in", targetIds);
@@ -61,23 +63,11 @@ export const useSupportHub = (user: any) => {
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            console.log("✅ [useSupportHub] Tickets snapshot received. Count:", snapshot.docs.length);
-            const tickets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ticket));
-            // Sort manually if orderBy is disabled
-            const sortedTickets = tickets.sort((a, b) => {
-                const dateA = a.createdAt?.toDate?.() || new Date(0);
-                const dateB = b.createdAt?.toDate?.() || new Date(0);
-                return dateB.getTime() - dateA.getTime();
-            });
-            setMyTickets(sortedTickets);
+            const tickets = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Ticket));
+            setMyTickets(tickets);
             setLoadingTickets(false);
         }, (error) => {
-            console.error("❌ [useSupportHub] Firestore error details:", {
-                code: error.code,
-                message: error.message,
-                uid: user.uid,
-                targetIds
-            });
+            console.error("[useSupportHub] Query error:", error.code, error.message);
             setLoadingTickets(false);
         });
 
@@ -89,9 +79,9 @@ export const useSupportHub = (user: any) => {
     const handleSubjectChange = useCallback((text: string) => {
         if (text.length > 2) {
             const matches = getSuggestions(text);
-            setSuggestions(matches.map((m: any) => ({
+            setSuggestions(matches.map((m: KnowledgeArticle) => ({
                 id: m.id || Math.random().toString(),
-                title: m.title || m.subject || '',
+                title: m.title || '',
                 category: m.category || 'General'
             })));
         } else {
@@ -104,42 +94,46 @@ export const useSupportHub = (user: any) => {
 
         setSending(true);
         try {
-            // 1. Initial Firestore Doc
             const ticketData = {
+                // Identity fields — both legacy and new
                 uid: user.uid,
+                userId: user.uid,
+                franchiseId: user.franchiseId || user.uid,
                 email: user.email,
+                displayName: user.displayName || user.email,
+                // Content
                 subject,
                 message,
-                urgency,
                 category,
+                // Status
+                urgency,
+                priority: urgency, // Mirror for security rules compatibility
                 status: 'open',
-                createdAt: serverTimestamp(),
                 read: false,
-                hasAttachment: !!file
+                hasAttachment: !!file,
+                // Timestamps
+                createdAt: serverTimestamp(),
             };
 
             const docRef = await addDoc(collection(db, "tickets"), ticketData);
 
-            // 2. Upload File (if exists)
+            // Upload file if present
             let attachmentUrl: string | null = null;
             if (file) {
                 setUploading(true);
                 try {
-                    const storageRef = ref(storage, `tickets / ${docRef.id}/${file.name}`);
+                    const storageRef = ref(storage, `tickets/${docRef.id}/${file.name}`);
                     await uploadBytes(storageRef, file);
                     attachmentUrl = await getDownloadURL(storageRef);
-
-                    // Update ticket with URL
                     await updateDoc(doc(db, "tickets", docRef.id), { attachmentUrl });
                 } catch (uploadErr) {
                     console.error("Upload failed but ticket created:", uploadErr);
-                    // We don't fail the whole process if upload fails, but we might warn
                 } finally {
                     setUploading(false);
                 }
             }
 
-            // 3. Post-Processing & Notifications (Parallelized)
+            // Background tasks (audit + email) — fire-and-forget
             Promise.all([
                 logAction(user, AUDIT_ACTIONS.TICKET_CREATED, {
                     ticketId: docRef.id,
@@ -156,13 +150,11 @@ export const useSupportHub = (user: any) => {
                     urgency,
                     category
                 })
-            ]).catch(err => console.warn("Background tasks (Audit/Email) failed partially:", err));
+            ]).catch(err => console.warn("Background tasks failed:", err));
 
             setSuccess(true);
-            setFile(null); // Reset file
+            setFile(null);
             setSuggestions([]);
-
-            // Auto-hide success message
             setTimeout(() => setSuccess(false), 5000);
 
             return true;
@@ -182,29 +174,20 @@ export const useSupportHub = (user: any) => {
     }, [myTickets, ticketFilter]);
 
     return {
-        // Data
         tickets: filteredTickets,
         allTicketsCount: myTickets.length,
         loading: loadingTickets,
-
-        // Form State
         sending,
         success,
         suggestions,
-        setSuggestions, // In case we need manual clear
-
-        // Upload State
+        setSuggestions,
         file,
         setFile,
         uploading,
-
-        // Actions
         handleSubjectChange,
         createTicket,
         setTicketFilter,
         ticketFilter,
-
-        // Helper
         setSuccess
     };
 };

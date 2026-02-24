@@ -6,7 +6,7 @@ import { Timestamp } from 'firebase/firestore';
 export interface Message {
     id: string;
     text: string;
-    senderRole: 'admin' | 'user' | 'system';
+    senderRole: 'admin' | 'user' | 'franchise' | 'rider' | 'system';
     senderName?: string;
     isInternal?: boolean;
     createdAt?: string | number | Timestamp;

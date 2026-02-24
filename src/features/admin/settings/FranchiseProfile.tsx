@@ -5,7 +5,7 @@ import { useForm, SubmitHandler, Controller } from 'react-hook-form';
 import { LogisticsRatesEditor } from '../../franchise/components/LogisticsRatesEditor';
 import {
     Building, MapPin, Save, User, Camera,
-    Mail, Phone, Shield, Lock, ArrowLeft
+    Mail, Lock, ArrowLeft
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { ToastContext } from '../../../context/contexts';
@@ -426,12 +426,11 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nombre Completo</label>
                                         <div className="relative group h-12">
-                                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" aria-hidden="true" />
                                             <input
                                                 {...register('userDisplayName')}
                                                 autoComplete="name"
                                                 inputMode="text"
-                                                className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                                                className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm"
                                                 placeholder="Tu nombre real"
                                             />
                                         </div>
@@ -440,13 +439,12 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Teléfono Personal</label>
                                         <div className="relative group h-12">
-                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" aria-hidden="true" />
                                             <input
                                                 {...register('userPhone')}
                                                 type="tel"
                                                 autoComplete="tel"
                                                 inputMode="tel"
-                                                className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                                                className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm"
                                                 placeholder="+34 600 000 000"
                                             />
                                         </div>
@@ -470,12 +468,11 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nombre Comercial</label>
                                     <div className="relative group h-12">
-                                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" aria-hidden="true" />
                                         <input
                                             {...register('name')}
                                             autoComplete="organization"
                                             inputMode="text"
-                                            className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                                             placeholder="Ej: Burger King Centro"
                                         />
                                     </div>
@@ -485,12 +482,11 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Razón Social</label>
                                     <div className="relative group h-12">
-                                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" aria-hidden="true" />
                                         <input
                                             {...register('legalName')}
                                             autoComplete="organization-title"
                                             inputMode="text"
-                                            className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                                             placeholder="Ej: Burger King Spain S.L."
                                         />
                                     </div>
@@ -500,12 +496,11 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">CIF / NIF</label>
                                     <div className="relative group h-12">
-                                        <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" aria-hidden="true" />
                                         <input
                                             {...register('cif')}
                                             autoComplete="off"
                                             inputMode="text"
-                                            className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                                             placeholder="B12345678"
                                         />
                                     </div>
@@ -515,13 +510,12 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Teléfono de Contacto (Público)</label>
                                     <div className="relative group h-12">
-                                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" aria-hidden="true" />
                                         <input
                                             {...register('phone')}
                                             type="tel"
                                             autoComplete="tel"
                                             inputMode="tel"
-                                            className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                                             placeholder="+34 600 000 000"
                                         />
                                     </div>
@@ -531,14 +525,13 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Email Operativo</label>
                                     <div className="relative group h-12">
-                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" aria-hidden="true" />
                                         <input
                                             {...register('email')}
                                             type="email"
                                             autoComplete="email"
                                             inputMode="email"
                                             spellCheck={false}
-                                            className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                                             placeholder="contacto@restaurante.com"
                                         />
                                     </div>
@@ -549,12 +542,11 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                 <div className="space-y-2 col-span-1 md:col-span-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Localidad (Para el Tiempo)</label>
                                     <div className="relative group h-12">
-                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" aria-hidden="true" />
                                         <input
                                             {...register('city', { required: true })}
                                             autoComplete="address-level2"
                                             inputMode="text"
-                                            className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                                             placeholder="Ej: Barcelona"
                                         />
                                     </div>
@@ -565,12 +557,11 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                 <div className="space-y-2 col-span-1 md:col-span-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Dirección Completa</label>
                                     <div className="relative group h-12">
-                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" aria-hidden="true" />
                                         <input
                                             {...register('address')}
                                             autoComplete="street-address"
                                             inputMode="text"
-                                            className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                                             placeholder="Calle Ejemplo 123, Ciudad"
                                         />
                                     </div>

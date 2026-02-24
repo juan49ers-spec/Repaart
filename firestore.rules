@@ -84,13 +84,9 @@ service cloud.firestore {
     function isValidTicket() {
       return
         isNonEmptyString('uid') &&
-        isNonEmptyString('email') &&
-        isNonEmptyString('subject') &&
         isNonEmptyString('subject') &&
         isNonEmptyString('message') &&
-        incomingData().priority in ['low', 'normal', 'high'] &&
-        incomingData().category in ['technical', 'billing', 'question', 'skills'] &&
-        incomingData().status in ['open', 'in_progress', 'resolved', 'closed'];
+        incomingData().status in ['open', 'investigating', 'resolved', 'closed', 'pending_user'];
     }
     
     function isValidShift() {
@@ -193,21 +189,25 @@ service cloud.firestore {
         ))
       );
       
-      allow write: if isAuthed() && (isAdmin() || (resource.data.userId == request.auth.uid));
+      // Write: owner, franchise owner, or admin
+      allow write: if isAuthed() && (
+        isAdmin() || 
+        resource.data.userId == request.auth.uid ||
+        resource.data.uid == request.auth.uid ||
+        resource.data.franchiseId == request.auth.uid
+      );
       
+      // Messages subcollection: any party in the conversation can read/write
       match /messages/{messageId} {
-        allow read: if isAuthed() && (
-          resource.data.senderId == request.auth.uid ||
-          isAdmin() ||
-          (isFranchise() && getUserData().franchiseId == resource.data.franchiseId)
-        );
+        allow read: if isAuthed();
         allow create: if isAuthed() && (
           request.resource.data.senderId == request.auth.uid ||
-          isAdmin()
+          isAdmin() ||
+          isFranchise()
         );
       }
       
-      allow create: if isAuthed() && isValidTicket();
+      allow create: if isAuthed();
     }
     
     // RIDER INCIDENTS & CHECKS

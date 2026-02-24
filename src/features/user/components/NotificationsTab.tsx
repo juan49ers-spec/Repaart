@@ -102,14 +102,19 @@ const NotificationsTab = ({ user }: { user: { uid: string; franchiseId?: string 
     };
 
     const unreadCount = notifications.filter(n => !n.read).length;
-    const plural = unreadCount > 1 ? 'es' : unreadCount === 0 ? '' : 'ión';
+
+    const getHeaderText = () => {
+        if (unreadCount === 0) return "No tienes notificaciones sin leer";
+        if (unreadCount === 1) return "Tienes 1 notificación no leída";
+        return `Tienes ${unreadCount} notificaciones no leídas`;
+    };
 
     return (
         <div className="space-y-8">
             <div>
                 <h2 className="text-xl font-black text-slate-800">Notificaciones</h2>
                 <p className="text-sm text-slate-500 mt-1">
-                    Tienes {unreadCount} notificación{plural} no leída
+                    {getHeaderText()}
                 </p>
             </div>
 

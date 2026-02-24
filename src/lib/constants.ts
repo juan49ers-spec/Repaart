@@ -143,3 +143,69 @@ export const GUIDE_THEMES = {
 export const GUIDE_ICONS = {
     ShieldAlert, Wrench, Users, PlayCircle, BookOpen, FileText, Zap, Heart, Star, Award, Info, AlertTriangle, CheckCircle, HelpCircle, Lightbulb, Target
 };
+
+// --- Support: Canned Responses ---
+export interface CannedResponse {
+    id: string;
+    label: string;
+    category: 'greeting' | 'info' | 'progress' | 'resolution' | 'escalation';
+    text: string;
+}
+
+export const CANNED_RESPONSES: CannedResponse[] = [
+    {
+        id: 'ack',
+        label: 'Acuse de recibo',
+        category: 'greeting',
+        text: 'Hola, hemos recibido tu solicitud y estamos revisándola. Te responderemos lo antes posible.'
+    },
+    {
+        id: 'need_info',
+        label: 'Necesitamos más info',
+        category: 'info',
+        text: 'Para poder ayudarte mejor, necesitamos que nos facilites más información sobre el problema. ¿Podrías indicarnos los pasos exactos que realizaste y el error que aparece?'
+    },
+    {
+        id: 'need_screenshot',
+        label: 'Pedir captura de pantalla',
+        category: 'info',
+        text: 'Para diagnosticar el problema correctamente, ¿podrías adjuntar una captura de pantalla del error? Esto nos ayudará a resolverlo más rápido.'
+    },
+    {
+        id: 'investigating',
+        label: 'En investigación',
+        category: 'progress',
+        text: 'Estamos investigando tu caso. Nuestro equipo técnico está trabajando en una solución. Te mantendremos informado de cualquier avance.'
+    },
+    {
+        id: 'workaround',
+        label: 'Solución temporal',
+        category: 'progress',
+        text: 'Hemos identificado el problema y estamos trabajando en una solución definitiva. Mientras tanto, te sugerimos la siguiente solución temporal:'
+    },
+    {
+        id: 'resolved',
+        label: 'Problema resuelto',
+        category: 'resolution',
+        text: 'El problema ha sido resuelto correctamente. Si vuelves a experimentar alguna incidencia, no dudes en contactarnos de nuevo. ¡Gracias por tu paciencia!'
+    },
+    {
+        id: 'not_reproducible',
+        label: 'No reproducible',
+        category: 'resolution',
+        text: 'Hemos intentado reproducir el problema pero no hemos conseguido replicarlo. ¿Podrías confirmar si el problema persiste? Si es así, necesitaríamos más detalles.'
+    },
+    {
+        id: 'escalated',
+        label: 'Escalado a desarrollo',
+        category: 'escalation',
+        text: 'Tu caso ha sido escalado al equipo de desarrollo para una revisión en profundidad. Te notificaremos en cuanto tengamos una actualización.'
+    },
+];
+
+// SLA Configuration
+export const SLA_CONFIG = {
+    TARGET_HOURS: 24,    // SLA target in hours
+    WARNING_HOURS: 18,   // Yellow zone
+    CRITICAL_HOURS: 24,  // Red zone
+};

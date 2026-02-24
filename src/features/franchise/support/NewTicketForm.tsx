@@ -81,20 +81,30 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
             console.log('📝 [NewTicketForm] Creating ticket with userId:', user?.uid, 'franchiseId:', user?.franchiseId);
             const docRef = await addDoc(collection(db, "tickets"), {
                 ...formData,
-                status: 'open',
-                origin: currentPath,
+                // Identity — all fields the admin panel needs
+                uid: user?.uid,
                 userId: user?.uid,
-                franchiseId: user?.franchiseId,
+                franchiseId: user?.franchiseId || user?.uid,
+                email: user?.email,
+                displayName: user?.displayName || user?.email?.split('@')[0] || 'Franquicia',
+                // Content — mirror description → message for TicketDetail compat
+                message: formData.description,
+                // Status
+                status: 'open',
+                urgency: formData.priority, // Mirror priority → urgency for TicketList/Detail
+                origin: currentPath,
+                read: false,
+                hasAttachment: false,
+                // Timestamps
                 createdAt: serverTimestamp(),
                 lastUpdated: serverTimestamp(),
-                messages: []
             });
             console.log('✅ [NewTicketForm] Ticket created with ID:', docRef.id);
 
             if (onClose) onClose();
             else alert("Ticket creado correctamente!");
 
-            // Notify Admin
+            // Notify Admin (single notification)
             await notificationService.notify(
                 'SUPPORT_TICKET',
                 user?.franchiseId || user?.uid || 'unknown',
@@ -107,25 +117,6 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
                         ticketId: docRef.id,
                         category: formData.category,
                         userId: user?.uid
-                    }
-                }
-            );
-
-            if (onClose) onClose();
-            else alert("Ticket creado correctamente!");
-
-            // Notify Admin
-            await notificationService.notify(
-                'SUPPORT_TICKET',
-                user?.uid || 'unknown',
-                user?.displayName || 'Franquicia',
-                {
-                    title: `Nuevo Ticket: ${formData.subject}`,
-                    message: `Prioridad: ${formData.priority.toUpperCase()}\nCategoría: ${formData.category}\n\n${formData.description.substring(0, 100)}...`,
-                    priority: formData.priority === 'high' ? 'high' : 'normal',
-                    metadata: {
-                        ticketId: 'unknown',
-                        category: formData.category
                     }
                 }
             );
@@ -308,7 +299,7 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
                         />
                     </div>
 
-            <div className="lg:col-span-5 flex flex-col space-y-1.5 min-h-[150px]">
+                    <div className="lg:col-span-5 flex flex-col space-y-1.5 min-h-[150px]">
                         <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-1 font-mono">Evidencia</label>
                         <div className="flex-1 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-lg p-2 flex flex-col items-center justify-center text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group bg-slate-50/30 dark:bg-slate-900/30 min-h-[120px]">
                             <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 dark:text-indigo-400 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
