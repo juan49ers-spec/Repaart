@@ -12,7 +12,10 @@ import {
     Edit3,
     BookOpen,
     PenTool,
-    History
+    History,
+    FileText,
+    Calendar,
+    Hash
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db, storage } from '../../../lib/firebase';
@@ -161,6 +164,15 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
 
     const handleManualEdit = (val: string) => {
         setFinalContent(val);
+    };
+
+    // Blank contract (no client)
+    const handleBlankContract = () => {
+        setSelectedRestaurant({ id: 'blank', fiscalName: 'Contrato Genérico', cif: 'N/A' } as Restaurant);
+        setVariables({});
+        setFinalContent(templateContent);
+        startSession('blank', 'generic-contract');
+        setStep(2);
     };
 
     // Auto-save
@@ -360,6 +372,20 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
                                             </div>
                                         </motion.button>
                                     ))}
+                                </div>
+
+                                {/* Blank Contract Option */}
+                                <div className="flex justify-center pt-4">
+                                    <button
+                                        onClick={handleBlankContract}
+                                        className="group flex items-center gap-4 px-8 py-4 rounded-2xl border-2 border-dashed border-slate-300 dark:border-white/10 hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all"
+                                    >
+                                        <FileText className="w-5 h-5 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                                        <div className="text-left">
+                                            <span className="block text-sm font-black text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 uppercase tracking-wider transition-colors">Contrato en blanco</span>
+                                            <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest">Sin vincular a cliente</span>
+                                        </div>
+                                    </button>
                                 </div>
                             </div>
                         </motion.div>
@@ -666,43 +692,88 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
                             key="step3"
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="h-full flex flex-col items-center justify-center p-12 text-center"
+                            className="h-full flex flex-col items-center justify-center p-8 md:p-12 scrollable-area"
                         >
-                            <div className="w-40 h-40 bg-emerald-500/5 rounded-full flex items-center justify-center mb-12 relative">
-                                <motion.div
-                                    animate={{ scale: [1, 1.5, 1], opacity: [0.2, 0, 0.2] }}
-                                    transition={{ duration: 3, repeat: Infinity }}
-                                    className="absolute inset-0 bg-emerald-500 rounded-full"
-                                />
-                                <div className="w-28 h-28 bg-emerald-500 rounded-[2.5rem] rotate-3 flex items-center justify-center text-white shadow-2xl shadow-emerald-500/40">
-                                    <CheckCircle2 size={56} />
+                            <div className="w-full max-w-2xl space-y-10">
+                                {/* Success Icon */}
+                                <div className="flex justify-center">
+                                    <div className="w-28 h-28 bg-emerald-500/5 rounded-full flex items-center justify-center relative">
+                                        <motion.div
+                                            animate={{ scale: [1, 1.5, 1], opacity: [0.2, 0, 0.2] }}
+                                            transition={{ duration: 3, repeat: Infinity }}
+                                            className="absolute inset-0 bg-emerald-500 rounded-full"
+                                        />
+                                        <div className="w-20 h-20 bg-emerald-500 rounded-[2rem] rotate-3 flex items-center justify-center text-white shadow-2xl shadow-emerald-500/40">
+                                            <CheckCircle2 size={40} />
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <h3 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white mb-6 italic uppercase tracking-tighter leading-none">
-                                CONTRATO <br /><span className="text-emerald-500">EMITIDO</span>
-                            </h3>
-                            <p className="text-slate-400 max-w-md font-bold uppercase tracking-widest text-xs leading-loose mb-12">
-                                Protocolo finalizado. El documento ha sido indexado en la bóveda con integridad criptográfica.
-                            </p>
-                            <div className="flex flex-col sm:flex-row gap-6">
-                                <button
-                                    onClick={handleExport}
-                                    className="px-12 py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[2rem] font-black uppercase tracking-[0.2em] text-[11px] transition-all hover:scale-105 active:scale-95 flex items-center gap-4 shadow-2xl"
-                                >
-                                    <Download className="w-5 h-5" /> Descargar
-                                </button>
-                                <button
-                                    onClick={() => setIsSignatureModalOpen(true)}
-                                    className="px-12 py-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] text-[11px] transition-all hover:scale-105 active:scale-95 flex items-center gap-4 shadow-2xl shadow-indigo-600/20"
-                                >
-                                    <PenTool className="w-5 h-5" /> Firmar Digitalmente
-                                </button>
-                                <button
-                                    onClick={onClose}
-                                    className="px-12 py-5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] text-[11px] transition-all hover:scale-105 active:scale-95 flex items-center gap-4 shadow-2xl shadow-emerald-600/20"
-                                >
-                                    Finalizar
-                                </button>
+
+                                <div className="text-center">
+                                    <h3 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white mb-3 italic uppercase tracking-tighter leading-none">
+                                        CONTRATO <span className="text-emerald-500">EMITIDO</span>
+                                    </h3>
+                                    <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">
+                                        Indexado en la bóveda con integridad verificada
+                                    </p>
+                                </div>
+
+                                {/* Executive Summary Card */}
+                                <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200/50 dark:border-white/5 shadow-lg space-y-5">
+                                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] border-b border-slate-100 dark:border-white/5 pb-3">Resumen Ejecutivo</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="flex items-start gap-3">
+                                            <Store className="w-4 h-4 text-indigo-500 mt-0.5 shrink-0" />
+                                            <div>
+                                                <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest">Cliente</span>
+                                                <span className="text-sm font-bold text-slate-900 dark:text-white">{selectedRestaurant?.fiscalName || 'N/A'}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <Calendar className="w-4 h-4 text-indigo-500 mt-0.5 shrink-0" />
+                                            <div>
+                                                <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest">Fecha</span>
+                                                <span className="text-sm font-bold text-slate-900 dark:text-white">{new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                                            <div>
+                                                <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest">Variables</span>
+                                                <span className="text-sm font-bold text-slate-900 dark:text-white">{placeholders.filter(k => variables[k]?.trim()).length}/{placeholders.length} completadas</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <Hash className="w-4 h-4 text-indigo-500 mt-0.5 shrink-0" />
+                                            <div>
+                                                <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest">Extensión</span>
+                                                <span className="text-sm font-bold text-slate-900 dark:text-white">{finalContent.split(/\s+/).filter(Boolean).length} palabras · {versions.length} versiones</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                    <button
+                                        onClick={handleExport}
+                                        className="px-10 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black uppercase tracking-[0.15em] text-[10px] transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-3 shadow-xl"
+                                    >
+                                        <Download className="w-4 h-4" /> Descargar
+                                    </button>
+                                    <button
+                                        onClick={() => setIsSignatureModalOpen(true)}
+                                        className="px-10 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black uppercase tracking-[0.15em] text-[10px] transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-3 shadow-xl shadow-indigo-600/20"
+                                    >
+                                        <PenTool className="w-4 h-4" /> Firmar
+                                    </button>
+                                    <button
+                                        onClick={onClose}
+                                        className="px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-[0.15em] text-[10px] transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-3 shadow-xl shadow-emerald-600/20"
+                                    >
+                                        Finalizar
+                                    </button>
+                                </div>
                             </div>
                         </motion.div>
                     )}
