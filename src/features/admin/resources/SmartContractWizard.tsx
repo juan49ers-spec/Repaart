@@ -30,10 +30,11 @@ import { FranchiseFiscalData } from '../../../hooks/useFranchiseData';
 import ContractTextEditor from './ContractTextEditor';
 import CompliancePanel from './CompliancePanel';
 import VersionManager from './VersionManager';
-import SnippetLibrary from './SnippetLibrary';
+import InlineSnippetPanel from './InlineSnippetPanel';
 import ExportModal from './ExportModal';
 import DigitalSignatureModal from './DigitalSignatureModal';
 import { ClauseSnippet } from './snippets/snippetLibrary';
+import { useContractDraft } from './hooks/useContractDraft';
 import { useContractAnalytics } from '../../../hooks/useContractAnalytics';
 
 interface SmartContractWizardProps {
@@ -83,8 +84,10 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
     const [placeholders, setPlaceholders] = useState<string[]>([]);
     const [aiPrompt, setAiPrompt] = useState('');
     const [aiReview, setAiReview] = useState<ComplianceReport | null>(null);
-    const [editMode, setEditMode] = useState<'vars' | 'text' | 'ai' | 'versions'>('vars');
-    const [isSnippetLibraryOpen, setIsSnippetLibraryOpen] = useState(false);
+    const [editMode, setEditMode] = useState<'vars' | 'text' | 'ai' | 'versions' | 'snippets'>('vars');
+
+    // Draft persistence
+    const { draft, saveDraft, clearDraft, hasDraft } = useContractDraft(user?.uid);
 
     // Step 3: Finalize
     const [isSaving, setIsSaving] = useState(false);
@@ -95,7 +98,6 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
     // Insert snippet handler
     const handleInsertSnippet = (snippet: ClauseSnippet) => {
         setFinalContent(prev => prev + "\n\n" + snippet.content);
-        setIsSnippetLibraryOpen(false);
         // Track snippet usage
         trackSnippetUsage(snippet.id);
     };
@@ -175,16 +177,34 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
         setStep(2);
     };
 
-    // Auto-save
+    // Auto-save (versioning + draft persistence)
     useEffect(() => {
         if (step === 2 && finalContent && selectedRestaurant) {
             const timeoutId = setTimeout(() => {
                 autoSave(finalContent, variables, selectedRestaurant.id);
-            }, 5000); // Auto-save después de 5 segundos de inactividad
+                saveDraft({
+                    templateId: contractId,
+                    restaurantId: selectedRestaurant.id,
+                    restaurantName: selectedRestaurant.fiscalName || '',
+                    variables,
+                    finalContent,
+                    step
+                });
+            }, 5000);
 
             return () => clearTimeout(timeoutId);
         }
-    }, [finalContent, variables, step, selectedRestaurant, autoSave]);
+    }, [finalContent, variables, step, selectedRestaurant, autoSave, saveDraft, contractId]);
+
+    // Restore draft
+    const handleRestoreDraft = () => {
+        if (!draft) return;
+        setSelectedRestaurant({ id: draft.restaurantId, fiscalName: draft.restaurantName, cif: '' } as Restaurant);
+        setVariables(draft.variables);
+        setFinalContent(draft.finalContent);
+        startSession(draft.restaurantId, draft.templateId);
+        setStep(draft.step || 2);
+    };
 
     // AI Logic
     const handleAddClause = async () => {
@@ -312,6 +332,39 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
                             className="h-full flex flex-col items-center justify-center p-8 scrollable-area"
                         >
                             <div className="w-full max-w-5xl space-y-16">
+                                {/* Draft Restoration Banner */}
+                                {hasDraft && draft && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 rounded-2xl p-5 flex items-center justify-between"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <SaveAll className="w-5 h-5 text-amber-600" />
+                                            <div>
+                                                <p className="text-sm font-bold text-amber-800 dark:text-amber-200">Borrador guardado</p>
+                                                <p className="text-[10px] text-amber-600 font-bold uppercase tracking-wider">
+                                                    {draft.restaurantName} · {draft.updatedAt.toLocaleDateString('es-ES')}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={handleRestoreDraft}
+                                                className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all"
+                                            >
+                                                Continuar
+                                            </button>
+                                            <button
+                                                onClick={clearDraft}
+                                                className="px-4 py-2 bg-white dark:bg-white/10 hover:bg-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border border-slate-200 dark:border-white/10"
+                                            >
+                                                Descartar
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
+
                                 <div className="text-center space-y-4">
                                     <motion.div
                                         initial={{ scale: 0 }}
@@ -415,6 +468,7 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
                                     {[
                                         { id: 'vars' as const, icon: Eye, label: 'Variables' },
                                         { id: 'text' as const, icon: Edit3, label: 'Editor' },
+                                        { id: 'snippets' as const, icon: BookOpen, label: 'Cláusulas' },
                                         { id: 'ai' as const, icon: Sparkles, label: 'AI' },
                                         { id: 'versions' as const, icon: History, label: 'Versiones' },
                                     ].map(tab => (
@@ -607,6 +661,18 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
                                                 />
                                             </motion.div>
                                         )}
+
+                                        {/* Snippets Tab */}
+                                        {editMode === 'snippets' && (
+                                            <motion.div
+                                                key="tab-snippets"
+                                                initial={{ opacity: 0, x: 10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: 10 }}
+                                            >
+                                                <InlineSnippetPanel onInsertSnippet={handleInsertSnippet} />
+                                            </motion.div>
+                                        )}
                                     </AnimatePresence>
                                 </div>
 
@@ -674,13 +740,6 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
                                         title="Exportar Documento"
                                     >
                                         <Download className="w-6 h-6" />
-                                    </button>
-                                    <button
-                                        onClick={() => setIsSnippetLibraryOpen(true)}
-                                        className="w-14 h-14 glass-premium-v2 rounded-2xl flex items-center justify-center text-slate-600 hover:text-emerald-600 transition-all shadow-xl hover:-translate-y-1 active:scale-90"
-                                        title="Librería de Cláusulas"
-                                    >
-                                        <BookOpen className="w-6 h-6" />
                                     </button>
                                 </div>
                             </div>
@@ -780,15 +839,7 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
                 </AnimatePresence>
             </main >
 
-            <AnimatePresence>
-                {isSnippetLibraryOpen && (
-                    <SnippetLibrary
-                        onClose={() => setIsSnippetLibraryOpen(false)}
-                        onInsertSnippet={handleInsertSnippet}
-                        isOpen={isSnippetLibraryOpen}
-                    />
-                )}
-            </AnimatePresence>
+
 
             {/* Export Modal */}
             <ExportModal
