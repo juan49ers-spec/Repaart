@@ -1,9 +1,27 @@
 import { useState } from 'react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Note: In a real app, this should be handled through a secure backend or cloud function to protect the API key.
-// For this playground, we use the client-side approach if the key is available in env.
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
+
+export type ComplianceSeverity = 'info' | 'warning' | 'critical';
+
+export interface ComplianceIssue {
+    id: string;
+    severity: ComplianceSeverity;
+    title: string;
+    description: string;
+    lineNumber?: number;
+    lineText?: string;
+    regulation: string;
+    suggestion: string;
+}
+
+export interface ComplianceReport {
+    score: number;
+    issues: ComplianceIssue[];
+    summary: string;
+    passed: string[];
+}
 
 export const useContractAI = () => {
     const [loading, setLoading] = useState(false);
@@ -40,23 +58,89 @@ export const useContractAI = () => {
         }
     };
 
-    const reviewContract = async (currentContract: string) => {
+    const reviewContract = async (currentContract: string): Promise<ComplianceReport> => {
         setLoading(true);
         try {
             const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
             const fullPrompt = `
-                Actúa como un auditor legal. Revisa este contrato logístico:
+                Actúa como un experto legal especializado en la "Ley Rider" española (Ley 12/2021) y normativa laboral de riders.
                 
+                Analiza este contrato de prestación de servicios logísticos y genera un informe de cumplimiento JSON estricto:
+                
+                CONTRATO A ANALIZAR:
                 ${currentContract}
                 
-                Indica si falta alguna cláusula crítica según la normativa española (Ley Rider, RGPD, riesgos laborales).
-                Responde con un máximo de 3 puntos clave de mejora de forma muy concisa.
+                REGLAS DE CUMPLIMIENTO A VERIFICAR (Ley Rider y normativa española):
+                1. Presunción de laboralidad: ¿El contrato tiene cláusulas que indican relación laboral encubierta?
+                2. Exclusividad: ¿Hay cláusulas de exclusividad prohibidas por la Ley Rider?
+                3. Control algorítmico: ¿Se menciona el algoritmo de asignación de pedidos y sus derechos?
+                4. Representación sindical: ¿Se informa sobre derechos de representación?
+                5. Formación: ¿Hay cláusulas de formación obligatoria?
+                6. Seguridad social: ¿Se menciona correctamente la cotización?
+                7. RGPD: ¿Hay cláusulas de protección de datos adecuadas?
+                8. Riesgos laborales: ¿Se menciona la prevención de riesgos?
+                9. Limitación de responsabilidad abusiva
+                10. Plazos de pago excesivos
+                
+                DEBES RESPONDER ÚNICAMENTE CON UN JSON VÁLIDO con esta estructura exacta:
+                {
+                    "score": número entre 0-100,
+                    "issues": [
+                        {
+                            "id": "string único",
+                            "severity": "critical" | "warning" | "info",
+                            "title": "Título breve del problema",
+                            "description": "Descripción detallada",
+                            "lineNumber": número de línea aproximado o null,
+                            "lineText": "texto de la línea problemática o null",
+                            "regulation": "Nombre de la norma (ej: 'Ley Rider Art. 3')",
+                            "suggestion": "Sugerencia de cómo corregirlo"
+                        }
+                    ],
+                    "summary": "Resumen ejecutivo de 2-3 líneas",
+                    "passed": ["lista de aspectos que cumplen correctamente"]
+                }
+                
+                Usa severidad:
+                - "critical": Falta cláusula obligatoria por Ley Rider o cláusula abusiva clara (ej: exclusividad ilegal)
+                - "warning": Posible problema o mejora recomendada
+                - "info": Sugerencia de mejora o información adicional
+                
+                Sé estricto pero justo. Un contrato de riders debe cumplir la Ley Rider española.
+                Si no hay "issues" críticos, el score debe ser alto (80-100).
+                Si hay issues críticos, el score debe ser bajo (<60).
             `;
 
             const result = await model.generateContent(fullPrompt);
-            const response = await result.response;
-            return response.text();
+            const responseText = await result.response.text();
+            
+            // Intentar extraer JSON de la respuesta
+            const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0]);
+                return {
+                    score: parsed.score || 0,
+                    issues: parsed.issues || [],
+                    summary: parsed.summary || "Análisis completado",
+                    passed: parsed.passed || []
+                };
+            }
+            
+            // Fallback si no hay JSON válido
+            return {
+                score: 50,
+                issues: [{
+                    id: 'parse-error',
+                    severity: 'warning',
+                    title: 'Error de análisis',
+                    description: 'No se pudo parsear la respuesta del análisis',
+                    regulation: 'N/A',
+                    suggestion: 'Intente nuevamente'
+                }],
+                summary: "Error al analizar el contrato",
+                passed: []
+            };
         } catch (error) {
             console.error("AI Error:", error);
             throw new Error("No se pudo realizar la auditoría IA.");
@@ -71,3 +155,5 @@ export const useContractAI = () => {
         loading
     };
 };
+
+export default useContractAI;

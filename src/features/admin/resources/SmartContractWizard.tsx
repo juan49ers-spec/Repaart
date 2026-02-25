@@ -1,51 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import {
     X,
-    ChevronRight,
-    ChevronLeft,
     Store,
-    FileText,
     Sparkles,
     Download,
-    Save,
     CheckCircle2,
     Search,
-    MessageSquare,
     Loader2,
     SaveAll,
-    Plus
+    Eye,
+    Edit3,
+    BookOpen,
+    PenTool
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { db, storage } from '../../../lib/firebase';
 import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import ReactMarkdown from 'react-markdown';
-import { useContractAI } from '../../../hooks/useContractAI';
-import { extractPlaceholders, fillTemplate, mapRestaurantToPlaceholders } from './utils/contractUtils';
+import { useContractAI, ComplianceReport } from '../../../hooks/useContractAI';
+import { useContractVersioning } from '../../../hooks/useContractVersioning';
+import { extractPlaceholders, fillTemplate, mapRestaurantToPlaceholders, Restaurant } from './utils/contractUtils';
 import { useAuth } from '../../../context/AuthContext';
-import { jsPDF } from 'jspdf';
-
-interface Restaurant {
-    id: string;
-    fiscalName: string;
-    cif: string;
-    address?: {
-        street: string;
-        city: string;
-        province: string;
-    };
-    legalRepresentative?: string;
-}
+import { FranchiseFiscalData } from '../../../hooks/useFranchiseData';
+import ContractTextEditor from './ContractTextEditor';
+import CompliancePanel from './CompliancePanel';
+import VersionManager from './VersionManager';
+import SnippetLibrary from './SnippetLibrary';
+import ExportModal from './ExportModal';
+import DigitalSignatureModal from './DigitalSignatureModal';
+import { ClauseSnippet } from './snippets/snippetLibrary';
+import { useContractAnalytics } from '../../../hooks/useContractAnalytics';
 
 interface SmartContractWizardProps {
     isOpen: boolean;
     onClose: () => void;
-    templateName: string; // e.g., 'PLANTILLA CONTRATO RESTAURANTES.md'
+    templateName: string;
     templateContent: string;
+    franchiseData: FranchiseFiscalData | null;
 }
 
-const SmartContractWizard: React.FC<SmartContractWizardProps> = ({ isOpen, onClose, templateContent }) => {
+const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
+    isOpen,
+    onClose,
+    templateContent,
+    franchiseData
+}) => {
     const { user } = useAuth();
     const { suggestClause, reviewContract, loading: aiLoading } = useContractAI();
+    const { trackSnippetUsage, trackExport, trackAISuggestion, startSession, endSession } = useContractAnalytics();
 
     // Steps: 1: Select Client, 2: Edit/AI, 3: Finalize/Export
     const [step, setStep] = useState(1);
@@ -56,16 +59,42 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({ isOpen, onClo
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
 
+    // Versioning
+    const contractId = selectedRestaurant?.id || 'draft';
+    const {
+        versions,
+        autoSaveData,
+        createVersion,
+        autoSave,
+        deleteVersion,
+        compareVersions,
+        restoreVersion,
+        clearAutoSave,
+        hasAutoSave
+    } = useContractVersioning(contractId);
+
     // Step 2: Editor
     const [variables, setVariables] = useState<Record<string, string>>({});
     const [finalContent, setFinalContent] = useState(templateContent);
     const [placeholders, setPlaceholders] = useState<string[]>([]);
     const [aiPrompt, setAiPrompt] = useState('');
-    const [aiReview, setAiReview] = useState<string | null>(null);
+    const [aiReview, setAiReview] = useState<ComplianceReport | null>(null);
+    const [editMode, setEditMode] = useState<'vars' | 'text'>('vars');
+    const [isSnippetLibraryOpen, setIsSnippetLibraryOpen] = useState(false);
 
     // Step 3: Finalize
     const [isSaving, setIsSaving] = useState(false);
-    const [savedResourceId, setSavedResourceId] = useState<string | null>(null);
+    
+    // Signature Modal
+    const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+
+    // Insert snippet handler
+    const handleInsertSnippet = (snippet: ClauseSnippet) => {
+        setFinalContent(prev => prev + "\n\n" + snippet.content);
+        setIsSnippetLibraryOpen(false);
+        // Track snippet usage
+        trackSnippetUsage(snippet.id);
+    };
 
     // Initial parsing
     useEffect(() => {
@@ -98,8 +127,27 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({ isOpen, onClo
     // Handle Auto-fill when restaurant selected
     const handleSelectRestaurant = (rest: Restaurant) => {
         setSelectedRestaurant(rest);
-        const autoFilled = mapRestaurantToPlaceholders(rest, user || {});
+
+        // Combinar datos del usuario autenticado con datos fiscales de franquicia
+        const enrichedUserData = {
+            ...user,
+            legalName: franchiseData?.legalName || user?.displayName,
+            cif: franchiseData?.cif,
+            fiscalAddress: franchiseData?.address,
+            city: franchiseData?.city,
+            province: franchiseData?.province,
+            postalCode: franchiseData?.postalCode,
+            legalRepresentative: franchiseData?.legalRepresentative,
+            representativeDni: franchiseData?.dniRepresentative,
+            phone: franchiseData?.phone,
+            email: franchiseData?.email
+        };
+
+        const autoFilled = mapRestaurantToPlaceholders(rest, enrichedUserData || {});
         setVariables(autoFilled);
+        setFinalContent(fillTemplate(templateContent, autoFilled));
+        // Start analytics session
+        startSession(rest.id, 'service-contract');
         setStep(2);
     };
 
@@ -110,6 +158,21 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({ isOpen, onClo
         setFinalContent(fillTemplate(templateContent, newVars));
     };
 
+    const handleManualEdit = (val: string) => {
+        setFinalContent(val);
+    };
+
+    // Auto-save
+    useEffect(() => {
+        if (step === 2 && finalContent && selectedRestaurant) {
+            const timeoutId = setTimeout(() => {
+                autoSave(finalContent, variables, selectedRestaurant.id);
+            }, 5000); // Auto-save después de 5 segundos de inactividad
+
+            return () => clearTimeout(timeoutId);
+        }
+    }, [finalContent, variables, step, selectedRestaurant, autoSave]);
+
     // AI Logic
     const handleAddClause = async () => {
         if (!aiPrompt) return;
@@ -117,8 +180,13 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({ isOpen, onClo
             const newClause = await suggestClause(aiPrompt, finalContent);
             setFinalContent(prev => prev + "\n\n" + newClause);
             setAiPrompt('');
-        } catch (e) {
+            // Track AI suggestion accepted
+            trackAISuggestion(true);
+        } catch (error) {
+            console.error("Error con la IA:", error);
             alert("Error con la IA");
+            // Track AI suggestion rejected/failed
+            trackAISuggestion(false);
         }
     };
 
@@ -126,18 +194,17 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({ isOpen, onClo
         try {
             const review = await reviewContract(finalContent);
             setAiReview(review);
-        } catch (e) {
+        } catch (error) {
+            console.error("Error en la auditoría:", error);
             alert("Error en la auditoría");
         }
     };
 
     // Export Logic
-    const handleExportPDF = () => {
-        const doc = new jsPDF();
-        const splitText = doc.splitTextToSize(finalContent.replace(/[#*]/g, ''), 180);
-        doc.setFontSize(10);
-        doc.text(splitText, 15, 20);
-        doc.save(`${selectedRestaurant?.fiscalName || 'Contrato'}_final.pdf`);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+
+    const handleExport = () => {
+        setIsExportModalOpen(true);
     };
 
     const handleSaveToVault = async () => {
@@ -153,7 +220,7 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({ isOpen, onClo
             const url = await getDownloadURL(storageRef);
 
             // Save to Firestore
-            const docRef = await addDoc(collection(db, "resources"), {
+            await addDoc(collection(db, "resources"), {
                 title: `Contrato: ${selectedRestaurant.fiscalName}`,
                 name: fileName,
                 category: 'contracts',
@@ -167,7 +234,10 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({ isOpen, onClo
                 generatedBy: 'SmartContractOrchestrator'
             });
 
-            setSavedResourceId(docRef.id);
+            // Limpiar auto-save después de guardar exitosamente
+            clearAutoSave();
+            // End analytics session (completed = true)
+            endSession(true);
             setStep(3);
         } catch (e) {
             console.error("Save error:", e);
@@ -180,220 +250,430 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({ isOpen, onClo
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl animate-in fade-in duration-300">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-6xl h-[90vh] rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-[100dvh] bg-[#f8fafc] dark:bg-black overflow-hidden selection:bg-indigo-500/30">
+            {/* Header */}
+            <header className="h-20 flex items-center justify-between px-12 border-b border-slate-200/50 dark:border-white/5 relative z-50 backdrop-blur-xl bg-white/50 dark:bg-black/50">
+                <div className="flex flex-col">
+                    <motion.h2
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="text-4xl md:text-5xl font-black tracking-tighter text-slate-900 dark:text-white leading-none italic uppercase"
+                    >
+                        {step === 1 ? 'Selección' : step === 2 ? 'Zen Editor' : 'Certificado'}
+                    </motion.h2>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] mt-1 ml-1">Smart Contract Orchestrator v4</span>
+                </div>
 
-                {/* Header with Progress */}
-                <header className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900/50">
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-600/20">
-                            <Sparkles className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase italic tracking-tight">Smart <span className="text-indigo-600">Contract</span> Orchestrator</h2>
-                            <div className="flex items-center gap-2 mt-1">
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter ${step >= 1 ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}>1. Cliente</span>
-                                <ChevronRight className="w-3 h-3 text-slate-300" />
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter ${step >= 2 ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}>2. Configuración</span>
-                                <ChevronRight className="w-3 h-3 text-slate-300" />
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter ${step >= 3 ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>3. Finalizar</span>
+                <div className="flex items-center gap-6">
+                    {/* Progress Stepper - Asymmetric Positioning */}
+                    <div className="hidden lg:flex items-center gap-4 mr-12 bg-slate-100 dark:bg-white/5 p-1.5 rounded-full border border-slate-200/50 dark:border-white/5">
+                        {[1, 2, 3].map((s) => (
+                            <div
+                                key={s}
+                                className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-500 ${step >= s ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg' : 'text-slate-400'}`}
+                            >
+                                {s}
                             </div>
-                        </div>
+                        ))}
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
-                        <X className="w-6 h-6 text-slate-400" />
+
+                    <button
+                        onClick={onClose}
+                        className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all mechanical-press shadow-sm group"
+                        aria-label="Cerrar asistente"
+                    >
+                        <X className="w-5 h-5 text-slate-500 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
                     </button>
-                </header>
+                </div>
+            </header>
 
-                <main className="flex-1 overflow-hidden flex flex-col md:flex-row">
-
-                    {/* STEP 1: RESTAURANT SELECTION */}
+            <main className="flex-1 overflow-hidden relative">
+                <AnimatePresence mode="wait">
                     {step === 1 && (
-                        <div className="flex-1 p-8 flex flex-col animate-in slide-in-from-bottom-4 duration-500">
-                            <div className="max-w-2xl mx-auto w-full space-y-8">
-                                <div className="text-center space-y-2">
-                                    <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Selecciona un <span className="text-indigo-600">Cliente</span></h3>
-                                    <p className="text-sm text-slate-500 font-medium">Auto-completa el contrato con los datos existentes en la red.</p>
+                        <motion.div
+                            key="step1"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                            className="h-full flex flex-col items-center justify-center p-8 scrollable-area"
+                        >
+                            <div className="w-full max-w-5xl space-y-16">
+                                <div className="text-center space-y-4">
+                                    <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        transition={{ type: "spring", delay: 0.2 }}
+                                        className="w-24 h-24 bg-indigo-500/10 rounded-3xl flex items-center justify-center mx-auto mb-8 transform rotate-3 border border-indigo-500/20"
+                                    >
+                                        <Store className="w-12 h-12 text-indigo-600" />
+                                    </motion.div>
+                                    <h1 className="text-6xl md:text-8xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase leading-[0.85]">
+                                        BUSCAR <br /><span className="text-indigo-600">CLIENTE</span>
+                                    </h1>
+                                    <p className="text-slate-400 max-w-lg mx-auto font-bold text-sm tracking-wide uppercase leading-relaxed pt-4">
+                                        Selección de entidad para mapeo legal automático
+                                    </p>
                                 </div>
 
-                                <div className="relative group">
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                                    <input
-                                        type="text"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="Buscar restaurante..."
-                                        className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium"
-                                    />
+                                <div className="relative group max-w-3xl mx-auto">
+                                    <div className="absolute inset-0 bg-indigo-500/10 blur-[120px] rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity" />
+                                    <div className="relative glass-premium-v2 rounded-[3rem] p-4 flex items-center gap-4 transition-all focus-within:ring-8 focus-within:ring-indigo-500/5 shadow-2xl overflow-hidden border-2 border-slate-200 dark:border-white/10">
+                                        <Search className="w-8 h-8 text-slate-300 ml-6" />
+                                        <input
+                                            id="restaurant-search"
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            placeholder="Nombre del restaurante / CIF..."
+                                            className="flex-1 bg-transparent text-3xl font-black italic tracking-tighter outline-none placeholder:text-slate-200 py-6"
+                                            autoFocus
+                                        />
+                                    </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                     {searching ? (
-                                        <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-indigo-500" /></div>
-                                    ) : restaurants.filter(r => r.fiscalName.toLowerCase().includes(searchQuery.toLowerCase())).map(rest => (
-                                        <button
+                                        <div className="col-span-full flex justify-center p-20">
+                                            <Loader2 className="w-12 h-12 animate-spin text-indigo-500" />
+                                        </div>
+                                    ) : restaurants.filter(r => r.fiscalName?.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 6).map((rest, idx) => (
+                                        <motion.button
                                             key={rest.id}
+                                            initial={{ opacity: 0, y: 30 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: idx * 0.1 }}
                                             onClick={() => handleSelectRestaurant(rest)}
-                                            className="flex items-center justify-between p-5 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-500/5 transition-all group"
+                                            className="group p-10 glass-premium-v2 rounded-[2.5rem] hover:border-indigo-500/50 transition-all text-left relative overflow-hidden mechanical-press shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 border border-slate-200/50 dark:border-white/5"
                                         >
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-slate-100 dark:bg-slate-900 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/30 group-hover:text-indigo-600 transition-colors">
-                                                    <Store size={24} />
+                                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-150 duration-700" />
+                                            <div className="relative z-10">
+                                                <div className="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-white/5 flex items-center justify-center mb-8 group-hover:bg-indigo-600 transition-all duration-500 group-hover:shadow-[0_0_30px_rgba(79,70,229,0.4)]">
+                                                    <Store className="w-7 h-7 text-slate-400 group-hover:text-white" />
                                                 </div>
-                                                <div className="text-left">
-                                                    <h4 className="font-bold text-slate-900 dark:text-white uppercase tracking-tight">{rest.fiscalName}</h4>
-                                                    <p className="text-[10px] font-mono text-slate-400 tracking-widest">{rest.cif}</p>
+                                                <h3 className="font-black text-2xl text-slate-900 dark:text-white tracking-tighter leading-tight mb-3 uppercase italic">{rest.fiscalName}</h3>
+                                                <div className="flex flex-col gap-1.5">
+                                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{rest.cif}</span>
+                                                    <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">{rest.address?.city}</span>
                                                 </div>
                                             </div>
-                                            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
-                                        </button>
+                                        </motion.button>
                                     ))}
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
                     )}
 
-                    {/* STEP 2: DYNAMIC EDITOR & AI */}
                     {step === 2 && (
-                        <>
-                            {/* Left Side: Controls & Form */}
-                            <div className="w-full md:w-[450px] border-r border-slate-100 dark:border-slate-800 p-6 overflow-y-auto custom-scrollbar bg-slate-50/30 dark:bg-slate-950/30">
-                                <div className="space-y-8">
-                                    {/* Auto-fill Info */}
-                                    <div className="bg-indigo-600 rounded-2xl p-4 text-white shadow-lg shadow-indigo-600/20">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <Store className="w-4 h-4" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest">Cliente Vinculado</span>
-                                        </div>
-                                        <h4 className="font-black italic uppercase tracking-tight truncate">{selectedRestaurant?.fiscalName}</h4>
+                        <motion.div
+                            key="step2"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="h-full flex flex-col md:flex-row overflow-hidden bg-[#f8fafc] dark:bg-black"
+                        >
+                            {/* Left Side: High-Agency Control Center */}
+                            <div className="w-full md:w-[480px] border-r border-slate-200/50 dark:border-white/5 bg-white/50 dark:bg-white/[0.02] backdrop-blur-3xl p-10 overflow-y-auto custom-scrollbar flex flex-col gap-10">
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_12px_rgba(16,185,129,0.6)]" />
+                                        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em]">Protocolo Activo</span>
                                     </div>
-
-                                    {/* Variable Form */}
-                                    <div className="space-y-4">
-                                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                            <FileText className="w-3.5 h-3.5" />
-                                            Campos Dinámicos
-                                        </h3>
-                                        <div className="grid gap-4">
-                                            {placeholders.map(key => (
-                                                <div key={key}>
-                                                    <label className="block text-[10px] font-bold text-slate-500 mb-1 ml-1 uppercase">{key}</label>
-                                                    <input
-                                                        type="text"
-                                                        value={variables[key] || ''}
-                                                        onChange={(e) => updateVariable(key, e.target.value)}
-                                                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm"
-                                                    />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* AI Assistant Section */}
-                                    <div className="bg-slate-900 dark:bg-black rounded-3xl p-5 border border-slate-800 shadow-2xl space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Sparkles className="w-4 h-4 text-indigo-400" />
-                                                <span className="text-[10px] font-black text-white uppercase tracking-widest">AI legal Assistant</span>
-                                            </div>
-                                            {aiLoading && <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />}
-                                        </div>
-                                        <textarea
-                                            value={aiPrompt}
-                                            onChange={(e) => setAiPrompt(e.target.value)}
-                                            placeholder="Ej: Añade una cláusula de exclusividad..."
-                                            className="w-full bg-slate-800/50 border border-slate-700 rounded-2xl p-3 text-xs text-white placeholder:text-slate-500 outline-none focus:border-indigo-500/50 min-h-[80px]"
-                                        />
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={handleAddClause}
-                                                disabled={aiLoading || !aiPrompt}
-                                                className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
-                                            >
-                                                <Plus className="w-3.5 h-3.5" /> Añadir Cláusula
-                                            </button>
-                                            <button
-                                                onClick={handleRunReview}
-                                                disabled={aiLoading}
-                                                className="px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-all"
-                                                title="Auditoría IA"
-                                            >
-                                                <CheckCircle2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                        {aiReview && (
-                                            <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
-                                                <p className="text-[10px] text-indigo-300 font-medium italic">{aiReview}</p>
-                                            </div>
-                                        )}
-                                    </div>
+                                    <h3 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter leading-none italic uppercase">CONFIGURACIÓN</h3>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Entidad: <span className="text-indigo-600">{selectedRestaurant?.fiscalName}</span></p>
                                 </div>
-                            </div>
 
-                            {/* Right Side: Real-time Markdown Preview */}
-                            <div className="flex-1 flex flex-col bg-white dark:bg-slate-900 border-l border-slate-100 dark:border-slate-800">
-                                <div className="p-4 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
-                                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Document Preview</h3>
-                                    <div className="flex gap-2">
-                                        <button onClick={handleExportPDF} className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="Exportar PDF">
-                                            <Download size={16} />
+                                {/* Sidebar Tabs - Refined */}
+                                <div className="flex bg-slate-100 dark:bg-white/5 p-1.5 rounded-[1.5rem] border border-slate-200/50 dark:border-white/5">
+                                    <button
+                                        onClick={() => setEditMode('vars')}
+                                        className={`flex-1 flex items-center justify-center gap-3 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${editMode === 'vars' ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-[0_10px_20px_rgba(0,0,0,0.05)]' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                                    >
+                                        <Eye className="w-4 h-4" /> Variables
+                                    </button>
+                                    <button
+                                        onClick={() => setEditMode('text')}
+                                        className={`flex-1 flex items-center justify-center gap-3 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${editMode === 'text' ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-[0_10px_20px_rgba(0,0,0,0.05)]' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                                    >
+                                        <Edit3 className="w-4 h-4" /> Directo
+                                    </button>
+                                </div>
+
+                                <div className="flex-1 space-y-10">
+                                    {editMode === 'vars' ? (
+                                        <motion.div
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            className="space-y-6"
+                                        >
+                                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
+                                                CAMPOS DINÁMICOS
+                                                <span className="text-indigo-600">{placeholders.length} Detectados</span>
+                                            </h4>
+                                            <div className="grid gap-6">
+                                                {placeholders.map((key, i) => (
+                                                    <motion.div
+                                                        key={key}
+                                                        initial={{ opacity: 0, x: -10 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        transition={{ delay: i * 0.05 }}
+                                                    >
+                                                        <label className="block text-[9px] font-black text-slate-500 mb-2 ml-1 uppercase tracking-widest">
+                                                            {key}
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            id={`var-${key}`}
+                                                            value={variables[key] || ''}
+                                                            onChange={(e) => updateVariable(key, e.target.value)}
+                                                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl px-6 py-4 text-sm font-bold shadow-sm focus:ring-8 focus:ring-indigo-500/5 transition-all outline-none"
+                                                            placeholder={`Fijar valor...`}
+                                                        />
+                                                    </motion.div>
+                                                ))}
+                                            </div>
+                                        </motion.div>
+                                    ) : (
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.98 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            className="h-full min-h-[400px]"
+                                        >
+                                            <ContractTextEditor
+                                                value={finalContent}
+                                                onChange={handleManualEdit}
+                                                placeholders={placeholders}
+                                            />
+                                        </motion.div>
+                                    )}
+                                </div>
+
+                                {/* AI Bento Card */}
+                                <div className="bg-slate-900 dark:bg-slate-900 rounded-[2.5rem] p-8 space-y-6 shadow-2xl relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-[50px] rounded-full group-hover:scale-150 transition-transform duration-1000" />
+                                    <div className="flex items-center justify-between relative z-10">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-indigo-500/20 rounded-xl">
+                                                <Sparkles className="w-4 h-4 text-indigo-400" />
+                                            </div>
+                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">Legal Engine</span>
+                                        </div>
+                                        {aiLoading && <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />}
+                                    </div>
+
+                                    <textarea
+                                        value={aiPrompt}
+                                        onChange={(e) => setAiPrompt(e.target.value)}
+                                        placeholder="Describa la cláusula deseada..."
+                                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-xs text-white placeholder:text-slate-600 outline-none focus:border-indigo-500/50 min-h-[100px] transition-all relative z-10"
+                                    />
+
+                                    <div className="flex gap-3 relative z-10">
+                                        <button
+                                            onClick={handleAddClause}
+                                            disabled={aiLoading || !aiPrompt}
+                                            className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all mechanical-press shadow-lg shadow-indigo-600/30"
+                                        >
+                                            Generar
                                         </button>
                                         <button
-                                            onClick={() => setStep(1)}
-                                            className="px-4 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold uppercase transition-all"
+                                            onClick={handleRunReview}
+                                            disabled={aiLoading}
+                                            className="px-5 py-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl transition-all mechanical-press border border-white/10"
+                                            title="Revisión de Cumplimiento"
                                         >
-                                            Cerrar Editor
+                                            <CheckCircle2 className="w-5 h-5" />
                                         </button>
                                     </div>
+
+                                    <CompliancePanel report={aiReview} loading={aiLoading} />
                                 </div>
-                                <div className="flex-1 overflow-y-auto p-12 bg-white dark:bg-slate-950/20 prose dark:prose-invert prose-indigo max-w-none prose-sm selection:bg-indigo-500/20 custom-scrollbar">
-                                    <ReactMarkdown>{finalContent}</ReactMarkdown>
+
+                                {/* Version Manager - Integrated into high-agency sidebar */}
+                                <div className="space-y-6 pt-6 border-t border-slate-200/50 dark:border-white/5">
+                                    <VersionManager
+                                        versions={versions}
+                                        autoSaveData={autoSaveData}
+                                        currentContent={finalContent}
+                                        currentVariables={variables}
+                                        onCreateVersion={(name) => createVersion(name, finalContent, variables, selectedRestaurant?.id)}
+                                        onRestoreVersion={(version) => {
+                                            const restored = restoreVersion(version);
+                                            setFinalContent(restored.content);
+                                            setVariables(restored.variables);
+                                        }}
+                                        onDeleteVersion={deleteVersion}
+                                        onCompareVersions={compareVersions}
+                                        onRestoreAutoSave={() => {
+                                            if (autoSaveData) {
+                                                setFinalContent(autoSaveData.content);
+                                                setVariables(autoSaveData.variables);
+                                            }
+                                        }}
+                                        hasAutoSave={hasAutoSave()}
+                                    />
                                 </div>
-                                <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex justify-end">
+
+                                {/* Action Footbar */}
+                                <div className="space-y-4 pt-6 border-t border-slate-200/50 dark:border-white/5">
                                     <button
                                         onClick={handleSaveToVault}
                                         disabled={isSaving}
-                                        className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black uppercase tracking-widest transition-all flex items-center gap-3 shadow-xl shadow-indigo-600/30 active:scale-95 disabled:opacity-70"
+                                        className="w-full py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[2rem] font-black uppercase tracking-[0.2em] text-[11px] transition-all shadow-2xl hover:scale-[1.02] mechanical-press flex items-center justify-center gap-4"
                                     >
                                         {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <SaveAll className="w-5 h-5" />}
-                                        Finalizar y Guardar en Bóveda
+                                        Finalizar Protocolo
+                                    </button>
+                                    <button
+                                        onClick={() => setStep(1)}
+                                        className="w-full py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
+                                    >
+                                        Volver al Inicio
                                     </button>
                                 </div>
                             </div>
-                        </>
-                    )}
 
-                    {/* STEP 3: SUCCESS & RETENTION */}
-                    {step === 3 && (
-                        <div className="flex-1 flex flex-col items-center justify-center p-12 text-center animate-in zoom-in-95 duration-500">
-                            <div className="w-32 h-32 bg-emerald-500/10 rounded-full flex items-center justify-center mb-10 relative">
-                                <div className="absolute inset-0 bg-emerald-500 animate-ping opacity-10 rounded-full" />
-                                <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-2xl shadow-emerald-500/50">
-                                    <CheckCircle2 size={48} />
+                            {/* Right Side: Artsy Paper Preview */}
+                            <div className="flex-1 bg-[#f0f2f5] dark:bg-black/40 overflow-hidden relative flex items-center justify-center p-12">
+                                <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
+                                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/20 blur-[150px] rounded-full animate-aurora-slow" />
+                                    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/10 blur-[150px] rounded-full animate-aurora-reverse" />
+                                </div>
+
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9, y: 50 }}
+                                    animate={{
+                                        opacity: 1,
+                                        scale: 1,
+                                        y: 0,
+                                        transition: { type: "spring", stiffness: 50 }
+                                    }}
+                                    className="relative w-full max-w-[850px] h-full"
+                                >
+                                    <motion.div
+                                        animate={{
+                                            y: [0, -10, 0],
+                                        }}
+                                        transition={{
+                                            duration: 6,
+                                            repeat: Infinity,
+                                            ease: "easeInOut"
+                                        }}
+                                        className="w-full h-full bg-white text-slate-900 shadow-[0_40px_100px_rgba(0,0,0,0.15)] rounded-sm p-[60px] md:p-[100px] relative overflow-hidden flex flex-col"
+                                    >
+                                        <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/paper-fibers.png')]" />
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-600/20 to-transparent" />
+
+                                        <div className="flex-1 prose prose-slate max-w-none prose-sm md:prose-base !text-slate-900 font-serif selection:bg-indigo-100">
+                                            <ReactMarkdown>{finalContent}</ReactMarkdown>
+                                        </div>
+
+                                        <div className="mt-20 pt-10 border-t border-slate-100 flex justify-between items-center text-[8px] font-black uppercase tracking-[0.5em] text-slate-300 relative z-10">
+                                            <span>REPAART LEGAL INFRASTRUCTURE</span>
+                                            <div className="flex items-center gap-4">
+                                                <span>DOCUMENTO CERTIFICADO</span>
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                </motion.div>
+
+                                {/* Tool Floating Bar */}
+                                <div className="absolute top-10 right-10 flex flex-col gap-4">
+                                    <button
+                                        onClick={handleExport}
+                                        className="w-14 h-14 glass-premium-v2 rounded-2xl flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-all shadow-xl hover:-translate-y-1 active:scale-90"
+                                        title="Exportar Documento"
+                                    >
+                                        <Download className="w-6 h-6" />
+                                    </button>
+                                    <button
+                                        onClick={() => setIsSnippetLibraryOpen(true)}
+                                        className="w-14 h-14 glass-premium-v2 rounded-2xl flex items-center justify-center text-slate-600 hover:text-emerald-600 transition-all shadow-xl hover:-translate-y-1 active:scale-90"
+                                        title="Librería de Cláusulas"
+                                    >
+                                        <BookOpen className="w-6 h-6" />
+                                    </button>
                                 </div>
                             </div>
-                            <h3 className="text-4xl font-black text-slate-900 dark:text-white mb-4 italic uppercase tracking-tighter">CONTRATO <span className="text-emerald-600">CERTIFICADO</span></h3>
-                            <p className="text-slate-500 dark:text-slate-400 max-w-md font-medium text-lg leading-relaxed mb-10">
-                                El documento ha sido generado, auditado por IA y guardado exitosamente en tu bóveda digital de contratos.
+                        </motion.div>
+                    )}
+
+                    {step === 3 && (
+                        <motion.div
+                            key="step3"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="h-full flex flex-col items-center justify-center p-12 text-center"
+                        >
+                            <div className="w-40 h-40 bg-emerald-500/5 rounded-full flex items-center justify-center mb-12 relative">
+                                <motion.div
+                                    animate={{ scale: [1, 1.5, 1], opacity: [0.2, 0, 0.2] }}
+                                    transition={{ duration: 3, repeat: Infinity }}
+                                    className="absolute inset-0 bg-emerald-500 rounded-full"
+                                />
+                                <div className="w-28 h-28 bg-emerald-500 rounded-[2.5rem] rotate-3 flex items-center justify-center text-white shadow-2xl shadow-emerald-500/40">
+                                    <CheckCircle2 size={56} />
+                                </div>
+                            </div>
+                            <h3 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white mb-6 italic uppercase tracking-tighter leading-none">
+                                CONTRATO <br /><span className="text-emerald-500">EMITIDO</span>
+                            </h3>
+                            <p className="text-slate-400 max-w-md font-bold uppercase tracking-widest text-xs leading-loose mb-12">
+                                Protocolo finalizado. El documento ha sido indexado en la bóveda con integridad criptográfica.
                             </p>
-                            <div className="flex flex-col sm:flex-row gap-4">
+                            <div className="flex flex-col sm:flex-row gap-6">
                                 <button
-                                    onClick={handleExportPDF}
-                                    className="px-8 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+                                    onClick={handleExport}
+                                    className="px-12 py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[2rem] font-black uppercase tracking-[0.2em] text-[11px] transition-all hover:scale-105 active:scale-95 flex items-center gap-4 shadow-2xl"
                                 >
-                                    <Download className="w-5 h-5" /> Descargar PDF
+                                    <Download className="w-5 h-5" /> Descargar
+                                </button>
+                                <button
+                                    onClick={() => setIsSignatureModalOpen(true)}
+                                    className="px-12 py-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] text-[11px] transition-all hover:scale-105 active:scale-95 flex items-center gap-4 shadow-2xl shadow-indigo-600/20"
+                                >
+                                    <PenTool className="w-5 h-5" /> Firmar Digitalmente
                                 </button>
                                 <button
                                     onClick={onClose}
-                                    className="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+                                    className="px-12 py-5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] text-[11px] transition-all hover:scale-105 active:scale-95 flex items-center gap-4 shadow-2xl shadow-emerald-600/20"
                                 >
-                                    Finalizar Wizard
+                                    Finalizar
                                 </button>
                             </div>
-                        </div>
+                        </motion.div>
                     )}
-                </main>
-            </div>
+                </AnimatePresence>
+            </main>
+
+            <AnimatePresence>
+                {isSnippetLibraryOpen && (
+                    <SnippetLibrary
+                        onClose={() => setIsSnippetLibraryOpen(false)}
+                        onInsertSnippet={handleInsertSnippet}
+                        isOpen={isSnippetLibraryOpen}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Export Modal */}
+            <ExportModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+                content={finalContent}
+                filename={selectedRestaurant?.fiscalName || 'Contrato'}
+                onExport={trackExport}
+            />
+            
+            {/* Digital Signature Modal */}
+            <DigitalSignatureModal
+                isOpen={isSignatureModalOpen}
+                onClose={() => setIsSignatureModalOpen(false)}
+                documentId={contractId}
+                documentName={selectedRestaurant?.fiscalName || 'Contrato'}
+                documentContent={finalContent}
+            />
         </div>
     );
 };

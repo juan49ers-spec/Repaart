@@ -15,11 +15,13 @@ vi.mock('lucide-react', () => {
         FileText: null, Image: null, File: null, Grid: null, List: null, Search: null, Trash2: null, Eye: null,
         Download: null, Plus: null, Pin: null, FolderOpen: null, Shield: null, Briefcase: null, BookOpen: null,
         Layout: null, Folder: null, RefreshCw: null, ShieldAlert: null, Wrench: null, Users: null, PlayCircle: null,
-        Zap: null, Heart: null, Star: null, Award: null, Info: null, AlertTriangle: null, CheckCircle: null,
+        Zap: null, Heart: null, Star: null, Award: null, Info: null, AlertTriangle: null, CheckCircle: null, AlertCircle: null,
         HelpCircle: null, Lightbulb: null, Target: null, Loader2: null, Check: null, ChevronRight: null,
         ChevronLeft: null, X: null, Menu: null, Filter: null, Settings: null, LogOut: null, User: null,
         Bell: null, Calendar: null, Clock: null, MapPin: null, Phone: null, Mail: null, Globe: null,
-        ExternalLink: null, Copy: null, Edit: null, Save: null,
+        ExternalLink: null, Copy: null, Edit: null, Save: null, Sparkles: null, BarChart3: null, FileCheck: null,
+        TrendingUp: null, PenTool: null, ShieldCheck: null, Fingerprint: null, Lock: null, Send: null,
+        Link2: null, Gauge: null, MapPinned: null, FileType: null, FileType2: null, Droplets: null,
     };
     const mockIcons: any = {
         Image: (props: any) => <div data-testid="image-icon" {...props} />,
@@ -61,11 +63,51 @@ vi.mock('../resources/RequestsInbox', () => ({
 vi.mock('../services/ServiceManager', () => ({
     default: () => <div data-testid="service-manager" />
 }));
+vi.mock('../resources/ContractAnalyticsDashboard', () => ({
+    default: () => <div data-testid="analytics-dashboard" />
+}));
+vi.mock('../resources/SmartContractWizard', () => ({
+    default: ({ isOpen, onClose }: any) => isOpen ? (
+        <div data-testid="smart-contract-wizard">
+            <button onClick={onClose}>Close Wizard</button>
+        </div>
+    ) : null
+}));
+vi.mock('../resources/FiscalValidationModal', () => ({
+    default: ({ isOpen, onClose }: any) => isOpen ? (
+        <div data-testid="fiscal-validation-modal">
+            <button onClick={onClose}>Close</button>
+        </div>
+    ) : null
+}));
+vi.mock('../resources/FiscalDataForm', () => ({
+    default: ({ isOpen, onClose }: any) => isOpen ? (
+        <div data-testid="fiscal-data-form">
+            <button onClick={onClose}>Close</button>
+        </div>
+    ) : null
+}));
+vi.mock('../resources/TemplateSelector', () => ({
+    default: ({ isOpen, onClose }: any) => isOpen ? (
+        <div data-testid="template-selector">
+            <button onClick={onClose}>Close</button>
+        </div>
+    ) : null
+}));
 vi.mock('../../../services/resourceRequestService', () => ({
     resourceRequestService: {
         getPendingRequestsCount: vi.fn(() => 1),
         getPendingRequests: vi.fn(() => Promise.resolve([{ id: 'req-1' }]))
     }
+}));
+
+// Mock hooks
+vi.mock('../../../hooks/useFranchiseData', () => ({
+    useFranchiseData: () => ({
+        franchiseData: null,
+        validation: { isValid: false, errors: [] },
+        isReady: false
+    })
 }));
 
 // Mock Firebase
@@ -187,11 +229,12 @@ describe('AdminResourcesPanel Integration', () => {
         fireEvent.click(screen.getByText(/Solicitudes/i));
         expect(screen.getByTestId('requests-inbox')).toBeInTheDocument();
 
-        fireEvent.click(screen.getByText(/Manual de Uso/i));
-        expect(screen.getByTestId('user-manual')).toBeInTheDocument();
-
         fireEvent.click(screen.getByText(/Servicios Premium/i));
         expect(screen.getByTestId('service-manager')).toBeInTheDocument();
+
+        // Volver a Bóveda
+        fireEvent.click(screen.getByText(/Bóveda/i));
+        expect(screen.getByText(/Bóveda Digital/i)).toBeInTheDocument();
     });
 
     it('should filter resources by category in vault', async () => {
@@ -268,5 +311,17 @@ describe('AdminResourcesPanel Integration', () => {
 
         fireEvent.click(screen.getByText(/Actualizar Token/i));
         // The token refresh is called (mocked in AuthContext)
+    });
+
+    it('should show analytics dashboard', () => {
+        render(<AdminResourcesPanel />);
+        expect(screen.getByTestId('analytics-dashboard')).toBeInTheDocument();
+    });
+
+    it('should open smart contract wizard', () => {
+        render(<AdminResourcesPanel />);
+        
+        fireEvent.click(screen.getByText(/Generar Inteligente/i));
+        expect(screen.getByTestId('fiscal-validation-modal')).toBeInTheDocument();
     });
 });

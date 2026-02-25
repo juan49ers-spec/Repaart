@@ -28,10 +28,15 @@ import ConfirmationModal from '../../components/ui/feedback/ConfirmationModal';
 import ResourceUploadModal from './resources/ResourceUploadModal';
 import { resourceRequestService } from '../../services/resourceRequestService';
 import { useAuth } from '../../context/AuthContext';
-import { extractPlaceholders } from './resources/utils/contractUtils';
 import SmartContractWizard from './resources/SmartContractWizard';
+import FiscalValidationModal from './resources/FiscalValidationModal';
+import FiscalDataForm from './resources/FiscalDataForm';
+import TemplateSelector from './resources/TemplateSelector';
+import { useFranchiseData } from '../../hooks/useFranchiseData';
+import { ContractTemplate } from './resources/templates/templateLibrary';
 import AdminGuidesPanel from './knowledge/AdminGuidesPanel';
-import UserManual from '../common/UserManual/UserManual';
+import ContractAnalyticsDashboard from './resources/ContractAnalyticsDashboard';
+
 import RequestsInbox from './resources/RequestsInbox';
 import ServiceManager from './services/ServiceManager';
 
@@ -72,9 +77,13 @@ const FOLDERS = [
 const MOCK_RESOURCES: Resource[] = [];
 
 const AdminResourcesPanel = () => {
-    const { forceTokenRefresh } = useAuth();
+    const { forceTokenRefresh, user } = useAuth();
+
+    // 🏢 Datos fiscales del franquiciado
+    const { franchiseData, validation, isReady } = useFranchiseData(user?.uid);
+
     // Tab State (Global Navigation)
-    const [activeTab, setActiveTab] = useState<'vault' | 'guides' | 'manual' | 'requests' | 'services'>('vault');
+    const [activeTab, setActiveTab] = useState<'vault' | 'guides' | 'requests' | 'services'>('vault');
     const [activeCategory, setActiveCategory] = useState<string>('contracts');
 
     // Data State
@@ -97,28 +106,26 @@ const AdminResourcesPanel = () => {
     // 🧠 Smart Contract Wizard State
     const [isWizardOpen, setIsWizardOpen] = useState(false);
     const [templateContent, setTemplateContent] = useState('');
+    const [showFiscalValidation, setShowFiscalValidation] = useState(false);
+    const [showFiscalDataForm, setShowFiscalDataForm] = useState(false);
+    const [isTemplateSelectorOpen, setIsTemplateSelectorOpen] = useState(false);
 
     const handleOpenWizard = async () => {
-        try {
-            const response = await fetch('/documentacion/PLANTILLA CONTRATO RESTAURANTES.md');
-            if (response.ok) {
-                const text = await response.text();
-                setTemplateContent(text);
-                setIsWizardOpen(true);
-            } else {
-                const fallback = `
-# CONTRATO DE PRESTACIÓN DE SERVICIOS LOGÍSTICOS
-
-En [LOCALIDAD], a [DÍA] de [MES] de 2024.
-
-**REUNIDOS**...
-`;
-                setTemplateContent(fallback);
-                setIsWizardOpen(true);
-            }
-        } catch (e) {
-            console.error("Error loading template:", e);
+        // Primero verificar datos fiscales
+        if (!isReady) {
+            setShowFiscalValidation(true);
+            return;
         }
+
+        // Abrir selector de plantillas
+        setIsTemplateSelectorOpen(true);
+    };
+
+    const handleSelectTemplate = (template: ContractTemplate) => {
+        setTemplateContent(template.content);
+        setIsTemplateSelectorOpen(false);
+        setIsWizardOpen(true);
+        setShowFiscalValidation(false);
     };
 
     const handleForceTokenRefresh = async () => {
@@ -269,12 +276,7 @@ En [LOCALIDAD], a [DÍA] de [MES] de 2024.
                         >
                             Guías Interactivas
                         </button>
-                        <button
-                            onClick={() => setActiveTab('manual')}
-                            className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'manual' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                        >
-                            Manual de Uso
-                        </button>
+
                         <button
                             onClick={() => setActiveTab('requests')}
                             className={`px-5 py-2 rounded-lg text-sm font-bold transition-all relative flex items-center gap-2 ${activeTab === 'requests' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
@@ -383,6 +385,11 @@ En [LOCALIDAD], a [DÍA] de [MES] de 2024.
                                     <Sparkles className="w-4 h-4 text-indigo-400 group-hover:animate-pulse" />
                                     Generar Inteligente
                                 </button>
+
+                                {/* Analytics Dashboard */}
+                                <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                                    <ContractAnalyticsDashboard />
+                                </div>
                             </div>
                         </aside>
 
@@ -555,13 +562,9 @@ En [LOCALIDAD], a [DÍA] de [MES] de 2024.
                     <div className="flex-1 overflow-hidden bg-slate-50 dark:bg-slate-950">
                         <RequestsInbox />
                     </div>
-                ) : activeTab === 'services' ? (
+                ) : (
                     <div className="flex-1 overflow-hidden bg-slate-50 dark:bg-slate-950">
                         <ServiceManager />
-                    </div>
-                ) : (
-                    <div className="flex-1 overflow-hidden p-6 bg-slate-50 dark:bg-slate-950">
-                        <UserManual role="admin" />
                     </div>
                 )}
             </div>
@@ -586,6 +589,40 @@ En [LOCALIDAD], a [DÍA] de [MES] de 2024.
                 onClose={() => setIsWizardOpen(false)}
                 templateName="PLANTILLA CONTRATO RESTAURANTES.md"
                 templateContent={templateContent}
+                franchiseData={franchiseData}
+            />
+
+            {/* 💼 Fiscal Validation Modal */}
+            <FiscalValidationModal
+                isOpen={showFiscalValidation}
+                onClose={() => setShowFiscalValidation(false)}
+                onContinue={() => {
+                    setShowFiscalValidation(false);
+                    setIsTemplateSelectorOpen(true);
+                }}
+                onEdit={() => {
+                    setShowFiscalValidation(false);
+                    setShowFiscalDataForm(true);
+                }}
+                validation={validation}
+                franchiseData={franchiseData}
+            />
+
+            {/* 📝 Fiscal Data Form */}
+            <FiscalDataForm
+                isOpen={showFiscalDataForm}
+                onClose={() => setShowFiscalDataForm(false)}
+                onSuccess={() => {
+                    // Recargar datos del usuario
+                    window.location.reload();
+                }}
+            />
+
+            {/* 📄 Template Selector */}
+            <TemplateSelector
+                isOpen={isTemplateSelectorOpen}
+                onClose={() => setIsTemplateSelectorOpen(false)}
+                onSelectTemplate={handleSelectTemplate}
             />
 
             <ConfirmationModal
