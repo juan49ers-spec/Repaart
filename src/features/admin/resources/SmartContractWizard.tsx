@@ -11,7 +11,8 @@ import {
     Eye,
     Edit3,
     BookOpen,
-    PenTool
+    PenTool,
+    History
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db, storage } from '../../../lib/firebase';
@@ -79,7 +80,7 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
     const [placeholders, setPlaceholders] = useState<string[]>([]);
     const [aiPrompt, setAiPrompt] = useState('');
     const [aiReview, setAiReview] = useState<ComplianceReport | null>(null);
-    const [editMode, setEditMode] = useState<'vars' | 'text'>('vars');
+    const [editMode, setEditMode] = useState<'vars' | 'text' | 'ai' | 'versions'>('vars');
     const [isSnippetLibraryOpen, setIsSnippetLibraryOpen] = useState(false);
 
     // Step 3: Finalize
@@ -383,173 +384,204 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Entidad: <span className="text-indigo-600">{selectedRestaurant?.fiscalName}</span></p>
                                 </div>
 
-                                {/* Sidebar Tabs - Refined */}
-                                <div className="flex bg-slate-100 dark:bg-white/5 p-1.5 rounded-[1.5rem] border border-slate-200/50 dark:border-white/5">
-                                    <button
-                                        onClick={() => setEditMode('vars')}
-                                        className={`flex-1 flex items-center justify-center gap-3 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${editMode === 'vars' ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-[0_10px_20px_rgba(0,0,0,0.05)]' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
-                                    >
-                                        <Eye className="w-4 h-4" /> Variables
-                                    </button>
-                                    <button
-                                        onClick={() => setEditMode('text')}
-                                        className={`flex-1 flex items-center justify-center gap-3 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${editMode === 'text' ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-[0_10px_20px_rgba(0,0,0,0.05)]' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
-                                    >
-                                        <Edit3 className="w-4 h-4" /> Directo
-                                    </button>
+                                {/* Sidebar Tabs - 4 focused panels */}
+                                <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-2xl border border-slate-200/50 dark:border-white/5">
+                                    {[
+                                        { id: 'vars' as const, icon: Eye, label: 'Variables' },
+                                        { id: 'text' as const, icon: Edit3, label: 'Editor' },
+                                        { id: 'ai' as const, icon: Sparkles, label: 'AI' },
+                                        { id: 'versions' as const, icon: History, label: 'Versiones' },
+                                    ].map(tab => (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => setEditMode(tab.id)}
+                                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${editMode === tab.id ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-[0_8px_16px_rgba(0,0,0,0.04)]' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                                        >
+                                            <tab.icon className="w-3.5 h-3.5" />
+                                            <span className="hidden xl:inline">{tab.label}</span>
+                                        </button>
+                                    ))}
                                 </div>
 
-                                <div className="flex-1 space-y-10">
-                                    {editMode === 'vars' ? (
-                                        <motion.div
-                                            initial={{ opacity: 0, x: -10 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            className="space-y-6"
-                                        >
-                                            {/* Progress Bar */}
-                                            {(() => {
-                                                const filled = placeholders.filter(k => variables[k]?.trim()).length;
-                                                const total = placeholders.length;
-                                                const pct = total > 0 ? Math.round((filled / total) * 100) : 0;
-                                                const barBg = pct >= 100 ? 'bg-emerald-500' : pct >= 50 ? 'bg-amber-500' : 'bg-rose-500';
-                                                const badgeBg = pct >= 100 ? 'bg-emerald-500/10 text-emerald-600' : pct >= 50 ? 'bg-amber-500/10 text-amber-600' : 'bg-rose-500/10 text-rose-600';
-                                                const glowColor = pct >= 100 ? 'shadow-emerald-500/30' : pct >= 50 ? 'shadow-amber-500/30' : 'shadow-rose-500/30';
-                                                return (
-                                                    <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-3">
-                                                        <div className="flex items-center justify-between">
-                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Progreso</span>
-                                                            <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${badgeBg}`}>
-                                                                {filled}/{total} · {pct}%
-                                                            </span>
-                                                        </div>
-                                                        <div className="h-2 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
-                                                            <motion.div
-                                                                initial={{ width: 0 }}
-                                                                animate={{ width: `${pct}%` }}
-                                                                transition={{ type: 'spring', stiffness: 60, damping: 15 }}
-                                                                className={`h-full rounded-full ${barBg} shadow-lg ${glowColor}`}
-                                                            />
-                                                        </div>
-                                                        {pct >= 100 && (
-                                                            <p className="text-[10px] font-bold text-emerald-600 flex items-center gap-1.5">
-                                                                <CheckCircle2 className="w-3 h-3" />
-                                                                Todos los campos completados — listo para finalizar
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })()}
-
-                                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
-                                                CAMPOS DINÁMICOS
-                                                <span className="text-indigo-600">{placeholders.length} Detectados</span>
-                                            </h4>
-                                            <div className="grid gap-6">
-                                                {placeholders.map((key, i) => {
-                                                    const isFilled = !!variables[key]?.trim();
+                                {/* Tab Content */}
+                                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                    <AnimatePresence mode="wait">
+                                        {/* Variables Tab */}
+                                        {editMode === 'vars' && (
+                                            <motion.div
+                                                key="tab-vars"
+                                                initial={{ opacity: 0, x: -10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: -10 }}
+                                                className="space-y-6"
+                                            >
+                                                {/* Progress Bar */}
+                                                {(() => {
+                                                    const filled = placeholders.filter(k => variables[k]?.trim()).length;
+                                                    const total = placeholders.length;
+                                                    const pct = total > 0 ? Math.round((filled / total) * 100) : 0;
+                                                    const barBg = pct >= 100 ? 'bg-emerald-500' : pct >= 50 ? 'bg-amber-500' : 'bg-rose-500';
+                                                    const badgeBg = pct >= 100 ? 'bg-emerald-500/10 text-emerald-600' : pct >= 50 ? 'bg-amber-500/10 text-amber-600' : 'bg-rose-500/10 text-rose-600';
+                                                    const glowColor = pct >= 100 ? 'shadow-emerald-500/30' : pct >= 50 ? 'shadow-amber-500/30' : 'shadow-rose-500/30';
                                                     return (
-                                                        <motion.div
-                                                            key={key}
-                                                            initial={{ opacity: 0, x: -10 }}
-                                                            animate={{ opacity: 1, x: 0 }}
-                                                            transition={{ delay: i * 0.05 }}
-                                                        >
-                                                            <label className="flex items-center gap-2 text-[9px] font-black text-slate-500 mb-2 ml-1 uppercase tracking-widest">
-                                                                <span className={`w-1.5 h-1.5 rounded-full ${isFilled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
-                                                                {key}
-                                                            </label>
-                                                            <input
-                                                                type="text"
-                                                                id={`var-${key}`}
-                                                                value={variables[key] || ''}
-                                                                onChange={(e) => updateVariable(key, e.target.value)}
-                                                                className={`w-full bg-white dark:bg-slate-900 border rounded-2xl px-6 py-4 text-sm font-bold shadow-sm focus:ring-8 focus:ring-indigo-500/5 transition-all outline-none ${isFilled ? 'border-emerald-200 dark:border-emerald-500/20' : 'border-slate-200 dark:border-white/10'}`}
-                                                                placeholder={`Fijar valor...`}
-                                                            />
-                                                        </motion.div>
+                                                        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-3">
+                                                            <div className="flex items-center justify-between">
+                                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Progreso</span>
+                                                                <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${badgeBg}`}>
+                                                                    {filled}/{total} · {pct}%
+                                                                </span>
+                                                            </div>
+                                                            <div className="h-2 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
+                                                                <motion.div
+                                                                    initial={{ width: 0 }}
+                                                                    animate={{ width: `${pct}%` }}
+                                                                    transition={{ type: 'spring', stiffness: 60, damping: 15 }}
+                                                                    className={`h-full rounded-full ${barBg} shadow-lg ${glowColor}`}
+                                                                />
+                                                            </div>
+                                                            {pct >= 100 && (
+                                                                <p className="text-[10px] font-bold text-emerald-600 flex items-center gap-1.5">
+                                                                    <CheckCircle2 className="w-3 h-3" />
+                                                                    Todos los campos completados — listo para finalizar
+                                                                </p>
+                                                            )}
+                                                        </div>
                                                     );
-                                                })}
-                                            </div>
-                                        </motion.div>
-                                    ) : (
-                                        <motion.div
-                                            initial={{ opacity: 0, scale: 0.98 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            className="h-full min-h-[400px]"
-                                        >
-                                            <ContractTextEditor
-                                                value={finalContent}
-                                                onChange={handleManualEdit}
-                                                placeholders={placeholders}
-                                            />
-                                        </motion.div>
-                                    )}
-                                </div>
+                                                })()}
 
-                                {/* AI Bento Card */}
-                                <div className="bg-slate-900 dark:bg-slate-900 rounded-[2.5rem] p-8 space-y-6 shadow-2xl relative overflow-hidden group">
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-[50px] rounded-full group-hover:scale-150 transition-transform duration-1000" />
-                                    <div className="flex items-center justify-between relative z-10">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-indigo-500/20 rounded-xl">
-                                                <Sparkles className="w-4 h-4 text-indigo-400" />
-                                            </div>
-                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">Legal Engine</span>
-                                        </div>
-                                        {aiLoading && <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />}
-                                    </div>
+                                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
+                                                    CAMPOS DINÁMICOS
+                                                    <span className="text-indigo-600">{placeholders.length} Detectados</span>
+                                                </h4>
+                                                <div className="grid gap-5">
+                                                    {placeholders.map((key, i) => {
+                                                        const isFilled = !!variables[key]?.trim();
+                                                        return (
+                                                            <motion.div
+                                                                key={key}
+                                                                initial={{ opacity: 0, x: -10 }}
+                                                                animate={{ opacity: 1, x: 0 }}
+                                                                transition={{ delay: i * 0.03 }}
+                                                            >
+                                                                <label className="flex items-center gap-2 text-[9px] font-black text-slate-500 mb-2 ml-1 uppercase tracking-widest">
+                                                                    <span className={`w-1.5 h-1.5 rounded-full ${isFilled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
+                                                                    {key}
+                                                                </label>
+                                                                <input
+                                                                    type="text"
+                                                                    id={`var-${key}`}
+                                                                    value={variables[key] || ''}
+                                                                    onChange={(e) => updateVariable(key, e.target.value)}
+                                                                    className={`w-full bg-white dark:bg-slate-900 border rounded-2xl px-5 py-3.5 text-sm font-bold shadow-sm focus:ring-8 focus:ring-indigo-500/5 transition-all outline-none ${isFilled ? 'border-emerald-200 dark:border-emerald-500/20' : 'border-slate-200 dark:border-white/10'}`}
+                                                                    placeholder="Fijar valor..."
+                                                                />
+                                                            </motion.div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </motion.div>
+                                        )}
 
-                                    <textarea
-                                        value={aiPrompt}
-                                        onChange={(e) => setAiPrompt(e.target.value)}
-                                        placeholder="Describa la cláusula deseada..."
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-xs text-white placeholder:text-slate-600 outline-none focus:border-indigo-500/50 min-h-[100px] transition-all relative z-10"
-                                    />
+                                        {/* Editor Tab */}
+                                        {editMode === 'text' && (
+                                            <motion.div
+                                                key="tab-text"
+                                                initial={{ opacity: 0, scale: 0.98 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                exit={{ opacity: 0, scale: 0.98 }}
+                                                className="min-h-[400px]"
+                                            >
+                                                <ContractTextEditor
+                                                    value={finalContent}
+                                                    onChange={handleManualEdit}
+                                                    placeholders={placeholders}
+                                                />
+                                            </motion.div>
+                                        )}
 
-                                    <div className="flex gap-3 relative z-10">
-                                        <button
-                                            onClick={handleAddClause}
-                                            disabled={aiLoading || !aiPrompt}
-                                            className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all mechanical-press shadow-lg shadow-indigo-600/30"
-                                        >
-                                            Generar
-                                        </button>
-                                        <button
-                                            onClick={handleRunReview}
-                                            disabled={aiLoading}
-                                            className="px-5 py-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl transition-all mechanical-press border border-white/10"
-                                            title="Revisión de Cumplimiento"
-                                        >
-                                            <CheckCircle2 className="w-5 h-5" />
-                                        </button>
-                                    </div>
+                                        {/* AI Tab */}
+                                        {editMode === 'ai' && (
+                                            <motion.div
+                                                key="tab-ai"
+                                                initial={{ opacity: 0, x: 10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: 10 }}
+                                                className="space-y-6"
+                                            >
+                                                <div className="bg-slate-900 dark:bg-slate-900 rounded-[2rem] p-7 space-y-5 shadow-2xl relative overflow-hidden group">
+                                                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-[50px] rounded-full group-hover:scale-150 transition-transform duration-1000" />
+                                                    <div className="flex items-center justify-between relative z-10">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="p-2 bg-indigo-500/20 rounded-xl">
+                                                                <Sparkles className="w-4 h-4 text-indigo-400" />
+                                                            </div>
+                                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">Legal Engine</span>
+                                                        </div>
+                                                        {aiLoading && <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />}
+                                                    </div>
 
-                                    <CompliancePanel report={aiReview} loading={aiLoading} />
-                                </div>
+                                                    <textarea
+                                                        value={aiPrompt}
+                                                        onChange={(e) => setAiPrompt(e.target.value)}
+                                                        placeholder="Describa la cláusula deseada..."
+                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-xs text-white placeholder:text-slate-600 outline-none focus:border-indigo-500/50 min-h-[120px] transition-all relative z-10"
+                                                    />
 
-                                {/* Version Manager - Integrated into high-agency sidebar */}
-                                <div className="space-y-6 pt-6 border-t border-slate-200/50 dark:border-white/5">
-                                    <VersionManager
-                                        versions={versions}
-                                        autoSaveData={autoSaveData}
-                                        currentContent={finalContent}
-                                        currentVariables={variables}
-                                        onCreateVersion={(name) => createVersion(name, finalContent, variables, selectedRestaurant?.id)}
-                                        onRestoreVersion={(version) => {
-                                            const restored = restoreVersion(version);
-                                            setFinalContent(restored.content);
-                                            setVariables(restored.variables);
-                                        }}
-                                        onDeleteVersion={deleteVersion}
-                                        onCompareVersions={compareVersions}
-                                        onRestoreAutoSave={() => {
-                                            if (autoSaveData) {
-                                                setFinalContent(autoSaveData.content);
-                                                setVariables(autoSaveData.variables);
-                                            }
-                                        }}
-                                        hasAutoSave={hasAutoSave()}
-                                    />
+                                                    <div className="flex gap-3 relative z-10">
+                                                        <button
+                                                            onClick={handleAddClause}
+                                                            disabled={aiLoading || !aiPrompt}
+                                                            className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all mechanical-press shadow-lg shadow-indigo-600/30"
+                                                        >
+                                                            Generar Cláusula
+                                                        </button>
+                                                        <button
+                                                            onClick={handleRunReview}
+                                                            disabled={aiLoading}
+                                                            className="px-5 py-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl transition-all mechanical-press border border-white/10"
+                                                            title="Revisión de Cumplimiento"
+                                                        >
+                                                            <CheckCircle2 className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <CompliancePanel report={aiReview} loading={aiLoading} />
+                                            </motion.div>
+                                        )}
+
+                                        {/* Versions Tab */}
+                                        {editMode === 'versions' && (
+                                            <motion.div
+                                                key="tab-versions"
+                                                initial={{ opacity: 0, x: 10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: 10 }}
+                                            >
+                                                <VersionManager
+                                                    versions={versions}
+                                                    autoSaveData={autoSaveData}
+                                                    currentContent={finalContent}
+                                                    currentVariables={variables}
+                                                    onCreateVersion={(name) => createVersion(name, finalContent, variables, selectedRestaurant?.id)}
+                                                    onRestoreVersion={(version) => {
+                                                        const restored = restoreVersion(version);
+                                                        setFinalContent(restored.content);
+                                                        setVariables(restored.variables);
+                                                    }}
+                                                    onDeleteVersion={deleteVersion}
+                                                    onCompareVersions={compareVersions}
+                                                    onRestoreAutoSave={() => {
+                                                        if (autoSaveData) {
+                                                            setFinalContent(autoSaveData.content);
+                                                            setVariables(autoSaveData.variables);
+                                                        }
+                                                    }}
+                                                    hasAutoSave={hasAutoSave()}
+                                                />
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </div>
 
                                 {/* Action Footbar */}
@@ -588,16 +620,8 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
                                     }}
                                     className="relative w-full max-w-[850px] h-full"
                                 >
-                                    <motion.div
-                                        animate={{
-                                            y: [0, -10, 0],
-                                        }}
-                                        transition={{
-                                            duration: 6,
-                                            repeat: Infinity,
-                                            ease: "easeInOut"
-                                        }}
-                                        className="w-full h-full bg-white text-slate-900 shadow-[0_40px_100px_rgba(0,0,0,0.15)] rounded-sm p-[60px] md:p-[100px] relative overflow-hidden flex flex-col"
+                                    <div
+                                        className="w-full h-full bg-white text-slate-900 shadow-[0_40px_100px_rgba(0,0,0,0.15)] rounded-sm p-[60px] md:p-[100px] relative overflow-hidden flex flex-col overflow-y-auto custom-scrollbar"
                                     >
                                         <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/paper-fibers.png')]" />
                                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-600/20 to-transparent" />
@@ -613,7 +637,7 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
                                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                             </div>
                                         </div>
-                                    </motion.div>
+                                    </div>
                                 </motion.div>
 
                                 {/* Tool Floating Bar */}
@@ -683,7 +707,7 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </main>
+            </main >
 
             <AnimatePresence>
                 {isSnippetLibraryOpen && (
@@ -712,7 +736,7 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
                 documentName={selectedRestaurant?.fiscalName || 'Contrato'}
                 documentContent={finalContent}
             />
-        </div>
+        </div >
     );
 };
 
