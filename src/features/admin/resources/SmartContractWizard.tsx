@@ -84,7 +84,7 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
 
     // Step 3: Finalize
     const [isSaving, setIsSaving] = useState(false);
-    
+
     // Signature Modal
     const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
 
@@ -406,31 +406,69 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
                                             animate={{ opacity: 1, x: 0 }}
                                             className="space-y-6"
                                         >
+                                            {/* Progress Bar */}
+                                            {(() => {
+                                                const filled = placeholders.filter(k => variables[k]?.trim()).length;
+                                                const total = placeholders.length;
+                                                const pct = total > 0 ? Math.round((filled / total) * 100) : 0;
+                                                const barBg = pct >= 100 ? 'bg-emerald-500' : pct >= 50 ? 'bg-amber-500' : 'bg-rose-500';
+                                                const badgeBg = pct >= 100 ? 'bg-emerald-500/10 text-emerald-600' : pct >= 50 ? 'bg-amber-500/10 text-amber-600' : 'bg-rose-500/10 text-rose-600';
+                                                const glowColor = pct >= 100 ? 'shadow-emerald-500/30' : pct >= 50 ? 'shadow-amber-500/30' : 'shadow-rose-500/30';
+                                                return (
+                                                    <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-3">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Progreso</span>
+                                                            <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${badgeBg}`}>
+                                                                {filled}/{total} · {pct}%
+                                                            </span>
+                                                        </div>
+                                                        <div className="h-2 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
+                                                            <motion.div
+                                                                initial={{ width: 0 }}
+                                                                animate={{ width: `${pct}%` }}
+                                                                transition={{ type: 'spring', stiffness: 60, damping: 15 }}
+                                                                className={`h-full rounded-full ${barBg} shadow-lg ${glowColor}`}
+                                                            />
+                                                        </div>
+                                                        {pct >= 100 && (
+                                                            <p className="text-[10px] font-bold text-emerald-600 flex items-center gap-1.5">
+                                                                <CheckCircle2 className="w-3 h-3" />
+                                                                Todos los campos completados — listo para finalizar
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()}
+
                                             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
                                                 CAMPOS DINÁMICOS
                                                 <span className="text-indigo-600">{placeholders.length} Detectados</span>
                                             </h4>
                                             <div className="grid gap-6">
-                                                {placeholders.map((key, i) => (
-                                                    <motion.div
-                                                        key={key}
-                                                        initial={{ opacity: 0, x: -10 }}
-                                                        animate={{ opacity: 1, x: 0 }}
-                                                        transition={{ delay: i * 0.05 }}
-                                                    >
-                                                        <label className="block text-[9px] font-black text-slate-500 mb-2 ml-1 uppercase tracking-widest">
-                                                            {key}
-                                                        </label>
-                                                        <input
-                                                            type="text"
-                                                            id={`var-${key}`}
-                                                            value={variables[key] || ''}
-                                                            onChange={(e) => updateVariable(key, e.target.value)}
-                                                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl px-6 py-4 text-sm font-bold shadow-sm focus:ring-8 focus:ring-indigo-500/5 transition-all outline-none"
-                                                            placeholder={`Fijar valor...`}
-                                                        />
-                                                    </motion.div>
-                                                ))}
+                                                {placeholders.map((key, i) => {
+                                                    const isFilled = !!variables[key]?.trim();
+                                                    return (
+                                                        <motion.div
+                                                            key={key}
+                                                            initial={{ opacity: 0, x: -10 }}
+                                                            animate={{ opacity: 1, x: 0 }}
+                                                            transition={{ delay: i * 0.05 }}
+                                                        >
+                                                            <label className="flex items-center gap-2 text-[9px] font-black text-slate-500 mb-2 ml-1 uppercase tracking-widest">
+                                                                <span className={`w-1.5 h-1.5 rounded-full ${isFilled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
+                                                                {key}
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                id={`var-${key}`}
+                                                                value={variables[key] || ''}
+                                                                onChange={(e) => updateVariable(key, e.target.value)}
+                                                                className={`w-full bg-white dark:bg-slate-900 border rounded-2xl px-6 py-4 text-sm font-bold shadow-sm focus:ring-8 focus:ring-indigo-500/5 transition-all outline-none ${isFilled ? 'border-emerald-200 dark:border-emerald-500/20' : 'border-slate-200 dark:border-white/10'}`}
+                                                                placeholder={`Fijar valor...`}
+                                                            />
+                                                        </motion.div>
+                                                    );
+                                                })}
                                             </div>
                                         </motion.div>
                                     ) : (
@@ -665,7 +703,7 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
                 filename={selectedRestaurant?.fiscalName || 'Contrato'}
                 onExport={trackExport}
             />
-            
+
             {/* Digital Signature Modal */}
             <DigitalSignatureModal
                 isOpen={isSignatureModalOpen}
