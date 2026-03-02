@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Edit3, Eye, EyeOff, Trash2, Lock, ChevronRight, Copy } from 'lucide-react';
+import { BookOpen, Edit3, Eye, EyeOff, Trash2, Lock, ChevronRight, Copy, GripVertical } from 'lucide-react';
 import { AcademyModule } from '../../../../services/academyService';
 import { cn } from '../../../../lib/utils';
 import { motion } from 'framer-motion';
@@ -12,6 +12,12 @@ interface ModuleCardProps {
     onToggleStatus: () => void;
     onDelete: () => void;
     onDuplicate?: () => void;
+    // Drag & Drop
+    dragListeners?: Record<string, any>;
+    dragAttributes?: Record<string, any>;
+    setNodeRef?: (node: HTMLElement | null) => void;
+    style?: React.CSSProperties;
+    isDragging?: boolean;
 }
 
 const getStatusStyles = (status: string) => {
@@ -39,7 +45,12 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
     onEdit,
     onToggleStatus,
     onDelete,
-    onDuplicate
+    onDuplicate,
+    dragListeners,
+    dragAttributes,
+    setNodeRef,
+    style,
+    isDragging
 }) => {
     const statusStyles = getStatusStyles(module.status || 'draft');
 
@@ -48,13 +59,16 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            whileHover={{ scale: 1.01, y: -2 }}
+            whileHover={!isDragging ? { scale: 1.01, y: -2 } : {}}
             onClick={onSelect}
+            ref={setNodeRef}
+            style={style}
             className={cn(
                 "group relative bg-white dark:bg-slate-900 rounded-xl border-2 transition-all duration-300 cursor-pointer overflow-hidden",
                 isSelected
                     ? 'border-blue-500 dark:border-blue-400 shadow-lg shadow-blue-500/10'
-                    : 'border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600'
+                    : 'border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600',
+                isDragging ? 'opacity-50 z-50 border-blue-500 scale-105 shadow-xl' : ''
             )}
         >
             {/* Selection Indicator */}
@@ -80,8 +94,18 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
 
                 {/* Top Section: Icon + Title + Status */}
                 <div className="flex items-start gap-3 pl-2">
-                    {/* Icon */}
-                    <div className="shrink-0">
+                    {/* Drag Handle & Icon */}
+                    <div className="shrink-0 flex items-center gap-1.5">
+                        {dragListeners && (
+                            <div
+                                {...dragAttributes}
+                                {...dragListeners}
+                                onClick={(e) => e.stopPropagation()}
+                                className="cursor-grab active:cursor-grabbing p-1.5 -ml-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
+                            >
+                                <GripVertical className="w-4 h-4" />
+                            </div>
+                        )}
                         <div className={cn(
                             "w-11 h-11 rounded-lg flex items-center justify-center shadow-md",
                             "bg-gradient-to-br from-slate-700 to-slate-800 dark:from-slate-600 dark:to-slate-700"
@@ -96,7 +120,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
                             <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-snug">
                                 {module.title}
                             </h3>
-                            
+
                             {/* Status Badge */}
                             <span className={cn(
                                 "px-2 py-0.5 rounded-md text-[9px] font-semibold uppercase tracking-wider flex items-center gap-1 shrink-0",

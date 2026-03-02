@@ -1,7 +1,8 @@
 import { db, storage } from '../lib/firebase';
 import {
     collection, getDocs, getDoc, query, where, addDoc, doc, updateDoc,
-    serverTimestamp, deleteDoc, Timestamp, FieldValue, orderBy, limit
+    serverTimestamp, deleteDoc, Timestamp, FieldValue, orderBy, limit,
+    writeBatch
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { ServiceError } from '../utils/ServiceError';
@@ -23,13 +24,21 @@ export interface AcademyModule {
     updated_at?: Timestamp | FieldValue;
 }
 
+export interface QuizQuestion {
+    id: string;
+    question: string;
+    options: string[];
+    correctOptionIndex: number;
+}
+
 export interface AcademyLesson {
     id?: string;
     module_id: string;
     title: string;
     content: string;
-    content_type: 'text' | 'video';
+    content_type: 'text' | 'video' | 'quiz';
     video_url?: string;
+    quiz?: QuizQuestion[];
     duration: number;
     order: number;
     status: 'draft' | 'published';
@@ -132,6 +141,19 @@ export const academyService = {
         }
     },
 
+    updateModulesOrder: async (moduleUpdates: { id: string, order: number }[]): Promise<void> => {
+        try {
+            const batch = writeBatch(db);
+            moduleUpdates.forEach(({ id, order }) => {
+                const docRef = doc(db, COLLECTIONS.MODULES, id);
+                batch.update(docRef, { order, updated_at: serverTimestamp() });
+            });
+            await batch.commit();
+        } catch (error) {
+            throw new ServiceError('updateModulesOrder', { cause: error });
+        }
+    },
+
     getLessonsByModule: async (moduleId: string, status?: 'draft' | 'published' | 'all'): Promise<AcademyLesson[]> => {
         try {
             let q;
@@ -201,6 +223,19 @@ export const academyService = {
             await deleteDoc(doc(db, COLLECTIONS.LESSONS, lessonId));
         } catch (error) {
             throw new ServiceError('deleteLesson', { cause: error });
+        }
+    },
+
+    updateLessonsOrder: async (lessonUpdates: { id: string, order: number }[]): Promise<void> => {
+        try {
+            const batch = writeBatch(db);
+            lessonUpdates.forEach(({ id, order }) => {
+                const docRef = doc(db, COLLECTIONS.LESSONS, id);
+                batch.update(docRef, { order, updated_at: serverTimestamp() });
+            });
+            await batch.commit();
+        } catch (error) {
+            throw new ServiceError('updateLessonsOrder', { cause: error });
         }
     },
 

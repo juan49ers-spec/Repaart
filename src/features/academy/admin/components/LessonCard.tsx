@@ -1,5 +1,5 @@
 import React from 'react';
-import { Video, FileText, Eye, EyeOff, Trash2, Edit2 } from 'lucide-react';
+import { Video, FileText, Eye, EyeOff, Trash2, Edit2, GripVertical, ListChecks } from 'lucide-react';
 import { AcademyLesson } from '../../../../services/academyService';
 import { cn } from '../../../../lib/utils';
 
@@ -8,26 +8,60 @@ interface LessonCardProps {
     onEdit: () => void;
     onToggleStatus: () => void;
     onDelete: () => void;
+    // Drag & Drop
+    dragListeners?: Record<string, any>;
+    dragAttributes?: Record<string, any>;
+    setNodeRef?: (node: HTMLElement | null) => void;
+    style?: React.CSSProperties;
+    isDragging?: boolean;
 }
 
 const LessonCard: React.FC<LessonCardProps> = ({
     lesson,
     onEdit,
     onToggleStatus,
-    onDelete
+    onDelete,
+    dragListeners,
+    dragAttributes,
+    setNodeRef,
+    style,
+    isDragging
 }) => {
     const getPreviewText = () => {
         if (lesson.content_type === 'video') {
             return lesson.video_url ? 'Video de YouTube' : 'Sin video';
+        }
+        if (lesson.content_type === 'quiz') {
+            return 'Cuestionario de evaluación';
         }
         const plainText = lesson.content.replace(/<[^>]+>/g, '');
         return plainText.length > 100 ? plainText.substring(0, 100) + '...' : plainText;
     };
 
     return (
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 hover:shadow-sm transition-shadow">
+        <div
+            ref={setNodeRef}
+            style={style}
+            className={cn(
+                "bg-white dark:bg-slate-800 border-2 rounded-lg p-3 hover:shadow-sm transition-all relative overflow-hidden",
+                isDragging
+                    ? "opacity-50 z-50 border-blue-500 scale-[1.02] shadow-xl"
+                    : "border-slate-200 dark:border-slate-700"
+            )}
+        >
             <div className="flex items-start gap-3">
-                <div className="flex-1">
+                {/* Drag Handle */}
+                {dragListeners && (
+                    <div
+                        {...dragAttributes}
+                        {...dragListeners}
+                        className="cursor-grab active:cursor-grabbing p-1 -ml-1 mt-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors shrink-0"
+                    >
+                        <GripVertical className="w-4 h-4" />
+                    </div>
+                )}
+
+                <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1.5">
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
                             Lección {lesson.order}
@@ -40,11 +74,16 @@ const LessonCard: React.FC<LessonCardProps> = ({
                         )}>
                             {lesson.status === 'published' ? 'Publicado' : 'Borrador'}
                         </span>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1 shrink-0">
                             {lesson.content_type === 'video' ? (
                                 <>
                                     <Video className="w-2.5 h-2.5" />
                                     Video
+                                </>
+                            ) : lesson.content_type === 'quiz' ? (
+                                <>
+                                    <ListChecks className="w-2.5 h-2.5" />
+                                    Quiz
                                 </>
                             ) : (
                                 <>
@@ -54,10 +93,10 @@ const LessonCard: React.FC<LessonCardProps> = ({
                             )}
                         </span>
                     </div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1 truncate">
                         {lesson.title}
                     </h3>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 pr-2">
                         {getPreviewText()}
                     </p>
                 </div>

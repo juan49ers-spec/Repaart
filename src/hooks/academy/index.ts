@@ -261,3 +261,43 @@ export const useMarkLessonComplete = () => {
 
     return { markComplete, loading, error };
 };
+
+export const useUpdateModulesOrder = () => {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
+
+    const updateModulesOrder = async (moduleUpdates: { id: string, order: number }[]): Promise<void> => {
+        try {
+            setLoading(true);
+            setError(null);
+            await academyService.updateModulesOrder(moduleUpdates);
+        } catch (err) {
+            setError(err as Error);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { updateModulesOrder, loading, error };
+};
+
+export const useUpdateLessonsOrder = () => {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
+
+    const updateLessonsOrder = async (lessonUpdates: { id: string, order: number }[]): Promise<void> => {
+        try {
+            setLoading(true);
+            setError(null);
+            await academyService.updateLessonsOrder(lessonUpdates);
+        } catch (err) {
+            setError(err as Error);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { updateLessonsOrder, loading, error };
+};

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import {
@@ -9,17 +9,111 @@ import {
     useDeleteModule,
     useCreateLesson,
     useUpdateLesson,
-    useDeleteLesson
+    useDeleteLesson,
+    useUpdateModulesOrder,
+    useUpdateLessonsOrder
 } from '../../../hooks/academy';
 import { AcademyModule, AcademyLesson } from '../../../services/academyService';
 import { BookOpen, Plus, Layout, Users, ChevronRight, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+    rectSortingStrategy,
+    useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { restrictToWindowEdges } from '@dnd-kit/modifiers';
 
 import AcademyHeader from './components/AcademyHeader';
 import ModuleCard from './components/ModuleCard';
 import LessonCard from './components/LessonCard';
 import ModuleEditorModal from './components/ModuleEditorModal';
 import LessonEditorModal from './components/LessonEditorModal';
+
+interface SortableModuleProps {
+    module: AcademyModule;
+    isSelected: boolean;
+    onSelect: () => void;
+    onEdit: () => void;
+    onToggleStatus: () => void;
+    onDelete: () => void;
+    onDuplicate: () => void;
+}
+
+function SortableModule({ module, ...props }: SortableModuleProps) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({ id: module.id! });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+
+    return (
+        <ModuleCard
+            module={module}
+            setNodeRef={setNodeRef}
+            dragAttributes={attributes}
+            dragListeners={listeners}
+            style={style}
+            isDragging={isDragging}
+            {...props}
+        />
+    );
+}
+
+interface SortableLessonProps {
+    lesson: AcademyLesson;
+    onEdit: () => void;
+    onToggleStatus: () => void;
+    onDelete: () => void;
+}
+
+function SortableLesson({ lesson, ...props }: SortableLessonProps) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({ id: lesson.id! });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+
+    return (
+        <LessonCard
+            lesson={lesson}
+            setNodeRef={setNodeRef}
+            dragAttributes={attributes}
+            dragListeners={listeners}
+            style={style}
+            isDragging={isDragging}
+            {...props}
+        />
+    );
+}
 
 const AcademyAdmin = () => {
     const navigate = useNavigate();
@@ -31,6 +125,8 @@ const AcademyAdmin = () => {
     const { createLesson: createLessonFunc } = useCreateLesson();
     const { updateLesson: updateLessonFunc } = useUpdateLesson();
     const { deleteLesson: deleteLessonFunc } = useDeleteLesson();
+    const { updateModulesOrder } = useUpdateModulesOrder();
+    const { updateLessonsOrder } = useUpdateLessonsOrder();
 
     const [viewMode, setViewMode] = useState<'overview' | 'modules' | 'lessons'>('overview');
     const [selectedModule, setSelectedModule] = useState<AcademyModule | null>(null);
@@ -43,6 +139,77 @@ const AcademyAdmin = () => {
 
     const { lessons, refetch: refetchLessons } = useAcademyLessons(selectedModule?.id || null, 'all');
 
+    const [localModules, setLocalModules] = useState<AcademyModule[]>([]);
+    const [localLessons, setLocalLessons] = useState<AcademyLesson[]>([]);
+
+    useEffect(() => {
+        if (modules) {
+            setLocalModules([...modules].sort((a, b) => (a.order || 0) - (b.order || 0)));
+        }
+    }, [modules]);
+
+    useEffect(() => {
+        if (!selectedModule || !lessons) {
+            setLocalLessons([]);
+            return;
+        }
+        const filtered = lessons.filter(l => l.module_id === selectedModule.id);
+        setLocalLessons([...filtered].sort((a, b) => (a.order || 0) - (b.order || 0)));
+    }, [lessons, selectedModule]);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    const handleDragEndModules = async (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            const oldIndex = localModules.findIndex((m) => m.id === active.id);
+            const newIndex = localModules.findIndex((m) => m.id === over.id);
+
+            const newModules = arrayMove(localModules, oldIndex, newIndex);
+            setLocalModules(newModules);
+
+            const updates = newModules.map((m, idx) => ({ id: m.id!, order: idx }));
+            setIsSaving(true);
+            try {
+                await updateModulesOrder(updates);
+                await refetchModules();
+            } catch (error) {
+                console.error('Error updating module orders', error);
+                toast.error('Error al reordenar módulos');
+            } finally {
+                setIsSaving(false);
+            }
+        }
+    };
+
+    const handleDragEndLessons = async (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            const oldIndex = localLessons.findIndex((l) => l.id === active.id);
+            const newIndex = localLessons.findIndex((l) => l.id === over.id);
+
+            const newLessons = arrayMove(localLessons, oldIndex, newIndex);
+            setLocalLessons(newLessons);
+
+            const updates = newLessons.map((l, idx) => ({ id: l.id!, order: idx }));
+            setIsSaving(true);
+            try {
+                await updateLessonsOrder(updates);
+                await refetchLessons();
+            } catch (error) {
+                console.error('Error updating lesson orders', error);
+                toast.error('Error al reordenar lecciones');
+            } finally {
+                setIsSaving(false);
+            }
+        }
+    };
+
     const filteredLessons = useMemo(() => {
         if (!selectedModule) return [];
         return lessons.filter(l => l.module_id === selectedModule.id);
@@ -52,7 +219,7 @@ const AcademyAdmin = () => {
         const activeModules = modules.filter(m => m.status === 'active').length;
         const draftModules = modules.filter(m => m.status === 'draft').length;
         const totalLessons = lessons.length;
-        
+
         return {
             totalModules: modules.length,
             activeModules,
@@ -190,15 +357,42 @@ const AcademyAdmin = () => {
         }
     };
 
-    const handleUpdateLesson = async (lessonData: Partial<AcademyLesson>) => {
-        if (!editingLesson?.id) return;
+    // Autosave: persiste sin cerrar el modal
+    const handleAutoSaveLesson = async (lessonData: Partial<AcademyLesson>) => {
+        console.log('[DEBUG] handleAutoSaveLesson triggered', { editingLessonId: editingLesson?.id, lessonData });
+        if (!editingLesson?.id) {
+            console.warn('[DEBUG] handleAutoSaveLesson aborted: no editingLesson.id');
+            return;
+        }
         try {
             const dataToUpdate = { ...lessonData };
             delete dataToUpdate.id;
+            console.log('[DEBUG] Calling updateLessonFunc via AutoSave');
+            await updateLessonFunc(editingLesson.id, dataToUpdate);
+            setLastSaved(new Date());
+            setHasUnsavedChanges(false);
+            console.log('[DEBUG] AutoSave success');
+        } catch (error) {
+            console.error('[AcademyAdmin] Error en auto-guardado:', error);
+        }
+    };
+
+    // Guardado manual: persiste Y cierra el modal
+    const handleUpdateLesson = async (lessonData: Partial<AcademyLesson>) => {
+        console.log('[DEBUG] handleUpdateLesson triggered', { editingLessonId: editingLesson?.id, lessonData });
+        if (!editingLesson?.id) {
+            console.warn('[DEBUG] handleUpdateLesson aborted: no editingLesson.id');
+            return;
+        }
+        try {
+            const dataToUpdate = { ...lessonData };
+            delete dataToUpdate.id;
+            console.log('[DEBUG] Calling updateLessonFunc via Manual Save');
             await updateLessonFunc(editingLesson.id, dataToUpdate);
             setLastSaved(new Date());
             setHasUnsavedChanges(false);
             setEditingLesson(null);
+            console.log('[DEBUG] Manual Save success, clearing editingLesson and refetching');
             await refetchLessons();
         } catch (error) {
             console.error('[AcademyAdmin] Error al actualizar lección:', error);
@@ -395,29 +589,35 @@ const AcademyAdmin = () => {
                                 </button>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {modules.map((module, index) => (
-                                    <motion.div
-                                        key={module.id}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                                    >
-                                        <ModuleCard
-                                            module={module}
-                                            isSelected={selectedModule?.id === module.id}
-                                            onSelect={() => {
-                                                setSelectedModule(module);
-                                                setViewMode('lessons');
-                                            }}
-                                            onEdit={() => setEditingModule(module)}
-                                            onToggleStatus={() => handleToggleModuleStatus(module)}
-                                            onDelete={() => module.id && handleDeleteModule(module.id)}
-                                            onDuplicate={() => handleDuplicateModule(module)}
-                                        />
-                                    </motion.div>
-                                ))}
-                            </div>
+                            <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCenter}
+                                onDragEnd={handleDragEndModules}
+                                modifiers={[restrictToWindowEdges]}
+                            >
+                                <SortableContext
+                                    items={localModules.map((m) => m.id!)}
+                                    strategy={rectSortingStrategy}
+                                >
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {localModules.map((module) => (
+                                            <SortableModule
+                                                key={module.id}
+                                                module={module}
+                                                isSelected={selectedModule?.id === module.id}
+                                                onSelect={() => {
+                                                    setSelectedModule(module);
+                                                    setViewMode('lessons');
+                                                }}
+                                                onEdit={() => setEditingModule(module)}
+                                                onToggleStatus={() => handleToggleModuleStatus(module)}
+                                                onDelete={() => module.id && handleDeleteModule(module.id)}
+                                                onDuplicate={() => handleDuplicateModule(module)}
+                                            />
+                                        ))}
+                                    </div>
+                                </SortableContext>
+                            </DndContext>
 
                             {isSaving && (
                                 <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-50">
@@ -495,32 +695,38 @@ const AcademyAdmin = () => {
                                 </button>
                             </div>
 
-                            <div className="space-y-3">
-                                {filteredLessons.map((lesson, index) => (
-                                    <motion.div
-                                        key={lesson.id}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                                    >
-                                        <LessonCard
-                                            lesson={lesson}
-                                            onEdit={() => setEditingLesson(lesson)}
-                                            onToggleStatus={() => handleToggleLessonStatus(lesson)}
-                                            onDelete={() => lesson.id && handleDeleteLesson(lesson.id)}
-                                        />
-                                    </motion.div>
-                                ))}
+                            <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCenter}
+                                onDragEnd={handleDragEndLessons}
+                                modifiers={[restrictToWindowEdges]}
+                            >
+                                <SortableContext
+                                    items={localLessons.map((l) => l.id!)}
+                                    strategy={verticalListSortingStrategy}
+                                >
+                                    <div className="space-y-3">
+                                        {localLessons.map((lesson) => (
+                                            <SortableLesson
+                                                key={lesson.id}
+                                                lesson={lesson}
+                                                onEdit={() => setEditingLesson(lesson)}
+                                                onToggleStatus={() => handleToggleLessonStatus(lesson)}
+                                                onDelete={() => lesson.id && handleDeleteLesson(lesson.id)}
+                                            />
+                                        ))}
 
-                                {filteredLessons.length === 0 && (
-                                    <div className="text-center py-12">
-                                        <BookOpen className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
-                                        <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                                            Este módulo aún no tiene lecciones
-                                        </p>
+                                        {localLessons.length === 0 && (
+                                            <div className="text-center py-12">
+                                                <BookOpen className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
+                                                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                                                    Este módulo aún no tiene lecciones
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                            </div>
+                                </SortableContext>
+                            </DndContext>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -546,6 +752,7 @@ const AcademyAdmin = () => {
                     onClose={handleCloseLessonEditor}
                     onChange={handleLessonDataChange}
                     onSave={handleUpdateLesson}
+                    onAutoSave={handleAutoSaveLesson}
                     onDelete={handleDeleteLesson}
                     onToggleStatus={editingLesson ? () => handleToggleLessonStatus(editingLesson) : undefined}
                 />
