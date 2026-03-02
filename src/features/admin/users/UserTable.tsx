@@ -237,8 +237,8 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction, currentUserRole,
                 className="flex-1 overflow-y-auto relative custom-scrollbar h-full text-slate-700 dark:text-slate-300"
             >
                 {/* Responsive wrapper: min-width only on desktop to allow mobile flex behavior */}
-                <div style={{ '--table-height': `${totalContentHeight}px`, height: 'var(--table-height)', position: 'relative' } as React.CSSProperties} className="min-w-full md:min-w-[800px]">
-                    <div style={{ transform: `translateY(${offsetY}px)` }}>
+                <div style={{ '--table-height': `${totalContentHeight}px` } as React.CSSProperties} className="min-w-full md:min-w-[800px] h-[var(--table-height)] relative">
+                    <div style={{ '--y-offset': `${offsetY}px` } as React.CSSProperties} className="translate-y-[var(--y-offset)]">
                         {visibleUsers.map((user) => (
                             <UserRow
                                 key={user.uid || user.id}

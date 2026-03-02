@@ -17,18 +17,31 @@ interface ResourceUploadModalProps {
     onClose: () => void;
     onSuccess: (resourceId?: string) => void;
     defaultCategory?: string;
+    initialFile?: File | null;
 }
 
-const ResourceUploadModal: React.FC<ResourceUploadModalProps> = ({ isOpen, onClose, onSuccess, defaultCategory = 'general' }) => {
+const ResourceUploadModal: React.FC<ResourceUploadModalProps> = ({ isOpen, onClose, onSuccess, defaultCategory = 'general', initialFile }) => {
     const [file, setFile] = useState<File | null>(null);
     const [title, setTitle] = useState('');
     const [category, setCategory] = useState(defaultCategory);
     const [prevDefaultCategory, setPrevDefaultCategory] = useState(defaultCategory);
     const [isPinned, setIsPinned] = useState(false);
+    const [prevInitialFile, setPrevInitialFile] = useState<File | null | undefined>(undefined);
 
     if (defaultCategory !== prevDefaultCategory) {
         setCategory(defaultCategory);
         setPrevDefaultCategory(defaultCategory);
+    }
+
+    // Auto-populate from dropped file
+    if (initialFile && initialFile !== prevInitialFile) {
+        setPrevInitialFile(initialFile);
+        setFile(initialFile);
+        const nameWithoutExt = initialFile.name.split('.').slice(0, -1).join('.');
+        setTitle(nameWithoutExt.charAt(0).toUpperCase() + nameWithoutExt.slice(1).replace(/[-_]/g, ' '));
+    }
+    if (!initialFile && prevInitialFile) {
+        setPrevInitialFile(undefined);
     }
 
     // Upload State
@@ -133,8 +146,8 @@ const ResourceUploadModal: React.FC<ResourceUploadModalProps> = ({ isOpen, onClo
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-slate-900 border border-slate-700 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
+            <div className="bg-slate-900 border border-slate-700 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
 
                 {/* Header */}
                 <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-800/50">

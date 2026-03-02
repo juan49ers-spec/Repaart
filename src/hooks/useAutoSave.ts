@@ -19,6 +19,14 @@ export function useAutoSave({
   const saveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const previousDepsRef = useRef<React.DependencyList | undefined>(undefined);
 
+  const onSaveRef = useRef(onSave);
+  // Keep the latest onSave callback
+  useEffect(() => {
+    onSaveRef.current = onSave;
+  }, [onSave]);
+
+  const depsString = JSON.stringify(deps);
+
   useEffect(() => {
     if (!enabled) return;
 
@@ -31,16 +39,14 @@ export function useAutoSave({
     if (hasChanged) {
       setHasUnsavedChanges(true);
 
-      // Clear existing timeout
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
 
-      // Set new timeout
       saveTimeoutRef.current = setTimeout(async () => {
         setIsSaving(true);
         try {
-          await onSave();
+          await onSaveRef.current();
           setHasUnsavedChanges(false);
           setLastSaved(new Date());
         } catch (error) {
@@ -53,12 +59,13 @@ export function useAutoSave({
       previousDepsRef.current = deps;
     }
 
+    // Cleanup when component unmounts or when enabled/delay/depsString changes
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [deps, delay, onSave, enabled]);
+  }, [depsString, delay, enabled]);
 
   const forceSave = async () => {
     if (saveTimeoutRef.current) {

@@ -14,14 +14,20 @@ import {
     Download,
     Plus,
     Pin,
-    FolderOpen,
     Shield,
     Briefcase,
     BookOpen,
     Layout,
     Folder,
     RefreshCw,
-    Sparkles
+    Sparkles,
+    UploadCloud,
+    FileUp,
+    Archive,
+    ChevronDown,
+    ChevronRight,
+    ArrowUpDown,
+    Home
 } from 'lucide-react';
 import DocPreviewModal from '../../components/ui/overlays/DocPreviewModal';
 import ConfirmationModal from '../../components/ui/feedback/ConfirmationModal';
@@ -110,6 +116,69 @@ const AdminResourcesPanel = () => {
     const [showFiscalDataForm, setShowFiscalDataForm] = useState(false);
     const [isTemplateSelectorOpen, setIsTemplateSelectorOpen] = useState(false);
 
+    // 🎯 Dropzone State
+    const [isDraggingOver, setIsDraggingOver] = useState(false);
+    const [droppedFile, setDroppedFile] = useState<File | null>(null);
+
+    // 📊 Sidebar & Sort State
+    const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+    const [sortMode, setSortMode] = useState<'newest' | 'oldest' | 'name_asc' | 'name_desc' | 'size_desc' | 'size_asc'>('newest');
+
+    // ☑️ Selection State
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+    const toggleSelect = (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    };
+
+    const selectAll = () => {
+        setSelectedIds(new Set(filteredResources.map(r => r.id)));
+    };
+
+    const clearSelection = () => setSelectedIds(new Set());
+
+    const handleBulkDelete = () => {
+        const toDelete = filteredResources.filter(r => selectedIds.has(r.id) && !r.isMock);
+        if (toDelete.length === 0) return;
+        setConfirmDialog({
+            isOpen: true,
+            title: `Eliminar ${toDelete.length} recurso(s)`,
+            message: `¿Estás seguro de eliminar ${toDelete.length} archivo(s)? Esta acción no se puede deshacer.`,
+            isDestructive: true,
+            confirmText: 'Eliminar todos',
+            onConfirm: async () => {
+                for (const file of toDelete) {
+                    try {
+                        if (file.storagePath) {
+                            const storageRef = ref(storage, file.storagePath);
+                            await deleteObject(storageRef);
+                        }
+                        await deleteDoc(doc(db, 'resources', file.id));
+                    } catch (err) {
+                        console.error('Error deleting', file.id, err);
+                    }
+                }
+                clearSelection();
+                setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+            },
+        });
+    };
+
+    const handleBulkDownload = () => {
+        filteredResources
+            .filter(r => selectedIds.has(r.id) && r.url)
+            .forEach(r => window.open(r.url, '_blank', 'noopener,noreferrer'));
+    };
+
     const handleOpenWizard = async () => {
         // Primero verificar datos fiscales
         if (!isReady) {
@@ -162,33 +231,79 @@ const AdminResourcesPanel = () => {
         return [...MOCK_RESOURCES, ...dbResources];
     }, [dbResources]);
 
-    // Filter Logic
-    const filteredResources = useMemo(() => {
-        let filtered = allResources;
+    // Computed storage stats
+    const storageStats = useMemo(() => {
+        const totalBytes = allResources.reduce((acc, r) => acc + (r.size || 0), 0);
+        const maxBytes = 10 * 1024 * 1024 * 1024; // 10 GB
+        const percentage = Math.min((totalBytes / maxBytes) * 100, 100);
+        const formatStorage = (bytes: number) => {
+            if (bytes >= 1024 * 1024 * 1024) return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+            if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+            if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return bytes + ' B';
+        };
+        return { totalBytes, maxBytes, percentage, formatted: formatStorage(totalBytes) };
+    }, [allResources]);
 
-        // 1. Category Filter
-        if (activeCategory) {
-            filtered = filtered.filter(r => (r.category || 'general') === activeCategory);
+    // Per-folder resource counts
+    const folderCounts = useMemo(() => {
+        const counts: Record<string, number> = {};
+        for (const folder of FOLDERS) {
+            counts[folder.id] = allResources.filter(r => (r.category || 'general') === folder.id).length;
         }
+        return counts;
+    }, [allResources]);
 
+    // Download handler
+    const handleDownload = (file: Resource, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (file.url) {
+            window.open(file.url, '_blank', 'noopener,noreferrer');
+        }
+    };
+
+    // Filter Logic
+    const filteredResources = allResources.filter(r => {
+        // 1. Category Filter
+        if (activeCategory && (r.category || 'general') !== activeCategory) {
+            return false;
+        }
         // 2. Search Filter
         if (searchTerm) {
             const lower = searchTerm.toLowerCase();
-            filtered = filtered.filter(resource =>
-                (resource.title || resource.name || '').toLowerCase().includes(lower)
-            );
+            if (!(r.title || r.name || '').toLowerCase().includes(lower)) {
+                return false;
+            }
         }
+        return true;
+    }).sort((a, b) => {
+        // 3. Sort (Pinned first, then by sortMode)
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
 
-        // 3. Sort (Pinned first, then by createdAt)
-        return filtered.sort((a, b) => {
-            if (a.isPinned && !b.isPinned) return -1;
-            if (!a.isPinned && b.isPinned) return 1;
-            // Sort by createdAt descending (newest first)
-            const aTime = a.createdAt?.toMillis() || 0;
-            const bTime = b.createdAt?.toMillis() || 0;
-            return bTime - aTime;
-        });
-    }, [allResources, activeCategory, searchTerm]);
+        switch (sortMode) {
+            case 'newest': {
+                const aTime = a.createdAt?.toMillis?.() || 0;
+                const bTime = b.createdAt?.toMillis?.() || 0;
+                return bTime - aTime;
+            }
+            case 'oldest': {
+                const aTime = a.createdAt?.toMillis?.() || 0;
+                const bTime = b.createdAt?.toMillis?.() || 0;
+                return aTime - bTime;
+            }
+            case 'name_asc':
+                return (a.title || a.name || '').localeCompare(b.title || b.name || '');
+            case 'name_desc':
+                return (b.title || b.name || '').localeCompare(a.title || a.name || '');
+            case 'size_desc':
+                return (b.size || 0) - (a.size || 0);
+            case 'size_asc':
+                return (a.size || 0) - (b.size || 0);
+            default:
+                return 0;
+        }
+    });
 
 
     // Actions
@@ -352,7 +467,9 @@ const AdminResourcesPanel = () => {
                                                 <folder.icon className={`w-4 h-4 ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
                                                 {folder.label}
                                             </div>
-                                            {isActive && <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />}
+                                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${isActive ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                                                {folderCounts[folder.id] || 0}
+                                            </span>
                                         </button>
                                     );
                                 })}
@@ -363,10 +480,10 @@ const AdminResourcesPanel = () => {
                                 <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-100 dark:border-slate-700">
                                     <div className="flex justify-between items-center mb-2">
                                         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Almacenamiento</span>
-                                        <span className="text-[10px] font-bold text-indigo-500">2.4 GB / 10 GB</span>
+                                        <span className="text-[10px] font-bold text-indigo-500">{storageStats.formatted} / 10 GB</span>
                                     </div>
                                     <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                        <div className="h-full bg-indigo-500 w-[24%] rounded-full" />
+                                        <div className="h-full bg-indigo-500 rounded-full transition-all duration-500" style={{ width: `${Math.max(storageStats.percentage, 1)}%` }} />
                                     </div>
                                 </div>
 
@@ -386,28 +503,75 @@ const AdminResourcesPanel = () => {
                                     Generar Inteligente
                                 </button>
 
-                                {/* Analytics Dashboard */}
-                                <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
-                                    <ContractAnalyticsDashboard />
+                                {/* Analytics Dashboard — Collapsible */}
+                                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                    <button
+                                        onClick={() => setIsAnalyticsOpen(!isAnalyticsOpen)}
+                                        className="w-full flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider hover:text-slate-600 dark:hover:text-slate-300 transition-colors px-1 py-1"
+                                    >
+                                        <span>Analytics</span>
+                                        {isAnalyticsOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                                    </button>
+                                    {isAnalyticsOpen && (
+                                        <div className="mt-3 animate-in slide-in-from-top-2 fade-in duration-200">
+                                            <ContractAnalyticsDashboard />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </aside>
 
                         {/* 📄 MAIN GRID */}
-                        <main className="flex-1 flex flex-col min-w-0 bg-slate-50/50 dark:bg-slate-950/50 relative overflow-hidden">
-                            {/* Sub-Header / Search */}
-                            <div className="h-auto md:h-16 p-4 md:px-8 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 shrink-0 bg-white/50 dark:bg-slate-950/50 backdrop-blur-md sticky top-0 z-10">
-                                <div className="flex items-center gap-4">
-                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                        <main
+                            className="flex-1 flex flex-col min-w-0 bg-slate-50/50 dark:bg-slate-950/50 relative overflow-hidden"
+                            onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDraggingOver(true); }}
+                            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                            onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); if (e.currentTarget === e.target) setIsDraggingOver(false); }}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setIsDraggingOver(false);
+                                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                                    setDroppedFile(e.dataTransfer.files[0]);
+                                    setIsUploadModalOpen(true);
+                                }
+                            }}
+                        >
+                            {/* Drag Overlay */}
+                            {isDraggingOver && (
+                                <div className="absolute inset-0 z-50 bg-indigo-600/10 dark:bg-indigo-500/10 backdrop-blur-sm flex items-center justify-center pointer-events-none animate-in fade-in duration-200">
+                                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-10 shadow-2xl shadow-indigo-500/20 border-2 border-dashed border-indigo-400 flex flex-col items-center gap-4 animate-in zoom-in-95 duration-300">
+                                        <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center">
+                                            <FileUp className="w-8 h-8 text-indigo-500 animate-bounce" />
+                                        </div>
+                                        <p className="text-lg font-bold text-slate-800 dark:text-white">Soltar archivo aquí</p>
+                                        <p className="text-sm text-slate-500">Se guardará en <span className="font-semibold text-indigo-600">{FOLDERS.find(f => f.id === activeCategory)?.label}</span></p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Sub-Header / Breadcrumb + Search + Sort */}
+                            <div className="h-auto p-4 md:px-8 border-b border-slate-200 dark:border-slate-800 shrink-0 bg-white/50 dark:bg-slate-950/50 backdrop-blur-md sticky top-0 z-10 space-y-3">
+                                {/* Breadcrumb */}
+                                <div className="flex items-center gap-2 text-xs">
+                                    <button onClick={() => setActiveCategory('contracts')} className="text-slate-400 hover:text-indigo-600 transition-colors flex items-center gap-1">
+                                        <Home className="w-3 h-3" />
+                                        Conocimiento
+                                    </button>
+                                    <ChevronRight className="w-3 h-3 text-slate-300" />
+                                    <span className="text-slate-400">Bóveda</span>
+                                    <ChevronRight className="w-3 h-3 text-slate-300" />
+                                    <span className="font-bold text-slate-700 dark:text-white">
                                         {FOLDERS.find(f => f.id === activeCategory)?.label}
-                                    </h3>
-                                    <span className="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold px-2 py-0.5 rounded-md">
+                                    </span>
+                                    <span className="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold px-1.5 py-0.5 rounded-md ml-1">
                                         {filteredResources.length}
                                     </span>
                                 </div>
 
-                                <div className="flex items-center gap-3 w-full md:w-auto">
-                                    <div className="relative group flex-1 md:w-64 transition-all focus-within:md:w-80">
+                                {/* Search + Sort + View Toggle */}
+                                <div className="flex items-center gap-3 w-full">
+                                    <div className="relative group flex-1 md:max-w-sm transition-all focus-within:md:max-w-md">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                                         <input
                                             type="text"
@@ -417,6 +581,26 @@ const AdminResourcesPanel = () => {
                                             className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm"
                                         />
                                     </div>
+
+                                    {/* Sort Selector */}
+                                    <div className="relative">
+                                        <select
+                                            value={sortMode}
+                                            onChange={(e) => setSortMode(e.target.value as typeof sortMode)}
+                                            aria-label="Ordenar recursos"
+                                            className="appearance-none bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs pl-8 pr-6 py-2 text-slate-600 dark:text-slate-400 font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-sm cursor-pointer"
+                                        >
+                                            <option value="newest">Más recientes</option>
+                                            <option value="oldest">Más antiguos</option>
+                                            <option value="name_asc">Nombre A-Z</option>
+                                            <option value="name_desc">Nombre Z-A</option>
+                                            <option value="size_desc">Mayor tamaño</option>
+                                            <option value="size_asc">Menor tamaño</option>
+                                        </select>
+                                        <ArrowUpDown className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                                    </div>
+
+                                    {/* View Toggle */}
                                     <div className="flex bg-white dark:bg-slate-900 rounded-lg p-1 border border-slate-200 dark:border-slate-700 shadow-sm shrink-0">
                                         <button onClick={() => setViewMode('grid')} title="Vista Cuadrícula" className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
                                             <Grid className="w-4 h-4" />
@@ -428,6 +612,44 @@ const AdminResourcesPanel = () => {
                                 </div>
                             </div>
 
+                            {/* Bulk Action Bar */}
+                            {selectedIds.size > 0 && (
+                                <div className="mx-8 mt-4 mb-0 p-3 bg-indigo-600 rounded-2xl flex items-center justify-between animate-in slide-in-from-top-2 fade-in duration-200 shadow-lg shadow-indigo-500/30">
+                                    <div className="flex items-center gap-3">
+                                        <span className="bg-white/20 text-white text-xs font-black px-2.5 py-1 rounded-lg">
+                                            {selectedIds.size}
+                                        </span>
+                                        <span className="text-white/90 text-sm font-medium">seleccionado{selectedIds.size > 1 ? 's' : ''}</span>
+                                        <button onClick={selectAll} className="text-white/70 text-xs hover:text-white transition-colors underline underline-offset-2">
+                                            Seleccionar todos ({filteredResources.length})
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={handleBulkDownload}
+                                            className="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"
+                                        >
+                                            <Download className="w-3.5 h-3.5" />
+                                            Descargar
+                                        </button>
+                                        <button
+                                            onClick={handleBulkDelete}
+                                            className="px-3 py-1.5 bg-rose-500/80 hover:bg-rose-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                            Eliminar
+                                        </button>
+                                        <button
+                                            onClick={clearSelection}
+                                            className="p-1.5 text-white/50 hover:text-white transition-colors ml-1"
+                                            title="Deseleccionar"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Scrollable Content */}
                             <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
                                 {loading ? (
@@ -435,21 +657,45 @@ const AdminResourcesPanel = () => {
                                         {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-48 bg-slate-200 dark:bg-slate-800 rounded-2xl" />)}
                                     </div>
                                 ) : filteredResources.length === 0 ? (
-                                    <div className="h-full flex flex-col items-center justify-center text-center opacity-80 animate-in fade-in zoom-in-95 duration-500">
-                                        <div className="w-24 h-24 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4 group relative">
-                                            <div className="absolute inset-0 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-full animate-spin-slow pointer-events-none" />
-                                            <FolderOpen className="w-10 h-10 text-slate-300 dark:text-slate-600 group-hover:scale-110 transition-transform" />
+                                    <div className="h-full flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-500">
+                                        {/* Premium Empty State */}
+                                        <div className="relative mb-6">
+                                            <div className="w-28 h-28 bg-gradient-to-br from-indigo-50 to-slate-100 dark:from-indigo-900/20 dark:to-slate-800/50 rounded-3xl flex items-center justify-center shadow-inner">
+                                                <Archive className="w-12 h-12 text-indigo-300 dark:text-indigo-600" />
+                                            </div>
+                                            <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-100 dark:border-slate-700 flex items-center justify-center shadow-sm">
+                                                <Plus className="w-4 h-4 text-indigo-500" />
+                                            </div>
                                         </div>
-                                        <h4 className="text-lg font-black text-slate-700 dark:text-slate-200">Carpeta Vacía</h4>
-                                        <p className="text-sm text-slate-400 dark:text-slate-500 max-w-[200px] mt-2 mb-6 leading-relaxed">
-                                            No hay documentos en esta sección.
+
+                                        <h4 className="text-xl font-black text-slate-800 dark:text-slate-100 mb-2">
+                                            {FOLDERS.find(f => f.id === activeCategory)?.label || 'Carpeta'} vacía
+                                        </h4>
+                                        <p className="text-sm text-slate-400 dark:text-slate-500 max-w-xs mb-8 leading-relaxed">
+                                            Arrastra archivos aquí o usa los botones para empezar a organizar tus documentos.
                                         </p>
-                                        <button
-                                            onClick={() => setIsUploadModalOpen(true)}
-                                            className="px-6 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-indigo-600 dark:text-indigo-400 text-xs font-bold uppercase tracking-wider hover:bg-indigo-50 dark:hover:bg-slate-700 transition-colors"
-                                        >
-                                            Subir primer archivo
-                                        </button>
+
+                                        <div className="flex flex-col sm:flex-row gap-3">
+                                            <button
+                                                onClick={() => setIsUploadModalOpen(true)}
+                                                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-indigo-500/20 transition-all hover:-translate-y-0.5 group"
+                                            >
+                                                <UploadCloud className="w-4 h-4 group-hover:animate-bounce" />
+                                                Subir archivo
+                                            </button>
+                                            <button
+                                                onClick={handleOpenWizard}
+                                                className="px-6 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-bold flex items-center gap-2 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all hover:-translate-y-0.5 group"
+                                            >
+                                                <Sparkles className="w-4 h-4 text-indigo-500 group-hover:animate-pulse" />
+                                                Generar contrato
+                                            </button>
+                                        </div>
+
+                                        <p className="text-[11px] text-slate-300 dark:text-slate-600 mt-6 flex items-center gap-1.5">
+                                            <UploadCloud className="w-3 h-3" />
+                                            PDF, Imágenes, Word, Excel — máx. 25 MB
+                                        </p>
                                     </div>
                                 ) : (
                                     <>
@@ -459,8 +705,27 @@ const AdminResourcesPanel = () => {
                                                     <div
                                                         key={file.id}
                                                         onClick={() => setPreviewFile(file)}
-                                                        className="group bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2rem] p-5 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col items-center text-center relative overflow-hidden"
+                                                        className={`group bg-white dark:bg-slate-900 border rounded-[2rem] p-5 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col items-center text-center relative overflow-hidden ${selectedIds.has(file.id)
+                                                            ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/30 dark:bg-indigo-900/10'
+                                                            : 'border-slate-100 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500'
+                                                            }`}
                                                     >
+                                                        {/* Selection Checkbox */}
+                                                        <div className="absolute top-3 left-3 z-20">
+                                                            <button
+                                                                onClick={(e) => toggleSelect(file.id, e)}
+                                                                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${selectedIds.has(file.id)
+                                                                    ? 'bg-indigo-600 border-indigo-600 text-white'
+                                                                    : 'border-slate-300 dark:border-slate-600 opacity-0 group-hover:opacity-100 hover:border-indigo-400'
+                                                                    }`}
+                                                            >
+                                                                {selectedIds.has(file.id) && (
+                                                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                                    </svg>
+                                                                )}
+                                                            </button>
+                                                        </div>
                                                         {file.isMock && (
                                                             <div className="absolute top-3 left-3 z-10">
                                                                 <span className="bg-slate-100 dark:bg-slate-800 text-[9px] font-bold text-slate-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">EJEMPLO</span>
@@ -513,7 +778,22 @@ const AdminResourcesPanel = () => {
                                                 <table className="w-full text-left">
                                                     <thead className="bg-slate-50 dark:bg-slate-950 text-xs uppercase font-bold text-slate-500 tracking-wider">
                                                         <tr>
-                                                            <th className="p-4 pl-6">Documento</th>
+                                                            <th className="p-4 pl-4 w-10">
+                                                                <button
+                                                                    onClick={selectedIds.size === filteredResources.length ? clearSelection : selectAll}
+                                                                    className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${selectedIds.size === filteredResources.length && filteredResources.length > 0
+                                                                        ? 'bg-indigo-600 border-indigo-600 text-white'
+                                                                        : 'border-slate-300 dark:border-slate-600 hover:border-indigo-400'
+                                                                        }`}
+                                                                >
+                                                                    {selectedIds.size === filteredResources.length && filteredResources.length > 0 && (
+                                                                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                                        </svg>
+                                                                    )}
+                                                                </button>
+                                                            </th>
+                                                            <th className="p-4 pl-2">Documento</th>
                                                             <th className="p-4">Tamaño</th>
                                                             <th className="p-4">Fecha</th>
                                                             <th className="p-4 text-right pr-6">Acciones</th>
@@ -521,8 +801,23 @@ const AdminResourcesPanel = () => {
                                                     </thead>
                                                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
                                                         {filteredResources.map(file => (
-                                                            <tr key={file.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer" onClick={() => setPreviewFile(file)}>
-                                                                <td className="p-4 pl-6 font-medium text-slate-900 dark:text-white flex items-center gap-3">
+                                                            <tr key={file.id} className={`transition-colors group cursor-pointer ${selectedIds.has(file.id) ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}`} onClick={() => setPreviewFile(file)}>
+                                                                <td className="p-4 pl-4 w-10">
+                                                                    <button
+                                                                        onClick={(e) => toggleSelect(file.id, e)}
+                                                                        className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${selectedIds.has(file.id)
+                                                                            ? 'bg-indigo-600 border-indigo-600 text-white'
+                                                                            : 'border-slate-300 dark:border-slate-600 hover:border-indigo-400'
+                                                                            }`}
+                                                                    >
+                                                                        {selectedIds.has(file.id) && (
+                                                                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                                            </svg>
+                                                                        )}
+                                                                    </button>
+                                                                </td>
+                                                                <td className="p-4 pl-2 font-medium text-slate-900 dark:text-white flex items-center gap-3">
                                                                     <div className="transform scale-75">{getFileIcon(file.type)}</div>
                                                                     <div>
                                                                         {file.title || file.name}
@@ -530,10 +825,10 @@ const AdminResourcesPanel = () => {
                                                                     </div>
                                                                 </td>
                                                                 <td className="p-4 text-slate-500 font-mono text-xs">{formatBytes(file.size)}</td>
-                                                                <td className="p-4 text-slate-500">{new Date().toLocaleDateString()}</td>
+                                                                <td className="p-4 text-slate-500">{file.createdAt?.toDate?.().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) || '—'}</td>
                                                                 <td className="p-4 text-right pr-6">
                                                                     <div className="flex justify-end gap-2">
-                                                                        <button onClick={(e) => { e.stopPropagation(); /* Download logic */ }} title="Descargar" className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-slate-100">
+                                                                        <button onClick={(e) => handleDownload(file, e)} title="Descargar" className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-slate-100">
                                                                             <Download className="w-4 h-4" />
                                                                         </button>
                                                                         {!file.isMock && (
@@ -572,9 +867,10 @@ const AdminResourcesPanel = () => {
             {/* MODALS */}
             <ResourceUploadModal
                 isOpen={isUploadModalOpen}
-                onClose={() => setIsUploadModalOpen(false)}
-                onSuccess={() => { /* Reload trigger? */ }}
+                onClose={() => { setIsUploadModalOpen(false); setDroppedFile(null); }}
+                onSuccess={() => { setDroppedFile(null); }}
                 defaultCategory={activeCategory}
+                initialFile={droppedFile}
             />
 
             <DocPreviewModal

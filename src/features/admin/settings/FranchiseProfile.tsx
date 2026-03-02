@@ -404,7 +404,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                             <button
                                 key={tab.id}
                                 type="button"
-                                onClick={() => setActiveTab(tab.id as any)}
+                                onClick={() => setActiveTab(tab.id)}
                                 className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all duration-200 ${activeTab === tab.id
                                     ? 'bg-white text-slate-800 shadow-md translate-y-[-1px]'
                                     : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'

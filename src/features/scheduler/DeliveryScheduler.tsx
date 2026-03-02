@@ -1288,7 +1288,7 @@ const DeliveryScheduler: React.FC<{
                                         );
                                     })
                                 ) : (
-                                    <div className="flex-1 flex transition-all" style={{ '--day-min-width': `${dayViewMinWidth}px`, minWidth: 'var(--day-min-width)' } as React.CSSProperties}>
+                                    <div className="flex-1 flex transition-all min-w-[var(--day-min-width)]" style={{ '--day-min-width': `${dayViewMinWidth}px` } as React.CSSProperties}>
                                         {/* Timeline Header Day View - 24h with 15-min intervals */}
                                         {dayStructure.map((hObj) => {
                                             return (
@@ -1433,7 +1433,7 @@ const DeliveryScheduler: React.FC<{
                                                 );
                                             })
                                         ) : (
-                                            <div className="w-full h-full relative" style={{ '--day-min-width': `${dayViewMinWidth}px`, minWidth: 'var(--day-min-width)' } as React.CSSProperties}>
+                                            <div className="w-full h-full relative min-w-[var(--day-min-width)]" style={{ '--day-min-width': `${dayViewMinWidth}px` } as React.CSSProperties}>
                                                 {/* Grid Background - Nested Structure */}
                                                 <div className="absolute inset-0 flex pointer-events-none">
                                                     {dayStructure.map((hObj) => (
@@ -1483,12 +1483,10 @@ const DeliveryScheduler: React.FC<{
                                                         return (
                                                             <div
                                                                 key={shift.id}
-                                                                className="absolute top-[2px] bottom-[2px] z-20 hover:z-50 transition-all duration-200 ease-out rounded-md overflow-hidden shadow-sm hover:shadow-lg hover:shadow-indigo-500/20 hover:scale-[1.02] hover:brightness-105 cursor-pointer ring-0 hover:ring-1 hover:ring-white/50 pointer-events-auto"
+                                                                className="absolute top-[2px] bottom-[2px] z-20 hover:z-50 transition-all duration-200 ease-out rounded-md overflow-hidden shadow-sm hover:shadow-lg hover:shadow-indigo-500/20 hover:scale-[1.02] hover:brightness-105 cursor-pointer ring-0 hover:ring-1 hover:ring-white/50 pointer-events-auto left-[var(--shift-left)] w-[var(--shift-width)]"
                                                                 style={{
                                                                     '--shift-left': `${leftPct}%`,
-                                                                    '--shift-width': `${widthPct}%`,
-                                                                    left: 'var(--shift-left)',
-                                                                    width: 'var(--shift-width)'
+                                                                    '--shift-width': `${widthPct}%`
                                                                 } as React.CSSProperties}
                                                             >
                                                                 <DraggableShift
@@ -1545,7 +1543,7 @@ const DeliveryScheduler: React.FC<{
                                         );
                                     })
                                 ) : (
-                                    <div className="flex-1 flex items-center px-6 py-2" style={{ '--day-min-width': `${dayViewMinWidth}px`, minWidth: 'var(--day-min-width)' } as React.CSSProperties}>
+                                    <div className="flex-1 flex items-center px-6 py-2 min-w-[var(--day-min-width)]" style={{ '--day-min-width': `${dayViewMinWidth}px` } as React.CSSProperties}>
                                         {(() => {
                                             const iso = toLocalDateString(selectedDate);
                                             const counts = coverage[iso] || Array(24).fill(0);

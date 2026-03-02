@@ -1,4 +1,5 @@
 import React, { Suspense, useEffect } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { useExport } from './hooks/useExport';
@@ -162,194 +163,218 @@ function App() {
     }
 
     return (
-        <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><DashboardSkeleton /></div>}>
+        <>
+            <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><DashboardSkeleton /></div>}>
 
-            <Routes>
-                {/* PUBLIC */}
-                <Route path="/login" element={
-                    !user ? <Login /> : (
-                        ['rider'].includes(user.role || '')
-                            ? <Navigate to="/rider/dashboard" replace />
-                            : <Navigate to="/dashboard" replace />
-                    )
-                } />
-
-                {/* PROTECTED LAYOUT */}
-                <Route path="/" element={
-                    <ProtectedRoute>
-                        {['rider'].includes(user?.role || '') ? (
-                            <Navigate to="/rider/dashboard" replace />
-                        ) : (
-                            <DashboardLayout {...layoutProps} outletContext={outletContext} />
-                        )}
-                    </ProtectedRoute>
-                }>
-                    {/* SHARED ROUTES - Explicitly first */}
-                    <Route path="notifications" element={
-                        <React.Suspense fallback={<div className="p-10 text-center">Cargando Notificaciones...</div>}>
-                            <NotificationsPage />
-                        </React.Suspense>
+                <Routes>
+                    {/* PUBLIC */}
+                    <Route path="/login" element={
+                        !user ? <Login /> : (
+                            ['rider'].includes(user.role || '')
+                                ? <Navigate to="/rider/dashboard" replace />
+                                : <Navigate to="/dashboard" replace />
+                        )
                     } />
 
-                    <Route index element={
-                        ['rider'].includes(user?.role || '')
-                            ? <Navigate to="/rider/dashboard" replace />
-                            : (user?.role === 'admin' || user?.role === 'franchise'
-                                ? <Navigate to="/dashboard" replace />
-                                : <Navigate to="/profile" replace />)
-                    } />
-
-                    {/* CORE (Admin/Franchise Only) */}
-                    <Route path="dashboard" element={
-                        <RequireRole allowedRoles={['admin', 'franchise']}>
-                            <RequireActiveStatus>
-                                <DashboardSwitcher />
-                            </RequireActiveStatus>
-                        </RequireRole>
-                    } />
-                    <Route path="operations" element={
-                        <RequireRole allowedRoles={['admin', 'franchise']}>
-                            <RequireActiveStatus>
-                                <OperationsPage />
-                            </RequireActiveStatus>
-                        </RequireRole>
-                    } />
-                    <Route path="academy" element={
-                        <RequireRole allowedRoles={['admin', 'franchise']}>
-                            <Academy />
-                        </RequireRole>
-                    } />
-                    <Route path="academy/:moduleId" element={
-                        <RequireRole allowedRoles={['admin', 'franchise']}>
-                            <Academy />
-                        </RequireRole>
-                    } />
-                    <Route path="fleet" element={
-                        <RequireRole allowedRoles={['admin', 'franchise']}>
-                            <RequireActiveStatus>
-                                <RidersView />
-                            </RequireActiveStatus>
-                        </RequireRole>
-                    } />
-                    <Route path="invoicing" element={
-                        <Navigate to="/dashboard" replace />
-                    } />
-                    <Route path="profile" element={<UserProfile />} />
-                     <Route path="demo/smart-input" element={<DevSandbox />} />
-
-                    {/* FRANCHISE SPECIFIC */}
-                    <Route path="support" element={
-                        <RequireRole allowedRoles={['admin', 'franchise']}>
-                            {/* Support is ALLOWED for Pending users */}
-                            <SupportHub />
-                        </RequireRole>
-                    } />
-                    <Route path="resources" element={
-                        <RequireRole allowedRoles={['admin', 'franchise']}>
-                            {/* Resources is ALLOWED for Pending users */}
-                            <ResourcesPanel />
-                        </RequireRole>
-                    } />
-
-                    {/* ADMIN SPECIFIC */}
-                    <Route path="admin/users" element={
-                        <ProtectedRoute requireAdmin={true}>
-                            <UserManagementPanel />
+                    {/* PROTECTED LAYOUT */}
+                    <Route path="/" element={
+                        <ProtectedRoute>
+                            {['rider'].includes(user?.role || '') ? (
+                                <Navigate to="/rider/dashboard" replace />
+                            ) : (
+                                <DashboardLayout {...layoutProps} outletContext={outletContext} />
+                            )}
                         </ProtectedRoute>
-                    } />
+                    }>
+                        {/* SHARED ROUTES - Explicitly first */}
+                        <Route path="notifications" element={
+                            <React.Suspense fallback={<div className="p-10 text-center">Cargando Notificaciones...</div>}>
+                                <NotificationsPage />
+                            </React.Suspense>
+                        } />
 
-                    <Route path="admin/support" element={
-                        <ProtectedRoute requireAdmin={true}>
-                            <AdminSupportPanel />
+                        <Route index element={
+                            ['rider'].includes(user?.role || '')
+                                ? <Navigate to="/rider/dashboard" replace />
+                                : (user?.role === 'admin' || user?.role === 'franchise'
+                                    ? <Navigate to="/dashboard" replace />
+                                    : <Navigate to="/profile" replace />)
+                        } />
+
+                        {/* CORE (Admin/Franchise Only) */}
+                        <Route path="dashboard" element={
+                            <RequireRole allowedRoles={['admin', 'franchise']}>
+                                <RequireActiveStatus>
+                                    <DashboardSwitcher />
+                                </RequireActiveStatus>
+                            </RequireRole>
+                        } />
+                        <Route path="operations" element={
+                            <RequireRole allowedRoles={['admin', 'franchise']}>
+                                <RequireActiveStatus>
+                                    <OperationsPage />
+                                </RequireActiveStatus>
+                            </RequireRole>
+                        } />
+                        <Route path="academy" element={
+                            <RequireRole allowedRoles={['admin', 'franchise']}>
+                                <Academy />
+                            </RequireRole>
+                        } />
+                        <Route path="academy/:moduleId" element={
+                            <RequireRole allowedRoles={['admin', 'franchise']}>
+                                <Academy />
+                            </RequireRole>
+                        } />
+                        <Route path="fleet" element={
+                            <RequireRole allowedRoles={['admin', 'franchise']}>
+                                <RequireActiveStatus>
+                                    <RidersView />
+                                </RequireActiveStatus>
+                            </RequireRole>
+                        } />
+                        <Route path="invoicing" element={
+                            <Navigate to="/dashboard" replace />
+                        } />
+                        <Route path="profile" element={<UserProfile />} />
+                        <Route path="demo/smart-input" element={<DevSandbox />} />
+
+                        {/* FRANCHISE SPECIFIC */}
+                        <Route path="support" element={
+                            <RequireRole allowedRoles={['admin', 'franchise']}>
+                                {/* Support is ALLOWED for Pending users */}
+                                <SupportHub />
+                            </RequireRole>
+                        } />
+                        <Route path="resources" element={
+                            <RequireRole allowedRoles={['admin', 'franchise']}>
+                                {/* Resources is ALLOWED for Pending users */}
+                                <ResourcesPanel />
+                            </RequireRole>
+                        } />
+
+                        {/* ADMIN SPECIFIC */}
+                        <Route path="admin/users" element={
+                            <ProtectedRoute requireAdmin={true}>
+                                <UserManagementPanel />
+                            </ProtectedRoute>
+                        } />
+
+                        <Route path="admin/support" element={
+                            <ProtectedRoute requireAdmin={true}>
+                                <AdminSupportPanel />
+                            </ProtectedRoute>
+                        } />
+
+                        <Route path="admin/resources" element={
+                            <ProtectedRoute requireAdmin={true}>
+                                <AdminResourcesPanel />
+                            </ProtectedRoute>
+                        } />
+
+                        <Route path="admin/audit" element={
+                            <ProtectedRoute requireAdmin={true}>
+                                <AuditPanel />
+                            </ProtectedRoute>
+                        } />
+
+                        <Route path="admin/tariffs" element={
+                            <ProtectedRoute requireAdmin={true}>
+                                <TariffEditor onClose={() => { }} />
+                            </ProtectedRoute>
+                        } />
+
+                        <Route path="admin/communications" element={
+                            <ProtectedRoute requireAdmin={true}>
+                                <div className="p-5 md:p-8 space-y-6"><AnnouncementSystem /></div>
+                            </ProtectedRoute>
+                        } />
+
+                        <Route path="admin/shifts" element={
+                            <ProtectedRoute requireAdmin={true}>
+                                <div className="p-5 md:p-8 space-y-6 h-[calc(100vh-64px)] overflow-hidden"><WeeklyScheduler franchiseId={targetFranchiseId || ''} readOnly={false} /></div>
+                            </ProtectedRoute>
+                        } />
+
+                        <Route path="admin/kanban" element={
+                            <ProtectedRoute requireAdmin={true}>
+                                <div className="p-5 md:p-8 space-y-6 h-[calc(100vh-64px)] overflow-hidden">
+                                    <React.Suspense fallback={<DashboardSkeleton />}>
+                                        <KanbanBoard />
+                                    </React.Suspense>
+                                </div>
+                            </ProtectedRoute>
+                        } />
+
+                        {/* ADMIN FINANCE DETAIL */}
+                        <Route path="admin/franchise/:franchiseId" element={
+                            <ProtectedRoute requireAdmin={true}>
+                                <AdminFranchiseView />
+                            </ProtectedRoute>
+                        } />
+
+                        {/* ADMIN ACADEMY STUDIO */}
+                        <Route path="admin/academy" element={
+                            <ProtectedRoute requireAdmin={true}>
+                                <AcademyAdmin />
+                            </ProtectedRoute>
+                        } />
+
+                        {/* ADMIN FLYDER DASHBOARD - Hyper-Vision Module */}
+                        <Route path="admin/flyder" element={
+                            <ProtectedRoute requireAdmin={true}>
+                                <AdminFlyderDashboard franchiseId={targetFranchiseId || undefined} />
+                            </ProtectedRoute>
+                        } />
+
+                        {/* 404 for DashboardLayout */}
+                        <Route path="*" element={<NotFound />} />
+                    </Route>
+
+                    {/* RIDER SPECIFIC APP (Independent from Admin Layout) */}
+                    <Route path="/rider" element={
+                        <ProtectedRoute>
+                            <RequireRole allowedRoles={['rider', 'admin']}>
+                                <RiderLayout />
+                            </RequireRole>
                         </ProtectedRoute>
-                    } />
+                    }>
+                        <Route index element={<Navigate to="dashboard" replace />} />
+                        <Route path="dashboard" element={<RiderHomeView />} />
+                        <Route path="schedule" element={<RiderScheduleView />} />
+                        <Route path="availability" element={<RiderAvailabilityView />} />
+                        <Route path="profile" element={<RiderProfileView />} />
+                        <Route path="profile/personal" element={<RiderPersonalDataView />} />
+                        <Route path="profile/notifications" element={<RiderNotificationsView />} />
+                        <Route path="profile/security" element={<RiderSecurityView />} />
+                    </Route>
+                </Routes>
+            </Suspense>
 
-                    <Route path="admin/resources" element={
-                        <ProtectedRoute requireAdmin={true}>
-                            <AdminResourcesPanel />
-                        </ProtectedRoute>
-                    } />
-
-                    <Route path="admin/audit" element={
-                        <ProtectedRoute requireAdmin={true}>
-                            <AuditPanel />
-                        </ProtectedRoute>
-                    } />
-
-                    <Route path="admin/tariffs" element={
-                        <ProtectedRoute requireAdmin={true}>
-                            <TariffEditor onClose={() => { }} />
-                        </ProtectedRoute>
-                    } />
-
-                    <Route path="admin/communications" element={
-                        <ProtectedRoute requireAdmin={true}>
-                            <div className="p-5 md:p-8 space-y-6"><AnnouncementSystem /></div>
-                        </ProtectedRoute>
-                    } />
-
-                    <Route path="admin/shifts" element={
-                        <ProtectedRoute requireAdmin={true}>
-                            <div className="p-5 md:p-8 space-y-6 h-[calc(100vh-64px)] overflow-hidden"><WeeklyScheduler franchiseId={targetFranchiseId || ''} readOnly={false} /></div>
-                        </ProtectedRoute>
-                    } />
-
-                    <Route path="admin/kanban" element={
-                        <ProtectedRoute requireAdmin={true}>
-                            <div className="p-5 md:p-8 space-y-6 h-[calc(100vh-64px)] overflow-hidden">
-                                <React.Suspense fallback={<DashboardSkeleton />}>
-                                    <KanbanBoard />
-                                </React.Suspense>
-                            </div>
-                        </ProtectedRoute>
-                    } />
-
-                    {/* ADMIN FINANCE DETAIL */}
-                    <Route path="admin/franchise/:franchiseId" element={
-                        <ProtectedRoute requireAdmin={true}>
-                            <AdminFranchiseView />
-                        </ProtectedRoute>
-                    } />
-
-                    {/* ADMIN ACADEMY STUDIO */}
-                    <Route path="admin/academy" element={
-                        <ProtectedRoute requireAdmin={true}>
-                            <AcademyAdmin />
-                        </ProtectedRoute>
-                    } />
-
-                    {/* ADMIN FLYDER DASHBOARD - Hyper-Vision Module */}
-                    <Route path="admin/flyder" element={
-                        <ProtectedRoute requireAdmin={true}>
-                            <AdminFlyderDashboard franchiseId={targetFranchiseId || undefined} />
-                        </ProtectedRoute>
-                    } />
-
-                    {/* 404 for DashboardLayout */}
-                    <Route path="*" element={<NotFound />} />
-                </Route>
-
-                {/* RIDER SPECIFIC APP (Independent from Admin Layout) */}
-                <Route path="/rider" element={
-                    <ProtectedRoute>
-                        <RequireRole allowedRoles={['rider', 'admin']}>
-                            <RiderLayout />
-                        </RequireRole>
-                    </ProtectedRoute>
-                }>
-                    <Route index element={<Navigate to="dashboard" replace />} />
-                    <Route path="dashboard" element={<RiderHomeView />} />
-                    <Route path="schedule" element={<RiderScheduleView />} />
-                    <Route path="availability" element={<RiderAvailabilityView />} />
-                    <Route path="profile" element={<RiderProfileView />} />
-                    <Route path="profile/personal" element={<RiderPersonalDataView />} />
-                    <Route path="profile/notifications" element={<RiderNotificationsView />} />
-                    <Route path="profile/security" element={<RiderSecurityView />} />
-                </Route>
-            </Routes>
-
-            {/* <Seeder /> (Removed by User Request) */}
-        </Suspense >
+            {/* Global Toast Notifications */}
+            <Toaster
+                position="top-right"
+                toastOptions={{
+                    duration: 4000,
+                    style: {
+                        background: '#1e293b',
+                        color: '#f1f5f9',
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        padding: '12px 16px',
+                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+                    },
+                    success: {
+                        iconTheme: { primary: '#10b981', secondary: '#f1f5f9' },
+                    },
+                    error: {
+                        iconTheme: { primary: '#ef4444', secondary: '#f1f5f9' },
+                        duration: 5000,
+                    },
+                }}
+            />
+        </>
     );
 }
 

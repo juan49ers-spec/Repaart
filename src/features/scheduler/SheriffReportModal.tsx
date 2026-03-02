@@ -56,9 +56,10 @@ export const SheriffReportModal: React.FC<SheriffReportModalProps> = ({ isOpen, 
     // Using theme.icon directly if needed in future
 
     return createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
             <div
                 className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col md:flex-row max-h-[90vh] animate-in zoom-in-95 slide-in-from-bottom-5 duration-300"
+                onClick={(e) => e.stopPropagation()}
             >
                 {/* LEFT PANEL: SCORE & VERDICT */}
                 <div className={cn("w-full md:w-1/3 p-8 flex flex-col items-center justify-center text-center relative overflow-hidden", theme.bg)}>

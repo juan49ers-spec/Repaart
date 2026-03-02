@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { academyService, AcademyModule, AcademyLesson, AcademyProgress } from '../services/academyService';
+import { academyService, AcademyModule, AcademyLesson, AcademyProgress, AcademyProfile } from '../services/academyService';
 
 export const useAcademyModules = (status?: 'draft' | 'active' | 'all') => {
     const [modules, setModules] = useState<AcademyModule[]>([]);
@@ -373,3 +373,54 @@ export const useUpdateLessonsOrder = () => {
 
     return { updateLessonsOrder, loading, error };
 };
+
+export const useAcademyProfile = (userId: string | null) => {
+    const [profile, setProfile] = useState<AcademyProfile | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+
+    const fetchProfile = useCallback(async () => {
+        if (!userId) {
+            setProfile(null);
+            setLoading(false);
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const data = await academyService.getUserAcademyProfile(userId);
+            setProfile(data);
+        } catch (err) {
+            setError(err as Error);
+        } finally {
+            setLoading(false);
+        }
+    }, [userId]);
+
+    useEffect(() => {
+        fetchProfile();
+    }, [fetchProfile]);
+
+    return { profile, loading, error, refetch: fetchProfile };
+};
+
+export const useAwardXp = () => {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
+
+    const awardXp = async (userId: string, lessonId: string, amount: number) => {
+        try {
+            setLoading(true);
+            setError(null);
+            return await academyService.awardXpForLesson(userId, lessonId, amount);
+        } catch (err) {
+            setError(err as Error);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { awardXp, loading, error };
+};
+

@@ -98,8 +98,9 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
             exit={{ opacity: 0, scale: 0.8, y: 50 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
             className="fixed inset-0 flex items-center justify-center z-50 p-4"
+            onClick={onClose}
           >
-            <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-8 max-w-md w-full text-center relative overflow-hidden">
+            <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-8 max-w-md w-full text-center relative overflow-hidden" onClick={(e) => e.stopPropagation()}>
               {/* Background decoration */}
               <div className="absolute inset-0 bg-gradient-to-br from-purple-100/50 to-pink-100/50 dark:from-purple-900/20 dark:to-pink-900/20 pointer-events-none" />
 

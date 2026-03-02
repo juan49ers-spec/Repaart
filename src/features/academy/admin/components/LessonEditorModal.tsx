@@ -511,6 +511,7 @@ const LessonEditorModal: React.FC<LessonEditorModalProps> = ({
                     exit={{ opacity: 0, scale: 0.98, y: 10 }}
                     transition={{ duration: 0.3, ease: 'easeOut' }}
                     className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm"
+                    onClick={onClose}
                 >
                     <motion.div
                         initial={{ opacity: 0 }}

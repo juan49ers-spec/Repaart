@@ -7,6 +7,7 @@ import ContentProtection from './components/ContentProtection';
 import LearningPath from './components/LearningPath';
 import CelebrationModal from './components/CelebrationModal';
 import LessonNotes from './components/LessonNotes';
+import QuizPlayer from './components/QuizPlayer';
 import { EmptyState, LoadingState } from './components/AcademyStates';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -15,11 +16,15 @@ import {
     useAcademyLessons,
     useAcademyAllLessons,
     useMarkLessonComplete,
-    useUnmarkLessonComplete
+    useUnmarkLessonComplete,
+    useAcademyProfile,
+    useAwardXp
 } from '../../hooks/academy';
 import { AcademyLesson, academyService } from '../../services/academyService';
+import { calculateLevel, getNextLevel, getXpProgressToNextLevel, getXpForLesson } from '../../lib/academyGamification';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
+import toast from 'react-hot-toast';
 import {
     BookOpen,
     Play,
@@ -34,7 +39,8 @@ import {
     Trophy,
     Target,
     StickyNote,
-    Loader2
+    Loader2,
+    ClipboardCheck
 } from 'lucide-react';
 
 const Academy = () => {
@@ -52,6 +58,10 @@ const Academy = () => {
     }>({ isOpen: false, moduleTitle: '', moduleNumber: 0 });
     const [notesOpen, setNotesOpen] = useState(false);
     const videoRef = useRef<HTMLIFrameElement>(null);
+
+    // Gamification Hooks
+    const { profile: academyProfile, refetch: refreshProfile } = useAcademyProfile(user?.uid || null);
+    const { awardXp } = useAwardXp();
 
     // Cargar todos los módulos y filtrar por status
     const { modules: allModules, loading: modulesLoading } = useAcademyModules('all');
@@ -157,6 +167,35 @@ const Academy = () => {
         try {
             await markComplete(user.uid, moduleId, lessonId);
 
+            // Recompensar con XP
+            const lesson = lessons.find(l => l.id === lessonId);
+            if (lesson && lesson.content_type) {
+                const lessonType = lesson.content_type === 'quiz' ? 'quiz' : (lesson.content_type === 'video' ? 'video' : 'text');
+                const xpAmount = getXpForLesson(lessonType);
+                const xpResult = await awardXp(user.uid, lessonId, xpAmount);
+                if (xpResult && xpResult.awarded) {
+                    refreshProfile();
+
+                    // Notificar ganancia de XP
+                    toast.success(`¡Has ganado ${xpResult.xpGained} XP!`, {
+                        icon: '⚡',
+                        style: {
+                            background: '#1e293b',
+                            color: '#fff',
+                            borderRadius: '12px',
+                        }
+                    });
+
+                    if (xpResult.levelUp) {
+                        setCelebration({
+                            isOpen: true,
+                            moduleTitle: `¡Subiste a ${calculateLevel(xpResult.newTotal).name}!`,
+                            moduleNumber: typeof xpResult.newLevel === 'string' ? parseInt(xpResult.newLevel, 10) : xpResult.newLevel
+                        });
+                    }
+                }
+            }
+
             // Forzar re-fetch del progreso después de marcar la lección como completada
             const newProgress = await academyService.getUserProgress(user.uid, moduleId);
             setProgress(newProgress);
@@ -217,10 +256,17 @@ const Academy = () => {
             return;
         }
 
+        setIsVideoExpanded(false);
+
+        // Quiz lessons go directly — no video/text modal
+        if (lesson.content_type === 'quiz') {
+            setSelectedLessonId(lessonId);
+            setShowInitialModal(false);
+            return;
+        }
+
         const hasVideo = lesson.video_url && lesson.video_url.trim().length > 0;
         const hasText = lesson.content && lesson.content.trim().length > 0;
-
-        setIsVideoExpanded(false);
 
         // Always show modal if lesson has both video and text
         if (hasVideo && hasText) {
@@ -460,6 +506,7 @@ const Academy = () => {
     const youtubeId = currentLesson?.video_url ? extractYouTubeId(currentLesson.video_url || '') : null;
     const hasVideo = !!currentLesson?.video_url && currentLesson.video_url.trim().length > 0 && !!youtubeId;
     const hasText = !!currentLesson?.content && currentLesson.content.trim().length > 0;
+    const isQuiz = currentLesson?.content_type === 'quiz' && currentLesson?.quiz && currentLesson.quiz.length > 0;
 
     return (
         <div className="academy-container h-screen flex flex-col lg:flex-row" key={progress?.completed_lessons?.join(',') || 'no-progress'}>
@@ -558,6 +605,53 @@ const Academy = () => {
                     </div>
                 </div>
 
+                {/* Gamification Widget */}
+                {academyProfile && (
+                    <div className="px-4 pb-2">
+                        {(() => {
+                            const safeXp = typeof academyProfile.total_xp === 'number' ? academyProfile.total_xp : (parseInt(String(academyProfile.total_xp), 10) || 0);
+                            return (
+                                <div className={cn('p-4 rounded-xl border border-white/20 shadow-sm relative overflow-hidden group', calculateLevel(safeXp).bg)}>
+                                    <div className="absolute -top-6 -right-6 w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-500"></div>
+
+                                    <div className="relative z-10 flex items-center justify-between mb-3">
+                                        <div className="flex items-center gap-2">
+                                            <Trophy className={cn('w-5 h-5', calculateLevel(safeXp).color)} />
+                                            <span className={cn('font-bold', calculateLevel(safeXp).color)}>
+                                                {calculateLevel(safeXp).name}
+                                            </span>
+                                        </div>
+                                        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 rounded-lg shadow-sm border border-slate-200/50 dark:border-slate-700/50">
+                                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                                Nivel {calculateLevel(safeXp).name}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="relative z-10">
+                                        <div className="flex justify-between text-xs font-medium mb-1.5 px-0.5">
+                                            <span className="text-slate-700 dark:text-slate-300 shadow-sm">{safeXp} XP</span>
+                                            {getNextLevel(safeXp) && (
+                                                <span className="text-slate-600 dark:text-slate-400 opacity-80">
+                                                    {getNextLevel(safeXp)?.minXp} XP
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="h-2 w-full bg-slate-200/50 dark:bg-slate-900/50 rounded-full overflow-hidden shadow-inner border border-black/5 dark:border-white/5">
+                                            <motion.div
+                                                className={cn('h-full bg-opacity-80', calculateLevel(safeXp).color.replace('text-', 'bg-'))}
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${getXpProgressToNextLevel(safeXp)}%` }}
+                                                transition={{ duration: 1, delay: 0.5, type: 'spring' }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })()}
+                    </div>
+                )}
+
                 <div className="academy-lessons-list">
                     {lessonsInOrder.map((lesson, index) => {
                         const lessonCompleted = completedLessons.includes(lesson.id!);
@@ -595,17 +689,26 @@ const Academy = () => {
                                             {lesson.title}
                                         </h4>
                                         <div className="flex items-center gap-2 text-xs">
-                                            {hasVideo && (
-                                                <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
-                                                    <Youtube className="w-3 h-3" />
-                                                    Video
+                                            {lesson.content_type === 'quiz' ? (
+                                                <span className="flex items-center gap-1 text-purple-600 dark:text-purple-400">
+                                                    <ClipboardCheck className="w-3 h-3" />
+                                                    Quiz
                                                 </span>
-                                            )}
-                                            {hasText && (
-                                                <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
-                                                    <FileText className="w-3 h-3" />
-                                                    Texto
-                                                </span>
+                                            ) : (
+                                                <>
+                                                    {hasVideo && (
+                                                        <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
+                                                            <Youtube className="w-3 h-3" />
+                                                            Video
+                                                        </span>
+                                                    )}
+                                                    {hasText && (
+                                                        <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
+                                                            <FileText className="w-3 h-3" />
+                                                            Texto
+                                                        </span>
+                                                    )}
+                                                </>
                                             )}
                                             <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
                                                 <Clock className="w-3 h-3" />
@@ -691,15 +794,23 @@ const Academy = () => {
 
                                                 {/* Type Badge */}
                                                 <div className="absolute top-3 right-3 flex gap-2">
-                                                    {lessonYtId && (
-                                                        <div className="bg-red-500/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-lg">
-                                                            <Youtube className="w-4 h-4 text-white" />
+                                                    {lesson.content_type === 'quiz' ? (
+                                                        <div className="bg-purple-500/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-lg">
+                                                            <ClipboardCheck className="w-4 h-4 text-white" />
                                                         </div>
-                                                    )}
-                                                    {lesson.content && lesson.content.trim().length > 0 && (
-                                                        <div className="bg-blue-500/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-lg">
-                                                            <FileText className="w-4 h-4 text-white" />
-                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            {lessonYtId && (
+                                                                <div className="bg-red-500/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-lg">
+                                                                    <Youtube className="w-4 h-4 text-white" />
+                                                                </div>
+                                                            )}
+                                                            {lesson.content && lesson.content.trim().length > 0 && (
+                                                                <div className="bg-blue-500/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-lg">
+                                                                    <FileText className="w-4 h-4 text-white" />
+                                                                </div>
+                                                            )}
+                                                        </>
                                                     )}
                                                 </div>
 
@@ -751,7 +862,7 @@ const Academy = () => {
                                                         )}
                                                     </span>
                                                     <span>
-                                                        {lessonYtId && lesson.content ? 'Video + Texto' : lessonYtId ? 'Video' : 'Texto'}
+                                                        {lesson.content_type === 'quiz' ? 'Evaluación' : lessonYtId && lesson.content ? 'Video + Texto' : lessonYtId ? 'Video' : 'Texto'}
                                                     </span>
                                                 </div>
                                             </div>
@@ -822,8 +933,8 @@ const Academy = () => {
                                 {/* Title */}
                                 <h1 className="academy-lesson-title-large">{currentLesson?.title}</h1>
 
-                                {/* Tabs Toggle */}
-                                {(hasVideo || hasText) && (
+                                {/* Tabs Toggle — not shown for quizzes */}
+                                {!isQuiz && (hasVideo || hasText) && (
                                     <div className="mb-4">
                                         <div className="academy-lesson-tabs">
                                             {hasVideo && (
@@ -1008,32 +1119,55 @@ const Academy = () => {
                                     </motion.div>
                                 )}
 
-                                {/* Action Bar */}
-                                <div className="sticky bottom-0 z-10 mt-6 pt-4 pb-2 bg-gradient-to-t from-slate-50 dark:from-slate-950 to-transparent">
-                                    <div className="flex items-center gap-3">
-                                        <button
-                                            onClick={() => {
-                                                if (currentLesson?.id) {
-                                                    if (isCompleted) {
-                                                        handleLessonUncomplete(currentLesson.id);
-                                                    } else {
-                                                        handleLessonComplete(currentLesson.id);
-                                                    }
+                                {/* Quiz Section */}
+                                {isQuiz && currentLesson?.quiz && currentLesson.id && moduleId && user?.uid && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="mb-6"
+                                    >
+                                        <QuizPlayer
+                                            questions={currentLesson.quiz}
+                                            lessonId={currentLesson.id}
+                                            moduleId={moduleId}
+                                            userId={user.uid}
+                                            onComplete={(passed) => {
+                                                if (passed && currentLesson.id) {
+                                                    handleLessonComplete(currentLesson.id);
                                                 }
                                             }}
-                                            disabled={markingComplete || unmarkingComplete}
-                                            className={cn(
-                                                'flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm uppercase tracking-wide transition-all shadow-lg hover:shadow-xl',
-                                                isCompleted
-                                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                                                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                                            )}
-                                        >
-                                            <CheckCircle className={cn("w-5 h-5", isCompleted && "fill-current")} />
-                                            {isCompleted ? '✓ Completada (Click para desmarcar)' : 'Marcar como Completada'}
-                                        </button>
+                                        />
+                                    </motion.div>
+                                )}
+
+                                {/* Action Bar — not shown for quizzes (quiz auto-completes) */}
+                                {!isQuiz && (
+                                    <div className="sticky bottom-0 z-10 mt-6 pt-4 pb-2 bg-gradient-to-t from-slate-50 dark:from-slate-950 to-transparent">
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                onClick={() => {
+                                                    if (currentLesson?.id) {
+                                                        if (isCompleted) {
+                                                            handleLessonUncomplete(currentLesson.id);
+                                                        } else {
+                                                            handleLessonComplete(currentLesson.id);
+                                                        }
+                                                    }
+                                                }}
+                                                disabled={markingComplete || unmarkingComplete}
+                                                className={cn(
+                                                    'flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm uppercase tracking-wide transition-all shadow-lg hover:shadow-xl',
+                                                    isCompleted
+                                                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                                )}
+                                            >
+                                                <CheckCircle className={cn("w-5 h-5", isCompleted && "fill-current")} />
+                                                {isCompleted ? '✓ Completada (Click para desmarcar)' : 'Marcar como Completada'}
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 {/* Notes Panel */}
                                 {currentLesson?.id && (

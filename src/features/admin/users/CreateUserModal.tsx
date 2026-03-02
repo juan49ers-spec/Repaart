@@ -157,10 +157,10 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
 
     return (
         // OVERLAY
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/30 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/30 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={onClose}>
 
             {/* MODAL WINDOW */}
-            <div className="w-full max-w-2xl bg-white dark:bg-slate-950 rounded-2xl shadow-2xl ring-1 ring-black/5 flex flex-col max-h-[85vh] relative overflow-hidden">
+            <div className="w-full max-w-2xl bg-white dark:bg-slate-950 rounded-2xl shadow-2xl ring-1 ring-black/5 flex flex-col max-h-[85vh] relative overflow-hidden" onClick={(e) => e.stopPropagation()}>
 
                 {/* HEADER */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">

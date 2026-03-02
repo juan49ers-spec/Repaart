@@ -8,14 +8,12 @@ import {
     Search,
     Loader2,
     SaveAll,
-    Eye,
-    Edit3,
-    BookOpen,
     PenTool,
-    History,
     FileText,
     Calendar,
-    Hash
+    Hash,
+    ChevronDown,
+    ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db, storage } from '../../../lib/firebase';
@@ -24,7 +22,7 @@ import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import ReactMarkdown from 'react-markdown';
 import { useContractAI, ComplianceReport } from '../../../hooks/useContractAI';
 import { useContractVersioning } from '../../../hooks/useContractVersioning';
-import { extractPlaceholders, fillTemplate, mapRestaurantToPlaceholders, Restaurant } from './utils/contractUtils';
+import { extractPlaceholders, fillTemplate, mapRestaurantToPlaceholders, Restaurant, getVariableMeta, VARIABLE_GROUPS, VariableGroup } from './utils/contractUtils';
 import { useAuth } from '../../../context/AuthContext';
 import { FranchiseFiscalData } from '../../../hooks/useFranchiseData';
 import ContractTextEditor from './ContractTextEditor';
@@ -85,6 +83,19 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
     const [aiPrompt, setAiPrompt] = useState('');
     const [aiReview, setAiReview] = useState<ComplianceReport | null>(null);
     const [editMode, setEditMode] = useState<'vars' | 'text' | 'ai' | 'versions' | 'snippets'>('vars');
+    const [collapsedGroups, setCollapsedGroups] = useState<Set<VariableGroup>>(new Set());
+
+    const toggleGroup = (group: VariableGroup) => {
+        setCollapsedGroups(prev => {
+            const next = new Set(prev);
+            if (next.has(group)) {
+                next.delete(group);
+            } else {
+                next.add(group);
+            }
+            return next;
+        });
+    };
 
     // Draft persistence
     const { draft, saveDraft, clearDraft, hasDraft } = useContractDraft(user?.uid);
@@ -450,41 +461,69 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="h-full flex flex-col md:flex-row overflow-hidden bg-[#f8fafc] dark:bg-black"
+                            className="h-full flex flex-col md:flex-row overflow-hidden bg-slate-50/50 dark:bg-[#0a0a0a]"
                         >
-                            {/* Left Side: High-Agency Control Center */}
-                            <div className="w-full md:w-[480px] border-r border-slate-200/50 dark:border-white/5 bg-white/50 dark:bg-white/[0.02] backdrop-blur-3xl p-10 overflow-y-auto custom-scrollbar flex flex-col gap-10">
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_12px_rgba(16,185,129,0.6)]" />
-                                        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em]">Protocolo Activo</span>
+                            {/* Left Side: Professional Document Control Panel */}
+                            <div className="w-full md:w-[480px] border-r border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 flex flex-col z-10 transition-colors shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]">
+                                <div className="p-6 border-b border-slate-100 dark:border-white/5 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Detalles del Documento</h3>
+                                        <div className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold rounded-md border border-slate-200 dark:border-white/10 flex items-center gap-1.5">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                                            Borrador
+                                        </div>
                                     </div>
-                                    <h3 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter leading-none italic uppercase">CONFIGURACIÓN</h3>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Entidad: <span className="text-indigo-600">{selectedRestaurant?.fiscalName}</span></p>
+
+                                    {/* Client Brief */}
+                                    {selectedRestaurant && selectedRestaurant.id !== 'blank' ? (
+                                        <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-white/5">
+                                            <div className="w-9 h-9 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-400 dark:text-slate-400 font-bold text-sm shadow-sm flex-shrink-0">
+                                                <Store className="w-4 h-4" />
+                                            </div>
+                                            <div className="flex-1 min-w-0 pt-0.5">
+                                                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate leading-none mb-1.5">{selectedRestaurant.fiscalName}</p>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 truncate leading-none">
+                                                    {selectedRestaurant.cif}{selectedRestaurant.address?.city ? ` · ${selectedRestaurant.address.city}` : ''}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-white/5">
+                                            <div className="w-9 h-9 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-400 dark:text-slate-400 shadow-sm flex-shrink-0">
+                                                <FileText className="w-4 h-4" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Plantilla Base</p>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400">Sin vincular a cliente</p>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
-                                {/* Sidebar Tabs - 4 focused panels */}
-                                <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-2xl border border-slate-200/50 dark:border-white/5">
+                                {/* Sidebar Tabs - Clean DocuSign style */}
+                                <div className="flex px-6 border-b border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/50">
                                     {[
-                                        { id: 'vars' as const, icon: Eye, label: 'Variables' },
-                                        { id: 'text' as const, icon: Edit3, label: 'Editor' },
-                                        { id: 'snippets' as const, icon: BookOpen, label: 'Cláusulas' },
-                                        { id: 'ai' as const, icon: Sparkles, label: 'AI' },
-                                        { id: 'versions' as const, icon: History, label: 'Versiones' },
+                                        { id: 'vars' as const, label: 'Campos' },
+                                        { id: 'text' as const, label: 'Editor' },
+                                        { id: 'snippets' as const, label: 'Cláusulas' },
+                                        { id: 'ai' as const, label: 'AI' },
+                                        { id: 'versions' as const, label: 'Versiones' },
                                     ].map(tab => (
                                         <button
                                             key={tab.id}
                                             onClick={() => setEditMode(tab.id)}
-                                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${editMode === tab.id ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-[0_8px_16px_rgba(0,0,0,0.04)]' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                                            className={`relative px-4 py-3.5 text-[11px] font-bold uppercase tracking-wider transition-colors ${editMode === tab.id ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
                                         >
-                                            <tab.icon className="w-3.5 h-3.5" />
-                                            <span className="hidden xl:inline">{tab.label}</span>
+                                            {tab.label}
+                                            {editMode === tab.id && (
+                                                <motion.div layoutId="activeTab" className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-blue-600 dark:bg-blue-400" />
+                                            )}
                                         </button>
                                     ))}
                                 </div>
 
                                 {/* Tab Content */}
-                                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-50 dark:bg-[#0a0a0a]">
                                     <AnimatePresence mode="wait">
                                         {/* Variables Tab */}
                                         {editMode === 'vars' && (
@@ -493,71 +532,162 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
                                                 initial={{ opacity: 0, x: -10 }}
                                                 animate={{ opacity: 1, x: 0 }}
                                                 exit={{ opacity: 0, x: -10 }}
-                                                className="space-y-6"
+                                                className="flex flex-col min-h-full"
                                             >
-                                                {/* Progress Bar */}
+                                                {/* === MINIMALIST PROGRESS === */}
                                                 {(() => {
                                                     const filled = placeholders.filter(k => variables[k]?.trim()).length;
                                                     const total = placeholders.length;
-                                                    const pct = total > 0 ? Math.round((filled / total) * 100) : 0;
-                                                    const barBg = pct >= 100 ? 'bg-emerald-500' : pct >= 50 ? 'bg-amber-500' : 'bg-rose-500';
-                                                    const badgeBg = pct >= 100 ? 'bg-emerald-500/10 text-emerald-600' : pct >= 50 ? 'bg-amber-500/10 text-amber-600' : 'bg-rose-500/10 text-rose-600';
-                                                    const glowColor = pct >= 100 ? 'shadow-emerald-500/30' : pct >= 50 ? 'shadow-amber-500/30' : 'shadow-rose-500/30';
+                                                    const pct = total > 0 ? (filled / total) * 100 : 0;
+
                                                     return (
-                                                        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-3">
-                                                            <div className="flex items-center justify-between">
-                                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Progreso</span>
-                                                                <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${badgeBg}`}>
-                                                                    {filled}/{total} · {pct}%
-                                                                </span>
+                                                        <div className="bg-white dark:bg-slate-900 p-6 border-b border-slate-200 dark:border-white/10 shrink-0">
+                                                            <div className="flex items-center justify-between mb-3">
+                                                                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Progreso del documento</span>
+                                                                <span className="text-xs font-semibold text-slate-500">{Math.round(pct)}% • {filled} de {total} campos</span>
                                                             </div>
-                                                            <div className="h-2 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
+                                                            <div className="h-2 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
                                                                 <motion.div
                                                                     initial={{ width: 0 }}
                                                                     animate={{ width: `${pct}%` }}
                                                                     transition={{ type: 'spring', stiffness: 60, damping: 15 }}
-                                                                    className={`h-full rounded-full ${barBg} shadow-lg ${glowColor}`}
+                                                                    className={`h-full transition-colors duration-500 ${pct >= 100 ? 'bg-emerald-500' : 'bg-blue-600'}`}
                                                                 />
                                                             </div>
+                                                            {pct < 100 && (
+                                                                <p className="text-[11px] text-slate-500 mt-3 flex items-center gap-1.5 font-medium">
+                                                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                                                                    Faltan {total - filled} campos obligatorios por completar
+                                                                </p>
+                                                            )}
                                                             {pct >= 100 && (
-                                                                <p className="text-[10px] font-bold text-emerald-600 flex items-center gap-1.5">
-                                                                    <CheckCircle2 className="w-3 h-3" />
-                                                                    Todos los campos completados — listo para finalizar
+                                                                <p className="text-[11px] text-emerald-600 mt-3 flex items-center gap-1.5 font-medium">
+                                                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                                                    Todos los campos han sido completados
                                                                 </p>
                                                             )}
                                                         </div>
                                                     );
                                                 })()}
 
-                                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-4">
-                                                    CAMPOS DINÁMICOS
-                                                    <span className="text-indigo-600">{placeholders.length} Detectados</span>
-                                                </h4>
-                                                <div className="grid gap-5">
-                                                    {placeholders.map((key, i) => {
-                                                        const isFilled = !!variables[key]?.trim();
+                                                {/* === GROUPED VARIABLE SECTIONS === */}
+                                                <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+                                                    {(['fecha', 'franquicia', 'restaurante', 'condiciones'] as VariableGroup[]).map(groupId => {
+                                                        const groupKeys = placeholders.filter(k => getVariableMeta(k).group === groupId);
+                                                        if (groupKeys.length === 0) return null;
+                                                        const groupInfo = VARIABLE_GROUPS[groupId];
+                                                        const groupFilled = groupKeys.filter(k => variables[k]?.trim()).length;
+                                                        const isCollapsed = collapsedGroups.has(groupId);
+                                                        const isComplete = groupFilled === groupKeys.length;
+
                                                         return (
-                                                            <motion.div
-                                                                key={key}
-                                                                initial={{ opacity: 0, x: -10 }}
-                                                                animate={{ opacity: 1, x: 0 }}
-                                                                transition={{ delay: i * 0.03 }}
-                                                            >
-                                                                <label className="flex items-center gap-2 text-[9px] font-black text-slate-500 mb-2 ml-1 uppercase tracking-widest">
-                                                                    <span className={`w-1.5 h-1.5 rounded-full ${isFilled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
-                                                                    {key}
-                                                                </label>
-                                                                <input
-                                                                    type="text"
-                                                                    id={`var-${key}`}
-                                                                    value={variables[key] || ''}
-                                                                    onChange={(e) => updateVariable(key, e.target.value)}
-                                                                    className={`w-full bg-white dark:bg-slate-900 border rounded-2xl px-5 py-3.5 text-sm font-bold shadow-sm focus:ring-8 focus:ring-indigo-500/5 transition-all outline-none ${isFilled ? 'border-emerald-200 dark:border-emerald-500/20' : 'border-slate-200 dark:border-white/10'}`}
-                                                                    placeholder="Fijar valor..."
-                                                                />
-                                                            </motion.div>
+                                                            <div key={groupId} className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+                                                                {/* Group Header */}
+                                                                <button
+                                                                    onClick={() => toggleGroup(groupId)}
+                                                                    className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors text-left"
+                                                                >
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 ${isComplete ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400'}`}>
+                                                                            {isComplete ? <CheckCircle2 className="w-4 h-4" /> : groupInfo.icon}
+                                                                        </div>
+                                                                        <div>
+                                                                            <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">{groupInfo.label}</h4>
+                                                                            <p className="text-[11px] text-slate-500 mt-0.5">{groupFilled} de {groupKeys.length} completados</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <motion.div animate={{ rotate: isCollapsed ? 0 : 180 }} transition={{ duration: 0.2 }}>
+                                                                        <ChevronDown className="w-5 h-5 text-slate-400" />
+                                                                    </motion.div>
+                                                                </button>
+
+                                                                {/* Group Fields */}
+                                                                <AnimatePresence initial={false}>
+                                                                    {!isCollapsed && (
+                                                                        <motion.div
+                                                                            initial={{ height: 0, opacity: 0 }}
+                                                                            animate={{ height: 'auto', opacity: 1 }}
+                                                                            exit={{ height: 0, opacity: 0 }}
+                                                                            transition={{ duration: 0.2 }}
+                                                                            className="overflow-hidden"
+                                                                        >
+                                                                            <div className="px-5 pb-5 grid gap-4 border-t border-slate-100 dark:border-white/5 pt-4 bg-slate-50/50 dark:bg-slate-800/20">
+                                                                                {groupKeys.map((key) => {
+                                                                                    const meta = getVariableMeta(key);
+                                                                                    const isFilled = !!variables[key]?.trim();
+                                                                                    const isAuto = meta.autoFill && isFilled;
+                                                                                    const showPrefix = meta.type === 'currency' ? '€' : meta.type === 'number' && meta.label.toLowerCase().includes('km') ? 'km' : null;
+
+                                                                                    return (
+                                                                                        <div key={key} className="relative group/field">
+                                                                                            <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 ml-1">
+                                                                                                {meta.label}
+                                                                                                {isAuto && (
+                                                                                                    <span className="text-[9px] font-bold bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                                                                                                        Autocompletado
+                                                                                                    </span>
+                                                                                                )}
+                                                                                            </label>
+                                                                                            <div className="relative">
+                                                                                                {showPrefix && (
+                                                                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400 pointer-events-none z-10">
+                                                                                                        {showPrefix}
+                                                                                                    </span>
+                                                                                                )}
+                                                                                                <input
+                                                                                                    type="text"
+                                                                                                    inputMode={meta.type === 'number' || meta.type === 'currency' ? 'decimal' : 'text'}
+                                                                                                    id={`var-${key}`}
+                                                                                                    value={variables[key] || ''}
+                                                                                                    onChange={(e) => updateVariable(key, e.target.value)}
+                                                                                                    className={`w-full rounded-md border text-sm transition-all outline-none focus:ring-2 focus:ring-offset-0 ${showPrefix ? 'pl-8' : 'pl-3'} pr-8 py-2.5 ${isAuto
+                                                                                                        ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 focus:ring-slate-200 cursor-default'
+                                                                                                        : isFilled
+                                                                                                            ? 'bg-white dark:bg-slate-900 border-slate-300 dark:border-white/20 text-slate-900 dark:text-white focus:ring-blue-500 focus:border-blue-500'
+                                                                                                            : 'bg-amber-50/50 dark:bg-amber-900/10 border-amber-300/50 dark:border-amber-700/30 text-slate-900 dark:text-white focus:ring-amber-500 focus:border-amber-500 hover:border-amber-400'
+                                                                                                        }`}
+                                                                                                    placeholder={meta.hint}
+                                                                                                />
+                                                                                                {/* DocuSign style required indicator */}
+                                                                                                {!isFilled && !isAuto && (
+                                                                                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-amber-500 shadow-sm" />
+                                                                                                )}
+                                                                                                {isFilled && !isAuto && (
+                                                                                                    <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500 pointer-events-none" />
+                                                                                                )}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    );
+                                                                                })}
+                                                                            </div>
+                                                                        </motion.div>
+                                                                    )}
+                                                                </AnimatePresence>
+                                                            </div>
                                                         );
                                                     })}
+                                                </div>
+
+                                                {/* === CTA FOOTER === */}
+                                                <div className="p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-white/10 mt-auto shrink-0 shadow-[0_-4px_24px_-12px_rgba(0,0,0,0.1)]">
+                                                    {(() => {
+                                                        const filled = placeholders.filter(k => variables[k]?.trim()).length;
+                                                        const total = placeholders.length;
+                                                        const allDone = filled === total && total > 0;
+
+                                                        return (
+                                                            <button
+                                                                disabled={!allDone}
+                                                                onClick={() => setEditMode('text')}
+                                                                className={`w-full py-3.5 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 ${allDone
+                                                                    ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md'
+                                                                    : 'bg-slate-100 dark:bg-white/5 text-slate-400 cursor-not-allowed'}`}
+                                                            >
+                                                                {allDone ? 'Siguiente: Revisar Documento' : 'Completa los campos requeridos'}
+                                                                {allDone && <ArrowRight className="w-4 h-4" />}
+                                                            </button>
+                                                        );
+                                                    })()}
                                                 </div>
                                             </motion.div>
                                         )}
@@ -713,20 +843,46 @@ const SmartContractWizard: React.FC<SmartContractWizardProps> = ({
                                     className="relative w-full max-w-[850px] h-full"
                                 >
                                     <div
-                                        className="w-full h-full bg-white text-slate-900 shadow-[0_40px_100px_rgba(0,0,0,0.15)] rounded-sm p-[60px] md:p-[100px] relative overflow-hidden flex flex-col overflow-y-auto custom-scrollbar"
+                                        className="w-full h-full bg-white text-slate-900 shadow-[0_40px_100px_rgba(0,0,0,0.15)] rounded-sm relative overflow-hidden flex flex-col overflow-y-auto custom-scrollbar"
                                     >
-                                        <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/paper-fibers.png')]" />
-                                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-600/20 to-transparent" />
+                                        <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/paper-fibers.png')]" />
 
-                                        <div className="flex-1 prose prose-slate max-w-none prose-sm md:prose-base !text-slate-900 font-serif selection:bg-indigo-100">
-                                            <ReactMarkdown>{finalContent}</ReactMarkdown>
+                                        {/* Legal Document Header */}
+                                        <div className="px-12 pt-10 pb-6 border-b border-slate-200/60 relative z-10 flex-shrink-0">
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div>
+                                                    <h1 className="text-[15px] font-black text-slate-900 tracking-tight uppercase">REPAART</h1>
+                                                    <p className="text-[8px] font-semibold text-slate-400 uppercase tracking-[0.25em] mt-0.5">Soporte a Franquiciados y Restaurantes</p>
+                                                </div>
+                                                <div className="text-right text-[8px] text-slate-400 leading-relaxed">
+                                                    <p className="font-semibold">Teléfono: 613319713</p>
+                                                    <p>Email: hola@repaart.es</p>
+                                                </div>
+                                            </div>
+                                            <div className="h-px bg-gradient-to-r from-indigo-600/40 via-indigo-600/20 to-transparent" />
                                         </div>
 
-                                        <div className="mt-20 pt-10 border-t border-slate-100 flex justify-between items-center text-[8px] font-black uppercase tracking-[0.5em] text-slate-300 relative z-10">
-                                            <span>REPAART LEGAL INFRASTRUCTURE</span>
-                                            <div className="flex items-center gap-4">
-                                                <span>DOCUMENTO CERTIFICADO</span>
-                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                        {/* Document Body */}
+                                        <div className="flex-1 px-12 py-8">
+                                            <div className="prose prose-slate max-w-none prose-sm !text-slate-800 selection:bg-indigo-100 [&_p]:!text-[11px] [&_p]:!leading-[1.75] [&_p]:!mb-2 [&_h1]:!text-[14px] [&_h1]:!font-black [&_h1]:!uppercase [&_h1]:!tracking-tight [&_h1]:!mt-5 [&_h1]:!mb-2 [&_h2]:!text-[12px] [&_h2]:!font-extrabold [&_h2]:!uppercase [&_h2]:!tracking-wide [&_h2]:!mt-4 [&_h2]:!mb-1.5 [&_h3]:!text-[11px] [&_h3]:!font-bold [&_h3]:!mt-3 [&_h3]:!mb-1 [&_ul]:!text-[10.5px] [&_ul]:!leading-[1.6] [&_ol]:!text-[10.5px] [&_ol]:!leading-[1.6] [&_li]:!text-[10.5px] [&_li]:!mb-0.5 [&_strong]:!font-extrabold [&_hr]:!my-4 [&_table]:!text-[10px] [&_td]:!py-1 [&_th]:!py-1" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+                                                <ReactMarkdown>{finalContent}</ReactMarkdown>
+                                            </div>
+                                        </div>
+
+                                        {/* Professional Footer */}
+                                        <div className="px-12 py-5 border-t border-slate-100 flex-shrink-0 relative z-10">
+                                            <div className="flex justify-between items-end">
+                                                <div className="text-[7px] font-semibold uppercase tracking-[0.4em] text-slate-300 leading-relaxed">
+                                                    <p>REPAART Legal Infrastructure</p>
+                                                    <p className="mt-0.5">Ref: {selectedRestaurant?.id?.slice(0, 8).toUpperCase() || 'DRAFT'}-{new Date().getFullYear()}</p>
+                                                </div>
+                                                <div className="text-right text-[7px] text-slate-300">
+                                                    <div className="flex items-center gap-1.5 justify-end">
+                                                        <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                                                        <span className="font-bold uppercase tracking-[0.3em]">Documento Certificado</span>
+                                                    </div>
+                                                    <p className="mt-0.5 font-medium">{new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

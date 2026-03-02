@@ -2,7 +2,7 @@ import { db, storage } from '../lib/firebase';
 import {
     collection, getDocs, getDoc, query, where, addDoc, doc, updateDoc,
     serverTimestamp, deleteDoc, Timestamp, FieldValue, orderBy, limit,
-    writeBatch
+    writeBatch, arrayUnion
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { ServiceError } from '../utils/ServiceError';
@@ -10,8 +10,18 @@ import { ServiceError } from '../utils/ServiceError';
 const COLLECTIONS = {
     MODULES: 'academy_modules',
     LESSONS: 'academy_lessons',
-    PROGRESS: 'academy_progress'
+    PROGRESS: 'academy_progress',
+    QUIZ_RESULTS: 'academy_quiz_results',
+    PROFILES: 'academy_profiles'
 };
+
+export interface AcademyProfile {
+    user_id: string;
+    total_xp: number;
+    current_level: string;
+    awarded_lessons: string[];
+    updated_at?: Timestamp | FieldValue;
+}
 
 export interface AcademyModule {
     id?: string;
@@ -55,6 +65,19 @@ export interface AcademyProgress {
     completed_at?: Timestamp | FieldValue;
     created_at?: Timestamp | FieldValue;
     updated_at?: Timestamp | FieldValue;
+}
+
+export interface QuizResult {
+    id?: string;
+    user_id: string;
+    module_id: string;
+    lesson_id: string;
+    score: number;
+    total_questions: number;
+    correct_answers: number;
+    passed: boolean;
+    answers: { question_id: string; selected_index: number; correct: boolean }[];
+    completed_at?: Timestamp | FieldValue;
 }
 
 export const academyService = {
@@ -347,6 +370,49 @@ export const academyService = {
         }
     },
 
+    saveQuizResult: async (userId: string, moduleId: string, lessonId: string, result: Omit<QuizResult, 'id' | 'user_id' | 'module_id' | 'lesson_id' | 'completed_at'>): Promise<void> => {
+        try {
+            const docId = `${userId}_${moduleId}_${lessonId}`;
+            const docRef = doc(db, COLLECTIONS.QUIZ_RESULTS, docId);
+            const existing = await getDoc(docRef);
+
+            const data = {
+                user_id: userId,
+                module_id: moduleId,
+                lesson_id: lessonId,
+                ...result,
+                completed_at: serverTimestamp()
+            };
+
+            if (existing.exists()) {
+                // Solo sobrescribir si el nuevo score es mejor
+                const prev = existing.data() as QuizResult;
+                if (result.score > (prev.score ?? 0)) {
+                    await updateDoc(docRef, { ...data });
+                }
+            } else {
+                const { setDoc } = await import('firebase/firestore');
+                await setDoc(docRef, data);
+            }
+        } catch (error) {
+            throw new ServiceError('saveQuizResult', { cause: error });
+        }
+    },
+
+    getQuizResult: async (userId: string, moduleId: string, lessonId: string): Promise<QuizResult | null> => {
+        try {
+            const docId = `${userId}_${moduleId}_${lessonId}`;
+            const docRef = doc(db, COLLECTIONS.QUIZ_RESULTS, docId);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                return { id: docSnap.id, ...docSnap.data() } as QuizResult;
+            }
+            return null;
+        } catch (error) {
+            throw new ServiceError('getQuizResult', { cause: error });
+        }
+    },
+
     uploadLessonVideo: async (file: File): Promise<string> => {
         try {
             const filename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
@@ -355,6 +421,63 @@ export const academyService = {
             return await getDownloadURL(snapshot.ref);
         } catch (error) {
             throw new ServiceError('uploadLessonVideo', { cause: error });
+        }
+    },
+
+    getUserAcademyProfile: async (userId: string): Promise<AcademyProfile | null> => {
+        try {
+            const docRef = doc(db, COLLECTIONS.PROFILES, userId);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                return docSnap.data() as AcademyProfile;
+            }
+            return null;
+        } catch (error) {
+            throw new ServiceError('getUserAcademyProfile', { cause: error });
+        }
+    },
+
+    awardXpForLesson: async (userId: string, lessonId: string, amount: number): Promise<{ awarded: boolean, xpGained: number, newTotal: number, levelUp: boolean, newLevel: string }> => {
+        try {
+            const docRef = doc(db, COLLECTIONS.PROFILES, userId);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const profile = docSnap.data() as AcademyProfile;
+                if (profile.awarded_lessons?.includes(lessonId)) {
+                    return { awarded: false, xpGained: 0, newTotal: profile.total_xp, levelUp: false, newLevel: profile.current_level };
+                }
+
+                const newTotal = (profile.total_xp || 0) + amount;
+                const { calculateLevel } = await import('../lib/academyGamification');
+                const newLevel = calculateLevel(newTotal).name;
+                const levelUp = newLevel !== profile.current_level;
+
+                await updateDoc(docRef, {
+                    total_xp: newTotal,
+                    current_level: newLevel,
+                    awarded_lessons: arrayUnion(lessonId),
+                    updated_at: serverTimestamp()
+                });
+
+                return { awarded: true, xpGained: amount, newTotal, levelUp, newLevel };
+            } else {
+                const { calculateLevel } = await import('../lib/academyGamification');
+                const newTotal = amount;
+                const newLevel = calculateLevel(newTotal).name;
+                const { setDoc } = await import('firebase/firestore');
+                await setDoc(docRef, {
+                    user_id: userId,
+                    total_xp: newTotal,
+                    current_level: newLevel,
+                    awarded_lessons: [lessonId],
+                    updated_at: serverTimestamp()
+                });
+
+                return { awarded: true, xpGained: amount, newTotal, levelUp: false, newLevel };
+            }
+        } catch (error) {
+            throw new ServiceError('awardXpForLesson', { cause: error });
         }
     }
 };
