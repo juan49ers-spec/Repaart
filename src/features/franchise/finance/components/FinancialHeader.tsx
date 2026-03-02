@@ -18,15 +18,15 @@ const steps = [
 
 export const FinancialHeader: React.FC<FinancialHeaderProps> = ({ month, step, setStep, onClose, isLocked, onOpenGuide }) => {
     return (
-        <div className="h-16 bg-white dark:bg-slate-900 flex items-center justify-between px-5 lg:px-6 shrink-0 relative z-20 border-b border-slate-200/50 dark:border-white/5">
+        <div className="h-10 bg-white dark:bg-slate-900 flex items-center justify-between px-4 shrink-0 relative z-20 border-b border-slate-200/50 dark:border-white/5">
             {/* Left: Title */}
-            <div className="flex items-center gap-3">
-                <div className="p-2 bg-indigo-600 rounded-lg text-white">
-                    <Activity className="w-4 h-4" strokeWidth={2.5} />
+            <div className="flex items-center gap-1.5">
+                <div className="p-1 bg-indigo-600 rounded-md text-white">
+                    <Activity className="w-3 h-3" strokeWidth={2.5} />
                 </div>
                 <div>
-                    <h1 className="text-sm font-black text-slate-800 dark:text-white tracking-tight leading-none">Cierre Financiero</h1>
-                    <p className="text-[10px] text-slate-400 font-bold tracking-wider uppercase mt-0.5">{month}</p>
+                    <h1 className="text-[9px] font-bold text-slate-800 dark:text-white tracking-tight leading-none uppercase">Cierre Financiero</h1>
+                    <p className="text-[7px] text-slate-400 font-semibold tracking-wider uppercase mt-px">{month}</p>
                 </div>
             </div>
 
@@ -45,10 +45,10 @@ export const FinancialHeader: React.FC<FinancialHeaderProps> = ({ month, step, s
                                 role="tab"
                                 aria-selected={isActive ? true : false}
                                 onClick={() => !isLocked && setStep(s.id)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 border-b-2 transition-all text-[10px] font-bold uppercase tracking-wider ${isActive ? activeColor : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                                className={`flex items-center gap-1 px-2 py-1 border-b-2 transition-all text-[8px] font-bold uppercase tracking-tight ${isActive ? activeColor : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
                                     }`}
                             >
-                                <span className={`w-[18px] h-[18px] flex items-center justify-center rounded-full text-[9px] font-bold ${isActive ? `${activeBg} text-white` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                                <span className={`w-4 h-4 flex items-center justify-center rounded-full text-[8px] font-bold ${isActive ? `${activeBg} text-white` : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
                                     }`}>
                                     {s.id}
                                 </span>
@@ -64,7 +64,7 @@ export const FinancialHeader: React.FC<FinancialHeaderProps> = ({ month, step, s
                 {onOpenGuide && (
                     <button
                         onClick={onOpenGuide}
-                        className="px-3 py-1.5 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border border-slate-200/50 dark:border-slate-700"
+                        className="px-2 py-1 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-md text-[8px] font-bold uppercase tracking-tight hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border border-slate-200/50 dark:border-slate-700"
                     >
                         Guía
                     </button>
@@ -72,9 +72,9 @@ export const FinancialHeader: React.FC<FinancialHeaderProps> = ({ month, step, s
                 <button
                     onClick={onClose}
                     aria-label="Cerrar"
-                    className="p-2 bg-slate-50 dark:bg-slate-800 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-900/30 rounded-lg transition-all text-slate-400 border border-slate-200/50 dark:border-slate-700"
+                    className="p-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-900/30 rounded-md transition-all text-slate-400 border border-slate-200/50 dark:border-slate-700"
                 >
-                    <X className="w-4 h-4" strokeWidth={2.5} />
+                    <X className="w-3.5 h-3.5" strokeWidth={2.5} />
                 </button>
             </div>
         </div>

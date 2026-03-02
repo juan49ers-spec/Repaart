@@ -1104,7 +1104,8 @@ select {
 /* RESPONSIVE APPLE-STYLE TYPOGRAPHY        */
 /* ============================================== */
 
-h1,
+/* NOTE: Global h1/h2/h3 selectors removed — they were overriding Tailwind utility classes.
+   Use .text-apple-h1 / .text-apple-h2 / .text-apple-h3 explicitly when you want this style. */
 .text-apple-h1 {
   font-size: var(--font-size-4xl);
   letter-spacing: -0.025em;
@@ -1112,7 +1113,6 @@ h1,
   line-height: 1.1;
 }
 
-h2,
 .text-apple-h2 {
   font-size: var(--font-size-3xl);
   letter-spacing: -0.015em;
@@ -1120,7 +1120,7 @@ h2,
   line-height: 1.2;
 }
 
-h3 {
+.text-apple-h3 {
   font-size: var(--font-size-2xl);
   font-weight: 600;
   line-height: 1.3;

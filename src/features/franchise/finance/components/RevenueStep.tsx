@@ -75,19 +75,19 @@ export const RevenueStep: React.FC<RevenueStepProps> = ({
             transition={{ duration: 0.2 }}
             className="h-full"
         >
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 h-full">
                 {/* ── Left: Distance Breakdown ── */}
                 <div className="lg:col-span-7 flex flex-col h-full bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200/60 dark:border-white/5 overflow-hidden">
                     {/* Section Header */}
-                    <div className="px-5 py-3.5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                            <Wallet className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                            <h2 className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">Pedidos por distancia</h2>
+                    <div className="px-4 py-2 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Wallet className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                            <h2 className="text-[9px] font-bold text-slate-800 dark:text-slate-100 uppercase tracking-tight">Pedidos por distancia</h2>
                         </div>
                         {hasInvoicedData && (
                             <button
                                 onClick={handleSyncFromInvoices}
-                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-wider transition-all border border-indigo-100 dark:border-indigo-500/20"
+                                className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-[8px] font-bold uppercase tracking-tight transition-all border border-indigo-100 dark:border-indigo-500/20"
                             >
                                 <RefreshCw className="w-3 h-3" />
                                 Sincronizar
@@ -99,7 +99,7 @@ export const RevenueStep: React.FC<RevenueStepProps> = ({
                     <div className="flex-1 overflow-y-auto custom-scrollbar">
                         <table className="w-full">
                             <thead>
-                                <tr className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                <tr className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight">
                                     <th className="text-left px-5 py-2.5">#</th>
                                     <th className="text-left py-2.5">Rango</th>
                                     <th className="text-right py-2.5 pr-1">Tarifa</th>
@@ -193,36 +193,36 @@ export const RevenueStep: React.FC<RevenueStepProps> = ({
                     </div>
 
                     {/* Total Orders Footer */}
-                    <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/20">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Pedidos</span>
-                        <span className="text-base font-black text-slate-800 dark:text-white tabular-nums">{totalOrders}</span>
+                    <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/20">
+                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Total Pedidos</span>
+                        <span className="text-xs font-black text-slate-800 dark:text-white tabular-nums">{totalOrders}</span>
                     </div>
                 </div>
 
                 {/* ── Right: Totals & Adjustments ── */}
-                <div className="lg:col-span-5 flex flex-col gap-4 h-full">
+                <div className="lg:col-span-5 flex flex-col gap-2 h-full">
                     {/* Cancelled Orders */}
-                    <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200/60 dark:border-white/5 p-5">
+                    <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200/60 dark:border-white/5 p-3">
                         <ProfessionalInput
                             label="Pedidos Cancelados"
                             value={cancelledOrders}
                             onChange={setCancelledOrders}
                             type="number"
-                            size="medium"
+                            size="small"
                             disabled={isLocked}
                         />
                     </div>
 
                     {/* Total Income Card */}
-                    <div className="flex-1 bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200/60 dark:border-white/5 p-6 flex flex-col justify-center items-center text-center">
-                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-3">
+                    <div className="flex-1 bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200/60 dark:border-white/5 p-3 flex flex-col justify-center items-center text-center">
+                        <p className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight mb-1">
                             Ingreso Bruto Total
                         </p>
-                        <div className="flex items-baseline justify-center gap-0.5 mb-6">
-                            <span className="text-4xl sm:text-5xl font-black tabular-nums tracking-tighter text-slate-900 dark:text-white">
+                        <div className="flex items-baseline justify-center gap-0.5 mb-3">
+                            <span className="text-2xl sm:text-3xl font-black tabular-nums tracking-tighter text-slate-900 dark:text-white">
                                 {Math.floor(totalIncome).toLocaleString('es-ES')}
                             </span>
-                            <span className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
+                            <span className="text-base font-bold text-indigo-600 dark:text-indigo-400">
                                 ,{String(Math.round((totalIncome % 1) * 100)).padStart(2, '0')}€
                             </span>
                         </div>
@@ -232,19 +232,19 @@ export const RevenueStep: React.FC<RevenueStepProps> = ({
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                className="mb-5 w-full max-w-xs p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 rounded-xl text-left"
+                                className="mb-3 w-full max-w-xs p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 rounded-xl text-left"
                             >
-                                <div className="flex items-start gap-2.5">
-                                    <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                                <div className="flex items-start gap-1.5">
+                                    <AlertCircle className="w-3 h-3 text-amber-500 shrink-0 mt-0.5" />
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-0.5">Discrepancia</p>
-                                        <p className="text-[11px] text-amber-600 dark:text-amber-300/80 leading-relaxed">
-                                            No coincide con facturación: {formatMoney(invoicedIncome?.subtotal || 0)}€
+                                        <p className="text-[8px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-tight mb-0.5">Discrepancia</p>
+                                        <p className="text-[7px] text-amber-600 dark:text-amber-300/80 leading-relaxed">
+                                            No coincide con facturación: {formatMoney(invoicedIncome?.subtotal || 0)}
                                         </p>
                                         {!isLocked && (
                                             <button
                                                 onClick={handleSyncFromInvoices}
-                                                className="mt-2 w-full py-1.5 px-3 bg-amber-100 dark:bg-amber-800/30 hover:bg-amber-200 dark:hover:bg-amber-800/50 text-amber-700 dark:text-amber-300 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all"
+                                                className="mt-1 w-full py-0.5 px-2 bg-amber-100 dark:bg-amber-800/30 hover:bg-amber-200 dark:hover:bg-amber-800/50 text-amber-700 dark:text-amber-300 text-[7px] font-bold uppercase tracking-tight rounded-md transition-all"
                                             >
                                                 Sincronizar
                                             </button>
@@ -255,13 +255,13 @@ export const RevenueStep: React.FC<RevenueStepProps> = ({
                         )}
 
                         {/* Manual Adjustment */}
-                        <div className="w-full max-w-[200px]">
+                        <div className="w-full max-w-[180px]">
                             <ProfessionalInput
                                 label="Ajuste Manual (€)"
                                 value={totalIncome}
                                 onChange={(v) => setTotalIncome(v)}
                                 prefix="€"
-                                size="medium"
+                                size="small"
                                 disabled={isLocked}
                             />
                         </div>

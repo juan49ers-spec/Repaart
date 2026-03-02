@@ -30,8 +30,8 @@ export const ProfessionalInput: React.FC<ProfessionalInputProps> = ({
     const heightClass = size === 'small' ? 'h-8' : size === 'medium' ? 'h-9' : 'h-10';
 
     return (
-        <div className={cn("group flex flex-col gap-1", className)}>
-            <label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-none truncate">
+        <div className={cn("group flex flex-col gap-0.5", className)}>
+            <label className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight leading-none truncate">
                 {label}
             </label>
             <div className={cn(

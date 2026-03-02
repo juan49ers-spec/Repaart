@@ -255,7 +255,7 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/60 backdrop-blur-md p-4 pt-8 lg:pt-12 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-[95vw] lg:max-w-[1200px] h-[85dvh] max-h-[800px] rounded-2xl shadow-2xl flex flex-col overflow-hidden ring-1 ring-slate-900/5 dark:ring-slate-800">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-[95vw] lg:max-w-[900px] h-[85dvh] max-h-[700px] rounded-2xl shadow-2xl flex flex-col overflow-hidden ring-1 ring-slate-900/5 dark:ring-slate-800">
 
                 <FinancialHeader
                     month={month}
