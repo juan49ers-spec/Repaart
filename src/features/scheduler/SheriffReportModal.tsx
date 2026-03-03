@@ -118,7 +118,7 @@ export const SheriffReportModal: React.FC<SheriffReportModalProps> = ({ isOpen, 
                             <h2 className="text-2xl font-bold text-slate-900">Informe de Operaciones</h2>
                             <p className="text-slate-500 text-sm">Análisis detallado de eficiencia y cumplimiento.</p>
                         </div>
-                        <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                        <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors" aria-label="Cerrar">
                             <X size={20} className="text-slate-400" />
                         </button>
                     </div>

@@ -86,7 +86,7 @@ const ModuleEditorModal: React.FC<ModuleEditorModalProps> = ({
                         <div className="p-6 space-y-5">
                             {/* Order Number */}
                             <div>
-                                <label className="block text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-2">
+                                <label htmlFor="module-order" className="block text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-2">
                                     Orden
                                 </label>
                                 <div className="flex items-center gap-3">
@@ -94,6 +94,7 @@ const ModuleEditorModal: React.FC<ModuleEditorModalProps> = ({
                                         <Hash className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                                     </div>
                                     <input
+                                        id="module-order"
                                         type="number"
                                         min="1"
                                         value={module.order}

@@ -1246,13 +1246,15 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
                   </div>
                 )}
 
-                {/* Payment timeline */}
-                {record.payments && record.payments.length > 0 && (
+                {/* Payment timeline — payments may be enriched from Firestore at runtime */}
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                {(record as any).payments?.length > 0 && (
                   <div>
                     <span className="text-[10px] font-bold text-slate-500 uppercase mb-2 block">Historial de pagos</span>
                     <div className="relative pl-4 space-y-2">
                       <div className="absolute left-1.5 top-1 bottom-1 w-px bg-emerald-200" />
-                      {record.payments.map((payment: any, idx: number) => {
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                      {(record as any).payments.map((payment: any, idx: number) => {
                         const payDate = payment.date?.toDate ? payment.date.toDate() : new Date(payment.date);
                         return (
                           <div key={idx} className="flex items-center gap-3 relative">
