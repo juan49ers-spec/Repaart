@@ -1290,47 +1290,51 @@ const DeliveryScheduler: React.FC<{
                                 ) : (
                                     <div className="flex-1 flex transition-all min-w-[var(--day-min-width)]" style={{ '--day-min-width': `${dayViewMinWidth}px` } as React.CSSProperties}>
                                         {/* Timeline Header Day View - 24h with 15-min intervals */}
-                                        {dayStructure.map((hObj) => {
-                                            return (
-                                                <div key={hObj.hour} className="flex-1 flex border-l-2 border-slate-400 relative group h-full">
-                                                    {/* 15-min Slots with Labels */}
-                                                    {hObj.slots.map((slot) => {
-                                                        const isHour = slot.minute === 0;
-                                                        const isHalfHour = slot.minute === 30;
+                                        <div
+                                            className="prose prose-slate dark:prose-invert max-w-none font-serif"
+                                        >
+                                            {dayStructure.map((hObj) => {
+                                                return (
+                                                    <div key={hObj.hour} className="flex-1 flex border-l-2 border-slate-400 relative group h-full">
+                                                        {/* 15-min Slots with Labels */}
+                                                        {hObj.slots.map((slot) => {
+                                                            const isHour = slot.minute === 0;
+                                                            const isHalfHour = slot.minute === 30;
 
 
-                                                        return (
-                                                            <div
-                                                                key={slot.i}
-                                                                className={cn(
-                                                                    "flex-1 h-full relative flex items-center justify-center",
-                                                                    // Border styling based on interval
-                                                                    isHour ? "" : isHalfHour
-                                                                        ? "border-l border-slate-300 border-dashed"
-                                                                        : "border-l border-slate-200/60",
-                                                                    // Prime time highlight (conditional)
-                                                                    showPrime && ((slot.h >= 12 && slot.h < 16.5) || (slot.h >= 20 && slot.h < 24))
-                                                                        ? "bg-amber-100/40"
-                                                                        : "bg-white"
-                                                                )}
-                                                            >
-                                                                {/* Time Label - Mostramos solo :00 y :30 para evitar solapamientos en vista fluida */}
-                                                                <span className={cn(
-                                                                    "text-[9px] font-medium pointer-events-none select-none",
-                                                                    isHour
-                                                                        ? "text-slate-700 font-bold"
-                                                                        : isHalfHour
-                                                                            ? "text-slate-500/60"
-                                                                            : "hidden"
-                                                                )}>
-                                                                    {isHour ? `${hObj.hour}:00` : ":30"}
-                                                                </span>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            );
-                                        })}
+                                                            return (
+                                                                <div
+                                                                    key={slot.i}
+                                                                    className={cn(
+                                                                        "flex-1 h-full relative flex items-center justify-center",
+                                                                        // Border styling based on interval
+                                                                        isHour ? "" : isHalfHour
+                                                                            ? "border-l border-slate-300 border-dashed"
+                                                                            : "border-l border-slate-200/60",
+                                                                        // Prime time highlight (conditional)
+                                                                        showPrime && ((slot.h >= 12 && slot.h < 16.5) || (slot.h >= 20 && slot.h < 24))
+                                                                            ? "bg-amber-100/40"
+                                                                            : "bg-white"
+                                                                    )}
+                                                                >
+                                                                    {/* Time Label - Mostramos solo :00 y :30 para evitar solapamientos en vista fluida */}
+                                                                    <span className={cn(
+                                                                        "text-[9px] font-medium pointer-events-none select-none",
+                                                                        isHour
+                                                                            ? "text-slate-700 font-bold"
+                                                                            : isHalfHour
+                                                                                ? "text-slate-500/60"
+                                                                                : "hidden"
+                                                                    )}>
+                                                                        {isHour ? `${hObj.hour}:00` : ":30"}
+                                                                    </span>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 )}
                             </div>

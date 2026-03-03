@@ -56,15 +56,10 @@ const UserRow: React.FC<UserRowProps> = ({ user, style, onAction, currentUserRol
         <div
             style={{
                 '--virtual-top': `${style?.top ?? 0}px`,
-                '--virtual-height': `${style?.height ?? 'auto'}`,
+                '--virtual-height': `${style?.height ?? '60'}px`,
                 '--virtual-transform': style?.transform ?? 'none',
-                position: 'absolute',
-                top: 'var(--virtual-top)',
-                height: 'var(--virtual-height)',
-                transform: 'var(--virtual-transform)',
-                width: '100%'
             } as React.CSSProperties}
-            className="flex items-center border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors px-3 sm:px-4 group relative"
+            className="absolute top-[var(--virtual-top)] h-[var(--virtual-height)] transform-[var(--virtual-transform)] w-full flex items-center border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors px-3 sm:px-4 group relative"
         >
             {/* User Info & Mobile Stack */}
             <div className="flex-1 flex items-center gap-3 min-w-0">
@@ -218,7 +213,9 @@ const UserTable: React.FC<UserTableProps> = ({ users, onAction, currentUserRole,
     }
 
     return (
-        <div className="bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col h-full">
+        <div
+            className="flex flex-col h-full bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative"
+        >
             {/* Header - Fixed to avoid scroll */}
             <div className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 flex items-center px-4 h-[40px] shrink-0">
                 <div className="flex-1 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Usuario</div>

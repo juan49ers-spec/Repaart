@@ -57,39 +57,39 @@ export const CreateInvoiceModal: React.FC<Props> = ({
             total: 0
         }
     ]);
-    
+
     const [totals, setTotals] = useState({
         subtotal: 0,
         totalTax: 0,
         total: 0
     });
-    
+
     // Recalculate totals when lines change
     useEffect(() => {
         const subtotal = lines.reduce((sum, line) => sum + line.amount, 0);
         const totalTax = lines.reduce((sum, line) => sum + line.taxAmount, 0);
         const total = subtotal + totalTax;
-        
+
         setTotals({ subtotal, totalTax, total });
     }, [lines]);
-    
+
     // Update line when fields change
-    const updateLine = (key: string, field: string, value: any) => {
+    const updateLine = (key: string, field: keyof InvoiceLineItem, value: string | number) => {
         setLines(prevLines => prevLines.map(line => {
             if (line.key === key) {
                 const updated = { ...line, [field]: value };
-                
+
                 // Recalculate line totals
                 updated.amount = updated.quantity * updated.unitPrice;
                 updated.taxAmount = updated.amount * updated.taxRate;
                 updated.total = updated.amount + updated.taxAmount;
-                
+
                 return updated;
             }
             return line;
         }));
     };
-    
+
     // Add new line
     const addLine = () => {
         const newKey = String(Date.now());
@@ -107,7 +107,7 @@ export const CreateInvoiceModal: React.FC<Props> = ({
             }
         ]);
     };
-    
+
     // Remove line
     const removeLine = (key: string) => {
         if (lines.length === 1) {
@@ -116,28 +116,28 @@ export const CreateInvoiceModal: React.FC<Props> = ({
         }
         setLines(prevLines => prevLines.filter(line => line.key !== key));
     };
-    
+
     // Handle form submission
     const handleSubmit = async () => {
         try {
             setLoading(true);
-            
+
             // Validate form
             const values = await form.validateFields();
-            
+
             // Validate lines
-            const validLines = lines.filter(line => 
-                line.description.trim() !== '' && 
-                line.quantity > 0 && 
+            const validLines = lines.filter(line =>
+                line.description.trim() !== '' &&
+                line.quantity > 0 &&
                 line.unitPrice >= 0
             );
-            
+
             if (validLines.length === 0) {
                 message.error('Debe haber al menos una línea válida');
                 setLoading(false);
                 return;
             }
-            
+
             // Create invoice request
             const request: CreateInvoiceRequest = {
                 franchiseId,
@@ -153,10 +153,10 @@ export const CreateInvoiceModal: React.FC<Props> = ({
                     taxRate: line.taxRate
                 }))
             };
-            
+
             // Call billing controller
             const result = await billingController.createInvoice(request, 'current_user');
-            
+
             if (result.success) {
                 message.success('Factura creada correctamente');
                 form.resetFields();
@@ -177,13 +177,14 @@ export const CreateInvoiceModal: React.FC<Props> = ({
             } else {
                 message.error(`Error: ${result.error.type}`);
             }
-        } catch (error: any) {
-            message.error(`Error al crear factura: ${error.message}`);
+        } catch (error: unknown) {
+            const err = error as Error;
+            message.error(`Error al crear factura: ${err.message}`);
         } finally {
             setLoading(false);
         }
     };
-    
+
     // Tax rate options
     const taxRateOptions = [
         { label: '21% IVA General', value: 0.21 },
@@ -191,7 +192,7 @@ export const CreateInvoiceModal: React.FC<Props> = ({
         { label: '4% IVA Super Reducido', value: 0.04 },
         { label: '0% Exento', value: 0.00 }
     ];
-    
+
     // Columns for line items table
     const columns = [
         {
@@ -262,7 +263,7 @@ export const CreateInvoiceModal: React.FC<Props> = ({
             title: 'Acciones',
             key: 'actions',
             width: '8%',
-            render: (_: any, record: InvoiceLineItem) => (
+            render: (_: unknown, record: InvoiceLineItem) => (
                 <Button
                     type="text"
                     danger
@@ -272,7 +273,7 @@ export const CreateInvoiceModal: React.FC<Props> = ({
             )
         }
     ];
-    
+
     return (
         <Modal
             title={
@@ -335,15 +336,15 @@ export const CreateInvoiceModal: React.FC<Props> = ({
                         </Form.Item>
                     </Col>
                 </Row>
-                
+
                 <Row gutter={16}>
                     <Col span={12}>
                         <Form.Item
                             label="Fecha de Emisión"
                             name="issueDate"
                         >
-                            <DatePicker 
-                                style={{ width: '100%' }}
+                            <DatePicker
+                                className="w-full"
                                 format="DD/MM/YYYY"
                                 placeholder="Seleccionar fecha"
                             />
@@ -354,15 +355,15 @@ export const CreateInvoiceModal: React.FC<Props> = ({
                             label="Fecha de Vencimiento"
                             name="dueDate"
                         >
-                            <DatePicker 
-                                style={{ width: '100%' }}
+                            <DatePicker
+                                className="w-full"
                                 format="DD/MM/YYYY"
                                 placeholder="Seleccionar fecha"
                             />
                         </Form.Item>
                     </Col>
                 </Row>
-                
+
                 <Row gutter={16} className="mt-4">
                     <Col span={24}>
                         <Form.Item
@@ -399,12 +400,12 @@ export const CreateInvoiceModal: React.FC<Props> = ({
                         </Form.Item>
                     </Col>
                 </Row>
-                
-                <Card 
-                    title="Líneas de Factura" 
+
+                <Card
+                    title="Líneas de Factura"
                     extra={
-                        <Button 
-                            type="primary" 
+                        <Button
+                            type="primary"
                             icon={<Plus />}
                             onClick={addLine}
                             size="small"
@@ -422,8 +423,8 @@ export const CreateInvoiceModal: React.FC<Props> = ({
                         rowKey="key"
                     />
                 </Card>
-                
-                <Card 
+
+                <Card
                     title={<div className="flex items-center gap-2"><Calculator className="w-4 h-4" /> Totales</div>}
                     className="mt-4"
                 >
@@ -448,7 +449,7 @@ export const CreateInvoiceModal: React.FC<Props> = ({
                         </Col>
                     </Row>
                 </Card>
-                
+
                 <Alert
                     message="Información"
                     description="La factura se creará en estado BORRADOR y podrás emitirla después. Una vez emitida, será inmutable."

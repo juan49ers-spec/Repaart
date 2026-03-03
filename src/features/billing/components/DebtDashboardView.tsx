@@ -27,6 +27,14 @@ interface Props {
     refreshTrigger?: number;
 }
 
+const AGING_BUCKETS = [
+    { key: 'CURRENT', label: 'Al día', shortLabel: 'CORRIENTE', color: 'var(--color-primary)', colorClass: 'bg-indigo-500', action: 'Mantener' },
+    { key: '1_30', label: '1-30 días', shortLabel: '1-30D', color: 'var(--color-warning)', colorClass: 'bg-amber-500', action: 'Notificar' },
+    { key: '31_60', label: '31-60 días', shortLabel: '31-60D', color: 'var(--color-warning-dark)', colorClass: 'bg-orange-500', action: 'Reclamar' },
+    { key: '61_90', label: '61-90 días', shortLabel: '61-90D', color: 'var(--color-destructive)', colorClass: 'bg-red-500', action: 'Pre-Aviso' },
+    { key: 'OVER_90', label: '+90 días', shortLabel: '+90D', color: 'var(--color-destructive-dark)', colorClass: 'bg-red-900', action: 'Judicial' }
+];
+
 export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger }) => {
     const [loading, setLoading] = useState(false);
     const [debtData, setDebtData] = useState<DebtDashboard | null>(null);
@@ -39,14 +47,13 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
             <div className="flex items-center gap-3 bg-slate-50/50 dark:bg-slate-900/30 p-1 rounded-md border border-slate-100 dark:border-slate-800/50 mb-2 overflow-x-auto scroller-hidden">
                 <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter whitespace-nowrap">SALUD:</span>
                 <div className="flex items-center gap-3">
-                    {agingBuckets.map(bucket => {
+                    {AGING_BUCKETS.map(bucket => {
                         const amount = getAgingBucketAmount(bucket.key);
                         const hasDebt = amount > 0;
                         return (
                             <div key={bucket.key} className="flex items-center gap-1.5">
                                 <div
-                                    className="w-2 h-2 rounded-full shadow-sm flex-shrink-0"
-                                    style={{ backgroundColor: bucket.color }}
+                                    className={`w-2 h-2 rounded-full shadow-sm flex-shrink-0 ${bucket.colorClass || 'bg-slate-300'}`}
                                 />
                                 <span className={`text-[9px] font-medium whitespace-nowrap ${hasDebt ? 'text-slate-600 dark:text-slate-300' : 'text-slate-400'}`}>
                                     {bucket.shortLabel}
@@ -75,8 +82,9 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
             } else {
                 message.error(`Error: ${result.error.type}`);
             }
-        } catch (error: any) {
-            message.error(`Error al cargar dashboard: ${error.message}`);
+        } catch (error: unknown) {
+            const err = error as Error;
+            message.error(`Error al cargar dashboard: ${err.message}`);
         } finally {
             setLoading(false);
         }
@@ -138,7 +146,7 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
                             )}
                         </div>
                         {hasRecentPayment && (
-                            <Tag color="cyan" style={{ fontSize: '9px', width: 'fit-content', padding: '0 4px', lineHeight: '14px' }}>
+                            <Tag color="cyan" className="text-[9px] w-fit px-1 h-[14px] leading-[14px] flex items-center border-none">
                                 Voluntad de Pago
                             </Tag>
                         )}
@@ -150,7 +158,7 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
             title: 'Progreso de Cobro',
             key: 'progress',
             width: 150,
-            render: (_: any, record: CustomerDebt) => {
+            render: (_: unknown, record: CustomerDebt) => {
                 const totalAmount = record.invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
                 const paidAmount = record.invoices.reduce((sum, inv) => sum + inv.paidAmount, 0);
                 const percentage = totalAmount > 0 ? (paidAmount / totalAmount) * 100 : 0;
@@ -188,51 +196,24 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
         }
     ];
 
-    const agingBuckets = [
-        {
-            key: 'current',
-            label: 'Al día (Corriente)',
-            shortLabel: 'Al día',
-            color: '#52c41a',
-            action: 'Seguimiento normal'
-        },
-        {
-            key: '0-7',
-            label: '1-7 días (Aviso)',
-            shortLabel: '1-7 días',
-            color: '#faad14',
-            action: 'Email de cortesía'
-        },
-        {
-            key: '8-15',
-            label: '8-15 días (Crítico)',
-            shortLabel: '8-15 días',
-            color: '#ff9c6e',
-            action: 'Aviso de Bloqueo'
-        },
-        {
-            key: '>15',
-            label: '>15 días (Corte)',
-            shortLabel: '>15 días',
-            color: '#ff4d4f',
-            action: 'Suspensión de Servicio'
-        }
-    ];
     const getAgingBucketAmount = (bucketKey: string): number => {
         if (!debtData) return 0;
 
         return debtData.customerDebts.reduce((total, customer) => {
             return total + customer.invoices.reduce((customerTotal, invoice) => {
-                if (bucketKey === 'current' && invoice.daysOverdue === 0) {
+                if (bucketKey === 'CURRENT' && invoice.daysOverdue === 0) {
                     return customerTotal + invoice.remainingAmount;
                 }
-                if (bucketKey === '0-7' && invoice.daysOverdue >= 1 && invoice.daysOverdue <= 7) {
+                if (bucketKey === '1_30' && invoice.daysOverdue >= 1 && invoice.daysOverdue <= 30) {
                     return customerTotal + invoice.remainingAmount;
                 }
-                if (bucketKey === '8-15' && invoice.daysOverdue >= 8 && invoice.daysOverdue <= 15) {
+                if (bucketKey === '31_60' && invoice.daysOverdue >= 31 && invoice.daysOverdue <= 60) {
                     return customerTotal + invoice.remainingAmount;
                 }
-                if (bucketKey === '>15' && invoice.daysOverdue > 15) {
+                if (bucketKey === '61_90' && invoice.daysOverdue >= 61 && invoice.daysOverdue <= 90) {
+                    return customerTotal + invoice.remainingAmount;
+                }
+                if (bucketKey === 'OVER_90' && invoice.daysOverdue > 90) {
                     return customerTotal + invoice.remainingAmount;
                 }
                 return customerTotal;
@@ -243,15 +224,16 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
     const filteredCustomers = debtData?.customerDebts.filter(customer => {
         if (agingFilter === 'ALL') return true;
 
-        const hasInvoicesInBucket = customer.invoices.some((invoice: InvoiceDebt) => {
-            if (agingFilter === '0-30') return invoice.daysOverdue <= 30;
-            if (agingFilter === '31-60') return invoice.daysOverdue > 30 && invoice.daysOverdue <= 60;
-            if (agingFilter === '61-90') return invoice.daysOverdue > 60 && invoice.daysOverdue <= 90;
-            if (agingFilter === '>90') return invoice.daysOverdue > 90;
+        const overdueInBucket = customer.invoices.some((invoice: InvoiceDebt) => {
+            if (agingFilter === 'CURRENT') return invoice.daysOverdue === 0;
+            if (agingFilter === '1_30') return invoice.daysOverdue >= 1 && invoice.daysOverdue <= 30;
+            if (agingFilter === '31_60') return invoice.daysOverdue >= 31 && invoice.daysOverdue <= 60;
+            if (agingFilter === '61_90') return invoice.daysOverdue >= 61 && invoice.daysOverdue <= 90;
+            if (agingFilter === 'OVER_90') return invoice.daysOverdue > 90;
             return true;
         });
 
-        return hasInvoicesInBucket;
+        return overdueInBucket;
     }) || [];
 
     return (
@@ -267,7 +249,7 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
                                 value={debtData.totalDebt}
                                 precision={2}
                                 prefix="€"
-                                styles={{ content: { color: '#ef4444', fontSize: '18px', fontWeight: 'bold' } }}
+                                valueStyle={{ color: 'var(--color-destructive)', fontSize: '18px', fontWeight: 'bold' }}
                             />
                         </Card>
                     </Col>
@@ -278,7 +260,11 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
                                 value={debtData.totalOverdueDebt}
                                 precision={2}
                                 prefix="€"
-                                styles={{ content: { color: debtData.totalOverdueDebt > 0 ? '#ef4444' : '#10b981', fontSize: '18px', fontWeight: 'bold' } }}
+                                valueStyle={{
+                                    color: debtData.totalOverdueDebt > 0 ? 'var(--color-destructive)' : 'var(--color-success)',
+                                    fontSize: '18px',
+                                    fontWeight: 'bold'
+                                }}
                             />
                         </Card>
                     </Col>
@@ -288,8 +274,8 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
                                 title={<span className="flex items-center gap-2 text-[10px] uppercase tracking-tight font-medium text-slate-400"><Clock className="w-3 h-3" /> Corriente</span>}
                                 value={debtData.totalCurrentDebt}
                                 precision={2}
-                                prefix="€"
-                                styles={{ content: { color: '#3b82f6', fontSize: '18px', fontWeight: 'bold' } }}
+                                suffix="€"
+                                valueStyle={{ fontSize: '14px', fontWeight: '800', fontFamily: 'Outfit, sans-serif' }}
                             />
                         </Card>
                     </Col>
@@ -301,7 +287,7 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
                 title={<span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Distribución por Antigüedad</span>}
                 className="mb-4 bg-slate-50/20"
             >
-                {agingBuckets.map(bucket => {
+                {AGING_BUCKETS.map(bucket => {
                     const amount = getAgingBucketAmount(bucket.key);
                     const percentage = debtData?.totalDebt ? (amount / debtData.totalDebt) * 100 : 0;
 
@@ -312,7 +298,7 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
                             <div className="flex justify-between text-xs font-semibold">
                                 <span className="flex items-center gap-2">
                                     {bucket.label}
-                                    <Tag color="blue" bordered={false} style={{ fontSize: '9px', lineHeight: '14px' }}>
+                                    <Tag color="blue" bordered={false} className="text-[9px] leading-[14px] h-[14px] py-0 px-1 flex items-center">
                                         {bucket.action}
                                     </Tag>
                                 </span>
@@ -340,13 +326,14 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
                             size="small"
                             value={agingFilter}
                             onChange={setAgingFilter}
-                            style={{ width: 120 }}
+                            className="w-[120px]"
                         >
                             <Select.Option value="ALL">Todos</Select.Option>
-                            <Select.Option value="0-30">0-30 días</Select.Option>
-                            <Select.Option value="31-60">31-60 días</Select.Option>
-                            <Select.Option value="61-90">61-90 días</Select.Option>
-                            <Select.Option value=">90">{'>90 días'}</Select.Option>
+                            <Select.Option value="CURRENT">Al día</Select.Option>
+                            <Select.Option value="1_30">1-30 días</Select.Option>
+                            <Select.Option value="31_60">31-60 días</Select.Option>
+                            <Select.Option value="61_90">61-90 días</Select.Option>
+                            <Select.Option value="OVER_90">{'+90 días'}</Select.Option>
                         </Select>
                         <Button size="small" icon={<Download className="w-3 h-3" />}>Exportar</Button>
                         <Button size="small" icon={<Mail className="w-3 h-3" />}>Avisos</Button>

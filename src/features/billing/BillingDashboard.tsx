@@ -257,8 +257,7 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
                         <Badge
                             count={overdueCount}
                             size="small"
-                            className="ml-1"
-                            style={{ backgroundColor: '#ef4444' }}
+                            className="ml-1 bg-red-500"
                         />
                     )}
                 </span>
@@ -352,9 +351,8 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
                 footer={null}
                 width={{ xs: '98%', sm: '95%', md: '90%', lg: 1000 }}
                 centered
-                className="invoice-creator-modal"
+                className="invoice-creator-modal max-w-[95vw] top-5"
                 destroyOnHidden
-                style={{ maxWidth: '95vw', top: 20 }}
                 styles={{ body: { height: 'calc(90vh - 100px)', padding: 0 } }}
             >
                 <SimpleInvoiceCreator

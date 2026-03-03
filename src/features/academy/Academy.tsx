@@ -6,6 +6,7 @@ import './academy-lessons-grid.css';
 import ContentProtection from './components/ContentProtection';
 import LearningPath from './components/LearningPath';
 import CelebrationModal from './components/CelebrationModal';
+import XpProgressBar from './components/XpProgressBar';
 import LessonNotes from './components/LessonNotes';
 import QuizPlayer from './components/QuizPlayer';
 import { EmptyState, LoadingState } from './components/AcademyStates';
@@ -21,7 +22,7 @@ import {
     useAwardXp
 } from '../../hooks/academy';
 import { AcademyLesson, academyService } from '../../services/academyService';
-import { calculateLevel, getNextLevel, getXpProgressToNextLevel, getXpForLesson } from '../../lib/academyGamification';
+import { calculateLevel, getXpForLesson, ACADEMY_LEVELS } from '../../lib/academyGamification';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
 import toast from 'react-hot-toast';
@@ -53,9 +54,16 @@ const Academy = () => {
     const [isVideoExpanded, setIsVideoExpanded] = useState(false);
     const [celebration, setCelebration] = useState<{
         isOpen: boolean;
-        moduleTitle: string;
-        moduleNumber: number;
-    }>({ isOpen: false, moduleTitle: '', moduleNumber: 0 });
+        type: 'module_complete' | 'level_up';
+        title: string;
+        subtitle?: string;
+        xpGained?: number;
+    }>({
+        isOpen: false,
+        type: 'module_complete',
+        title: '',
+        subtitle: ''
+    });
     const [notesOpen, setNotesOpen] = useState(false);
     const videoRef = useRef<HTMLIFrameElement>(null);
 
@@ -150,7 +158,7 @@ const Academy = () => {
                     });
 
                     const results = await Promise.all(progressPromises);
-                    const allProgressData = results.reduce((acc: any, curr: any) => ({ ...acc, ...curr }), {});
+                    const allProgressData = results.reduce((acc: Record<string, any>, curr: Record<string, any>) => ({ ...acc, ...curr }), {});
                     console.log('[Academy] Progreso de todos los módulos cargado:', allProgressData);
                     setAllProgress(allProgressData);
                 } catch (error) {
@@ -176,7 +184,7 @@ const Academy = () => {
                 if (xpResult && xpResult.awarded) {
                     refreshProfile();
 
-                    // Notificar ganancia de XP
+                    // Notificar ganancia de XP vía toast (siempre)
                     toast.success(`¡Has ganado ${xpResult.xpGained} XP!`, {
                         icon: '⚡',
                         style: {
@@ -186,12 +194,30 @@ const Academy = () => {
                         }
                     });
 
+                    // Si subió de nivel, mostrar modal de celebración de nivel (Prioridad)
                     if (xpResult.levelUp) {
+                        const newLevelInfo = calculateLevel(xpResult.newTotal);
+                        const levelIndex = ACADEMY_LEVELS.findIndex((l: any) => l.name === newLevelInfo.name) + 1;
                         setCelebration({
                             isOpen: true,
-                            moduleTitle: `¡Subiste a ${calculateLevel(xpResult.newTotal).name}!`,
-                            moduleNumber: typeof xpResult.newLevel === 'string' ? parseInt(xpResult.newLevel, 10) : xpResult.newLevel
+                            type: 'level_up',
+                            title: newLevelInfo.name,
+                            subtitle: `¡Has alcanzado el Nivel ${levelIndex}!`,
+                            xpGained: xpResult.xpGained
                         });
+                    }
+                    // Si no subió de nivel, ver si completó el módulo
+                    else {
+                        const completedCount = lessons.filter((l: any) => (completedLessons || []).includes(l.id!) || l.id === lessonId).length;
+                        if (completedCount === lessons.length && activeModule) {
+                            setCelebration({
+                                isOpen: true,
+                                type: 'module_complete',
+                                title: activeModule.title,
+                                subtitle: '¡Módulo Completado!',
+                                xpGained: xpResult.xpGained
+                            });
+                        }
                     }
                 }
             }
@@ -442,6 +468,18 @@ const Academy = () => {
                         </motion.div>
                     </motion.div>
 
+                    {/* XP Progress Widget */}
+                    {academyProfile && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.7 }}
+                            className="max-w-md mx-auto mt-6 mb-8"
+                        >
+                            <XpProgressBar profile={academyProfile} />
+                        </motion.div>
+                    )}
+
                     {/* Learning Path */}
                     {visibleModules.length > 0 ? (
                         <LearningPath
@@ -465,8 +503,10 @@ const Academy = () => {
                     <CelebrationModal
                         isOpen={celebration.isOpen}
                         onClose={() => setCelebration({ ...celebration, isOpen: false })}
-                        moduleTitle={celebration.moduleTitle}
-                        moduleNumber={celebration.moduleNumber}
+                        type={celebration.type}
+                        title={celebration.title}
+                        subtitle={celebration.subtitle}
+                        xpGained={celebration.xpGained}
                     />
                 </div>
             </div>
@@ -608,47 +648,7 @@ const Academy = () => {
                 {/* Gamification Widget */}
                 {academyProfile && (
                     <div className="px-4 pb-2">
-                        {(() => {
-                            const safeXp = typeof academyProfile.total_xp === 'number' ? academyProfile.total_xp : (parseInt(String(academyProfile.total_xp), 10) || 0);
-                            return (
-                                <div className={cn('p-4 rounded-xl border border-white/20 shadow-sm relative overflow-hidden group', calculateLevel(safeXp).bg)}>
-                                    <div className="absolute -top-6 -right-6 w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:bg-white/20 transition-all duration-500"></div>
-
-                                    <div className="relative z-10 flex items-center justify-between mb-3">
-                                        <div className="flex items-center gap-2">
-                                            <Trophy className={cn('w-5 h-5', calculateLevel(safeXp).color)} />
-                                            <span className={cn('font-bold', calculateLevel(safeXp).color)}>
-                                                {calculateLevel(safeXp).name}
-                                            </span>
-                                        </div>
-                                        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 rounded-lg shadow-sm border border-slate-200/50 dark:border-slate-700/50">
-                                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                                                Nivel {calculateLevel(safeXp).name}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div className="relative z-10">
-                                        <div className="flex justify-between text-xs font-medium mb-1.5 px-0.5">
-                                            <span className="text-slate-700 dark:text-slate-300 shadow-sm">{safeXp} XP</span>
-                                            {getNextLevel(safeXp) && (
-                                                <span className="text-slate-600 dark:text-slate-400 opacity-80">
-                                                    {getNextLevel(safeXp)?.minXp} XP
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="h-2 w-full bg-slate-200/50 dark:bg-slate-900/50 rounded-full overflow-hidden shadow-inner border border-black/5 dark:border-white/5">
-                                            <motion.div
-                                                className={cn('h-full bg-opacity-80', calculateLevel(safeXp).color.replace('text-', 'bg-'))}
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${getXpProgressToNextLevel(safeXp)}%` }}
-                                                transition={{ duration: 1, delay: 0.5, type: 'spring' }}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })()}
+                        <XpProgressBar profile={academyProfile} compact />
                     </div>
                 )}
 

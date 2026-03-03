@@ -288,7 +288,10 @@ const ResourceUploadModal: React.FC<ResourceUploadModalProps> = ({ isOpen, onClo
 
                 {/* Progress Bar Overlay */}
                 {uploading && (
-                    <div className="absolute bottom-0 left-0 h-1 bg-indigo-500 transition-all duration-300" style={{ width: `${progress}%` }} />
+                    <div
+                        className="absolute bottom-0 left-0 h-1 bg-indigo-500 transition-all duration-300 w-[var(--upload-progress)]"
+                        style={{ '--upload-progress': `${progress}%` } as React.CSSProperties}
+                    />
                 )}
             </div>
         </div>

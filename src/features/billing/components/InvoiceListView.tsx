@@ -504,8 +504,8 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
     {
       key: 'view-pdf',
       label: (
-        <span onClick={() => handleViewPdf(invoice)}>
-          <Eye style={{ width: 14, marginRight: 8 }} />
+        <span onClick={() => handleViewPdf(invoice)} className="flex items-center">
+          <Eye className="w-3.5 h-3.5 mr-2" />
           Ver PDF
         </span>
       )
@@ -513,8 +513,8 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
     {
       key: 'download-pdf',
       label: (
-        <span onClick={() => handleDownloadPdf(invoice)}>
-          <Download style={{ width: 14, marginRight: 8 }} />
+        <span onClick={() => handleDownloadPdf(invoice)} className="flex items-center">
+          <Download className="w-3.5 h-3.5 mr-2" />
           Descargar PDF
         </span>
       )
@@ -523,8 +523,8 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
     {
       key: 'export-excel',
       label: (
-        <span onClick={() => handleExport(invoice, 'excel')}>
-          <FileSpreadsheet style={{ width: 14, marginRight: 8 }} />
+        <span onClick={() => handleExport(invoice, 'excel')} className="flex items-center">
+          <FileSpreadsheet className="w-3.5 h-3.5 mr-2" />
           Exportar Excel
         </span>
       )
@@ -532,8 +532,8 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
     {
       key: 'export-csv',
       label: (
-        <span onClick={() => handleExport(invoice, 'csv')}>
-          <FileText style={{ width: 14, marginRight: 8 }} />
+        <span onClick={() => handleExport(invoice, 'csv')} className="flex items-center">
+          <FileText className="w-3.5 h-3.5 mr-2" />
           Exportar CSV
         </span>
       )
@@ -541,8 +541,8 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
     {
       key: 'export-json',
       label: (
-        <span onClick={() => handleExport(invoice, 'json')}>
-          <FileJson style={{ width: 14, marginRight: 8 }} />
+        <span onClick={() => handleExport(invoice, 'json')} className="flex items-center">
+          <FileJson className="w-3.5 h-3.5 mr-2" />
           Exportar JSON
         </span>
       )
@@ -550,8 +550,8 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
     {
       key: 'export-xml',
       label: (
-        <span onClick={() => handleExport(invoice, 'xml')}>
-          <FileCode style={{ width: 14, marginRight: 8 }} />
+        <span onClick={() => handleExport(invoice, 'xml')} className="flex items-center">
+          <FileCode className="w-3.5 h-3.5 mr-2" />
           Exportar XML
         </span>
       )
@@ -568,10 +568,10 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
       sorter: (a: Invoice, b: Invoice) => a.fullNumber.localeCompare(b.fullNumber),
       render: (text: string, record: Invoice) => (
         <div className="flex items-center gap-1 whitespace-nowrap">
-          <Tag color="blue" style={{ margin: 0, fontSize: '10px', padding: '0 4px', lineHeight: '18px' }}>
+          <Tag color="blue" className="!m-0 !text-[10px] !px-1 !h-[18px] !leading-[18px] flex items-center">
             {record.series}
           </Tag>
-          <span style={{ fontSize: '11px' }}>{text}</span>
+          <span className="text-[11px] font-medium text-slate-700 dark:text-slate-300">{text}</span>
         </div>
       )
     },
@@ -582,9 +582,11 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
       width: 200,
       ellipsis: true,
       render: (customer: any) => (
-        <div>
-          <div className="font-medium truncate" style={{ fontSize: '11px' }} title={customer.fiscalName}>{customer.fiscalName}</div>
-          <div className="text-xs text-gray-500 truncate">{customer.cif}</div>
+        <div className="min-w-0">
+          <div className="font-bold truncate text-[11px] text-slate-900 dark:text-slate-100" title={customer.fiscalName}>
+            {customer.fiscalName}
+          </div>
+          <div className="text-[10px] font-medium text-slate-500 truncate">{customer.cif}</div>
         </div>
       )
     },
@@ -607,7 +609,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
 
         const config = statusConfig[status];
         return (
-          <Tag color={config.color} icon={config.icon} style={{ margin: 0, fontSize: '10px', padding: '0 4px', lineHeight: '18px' }}>
+          <Tag color={config.color} icon={config.icon} className="m-0 text-[10px] px-1 line-height-18">
             {config.text}
           </Tag>
         );
@@ -633,7 +635,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
 
         const config = statusConfig[status];
         return (
-          <Tag color={config.color} style={{ margin: 0, fontSize: '10px', padding: '0 4px', lineHeight: '18px' }}>
+          <Tag color={config.color} className="m-0 text-[10px] px-1 line-height-18">
             {config.text}
           </Tag>
         );
@@ -693,8 +695,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
                   size="small"
                   icon={<Eye style={{ width: 12 }} />}
                   onClick={() => openPreviewModal(record)}
-                  className="bg-emerald-500 hover:bg-emerald-600"
-                  style={{ fontSize: '10px', height: '20px', padding: '0 6px' }}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-[10px] h-5 px-1.5"
                 />
               </Tooltip>
               <Tooltip title="Editar Borrador">
@@ -702,7 +703,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
                   size="small"
                   icon={<Edit style={{ width: 12 }} />}
                   onClick={() => openEditModal(record)}
-                  style={{ fontSize: '10px', height: '20px', padding: '0 6px' }}
+                  className="text-[10px] h-5 px-1.5"
                 />
               </Tooltip>
               <Popconfirm
@@ -714,7 +715,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
                     danger
                     size="small"
                     icon={<Trash2 style={{ width: 12 }} />}
-                    style={{ fontSize: '10px', height: '20px', padding: '0 6px' }}
+                    className="text-[10px] h-5 px-1.5"
                   />
                 </Tooltip>
               </Popconfirm>
@@ -732,7 +733,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
                   <Button
                     size="small"
                     icon={<Download style={{ width: 12 }} />}
-                    style={{ fontSize: '10px', height: '20px', padding: '0 6px' }}
+                    className="text-[10px] h-5 px-1.5"
                   />
                 </Tooltip>
               </Dropdown>
@@ -746,8 +747,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
                       setSelectedInvoice(record);
                       setPaymentModalOpen(true);
                     }}
-                    className="bg-emerald-600 hover:bg-emerald-700 border-none"
-                    style={{ fontSize: '10px', height: '22px', padding: '0 8px' }}
+                    className="bg-emerald-600 hover:bg-emerald-700 border-none text-[10px] h-5.5 px-2"
                   >
                     COBRO
                   </Button>
@@ -764,8 +764,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
                 danger
                 icon={<Trash2 style={{ width: 12 }} />}
                 onClick={() => openDeleteReasonModal(record)}
-                className="text-xs"
-                style={{ fontSize: '10px', height: '20px', padding: '0 6px' }}
+                className="text-xs text-[10px] h-5 px-1.5"
               >
                 Eliminar
               </Button>
@@ -783,7 +782,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
                   <Button
                     size="small"
                     icon={<Download style={{ width: 12 }} />}
-                    style={{ fontSize: '10px', height: '20px', padding: '0 6px' }}
+                    className="text-[10px] h-5 px-1.5"
                   />
                 </Tooltip>
               </Dropdown>
@@ -798,7 +797,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
                       setPaymentModalOpen(true);
                     }}
                     className="bg-orange-500"
-                    style={{ fontSize: '10px', height: '20px', padding: '0 6px' }}
+                    className="bg-orange-500 text-[10px] h-5 px-1.5"
                   >
                     Devolver
                   </Button>
@@ -815,8 +814,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
                 danger
                 icon={<Trash2 style={{ width: 12 }} />}
                 onClick={() => openDeleteReasonModal(record)}
-                className="text-xs"
-                style={{ fontSize: '10px', height: '20px', padding: '0 6px' }}
+                className="text-xs text-[10px] h-5 px-1.5"
               >
                 Eliminar
               </Button>
@@ -838,7 +836,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
         else if (status === 'PARTIAL') { color = 'processing'; text = 'PARCIAL'; }
         else if (status === 'PENDING') { color = 'warning'; text = 'PENDIENTE'; }
 
-        return <Tag color={color} style={{ fontSize: '10px' }}>{text}</Tag>;
+        return <Tag color={color} className="text-[10px]">{text}</Tag>;
       }
     }
   ];
@@ -896,8 +894,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
           size="small"
           type={quickFilter === 'all' ? 'primary' : 'text'}
           onClick={() => { setQuickFilter('all'); setStatusFilter('ALL'); setPaymentStatusFilter('ALL'); }}
-          className={`px-3 ${quickFilter === 'all' ? 'bg-indigo-600' : 'text-slate-500'}`}
-          style={{ fontSize: '11px', height: '24px' }}
+          className={`px-3 text-[11px] h-6 ${quickFilter === 'all' ? 'bg-indigo-600' : 'text-slate-500'}`}
         >
           Todas ({invoices.length})
         </Button>
@@ -905,8 +902,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
           size="small"
           type={quickFilter === 'draft' ? 'primary' : 'text'}
           onClick={() => { setQuickFilter('draft'); setStatusFilter('DRAFT' as InvoiceStatus | 'ALL'); setPaymentStatusFilter('ALL'); }}
-          className={`px-3 ${quickFilter === 'draft' ? 'bg-pink-600' : 'text-slate-500'}`}
-          style={{ fontSize: '11px', height: '24px' }}
+          className={`px-3 text-[11px] h-6 ${quickFilter === 'draft' ? 'bg-pink-600' : 'text-slate-500'}`}
         >
           Borradores ({invoices.filter(i => i.status === 'DRAFT').length})
         </Button>
@@ -914,8 +910,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
           size="small"
           type={quickFilter === 'issued' ? 'primary' : 'text'}
           onClick={() => { setQuickFilter('issued'); setStatusFilter('ISSUED' as InvoiceStatus | 'ALL'); setPaymentStatusFilter('ALL'); }}
-          className={`px-3 ${quickFilter === 'issued' ? 'bg-emerald-600' : 'text-slate-500'}`}
-          style={{ fontSize: '11px', height: '24px' }}
+          className={`px-3 text-[11px] h-6 ${quickFilter === 'issued' ? 'bg-emerald-600' : 'text-slate-500'}`}
         >
           Emitidas ({invoices.filter(i => i.status === 'ISSUED').length})
         </Button>
@@ -923,8 +918,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
           size="small"
           type={quickFilter === 'unpaid' ? 'primary' : 'text'}
           onClick={() => { setQuickFilter('unpaid'); setPaymentStatusFilter('PENDING' as PaymentStatus | 'ALL'); setStatusFilter('ALL'); }}
-          className={`px-3 ${quickFilter === 'unpaid' ? 'bg-amber-600' : 'text-slate-500'}`}
-          style={{ fontSize: '11px', height: '24px' }}
+          className={`px-3 text-[11px] h-6 ${quickFilter === 'unpaid' ? 'bg-amber-600' : 'text-slate-500'}`}
         >
           Deuda ({invoices.filter(i => i.remainingAmount > 0).length})
         </Button>
@@ -950,7 +944,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
-            style={{ fontSize: '12px' }}
+            className="text-xs"
           />
         </Col>
         <Col xs={12} sm={6} md={3}>
@@ -959,9 +953,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
             placeholder="Estado"
             value={statusFilter}
             onChange={setStatusFilter}
-            className="w-full"
-            allowClear
-            style={{ fontSize: '12px' }}
+            className="w-full text-xs"
           >
             <Select.Option value="ALL">📋 Todos</Select.Option>
             <Select.Option value="DRAFT">📝 Borradores</Select.Option>
@@ -975,9 +967,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
             placeholder="Pago"
             value={paymentStatusFilter}
             onChange={setPaymentStatusFilter}
-            className="w-full"
-            allowClear
-            style={{ fontSize: '12px' }}
+            className="w-full text-xs"
           >
             <Select.Option value="ALL">💰 Todos</Select.Option>
             <Select.Option value="PENDING">⏳ Pendiente</Select.Option>

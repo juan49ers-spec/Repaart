@@ -80,3 +80,5 @@ export const FinancialHeader: React.FC<FinancialHeaderProps> = ({ month, step, s
         </div>
     );
 };
+
+export default FinancialHeader;

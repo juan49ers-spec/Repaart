@@ -398,7 +398,7 @@ const AdminResourcesPanel = () => {
                         >
                             Solicitudes
                             {pendingRequestsCount > 0 && (
-                                <span className="flex items-center justify-center bg-rose-500 text-white text-[10px] h-5 min-w-[20px] px-1 rounded-full border-2 border-slate-100 dark:border-slate-800">
+                                <span className="flex items-center justify-center bg-rose-500 text-white text-[10px] h-5 min-w-5 px-1 rounded-full border-2 border-slate-100 dark:border-slate-800">
                                     {pendingRequestsCount}
                                 </span>
                             )}
@@ -483,7 +483,10 @@ const AdminResourcesPanel = () => {
                                         <span className="text-[10px] font-bold text-indigo-500">{storageStats.formatted} / 10 GB</span>
                                     </div>
                                     <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                        <div className="h-full bg-indigo-500 rounded-full transition-all duration-500" style={{ width: `${Math.max(storageStats.percentage, 1)}%` }} />
+                                        <div
+                                            className="h-full bg-indigo-500 rounded-full transition-all duration-500"
+                                            style={{ width: `${Math.max(storageStats.percentage, 1)}%` }}
+                                        />
                                     </div>
                                 </div>
 

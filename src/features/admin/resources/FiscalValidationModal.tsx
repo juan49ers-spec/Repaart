@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    X, 
-    AlertTriangle, 
-    Building2, 
-    User, 
-    MapPin, 
+import {
+    X,
+    AlertTriangle,
+    Building2,
+    User,
+    MapPin,
     FileText,
     CheckCircle2,
     ChevronRight,
@@ -50,13 +50,13 @@ const FIELD_ICONS: Record<string, React.ReactNode> = {
 
 const containerVariants = {
     hidden: { opacity: 0, scale: 0.95 },
-    visible: { 
-        opacity: 1, 
+    visible: {
+        opacity: 1,
         scale: 1,
         transition: { duration: 0.3 }
     },
-    exit: { 
-        opacity: 0, 
+    exit: {
+        opacity: 0,
         scale: 0.95,
         transition: { duration: 0.2 }
     }
@@ -72,7 +72,7 @@ export const FiscalValidationModal: React.FC<FiscalValidationModalProps> = ({
 }) => {
     if (!isOpen) return null;
 
-    const completedFields = franchiseData 
+    const completedFields = franchiseData
         ? Object.keys(FIELD_LABELS).filter(key => {
             const value = franchiseData[key as keyof FranchiseFiscalData];
             return value && String(value).trim() !== '';
@@ -119,6 +119,7 @@ export const FiscalValidationModal: React.FC<FiscalValidationModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xl"
+            data-testid="fiscal-validation-modal"
         >
             <motion.div
                 variants={containerVariants}
@@ -128,24 +129,24 @@ export const FiscalValidationModal: React.FC<FiscalValidationModalProps> = ({
                 className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 w-full max-w-2xl max-h-[90vh] rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden"
             >
                 {/* Header Premium */}
-                <motion.header 
+                <motion.header
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="relative px-10 py-8 border-b border-slate-100 dark:border-slate-800 overflow-hidden"
                 >
                     <div className="absolute inset-0 bg-gradient-to-br from-slate-50/80 via-white to-slate-50/60 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800/50" />
-                    
+
                     <div className="relative flex items-center justify-between"
                     >
                         <div className="flex items-center gap-5">
-                            <motion.div 
+                            <motion.div
                                 className={`p-4 ${status.bgColor} rounded-2xl shadow-xl ${status.shadowColor}`}
                                 whileHover={{ scale: 1.05, rotate: 2 }}
                                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
                             >
                                 <StatusIcon className="w-7 h-7 text-white" strokeWidth={1.5} />
                             </motion.div>
-                            
+
                             <div>
                                 <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight"
                                 >
@@ -156,8 +157,8 @@ export const FiscalValidationModal: React.FC<FiscalValidationModalProps> = ({
                                 </p>
                             </div>
                         </div>
-                        
-                        <motion.button 
+
+                        <motion.button
                             onClick={onClose}
                             whileHover={{ scale: 1.1, rotate: 90 }}
                             whileTap={{ scale: 0.9 }}
@@ -170,7 +171,7 @@ export const FiscalValidationModal: React.FC<FiscalValidationModalProps> = ({
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-10 space-y-8">
                     {/* Progress Card */}
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
@@ -185,9 +186,9 @@ export const FiscalValidationModal: React.FC<FiscalValidationModalProps> = ({
                             </div>
                             <span className={`text-4xl font-black ${status.textColor}`}>{progress}%</span>
                         </div>
-                        
+
                         <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
-                            <motion.div 
+                            <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${progress}%` }}
                                 transition={{ duration: 0.8, ease: "easeOut" }}
@@ -196,7 +197,7 @@ export const FiscalValidationModal: React.FC<FiscalValidationModalProps> = ({
                         </div>
 
                         {validation.errors.length > 0 && (
-                            <motion.div 
+                            <motion.div
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: 'auto' }}
                                 className="mt-6 p-5 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/50 rounded-2xl"
@@ -232,10 +233,10 @@ export const FiscalValidationModal: React.FC<FiscalValidationModalProps> = ({
                                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                                     Campos pendientes
                                 </h3>
-                                
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     {missingFields.map((field, idx) => (
-                                        <motion.div 
+                                        <motion.div
                                             key={field}
                                             initial={{ opacity: 0, x: -10 }}
                                             animate={{ opacity: 1, x: 0 }}
@@ -249,7 +250,7 @@ export const FiscalValidationModal: React.FC<FiscalValidationModalProps> = ({
                                             <span className="text-sm font-medium text-amber-700 dark:text-amber-400">
                                                 {FIELD_LABELS[field]}
                                             </span>
-                                            
+
                                             <ChevronRight className="w-4 h-4 text-amber-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                                         </motion.div>
                                     ))}
@@ -272,10 +273,10 @@ export const FiscalValidationModal: React.FC<FiscalValidationModalProps> = ({
                                     <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                                     Campos completados
                                 </h3>
-                                
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     {completedFields.map((field, idx) => (
-                                        <motion.div 
+                                        <motion.div
                                             key={field}
                                             initial={{ opacity: 0, x: 10 }}
                                             animate={{ opacity: 1, x: 0 }}
@@ -285,7 +286,7 @@ export const FiscalValidationModal: React.FC<FiscalValidationModalProps> = ({
                                             <div className="text-emerald-500">
                                                 {FIELD_ICONS[field]}
                                             </div>
-                                            
+
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-[10px] text-emerald-600 dark:text-emerald-500 font-semibold uppercase tracking-wider">
                                                     {FIELD_LABELS[field]}
@@ -304,7 +305,7 @@ export const FiscalValidationModal: React.FC<FiscalValidationModalProps> = ({
                 </div>
 
                 {/* Footer */}
-                <motion.footer 
+                <motion.footer
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}

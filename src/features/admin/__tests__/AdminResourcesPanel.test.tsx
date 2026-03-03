@@ -22,6 +22,7 @@ vi.mock('lucide-react', () => {
         ExternalLink: null, Copy: null, Edit: null, Save: null, Sparkles: null, BarChart3: null, FileCheck: null,
         TrendingUp: null, PenTool: null, ShieldCheck: null, Fingerprint: null, Lock: null, Send: null,
         Link2: null, Gauge: null, MapPinned: null, FileType: null, FileType2: null, Droplets: null,
+        UploadCloud: null, FileUp: null, Archive: null, ChevronDown: null, ArrowUpDown: null, Home: null,
     };
     const mockIcons: any = {
         Image: (props: any) => <div data-testid="image-icon" {...props} />,
@@ -223,17 +224,25 @@ describe('AdminResourcesPanel Integration', () => {
     it('should switch tabs', async () => {
         render(<AdminResourcesPanel />);
 
-        fireEvent.click(screen.getByText(/Guías Interactivas/i));
+        await act(async () => {
+            fireEvent.click(screen.getByText(/Guías Interactivas/i));
+        });
         expect(screen.getByTestId('admin-guides-panel')).toBeInTheDocument();
 
-        fireEvent.click(screen.getByText(/Solicitudes/i));
+        await act(async () => {
+            fireEvent.click(screen.getByText(/Solicitudes/i));
+        });
         expect(screen.getByTestId('requests-inbox')).toBeInTheDocument();
 
-        fireEvent.click(screen.getByText(/Servicios Premium/i));
+        await act(async () => {
+            fireEvent.click(screen.getByText(/Servicios Premium/i));
+        });
         expect(screen.getByTestId('service-manager')).toBeInTheDocument();
 
         // Volver a Bóveda
-        fireEvent.click(screen.getByText(/Bóveda/i));
+        await act(async () => {
+            fireEvent.click(screen.getByText(/Bóveda/i));
+        });
         expect(screen.getByText(/Bóveda Digital/i)).toBeInTheDocument();
     });
 
@@ -251,7 +260,9 @@ describe('AdminResourcesPanel Integration', () => {
 
         // Switch category
         const manualsButton = screen.getAllByText(/Manuales Operativos/i)[0];
-        fireEvent.click(manualsButton);
+        await act(async () => {
+            fireEvent.click(manualsButton);
+        });
 
         await waitFor(() => {
             expect(screen.getByText('Manual de Rider')).toBeInTheDocument();
@@ -259,9 +270,11 @@ describe('AdminResourcesPanel Integration', () => {
         });
     });
 
-    it('should open upload modal', () => {
+    it('should open upload modal', async () => {
         render(<AdminResourcesPanel />);
-        fireEvent.click(screen.getByText(/Subir Nuevo Recurso/i));
+        await act(async () => {
+            fireEvent.click(screen.getByText(/Subir Nuevo Recurso/i));
+        });
         expect(screen.getByTestId('upload-modal')).toBeInTheDocument();
     });
 
@@ -274,12 +287,16 @@ describe('AdminResourcesPanel Integration', () => {
         await waitFor(() => expect(screen.getAllByTestId('trash-icon')[0]).toBeInTheDocument());
 
         const trashButton = screen.getAllByTestId('trash-icon')[0];
-        fireEvent.click(trashButton);
+        await act(async () => {
+            fireEvent.click(trashButton);
+        });
 
         expect(screen.getByTestId('confirm-modal')).toBeInTheDocument();
 
         const { deleteDoc } = await import('firebase/firestore');
-        fireEvent.click(screen.getByText(/Confirm/i));
+        await act(async () => {
+            fireEvent.click(screen.getByText(/Confirm/i));
+        });
 
         await waitFor(() => {
             expect(deleteDoc).toHaveBeenCalled();
@@ -296,32 +313,54 @@ describe('AdminResourcesPanel Integration', () => {
 
         const { updateDoc } = await import('firebase/firestore');
         const pinButton = screen.getAllByTestId('pin-icon')[0];
-        fireEvent.click(pinButton);
+        await act(async () => {
+            fireEvent.click(pinButton);
+        });
 
         await waitFor(() => {
             expect(updateDoc).toHaveBeenCalled();
         });
     });
 
-    it('should handle token refresh', () => {
+    it('should handle token refresh', async () => {
         render(<AdminResourcesPanel />);
-
-        // Mock window.alert
         window.alert = vi.fn();
 
         fireEvent.click(screen.getByText(/Actualizar Token/i));
-        // The token refresh is called (mocked in AuthContext)
+
+        await waitFor(() => {
+            expect(window.alert).toHaveBeenCalledWith(expect.stringMatching(/Token actualizado/i));
+        });
     });
 
-    it('should show analytics dashboard', () => {
+    it('should show analytics dashboard', async () => {
         render(<AdminResourcesPanel />);
-        expect(screen.getByTestId('analytics-dashboard')).toBeInTheDocument();
+
+        await waitFor(() => expect(adminSnapshotCallback).toBeTruthy());
+        act(() => triggerSnapshot());
+
+        // Open analytics section
+        const analyticsBtn = await screen.findByText(/Analytics/i);
+        act(() => {
+            fireEvent.click(analyticsBtn);
+        });
+
+        const dashboard = await screen.findByTestId('analytics-dashboard');
+        expect(dashboard).toBeInTheDocument();
     });
 
-    it('should open smart contract wizard', () => {
+    it('should open smart contract wizard', async () => {
         render(<AdminResourcesPanel />);
-        
-        fireEvent.click(screen.getByText(/Generar Inteligente/i));
-        expect(screen.getByTestId('fiscal-validation-modal')).toBeInTheDocument();
+
+        await waitFor(() => expect(adminSnapshotCallback).toBeTruthy());
+        act(() => triggerSnapshot());
+
+        const wizardButton = await screen.findByText(/Generar Inteligente/i);
+        await act(async () => {
+            fireEvent.click(wizardButton);
+        });
+
+        const modal = await screen.findByTestId('fiscal-validation-modal');
+        expect(modal).toBeInTheDocument();
     });
 });
