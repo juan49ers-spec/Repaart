@@ -13,13 +13,12 @@
  */
 import './InvoiceListView.module.css';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Eye,
   Download,
   Trash2,
   Filter,
-  DownloadCloud,
   CheckCircle,
   Clock,
   AlertCircle,
@@ -33,9 +32,12 @@ import {
   FileCode,
   FileText,
   Edit,
+  X,
+  ChevronDown,
+  FileBarChart,
 } from 'lucide-react';
 import {
-  Table, Tag, Space, Button, Tooltip, Modal, message, Popconfirm, Select, Col, Input, Row, DatePicker, Dropdown, Divider
+  Table, Tag, Space, Button, Tooltip, Modal, message, Popconfirm, Select, Col, Input, Row, DatePicker, Dropdown, Divider, Slider, Progress
 } from 'antd';
 import type { Invoice, InvoiceStatus, PaymentStatus } from '../../../types/invoicing';
 import { invoiceEngine, downloadExport, invoicePdfGenerator } from '../../../services/billing';
@@ -58,6 +60,9 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | 'ALL'>('ALL');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<PaymentStatus | 'ALL'>('ALL');
   const [dateRange, setDateRange] = useState<any>(null);
+  const [customerFilter, setCustomerFilter] = useState<string | null>(null);
+  const [amountRange, setAmountRange] = useState<[number, number]>([0, 0]);
+  const [amountFilterActive, setAmountFilterActive] = useState(false);
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [rectificationModalOpen, setRectificationModalOpen] = useState(false);
@@ -68,12 +73,13 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editInvoice, setEditInvoice] = useState<Invoice | null>(null);
-  const [devMode, setDevMode] = useState(false); // Development mode for dangerous actions
-  const [devModeModalOpen, setDevModeModalOpen] = useState(false); // Modal for dev mode activation
+  const [devMode, setDevMode] = useState(false);
+  const [devModeModalOpen, setDevModeModalOpen] = useState(false);
   const [deleteReasonModalOpen, setDeleteReasonModalOpen] = useState(false);
   const [deleteReason, setDeleteReason] = useState('');
   const [invoiceToDelete, setInvoiceToDelete] = useState<Invoice | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
   const [quickFilter, setQuickFilter] = useState<'all' | 'draft' | 'issued' | 'unpaid'>('all');
 
   // Fetch invoices - Wrapped in useCallback to prevent re-renders
@@ -98,7 +104,43 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
     fetchInvoices();
   }, [franchiseId, refreshTrigger]);
 
-  // Apply filters
+  // Unique customers list for the filter dropdown
+  const uniqueCustomers = useMemo(() => {
+    const map = new Map<string, string>();
+    invoices.forEach(inv => {
+      if (inv.customerSnapshot?.fiscalName) {
+        map.set(inv.customerSnapshot.fiscalName, inv.customerSnapshot.cif || '');
+      }
+    });
+    return Array.from(map.entries()).map(([name, cif]) => ({ name, cif }));
+  }, [invoices]);
+
+  // Max amount for slider
+  const maxAmount = useMemo(() => {
+    if (invoices.length === 0) return 10000;
+    return Math.ceil(Math.max(...invoices.map(inv => inv.total)) / 100) * 100;
+  }, [invoices]);
+
+  // Initialize amount range when invoices load
+  useEffect(() => {
+    if (invoices.length > 0 && !amountFilterActive) {
+      setAmountRange([0, maxAmount]);
+    }
+  }, [invoices, maxAmount, amountFilterActive]);
+
+  // Count active filters for the badge
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (searchText) count++;
+    if (statusFilter !== 'ALL') count++;
+    if (paymentStatusFilter !== 'ALL') count++;
+    if (customerFilter) count++;
+    if (amountFilterActive) count++;
+    if (dateRange && dateRange[0] && dateRange[1]) count++;
+    return count;
+  }, [searchText, statusFilter, paymentStatusFilter, customerFilter, amountFilterActive, dateRange]);
+
+  // Apply all filters
   useEffect(() => {
     let filtered = [...invoices];
 
@@ -119,8 +161,110 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
       filtered = filtered.filter(inv => inv.paymentStatus === paymentStatusFilter);
     }
 
+    if (customerFilter) {
+      filtered = filtered.filter(inv =>
+        inv.customerSnapshot.fiscalName === customerFilter
+      );
+    }
+
+    if (amountFilterActive) {
+      filtered = filtered.filter(inv =>
+        inv.total >= amountRange[0] && inv.total <= amountRange[1]
+      );
+    }
+
+    if (dateRange && dateRange[0] && dateRange[1]) {
+      const start = dateRange[0].startOf('day').toDate();
+      const end = dateRange[1].endOf('day').toDate();
+      filtered = filtered.filter(inv => {
+        const issueDate = inv.issueDate instanceof Date
+          ? inv.issueDate
+          : new Date((inv.issueDate as any).seconds * 1000);
+        return issueDate >= start && issueDate <= end;
+      });
+    }
+
     setFilteredInvoices(filtered);
-  }, [invoices, searchText, statusFilter, paymentStatusFilter, dateRange]);
+  }, [invoices, searchText, statusFilter, paymentStatusFilter, customerFilter, amountFilterActive, amountRange, dateRange]);
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSearchText('');
+    setStatusFilter('ALL');
+    setPaymentStatusFilter('ALL');
+    setCustomerFilter(null);
+    setAmountFilterActive(false);
+    setAmountRange([0, maxAmount]);
+    setDateRange(null);
+    setQuickFilter('all');
+  };
+
+  // Bulk export (CSV/Excel)
+  const handleBulkExport = (format: 'csv' | 'excel') => {
+    const dataToExport = filteredInvoices;
+    if (dataToExport.length === 0) {
+      message.warning('No hay facturas para exportar con los filtros actuales');
+      return;
+    }
+
+    const separator = format === 'excel' ? ';' : ',';
+    const headers = ['Número', 'Serie', 'Cliente', 'CIF', 'Fecha Emisión', 'Fecha Vencimiento', 'Estado', 'Estado Pago', 'Base Imponible', 'IVA', 'Total', 'Cobrado', 'Pendiente'];
+    const rows = dataToExport.map(inv => {
+      const issueDate = inv.issueDate instanceof Date
+        ? inv.issueDate
+        : new Date((inv.issueDate as any).seconds * 1000);
+      const dueDate = inv.dueDate instanceof Date
+        ? inv.dueDate
+        : new Date((inv.dueDate as any).seconds * 1000);
+      return [
+        inv.fullNumber,
+        inv.series,
+        `"${inv.customerSnapshot.fiscalName}"`,
+        inv.customerSnapshot.cif || '',
+        issueDate.toLocaleDateString('es-ES'),
+        dueDate.toLocaleDateString('es-ES'),
+        inv.status,
+        inv.paymentStatus,
+        inv.subtotal?.toFixed(2) || '0.00',
+        ((inv.total || 0) - (inv.subtotal || 0)).toFixed(2),
+        inv.total.toFixed(2),
+        inv.totalPaid.toFixed(2),
+        inv.remainingAmount.toFixed(2)
+      ].join(separator);
+    });
+
+    const bom = '\uFEFF';
+    const content = bom + headers.join(separator) + '\n' + rows.join('\n');
+    const ext = format === 'excel' ? 'xlsx.csv' : 'csv';
+    const mimeType = 'text/csv;charset=utf-8';
+
+    // Smart filename
+    const filterParts: string[] = ['facturas_repaart'];
+    const now = new Date();
+    if (dateRange && dateRange[0] && dateRange[1]) {
+      filterParts.push(`${dateRange[0].format('DDMMYY')}-${dateRange[1].format('DDMMYY')}`);
+    } else {
+      filterParts.push(now.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }).replace(' ', ''));
+    }
+    if (statusFilter !== 'ALL') filterParts.push(statusFilter.toLowerCase());
+    if (customerFilter) filterParts.push(customerFilter.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 20));
+    const filename = `${filterParts.join('_')}.${ext}`;
+
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    message.success(`${dataToExport.length} facturas exportadas a ${format.toUpperCase()}`);
+  };
+
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -344,9 +488,9 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
 
   const handleDownloadPdf = (invoice: Invoice) => {
     try {
-      invoicePdfGenerator.downloadInvoicePdf(invoice, { 
+      invoicePdfGenerator.downloadInvoicePdf(invoice, {
         template: 'modern',
-        lang: 'es' 
+        lang: 'es'
       });
       message.success('PDF descargado');
     } catch (error) {
@@ -746,12 +890,12 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
         </div>
       )}
 
-      {/* Quick Filters - Ultra Compact Pills */}
-      <div className="flex flex-wrap gap-1">
+      {/* Quick Filters + Date Presets */}
+      <div className="flex flex-wrap items-center gap-1">
         <Button
           size="small"
           type={quickFilter === 'all' ? 'primary' : 'text'}
-          onClick={() => setQuickFilter('all')}
+          onClick={() => { setQuickFilter('all'); setStatusFilter('ALL'); setPaymentStatusFilter('ALL'); }}
           className={`px-3 ${quickFilter === 'all' ? 'bg-indigo-600' : 'text-slate-500'}`}
           style={{ fontSize: '11px', height: '24px' }}
         >
@@ -760,10 +904,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
         <Button
           size="small"
           type={quickFilter === 'draft' ? 'primary' : 'text'}
-          onClick={() => {
-            setQuickFilter('draft');
-            setStatusFilter('DRAFT' as InvoiceStatus | 'ALL');
-          }}
+          onClick={() => { setQuickFilter('draft'); setStatusFilter('DRAFT' as InvoiceStatus | 'ALL'); setPaymentStatusFilter('ALL'); }}
           className={`px-3 ${quickFilter === 'draft' ? 'bg-pink-600' : 'text-slate-500'}`}
           style={{ fontSize: '11px', height: '24px' }}
         >
@@ -772,10 +913,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
         <Button
           size="small"
           type={quickFilter === 'issued' ? 'primary' : 'text'}
-          onClick={() => {
-            setQuickFilter('issued');
-            setStatusFilter('ISSUED' as InvoiceStatus | 'ALL');
-          }}
+          onClick={() => { setQuickFilter('issued'); setStatusFilter('ISSUED' as InvoiceStatus | 'ALL'); setPaymentStatusFilter('ALL'); }}
           className={`px-3 ${quickFilter === 'issued' ? 'bg-emerald-600' : 'text-slate-500'}`}
           style={{ fontSize: '11px', height: '24px' }}
         >
@@ -784,20 +922,27 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
         <Button
           size="small"
           type={quickFilter === 'unpaid' ? 'primary' : 'text'}
-          onClick={() => {
-            setQuickFilter('unpaid');
-            setPaymentStatusFilter('PENDING' as PaymentStatus | 'ALL');
-          }}
+          onClick={() => { setQuickFilter('unpaid'); setPaymentStatusFilter('PENDING' as PaymentStatus | 'ALL'); setStatusFilter('ALL'); }}
           className={`px-3 ${quickFilter === 'unpaid' ? 'bg-amber-600' : 'text-slate-500'}`}
           style={{ fontSize: '11px', height: '24px' }}
         >
           Deuda ({invoices.filter(i => i.remainingAmount > 0).length})
         </Button>
+
+        <div className="border-l border-slate-200 h-4 mx-1" />
+
+        {/* Results counter */}
+        <span className="text-[10px] text-slate-400 font-medium ml-auto">
+          {filteredInvoices.length !== invoices.length
+            ? `Mostrando ${filteredInvoices.length} de ${invoices.length}`
+            : `${invoices.length} facturas`
+          }
+        </span>
       </div>
 
-      {/* Filters Row - Ultra Compact */}
+      {/* Filters Row */}
       <Row gutter={[8, 8]} align="middle">
-        <Col xs={24} md={8}>
+        <Col xs={24} md={6}>
           <Input
             size="small"
             placeholder="🔍 Buscar... (F)"
@@ -805,10 +950,10 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
-            style={{ fontSize: '13px' }}
+            style={{ fontSize: '12px' }}
           />
         </Col>
-        <Col xs={24} sm={8} md={4}>
+        <Col xs={12} sm={6} md={3}>
           <Select
             size="small"
             placeholder="Estado"
@@ -816,15 +961,15 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
             onChange={setStatusFilter}
             className="w-full"
             allowClear
-            style={{ fontSize: '13px' }}
+            style={{ fontSize: '12px' }}
           >
-            <Select.Option value="ALL">📋 Todos ({invoices.length})</Select.Option>
-            <Select.Option value="DRAFT">📝 Borradores ({invoices.filter(i => i.status === 'DRAFT').length})</Select.Option>
-            <Select.Option value="ISSUED">✅ Emitidas ({invoices.filter(i => i.status === 'ISSUED').length})</Select.Option>
-            <Select.Option value="RECTIFIED">❌ Rectificadas ({invoices.filter(i => i.status === 'RECTIFIED').length})</Select.Option>
+            <Select.Option value="ALL">📋 Todos</Select.Option>
+            <Select.Option value="DRAFT">📝 Borradores</Select.Option>
+            <Select.Option value="ISSUED">✅ Emitidas</Select.Option>
+            <Select.Option value="RECTIFIED">❌ Rectificadas</Select.Option>
           </Select>
         </Col>
-        <Col xs={24} sm={8} md={4}>
+        <Col xs={12} sm={6} md={3}>
           <Select
             size="small"
             placeholder="Pago"
@@ -832,13 +977,29 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
             onChange={setPaymentStatusFilter}
             className="w-full"
             allowClear
-            style={{ fontSize: '13px' }}
+            style={{ fontSize: '12px' }}
           >
             <Select.Option value="ALL">💰 Todos</Select.Option>
             <Select.Option value="PENDING">⏳ Pendiente</Select.Option>
             <Select.Option value="PARTIAL">📊 Parcial</Select.Option>
             <Select.Option value="PAID">✅ Pagado</Select.Option>
           </Select>
+        </Col>
+        <Col xs={24} sm={12} md={4}>
+          <Select
+            size="small"
+            placeholder="👤 Cliente"
+            value={customerFilter}
+            onChange={(val) => setCustomerFilter(val || null)}
+            className="w-full"
+            allowClear
+            showSearch
+            filterOption={(input, option) =>
+              (option?.label as string || '').toLowerCase().includes(input.toLowerCase())
+            }
+            options={uniqueCustomers.map(c => ({ value: c.name, label: `${c.name} (${c.cif})` }))}
+            style={{ fontSize: '12px' }}
+          />
         </Col>
         <Col xs={24} md={8}>
           <div className="flex gap-1.5">
@@ -847,19 +1008,41 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
               className="flex-1"
               format="DD/MM/YYYY"
               placeholder={['Inicio', 'Fin']}
+              value={dateRange}
               onChange={(dates) => setDateRange(dates)}
-              style={{ fontSize: '13px' }}
+              style={{ fontSize: '12px' }}
             />
             <Dropdown
               trigger={['click']}
               menu={{
                 items: [
                   {
-                    key: 'export',
-                    icon: <DownloadCloud className="w-3.5 h-3.5" />,
-                    label: 'Exportar Todas (CSV)',
-                    onClick: () => message.info('Exportación masiva próximamente')
+                    key: 'export-csv',
+                    icon: <FileText className="w-3.5 h-3.5" />,
+                    label: `Exportar CSV (${filteredInvoices.length})`,
+                    onClick: () => handleBulkExport('csv')
                   },
+                  {
+                    key: 'export-excel',
+                    icon: <FileSpreadsheet className="w-3.5 h-3.5" />,
+                    label: `Exportar Excel (${filteredInvoices.length})`,
+                    onClick: () => handleBulkExport('excel')
+                  },
+                  { type: 'divider' as const },
+                  {
+                    key: 'amount-filter',
+                    icon: <FileBarChart className="w-3.5 h-3.5" />,
+                    label: amountFilterActive ? '💰 Quitar filtro importe' : '💰 Filtrar por importe',
+                    onClick: () => {
+                      if (amountFilterActive) {
+                        setAmountFilterActive(false);
+                        setAmountRange([0, maxAmount]);
+                      } else {
+                        setAmountFilterActive(true);
+                      }
+                    }
+                  },
+                  { type: 'divider' as const },
                   {
                     key: 'devmode',
                     icon: devMode ? <LockOpen className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />,
@@ -881,7 +1064,73 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
         </Col>
       </Row>
 
-      {/* Table - Ultra Compact */}
+      {/* Amount Slider (conditional) */}
+      {amountFilterActive && (
+        <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[11px] font-semibold text-amber-800">Rango de importe</span>
+            <span className="text-[11px] text-amber-600 font-medium">
+              {formatCurrency(amountRange[0])} – {formatCurrency(amountRange[1])}
+            </span>
+          </div>
+          <Slider
+            range
+            min={0}
+            max={maxAmount}
+            value={amountRange}
+            onChange={(val) => setAmountRange(val as [number, number])}
+            step={50}
+            className="mx-1"
+          />
+        </div>
+      )}
+
+      {/* Active Filters Chips */}
+      {activeFilterCount > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Filtros:</span>
+          {searchText && (
+            <Tag closable onClose={() => setSearchText('')} className="text-[10px] m-0">
+              Búsqueda: &ldquo;{searchText}&rdquo;
+            </Tag>
+          )}
+          {statusFilter !== 'ALL' && (
+            <Tag closable onClose={() => setStatusFilter('ALL')} color="blue" className="text-[10px] m-0">
+              Estado: {statusFilter}
+            </Tag>
+          )}
+          {paymentStatusFilter !== 'ALL' && (
+            <Tag closable onClose={() => setPaymentStatusFilter('ALL')} color="orange" className="text-[10px] m-0">
+              Pago: {paymentStatusFilter}
+            </Tag>
+          )}
+          {customerFilter && (
+            <Tag closable onClose={() => setCustomerFilter(null)} color="purple" className="text-[10px] m-0">
+              Cliente: {customerFilter.substring(0, 20)}
+            </Tag>
+          )}
+          {amountFilterActive && (
+            <Tag closable onClose={() => { setAmountFilterActive(false); setAmountRange([0, maxAmount]); }} color="gold" className="text-[10px] m-0">
+              Importe: {formatCurrency(amountRange[0])} – {formatCurrency(amountRange[1])}
+            </Tag>
+          )}
+          {dateRange && dateRange[0] && dateRange[1] && (
+            <Tag closable onClose={() => setDateRange(null)} color="cyan" className="text-[10px] m-0">
+              {dateRange[0].format('DD/MM')} – {dateRange[1].format('DD/MM')}
+            </Tag>
+          )}
+          <Button
+            type="link"
+            size="small"
+            onClick={clearAllFilters}
+            className="text-[10px] text-slate-400 hover:text-red-500 p-0 h-auto"
+          >
+            <X className="w-3 h-3 mr-0.5" /> Limpiar
+          </Button>
+        </div>
+      )}
+
+      {/* Table with Expandable Rows */}
       <Table
         size="small"
         columns={columns}
@@ -903,6 +1152,169 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
             name: record.fullNumber
           })
         }}
+        expandable={{
+          expandedRowKeys,
+          onExpandedRowsChange: (keys) => setExpandedRowKeys(keys as React.Key[]),
+          expandedRowRender: (record: Invoice) => {
+            const issueDate = record.issueDate instanceof Date
+              ? record.issueDate
+              : new Date((record.issueDate as any).seconds * 1000);
+            const dueDate = record.dueDate instanceof Date
+              ? record.dueDate
+              : new Date((record.dueDate as any).seconds * 1000);
+            const paymentPercent = record.total > 0
+              ? Math.round((record.totalPaid / record.total) * 100)
+              : 0;
+
+            return (
+              <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 -mx-2 space-y-4">
+                {/* Header info */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold">Cliente</span>
+                    <p className="text-xs font-semibold text-slate-900">{record.customerSnapshot?.fiscalName}</p>
+                    <p className="text-[10px] text-slate-500">{record.customerSnapshot?.cif}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold">Emisión</span>
+                    <p className="text-xs font-medium text-slate-700">{issueDate.toLocaleDateString('es-ES')}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold">Vencimiento</span>
+                    <p className="text-xs font-medium text-slate-700">{dueDate.toLocaleDateString('es-ES')}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold">Dirección</span>
+                    <p className="text-[10px] text-slate-600">
+                      {record.customerSnapshot?.address
+                        ? `${(record.customerSnapshot.address as any).street || ''}, ${(record.customerSnapshot.address as any).city || ''}`
+                        : 'Sin dirección'
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                {/* Payment progress bar */}
+                <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase">Progreso de cobro</span>
+                    <span className="text-xs font-bold text-slate-900">
+                      {formatCurrency(record.totalPaid)} / {formatCurrency(record.total)}
+                    </span>
+                  </div>
+                  <Progress
+                    percent={paymentPercent}
+                    status={paymentPercent >= 100 ? 'success' : paymentPercent > 0 ? 'active' : 'normal'}
+                    size="small"
+                    strokeColor={paymentPercent >= 100 ? '#10b981' : paymentPercent > 0 ? '#3b82f6' : '#94a3b8'}
+                  />
+                </div>
+
+                {/* Invoice lines table */}
+                {record.lines && record.lines.length > 0 && (
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase mb-2 block">Líneas de factura</span>
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-200">
+                          <th className="text-left text-[10px] text-slate-400 font-semibold py-1 uppercase">Concepto</th>
+                          <th className="text-right text-[10px] text-slate-400 font-semibold py-1 uppercase w-16">Uds</th>
+                          <th className="text-right text-[10px] text-slate-400 font-semibold py-1 uppercase w-20">Precio</th>
+                          <th className="text-right text-[10px] text-slate-400 font-semibold py-1 uppercase w-16">IVA</th>
+                          <th className="text-right text-[10px] text-slate-400 font-semibold py-1 uppercase w-20">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {record.lines.map((line, idx) => (
+                          <tr key={idx} className="border-b border-slate-100 last:border-0">
+                            <td className="py-1.5 text-slate-700">{line.description}</td>
+                            <td className="text-right text-slate-600 py-1.5">{line.quantity}</td>
+                            <td className="text-right text-slate-600 py-1.5">{formatCurrency(line.unitPrice)}</td>
+                            <td className="text-right text-slate-500 py-1.5">{line.taxRate || 21}%</td>
+                            <td className="text-right font-semibold text-slate-900 py-1.5">{formatCurrency(line.quantity * line.unitPrice)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr className="border-t-2 border-slate-300">
+                          <td colSpan={3} />
+                          <td className="text-right text-[10px] text-slate-500 font-bold py-1.5 uppercase">Total</td>
+                          <td className="text-right text-sm font-bold text-emerald-600 py-1.5">{formatCurrency(record.total)}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
+
+                {/* Payment timeline */}
+                {record.payments && record.payments.length > 0 && (
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase mb-2 block">Historial de pagos</span>
+                    <div className="relative pl-4 space-y-2">
+                      <div className="absolute left-1.5 top-1 bottom-1 w-px bg-emerald-200" />
+                      {record.payments.map((payment: any, idx: number) => {
+                        const payDate = payment.date?.toDate ? payment.date.toDate() : new Date(payment.date);
+                        return (
+                          <div key={idx} className="flex items-center gap-3 relative">
+                            <div className="absolute -left-2.5 w-2 h-2 rounded-full bg-emerald-500 border-2 border-white shadow" />
+                            <span className="text-[10px] text-slate-500 w-20">{payDate.toLocaleDateString('es-ES')}</span>
+                            <span className="text-xs font-semibold text-emerald-700">{formatCurrency(payment.amount)}</span>
+                            {payment.method && <Tag className="text-[9px] m-0" style={{ lineHeight: '14px', padding: '0 4px' }}>{payment.method}</Tag>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Quick actions */}
+                <div className="flex gap-2 pt-2 border-t border-slate-200">
+                  {record.pdfUrl && (
+                    <Button size="small" icon={<Eye className="w-3 h-3" />} onClick={() => handleViewPdf(record)} style={{ fontSize: '11px' }}>
+                      Ver PDF
+                    </Button>
+                  )}
+                  {record.status === 'ISSUED' && record.remainingAmount > 0 && (
+                    <Button
+                      size="small"
+                      type="primary"
+                      icon={<DollarSign className="w-3 h-3" />}
+                      className="bg-emerald-600 hover:bg-emerald-700 border-none"
+                      onClick={() => { setSelectedInvoice(record); setPaymentModalOpen(true); }}
+                      style={{ fontSize: '11px' }}
+                    >
+                      Registrar Cobro
+                    </Button>
+                  )}
+                  {record.status === 'DRAFT' && (
+                    <Button
+                      size="small"
+                      type="primary"
+                      icon={<CheckCircle className="w-3 h-3" />}
+                      className="bg-blue-600 hover:bg-blue-700 border-none"
+                      onClick={() => openPreviewModal(record)}
+                      style={{ fontSize: '11px' }}
+                    >
+                      Emitir
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          },
+          expandIcon: ({ expanded, onExpand, record }) => (
+            <Button
+              type="text"
+              size="small"
+              className="p-0 w-5 h-5 flex items-center justify-center"
+              onClick={(e) => onExpand(record, e)}
+            >
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+              />
+            </Button>
+          ),
+        }}
         pagination={{
           pageSize: 25,
           showSizeChanger: true,
@@ -911,6 +1323,27 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
           size: 'small'
         }}
         scroll={{ x: 1300 }}
+        locale={{
+          emptyText: (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-2xl flex items-center justify-center">
+                <FileText className="w-8 h-8 text-slate-300" />
+              </div>
+              <p className="text-sm font-semibold text-slate-600 mb-1">Sin facturas{activeFilterCount > 0 ? ' con estos filtros' : ''}</p>
+              <p className="text-xs text-slate-400 mb-3">
+                {activeFilterCount > 0
+                  ? 'Prueba modificando los filtros o limpiándolos'
+                  : 'Crea tu primera factura para empezar a facturar'
+                }
+              </p>
+              {activeFilterCount > 0 && (
+                <Button size="small" onClick={clearAllFilters} icon={<X className="w-3 h-3" />}>
+                  Limpiar filtros
+                </Button>
+              )}
+            </div>
+          )
+        }}
       />
 
       {/* PDF Preview Modal */}

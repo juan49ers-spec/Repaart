@@ -7,12 +7,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-    Card, 
-    Table, 
-    Button, 
-    Space, 
-    Tag, 
+import {
+    Card,
+    Table,
+    Button,
+    Space,
+    Tag,
     Input,
     Row,
     Col,
@@ -21,16 +21,19 @@ import {
     message,
     Spin
 } from 'antd';
-import { 
-    Plus, 
-    Edit2, 
-    Trash2, 
+import {
+    Plus,
+    Edit2,
+    Trash2,
     Building2,
     Search,
     Phone,
     Mail,
     MapPin,
-    FileText
+    FileText,
+    TrendingUp,
+    TrendingDown,
+    Minus
 } from 'lucide-react';
 import { useInvoicing } from '../../../hooks/useInvoicing';
 import { CreateRestaurantModal } from '../../invoicing/components/CreateRestaurantModal';
@@ -63,6 +66,9 @@ interface CustomerWithStats extends Customer {
         totalInvoiced: number;
         totalPending: number;
         invoiceCount: number;
+        currentMonthInvoiced?: number;
+        previousMonthInvoiced?: number;
+        trendPercent?: number;
     };
 }
 
@@ -75,7 +81,7 @@ export const CustomersManager: React.FC<Props> = ({ franchiseId }) => {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-    const [historyCustomer, setHistoryCustomer] = useState<{id: string; name: string} | null>(null);
+    const [historyCustomer, setHistoryCustomer] = useState<{ id: string; name: string } | null>(null);
 
     useEffect(() => {
         loadCustomers();
@@ -97,18 +103,50 @@ export const CustomersManager: React.FC<Props> = ({ franchiseId }) => {
 
     const loadCustomerStats = async (customerList: Customer[]) => {
         if (!customerList.length) return;
-        
+
         setLoadingStats(true);
         try {
+            const now = new Date();
+            const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
             const statsPromises = customerList.map(async (customer) => {
                 const result = await invoiceEngine.getCustomerStats(franchiseId, customer.id);
                 if (result.success) {
+                    // Get all invoices for this customer to calculate trend
+                    const invoicesResult = await invoiceEngine.getInvoicesByCustomer(franchiseId, customer.id);
+                    let currentMonthInvoiced = 0;
+                    let previousMonthInvoiced = 0;
+
+                    if (invoicesResult.success) {
+                        const issuedInvoices = invoicesResult.data.filter(inv => inv.status !== 'RECTIFIED');
+                        for (const inv of issuedInvoices) {
+                            const issueDate = inv.issueDate instanceof Date
+                                ? inv.issueDate
+                                : (inv.issueDate as any)?.toDate ? (inv.issueDate as any).toDate() : new Date((inv.issueDate as any)?.seconds * 1000);
+
+                            if (issueDate >= currentMonthStart) {
+                                currentMonthInvoiced += inv.total;
+                            } else if (issueDate >= previousMonthStart && issueDate <= previousMonthEnd) {
+                                previousMonthInvoiced += inv.total;
+                            }
+                        }
+                    }
+
+                    const trendPercent = previousMonthInvoiced > 0
+                        ? ((currentMonthInvoiced - previousMonthInvoiced) / previousMonthInvoiced) * 100
+                        : currentMonthInvoiced > 0 ? 100 : 0;
+
                     return {
                         ...customer,
                         stats: {
                             totalInvoiced: result.data.totalInvoiced,
                             totalPending: result.data.totalPending,
-                            invoiceCount: result.data.invoiceCount
+                            invoiceCount: result.data.invoiceCount,
+                            currentMonthInvoiced,
+                            previousMonthInvoiced,
+                            trendPercent
                         }
                     };
                 }
@@ -144,10 +182,10 @@ export const CustomersManager: React.FC<Props> = ({ franchiseId }) => {
         setHistoryCustomer({ id: customer.id, name: customer.fiscalName });
     };
 
-    const formatCurrency = (amount: number) => 
+    const formatCurrency = (amount: number) =>
         new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
 
-    const filteredCustomers = customers.filter(customer => 
+    const filteredCustomers = customers.filter(customer =>
         customer.fiscalName?.toLowerCase().includes(searchText.toLowerCase()) ||
         customer.cif?.toLowerCase().includes(searchText.toLowerCase()) ||
         customer.email?.toLowerCase().includes(searchText.toLowerCase())
@@ -213,7 +251,9 @@ export const CustomersManager: React.FC<Props> = ({ franchiseId }) => {
         {
             title: 'Facturado',
             key: 'invoiced',
-            width: 120,
+            width: 150,
+            sorter: (a: CustomerWithStats, b: CustomerWithStats) =>
+                (a.stats?.trendPercent || 0) - (b.stats?.trendPercent || 0),
             render: (_: unknown, record: CustomerWithStats) => (
                 loadingStats ? (
                     <Spin size="small" />
@@ -225,6 +265,37 @@ export const CustomersManager: React.FC<Props> = ({ franchiseId }) => {
                         <div className="text-xs text-slate-500">
                             {record.stats.invoiceCount} facturas
                         </div>
+                        {record.stats.trendPercent !== undefined && record.stats.trendPercent !== 0 && (
+                            <Tooltip
+                                title={
+                                    <div className="text-xs">
+                                        <div>Este mes: {formatCurrency(record.stats.currentMonthInvoiced || 0)}</div>
+                                        <div>Mes anterior: {formatCurrency(record.stats.previousMonthInvoiced || 0)}</div>
+                                        <div className="font-bold mt-1">
+                                            {record.stats.trendPercent > 0 ? '+' : ''}
+                                            {record.stats.trendPercent.toFixed(1)}% vs mes anterior
+                                        </div>
+                                    </div>
+                                }
+                            >
+                                <div className={`flex items-center justify-end gap-0.5 mt-0.5 text-[10px] font-semibold ${record.stats.trendPercent > 0 ? 'text-emerald-600' : 'text-red-500'
+                                    }`}>
+                                    {record.stats.trendPercent > 0 ? (
+                                        <TrendingUp className="w-3 h-3" />
+                                    ) : (
+                                        <TrendingDown className="w-3 h-3" />
+                                    )}
+                                    {record.stats.trendPercent > 0 ? '+' : ''}
+                                    {record.stats.trendPercent.toFixed(1)}%
+                                </div>
+                            </Tooltip>
+                        )}
+                        {record.stats.trendPercent === 0 && record.stats.currentMonthInvoiced === 0 && record.stats.previousMonthInvoiced === 0 && (
+                            <div className="flex items-center justify-end gap-0.5 mt-0.5 text-[10px] text-slate-400">
+                                <Minus className="w-3 h-3" />
+                                Sin actividad
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <span className="text-slate-400">-</span>

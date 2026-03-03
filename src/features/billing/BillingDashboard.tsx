@@ -1,33 +1,20 @@
 /**
- * Billing Dashboard Component - Reorganizado en 3 secciones:
+ * Billing Dashboard Component - Reorganizado en 4 secciones:
  * 
  * 1. CLIENTES: Gestión completa de clientes (restaurantes)
- *    - Crear, editar, ver y eliminar clientes
- *    - Base de datos de clientes para facturación
- * 
- * 2. TARIFAS: Configuración de precios
- *    - Tarifas por distancia (km)
- *    - Configuración personalizada
- * 
- * 3. FACTURAS: Emisión y gestión completa
- *    - Crear facturas
- *    - Lista y estado de facturas
- *    - Deudas y cobros
- *    - Impuestos y cierres fiscales
- *
- * Features:
- * - Flujo claro: Clientes → Tarifas → Facturas
- * - Integración completa con backend
- * - Responsive design
+ * 2. TARIFAS: Configuración de precios por distancia
+ * 3. FACTURAS: Emisión, gestión y KPIs de facturación
+ * 4. DEUDA & FISCAL: Deudas, impagos, hucha fiscal y cierres
  */
 
-import React, { useState, useEffect } from 'react';
-import { Plus, Users, Settings2, FileText, TrendingDown, Database, Building2, Target } from 'lucide-react';
-import { Tabs, Button, Modal, Card, Form, Input, message } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Plus, Users, Settings2, FileText, AlertTriangle, Building2, Target, Shield } from 'lucide-react';
+import { Tabs, Button, Modal, Form, Input, message, Badge } from 'antd';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { CustomersManager } from './components/CustomersManager';
 import { InvoiceListView } from './components/InvoiceListView';
+import { InvoiceStatsCards } from './components/InvoiceStatsCards';
 import { DebtDashboardView } from './components/DebtDashboardView';
 import { TaxVaultPanel } from './components/TaxVaultPanel';
 import { SimpleInvoiceCreator } from './components/SimpleInvoiceCreator';
@@ -48,8 +35,9 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [loading, setLoading] = useState(true);
     const [companyForm] = Form.useForm();
+    const [overdueCount, setOverdueCount] = useState(0);
+    const [overdueAmount, setOverdueAmount] = useState(0);
 
-    // Datos de la empresa
     const [companyData, setCompanyData] = useState<{
         legalName: string;
         cif: string;
@@ -59,51 +47,62 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
         province: string;
     } | null>(null);
 
-    // Sincronizar formulario solo cuando el modal esté abierto para evitar advertencias de "Instance not connected"
     useEffect(() => {
         if (isFranchiseModalOpen && companyData) {
             companyForm.setFieldsValue(companyData);
         }
     }, [isFranchiseModalOpen, companyData, companyForm]);
 
-    // Cargar datos de la empresa (solo datos, sin tocar el form directamente aquí)
     useEffect(() => {
         const loadCompanyData = async () => {
-            if (!franchiseId) return;
-
             try {
-                const userDocRef = doc(db, 'users', franchiseId); // Original path
-                const userDocSnap = await getDoc(userDocRef);
-
-                if (userDocSnap.exists()) {
-                    const data = userDocSnap.data();
-                    const companyInfo = {
-                        legalName: data.legalName || data.fiscalName || data.businessName || data.displayName || '',
-                        cif: data.cif || data.vatNumber || data.taxId || '',
-                        address: data.address || '',
-                        zipCode: data.zipCode || data.address?.zipCode || '',
-                        city: data.city || data.address?.city || '',
-                        province: data.province || data.address?.province || ''
-                    };
-                    setCompanyData(companyInfo);
+                setLoading(true);
+                const franchiseDoc = await getDoc(doc(db, 'franchises', franchiseId));
+                if (franchiseDoc.exists()) {
+                    const data = franchiseDoc.data();
+                    setCompanyData({
+                        legalName: data.legalName || data.name || '',
+                        cif: data.cif || '',
+                        address: data.address?.street || '',
+                        zipCode: data.address?.zipCode || '',
+                        city: data.address?.city || '',
+                        province: data.address?.province || ''
+                    });
                 }
             } catch (error) {
-                console.error('[BillingDashboard] Error loading company data:', error);
+                console.error('Error loading company data:', error);
+            } finally {
+                setLoading(false);
             }
         };
-
         loadCompanyData();
     }, [franchiseId]);
 
-    const handleCreateInvoice = () => {
-        // Verificar si hay datos de empresa
-        if (!companyData?.legalName || !companyData?.cif) {
-            message.error({
-                content: 'Debes configurar los datos de tu empresa antes de crear facturas. Haz clic en "Datos Franquicia".',
-                duration: 5
-            });
-            return;
+    // Calcular deuda vencida para el badge del tab
+    const fetchOverdueData = useCallback(async () => {
+        try {
+            const result = await invoiceEngine.getInvoicesByFranchise(franchiseId);
+            if (result.success) {
+                const now = new Date();
+                const overdue = result.data.filter(inv =>
+                    inv.status === 'ISSUED' &&
+                    inv.paymentStatus !== 'PAID' &&
+                    inv.remainingAmount > 0 &&
+                    inv.dueDate < now
+                );
+                setOverdueCount(overdue.length);
+                setOverdueAmount(overdue.reduce((sum, inv) => sum + inv.remainingAmount, 0));
+            }
+        } catch (error) {
+            console.error('Error fetching overdue data:', error);
         }
+    }, [franchiseId]);
+
+    useEffect(() => {
+        fetchOverdueData();
+    }, [fetchOverdueData, refreshTrigger]);
+
+    const handleCreateInvoice = () => {
         setIsWizardOpen(true);
     };
 
@@ -117,38 +116,42 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
     }) => {
         try {
             setLoading(true);
-            const userDocRef = doc(db, 'users', franchiseId);
-
-            await setDoc(userDocRef, {
+            const franchiseRef = doc(db, 'franchises', franchiseId);
+            await setDoc(franchiseRef, {
                 legalName: values.legalName,
                 cif: values.cif,
-                address: values.address,
-                zipCode: values.zipCode,
-                city: values.city,
-                province: values.province,
+                address: {
+                    street: values.address,
+                    zipCode: values.zipCode,
+                    city: values.city,
+                    province: values.province
+                },
                 updatedAt: serverTimestamp()
             }, { merge: true });
 
             setCompanyData(values);
-            message.success('Datos de la empresa guardados correctamente');
+            message.success('Datos de empresa actualizados');
             setIsFranchiseModalOpen(false);
         } catch (error) {
-            console.error('[BillingDashboard] Error saving company data:', error);
-            message.error('Error al guardar los datos');
+            console.error('Error saving company data:', error);
+            message.error('Error al guardar datos');
         } finally {
             setLoading(false);
         }
     };
 
-    const refreshInvoices = React.useCallback(async () => {
+    const refreshInvoices = useCallback(async () => {
         setLoading(true);
         await invoiceEngine.getInvoicesByFranchise(franchiseId);
         setLoading(false);
     }, [franchiseId]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         refreshInvoices();
     }, [refreshInvoices, refreshTrigger]);
+
+    const formatCurrency = (amount: number) =>
+        new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
 
     const tabItems = [
         {
@@ -162,7 +165,7 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
             children: (
                 <div className="animate-in slide-in-from-bottom-4 duration-300">
                     <div className="mb-6">
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                        <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
                             Gestión de Clientes
                         </h2>
                         <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -184,7 +187,7 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
             children: (
                 <div className="animate-in slide-in-from-bottom-4 duration-300">
                     <div className="mb-6">
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                        <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
                             Configuración de Tarifas
                         </h2>
                         <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -204,51 +207,98 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
                 </span>
             ),
             children: (
-                <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
-                    {/* 1. Widget de Facturación - Prioridad 1 (Fundamental) */}
-                    <Card
-                        className="shadow-sm border-slate-200 dark:border-slate-800"
-                        title={
-                            <div className="flex items-center gap-2 py-1">
-                                <FileText className="w-5 h-5 text-indigo-500" />
-                                <span className="text-sm font-bold uppercase tracking-wider">Listado de Facturación</span>
+                <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-300">
+                    {/* KPIs de Facturación — Mejora 4 */}
+                    <InvoiceStatsCards franchiseId={franchiseId} />
+
+                    {/* Banner de deuda vencida — Mejora 6 */}
+                    {overdueCount > 0 && (
+                        <div className="flex items-center justify-between p-3 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-xl">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                                    <AlertTriangle className="w-4 h-4 text-red-600" />
+                                </div>
+                                <div>
+                                    <span className="text-sm font-semibold text-red-800">
+                                        {overdueCount} factura{overdueCount > 1 ? 's' : ''} vencida{overdueCount > 1 ? 's' : ''}
+                                    </span>
+                                    <span className="text-sm text-red-600 ml-2">
+                                        por {formatCurrency(overdueAmount)}
+                                    </span>
+                                </div>
                             </div>
-                        }
-                    >
-                        <InvoiceListView
-                            franchiseId={franchiseId}
-                            refreshTrigger={refreshTrigger}
-                            onRefresh={() => setRefreshTrigger(prev => prev + 1)}
+                            <Button
+                                size="small"
+                                type="link"
+                                className="text-red-600 font-semibold"
+                                onClick={() => setActiveTab('debt')}
+                            >
+                                Ver Deuda →
+                            </Button>
+                        </div>
+                    )}
+
+                    {/* Lista de Facturas */}
+                    <InvoiceListView
+                        franchiseId={franchiseId}
+                        refreshTrigger={refreshTrigger}
+                        onRefresh={() => setRefreshTrigger(prev => prev + 1)}
+                    />
+                </div>
+            )
+        },
+        {
+            key: 'debt',
+            label: (
+                <span className="flex items-center gap-2">
+                    <Shield className="w-4 h-4" />
+                    Deuda & Fiscal
+                    {overdueCount > 0 && (
+                        <Badge
+                            count={overdueCount}
+                            size="small"
+                            className="ml-1"
+                            style={{ backgroundColor: '#ef4444' }}
                         />
-                    </Card>
-
-                    {/* 2. Widget de Gestión de Deudas - Prioridad 2 (Recatado) */}
-                    <Card
-                        size="small"
-                        className="shadow-sm border-slate-200 dark:border-slate-800"
-                        title={
-                            <div className="flex items-center gap-2 py-0.5">
-                                <TrendingDown className="w-4 h-4 text-red-400" />
-                                <span className="text-xs font-semibold uppercase tracking-tight text-slate-500">Gestión de Deudas e Impagos</span>
+                    )}
+                </span>
+            ),
+            children: (
+                <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
+                    {/* Panel de Deudas */}
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                        <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-red-50/50 to-orange-50/50">
+                            <div className="flex items-center gap-2">
+                                <AlertTriangle className="w-4 h-4 text-red-500" />
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                                    Gestión de Deudas e Impagos
+                                </span>
+                                {overdueCount > 0 && (
+                                    <span className="ml-auto text-xs font-semibold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">
+                                        {overdueCount} vencida{overdueCount > 1 ? 's' : ''}
+                                    </span>
+                                )}
                             </div>
-                        }
-                    >
-                        <DebtDashboardView franchiseId={franchiseId} refreshTrigger={refreshTrigger} />
-                    </Card>
+                        </div>
+                        <div className="p-4">
+                            <DebtDashboardView franchiseId={franchiseId} refreshTrigger={refreshTrigger} />
+                        </div>
+                    </div>
 
-                    {/* 3. Widget de Impuestos y Cierres - Prioridad 3 (Recatado) */}
-                    <Card
-                        size="small"
-                        className="shadow-sm border-slate-200 dark:border-slate-800"
-                        title={
-                            <div className="flex items-center gap-2 py-0.5">
-                                <Database className="w-4 h-4 text-emerald-400" />
-                                <span className="text-xs font-semibold uppercase tracking-tight text-slate-500">Caja Fuerte Fiscal y Cierres</span>
+                    {/* Panel Fiscal */}
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                        <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-emerald-50/50 to-teal-50/50">
+                            <div className="flex items-center gap-2">
+                                <Shield className="w-4 h-4 text-emerald-500" />
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                                    Caja Fuerte Fiscal y Cierres
+                                </span>
                             </div>
-                        }
-                    >
-                        <TaxVaultPanel franchiseId={franchiseId} refreshTrigger={refreshTrigger} />
-                    </Card>
+                        </div>
+                        <div className="p-4">
+                            <TaxVaultPanel franchiseId={franchiseId} refreshTrigger={refreshTrigger} />
+                        </div>
+                    </div>
                 </div>
             )
         }
@@ -256,7 +306,6 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
 
     return (
         <div className="pt-2">
-            {/* Tabs - 3 Secciones Principales */}
             <Tabs
                 activeKey={activeTab}
                 onChange={setActiveTab}
