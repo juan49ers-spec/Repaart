@@ -130,11 +130,12 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                     }
                 }
 
+                const legacyData = data as Record<string, unknown>;
                 reset({
                     // Franchise
-                    legalName: (data as any).legalName || (data as any).businessName || '',
-                    name: data.displayName || (data as any).franchiseName || '',
-                    cif: data.cif || (data as any).taxId || '',
+                    legalName: (legacyData.legalName as string) || (legacyData.businessName as string) || '',
+                    name: data.displayName || (legacyData.franchiseName as string) || '',
+                    cif: data.cif || (legacyData.taxId as string) || '',
                     city: data.city || '',
                     address: data.address || '',
                     email: data.email || (targetId === user?.uid ? (user?.email || '') : ''),
@@ -154,8 +155,9 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                 // Save initial rates for comparison
                 initialRatesRef.current = data.logisticsRates || [];
 
-            } catch (e: any) {
-                addToast("Error al cargar perfil: " + (e.message || String(e)), "error");
+            } catch (e) {
+                const errorMessage = e instanceof Error ? e.message : String(e);
+                addToast("Error al cargar perfil: " + errorMessage, "error");
             }
         };
         loadProfile();
@@ -180,7 +182,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
 
             setValue('userPhotoURL', downloadURL, { shouldDirty: true });
             addToast("Foto de perfil actualizada", "success");
-        } catch (error: any) {
+        } catch (error) {
             console.error("[FranchiseProfile] Avatar upload failed:", error);
             addToast("Error al subir imagen", "error");
         } finally {
@@ -288,8 +290,9 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
 
             addToast("Perfil unificado guardado correctamente", "success");
             reset(data); // Reset form state
-        } catch (error: any) {
-            addToast("Error al guardar: " + error.message, "error");
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            addToast("Error al guardar: " + errorMessage, "error");
         } finally {
             setLoading(false);
         }

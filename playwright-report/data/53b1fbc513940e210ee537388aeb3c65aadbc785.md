@@ -11,12 +11,16 @@
       - generic [ref=e11]:
         - generic [ref=e12]:
           - generic [ref=e13]: Correo electrónico
-          - textbox "nombre@empresa.com" [ref=e14]: admin@repaart.com
+          - textbox "Correo electrónico" [ref=e14]:
+            - /placeholder: nombre@empresa.com
+            - text: test@repaart.com
         - generic [ref=e15]:
           - generic [ref=e16]: Contraseña
           - generic [ref=e17]:
-            - textbox "••••••••" [active] [ref=e18]: AdminPass123
-            - button [ref=e19]:
+            - textbox "Contraseña" [ref=e18]:
+              - /placeholder: ••••••••
+              - text: testpassword
+            - button "Show password" [ref=e19]:
               - img [ref=e20]
         - button "Acceder al Portal" [ref=e24]:
           - generic [ref=e25]: Acceder al Portal
@@ -29,12 +33,12 @@
           - img "Yamimoto" [ref=e32]
           - img "Flyder" [ref=e34]
     - generic [ref=e35]:
-      - img "Repaart Operations" [ref=e37]
-      - generic [ref=e40]:
-        - heading "Control total para tu negocio de delivery." [level=2] [ref=e41]
-        - paragraph [ref=e43]: Repaart centraliza tus operaciones, gestión de flotas y finanzas en una interfaz elegante y eficiente.
-  - generic [ref=e44]:
-    - img [ref=e46]
-    - button "Open Tanstack query devtools" [ref=e94] [cursor=pointer]:
-      - img [ref=e95]
+      - img [ref=e37]
+      - generic [ref=e41]:
+        - heading "Control total para tu negocio de delivery." [level=2] [ref=e42]
+        - paragraph [ref=e44]: Repaart centraliza tus operaciones, gestión de flotas y finanzas en una interfaz elegante y eficiente.
+  - generic [ref=e45]:
+    - img [ref=e47]
+    - button "Open Tanstack query devtools" [ref=e95] [cursor=pointer]:
+      - img [ref=e96]
 ```

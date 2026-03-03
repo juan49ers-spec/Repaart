@@ -15,10 +15,12 @@ import {
     PenTool,
     ListChecks,
     Plus,
-    Check
+    Check,
+    Trophy
 } from 'lucide-react';
 import { AcademyLesson, QuizQuestion } from '../../../../services/academyService';
 import { useAutoSave } from '../../../../hooks/useAutoSave';
+import { getXpForLesson } from '../../../../lib/academyGamification';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ReactPlayer = lazy(() => import('react-player')) as any;
@@ -514,14 +516,14 @@ const LessonEditorModal: React.FC<LessonEditorModalProps> = ({
                     onClick={onClose}
                 >
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="bg-white dark:bg-slate-950 rounded-2xl shadow-2xl w-full max-w-[1400px] h-[90vh] overflow-hidden flex flex-col relative border border-slate-200 dark:border-slate-800"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-2xl shadow-2xl w-full max-w-[1400px] h-[90vh] overflow-hidden flex flex-col relative border border-white/20 dark:border-slate-700/50"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* HEADER - DOCUSIGN STYLE */}
-                        <header className="flex-none h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex items-center justify-between px-6 z-20">
+                        <header className="flex-none h-16 border-b border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-950/50 backdrop-blur-md flex items-center justify-between px-6 z-20">
                             <div className="flex items-center gap-4">
                                 <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
                                     <FileText className="w-4 h-4 text-white" />
@@ -600,10 +602,10 @@ const LessonEditorModal: React.FC<LessonEditorModalProps> = ({
                         </header>
 
                         {/* MAIN SPLIT LAYOUT */}
-                        <div className="flex flex-1 overflow-hidden relative bg-slate-50/50 dark:bg-slate-900/20">
+                        <div className="flex flex-1 overflow-hidden relative bg-transparent">
 
                             {/* LEFT SIDEBAR - CONFIGURATION */}
-                            <div className="w-80 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 overflow-y-auto flex flex-col shrink-0">
+                            <div className="w-80 border-r border-slate-200/50 dark:border-slate-800/50 bg-white/40 dark:bg-slate-950/40 backdrop-blur-sm overflow-y-auto flex flex-col shrink-0">
                                 {/* Completeness Donut */}
                                 <div className="p-6 border-b border-slate-100 dark:border-slate-800/60">
                                     <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase mb-5">Estado de la Lección</h3>
@@ -762,7 +764,7 @@ const LessonEditorModal: React.FC<LessonEditorModalProps> = ({
                             </div>
 
                             {/* RIGHT CONTENT AREA - EDITOR */}
-                            <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900/50 overflow-y-auto">
+                            <div className="flex-1 flex flex-col bg-slate-50/50 dark:bg-slate-900/30 overflow-y-auto">
                                 <div className="p-8 max-w-4xl mx-auto w-full space-y-8 pb-32">
                                     {/* Title Editor */}
                                     <div>
@@ -774,8 +776,17 @@ const LessonEditorModal: React.FC<LessonEditorModalProps> = ({
                                                 onChange({ title: e.target.value });
                                             }}
                                             placeholder="Título de la lección..."
-                                            className="w-full text-4xl sm:text-5xl font-black text-slate-900 dark:text-white bg-transparent outline-none placeholder:text-slate-300 dark:placeholder:text-slate-700"
+                                            className="w-full text-4xl sm:text-5xl font-black text-slate-900 dark:text-white bg-transparent outline-none placeholder:text-slate-300 dark:placeholder:text-slate-700 mb-4"
                                         />
+                                        <div className="flex items-center gap-2 mt-2">
+                                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-400/20 to-orange-500/20 dark:from-amber-400/10 dark:to-orange-500/10 border border-amber-200 dark:border-amber-900/50 text-amber-700 dark:text-amber-400 rounded-full font-bold text-sm shadow-sm">
+                                                <Trophy className="w-4 h-4" />
+                                                Recompensa: {getXpForLesson(contentType)} XP
+                                            </div>
+                                            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                Los Riders ganarán esta experiencia al completar la lección.
+                                            </span>
+                                        </div>
                                     </div>
 
                                     {/* Content Types Selector */}

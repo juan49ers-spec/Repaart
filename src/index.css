@@ -415,7 +415,6 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  scrollbar-gutter: stable;
 }
 
 .scrollable-area::-webkit-scrollbar {
@@ -588,8 +587,6 @@ body {
   -webkit-touch-callout: none;
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
-  -webkit-overflow-scrolling: touch;
-  /* Momentum scrolling */
 
   /* SF Pro uses double-story 'a', so we keep Inter defaults.
      ss01 (open digits) or cv05 (l with tail) are optional preferences.
@@ -672,7 +669,6 @@ body {
 
 .hide-scrollbar {
   -ms-overflow-style: none;
-  scrollbar-width: none;
 }
 
 /* ============================================== */
