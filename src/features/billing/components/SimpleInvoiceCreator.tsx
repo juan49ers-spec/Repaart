@@ -52,25 +52,25 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
     onSuccess
 }) => {
     const { getRestaurants } = useInvoicing();
-    
+
     // Estados del formulario
     const [loading, setLoading] = useState(false);
     const [customers, setCustomers] = useState<any[]>([]);
     const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
     const [isInitializing, setIsInitializing] = useState(true);
     const [isCreateCustomerModalOpen, setIsCreateCustomerModalOpen] = useState(false);
-    
+
     // Tarifas configuradas
     const [rates, setRates] = useState<any[]>([]);
-    
+
     // Datos de la factura
     const [customerId, setCustomerId] = useState<string>('');
     const [issueDate, setIssueDate] = useState<dayjs.Dayjs>(dayjs());
     const [dueDate, setDueDate] = useState<dayjs.Dayjs>(dayjs().add(30, 'days'));
-    
+
     // Líneas de la factura
     const [lines, setLines] = useState<InvoiceLine[]>([]);
-    
+
     // Cargar clientes y tarifas al inicio
     useEffect(() => {
         const initializeData = async () => {
@@ -83,25 +83,25 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                 setIsInitializing(false);
             }
         };
-        
+
         initializeData();
     }, [franchiseId]);
-    
+
     // Cargar tarifas de la franquicia
     const loadRates = async () => {
         try {
             console.log('[SimpleInvoiceCreator] Loading rates for franchiseId:', franchiseId);
             const { getDoc, doc } = await import('firebase/firestore');
             const { db } = await import('../../../lib/firebase');
-            
+
             // Intentar cargar desde users collection primero
             const userDocRef = doc(db, 'users', franchiseId);
             console.log('[SimpleInvoiceCreator] Fetching user doc:', userDocRef.path);
             const userDocSnap = await getDoc(userDocRef);
-            
+
             console.log('[SimpleInvoiceCreator] User doc exists:', userDocSnap.exists());
             console.log('[SimpleInvoiceCreator] User doc data:', userDocSnap.data());
-            
+
             // Intentar cargar desde logisticsRates (nuevo formato)
             if (userDocSnap.exists() && userDocSnap.data()?.logisticsRates) {
                 const ratesData = userDocSnap.data().logisticsRates;
@@ -111,7 +111,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                 // Fallback a rates (formato antiguo)
                 const ratesData = userDocSnap.data().rates;
                 console.log('[SimpleInvoiceCreator] Found legacy rates in users:', ratesData);
-                
+
                 // Convertir formato legacy { "0-4": 6 } a array
                 const ratesArray = Object.entries(ratesData).map(([range, price], idx) => {
                     const [min, max] = range.split('-').map(Number);
@@ -123,16 +123,16 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                         name: range
                     };
                 }).sort((a, b) => a.min - b.min);
-                
+
                 setRates(ratesArray);
             } else {
                 // Fallback a franchises collection
                 console.log('[SimpleInvoiceCreator] Trying franchises collection...');
                 const franchiseDocRef = doc(db, 'franchises', franchiseId);
                 const franchiseDocSnap = await getDoc(franchiseDocRef);
-                
+
                 console.log('[SimpleInvoiceCreator] Franchise doc exists:', franchiseDocSnap.exists());
-                
+
                 if (franchiseDocSnap.exists() && franchiseDocSnap.data()?.logisticsRates) {
                     const ratesData = franchiseDocSnap.data().logisticsRates;
                     console.log('[SimpleInvoiceCreator] Found logisticsRates in franchises:', ratesData);
@@ -140,7 +140,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                 } else if (franchiseDocSnap.exists() && franchiseDocSnap.data()?.rates) {
                     const ratesData = franchiseDocSnap.data().rates;
                     console.log('[SimpleInvoiceCreator] Found legacy rates in franchises:', ratesData);
-                    
+
                     const ratesArray = Object.entries(ratesData).map(([range, price], idx) => {
                         const [min, max] = range.split('-').map(Number);
                         return {
@@ -151,7 +151,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                             name: range
                         };
                     }).sort((a, b) => a.min - b.min);
-                    
+
                     setRates(ratesArray);
                 } else {
                     console.log('[SimpleInvoiceCreator] No rates found');
@@ -227,7 +227,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
             message.error('Selecciona un cliente');
             return;
         }
-        
+
         if (lines.length === 0) {
             message.error('Agrega al menos una línea a la factura');
             return;
@@ -247,7 +247,8 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                     description: l.description,
                     quantity: l.quantity,
                     unitPrice: l.unitPrice,
-                    taxRate: l.taxRate
+                    taxRate: l.taxRate,
+                    logisticsRange: l.logisticsRange
                 }))
             };
 
@@ -259,7 +260,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
             } else {
                 // Mostrar mensaje de error amigable en español
                 const errorInfo = getBillingErrorMessage(result.error);
-                
+
                 message.error({
                     content: (
                         <div>
@@ -305,7 +306,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                     </div>
                 </div>
             )}
-            
+
             {/* Header */}
             <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-700">
                 <div>
@@ -388,7 +389,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                                         format="DD/MM/YYYY"
                                     />
                                 </div>
-                                
+
                                 <div>
                                     <Text type="secondary" className="text-xs mb-1 block">Fecha de vencimiento *</Text>
                                     <DatePicker
@@ -438,8 +439,8 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                                 </div>
                             </Card>
                         )}
-                        
-                        <Card 
+
+                        <Card
                             title={
                                 <div className="flex items-center justify-between">
                                     <span>Conceptos de Factura</span>
@@ -475,8 +476,8 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                             ) : (
                                 <div className="space-y-3">
                                     {lines.map((line) => (
-                                        <div 
-                                            key={line.id} 
+                                        <div
+                                            key={line.id}
                                             className="border border-slate-200 dark:border-slate-700 rounded-lg p-4"
                                         >
                                             <Row gutter={[16, 16]}>
@@ -497,9 +498,20 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                                                                     const selectedRate = rates[rateIndex];
                                                                     if (selectedRate) {
                                                                         const price = Number(selectedRate.price) || 0;
-                                                                        updateLine(line.id, 'description', `Servicio logístico ${selectedRate.min}-${selectedRate.max}km (${price.toFixed(2)}€)`);
-                                                                        updateLine(line.id, 'unitPrice', price);
-                                                                        message.success(`Tarifa aplicada: ${selectedRate.min}-${selectedRate.max}km - ${price.toFixed(2)}€`);
+                                                                        const rangeName = selectedRate.name || `${selectedRate.min}-${selectedRate.max}km`;
+
+                                                                        // Update multiple fields at once for this line
+                                                                        setLines(prev => prev.map(l => l.id === line.id ? {
+                                                                            ...l,
+                                                                            description: `Servicio logístico ${rangeName} (${price.toFixed(2)}€)`,
+                                                                            unitPrice: price,
+                                                                            logisticsRange: selectedRate.id || rangeName, // Store range ID
+                                                                            amount: l.quantity * price,
+                                                                            taxAmount: (l.quantity * price) * l.taxRate,
+                                                                            total: (l.quantity * price) * (1 + l.taxRate)
+                                                                        } : l));
+
+                                                                        message.success(`Tarifa aplicada: ${rangeName} - ${price.toFixed(2)}€`);
                                                                     }
                                                                 }
                                                             }}
@@ -510,7 +522,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                                                         />
                                                     </Col>
                                                 )}
-                                                
+
                                                 <Col span={12}>
                                                     <Text type="secondary" className="text-xs block mb-1">
                                                         Concepto
@@ -521,7 +533,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                                                         onChange={(e) => updateLine(line.id, 'description', e.target.value)}
                                                     />
                                                 </Col>
-                                                
+
                                                 <Col span={4}>
                                                     <Text type="secondary" className="text-xs block mb-1">
                                                         Cantidad
@@ -533,7 +545,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                                                         onChange={(val) => updateLine(line.id, 'quantity', val || 0)}
                                                     />
                                                 </Col>
-                                                
+
                                                 <Col span={4}>
                                                     <Text type="secondary" className="text-xs block mb-1">
                                                         Precio (€)
@@ -546,7 +558,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                                                         onChange={(val) => updateLine(line.id, 'unitPrice', val || 0)}
                                                     />
                                                 </Col>
-                                                
+
                                                 <Col span={3}>
                                                     <Text type="secondary" className="text-xs block mb-1">
                                                         Total
@@ -555,7 +567,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                                                         {line.total.toFixed(2)} €
                                                     </div>
                                                 </Col>
-                                                
+
                                                 <Col span={1}>
                                                     <Popconfirm
                                                         title="¿Eliminar esta línea?"

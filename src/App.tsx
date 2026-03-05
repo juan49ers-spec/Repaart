@@ -18,6 +18,7 @@ import NotFound from './layouts/pages/NotFound';
 import DashboardSwitcher from './layouts/components/DashboardSwitcher';
 import UserProfile from './features/user/UserProfile';
 import NotificationsPage from './features/user/NotificationsPage';
+import QuickRepairButton from './components/QuickRepairButton';
 
 const WeeklyScheduler = lazyWithRetry(() => import('./features/operations/WeeklyScheduler'));
 const AdminFlyderDashboard = lazyWithRetry(() => import('./features/admin/flyder/AdminFlyderDashboard'));
@@ -378,6 +379,9 @@ function App() {
                     },
                 }}
             />
+
+            {/* Custom Claims Repair Button - Temporary tool for fixing 403 errors */}
+            <QuickRepairButton />
         </>
     );
 }

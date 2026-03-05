@@ -52,6 +52,7 @@ export const RevenueStep: React.FC<RevenueStepProps> = ({
         if (invoicedIncome?.ordersDetail) {
             setOrders(prev => {
                 const newOrders = { ...prev };
+                // Sync standard ranges
                 activeRanges.forEach(range => {
                     const normalizedRange = normalizeRangeKey(range);
                     const invoicedMatch = Object.entries(invoicedIncome.ordersDetail || {}).find(([k]) => normalizeRangeKey(k) === normalizedRange);
@@ -59,6 +60,12 @@ export const RevenueStep: React.FC<RevenueStepProps> = ({
                         newOrders[range] = invoicedMatch[1];
                     }
                 });
+
+                // Sync 'Otros' bucket if it exists in invoiced data
+                if (invoicedIncome.ordersDetail['Otros'] !== undefined) {
+                    newOrders['Otros'] = invoicedIncome.ordersDetail['Otros'];
+                }
+
                 return newOrders;
             });
         }
@@ -109,85 +116,99 @@ export const RevenueStep: React.FC<RevenueStepProps> = ({
                                 </tr>
                             </thead>
                             <tbody>
-                                {activeRanges.map((range, index) => {
-                                    const rateInfo = logisticsRates.find(r =>
-                                        normalizeRangeKey(r.name || '') === normalizeRangeKey(range) ||
-                                        normalizeRangeKey(`${r.min}-${r.max} km`) === normalizeRangeKey(range)
-                                    );
-                                    const count = orders[range] || 0;
-                                    const subtotal = count * (rateInfo?.price || 0);
+                                {(() => {
+                                    // Combine activeRanges with any extra keys from orders (like 'Otros')
+                                    const allDisplayedRanges = [...activeRanges];
+                                    if (orders['Otros'] !== undefined && !allDisplayedRanges.includes('Otros')) {
+                                        allDisplayedRanges.push('Otros');
+                                    } else if (invoicedIncome.ordersDetail?.['Otros'] !== undefined && !allDisplayedRanges.includes('Otros')) {
+                                        allDisplayedRanges.push('Otros');
+                                    }
 
-                                    // Invoice matching
-                                    const invoicedItems = Object.entries(invoicedIncome?.ordersDetail || {});
-                                    const invMatch = invoicedItems.find(([k]) => normalizeRangeKey(k) === normalizeRangeKey(range));
-                                    const invCount = invMatch ? invMatch[1] : undefined;
-                                    const isMatch = invCount !== undefined && count === invCount;
+                                    return allDisplayedRanges.map((range, index) => {
+                                        const rateInfo = logisticsRates.find(r =>
+                                            normalizeRangeKey(r.name || '') === normalizeRangeKey(range) ||
+                                            normalizeRangeKey(`${r.min}-${r.max} km`) === normalizeRangeKey(range)
+                                        );
+                                        const count = orders[range] || 0;
+                                        const subtotal = count * (rateInfo?.price || 0);
 
-                                    return (
-                                        <tr
-                                            key={range}
-                                            className="border-b border-slate-50 dark:border-slate-800/30 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors"
-                                        >
-                                            {/* Index */}
-                                            <td className="px-5 py-2">
-                                                <span className="w-5 h-5 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                                                    {index + 1}
-                                                </span>
-                                            </td>
+                                        // Invoice matching
+                                        const invoicedItems = Object.entries(invoicedIncome?.ordersDetail || {});
+                                        const invMatch = invoicedItems.find(([k]) => normalizeRangeKey(k) === normalizeRangeKey(range));
+                                        const invCount = invMatch ? invMatch[1] : undefined;
+                                        const isMatch = invCount !== undefined && count === invCount;
 
-                                            {/* Range */}
-                                            <td className="py-2">
-                                                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{range}</span>
-                                            </td>
-
-                                            {/* Rate */}
-                                            <td className="text-right py-2 pr-1">
-                                                {rateInfo && (
-                                                    <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 tabular-nums">
-                                                        {rateInfo.price}€
+                                        return (
+                                            <tr
+                                                key={range}
+                                                className={`border-b border-slate-50 dark:border-slate-800/30 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors ${range === 'Otros' ? 'bg-amber-50/10' : ''}`}
+                                            >
+                                                {/* Index */}
+                                                <td className="px-5 py-2">
+                                                    <span className="w-5 h-5 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                                                        {range === 'Otros' ? '?' : index + 1}
                                                     </span>
-                                                )}
-                                            </td>
-
-                                            {/* Invoice Match */}
-                                            {hasInvoicedData && (
-                                                <td className="text-right py-2 pr-1">
-                                                    {invCount !== undefined && (
-                                                        <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold tabular-nums ${isMatch
-                                                            ? 'text-emerald-600 dark:text-emerald-400'
-                                                            : 'text-amber-600 dark:text-amber-400'
-                                                            }`}>
-                                                            {isMatch
-                                                                ? <CheckCircle2 className="w-3 h-3" />
-                                                                : <AlertCircle className="w-3 h-3" />
-                                                            }
-                                                            {invCount}
-                                                        </span>
-                                                    )}
                                                 </td>
-                                            )}
 
-                                            {/* Input */}
-                                            <td className="text-right py-1.5">
-                                                <input
-                                                    type="number"
-                                                    className="w-14 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-md text-right text-xs font-bold py-1.5 px-2 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-mono text-slate-900 dark:text-white"
-                                                    value={orders[range] || ''}
-                                                    onChange={(e) => setOrders(prev => ({ ...prev, [range]: parseInt(e.target.value) || 0 }))}
-                                                    disabled={isLocked}
-                                                    placeholder="0"
-                                                />
-                                            </td>
+                                                {/* Range */}
+                                                <td className="py-2">
+                                                    <span className={`text-xs font-bold ${range === 'Otros' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                                                        {range}
+                                                    </span>
+                                                </td>
 
-                                            {/* Subtotal */}
-                                            <td className="text-right py-2 pr-5">
-                                                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 tabular-nums">
-                                                    {subtotal > 0 ? `${formatMoney(subtotal)}€` : '—'}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
+                                                {/* Rate */}
+                                                <td className="text-right py-2 pr-1">
+                                                    {rateInfo ? (
+                                                        <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 tabular-nums">
+                                                            {rateInfo.price}€
+                                                        </span>
+                                                    ) : range === 'Otros' ? (
+                                                        <span className="text-[9px] text-slate-400 italic">Varía</span>
+                                                    ) : null}
+                                                </td>
+
+                                                {/* Invoice Match */}
+                                                {hasInvoicedData && (
+                                                    <td className="text-right py-2 pr-1">
+                                                        {invCount !== undefined && (
+                                                            <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold tabular-nums ${isMatch
+                                                                ? 'text-emerald-600 dark:text-emerald-400'
+                                                                : 'text-amber-600 dark:text-amber-400'
+                                                                }`}>
+                                                                {isMatch
+                                                                    ? <CheckCircle2 className="w-3 h-3" />
+                                                                    : <AlertCircle className="w-3 h-3" />
+                                                                }
+                                                                {invCount}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                )}
+
+                                                {/* Input */}
+                                                <td className="text-right py-1.5">
+                                                    <input
+                                                        type="number"
+                                                        className="w-14 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-md text-right text-xs font-bold py-1.5 px-2 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-mono text-slate-900 dark:text-white"
+                                                        value={orders[range] || ''}
+                                                        onChange={(e) => setOrders(prev => ({ ...prev, [range]: parseInt(e.target.value) || 0 }))}
+                                                        disabled={isLocked}
+                                                        placeholder="0"
+                                                    />
+                                                </td>
+
+                                                {/* Subtotal */}
+                                                <td className="text-right py-2 pr-5">
+                                                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 tabular-nums">
+                                                        {subtotal > 0 ? `${formatMoney(subtotal)}€` : range === 'Otros' && count > 0 ? '—' : '—'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        );
+                                    });
+                                })()}
                             </tbody>
                         </table>
                     </div>

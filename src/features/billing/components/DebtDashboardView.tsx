@@ -173,7 +173,7 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
                             percent={percentage}
                             size="small"
                             strokeColor="#52c41a"
-                            trailColor="#f0f0f0"
+                            railColor="#f0f0f0"
                             showInfo={false}
                         />
                     </div>
@@ -249,7 +249,7 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
                                 value={debtData.totalDebt}
                                 precision={2}
                                 prefix="€"
-                                valueStyle={{ color: 'var(--color-destructive)', fontSize: '18px', fontWeight: 'bold' }}
+                                styles={{ content: { color: 'var(--color-destructive)', fontSize: '18px', fontWeight: 'bold' } }}
                             />
                         </Card>
                     </Col>
@@ -260,10 +260,12 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
                                 value={debtData.totalOverdueDebt}
                                 precision={2}
                                 prefix="€"
-                                valueStyle={{
-                                    color: debtData.totalOverdueDebt > 0 ? 'var(--color-destructive)' : 'var(--color-success)',
-                                    fontSize: '18px',
-                                    fontWeight: 'bold'
+                                styles={{
+                                    content: {
+                                        color: debtData.totalOverdueDebt > 0 ? 'var(--color-destructive)' : 'var(--color-success)',
+                                        fontSize: '18px',
+                                        fontWeight: 'bold'
+                                    }
                                 }}
                             />
                         </Card>
@@ -275,7 +277,7 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
                                 value={debtData.totalCurrentDebt}
                                 precision={2}
                                 suffix="€"
-                                valueStyle={{ fontSize: '14px', fontWeight: '800', fontFamily: 'Outfit, sans-serif' }}
+                                styles={{ content: { fontSize: '14px', fontWeight: '800', fontFamily: 'Outfit, sans-serif' } }}
                             />
                         </Card>
                     </Col>
@@ -298,7 +300,7 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
                             <div className="flex justify-between text-xs font-semibold">
                                 <span className="flex items-center gap-2">
                                     {bucket.label}
-                                    <Tag color="blue" bordered={false} className="text-[9px] leading-[14px] h-[14px] py-0 px-1 flex items-center">
+                                    <Tag color="blue" variant="filled" className="text-[9px] leading-[14px] h-[14px] py-0 px-1 flex items-center">
                                         {bucket.action}
                                     </Tag>
                                 </span>

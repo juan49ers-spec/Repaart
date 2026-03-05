@@ -37,7 +37,7 @@ import {
   FileBarChart,
 } from 'lucide-react';
 import {
-  Table, Tag, Space, Button, Tooltip, Modal, message, Popconfirm, Select, Col, Input, Row, DatePicker, Dropdown, Divider, Slider, Progress
+  Table, Tag, Space, Button, Tooltip, Modal, message, Popconfirm, Select, Col, Input, Row, DatePicker, Dropdown, Divider, Slider, Progress, Alert
 } from 'antd';
 import type { Invoice, InvoiceStatus, PaymentStatus } from '../../../types/invoicing';
 import { invoiceEngine, downloadExport, invoicePdfGenerator } from '../../../services/billing';
@@ -45,6 +45,7 @@ import { InvoicePreviewModal } from './InvoicePreviewModal';
 import { EditInvoiceModal } from './EditInvoiceModal';
 import { PaymentModal } from './PaymentModal';
 import { RectificationModal } from './RectificationModal';
+import { useAuth } from '../../../context/AuthContext';
 
 interface Props {
   franchiseId: string;
@@ -53,6 +54,7 @@ interface Props {
 }
 
 export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, onRefresh }) => {
+  const { isAdmin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
@@ -139,6 +141,33 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
     if (dateRange && dateRange[0] && dateRange[1]) count++;
     return count;
   }, [searchText, statusFilter, paymentStatusFilter, customerFilter, amountFilterActive, dateRange]);
+
+  // Find sequence gaps in the issued invoices
+  const sequenceGaps = useMemo(() => {
+    const issuedInvoices = invoices.filter(inv => inv.status === 'ISSUED' || inv.status === 'RECTIFIED');
+    if (issuedInvoices.length < 2) return [];
+
+    const gaps: { series: string; expected: number; found: number; }[] = [];
+    const groupedBySeries = issuedInvoices.reduce((acc, inv) => {
+      if (!acc[inv.series]) acc[inv.series] = [];
+      acc[inv.series].push(inv);
+      return acc;
+    }, {} as Record<string, Invoice[]>);
+
+    Object.entries(groupedBySeries).forEach(([series, seriesInvoices]) => {
+      // Sort in ascending order by invoice number
+      const sorted = [...seriesInvoices].sort((a, b) => a.number - b.number);
+      for (let i = 1; i < sorted.length; i++) {
+        const prev = sorted[i - 1];
+        const curr = sorted[i];
+        if (prev.number + 1 !== curr.number) {
+          gaps.push({ series, expected: prev.number + 1, found: curr.number });
+        }
+      }
+    });
+
+    return gaps;
+  }, [invoices]);
 
   // Apply all filters
   useEffect(() => {
@@ -447,7 +476,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
       console.log('[InvoiceListView] Force delete requested for invoice:', invoiceToDelete.fullNumber);
       console.log('[InvoiceListView] Delete reason:', deleteReason);
 
-      const result = await invoiceEngine.deleteInvoiceForced(invoiceToDelete.id, true);
+      const result = await invoiceEngine.deleteInvoiceForced(invoiceToDelete.id, true, deleteReason);
 
       if (result.success) {
         message.warning(`⚠️ Factura ${invoiceToDelete.fullNumber} eliminada (modo desarrollo)`);
@@ -756,9 +785,9 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
             </>
           )}
 
-          {/* Development mode: Force delete for ISSUED invoices */}
-          {devMode && record.status === 'ISSUED' && (
-            <Tooltip title="Eliminar factura emitida (modo desarrollo)">
+          {/* Any user: Force delete for ISSUED invoices with warning */}
+          {record.status === 'ISSUED' && (
+            <Tooltip title="Eliminar factura emitida (ATENCIÓN: Causa un salto en la numeración)">
               <Button
                 size="small"
                 danger
@@ -805,9 +834,9 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
             </>
           )}
 
-          {/* Development mode: Force delete for RECTIFIED invoices */}
-          {devMode && record.status === 'RECTIFIED' && (
-            <Tooltip title="Eliminar factura rectificada (modo desarrollo)">
+          {/* Any user: Force delete for RECTIFIED invoices with warning */}
+          {record.status === 'RECTIFIED' && (
+            <Tooltip title="Eliminar factura rectificada (ATENCIÓN: Causa un salto en la numeración)">
               <Button
                 size="small"
                 danger
@@ -842,6 +871,15 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
 
   return (
     <div className="space-y-3">
+      {sequenceGaps.length > 0 && (
+        <Alert
+          message="⚠️ Salto de correlatividad detectado"
+          description={`Se han detectado saltos en la numeración de facturas emitidas (se esperaba la número ${sequenceGaps[0].expected} pero se encontró la ${sequenceGaps[0].found} en la serie ${sequenceGaps[0].series}). Esto suele suceder al eliminar una factura emitida.`}
+          type="error"
+          showIcon
+          className="mb-2"
+        />
+      )}
       {/* Header Section - Removed to keep it minimalist as per user request */}
 
 
@@ -1629,6 +1667,13 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
                 <p><strong>Importe:</strong> €{invoiceToDelete.total.toFixed(2)}</p>
                 <p><strong>Estado:</strong> {invoiceToDelete.status}</p>
               </div>
+              {(invoiceToDelete.status === 'ISSUED' || invoiceToDelete.status === 'RECTIFIED') && (
+                <div className="mt-4 bg-red-100 p-3 rounded-md text-red-800 font-bold border border-red-300 text-xs shadow-sm">
+                  ❗ ¡ATENCIÓN! Estás eliminando una factura {invoiceToDelete.status === 'ISSUED' ? 'emitida' : 'rectificativa'}.
+                  Esto provocará un SALTO en la numeración correlativa.
+                  Hacer esto puede traerte problemas fiscales. Asegúrate de justificar este salto o reemitir otra factura para rellenar este hueco de forma legal.
+                </div>
+              )}
             </div>
 
             <div>

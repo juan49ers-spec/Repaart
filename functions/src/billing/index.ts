@@ -318,9 +318,90 @@ export const onInvoiceDeleted = functions
             } catch (error) {
                 console.error('[onInvoiceDeleted] Error cleaning up tax vault:', error);
             }
+
+            // 1.2 Update Financial Summary if it exists
+            try {
+                // Same period calculated for tax vault
+                const issueDate = invoice.issueDate?.toDate
+                    ? invoice.issueDate.toDate()
+                    : new Date(invoice.issueDate._seconds * 1000);
+                const period = `${issueDate.getFullYear()}-${String(issueDate.getMonth() + 1).padStart(2, '0')}`;
+
+                const summaryId = `${invoice.franchiseId}_${period}`;
+                const summaryRef = db.collection('financial_summaries').doc(summaryId);
+
+                await db.runTransaction(async (transaction) => {
+                    const summarySnap = await transaction.get(summaryRef);
+                    if (summarySnap.exists) {
+                        const summary = summarySnap.data();
+
+                        // Only update if not locked/approved
+                        if (summary?.status === 'approved' || summary?.isLocked || summary?.is_locked) {
+                            console.warn(`[onInvoiceDeleted] Cannot update summary: month ${period} is locked/approved`);
+                            return;
+                        }
+
+                        // Subtract invoice subtotal from revenue
+                        const subtotal = invoice.subtotal || 0;
+
+                        // We update all revenue aliases to keep consistency
+                        transaction.update(summaryRef, {
+                            revenue: admin.firestore.FieldValue.increment(-subtotal),
+                            totalIncome: admin.firestore.FieldValue.increment(-subtotal),
+                            grossIncome: admin.firestore.FieldValue.increment(-subtotal),
+                            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                        });
+
+                        console.log(`[onInvoiceDeleted] Updated financial summary ${summaryId}: subtracted ${subtotal} revenue`);
+                    }
+                });
+            } catch (error) {
+                console.error('[onInvoiceDeleted] Error updating financial summary:', error);
+            }
         }
 
-        // 2. Cleanup Storage PDF
+        // 2. Delete related payment receipts
+        try {
+            const paymentsSnapshot = await db.collection('payment_receipts')
+                .where('invoiceId', '==', invoiceId)
+                .get();
+
+            if (!paymentsSnapshot.empty) {
+                const batch = db.batch();
+                paymentsSnapshot.docs.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                console.log(`[onInvoiceDeleted] Deleted ${paymentsSnapshot.size} related payment receipts for invoice ${invoiceId}`);
+            }
+        } catch (error) {
+            console.error('[onInvoiceDeleted] Error deleting related payment receipts:', error);
+        }
+
+        // 3. Create Audit Log
+        try {
+            await db.collection('audit_logs').add({
+                action: 'INVOICE_DELETE',
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                details: {
+                    invoiceId: invoiceId,
+                    invoiceNumber: invoice.fullNumber,
+                    franchiseId: invoice.franchiseId,
+                    customerName: invoice.customerSnapshot?.fiscalName || 'Cliente',
+                    totalAmount: invoice.total || 0,
+                    statusWas: invoice.status,
+                    deletedAt: new Date().toISOString(),
+                    reason: (invoice as any).deletionReason || 'Automatic cleanup/Manual deletion'
+                },
+                actorId: 'system-trigger',
+                actorRole: 'system',
+                userAgent: 'Cloud Function: onInvoiceDeleted'
+            });
+        } catch (error) {
+            console.error('[onInvoiceDeleted] Error creating audit log:', error);
+        }
+
+        // 4. Cleanup Storage PDF
         if (invoice.pdf_storage_path) {
             try {
                 const file = bucket.file(invoice.pdf_storage_path);

@@ -1328,14 +1328,19 @@ export const invoiceEngine = {
                 // Extraction helper to normalize keys
                 const normalizeRangeKey = (key: string): string | null => {
                     if (!key) return null;
-                    const k = key.toLowerCase().replace(/\s/g, '');
+                    const k = key.toLowerCase().replace(/\s/g, '').replace(/,/g, '.');
+
                     if (k.includes('0-4')) return '0-4 km';
                     if (k.includes('4-5') || k.includes('4.1-5')) return '4-5 km';
                     if (k.includes('5-6') || k.includes('5.1-6')) return '5-6 km';
                     if (k.includes('6-7') || k.includes('6.1-7')) return '6-7 km';
                     if (k.includes('>7') || k.includes('masde7') || k.includes('gt7')) return '>7 km';
 
-                    // If doesn't match standard, return null to allow fallback
+                    // If it has numbers and km, it's a range. Return it as is to allow UI matching.
+                    if (/\d/.test(k) && k.includes('km')) {
+                        return key.trim();
+                    }
+
                     return null;
                 };
 
@@ -1407,7 +1412,12 @@ export const invoiceEngine = {
             }, initialAcc);
 
             // --- RECONSTRUCTION FALLBACK ---
-            const totalInvoicedOrders = (Object.values(finalIncome.ordersDetail) as number[]).reduce((sum: number, val: number) => sum + val, 0);
+            // We calculate total orders mapped to standard ranges to decide if we need reconstruction
+            const standardOrdersCount = Object.entries(finalIncome.ordersDetail)
+                .filter(([key]) => key !== 'Otros')
+                .reduce((sum, [_, val]) => sum + (val as number), 0);
+
+            const totalInvoicedOrders = standardOrdersCount;
 
             // Smart threshold: if we have no order details at all, always reconstruct
             // Otherwise use a reasonable threshold (5€ per order is more realistic for logistics)
@@ -1480,7 +1490,8 @@ export const invoiceEngine = {
      */
     deleteInvoiceForced: async (
         invoiceId: string,
-        confirmDangerous: boolean = false
+        confirmDangerous: boolean = false,
+        reason: string = 'Forced deletion by administrator'
     ): Promise<Result<void, BillingError>> => {
         try {
             if (!confirmDangerous) {
@@ -1506,6 +1517,9 @@ export const invoiceEngine = {
 
             const invoice = invoiceSnap.data() as Invoice;
 
+            // Update with reason first so Cloud Function trigger can log it
+            await updateDoc(invoiceRef, { deletionReason: reason });
+
             console.warn('[invoiceEngine] Deleting invoice and all related data:', {
                 id: invoiceId,
                 number: invoice.fullNumber,
@@ -1514,30 +1528,10 @@ export const invoiceEngine = {
                 WARNING: 'This is a LEGAL DOCUMENT being deleted!'
             });
 
-            // Delete related data in cascade
-            // 1. Delete payment receipts
-            const paymentsRef = collection(db, 'payment_receipts');
-            const paymentsQuery = query(paymentsRef, where('invoiceId', '==', invoiceId));
-            const paymentsSnap = await getDocs(paymentsQuery);
+            // Cascade deletion is handled by Cloud Functions trigger 'onInvoiceDeleted'
+            // which handles: Tax Vault subtraction, payment receipt removal, audit logging, and PDF cleanup.
 
-            if (!paymentsSnap.empty) {
-                console.warn(`[invoiceEngine] Deleting ${paymentsSnap.size} payment receipts for invoice ${invoiceId}`);
-                const batch = paymentsSnap.docs.map(docSnap => deleteDoc(docSnap.ref));
-                await Promise.all(batch);
-            }
-
-            // 2. Delete tax vault entries
-            const taxVaultRef = collection(db, 'tax_vault');
-            const taxVaultQuery = query(taxVaultRef, where('invoiceId', '==', invoiceId));
-            const taxVaultSnap = await getDocs(taxVaultQuery);
-
-            if (!taxVaultSnap.empty) {
-                console.warn(`[invoiceEngine] Deleting ${taxVaultSnap.size} tax vault entries for invoice ${invoiceId}`);
-                const batch = taxVaultSnap.docs.map(docSnap => deleteDoc(docSnap.ref));
-                await Promise.all(batch);
-            }
-
-            // 3. Finally delete the invoice
+            // 1. Finally delete the invoice
             await deleteDoc(invoiceRef);
 
             console.log(`[invoiceEngine] Invoice ${invoiceId} and all related data deleted successfully (forced)`);

@@ -21,9 +21,10 @@ import { invoiceEngine } from '../../../services/billing';
 
 interface Props {
     franchiseId: string;
+    refreshTrigger?: number;
 }
 
-export const InvoiceStatsCards: React.FC<Props> = ({ franchiseId }) => {
+export const InvoiceStatsCards: React.FC<Props> = ({ franchiseId, refreshTrigger }) => {
     const [loading, setLoading] = useState(false);
     const [stats, setStats] = useState({
         totalInvoiced: 0,
@@ -37,7 +38,7 @@ export const InvoiceStatsCards: React.FC<Props> = ({ franchiseId }) => {
     useEffect(() => {
         fetchStats();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [franchiseId]);
+    }, [franchiseId, refreshTrigger]);
 
     const fetchStats = async () => {
         try {

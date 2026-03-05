@@ -16,6 +16,7 @@ export { createUserManaged } from './callables/createUser';
 export { createFranchise } from './callables/createFranchise';
 export { archiveOldNotifications, archiveOldTickets, archiveOldAuditLogs, scheduledDataRetention } from './callables/dataRetention';
 export { adminDeleteUser } from './callables/adminDeleteUser';
+export { repairCustomClaims } from './callables/repairCustomClaims';
 
 // Flyder Integration
 export { getFlyderOrders, getFlyderOrdersStats } from './callables/getFlyderOrders';
@@ -28,10 +29,11 @@ export { createRestaurant, getRestaurants, updateRestaurant, deleteRestaurant, g
 export { toggleInvoicingModule, getInvoicingModuleStatus } from './callables/invoicingModule';
 
 // Billing & Treasury Module
-export { 
+export {
   generateInvoicePdf,
   generateRectificationPdf,
   syncInvoiceToTaxVault,
+  onInvoiceDeleted,
   cleanupDraftInvoices,
   sendPaymentReminders
 } from './billing';

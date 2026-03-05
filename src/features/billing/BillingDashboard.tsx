@@ -45,6 +45,7 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
         zipCode: string;
         city: string;
         province: string;
+        phone: string;
     } | null>(null);
 
     useEffect(() => {
@@ -57,18 +58,47 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
         const loadCompanyData = async () => {
             try {
                 setLoading(true);
-                const franchiseDoc = await getDoc(doc(db, 'franchises', franchiseId));
+                const [franchiseDoc, userDoc] = await Promise.all([
+                    getDoc(doc(db, 'franchises', franchiseId)),
+                    getDoc(doc(db, 'users', franchiseId))
+                ]);
+
+                let mergedData = {
+                    legalName: '',
+                    cif: '',
+                    address: '',
+                    zipCode: '',
+                    city: '',
+                    province: '',
+                    phone: ''
+                };
+
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    mergedData = {
+                        ...mergedData,
+                        legalName: userData.legalName || userData.displayName || '',
+                        cif: userData.cif || '',
+                        phone: userData.phone || userData.phoneNumber || '',
+                        address: userData.address || ''
+                    };
+                }
+
                 if (franchiseDoc.exists()) {
                     const data = franchiseDoc.data();
-                    setCompanyData({
-                        legalName: data.legalName || data.name || '',
-                        cif: data.cif || '',
-                        address: data.address?.street || '',
+                    mergedData = {
+                        ...mergedData,
+                        legalName: data.legalName || data.name || mergedData.legalName,
+                        cif: data.cif || mergedData.cif,
+                        phone: data.phone || data.phoneNumber || data.contactPhone || mergedData.phone,
+                        address: data.address?.street || mergedData.address,
                         zipCode: data.address?.zipCode || '',
                         city: data.address?.city || '',
                         province: data.address?.province || ''
-                    });
+                    };
                 }
+
+                setCompanyData(mergedData);
             } catch (error) {
                 console.error('Error loading company data:', error);
             } finally {
@@ -113,6 +143,7 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
         zipCode: string;
         city: string;
         province: string;
+        phone: string;
     }) => {
         try {
             setLoading(true);
@@ -120,6 +151,7 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
             await setDoc(franchiseRef, {
                 legalName: values.legalName,
                 cif: values.cif,
+                phone: values.phone,
                 address: {
                     street: values.address,
                     zipCode: values.zipCode,
@@ -209,7 +241,7 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
             children: (
                 <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-300">
                     {/* KPIs de Facturación — Mejora 4 */}
-                    <InvoiceStatsCards franchiseId={franchiseId} />
+                    <InvoiceStatsCards franchiseId={franchiseId} refreshTrigger={refreshTrigger} />
 
                     {/* Banner de deuda vencida — Mejora 6 */}
                     {overdueCount > 0 && (
@@ -404,6 +436,14 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
                             rules={[{ required: true, message: 'El CIF es obligatorio' }]}
                         >
                             <Input placeholder="Ej: B12345678" />
+                        </Form.Item>
+
+                        <Form.Item
+                            label="Teléfono de Contacto"
+                            name="phone"
+                            rules={[{ required: true, message: 'El teléfono es obligatorio para facturación' }]}
+                        >
+                            <Input placeholder="Ej: 600000000" />
                         </Form.Item>
 
                         <Form.Item
