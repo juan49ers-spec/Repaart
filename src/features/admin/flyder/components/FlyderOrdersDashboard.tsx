@@ -26,7 +26,7 @@ const FlyderOrdersDashboard: React.FC = () => {
 
   const formatDate = (dateValue: any): string => {
     if (!dateValue) return '-';
-    
+
     // Options for Spanish timezone (Europe/Madrid)
     const dateOptions: Intl.DateTimeFormatOptions = {
       day: '2-digit',
@@ -36,7 +36,7 @@ const FlyderOrdersDashboard: React.FC = () => {
       minute: '2-digit',
       timeZone: 'Europe/Madrid'
     };
-    
+
     // If it's a Date object (check with duck typing)
     if (typeof dateValue === 'object' && dateValue !== null) {
       // Check if it has Date methods
@@ -54,7 +54,7 @@ const FlyderOrdersDashboard: React.FC = () => {
       // It's an object but not a Date
       return JSON.stringify(dateValue);
     }
-    
+
     // If it's already a string that looks like a date, parse and format it
     if (typeof dateValue === 'string') {
       try {
@@ -68,7 +68,7 @@ const FlyderOrdersDashboard: React.FC = () => {
         return dateValue;
       }
     }
-    
+
     // For any other type, convert to string
     return String(dateValue);
   };
@@ -77,29 +77,29 @@ const FlyderOrdersDashboard: React.FC = () => {
     if (order.customer_name) {
       return String(order.customer_name);
     }
-    
+
     // Try alternative fields: phone or address
     const parts: string[] = [];
-    
+
     if (order.customer_phone) {
       parts.push(`📱 ${String(order.customer_phone)}`);
     }
-    
+
     if (order.customer_addr_street) {
       const street = String(order.customer_addr_street || '');
       const number = String(order.customer_addr_no || '');
       const city = String(order.customer_addr_city || '');
-      
+
       const address = `${street} ${number}`.trim();
       if (address) {
         parts.push(`📍 ${address}${city ? `, ${city}` : ''}`);
       }
     }
-    
+
     if (parts.length > 0) {
       return parts.join(' | ');
     }
-    
+
     return 'Sin datos';
   };
 
@@ -279,25 +279,6 @@ const FlyderOrdersDashboard: React.FC = () => {
 
   const filteredOrders = orders.filter(order => {
     try {
-      // Log first order to debug
-      if (order === orders[0]) {
-        console.log('[FlyderOrdersDashboard] First order data:', JSON.stringify(order, null, 2));
-        console.log('[FlyderOrdersDashboard] Order keys:', Object.keys(order));
-        console.log('[FlyderOrdersDashboard] created_at type:', typeof order.created_at);
-        console.log('[FlyderOrdersDashboard] created_at value:', order.created_at);
-        console.log('[FlyderOrdersDashboard] created_at instanceof Date:', (order.created_at as any) instanceof Date);
-        
-        // Log each field type
-        Object.keys(order).forEach(key => {
-          const value = (order as any)[key];
-          const type = typeof value;
-          if (type === 'object' && value !== null) {
-            console.log(`[FlyderOrdersDashboard] ${key}:`, type, '→', JSON.stringify(value).substring(0, 100));
-          } else {
-            console.log(`[FlyderOrdersDashboard] ${key}:`, type, '→', value);
-          }
-        });
-      }
 
       const matchesSearch =
         !searchTerm ||
@@ -509,17 +490,17 @@ const FlyderOrdersDashboard: React.FC = () => {
                 filteredOrders.map((order) => {
                   const statusConfig = getStatusConfig(order.status);
                   const isExpanded = expandedOrders.has(order.id);
-                  
+
                   return (
                     <React.Fragment key={order.id}>
                       <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer" onClick={() => toggleOrderExpansion(order.id)}>
                         <td className="px-4 py-3 text-sm font-mono">
                           <div className="flex items-center gap-2">
-                            <ChevronRight 
+                            <ChevronRight
                               className={cn(
                                 "w-4 h-4 transition-transform text-slate-400",
                                 isExpanded && "rotate-90"
-                              )} 
+                              )}
                             />
                             #{String(order.id || '')}
                           </div>
