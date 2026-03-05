@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createUserSchema, updateUserSchema, UserRole } from '../../../lib/schemas';
-import { X, Mail, Building, Loader2, Lock, Briefcase, User as UserIcon } from 'lucide-react';
+import { X, Mail, Building, Loader2, Lock, Briefcase, User as UserIcon, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '../../../hooks/useToast';
 import { User } from '../../../services/userService';
 import { z } from 'zod';
@@ -42,6 +42,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
 }) => {
     const toastContext = useToast();
     const toast = toastContext?.toast;
+    const [showPassword, setShowPassword] = React.useState(false);
 
     const {
         register,
@@ -50,7 +51,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
         watch,
         setValue,
         setError,
-        formState: { errors }
+        formState: { errors, dirtyFields }
     } = useForm<FormValues>({
         resolver: zodResolver((userToEdit ? updateUserSchema : createUserSchema) as any),
         defaultValues: {
@@ -66,14 +67,14 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
 
     // Auto-password logic
     useEffect(() => {
-        if (!userToEdit && role === 'franchise' && name) {
+        if (!userToEdit && role === 'franchise' && name && !dirtyFields.password) {
             const cleanName = name.trim();
             if (cleanName.length > 2) {
                 const generated = `${cleanName.charAt(0).toUpperCase() + cleanName.slice(1).toLowerCase()}123!`;
-                setValue('password', generated);
+                setValue('password', generated, { shouldValidate: true, shouldDirty: false });
             }
         }
-    }, [name, role, userToEdit, setValue]);
+    }, [name, role, userToEdit, setValue, dirtyFields.password]);
 
     // Initialization Effect
     useEffect(() => {
@@ -206,12 +207,24 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Contraseña</label>
-                                    <input
-                                        type="password"
-                                        {...register('password')}
-                                        className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                                        placeholder={userToEdit ? "••••••••" : "Mínimo 8 caracteres"}
-                                    />
+                                    <div className="relative">
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            {...register('password')}
+                                            className="w-full pl-3 pr-10 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                            placeholder={userToEdit ? "••••••••" : "Mínimo 8 caracteres"}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors focus:outline-none"
+                                        >
+                                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        </button>
+                                    </div>
+                                    {!userToEdit && role === 'franchise' && name && !dirtyFields.password && (
+                                        <p className="text-[10px] text-blue-500 font-medium">Contraseña autogenerada (copiar o modificar)</p>
+                                    )}
                                 </div>
                             </div>
                         </section>
