@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { Loader2 } from "lucide-react";
 import { auth, db } from "../lib/firebase";
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User, type UserCredential, getIdTokenResult } from "firebase/auth";
@@ -261,7 +261,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return unsubscribe;
     }, []);
 
-    const login = async (email: string, password: string) => {
+    const login = useCallback(async (email: string, password: string) => {
         const result = await signInWithEmailAndPassword(auth, email, password);
 
         // 🚀 NUEVO: Obtenemos datos del usuario CON CACHING de custom claims
@@ -284,9 +284,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         logAction(result.user, AUDIT_ACTIONS.LOGIN_SUCCESS, { method: 'email_password' });
         return { ...result, user: enhancedUser };
-    };
+    }, []);
 
-    const logout = async (): Promise<void> => {
+    const logout = useCallback(async (): Promise<void> => {
         try {
             if (user) {
                 // Log and continue, do not block signOut if audit fails
@@ -298,9 +298,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             console.error("[Auth] Pre-logout error:", error);
         }
         return signOut(auth);
-    };
+    }, [user]);
 
-    const assignRole = async (
+    const assignRole = useCallback(async (
         targetUid: string,
         role: string,
         franchiseId: string | null = null,
@@ -326,24 +326,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             user.franchiseId = franchiseId || undefined;
             setUser({ ...user });
         }
-    };
+    }, [user, roleConfig]);
 
-    const startImpersonation = (franchiseId: string) => {
+    const startImpersonation = useCallback((franchiseId: string) => {
         if (!isAdmin) return;
         setImpersonatedFranchiseId(franchiseId);
         if (user) {
             setUser({ ...user, franchiseId, role: 'franchise' });
         }
-    };
+    }, [isAdmin, user]);
 
-    const stopImpersonation = () => {
+    const stopImpersonation = useCallback(() => {
         setImpersonatedFranchiseId(null);
         if (user && roleConfig) {
             setUser({ ...user, franchiseId: roleConfig.franchiseId, role: roleConfig.role });
         }
-    };
+    }, [user, roleConfig]);
 
-    const forceTokenRefresh = async () => {
+    const forceTokenRefresh = useCallback(async () => {
         if (!user) return;
 
         try {
@@ -374,7 +374,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         } catch (error) {
             console.error("[Auth] Error forcing token refresh:", error);
         }
-    };
+    }, [user]);
 
     // 🕵️ SESSION TRACKING SYSTEM
     const [sessionId, setSessionId] = useState<string | null>(null);
@@ -433,26 +433,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return () => clearInterval(interval);
     }, [user, sessionId]);
 
-    // 📦 EXPORTAMOS EL PAQUETE COMPLETO
-    const value: AuthContextType = {
+    const resetPassword = useCallback(async (email: string): Promise<void> => {
+        const { sendPasswordResetEmail } = await import("firebase/auth");
+        return sendPasswordResetEmail(auth, email);
+    }, []);
+
+    // 📦 EXPORTAMOS EL PAQUETE COMPLETO MEMOIZADO
+    const value: AuthContextType = React.useMemo(() => ({
         user,
         roleConfig,
         isAdmin,
         login,
         logout,
         assignRole,
-        resetPassword: async (email: string): Promise<void> => {
-            const { sendPasswordResetEmail } = await import("firebase/auth");
-            return sendPasswordResetEmail(auth, email);
-        },
+        resetPassword,
         loading,
         impersonatedFranchiseId,
         startImpersonation,
         stopImpersonation,
-
         forceTokenRefresh,
         sessionId
-    };
+    }), [
+        user,
+        roleConfig,
+        isAdmin,
+        login,
+        logout,
+        assignRole,
+        resetPassword,
+        loading,
+        impersonatedFranchiseId,
+        startImpersonation,
+        stopImpersonation,
+        forceTokenRefresh,
+        sessionId
+    ]);
 
     if (loading) {
         return (

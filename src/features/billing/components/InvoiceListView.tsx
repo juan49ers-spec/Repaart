@@ -796,7 +796,6 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
                       setSelectedInvoice(record);
                       setPaymentModalOpen(true);
                     }}
-                    className="bg-orange-500"
                     className="bg-orange-500 text-[10px] h-5 px-1.5"
                   >
                     Devolver
