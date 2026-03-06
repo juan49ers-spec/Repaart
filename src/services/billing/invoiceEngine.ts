@@ -13,7 +13,7 @@
  */
 
 import { db } from '../../lib/firebase';
-import { logAction, AUDIT_ACTIONS } from '../../lib/audit';
+
 import { cleanUndefined } from '../../utils/cleanUndefined';
 import {
     collection,
@@ -1536,18 +1536,7 @@ export const invoiceEngine = {
 
             console.log(`[invoiceEngine] Invoice ${invoiceId} and all related data deleted successfully (forced)`);
 
-            // Log critical action to audit trail
-            await logAction(
-                { uid: 'admin_forced', email: 'admin@repaart.com', role: 'admin' }, // Simplified as we are in service layer
-                AUDIT_ACTIONS.INVOICE_DELETE,
-                {
-                    invoiceId,
-                    number: invoice.fullNumber,
-                    status: invoice.status,
-                    total: invoice.total,
-                    reason: 'Forced deletion by administrator'
-                }
-            );
+
 
             return ok(undefined);
         } catch (error: unknown) {

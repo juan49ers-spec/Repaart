@@ -50,20 +50,21 @@ export const RevenueStep: React.FC<RevenueStepProps> = ({
             setTotalIncome(invoicedIncome.subtotal);
         }
         if (invoicedIncome?.ordersDetail) {
+            const detail = invoicedIncome.ordersDetail;
             setOrders(prev => {
                 const newOrders = { ...prev };
                 // Sync standard ranges
                 activeRanges.forEach(range => {
                     const normalizedRange = normalizeRangeKey(range);
-                    const invoicedMatch = Object.entries(invoicedIncome.ordersDetail || {}).find(([k]) => normalizeRangeKey(k) === normalizedRange);
+                    const invoicedMatch = Object.entries(detail).find(([k]) => normalizeRangeKey(k) === normalizedRange);
                     if (invoicedMatch) {
                         newOrders[range] = invoicedMatch[1];
                     }
                 });
 
                 // Sync 'Otros' bucket if it exists in invoiced data
-                if (invoicedIncome.ordersDetail['Otros'] !== undefined) {
-                    newOrders['Otros'] = invoicedIncome.ordersDetail['Otros'];
+                if (detail['Otros'] !== undefined) {
+                    newOrders['Otros'] = detail['Otros'];
                 }
 
                 return newOrders;

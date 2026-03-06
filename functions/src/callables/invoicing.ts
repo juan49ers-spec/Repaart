@@ -16,7 +16,7 @@ export const createRestaurant = functions.https.onCall(async (data: any, context
     }
 
     const isAuthorized = context.auth.token.role === 'admin' ||
-        context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
+        (context.auth.token.franchiseId && context.auth.token.franchiseId.toLowerCase() === franchiseId.toLowerCase());
 
     if (!isAuthorized) {
         throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
@@ -29,9 +29,9 @@ export const createRestaurant = functions.https.onCall(async (data: any, context
             franchiseId,
             fiscalName,
             cif: cif.toUpperCase(),
-            email: email || undefined,
-            phone: phone || undefined,
-            notes: notes || undefined,
+            email: email || '',
+            phone: phone || '',
+            notes: notes || '',
             address,
             status: 'active',
             createdAt: Timestamp.now(),
@@ -53,7 +53,7 @@ export const getRestaurants = functions.https.onCall(async (data: any, context: 
 
     // Case-insensitive comparison for UID/franchiseId
     const isAuthorized = context.auth.token.role === 'admin' ||
-        context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
+        (context.auth.token.franchiseId && context.auth.token.franchiseId.toLowerCase() === franchiseId.toLowerCase());
 
     if (!isAuthorized) {
         throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
@@ -76,7 +76,7 @@ export const updateRestaurant = functions.https.onCall(async (data: any, context
     }
 
     const isAuthorized = context.auth.token.role === 'admin' ||
-        context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
+        (context.auth.token.franchiseId && context.auth.token.franchiseId.toLowerCase() === franchiseId.toLowerCase());
 
     if (!isAuthorized) {
         throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
@@ -86,9 +86,9 @@ export const updateRestaurant = functions.https.onCall(async (data: any, context
         await db.collection('restaurants').doc(id).update({
             fiscalName,
             cif: cif.toUpperCase(),
-            email: email || undefined,
-            phone: phone || undefined,
-            notes: notes || undefined,
+            email: email || '',
+            phone: phone || '',
+            notes: notes || '',
             address,
             updatedAt: Timestamp.now()
         });
@@ -108,7 +108,7 @@ export const deleteRestaurant = functions.https.onCall(async (data: any, context
 
     // Role-based auth
     const isAuthorized = context.auth.token.role === 'admin' ||
-        context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
+        (context.auth.token.franchiseId && context.auth.token.franchiseId.toLowerCase() === franchiseId.toLowerCase());
 
     if (!isAuthorized) {
         throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
@@ -174,7 +174,7 @@ export const generateInvoice = functions.https.onCall(async (data: CreateInvoice
     // 1. Validations
     // Case-insensitive comparison for UID/franchiseId
     const isAuthorized = context.auth.token.role === 'admin' ||
-        context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
+        (context.auth.token.franchiseId && context.auth.token.franchiseId.toLowerCase() === franchiseId.toLowerCase());
 
     if (!isAuthorized) {
         throw new functions.https.HttpsError('permission-denied', 'Only franchise owner can issue invoices');
@@ -329,6 +329,7 @@ export const generateInvoice = functions.https.onCall(async (data: CreateInvoice
 });
 
 export const getInvoices = functions.https.onCall(async (data: any, context: CallableContext) => {
+    // FIXED: Now using franchiseId from token instead of UID
     if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
 
     const { franchiseId } = data;
@@ -336,7 +337,7 @@ export const getInvoices = functions.https.onCall(async (data: any, context: Cal
 
     // Case-insensitive comparison for UID/franchiseId
     const isAuthorized = context.auth.token.role === 'admin' ||
-        context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
+        (context.auth.token.franchiseId && context.auth.token.franchiseId.toLowerCase() === franchiseId.toLowerCase());
 
     if (!isAuthorized) {
         throw new functions.https.HttpsError('permission-denied', 'Unauthorized');

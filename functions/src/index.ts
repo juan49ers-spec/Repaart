@@ -6,7 +6,6 @@ if (admin.apps.length === 0) {
 }
 
 // Export Triggers
-export { syncUserRole } from './triggers/onUserWrite';
 export { calculateWeekStats } from './triggers/onWeekWrite';
 export { onIncidentCreated } from './triggers/onIncident';
 export { deleteUserSync } from './triggers/onUserDelete';
@@ -17,6 +16,8 @@ export { createFranchise } from './callables/createFranchise';
 export { archiveOldNotifications, archiveOldTickets, archiveOldAuditLogs, scheduledDataRetention } from './callables/dataRetention';
 export { adminDeleteUser } from './callables/adminDeleteUser';
 export { repairCustomClaims } from './callables/repairCustomClaims';
+export { setRole } from './callables/setRole';
+export { setUserStatus } from './callables/setUserStatus';
 
 // Flyder Integration
 export { getFlyderOrders, getFlyderOrdersStats } from './callables/getFlyderOrders';

@@ -1,71 +1,85 @@
 import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
+import { UserRole } from '../utils/claims';
+import { isLastAdmin } from '../utils/admin';
 
 /**
  * Admin Delete User
- * Elimina completamente un usuario de Auth y Firestore
- * Solo puede ser llamada por usuarios con role 'admin'
+ * Elimina completamente un usuario de Auth y Firestore.
+ * Solo puede ser llamada por usuarios con role 'admin'.
+ * Implementa protección contra auto-eliminación de administradores.
  */
-export const adminDeleteUser = functions.https.onCall(async (data, context) => {
-    const uid = data.uid;
+export const adminDeleteUser = functions.region('us-central1').https.onCall(async (data: { uid: string }, context: functions.https.CallableContext) => {
+    const targetUid = data.uid;
 
-    if (!uid || typeof uid !== 'string') {
-        throw new functions.https.HttpsError(
-            'invalid-argument',
-            'UID del usuario es requerido'
-        );
+    if (!targetUid || typeof targetUid !== 'string') {
+        throw new functions.https.HttpsError('invalid-argument', 'UID del usuario es requerido.');
     }
 
-    // Verificar que el usuario que hace la llamada es admin
-    const callerUid = context.auth?.uid;
-    if (!callerUid) {
-        throw new functions.https.HttpsError(
-            'unauthenticated',
-            'No autenticado'
-        );
+    // 1. Verify caller is authenticated
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'Debe estar autenticado.');
     }
 
-    const callerDoc = await admin.firestore().collection('users').doc(callerUid).get();
-    if (!callerDoc.exists) {
-        throw new functions.https.HttpsError(
-            'not-found',
-            'Usuario no encontrado'
-        );
-    }
+    const callerUid = context.auth.uid;
+    const callerRole = (context.auth.token.role as UserRole) || 'user';
 
-    const callerRole = callerDoc.data()?.role;
+    // 2. Verify caller is Admin
     if (callerRole !== 'admin') {
-        throw new functions.https.HttpsError(
-            'permission-denied',
-            'Solo administradores pueden eliminar usuarios'
-        );
+        throw new functions.https.HttpsError('permission-denied', 'Solo administradores pueden eliminar usuarios.');
     }
 
-    console.log(`🗑️ Iniciando eliminación completa del usuario: ${uid}`);
+    // 3. Prevent self-deletion of Admins (protection)
+    if (targetUid === callerUid) {
+        throw new functions.https.HttpsError('permission-denied', 'No puede eliminarse a sí mismo desde este panel. Contacte con otro administrador.');
+    }
+
+    // 3.1. Last Admin Protection
+    const isTargetLastAdmin = await isLastAdmin(targetUid);
+    if (isTargetLastAdmin) {
+        throw new functions.https.HttpsError('failed-precondition', 'No se puede eliminar al último administrador activo del sistema.');
+    }
 
     try {
-        // 1. Eliminar usuario de Firebase Auth
+        console.log(`🗑️ Iniciando eliminación completa del usuario: ${targetUid}`);
+
+        // 4. Verification Check: Is target an Admin? (Additional Safety)
+        const targetAuth = await admin.auth().getUser(targetUid);
+        if (targetAuth.customClaims?.role === 'admin') {
+            // In some systems, we might want to prevent deleting other admins, 
+            // but for now we follow the same rule as setRole/setUserStatus: 
+            // admins can manage others, but not themselves.
+        }
+
+        // 5. Delete from Firebase Auth
         try {
-            await admin.auth().deleteUser(uid);
-            console.log(`✅ Usuario ${uid} eliminado de Firebase Auth`);
+            await admin.auth().deleteUser(targetUid);
+            console.log(`✅ Usuario ${targetUid} eliminado de Firebase Auth`);
         } catch (authError: any) {
             if (authError.code === 'auth/user-not-found') {
-                console.log(`⚠️ Usuario ${uid} no existe en Firebase Auth, continuando...`);
+                console.log(`⚠️ Usuario ${targetUid} no existe en Firebase Auth, continuando con limpieza...`);
             } else {
                 throw authError;
             }
         }
 
-        // 2. Eliminar documento de Firestore
-        await admin.firestore().collection('users').doc(uid).delete();
-        console.log(`✅ Documento de usuario ${uid} eliminado de Firestore`);
+        // 6. Delete User Document and related records (Optional: archiving might be better, but we follow original intent)
+        await admin.firestore().collection('users').doc(targetUid).delete();
+        console.log(`✅ Documento de usuario ${targetUid} eliminado de Firestore`);
 
-        return { success: true, message: 'Usuario eliminado completamente' };
-    } catch (error) {
-        console.error(`❌ Error eliminando usuario ${uid}:`, error);
-        throw new functions.https.HttpsError(
-            'internal',
-            'Error al eliminar usuario'
-        );
+        // 7. Audit Logging
+        await admin.firestore().collection('audit_logs').add({
+            action: 'DELETE_USER',
+            targetUid: targetUid,
+            performedBy: callerUid,
+            timestamp: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        return { success: true, message: 'Usuario eliminado completamente.' };
+
+    } catch (error: any) {
+        console.error(`❌ Error eliminando usuario ${targetUid}:`, error);
+        if (error.code) throw error;
+        throw new functions.https.HttpsError('internal', error.message || 'Error al eliminar usuario.');
     }
 });

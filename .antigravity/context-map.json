@@ -1,0 +1,43 @@
+{
+    "version": "1.0",
+    "strategies": {
+        "caching": {
+            "pinned_paths": [
+                "package.json",
+                "firebase.json",
+                "firestore.rules",
+                "GEMINI.md",
+                ".agent/ARCHITECTURE.md",
+                "functions/src/**/*",
+                "src/context/**/*",
+                "src/hooks/**/*"
+            ],
+            "max_cache_age_hours": 24
+        },
+        "pruning": {
+            "exclude": [
+                "**/*.log",
+                "**/*.txt",
+                "**/*.json",
+                "node_modules",
+                ".venv",
+                "dist",
+                "dev-dist",
+                "playwright-report",
+                "test-results",
+                "academy_sources",
+                "package-lock.json",
+                "lint_results.json",
+                "probe_output.txt",
+                "_PROYECTO_COMPLETO.txt"
+            ],
+            "allow_list": [
+                "firebase.json",
+                "package.json",
+                "tsconfig.json",
+                "context-map.json",
+                "mcp-settings.json"
+            ]
+        }
+    }
+}

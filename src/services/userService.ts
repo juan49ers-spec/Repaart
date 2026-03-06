@@ -1,7 +1,6 @@
-import { db } from '../lib/firebase';
+import { db, functions } from '../lib/firebase';
 import {
     collection,
-    addDoc,
     doc,
     serverTimestamp,
     getDoc,
@@ -13,12 +12,13 @@ import {
     QueryDocumentSnapshot,
     DocumentData
 } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 import {
     User,
     Franchise,
     toUserId
 } from '../schemas/users';
-import { ServiceError, validationError } from '../utils/ServiceError';
+import { ServiceError } from '../utils/ServiceError';
 
 export type { User, Franchise };
 export { toUserId };
@@ -90,6 +90,12 @@ const COLLECTIONS = {
     FRANCHISES: 'franchises'
 };
 
+const GOVERNANCE_FIELDS = new Set(['role', 'franchiseId', 'status', 'admin']);
+
+function hasGovernanceFields(data: Record<string, unknown>): boolean {
+    return Object.keys(data).some((key) => GOVERNANCE_FIELDS.has(key));
+}
+
 export const userService = {
     // --- IDENTITY (Users) ---
 
@@ -121,26 +127,54 @@ export const userService = {
         }
     },
 
-    updateUser: async (uid: string, data: Partial<User>): Promise<void> => {
+    updateUserProfile: async (uid: string, data: Partial<User>): Promise<void> => {
         try {
+            if (hasGovernanceFields(data as Record<string, unknown>)) {
+                throw new Error('updateUserProfile no permite modificar campos de gobernanza (rol, status, franchiseId). Use los métodos setUserRole o setUserStatus.');
+            }
+
             const docRef = doc(db, COLLECTIONS.USERS, uid);
             await setDoc(docRef, {
                 ...data,
                 updatedAt: serverTimestamp()
             }, { merge: true });
         } catch (error) {
-            throw new ServiceError('updateUser', { cause: error });
+            console.error("Error updating user profile:", error);
+            throw error;
         }
     },
 
-    setUserProfile: async (uid: string, data: Partial<User>): Promise<void> => {
+    setUserRole: async (
+        targetUid: string,
+        newRole: string,
+        franchiseId: string | null = null
+    ): Promise<void> => {
         try {
-            await setDoc(doc(db, COLLECTIONS.USERS, uid), {
-                ...data,
-                updatedAt: serverTimestamp()
-            }, { merge: true });
+            const setRoleFn = httpsCallable(functions, 'setRole');
+            await setRoleFn({
+                targetUid,
+                newRole,
+                franchiseId
+            });
         } catch (error) {
-            throw new ServiceError('setUserProfile', { cause: error });
+            console.error("Error setting user role:", error);
+            throw error;
+        }
+    },
+
+    setUserStatus: async (
+        targetUid: string,
+        newStatus: 'active' | 'pending' | 'banned' | 'deleted'
+    ): Promise<void> => {
+        try {
+            const setUserStatusFn = httpsCallable(functions, 'setUserStatus');
+            await setUserStatusFn({
+                targetUid,
+                newStatus
+            });
+        } catch (error) {
+            console.error("Error setting user status:", error);
+            throw error;
         }
     },
 
@@ -168,50 +202,20 @@ export const userService = {
     // --- BUSINESS ENTITIES (Franchises) ---
 
     createFranchise: async (franchiseData: object): Promise<{ success: boolean; data: { id: string } }> => {
-        const data = franchiseData as Record<string, unknown>;
-        // Validation: Ensure zipCodes are present
-        const location = data.location as Record<string, unknown> | undefined;
-        const zipCodes = (location?.zipCodes ?? data.zipCodes) as string[] | undefined;
-        if (!zipCodes || !Array.isArray(zipCodes) || zipCodes.length === 0) {
-            throw validationError('createFranchise', 'Datos incompletos: Faltan códigos postales (zipCodes)');
-        }
-
         try {
-            // Flatten location data for User schema compatibility
-            const flatData = {
-                ...data,
-                role: 'franchise',
-                status: 'active',
-                isActive: true,
-                zipCodes,
-                city: location?.city ?? data.city,
-                address: location?.address ?? data.address,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            };
-
-            // Remove nested location to avoid duplication
-            if ('location' in flatData) delete (flatData as Record<string, unknown>).location;
-
-            const docRef = await addDoc(collection(db, 'franchises'), flatData);
-
-            return {
-                success: true,
-                data: { id: docRef.id }
-            };
+            const createFranchiseFn = httpsCallable(functions, 'createFranchise');
+            const result = await createFranchiseFn(franchiseData);
+            const data = result.data as { success: boolean; data: { id: string } };
+            return data;
         } catch (error) {
+            console.error("Error creating franchise:", error);
             throw new ServiceError('createFranchise', { cause: error });
         }
     },
 
     deleteUser: async (uid: string): Promise<void> => {
         try {
-            const { getFunctions, httpsCallable } = await import('firebase/functions');
-            const { getApp } = await import('firebase/app');
-
-            const functions = getFunctions(getApp());
             const adminDeleteUser = httpsCallable(functions, 'adminDeleteUser');
-
             await adminDeleteUser({ uid });
         } catch (error) {
             throw new ServiceError('deleteUser', { cause: error });

@@ -20,67 +20,81 @@ export const toggleInvoicingModule = functions.https.onCall(async (data: any, co
         throw new functions.https.HttpsError('invalid-argument', 'Missing franchiseId or enabled');
     }
 
-    console.log('[toggleInvoicingModule] Toggling module:', {
-        franchiseId,
-        enabled
-    });
+    let targetIds = [franchiseId];
+    console.log('[toggleInvoicingModule] Toggling module for:', franchiseId);
 
     try {
-        // Try franchises collection first (with exact ID)
-        const franchiseRef = db.collection('franchises').doc(franchiseId);
-        const franchiseDoc = await franchiseRef.get();
+        const franchisesCol = db.collection('franchises');
+        const usersCol = db.collection('users');
 
-        console.log('[toggleInvoicingModule] Franchise doc exists (exact):', franchiseDoc.exists);
-
-        if (franchiseDoc.exists) {
-            await franchiseRef.update({
-                invoicingEnabled: enabled,
-                invoicingActivatedAt: enabled ? new Date() : null,
-                updatedAt: new Date()
-            });
-            console.log('[toggleInvoicingModule] Updated in franchises collection');
-            return { success: true, enabled };
+        // Fallback: If not found by ID, try finding by name field
+        const byNameFranchise = await franchisesCol.where('name', '==', franchiseId).get();
+        if (!byNameFranchise.empty) {
+            targetIds.push(byNameFranchise.docs[0].id);
         }
 
-        // Fallback to users collection - try exact ID first
-        const userRef = db.collection('users').doc(franchiseId);
-        const userDoc = await userRef.get();
-
-        console.log('[toggleInvoicingModule] User doc exists (exact):', userDoc.exists, 'Role:', userDoc.data()?.role);
-
-        if (userDoc.exists && userDoc.data()?.role === 'franchise') {
-            await userRef.update({
-                invoicingEnabled: enabled,
-                invoicingActivatedAt: enabled ? new Date() : null,
-                updatedAt: new Date()
-            });
-            console.log('[toggleInvoicingModule] Updated in users collection (exact ID)');
-            return { success: true, enabled };
+        const byNameUser = await usersCol.where('role', '==', 'franchise').where('name', '==', franchiseId).get();
+        if (!byNameUser.empty) {
+            targetIds.push(byNameUser.docs[0].id);
         }
 
-        // If still not found, try lowercase (for backward compatibility)
-        const lowerCaseId = franchiseId.toLowerCase();
-        if (lowerCaseId !== franchiseId) {
-            console.log('[toggleInvoicingModule] Trying with lowercase ID:', lowerCaseId);
+        // Add variation of the primary ID
+        const finalIds = Array.from(new Set([
+            ...targetIds,
+            franchiseId.toLowerCase(),
+            franchiseId.toUpperCase()
+        ]));
 
-            const lowerUserRef = db.collection('users').doc(lowerCaseId);
-            const lowerUserDoc = await lowerUserRef.get();
+        const updateData = {
+            invoicingEnabled: enabled,
+            invoicingActivatedAt: enabled ? new Date() : null,
+            'modules.billing.active': enabled,
+            updatedAt: new Date()
+        };
 
-            console.log('[toggleInvoicingModule] User doc exists (lowercase):', lowerUserDoc.exists, 'Role:', lowerUserDoc.data()?.role);
+        let totalUpdatedCount = 0;
 
-            if (lowerUserDoc.exists && lowerUserDoc.data()?.role === 'franchise') {
-                await lowerUserRef.update({
-                    invoicingEnabled: enabled,
-                    invoicingActivatedAt: enabled ? new Date() : null,
-                    updatedAt: new Date()
-                });
-                console.log('[toggleInvoicingModule] Updated in users collection (lowercase ID)');
-                return { success: true, enabled };
+        // 1. Update direct documents IDs in both collections
+        for (const id of finalIds) {
+            // Update franchises
+            const fRef = franchisesCol.doc(id);
+            const fDoc = await fRef.get();
+            if (fDoc.exists) {
+                await fRef.update(updateData);
+                console.log(`[toggleInvoicingModule] Updated franchises/${id}`);
+                totalUpdatedCount++;
+            }
+
+            // Update users
+            const uRef = usersCol.doc(id);
+            const uDoc = await uRef.get();
+            if (uDoc.exists) {
+                await uRef.update(updateData);
+                console.log(`[toggleInvoicingModule] Updated users/${id}`);
+                totalUpdatedCount++;
             }
         }
 
-        console.error('[toggleInvoicingModule] Franchise not found:', franchiseId);
-        throw new functions.https.HttpsError('not-found', 'Franchise not found');
+        // 2. Update all users where the FIELD franchiseId matches (case-insensitive search)
+        for (const id of finalIds) {
+            const usersByField = await usersCol.where('franchiseId', '==', id).get();
+            if (!usersByField.empty) {
+                const batch = db.batch();
+                usersByField.docs.forEach(doc => {
+                    batch.update(doc.ref, updateData);
+                });
+                await batch.commit();
+                console.log(`[toggleInvoicingModule] Updated ${usersByField.size} users with franchiseId field: ${id}`);
+                totalUpdatedCount += usersByField.size;
+            }
+        }
+
+        if (totalUpdatedCount === 0) {
+            console.error('[toggleInvoicingModule] Franchise not found in any collection or field:', franchiseId);
+            throw new functions.https.HttpsError('not-found', 'Franchise not found');
+        }
+
+        return { success: true, enabled };
 
     } catch (error: any) {
         console.error('Error toggling invoicing module:', error);
@@ -99,7 +113,7 @@ export const getInvoicingModuleStatus = functions.https.onCall(async (data: any,
 
     // Allow access if admin or the franchise itself (case-insensitive)
     const isAuthorized = context.auth.token.role === 'admin' ||
-                         context.auth.uid.toLowerCase() === franchiseId.toLowerCase();
+        (context.auth.token.franchiseId && context.auth.token.franchiseId.toLowerCase() === franchiseId.toLowerCase());
 
     if (!isAuthorized) {
         throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
@@ -107,55 +121,81 @@ export const getInvoicingModuleStatus = functions.https.onCall(async (data: any,
 
     console.log('[getInvoicingModuleStatus] Checking status for:', franchiseId);
 
+
+
+
     try {
-        // Try franchises collection first (with exact ID)
-        const franchiseDoc = await db.collection('franchises').doc(franchiseId).get();
+        let targetIds = [franchiseId];
 
-        console.log('[getInvoicingModuleStatus] Franchise doc exists (exact):', franchiseDoc.exists, 'Data:', franchiseDoc.data()?.invoicingEnabled);
-
-        if (franchiseDoc.exists) {
-            const data = franchiseDoc.data();
-            return {
-                enabled: data?.invoicingEnabled || false,
-                activatedAt: data?.invoicingActivatedAt || null
-            };
+        // Fallback: If not found by ID, try finding by name field to resolve real ID
+        const byNameUser = await db.collection('users').where('role', '==', 'franchise').where('name', '==', franchiseId).get();
+        if (!byNameUser.empty) {
+            targetIds.push(byNameUser.docs[0].id);
+            const fId = byNameUser.docs[0].data().franchiseId;
+            if (fId) targetIds.push(fId);
         }
 
-        // Fallback to users collection - try exact ID first
-        const userRef = db.collection('users').doc(franchiseId);
-        const userDoc = await userRef.get();
+        const searchIds = Array.from(new Set([
+            ...targetIds,
+            franchiseId.toLowerCase(),
+            franchiseId.toUpperCase()
+        ]));
 
-        console.log('[getInvoicingModuleStatus] User doc exists (exact):', userDoc.exists);
+        console.log('[getInvoicingModuleStatus] Searching for:', franchiseId);
 
-        if (userDoc.exists) {
-            const data = userDoc.data();
-            console.log('[getInvoicingModuleStatus] User data (exact) invoicingEnabled:', data?.invoicingEnabled);
-            return {
-                enabled: data?.invoicingEnabled || false,
-                activatedAt: data?.invoicingActivatedAt || null
-            };
-        }
+        // 1. Try users collection FIRST (prioritize user doc keyed by UID)
+        for (const id of searchIds) {
+            const doc = await db.collection('users').doc(id).get();
+            if (doc.exists) {
+                const data = doc.data();
+                // Check multiple possible fields for robustness
+                const isEnabled = data?.invoicingEnabled === true ||
+                    data?.modules?.billing?.active === true ||
+                    false;
 
-        // Try with lowercase as last resort (for backward compatibility)
-        const lowerCaseId = franchiseId.toLowerCase();
-        if (lowerCaseId !== franchiseId) {
-            console.log('[getInvoicingModuleStatus] Trying with lowercase ID:', lowerCaseId);
-            const lowerUserRef = db.collection('users').doc(lowerCaseId);
-            const lowerUserDoc = await lowerUserRef.get();
-
-            console.log('[getInvoicingModuleStatus] User doc exists (lowercase):', lowerUserDoc.exists);
-
-            if (lowerUserDoc.exists) {
-                const data = lowerUserDoc.data();
-                console.log('[getInvoicingModuleStatus] User data (lowercase) invoicingEnabled:', data?.invoicingEnabled);
+                console.log(`[getInvoicingModuleStatus] Found in users/${id}, enabled:`, isEnabled);
                 return {
-                    enabled: data?.invoicingEnabled || false,
+                    enabled: isEnabled,
                     activatedAt: data?.invoicingActivatedAt || null
                 };
             }
         }
 
-        console.log('[getInvoicingModuleStatus] No documents found, returning disabled');
+        // 2. Try searching by franchiseId FIELD in users collection
+        for (const id of searchIds) {
+            const usersByField = await db.collection('users').where('franchiseId', '==', id).get();
+            if (!usersByField.empty) {
+                const data = usersByField.docs[0].data();
+                const isEnabled = data?.invoicingEnabled === true ||
+                    data?.modules?.billing?.active === true ||
+                    false;
+
+                console.log(`[getInvoicingModuleStatus] Found in users by franchiseId field (${id}), enabled:`, isEnabled);
+                return {
+                    enabled: isEnabled,
+                    activatedAt: data?.invoicingActivatedAt || null
+                };
+            }
+        }
+
+        // 3. Last fallback: Try franchises collection
+        for (const id of searchIds) {
+            const doc = await db.collection('franchises').doc(id).get();
+            if (doc.exists) {
+                const data = doc.data();
+                const isEnabled = data?.invoicingEnabled === true ||
+                    data?.modules?.billing?.active === true ||
+                    false;
+
+                console.log(`[getInvoicingModuleStatus] Found in franchises/${id}, enabled:`, isEnabled);
+                return {
+                    enabled: isEnabled,
+                    activatedAt: data?.invoicingActivatedAt || null
+                };
+            }
+        }
+
+        console.log('[getInvoicingModuleStatus] No data found for:', franchiseId);
         return { enabled: false, activatedAt: null };
 
     } catch (error: any) {

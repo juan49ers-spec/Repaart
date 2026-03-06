@@ -74,3 +74,14 @@ scripts/audit_user.*
 # Service Account
 service-account.json
 nul
+
+# Heavy Context Killers
+probe_output.txt
+_PROYECTO_COMPLETO.txt
+lint_results.json
+playwright-report
+test-results
+academy_sources
+package-lock.json
+project_file_sizes.json
+directory_totals.json

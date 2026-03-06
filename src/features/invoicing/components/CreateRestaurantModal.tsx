@@ -17,7 +17,7 @@ interface Props {
 export const CreateRestaurantModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, restaurant, franchiseId: propFranchiseId }) => {
     const { user } = useAuth();
     const { createRestaurant, updateRestaurant } = useInvoicing();
-    
+
     const franchiseId = propFranchiseId || user?.franchiseId || user?.uid;
 
     const [loading, setLoading] = useState(false);
@@ -85,7 +85,7 @@ export const CreateRestaurantModal: React.FC<Props> = ({ isOpen, onClose, onSucc
     const handleCifChange = (value: string) => {
         const upperValue = value.toUpperCase();
         setFormData({ ...formData, cif: upperValue });
-        
+
         if (upperValue.length >= 8) {
             const result = validateSpanishFiscalId(upperValue);
             setCifValidation({ isValid: result.isValid, message: result.error || `${result.type} válido` });
@@ -112,9 +112,9 @@ export const CreateRestaurantModal: React.FC<Props> = ({ isOpen, onClose, onSucc
             const payload = {
                 fiscalName: formData.fiscalName.trim(),
                 cif: cifResult.normalizedValue,
-                email: formData.email.trim() || undefined,
-                phone: formData.phone.trim() || undefined,
-                notes: formData.notes.trim() || undefined,
+                email: formData.email.trim() || '',
+                phone: formData.phone.trim() || '',
+                notes: formData.notes.trim() || '',
                 address: {
                     street: formData.address.street.trim(),
                     city: formData.address.city.trim(),
@@ -140,7 +140,7 @@ export const CreateRestaurantModal: React.FC<Props> = ({ isOpen, onClose, onSucc
             onClose();
         } catch (err: any) {
             let errorMessage = 'Error al guardar cliente';
-            
+
             if (err.code === 'permission-denied') {
                 errorMessage = 'No tienes permisos para crear clientes';
             } else if (err.code === 'invalid-argument') {
@@ -150,7 +150,7 @@ export const CreateRestaurantModal: React.FC<Props> = ({ isOpen, onClose, onSucc
             } else if (err.message) {
                 errorMessage = err.message;
             }
-            
+
             setError(errorMessage);
         } finally {
             setLoading(false);
@@ -196,13 +196,12 @@ export const CreateRestaurantModal: React.FC<Props> = ({ isOpen, onClose, onSucc
                                     required
                                     type="text"
                                     aria-label="CIF o NIF"
-                                    className={`w-full px-4 py-2 rounded-lg border ${
-                                        cifValidation 
-                                            ? cifValidation.isValid 
-                                                ? 'border-green-500 focus:ring-green-500' 
+                                    className={`w-full px-4 py-2 rounded-lg border ${cifValidation
+                                            ? cifValidation.isValid
+                                                ? 'border-green-500 focus:ring-green-500'
                                                 : 'border-red-500 focus:ring-red-500'
                                             : 'border-slate-300 dark:border-slate-600 focus:ring-emerald-500'
-                                    } bg-white dark:bg-slate-700 outline-none transition-all`}
+                                        } bg-white dark:bg-slate-700 outline-none transition-all`}
                                     placeholder="B-12345678"
                                     value={formData.cif}
                                     onChange={e => handleCifChange(e.target.value)}

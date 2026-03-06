@@ -1,0 +1,1430 @@
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\ErrorBoundary.tsx
+   98:10  warning  Fast refresh only works when a file only exports components. Move your component(s) to a separate file  react-refresh/only-export-components
+  207:63  warning  Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+  211:53  warning  Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+  212:18  warning  Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+  227:22  warning  Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+  231:62  warning  Unexpected any. Specify a different type                                                                @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\SEO.tsx
+  166:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  167:30  warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  209:50  warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  225:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\accessibility\AccessibilityChecker.tsx
+   48:59  warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+   49:24  warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+   81:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+   95:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+   97:25  warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  129:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\dev\Seeder.tsx
+  41:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\error\__tests__\ErrorBoundary.test.tsx
+  7:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  8:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\perf\VirtualList.tsx
+  25:23  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\perf\VirtualList.tsx:25:23
+  23 |   const parentRef = useRef<HTMLDivElement>(null);
+  24 |
+> 25 |   const virtualizer = useVirtualizer({
+     |                       ^^^^^^^^^^^^^^ TanStack Virtual's `useVirtualizer()` API returns functions that cannot be memoized safely
+  26 |     count: items.length,
+  27 |     getScrollElement: () => parentRef.current,
+  28 |     estimateSize,  react-hooks/incompatible-library
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\perf\VirtualizedRidersGrid.tsx
+  75:28  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\perf\VirtualizedRidersGrid.tsx:75:28
+  73 |     const parentRef = useRef<HTMLDivElement>(null);
+  74 |
+> 75 |     const rowVirtualizer = useVirtualizer({
+     |                            ^^^^^^^^^^^^^^ TanStack Virtual's `useVirtualizer()` API returns functions that cannot be memoized safely
+  76 |         count: ridersGrid.length,
+  77 |         getScrollElement: () => parentRef.current,
+  78 |         estimateSize: () => rowHeight,  react-hooks/incompatible-library
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\perf\__tests__\VirtualizedRidersGrid.container.test.tsx
+  12:6  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\pwa\InstallPrompt.tsx
+  31:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\responsive\FluidTypography.tsx
+   10:90   warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+   26:105  warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+   52:74   warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+   68:78   warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+   86:69   warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  104:71   warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  121:60   warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  136:93   warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  152:14   warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  180:14   warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\support\SharedMessage.tsx
+  22:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  34:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\ui\data-display\AnimatedCounter.tsx
+  24:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\ui\drag-drop\SortableList.tsx
+  66:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  67:60  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  68:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\ui\feedback\ErrorBoundary.d.ts
+  3:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\ui\feedback\InstallPrompt.tsx
+   6:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  10:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\ui\feedback\ToastContainer.d.ts
+  3:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\ui\feedback\__tests__\Alert.test.tsx
+   7:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   8:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   9:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  10:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\ui\inputs\Button.d.ts
+  3:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\ui\layout\DashboardSkeleton.d.ts
+  3:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\ui\media\OptimizedImage.tsx
+  42:3  warning  'quality' is assigned a value but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\ui\modals\PageHelpModal.tsx
+  37:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\ui\modals\__tests__\ResponsiveModal.test.tsx
+  7:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\ui\overlays\UpdatePrompt.d.ts
+  3:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\components\ui\tables\ResponsiveTable.tsx
+   7:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\context\AuthContext.tsx
+    9:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+    9:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   14:75  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   86:70  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  156:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  157:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\context\FeatureFlags.tsx
+  123:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  145:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\context\SupportContext.tsx
+  10:14  warning  Fast refresh only works when a file only exports components. Move your React context(s) to a separate file  react-refresh/only-export-components
+  10:45  warning  Unexpected any. Specify a different type                                                                    @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\context\ThemeContext.tsx
+  6:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\academy\Academy.tsx
+  101:46   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  102:67   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  161:81   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  161:108  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  200:73   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  211:67   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\academy\admin\components\LessonCard.tsx
+  12:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  13:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\academy\admin\components\ModuleCard.tsx
+  16:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  17:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\academy\components\LearningPath.tsx
+  13:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\AdminFranchiseView.tsx
+  82:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\AdminResourcesPanel.tsx
+  61:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\AdminSupportPanel.tsx
+  46:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\AnnouncementSystem.tsx
+   15:20   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  140:109  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  152:105  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  268:64   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\AuditPanel.tsx
+  14:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  15:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\CreateFranchiseModal.tsx
+  52:8  warning  React Hook useEffect has a missing dependency: 'initialFormState'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\FranchiseOnboarding.tsx
+  31:68  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\MigrationPanel.tsx
+   11:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   30:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  180:62  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\__tests__\AdminResourcesPanel.test.tsx
+   27:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   28:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   29:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   30:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   34:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   42:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   45:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   53:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   71:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   78:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   85:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   92:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  121:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  195:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  198:41  warning  '_id' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\dashboard\AdminFinanceInbox.tsx
+  133:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\dashboard\OperationalMetrics.tsx
+   62:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  111:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\dashboard\SidebarWidgets.tsx
+  47:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\dashboard\TrendsSection.tsx
+  124:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\dashboard\widgets\PendingTasksWidget.tsx
+   9:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  42:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\flyder\components\BulkSyncButton.tsx
+  15:44  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  71:39  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  74:11  warning  'totalSkipped' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  75:11  warning  'totalFailed' is assigned a value but never used   @typescript-eslint/no-unused-vars
+  82:21  warning  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\flyder\components\CleanSyncButton.tsx
+   8:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  30:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  32:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\flyder\components\CreateTestFranchiseButton.tsx
+   9:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  27:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  29:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\flyder\components\FixFranchisesButton.tsx
+   18:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   19:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   29:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   31:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   64:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   73:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  180:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  196:53  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  244:57  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  264:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\flyder\components\FleetIntelligenceDashboard.tsx
+  273:65  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  323:63  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  339:69  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\flyder\components\FlyderFranchiseImport.tsx
+  61:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  80:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  87:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\flyder\components\FlyderOrdersDashboard.tsx
+   27:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   43:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   50:18  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+   67:16  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+   76:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  118:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  120:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  288:97  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  292:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\flyder\components\FlyderSyncPanel.tsx
+   31:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   53:52  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   55:52  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   57:52  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   59:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   61:60  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   94:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   97:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  127:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  130:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  160:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  163:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  179:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  181:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  197:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  199:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  214:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  217:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  232:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  235:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  254:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  256:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  280:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  324:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  330:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  689:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  793:65  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\flyder\components\SyncRemainingButton.tsx
+   8:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  57:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\flyder\components\SyncTestOrdersButton.tsx
+   8:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  23:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  25:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\kanban\KanbanBoard.tsx
+  68:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  76:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\kanban\KanbanCard.tsx
+  31:39   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  31:71   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  31:112  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:39   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:71   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:112  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\kanban\TaskDetailModal.tsx
+   25:26   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   25:65   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   99:38   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  265:72   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  265:109  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  265:155  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\knowledge\AdminGuidesPanel.tsx
+   72:44   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   73:42   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   81:25   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  495:101  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  513:101  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\resources\RequestsInbox.tsx
+  25:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\resources\utils\contractUtils.ts
+  44:95  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\roadmap\EditFeatureModal.tsx
+  16:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  78:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\roadmap\FeatureBoard.tsx
+  82:8  warning  React Hook useEffect has a missing dependency: 'toast'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\roadmap\FeatureCard.tsx
+   13:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   14:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   43:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  103:79  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\settings\FranchiseProfile.d.ts
+  3:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\users\CreateUserModal.tsx
+   24:19  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+   55:85  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+   63:18  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\admin\users\CreateUserModal.tsx:63:18
+  61 |     });
+  62 |
+> 63 |     const role = watch('role');
+     |                  ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  64 |     const pack = watch('pack');
+  65 |     const name = watch('name');
+  66 |  react-hooks/incompatible-library
+  142:23  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\billing\components\BillingWizard.tsx
+   84:48  warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+   91:8   warning  React Hook useEffect has a missing dependency: 'loadCustomers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  247:63  warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\billing\components\CustomerInvoiceHistory.tsx
+  93:8  warning  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\billing\components\CustomersManager.tsx
+   88:8    warning  React Hook useEffect has a missing dependency: 'loadCustomers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  127:53   warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+  127:86   warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+  127:129  warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\billing\components\EditInvoiceModal.tsx
+   26:46  warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+   37:31  warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+   57:6   warning  React Hook useEffect has a missing dependency: 'loadCustomers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   96:68  warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+  140:42  warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+  165:21  warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+  173:45  warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\billing\components\InvoiceListView.tsx
+    62:46   warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+   105:6    warning  React Hook useEffect has a missing dependency: 'fetchInvoices'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   182:40   warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+   215:38   warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+   218:36   warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+   324:25   warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+   371:25   warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+   401:21   warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+   418:21   warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+   464:21   warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+   584:26   warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+   648:19   warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+   688:19   warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+   800:21   error    No duplicate props allowed                                                                                        react/jsx-no-duplicate-props
+  1151:47   warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+  1154:45   warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+  1180:66   warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+  1180:124  warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+  1679:51   warning  Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\billing\components\InvoicePreviewModal.tsx
+  43:8  warning  React Hook useEffect has a missing dependency: 'loadFreshIssuerData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  92:8  warning  React Hook useEffect has a missing dependency: 'generatePreview'. Either include it or remove the dependency array      react-hooks/exhaustive-deps
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\billing\components\PaymentModal.tsx
+  156:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\billing\components\RectificationModal.tsx
+  70:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\billing\components\RevenueTrendChart.tsx
+  24:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\billing\components\SimpleInvoiceCreator.tsx
+   58:48  warning  Unexpected any. Specify a different type                                                                                            @typescript-eslint/no-explicit-any
+   64:40  warning  Unexpected any. Specify a different type                                                                                            @typescript-eslint/no-explicit-any
+   88:8   warning  React Hook useEffect has missing dependencies: 'loadCustomers' and 'loadRates'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  196:70  warning  Unexpected any. Specify a different type                                                                                            @typescript-eslint/no-explicit-any
+  258:43  warning  Unexpected any. Specify a different type                                                                                            @typescript-eslint/no-explicit-any
+  276:25  warning  Unexpected any. Specify a different type                                                                                            @typescript-eslint/no-explicit-any
+  292:47  warning  Unexpected any. Specify a different type                                                                                            @typescript-eslint/no-explicit-any
+  506:87  warning  Unexpected any. Specify a different type                                                                                            @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\billing\components\TaxVaultPanel.tsx
+   61:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   87:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  106:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  130:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  191:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  203:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\common\UserManual\UserManual.tsx
+  93:52  warning  'node' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  94:48  warning  'node' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  95:48  warning  'node' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\common\UserManual\manualContent.ts
+  14:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\fleet\RidersView.tsx
+  444:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\fleet\components\RiderForm.tsx
+  39:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  70:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\fleet\schemas\RiderSchema.test.ts
+  71:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\fleet\vehicles\components\VehicleForm.tsx
+  41:61  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  43:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\FinancialControlCenter.test.tsx
+   11:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   12:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   13:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   14:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   15:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   16:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   17:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   66:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   68:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   81:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   85:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   98:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   99:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  100:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  101:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  102:53  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  111:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\FinancialControlCenter.tsx
+  208:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\FranchiseDashboardView.tsx
+  292:91  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\SupportHub.tsx
+  21:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\__tests__\ResourcesPanel.test.tsx
+   22:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   23:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   24:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   25:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   29:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   79:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   80:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  138:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  141:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  144:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  159:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  166:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  169:41  warning  '_id' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  177:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  180:41  warning  '_id' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\components\GuideViewerModal.tsx
+  14:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\components\LogisticsRatesEditor.tsx
+  49:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  51:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  56:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  57:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\dashboard\ExecutiveFinanceView.tsx
+  234:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\dashboard\widgets\AlertsWidget.d.ts
+  3:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\dashboard\widgets\CoverageStats.tsx
+  7:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  8:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\dashboard\widgets\DashboardCharts.d.ts
+  3:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\dashboard\widgets\ExpenseBreakdownWidget.tsx
+  32:60  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\dashboard\widgets\FinancialAdvisorWidget.d.ts
+  3:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\dashboard\widgets\KPICard.d.ts
+  3:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\dashboard\widgets\MonthlyTaxWidget.d.ts
+  3:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\dashboard\widgets\MonthlyTrendChart.d.ts
+  3:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\dashboard\widgets\NewsFeedWidget.d.ts
+  3:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\dashboard\widgets\QuarterlyTaxModal.tsx
+  41:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\dashboard\widgets\TakeHomeProfitWidget.tsx
+   9:40   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  59:224  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  70:40   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  84:242  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\dashboard\widgets\TaxVaultWidget.d.ts
+  3:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\finance\BreakEvenWidget.tsx
+  4:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  9:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\finance\FranchiseHistoryView.tsx
+  13:52  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  19:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\finance\MonthlyHistoryTable.tsx
+  35:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  35:65  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  42:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\finance\ScenarioSimulator.tsx
+  8:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\finance\SmartInsightsWidget.tsx
+    8:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   18:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   19:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   32:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  137:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  151:57  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  162:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\finance\components\FinancialBreakdownChart.tsx
+  13:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\finance\components\ui\ProfessionalCard.tsx
+  13:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\finance\hooks\useFinancialDataLoad.ts
+   93:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  101:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  109:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  117:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  129:53  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  158:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  160:52  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  165:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  165:66  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  166:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\steps\ExpenseStep.tsx
+  29:92   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  52:112  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\steps\IncomeStep.tsx
+   86:27  warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+   99:8   warning  React Hook useEffect has missing dependencies: 'user?.role' and 'user.uid'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  124:8   warning  React Hook useEffect has a missing dependency: 'calculateTotal'. Either include it or remove the dependency array               react-hooks/exhaustive-deps
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\steps\SummaryStep.tsx
+  23:61  warning  Unexpected any. Specify a different type                                                                                                                                                         @typescript-eslint/no-explicit-any
+  24:19  warning  Unexpected any. Specify a different type                                                                                                                                                         @typescript-eslint/no-explicit-any
+  39:32  warning  Unexpected any. Specify a different type                                                                                                                                                         @typescript-eslint/no-explicit-any
+  50:11  warning  The 'expenses' logical expression could make the dependencies of useMemo Hook (at line 62) change on every render. To fix this, wrap the initialization of 'expenses' in its own useMemo() Hook  react-hooks/exhaustive-deps
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\support\NewTicketForm.tsx
+   11:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   16:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  270:53  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\support\ResourceLibrary.tsx
+  4:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\support\SupportDashboard.tsx
+   46:8   warning  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   53:34  warning  Unexpected any. Specify a different type                                                                     @typescript-eslint/no-explicit-any
+   70:30  warning  Unexpected any. Specify a different type                                                                     @typescript-eslint/no-explicit-any
+   72:32  warning  Unexpected any. Specify a different type                                                                     @typescript-eslint/no-explicit-any
+   80:45  warning  Unexpected any. Specify a different type                                                                     @typescript-eslint/no-explicit-any
+   81:45  warning  Unexpected any. Specify a different type                                                                     @typescript-eslint/no-explicit-any
+  103:30  warning  Unexpected any. Specify a different type                                                                     @typescript-eslint/no-explicit-any
+  104:32  warning  Unexpected any. Specify a different type                                                                     @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\support\TicketHistory.tsx
+  18:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\franchise\wizard\steps\SummaryStep.tsx
+  15:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  58:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\invoicing\components\CreateRestaurantModal.tsx
+   13:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  141:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\layouts\hooks\useNotificationBadge.tsx
+  13:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\operations\ContextMenu.tsx
+  9:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\operations\LogisticsPerformanceCard.tsx
+   7:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  17:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  42:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\operations\MobileAgendaView.tsx
+  17:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\operations\OperationsDashboard.tsx
+  128:74  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\operations\OperationsPage.tsx
+  23:50  warning  Unexpected any. Specify a different type                                                                                @typescript-eslint/no-explicit-any
+  63:8   warning  React Hook useEffect has a missing dependency: 'selectedFranchiseId'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\operations\QuickFillModal.tsx
+   66:82  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  248:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\operations\ShiftModal.tsx
+   62:22  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+  115:23  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\operations\ShiftModal.tsx:115:23
+  113 |     });
+  114 |
+> 115 |     const startDate = watch('startDate');
+      |                       ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  116 |     const startTimeStr = watch('startTime');
+  117 |     const endDate = watch('endDate');
+  118 |     const endTimeStr = watch('endTime');  react-hooks/incompatible-library
+  129:18  warning  'e' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+  141:11  warning  The 'isRiderBusy' function makes the dependencies of useMemo Hook (at line 219) change on every render. To fix this, wrap the definition of 'isRiderBusy' in its own useCallback() Hook                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/exhaustive-deps
+  172:18  warning  'e' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\operations\ShiftPlanner.tsx
+   32:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   70:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  269:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  290:60  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\operations\SmartSuggestionsPanel.tsx
+   6:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  22:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\operations\WeekMetricsPanel.tsx
+  41:22  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\operations\WeekMiniMap.tsx
+  16:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\operations\WeeklyScheduler.tsx
+    23:55  warning  Unexpected any. Specify a different type                                                                                                                                                               @typescript-eslint/no-explicit-any
+    54:14  warning  Unexpected any. Specify a different type                                                                                                                                                               @typescript-eslint/no-explicit-any
+   125:28  warning  Unexpected any. Specify a different type                                                                                                                                                               @typescript-eslint/no-explicit-any
+   204:54  warning  Unexpected any. Specify a different type                                                                                                                                                               @typescript-eslint/no-explicit-any
+   421:11  warning  The 'handleSaveShift' function makes the dependencies of useEffect Hook (at line 565) change on every render. To fix this, wrap the definition of 'handleSaveShift' in its own useCallback() Hook      react-hooks/exhaustive-deps
+   421:50  warning  Unexpected any. Specify a different type                                                                                                                                                               @typescript-eslint/no-explicit-any
+   423:46  warning  Unexpected any. Specify a different type                                                                                                                                                               @typescript-eslint/no-explicit-any
+   430:59  warning  Unexpected any. Specify a different type                                                                                                                                                               @typescript-eslint/no-explicit-any
+   446:29  warning  Unexpected any. Specify a different type                                                                                                                                                               @typescript-eslint/no-explicit-any
+   489:11  warning  The 'handleDeleteShift' function makes the dependencies of useEffect Hook (at line 565) change on every render. To fix this, wrap the definition of 'handleDeleteShift' in its own useCallback() Hook  react-hooks/exhaustive-deps
+   522:20  warning  Unexpected any. Specify a different type                                                                                                                                                               @typescript-eslint/no-explicit-any
+   835:37  warning  Unexpected any. Specify a different type                                                                                                                                                               @typescript-eslint/no-explicit-any
+   863:61  warning  Unexpected any. Specify a different type                                                                                                                                                               @typescript-eslint/no-explicit-any
+  1419:58  warning  Unexpected any. Specify a different type                                                                                                                                                               @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\operations\views\WeeklySummaryView.tsx
+  10:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  23:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\rider\home\components\RiderAchievements.tsx
+  129:75  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\rider\home\components\SlideToWork.tsx
+  86:8  warning  React Hook useEffect has missing dependencies: 'handleEnd' and 'handleMove'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\rider\home\modals\IncidentReportModal.tsx
+  8:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\rider\home\modals\VehicleChecklistModal.tsx
+   8:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  50:18  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\rider\hooks\useRiderSupport.ts
+  31:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  61:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\rider\profile\RiderNotificationsView.tsx
+  30:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\rider\profile\RiderPersonalDataView.tsx
+  40:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  50:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\rider\profile\RiderProfileView.tsx
+   44:8   warning  React Hook useEffect has a missing dependency: 'isLoading'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  185:52  warning  Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\rider\profile\RiderSecurityView.tsx
+  45:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\rider\profile\components\RiderNotifications.tsx
+  35:17  warning  Unexpected any. Specify a different type                                                                  @typescript-eslint/no-explicit-any
+  96:8   warning  React Hook useEffect has a missing dependency: 'toast'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\rider\profile\components\RiderShiftHistory.tsx
+  33:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  34:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\rider\profile\components\RiderSupport.tsx
+  36:18   warning  'err' is defined but never used           @typescript-eslint/no-unused-vars
+  46:35   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  81:103  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\rider\profile\components\__tests__\RiderHeader.test.tsx
+   8:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   9:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  10:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\rider\profile\components\__tests__\RiderStatsOverview.test.tsx
+   8:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   9:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  10:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  13:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  15:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  16:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\rider\schedule\components\SmartStartButton.tsx
+   58:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   68:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  129:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\scheduler\DroppableCell.tsx
+  15:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\scheduler\__tests__\DeliveryScheduler.container.test.tsx
+   7:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   8:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   9:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  10:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  13:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  15:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  16:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\scheduler\__tests__\DeliveryScheduler.integration.test.tsx
+    7:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+    8:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+    9:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   10:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   11:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   12:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   13:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   14:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   15:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   16:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   17:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   18:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   19:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   20:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   21:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   22:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   23:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   24:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   25:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   26:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   27:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   28:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   29:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   30:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   31:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   32:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   33:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   34:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   35:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  134:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  140:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\scheduler\components\RecurringShiftModal.tsx
+  138:83  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\scheduler\components\SchedulerHeader.tsx
+  18:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\scheduler\components\SchedulerSidebar.tsx
+  15:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\scheduler\hooks\useSchedulerCalculations.ts
+  104:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\scheduler\hooks\useShiftActions.ts
+   20:16   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  127:131  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\user\UserProfile.tsx
+  56:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\features\user\components\ProfileTab.tsx
+   53:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   64:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   66:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   88:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  100:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\__tests__\useFirestoreConnectionStatus.test.ts
+  28:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\__tests__\useIntersectionObserver.test.ts
+  5:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\useAdminAnnouncements.ts
+  15:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  16:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\useAdminControl.ts
+  25:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  34:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  41:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\useAdminDashboardData.ts
+   16:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   17:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  124:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\useAutoSave.ts
+  68:6  warning  React Hook useEffect has a missing dependency: 'deps'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\useContractExport.ts
+  33:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\useFranchiseData.ts
+  165:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\useFranchiseHistory.ts
+  60:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\useIntelligence.ts
+  13:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  15:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\useInvoicing.ts
+   9:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  26:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  26:52  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  42:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  47:90  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  56:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\useInvoicingModule.ts
+  30:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\useOrdersHistory.ts
+  32:10  warning  '_page' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\useShiftOperations.ts
+   15:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   28:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   34:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   35:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   63:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   75:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   80:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  127:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\useSupport.ts
+  9:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\useSupportManager.ts
+  27:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  29:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  50:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\useTableLogic.ts
+  36:82  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\useThrottle.ts
+  27:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  27:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\useUserManager.ts
+  136:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  191:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\useVersioning.ts
+  15:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\hooks\useWebVitals.ts
+  110:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  111:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  123:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  124:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\layouts\__tests__\DashboardLayout.container.test.tsx
+   8:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   9:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  10:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  13:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  15:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  16:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  17:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  19:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  20:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  22:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  23:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\layouts\components\BottomTabBar.tsx
+  24:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  26:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\layouts\components\ChatAssistant.tsx
+  12:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  36:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  70:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\layouts\components\DesktopSidebar.tsx
+  71:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\layouts\components\dev\ConsoleViewer.tsx
+  61:79  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\layouts\components\dev\DevToolsPanel.tsx
+  154:8   warning  React Hook useEffect has a missing dependency: 'healthResult'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  170:76  warning  Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  170:91  warning  Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  521:71  warning  Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\layouts\components\dev\SeedWeeks.tsx
+  61:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\layouts\components\dev\ToastContainer.tsx
+  102:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\lib\audit.ts
+   76:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   80:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  106:57  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\lib\email.ts
+  8:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\lib\finance.ts
+  262:90  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\lib\gemini.ts
+  188:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  195:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  210:68  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  261:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  335:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  380:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  380:73  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  444:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\lib\pdfGenerator.ts
+  110:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  130:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  139:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  182:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\lib\schemas.d.ts
+  4:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  5:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  6:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\main.tsx
+  18:7  warning  Fast refresh only works when a file has exports. Move your component(s) to a separate file  react-refresh/only-export-components
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\pages\DevSandbox.tsx
+  7:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\scripts\actionHistory.ts
+   6:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\scripts\consoleCapture.ts
+   8:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  23:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  51:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  56:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  61:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  66:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\scripts\devUtils.ts
+   34:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   35:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  116:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  118:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  155:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  171:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  235:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  236:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  237:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  238:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  243:73  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\scripts\executeCleanup.ts
+  28:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  29:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\scripts\healthCheck.ts
+  121:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\scripts\investigateFinancialData.ts
+  40:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  41:65  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  42:60  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\scripts\migrateFranchiseIds.ts
+  178:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  248:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  288:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  289:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\scripts\networkInterceptor.ts
+  18:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\scripts\performanceTracker.ts
+  27:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\__tests__\errorLogger.test.ts
+   18:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  118:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  182:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  198:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  207:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  221:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  231:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\__tests__\flyderApiService.test.ts
+   26:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   35:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   36:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   51:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   69:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   83:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  113:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  139:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  152:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  158:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  168:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  182:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  212:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  239:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  255:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  267:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  283:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  295:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\academyService.ts
+  94:26  warning  'indexError' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\billing\__tests__\integration.test.ts
+  177:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\billing\__tests__\logisticsBillingEngine.test.ts
+   66:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   90:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  113:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  135:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\billing\accountsReceivable.ts
+  244:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  311:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  342:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  439:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  527:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\billing\controllers\billingController.ts
+  151:76  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  232:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  260:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  293:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  293:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  329:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  329:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  360:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  360:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  393:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  393:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  414:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  414:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  435:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  435:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  470:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  470:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  491:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  491:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  520:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  520:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\billing\invoiceExport.ts
+   14:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  123:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  127:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  129:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\billing\invoiceValidation.ts
+  216:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  245:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\billing\logisticsBillingEngine.ts
+  144:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  226:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  272:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\billing\pdfGenerator.ts
+  136:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  153:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  243:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\billing\taxVault.ts
+  132:57  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  133:57  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  134:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  141:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  236:57  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  237:57  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  238:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  245:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  359:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  371:80  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  392:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  433:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  442:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  478:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  504:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  595:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  616:80  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  622:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\contractAnalyticsService.ts
+   73:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  129:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  145:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  166:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  169:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  171:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\errorLogger.ts
+  84:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  85:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\financeService.test.ts
+  27:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  41:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  52:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  63:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\finance\helpers.ts
+  32:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  41:73  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  69:69  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\finance\inbox.ts
+  111:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\finance\records.test.ts
+  19:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  20:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  22:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  23:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  43:82  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  59:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  71:93  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\finance\records.ts
+   71:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   90:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  112:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  154:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  168:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  180:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\finance\summary.ts
+   87:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  101:81  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  103:59  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  110:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  182:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  187:91  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  334:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\finance\trends.ts
+  50:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  75:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\fleetService.d.ts
+   8:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:66  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  13:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\fleetService.test.ts
+   42:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   48:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   69:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   94:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  119:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\fleetService.ts
+  180:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  331:64  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\franchiseService.test.ts
+  22:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  52:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  64:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  71:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  88:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\franchiseService.ts
+   94:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  136:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\migrationService.test.ts
+  26:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  32:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  36:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  54:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  70:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  86:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  86:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\mocks\financeMocks.ts
+  22:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\notificationService.test.ts
+  31:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\operationsService.test.ts
+  68:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\ordersHistoryService.ts
+  68:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\pwaService.ts
+  137:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  157:67  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\scheduler\weekService.test.ts
+  109:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  120:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  134:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  147:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  167:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\scheduler\weekService.ts
+  120:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\shiftService.ts
+  280:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  386:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  422:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\services\userService.test.ts
+  49:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\store\useFleetStore.test.ts
+  26:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  29:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  29:69  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  34:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  35:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\store\useVehicleStore.ts
+  37:95  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\types\finance.ts
+  121:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\types\franchise.ts
+  13:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\types\invoicing.ts
+  380:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\types\json.d.ts
+  2:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\types\support.ts
+  17:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\utils\analyticsHelpers.ts
+  39:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  77:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  77:65  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\utils\dateUtils.d.ts
+  8:66  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\utils\finance.d.ts
+  3:64  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  3:72  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  5:57  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\utils\finance.ts
+  29:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\utils\firebaseErrors.d.ts
+  6:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\utils\firebaseErrors.ts
+  4:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\utils\lazyLoading.ts
+  19:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\utils\lazyWithRetry.ts
+   8:61  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  25:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\utils\operationalMetrics.ts
+  17:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\utils\riderColors.ts
+  31:76  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\utils\schedulerValidation.ts
+  23:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\src\utils\seedEncyclopedia.ts
+  1214:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Usuario\.gemini\antigravity\playground\repaart\vitest.setup.ts
+   24:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   25:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   29:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   55:6   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   79:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   80:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  106:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  107:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Ô£û 859 problems (1 error, 858 warnings)
+

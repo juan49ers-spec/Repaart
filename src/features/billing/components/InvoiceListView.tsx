@@ -45,7 +45,7 @@ import { InvoicePreviewModal } from './InvoicePreviewModal';
 import { EditInvoiceModal } from './EditInvoiceModal';
 import { PaymentModal } from './PaymentModal';
 import { RectificationModal } from './RectificationModal';
-import { useAuth } from '../../../context/AuthContext';
+
 
 interface Props {
   franchiseId: string;
@@ -54,7 +54,6 @@ interface Props {
 }
 
 export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, onRefresh }) => {
-  const { isAdmin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);

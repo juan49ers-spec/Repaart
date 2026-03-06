@@ -2,13 +2,10 @@ import { useState, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userService, User } from '../services/userService';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { getApp } from 'firebase/app';
-import { auth } from '../lib/firebase';
+import { auth, functions } from '../lib/firebase';
 import { logAction, AUDIT_ACTIONS } from '../lib/audit';
 import { CreateUserInput, UpdateUserInput } from '../features/admin/users/CreateUserModal';
-
-// Helper for Cloud Functions
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
 
 class SecurityError extends Error {
     constructor(message: string) {
@@ -37,7 +34,7 @@ interface UserManagerReturn {
     refetch: () => void;
 }
 
-export const useUserManager = (currentUser: { uid: string; role?: string; email?: string | null } | null, franchiseId: string | null = null): UserManagerReturn => {
+export const useUserManager = (currentUser: { uid: string; role?: string; email?: string | null; franchiseId?: string } | null, franchiseId: string | null = null): UserManagerReturn => {
     const queryClient = useQueryClient();
     const isAdmin = currentUser?.role === 'admin';
     const isFranchise = currentUser?.role === 'franchise';
@@ -65,21 +62,18 @@ export const useUserManager = (currentUser: { uid: string; role?: string; email?
     } = useQuery({
         queryKey: ['users', roleFilter, franchiseId],
         queryFn: async () => {
-            if (!isAdmin && !isFranchise) throw new SecurityError("Acceso Denegado"); // Allow Franchise read
+            if (!isAdmin && !isFranchise) throw new SecurityError("Acceso Denegado");
 
-            // If franchiseId is provided (God Mode limit), we might need a specific fetch
-            // Filter by franchise if in "God Mode" context or Franchise User
-            const effectiveFranchiseId = franchiseId || (isFranchise ? currentUser?.uid : null);
+            const effectiveFranchiseId = franchiseId || (isFranchise ? currentUser?.franchiseId : null);
 
-            // Server-side filtering now supported:
-            const users = await userService.fetchUsers(
+            const fetchedUsers = await userService.fetchUsers(
                 roleFilter !== 'all' ? roleFilter : null,
                 effectiveFranchiseId || null
             );
 
-            return users;
+            return fetchedUsers;
         },
-        enabled: !!(isAdmin || isFranchise), // Enable for Franchise too
+        enabled: !!(isAdmin || isFranchise),
         staleTime: 2 * 60 * 1000
     });
 
@@ -90,15 +84,13 @@ export const useUserManager = (currentUser: { uid: string; role?: string; email?
                 throw new Error("Password required for new user");
             }
 
-            const functions = getFunctions(getApp());
-            const createUserManaged = httpsCallable(functions, 'createUserManaged');
+            const createUserManagedFn = httpsCallable(functions, 'createUserManaged');
 
-            // Preparar payload para la Cloud Function
             const payload = {
                 email: userData.email,
                 password: password,
                 role: userData.role,
-                franchiseId: franchiseId || userData.franchiseId, // Inject context franchiseId
+                franchiseId: franchiseId || userData.franchiseId,
                 displayName: userData.displayName,
                 phoneNumber: userData.phoneNumber ? (userData.phoneNumber.startsWith('+') ? userData.phoneNumber : `+34${userData.phoneNumber}`) : undefined,
                 status: userData.status || 'active',
@@ -109,8 +101,7 @@ export const useUserManager = (currentUser: { uid: string; role?: string; email?
                 address: userData.address
             };
 
-            // Llamada segura al Backend
-            const result = await createUserManaged(payload);
+            const result = await createUserManagedFn(payload);
             const data = result.data as { uid: string, message: string };
 
             await logAction(currentUser, AUDIT_ACTIONS.CREATE_USER, { email: userData.email, uid: data.uid });
@@ -124,17 +115,42 @@ export const useUserManager = (currentUser: { uid: string; role?: string; email?
     // MUTATION: Update User
     const updateUserMutation = useMutation({
         mutationFn: async ({ uid, updates }: { uid: string; updates: Partial<UpdateUserInput> }) => {
-            // Permission check: Admin or Franchise updating own rider
-            // We assume userService/Firestore rules handle the enforcement, or we add local check here
             if (isFranchise) {
-                // Basic client-side check, robust check is in Rules
-                // Franchise can only update riders in their franchise.
+                // Franchise checked by rules
             } else {
                 checkAdminPermission();
             }
 
-            await userService.updateUser(uid, updates as any);
-            await logAction(currentUser, AUDIT_ACTIONS.UPDATE_USER, { uid });
+            const {
+                role,
+                franchiseId: newFranchiseId,
+                status,
+                ...profileUpdates
+            } = updates;
+
+            // 1. Governance: Role & Franchise
+            if (role !== undefined || newFranchiseId !== undefined) {
+                await userService.setUserRole(
+                    uid,
+                    (role as string) || 'user',
+                    (newFranchiseId as string | null) ?? null
+                );
+            }
+
+            // 2. Governance: Status
+            if (status !== undefined) {
+                await userService.setUserStatus(
+                    uid,
+                    status as 'active' | 'pending' | 'banned' | 'deleted'
+                );
+            }
+
+            // 3. Profile: Normal fields
+            if (Object.keys(profileUpdates).length > 0) {
+                await userService.updateUserProfile(uid, profileUpdates as Partial<User>);
+            }
+
+            await logAction(currentUser, AUDIT_ACTIONS.UPDATE_USER, { uid, updates });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['users'] });
@@ -170,11 +186,11 @@ export const useUserManager = (currentUser: { uid: string; role?: string; email?
             const matchesSearch =
                 user.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (user.franchiseId && user.franchiseId?.toLowerCase().includes(searchQuery.toLowerCase())); // Fixed optional chaining for franchiseId string method
+                (user.franchiseId && user.franchiseId.toLowerCase().includes(searchQuery.toLowerCase()));
 
             const matchesRole = roleFilter === 'all' || user.role === roleFilter;
             const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
-            const isNotDeleted = user.status !== 'deleted'; // Hide soft-deleted users
+            const isNotDeleted = user.status !== 'deleted';
 
             return matchesSearch && matchesRole && matchesStatus && isNotDeleted;
         });
@@ -188,7 +204,7 @@ export const useUserManager = (currentUser: { uid: string; role?: string; email?
 
     const toggleUserStatus = async (uid: string, currentStatus: string) => {
         const newStatus = currentStatus === 'active' ? 'banned' : 'active';
-        return updateUser(uid, { status: newStatus as any });
+        return updateUser(uid, { status: newStatus as UpdateUserInput['status'] });
     };
 
     return {
@@ -205,7 +221,7 @@ export const useUserManager = (currentUser: { uid: string; role?: string; email?
         toggleUserStatus,
         isCreating: createUserMutation.isPending,
         isUpdating: updateUserMutation.isPending,
-        refetch // Expose refetch
+        refetch
     };
 };
 

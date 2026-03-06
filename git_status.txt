@@ -1,0 +1,45 @@
+ M .gitignore
+A  FIX_403_AUTHORIZATION.md
+A  SOLUCION_PASO_A_PASO.md
+ M firestore.rules
+ M functions/src/callables/adminDeleteUser.ts
+ M functions/src/callables/createFranchise.ts
+ M functions/src/callables/createUser.ts
+ M functions/src/callables/invoicing.ts
+ M functions/src/callables/invoicingModule.ts
+ M functions/src/callables/repairCustomClaims.ts
+ M functions/src/index.ts
+ D functions/src/triggers/onUserWrite.ts
+ M public/version.json
+A  scripts/repair-claims-cli.sh
+A  scripts/repair-claims-console-v2.js
+A  scripts/repair-claims-console.js
+ M src/App.tsx
+ M src/context/AuthContext.tsx
+ M src/features/admin/AdminFranchiseView.tsx
+ M src/features/billing/components/InvoiceListView.tsx
+ M src/features/finance/FinanceHub.tsx
+ M src/features/franchise/finance/components/RevenueStep.tsx
+ M src/features/invoicing/components/CreateRestaurantModal.tsx
+ M src/hooks/useUserManager.ts
+ M src/lib/firebase.ts
+ M src/services/billing/invoiceEngine.ts
+ M src/services/userService.ts
+?? .antigravity/
+?? activate_module.ts
+?? build-errors.txt
+?? check_module.ts
+?? eslint_diagnostics.txt
+?? functions/src/callables/setRole.ts
+?? functions/src/callables/setUserStatus.ts
+?? functions/src/inspect_db.ts
+?? functions/src/utils/claims.ts
+?? functions_list.txt
+?? git_status.txt
+?? project_structure.txt
+?? scripts/fix-claims-simple.js
+?? scripts/fix-custom-claims.js
+?? src/features/billing/InvoiceDeletionSymmetry.test.ts
+?? test_invoice_sync.ts
+?? ts-errors.txt
+?? tsc_diagnostics.txt

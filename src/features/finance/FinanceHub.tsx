@@ -7,28 +7,32 @@ import { useInvoicingModule } from '../../hooks/useInvoicingModule';
 
 type ActiveTab = 'invoicing' | 'results';
 
-export const FinanceHub: React.FC = () => {
+export const FinanceHub: React.FC<{ franchiseId?: string }> = ({ franchiseId: propFranchiseId }) => {
     const { user } = useAuth();
     const { getModuleStatus } = useInvoicingModule();
     const [activeTab, setActiveTab] = useState<ActiveTab>('invoicing');
     const [invoicingEnabled, setInvoicingEnabled] = useState<boolean | null>(null);
     const [loadingStatus, setLoadingStatus] = useState(true);
 
+    const targetFranchiseId = propFranchiseId || user?.franchiseId || user?.uid;
+
     // Check if invoicing module is enabled for this franchise
     useEffect(() => {
         const checkInvoicingStatus = async () => {
-            if (!user?.uid) return;
+            if (!targetFranchiseId) {
+                setLoadingStatus(false);
+                return;
+            }
 
             try {
-                // Always use the Firebase Auth UID (which is the document ID)
-                const franchiseId = user.uid;
                 console.log('[FinanceHub] Checking invoicing status for:', {
+                    propFranchiseId,
                     userFranchiseId: user?.franchiseId,
                     userUid: user?.uid,
-                    finalId: franchiseId,
+                    finalId: targetFranchiseId,
                     userEmail: user?.email
                 });
-                const status = await getModuleStatus(franchiseId);
+                const status = await getModuleStatus(targetFranchiseId);
                 console.log('[FinanceHub] Invoicing status response:', status);
                 setInvoicingEnabled(status.enabled);
             } catch (error) {
@@ -40,7 +44,7 @@ export const FinanceHub: React.FC = () => {
         };
 
         checkInvoicingStatus();
-    }, [user, getModuleStatus]);
+    }, [user, getModuleStatus, targetFranchiseId, propFranchiseId]);
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500 max-w-[1600px] mx-auto p-6">
@@ -96,7 +100,7 @@ export const FinanceHub: React.FC = () => {
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
                             </div>
                         ) : invoicingEnabled ? (
-                            <BillingDashboard franchiseId={user?.uid || ''} />
+                            <BillingDashboard franchiseId={targetFranchiseId || ''} />
                         ) : (
                             <div className="flex flex-col items-center justify-center py-20 px-6">
                                 <div className="bg-white dark:bg-slate-800 rounded-3xl p-12 max-w-2xl w-full border border-slate-200 dark:border-slate-700 shadow-sm text-center">
@@ -133,7 +137,7 @@ export const FinanceHub: React.FC = () => {
 
                 {activeTab === 'results' && (
                     <div className="animate-in slide-in-from-bottom-4 duration-500 fade-in">
-                        <FranchiseDashboard franchiseId={user?.franchiseId || user?.uid} />
+                        <FranchiseDashboard franchiseId={targetFranchiseId} />
                     </div>
                 )}
             </div>

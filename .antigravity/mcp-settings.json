@@ -1,0 +1,15 @@
+{
+    "context_optimization": {
+        "enabled": true,
+        "token_reduction": "aggressive",
+        "compression_format": "TOON",
+        "dynamic_context_pruning": true,
+        "auto_summarize_logs": true,
+        "auto_summarize_browser": true,
+        "hard_token_limit": 100000,
+        "safeguards": {
+            "max_error_loops": 3,
+            "notify_on_limit_reached": true
+        }
+    }
+}

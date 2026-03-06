@@ -79,7 +79,7 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
                     setFranchiseData({
                         id: result.data.id,
                         name: result.data.name,
-                        status: (result.data as any).status || 'active'
+                        status: (result.data as { status?: string }).status || 'active'
                     } as FranchiseData);
 
                     // Fetch invoicing module status
@@ -109,7 +109,7 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
                 currentState: invoicingEnabled,
                 newState
             });
-            await toggleModule(franchiseId, newState);
+            await toggleModule(franchiseData?.id || franchiseId, newState);
             setInvoicingEnabled(newState);
             console.log('[AdminFranchiseView] Invoicing toggled successfully:', newState);
         } catch (error) {
@@ -164,11 +164,10 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
                         <button
                             onClick={handleToggleInvoicing}
                             disabled={togglingInvoicing}
-                            className={`ml-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                                invoicingEnabled
-                                    ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600'
-                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-500'
-                            } ${togglingInvoicing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`ml-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${invoicingEnabled
+                                ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600'
+                                : 'bg-slate-100 hover:bg-slate-200 text-slate-500'
+                                } ${togglingInvoicing ? 'opacity-50 cursor-not-allowed' : ''}`}
                             title={invoicingEnabled ? 'Desactivar módulo de facturación' : 'Activar módulo de facturación'}
                         >
                             <FileText size={12} />
@@ -213,7 +212,7 @@ const AdminFranchiseView: React.FC<AdminFranchiseViewProps> = ({ franchiseId: pr
                             {/* FinanceHub uses useAuth -> user.franchiseId. */}
                             {/* AdminFranchiseView provides IMPERSONATION context? No, it's just a view. */}
                             {/* We need to IMPERSONATE or pass ID to FinanceHub. */}
-                            <FinanceHub />
+                            <FinanceHub key={invoicingEnabled.toString()} franchiseId={franchiseData?.id || franchiseId} />
                         </Suspense>
 
                         {/* HISTORY SECTION */}

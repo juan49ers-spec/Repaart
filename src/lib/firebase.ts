@@ -39,7 +39,7 @@ export const db = initializeFirestore(app, {
 export const storage = getStorage(app);
 
 // Initialize Cloud Functions
-export const functions = getFunctions(app, 'us-central1');
+export const functions = getFunctions(app, "us-central1");
 
 export const firebaseConfigExport = firebaseConfig;
 
