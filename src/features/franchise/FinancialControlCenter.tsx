@@ -3,7 +3,7 @@ import { PieChart, Wallet, X, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { useAuth } from '../../context/AuthContext';
-import { financeService } from '../../services/financeService';
+import { financeService } from '../../services/finance';
 import { userService } from '../../services/userService';
 import { notificationService } from '../../services/notificationService';
 import { formatMoney } from '../../lib/finance';

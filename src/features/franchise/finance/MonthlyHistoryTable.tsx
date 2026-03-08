@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { formatMoney } from '../../../lib/finance';
 import { TrendingUp, TrendingDown, Calendar, Edit3, Eye, Search, X, GitCompare, Trash2, Unlock, Lock, Shield, CheckCircle, AlertTriangle, FileText, Clock } from 'lucide-react';
-import { financeService } from '../../../services/financeService';
+import { financeService } from '../../../services/finance';
 import { notificationService } from '../../../services/notificationService';
 import FinancialControlCenter from '../FinancialControlCenter';
 import { MonthlyRecord, useFranchiseHistory } from '../../../hooks/useFranchiseHistory';

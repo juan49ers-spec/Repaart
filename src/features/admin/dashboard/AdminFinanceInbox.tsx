@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
-import { financeService } from '../../../services/financeService';
+import { financeService } from '../../../services/finance';
 import type { FinancialRecord } from '../../../types/finance';
 import {
     CheckCircle,

@@ -95,6 +95,30 @@ npm run build
 # Verifica que no haya alertas de 'Cycle Dependency'
 ```
 
+### Testing y Seguridad (Canónico)
+
+```bash
+# Unit tests
+npm run test:unit
+
+# Seguridad (Firestore rules + import hygiene)
+npm run test:security
+
+# Flujo CI local (preflight + unit + seguridad)
+npm run test:ci
+
+# Suite completa (unit + seguridad + e2e)
+npm run test:all
+```
+
+> Nota: `npm run test:ci` ahora ejecuta un preflight y mostrará un error claro si falta Vitest; en ese caso corre `npm install` (o `npm ci`).
+> Para detalle de la suite de seguridad, revisa `tests/security/README.md`.
+
+```bash
+# Verificar sincronización local vs remoto (commits)
+npm run git:sync-check
+```
+
 ### Documentación de API
 
 La especificación completa de la API está disponible en `docs/api/`:

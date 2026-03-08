@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { financeService } from '../services/financeService';
+import { financeService } from '../services/finance';
 import { calculateMonthlyRevenue, calculateExpenses, analyzeFinancialHealth, DEFAULT_MONTH_DATA, type MonthlyData, type FinancialReport, type FinancialAnalysis } from '../lib/finance';
 import { useAuth } from '../context/AuthContext';
 import { logAction, AUDIT_ACTIONS } from '../lib/audit';
