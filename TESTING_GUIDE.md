@@ -5,11 +5,42 @@
 
 ## 📋 ÍNDICE
 
-1. [Tests de Seguridad](#tests-de-seguridad)
-2. [Tests Funcionales](#tests-funcionales)
-3. [Scripts de Verificación](#scripts-de-verificación)
-4. [Tests de Carga](#tests-de-carga)
-5. [Testing Manual](#testing-manual)
+1. [Setup rápido](#setup-rápido)
+2. [Comandos canónicos](#comandos-canónicos)
+3. [Tests de Seguridad](#tests-de-seguridad)
+4. [Tests Funcionales](#tests-funcionales)
+5. [Scripts de Verificación](#scripts-de-verificación)
+6. [Tests de Carga](#tests-de-carga)
+7. [Testing Manual](#testing-manual)
+
+---
+
+## ⚙️ SETUP RÁPIDO
+
+Antes de ejecutar cualquier comando de pruebas, instala dependencias:
+
+```bash
+npm install
+```
+
+Si `npm run test:ci` falla en preflight por Vitest ausente, normalmente faltan dependencias locales en `node_modules`.
+
+---
+
+## 🧪 COMANDOS CANÓNICOS
+
+```bash
+# Unit tests
+npm run test:unit
+
+# Seguridad (reglas + imports + consistencia de arquitectura/workflows)
+npm run test:security
+
+# Flujo completo CI local (preflight + unit + seguridad)
+npm run test:ci
+```
+
+Para más detalle de la suite de seguridad, consulta `tests/security/README.md`.
 
 ---
 
@@ -1299,23 +1330,30 @@ loadTestShifts().catch(console.error);
 
 ## 🚀 EJECUCIÓN DE TESTS
 
-### Ejecutar Tests Automatizados
+> Referencia rápida: los comandos canónicos están documentados al inicio en la sección **"🧪 COMANDOS CANÓNICOS"**.
 
 ```bash
-# Instalar dependencias
-npm install firebase-admin firebase-functions
+# Unit tests (rápido)
+npm run test:unit
 
-# Ejecutar test de integridad
-node verify-data-integrity.js
+# Seguridad (Firestore rules + import hygiene)
+npm run test:security
 
-# Ejecutar test de permisos
-node verify-permissions.js
+# CI local equivalente (unit + seguridad)
+npm run test:ci
 
-# Ejecutar test de funciones
-node verify-functions.js
+# Suite completa (unit + seguridad + e2e)
+npm run test:all
+```
 
-# Ejecutar test de carga
-node load-test-shifts.js
+### Ejecutar Tests Automatizados Legacy (si aplica)
+
+```bash
+# Scripts de auditoría históricos (mantener solo si existen en tu entorno)
+# node verify-data-integrity.js
+# node verify-permissions.js
+# node verify-functions.js
+# node load-test-shifts.js
 ```
 
 ### Ejecutar Tests con Playwright

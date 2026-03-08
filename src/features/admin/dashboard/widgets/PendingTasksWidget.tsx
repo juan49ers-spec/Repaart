@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, AlertCircle, ArrowRight, Loader2 } from 'lucide-react';
-import { financeService } from '../../../../services/financeService';
+import { financeService } from '../../../../services/finance';
 import type { FinancialRecord } from '../../../../types/finance';
 import { userService } from '../../../../services/userService';
 

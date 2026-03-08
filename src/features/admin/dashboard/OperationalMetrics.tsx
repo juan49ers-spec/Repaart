@@ -4,7 +4,7 @@ import CustomChartTooltip from '../../../components/ui/data-display/CustomChartT
 
 
 import { useQueryClient } from '@tanstack/react-query';
-import { financeService } from '../../../services/financeService';
+import { financeService } from '../../../services/finance';
 
 interface Franchise {
     id: string;

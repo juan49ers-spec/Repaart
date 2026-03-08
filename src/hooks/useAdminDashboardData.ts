@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { financeService } from '../services/financeService';
+import { financeService } from '../services/finance';
 // userService import removed as unused
 import { franchiseService } from '../services/franchiseService';
 import { isOk } from '../types/result';
