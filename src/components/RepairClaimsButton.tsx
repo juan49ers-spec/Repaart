@@ -46,10 +46,11 @@ export const RepairClaimsButton: React.FC = () => {
                 }
             }, 1000);
 
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as { code?: string; message?: string };
             console.error('❌ Error:', error);
 
-            if (error.code === 'functions/not-found') {
+            if (err.code === 'functions/not-found') {
                 setResult({
                     success: false,
                     message: 'La función no está desplegada. Ejecuta: cd functions && firebase deploy --only functions'
@@ -57,7 +58,7 @@ export const RepairClaimsButton: React.FC = () => {
             } else {
                 setResult({
                     success: false,
-                    message: `Error: ${error.message || 'Error desconocido'}`
+                    message: `Error: ${err.message || 'Error desconocido'}`
                 });
             }
         } finally {

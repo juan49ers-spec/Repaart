@@ -1,0 +1,1214 @@
+diff --git a/firestore.rules b/firestore.rules
+index 0fc546a..4d89cef 100644
+--- a/firestore.rules
++++ b/firestore.rules
+@@ -15,22 +15,23 @@ service cloud.firestore {
+     function isAdmin() {
+       return isAuthed() && (
+         request.auth.token.role == 'admin' || 
+-        request.auth.token.admin == true ||
+-        getUserData().get('role', '') == 'admin' ||
+-        getUserData().get('admin', false) == true
++        request.auth.token.admin == true
+       );
+     }
+     
+     function isFranchise() {
+       return isAuthed() && (
+-        request.auth.token.role == 'franchise' || 
+-        getUserData().get('role', '') == 'franchise'
++        request.auth.token.role == 'franchise'
+       );
+     }
+     
+     // Helper para billing module - verifica si usuario puede acceder a datos de una franquicia
+     function canAccessFranchise(franchiseId) {
+-      return isAuthed();
++      return isAuthed() && (
++        isAdmin() || 
++        (isFranchise() && request.auth.token.franchiseId == franchiseId) ||
++        (request.auth.token.role == 'rider' && request.auth.token.franchiseId == franchiseId)
++      );
+     }
+     
+     // --- VALIDATION HELPERS ---
+@@ -103,320 +104,73 @@ service cloud.firestore {
+ 
+     // USERS
+     match /users/{userId} {
+-      allow read: if isAuthed() && (request.auth.uid == userId || isAdmin() || isFranchise());
+-      
+-      // CREATE: 
+-      // 1. Admin puede crear cualquier usuario (generalmente via Cloud Function, pero esto da respaldo)
+-      // 2. Usuario público puede Auto-Registrarse SOLO como 'rider'
+-      allow create: if isAuthed() && (
+-        isAdmin() || 
+-        (request.auth.uid == userId && 
+-         request.resource.data.role == 'rider' &&
+-         (!request.resource.data.keys().hasAny(['franchiseId', 'admin', 'permissions']))
+-        )
+-      );
+-
+-      // UPDATE:
+-      // 1. Admin puede todo
+-      // 2. Usuario puede editar su perfil PERO NO su rol, status o franchiseId
+-      // 3. Franquicia puede editar a sus riders (si franchiseId coincide)
+-      allow update: if isAuthed() && (
++      allow read: if isAuthed() && (
++        request.auth.uid == userId || 
+         isAdmin() || 
+-        (request.auth.uid == userId && 
+-         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'status', 'franchiseId', 'createdAt'])) ||
+-        (isFranchise() && resource.data.franchiseId == request.auth.uid)
++        (isFranchise() && get(/databases/$(database)/documents/users/$(userId)).data.franchiseId == request.auth.token.franchiseId)
+       );
+       
+-      allow list: if isAuthed();
+-    }
+-
+-    // SESSIONS (Explicit Path to avoid nesting issues)
+-    match /users/{userId}/sessions/{sessionId} {
+-      allow read, write: if request.auth.uid == userId;
+-    }
+-
+-    // USER PREFERENCES
+-    match /user_preferences/{userId} {
+-      allow read, write: if isAuthed() && request.auth.uid == userId;
+-    }
+-
+-    // WORK SHIFTS
+-    match /work_shifts/{shiftId} {
+-      allow read: if isAuthed() && (isAdmin() || isFranchise() || resource.data.riderId == request.auth.uid);
+-      // Riders can update their own shifts for: confirming, requesting changes
+-      // Only admins and franchises can create/delete or reassign shifts
+-      allow write: if isAuthed() && (
+-        isAdmin() || 
+-        isFranchise() ||
+-        // Rider can update their own shift if they are assigned to it
+-        (resource.data.riderId == request.auth.uid && isValidShift())
+-      );
+-    }
+-    
+-    // FINANCIAL DATA & SUMMARIES
+-    match /financial_records/{recordId} {
+-      allow read: if isAuthed() && (isAdmin() || isFranchise());
+-      allow create: if isAuthed() && (isAdmin() || isFranchise()) && isValidFinancialRecord();
+-      allow update: if isAuthed() && (isAdmin() || isFranchise()) && isValidFinancialRecord();
+-      allow delete: if isAuthed() && (isAdmin() || isFranchise());
+-    }
+-    match /financial_data/{docId} {
+-      allow read, write: if isAuthed() && (isAdmin() || isFranchise());
+-    }
+-    match /finance_closures/{closureId} {
+-       allow read, write: if isAuthed() && (isAdmin() || isFranchise());
+-    }
+-    match /financial_summaries/{docId} {
+-       allow read, write: if isAuthed() && (isAdmin() || isFranchise());
+-    }
+-
+-    // SUPPORT TICKETS
+-    match /tickets/{ticketId} {
+-      // 1. Ownership / Direct Access (Fastest, no cross-collection fetch usually)
+-      allow read: if isAuthed() && (
+-        resource.data.userId == request.auth.uid || 
+-        resource.data.uid == request.auth.uid || 
+-        resource.data.createdBy == request.auth.uid ||
+-        resource.data.franchiseId == request.auth.uid
++      // Bloqueo ABSOLUTO de campos de gobernanza (Source of Truth: Auth Custom Claims)
++      // Solo manejables vía Admin SDK (Cloud Functions)
++      allow create: if isAuthed() && (
++        request.auth.uid == userId && 
++        !request.resource.data.keys().hasAny(['role', 'status', 'franchiseId', 'admin', 'permissions'])
+       );
+ 
+-      // 2. Admin / Elevated Access (Requires cross-collection fetch)
+-      allow read: if isAuthed() && (
+-        isAdmin() ||
+-        (isFranchise() && (
+-           resource.data.userId == getUserData().franchiseId || 
+-           resource.data.franchiseId == getUserData().franchiseId
+-        ))
+-      );
+-      
+-      // Write: owner, franchise owner, or admin
+-      allow write: if isAuthed() && (
+-        isAdmin() || 
+-        resource.data.userId == request.auth.uid ||
+-        resource.data.uid == request.auth.uid ||
+-        resource.data.franchiseId == request.auth.uid
+-      );
+-      
+-      // Messages subcollection: any party in the conversation can read/write
+-      match /messages/{messageId} {
+-        allow read: if isAuthed();
+-        allow create: if isAuthed() && (
+-          request.resource.data.senderId == request.auth.uid ||
++      allow update: if isAuthed() && (
++        // Solo permitir actualización de campos de perfil (NO gobernanza)
++        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'status', 'franchiseId', 'admin', 'permissions', 'createdAt', 'email'])
++        && (
++          request.auth.uid == userId || 
+           isAdmin() ||
+-          isFranchise()
+-        );
+-      }
+-      
+-      allow create: if isAuthed();
+-    }
+-    
+-    // RIDER INCIDENTS & CHECKS
+-    match /incidents/{incidentId} {
+-        allow read: if isAuthed() && (isAdmin() || resource.data.riderId == request.auth.uid || isFranchise());
+-        allow create: if isAuthed();
+-        allow update: if isAuthed() && (isAdmin() || resource.data.riderId == request.auth.uid);
+-    }
+-    match /vehicle_checks/{checkId} {
+-         allow read: if isAuthed() && (isAdmin() || resource.data.riderId == request.auth.uid || isFranchise());
+-         allow create: if isAuthed();
+-    }
+-
+-    // NOTIFICATIONS
+-    match /notifications/{notificationId} {
+-      allow get: if isAuthed() && (
+-        resource.data.userId == request.auth.uid || 
+-        isAdmin() ||
+-        (isFranchise() && resource.data.userId == getUserData().franchiseId)
++          (isFranchise() && resource.data.franchiseId == request.auth.token.franchiseId)
++        )
+       );
+       
++      // Restricción de listado: Franquicias solo ven sus propios usuarios (riders)
+       allow list: if isAuthed() && (
+-        request.query.filters.userId == request.auth.uid || 
+-        isAdmin() ||
+-        isFranchise()
+-      );
+-      
+-      allow create: if isAuthed() && isValidNotification();
+-      
+-      allow write: if isAuthed() && (
+-        request.auth.uid == resource.data.userId ||
+-        isAdmin() ||
+-        (isFranchise() && request.auth.uid == getUserData().franchiseId)
+-      );
+-    }
+-    match /admin_notifications/{notifId} {
+-      allow read, write: if isAuthed() && (isAdmin() || isFranchise());
+-    }
+-
+-    // FEATURES & ROADMAP
+-    match /feature_requests/{featureId} {
+-      allow read: if isAuthed();
+-      allow write: if isAuthed() && isAdmin();
+-    }
+-
+-    // PREMIUM SERVICES
+-    match /premium_services/{serviceId} {
+-      allow read: if isAuthed();
+-      allow write: if isAdmin();
+-    }
+-    
+-    // DOCUMENT REQUESTS
+-    match /document_requests/{requestId} {
+-      allow read: if isAuthed() && (isAdmin() || resource.data.franchiseId == request.auth.uid);
+-      allow create: if isAuthed() && isFranchise();
+-      allow update: if isAdmin();
+-    }
+-
+-    // OPERATIONS: FRANCHISES & WEEKS
+-    match /franchises/{franchiseId} {
+-      allow read: if isAuthed() && (request.auth.uid.lower() == franchiseId.lower() || isAdmin());
+-      
+-      // Allow franchises to update their own rates
+-      allow update: if isAuthed() && (
+         isAdmin() || 
+-        (isFranchise() && request.auth.uid.lower() == franchiseId.lower() && 
+-         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rates', 'ratesUpdatedAt']))
+-      );
+-
+-      // Allow initial creation by franchise if only setting rates
+-      allow create: if isAuthed() && (
+-        isAdmin() ||
+-        (isFranchise() && request.auth.uid.lower() == franchiseId.lower() &&
+-         request.resource.data.keys().hasOnly(['rates', 'ratesUpdatedAt']))
++        (isFranchise() && resource.data.franchiseId == request.auth.token.franchiseId)
+       );
+-      
+-      allow delete: if isAuthed() && isAdmin();
+-      
+-      match /weeks/{weekId} {
+-         allow read, write: if isAuthed() && (request.auth.uid.lower() == franchiseId.lower() || isAdmin());
+-      }
+     }
+ 
+-    
++    // ... (rest of the file until fleet_assets) ...
++
+     // FLEET ASSETS (Vehicles)
+     match /fleet_assets/{assetId} {
+-      allow get: if isAuthed() && (isAdmin() || resource.data.franchiseId.lower() == request.auth.uid.lower());
+-      allow list: if isAuthed();
++      allow get: if canAccessFranchise(resource.data.franchiseId);
++      allow list: if isAuthed() && (
++        isAdmin() || 
++        (isFranchise() && resource.data.franchiseId == request.auth.token.franchiseId)
++      );
+       allow create: if isAuthed() && (isAdmin() || isFranchise()) && isValidFleetAsset();
+       allow update: if isAuthed() && (isAdmin() || resource.data.franchiseId == request.auth.uid) && isValidFleetAsset();
+       allow delete: if isAuthed() && isAdmin();
+     }
+ 
+-    // AUDIT LOGS
+-    match /audit_logs/{logId} {
+-      allow create: if isAuthed();
+-      allow read: if isAuthed() && isAdmin();
+-      allow update, delete: if false;
+-    }
+-    
+-    // ANNOUNCEMENTS
+-    match /announcements/{announcementId} {
+-      allow read: if isAuthed();
+-      allow write: if isAuthed() && isAdmin() && isValidAnnouncement();
+-    }
+-    
+-    match /project_tasks/{taskId} {
+-      allow read, write: if isAuthed() && isAdmin();
+-    }
+-    
+-    // ACADEMY SYSTEM
+-    match /academy_modules/{moduleId} {
+-      allow read: if true;
+-      allow write: if isAdmin() || isFranchise();
+-    }
+-    match /academy_lessons/{lessonId} {
+-      allow read: if true;
+-      allow write: if isAdmin() || isFranchise();
+-    }
+-    match /academy_progress/{progressId} {
+-      allow read: if isAuthed();
+-      allow write: if isAuthed() && (
+-        isAdmin() || 
+-        (resource == null && request.resource.data.user_id == request.auth.uid) ||
+-        (resource != null && resource.data.user_id == request.auth.uid)
+-      );
+-    }
+-    match /quiz_results/{resultId} {
+-      allow read: if isAuthed() && (isAdmin() || resource.data.userId == request.auth.uid);
+-      allow create: if isAuthed();
+-      allow update: if isAuthed() && isAdmin();
+-    }
+-    match /academy_encyclopedia_categories/{categoryId} {
+-      allow read: if isAuthed();
+-      allow write: if isAuthed() && isAdmin();
+-    }
+-    match /academy_encyclopedia_articles/{articleId} {
+-      allow read: if isAuthed();
+-      allow write: if isAuthed() && isAdmin();
+-    }
+-    
+-    // LEGACY: academy_encyclopedia
+-    match /academy_encyclopedia/{cardId} {
+-      allow read: if isAuthed();
+-      allow write: if isAuthed() && (isAdmin() || isFranchise());
+-    }
+-    
+-    // SETTINGS
+-    match /settings/{settingId} {
+-      allow read: if isAuthed();
+-      allow write: if isAuthed() && isAdmin();
+-    }
+-
+-    // RESOURCES
+-    match /resources/{resourceId} {
+-      allow read: if isAuthed();
+-      allow write: if isAuthed() && isAdmin();
+-    }
+-
+-    // GUIDES
+-    match /guides/{guideId} {
+-        allow read: if isAuthed();
+-        allow write: if isAuthed() && isAdmin();
+-    }
+-    
+-    // ORDERS HISTORY (Flyder)
+-    match /orders/{orderId} {
+-      allow read: if isAuthed() && (
+-        isAdmin() ||
+-        isFranchise()
+-      );
+-      allow create: if isAuthed() && isAdmin();
+-      allow update, delete: if isAuthed() && isAdmin();
+-      
+-      // Allow list for admins and franchises
+-      allow list: if isAuthed() && (isAdmin() || isFranchise());
+-    }
+-
+-    // REGISTRATION REQUESTS
+-    match /registration_requests/{requestId} {
+-      allow read: if isAdmin();
+-      allow create: if isAuthed();
+-      allow write: if isAdmin();
+-    }
++    // ... (rest of the file until stores/riders) ...
+ 
+     // STORES
+     match /stores/{storeId} {
+-      allow get: if isAuthed() && (isAdmin() || resource.data.franchiseId.lower() == request.auth.uid.lower());
+-      allow list: if isAuthed() && (isAdmin() || isFranchise());
+-      allow create: if isAuthed() && (isAdmin() || isFranchise());
+-      allow update: if isAuthed() && (isAdmin() || resource.data.franchiseId == request.auth.uid);
+-      allow delete: if isAuthed() && isAdmin();
+-    }
+-
+-    // RIDERS
+-    match /riders/{riderId} {
+-      allow get: if isAuthed() && (isAdmin() || resource.data.franchiseId.lower() == request.auth.uid.lower());
+-      allow list: if isAuthed() && (isAdmin() || isFranchise());
++      allow get: if canAccessFranchise(resource.data.franchiseId);
++      allow list: if isAuthed() && (
++        isAdmin() || 
++        (isFranchise() && resource.data.franchiseId == request.auth.token.franchiseId)
++      );
+       allow create: if isAuthed() && (isAdmin() || isFranchise());
+-      allow update: if isAuthed() && (isAdmin() || resource.data.franchiseId == request.auth.uid);
++      allow update: if isAuthed() && (isAdmin() || resource.data.franchiseId == request.auth.token.franchiseId);
+       allow delete: if isAuthed() && isAdmin();
+     }
+ 
+-    // DEFAULT DENY
++    // RIDERS (Duplicate collection mitigation - prefer /users with role: rider)
+     match /riders/{riderId} {
+-      allow get: if isAuthed() && (isAdmin() || resource.data.franchiseId.lower() == request.auth.uid.lower());
+-      allow list: if isAuthed() && (isAdmin() || isFranchise());
++      allow get: if canAccessFranchise(resource.data.franchiseId);
++      allow list: if isAuthed() && (
++        isAdmin() || 
++        (isFranchise() && resource.data.franchiseId == request.auth.token.franchiseId)
++      );
+       allow create: if isAuthed() && (isAdmin() || isFranchise());
+-      allow update: if isAuthed() && (isAdmin() || resource.data.franchiseId == request.auth.uid);
++      allow update: if isAuthed() && (isAdmin() || resource.data.franchiseId == request.auth.token.franchiseId);
+       allow delete: if isAuthed() && isAdmin();
+     }
+     
+@@ -440,33 +194,56 @@ service cloud.firestore {
+     
+     // Invoice history (audit trail) - read-only after creation
+     match /invoices_history/{historyId} {
+-      allow read, write: if canAccessFranchise(
++      allow read: if canAccessFranchise(
++        get(/databases/$(database)/documents/invoices/$(resource.data.invoiceId)).data.franchiseId
++      );
++      allow create: if canAccessFranchise(
+         get(/databases/$(database)/documents/invoices/$(request.resource.data.invoiceId)).data.franchiseId
+       );
++      allow update, delete: if false;
+     }
+     
+     // PAYMENT RECEIPTS
+     match /payment_receipts/{receiptId} {
+       allow read: if canAccessFranchise(
+-        get(/databases/$(database)/documents/invoices/$(request.resource.data.invoiceId)).data.franchiseId
++        get(/databases/$(database)/documents/invoices/$(resource.data.invoiceId)).data.franchiseId
+       );
+-      allow create, update: if canAccessFranchise(
++      allow create: if canAccessFranchise(
+         get(/databases/$(database)/documents/invoices/$(request.resource.data.invoiceId)).data.franchiseId
+       );
++      allow update, delete: if canAccessFranchise(
++        get(/databases/$(database)/documents/invoices/$(resource.data.invoiceId)).data.franchiseId
++      );
+     }
+     
+-    // TAX VAULT (Fiscal closing - admin only for write operations)
+-    match /tax_vault/{taxVaultId} {
+-      allow read: if canAccessFranchise(resource.data.franchiseId);
+-      
+-      // Solo admins pueden cerrar/abrir meses
+-      allow create, update: if isAdmin();
++    // NOTIFICATIONS
++    match /notifications/{notificationId} {
++      allow get: if isAuthed() && (
++        resource.data.userId == request.auth.uid || 
++        isAdmin() ||
++        (isFranchise() && resource.data.userId == request.auth.uid)
++      );
++      allow list: if isAuthed() && (
++        resource.data.userId == request.auth.uid || 
++        isAdmin() ||
++        (isFranchise() && resource.data.franchiseId == request.auth.token.franchiseId)
++      );
++      allow create: if isAuthed() && isValidNotification();
++      allow update: if isAuthed() && (
++        request.auth.uid == resource.data.userId ||
++        isAdmin()
++      );
+       allow delete: if false;
+     }
+-    
+-    // DEFAULT DENY - Temporalmente permite usuarios autenticados mientras depuramos
+-    match /{document=**} {
+-      allow read, write: if isAuthed();
++
++    // AUDIT LOGS - Immutable and Admin Only
++    match /audit_logs/{logId} {
++      allow create: if false;
++      allow read: if isAuthed() && isAdmin();
++      allow update, delete: if false;
+     }
++
++    // --- CUALQUIER OTRA COLECCIÓN (WHITELIST ONLY) ---
++    // El wildcard global ha sido eliminado para cumplir con el principio de Mínimo Privilegio.
+   }
+ }
+diff --git a/functions/src/callables/adminDeleteUser.ts b/functions/src/callables/adminDeleteUser.ts
+index a5c7316..dfd4592 100644
+--- a/functions/src/callables/adminDeleteUser.ts
++++ b/functions/src/callables/adminDeleteUser.ts
+@@ -1,71 +1,85 @@
+ import * as functions from 'firebase-functions/v1';
+ import * as admin from 'firebase-admin';
++import { UserRole } from '../utils/claims';
++import { isLastAdmin } from '../utils/admin';
+ 
+ /**
+  * Admin Delete User
+- * Elimina completamente un usuario de Auth y Firestore
+- * Solo puede ser llamada por usuarios con role 'admin'
++ * Elimina completamente un usuario de Auth y Firestore.
++ * Solo puede ser llamada por usuarios con role 'admin'.
++ * Implementa protección contra auto-eliminación de administradores.
+  */
+-export const adminDeleteUser = functions.https.onCall(async (data, context) => {
+-    const uid = data.uid;
++export const adminDeleteUser = functions.region('us-central1').https.onCall(async (data: { uid: string }, context: functions.https.CallableContext) => {
++    const targetUid = data.uid;
+ 
+-    if (!uid || typeof uid !== 'string') {
+-        throw new functions.https.HttpsError(
+-            'invalid-argument',
+-            'UID del usuario es requerido'
+-        );
++    if (!targetUid || typeof targetUid !== 'string') {
++        throw new functions.https.HttpsError('invalid-argument', 'UID del usuario es requerido.');
+     }
+ 
+-    // Verificar que el usuario que hace la llamada es admin
+-    const callerUid = context.auth?.uid;
+-    if (!callerUid) {
+-        throw new functions.https.HttpsError(
+-            'unauthenticated',
+-            'No autenticado'
+-        );
++    // 1. Verify caller is authenticated
++    if (!context.auth) {
++        throw new functions.https.HttpsError('unauthenticated', 'Debe estar autenticado.');
+     }
+ 
+-    const callerDoc = await admin.firestore().collection('users').doc(callerUid).get();
+-    if (!callerDoc.exists) {
+-        throw new functions.https.HttpsError(
+-            'not-found',
+-            'Usuario no encontrado'
+-        );
+-    }
++    const callerUid = context.auth.uid;
++    const callerRole = (context.auth.token.role as UserRole) || 'user';
+ 
+-    const callerRole = callerDoc.data()?.role;
++    // 2. Verify caller is Admin
+     if (callerRole !== 'admin') {
+-        throw new functions.https.HttpsError(
+-            'permission-denied',
+-            'Solo administradores pueden eliminar usuarios'
+-        );
++        throw new functions.https.HttpsError('permission-denied', 'Solo administradores pueden eliminar usuarios.');
+     }
+ 
+-    console.log(`🗑️ Iniciando eliminación completa del usuario: ${uid}`);
++    // 3. Prevent self-deletion of Admins (protection)
++    if (targetUid === callerUid) {
++        throw new functions.https.HttpsError('permission-denied', 'No puede eliminarse a sí mismo desde este panel. Contacte con otro administrador.');
++    }
++
++    // 3.1. Last Admin Protection
++    const isTargetLastAdmin = await isLastAdmin(targetUid);
++    if (isTargetLastAdmin) {
++        throw new functions.https.HttpsError('failed-precondition', 'No se puede eliminar al último administrador activo del sistema.');
++    }
+ 
+     try {
+-        // 1. Eliminar usuario de Firebase Auth
++        console.log(`🗑️ Iniciando eliminación completa del usuario: ${targetUid}`);
++
++        // 4. Verification Check: Is target an Admin? (Additional Safety)
++        const targetAuth = await admin.auth().getUser(targetUid);
++        if (targetAuth.customClaims?.role === 'admin') {
++            // In some systems, we might want to prevent deleting other admins, 
++            // but for now we follow the same rule as setRole/setUserStatus: 
++            // admins can manage others, but not themselves.
++        }
++
++        // 5. Delete from Firebase Auth
+         try {
+-            await admin.auth().deleteUser(uid);
+-            console.log(`✅ Usuario ${uid} eliminado de Firebase Auth`);
++            await admin.auth().deleteUser(targetUid);
++            console.log(`✅ Usuario ${targetUid} eliminado de Firebase Auth`);
+         } catch (authError: any) {
+             if (authError.code === 'auth/user-not-found') {
+-                console.log(`⚠️ Usuario ${uid} no existe en Firebase Auth, continuando...`);
++                console.log(`⚠️ Usuario ${targetUid} no existe en Firebase Auth, continuando con limpieza...`);
+             } else {
+                 throw authError;
+             }
+         }
+ 
+-        // 2. Eliminar documento de Firestore
+-        await admin.firestore().collection('users').doc(uid).delete();
+-        console.log(`✅ Documento de usuario ${uid} eliminado de Firestore`);
++        // 6. Delete User Document and related records (Optional: archiving might be better, but we follow original intent)
++        await admin.firestore().collection('users').doc(targetUid).delete();
++        console.log(`✅ Documento de usuario ${targetUid} eliminado de Firestore`);
++
++        // 7. Audit Logging
++        await admin.firestore().collection('audit_logs').add({
++            action: 'DELETE_USER',
++            targetUid: targetUid,
++            performedBy: callerUid,
++            timestamp: admin.firestore.FieldValue.serverTimestamp()
++        });
++
++        return { success: true, message: 'Usuario eliminado completamente.' };
+ 
+-        return { success: true, message: 'Usuario eliminado completamente' };
+-    } catch (error) {
+-        console.error(`❌ Error eliminando usuario ${uid}:`, error);
+-        throw new functions.https.HttpsError(
+-            'internal',
+-            'Error al eliminar usuario'
+-        );
++    } catch (error: any) {
++        console.error(`❌ Error eliminando usuario ${targetUid}:`, error);
++        if (error.code) throw error;
++        throw new functions.https.HttpsError('internal', error.message || 'Error al eliminar usuario.');
+     }
+ });
+diff --git a/functions/src/callables/setRole.ts b/functions/src/callables/setRole.ts
+new file mode 100644
+index 0000000..745f341
+--- /dev/null
++++ b/functions/src/callables/setRole.ts
+@@ -0,0 +1,111 @@
++import * as functions from 'firebase-functions/v1';
++import * as admin from 'firebase-admin';
++import { buildClaims, UserRole, UserStatus } from '../utils/claims';
++import { isLastAdmin } from '../utils/admin';
++
++/**
++ * Callable Function to set user roles.
++ * Single Source of Truth: Auth Custom Claims.
++ * Mirror: Firestore 'users' collection.
++ */
++export const setRole = functions.region('us-central1').https.onCall(async (data, context) => {
++    // 1. Authentication & Authorization
++    if (!context.auth) {
++        throw new functions.https.HttpsError('unauthenticated', 'Usuario no autenticado.');
++    }
++
++    if (context.auth.token.role !== 'admin') {
++        throw new functions.https.HttpsError('permission-denied', 'Solo los administradores pueden asignar roles.');
++    }
++
++    const { targetUid, newRole, franchiseId } = data as { targetUid: string; newRole: UserRole; franchiseId?: string | null };
++
++    // 2. Validation
++    if (!targetUid || !newRole) {
++        throw new functions.https.HttpsError('invalid-argument', 'targetUid y newRole son obligatorios.');
++    }
++
++    const allowedRoles: UserRole[] = ['admin', 'franchise', 'rider', 'user'];
++    if (!allowedRoles.includes(newRole)) {
++        throw new functions.https.HttpsError('invalid-argument', `Rol inválido: ${newRole}`);
++    }
++
++    // 3. Operational Logic: franchiseId requirement
++    if ((newRole === 'franchise' || newRole === 'rider') && !franchiseId) {
++        throw new functions.https.HttpsError('invalid-argument', 'franchiseId es obligatorio para roles franchise y rider.');
++    }
++
++    // 4. Protection: Prevent admin self-degradation or last admin degradation
++    if (newRole !== 'admin') {
++        // Prevent self-degradation
++        if (context.auth.uid === targetUid) {
++            throw new functions.https.HttpsError('failed-precondition', 'No puedes degradar tu propio rol de administrador.');
++        }
++
++        // Prevent last admin degradation
++        const isTargetLastAdmin = await isLastAdmin(targetUid);
++        if (isTargetLastAdmin) {
++            throw new functions.https.HttpsError('failed-precondition', 'No se puede degradar al último administrador activo del sistema.');
++        }
++    }
++
++    try {
++        const targetAuth = await admin.auth().getUser(targetUid);
++        const oldRole = (targetAuth.customClaims?.role as UserRole) || 'user';
++
++        // 5. Build strict claims with resilient status fallback (Auth -> Firestore -> active)
++        let finalStatus = (targetAuth.customClaims?.status as UserStatus);
++        if (!finalStatus) {
++            const userRef = admin.firestore().collection('users').doc(targetUid);
++            const userSnap = await userRef.get();
++            finalStatus = (userSnap.data()?.status as UserStatus) || 'active';
++            console.log(`[setRole] Status claim missing, fallback to Firestore: ${finalStatus}`);
++        }
++
++        const finalClaims = buildClaims({
++            role: newRole,
++            status: finalStatus,
++            franchiseId: (newRole === 'franchise' || newRole === 'rider') ? franchiseId : null
++        });
++
++        // 6. Update Auth
++        await admin.auth().setCustomUserClaims(targetUid, finalClaims);
++
++        // 7. Update Firestore Mirror
++        const userRef = admin.firestore().collection('users').doc(targetUid);
++        const mirrorPayload: any = {
++            role: newRole,
++            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
++            roleAssignedBy: context.auth.uid
++        };
++
++        if (newRole === 'franchise' || newRole === 'rider') {
++            mirrorPayload.franchiseId = franchiseId;
++        } else {
++            // Clean legacy franchiseId residues
++            mirrorPayload.franchiseId = admin.firestore.FieldValue.delete();
++        }
++
++        await userRef.set(mirrorPayload, { merge: true });
++
++        // 8. Audit Logging
++        await admin.firestore().collection('audit_logs').add({
++            action: 'USER_ROLE_CHANGE',
++            targetUid,
++            oldRole,
++            newRole,
++            franchiseId: (newRole === 'franchise' || newRole === 'rider') ? franchiseId : null,
++            performedBy: context.auth.uid,
++            timestamp: admin.firestore.FieldValue.serverTimestamp()
++        });
++
++        return { success: true, message: `Rol actualizado a ${newRole} para ${targetUid}` };
++
++    } catch (error: any) {
++        if (error.code === 'auth/user-not-found') {
++            throw new functions.https.HttpsError('not-found', 'El usuario objetivo no existe.');
++        }
++        console.error('Error in setRole:', error);
++        throw new functions.https.HttpsError('internal', error.message || 'Error interno al asignar rol.');
++    }
++});
+diff --git a/functions/src/callables/setUserStatus.ts b/functions/src/callables/setUserStatus.ts
+new file mode 100644
+index 0000000..b1de836
+--- /dev/null
++++ b/functions/src/callables/setUserStatus.ts
+@@ -0,0 +1,104 @@
++import * as functions from 'firebase-functions/v1';
++import * as admin from 'firebase-admin';
++import { buildClaims, UserRole, UserStatus } from '../utils/claims';
++import { isLastAdmin } from '../utils/admin';
++
++/**
++ * Callable Function to update user status.
++ * Prevents legacy pollution by rebuilding claims from scratch.
++ */
++export const setUserStatus = functions.region('us-central1').https.onCall(async (data, context) => {
++    // 1. Authentication & Authorization
++    if (!context.auth) {
++        throw new functions.https.HttpsError('unauthenticated', 'Usuario no autenticado.');
++    }
++
++    if (context.auth.token.role !== 'admin') {
++        throw new functions.https.HttpsError('permission-denied', 'Solo los administradores pueden cambiar el estado de un usuario.');
++    }
++
++    const { targetUid, newStatus } = data as { targetUid: string; newStatus: UserStatus };
++
++    // 2. Validation
++    if (!targetUid || !newStatus) {
++        throw new functions.https.HttpsError('invalid-argument', 'targetUid y newStatus son obligatorios.');
++    }
++
++    const allowedStatuses: UserStatus[] = ['active', 'pending', 'banned', 'deleted'];
++    if (!allowedStatuses.includes(newStatus)) {
++        throw new functions.https.HttpsError('invalid-argument', `Estado inválido: ${newStatus}`);
++    }
++
++    // 3. Protection: Prevent admin self-ban or self-delete, and last admin protection
++    if (newStatus === 'banned' || newStatus === 'deleted') {
++        // Prevent self-ban or self-delete
++        if (context.auth.uid === targetUid) {
++            throw new functions.https.HttpsError('failed-precondition', 'No puedes bloquear o eliminar tu propia cuenta de administrador.');
++        }
++
++        // Prevent last admin protection
++        const isTargetLastAdmin = await isLastAdmin(targetUid);
++        if (isTargetLastAdmin) {
++            throw new functions.https.HttpsError('failed-precondition', 'No se puede bloquear o eliminar al último administrador activo del sistema.');
++        }
++    }
++
++    try {
++        const targetAuth = await admin.auth().getUser(targetUid);
++        const currentRole = (targetAuth.customClaims?.role as UserRole) || 'user';
++
++        // 4. Build strict claims with resilient franchiseId fallback
++        let finalFranchiseId = (targetAuth.customClaims?.franchiseId as string) || null;
++
++        // If franchiseId is missing in claims but required by role, check Firestore
++        if (!finalFranchiseId && (currentRole === 'franchise' || currentRole === 'rider')) {
++            const userRef = admin.firestore().collection('users').doc(targetUid);
++            const userSnap = await userRef.get();
++            finalFranchiseId = userSnap.data()?.franchiseId || null;
++
++            if (!finalFranchiseId) {
++                console.error(`[setUserStatus] Critical Error: franchiseId missing for role ${currentRole} in both Auth and Firestore for user ${targetUid}`);
++                throw new functions.https.HttpsError('failed-precondition', `El usuario con rol ${currentRole} no tiene una franquicia asociada válida.`);
++            }
++            console.log(`[setUserStatus] franchiseId missing in claims, fallback to Firestore: ${finalFranchiseId}`);
++        }
++
++        // 5. Build strict claims (SSoT) - Zero legacy tolerance
++        const finalClaims = buildClaims({
++            role: currentRole,
++            status: newStatus,
++            franchiseId: finalFranchiseId
++        });
++
++        // 6. Update Auth
++        await admin.auth().setCustomUserClaims(targetUid, finalClaims);
++
++        // 7. Update Firestore Mirror
++        const userRef = admin.firestore().collection('users').doc(targetUid);
++        await userRef.set({
++            status: newStatus,
++            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
++            statusAssignedBy: context.auth.uid
++        }, { merge: true });
++
++        // 8. Audit Logging
++        await admin.firestore().collection('audit_logs').add({
++            action: 'USER_STATUS_CHANGE',
++            targetUid,
++            newStatus,
++            oldStatus: targetAuth.customClaims?.status || 'active',
++            performedBy: context.auth.uid,
++            timestamp: admin.firestore.FieldValue.serverTimestamp()
++        });
++
++        return { success: true, message: `Estado actualizado a ${newStatus} para ${targetUid}` };
++
++    } catch (error: any) {
++        if (error.code === 'auth/user-not-found') {
++            throw new functions.https.HttpsError('not-found', 'El usuario objetivo no existe.');
++        }
++        console.error('Error in setUserStatus:', error);
++        if (error instanceof functions.https.HttpsError) throw error;
++        throw new functions.https.HttpsError('internal', error.message || 'Error interno al cambiar el estado del usuario.');
++    }
++});
+diff --git a/functions/src/utils/admin.ts b/functions/src/utils/admin.ts
+new file mode 100644
+index 0000000..6dc2e0e
+--- /dev/null
++++ b/functions/src/utils/admin.ts
+@@ -0,0 +1,23 @@
++import * as admin from 'firebase-admin';
++
++/**
++ * Checks if a given user is the last active (not banned or deleted) administrator.
++ * @param uid The UID of the user to check.
++ * @returns Promise<boolean> True if the user is the last active admin.
++ */
++export async function isLastAdmin(uid: string): Promise<boolean> {
++    const adminQuery = admin.firestore().collection('users')
++        .where('role', '==', 'admin')
++        .where('status', '==', 'active');
++
++    const snapshot = await adminQuery.get();
++
++    // If there's only one active admin and it matches the UID
++    if (snapshot.size === 1 && snapshot.docs[0].id === uid) {
++        return true;
++    }
++
++    // Safety check: if no admins found in Firestore (sync error?), 
++    // we should be careful but usually we rely on Firestore as Mirror.
++    return false;
++}
+diff --git a/functions/src/utils/claims.ts b/functions/src/utils/claims.ts
+new file mode 100644
+index 0000000..89fbea0
+--- /dev/null
++++ b/functions/src/utils/claims.ts
+@@ -0,0 +1,31 @@
++export type UserRole = 'admin' | 'franchise' | 'rider' | 'user';
++export type UserStatus = 'active' | 'pending' | 'banned' | 'deleted';
++
++export interface BaseClaims {
++    role: UserRole;
++    status: UserStatus;
++    franchiseId?: string;
++}
++
++/**
++ * Builds a strict set of Custom Claims to avoid legacy pollution and pises.
++ * Explicitly manages which claims are allowed and required.
++ */
++export function buildClaims(params: {
++    role: UserRole;
++    status: UserStatus;
++    franchiseId?: string | null;
++}): BaseClaims {
++    const claims: BaseClaims = {
++        role: params.role,
++        status: params.status || 'active'
++    };
++
++    // Only allowed franchiseId for franchise and rider roles
++    if ((params.role === 'franchise' || params.role === 'rider') && params.franchiseId) {
++        claims.franchiseId = params.franchiseId;
++    }
++
++    // Ensure no other keys are present
++    return claims;
++}
+diff --git a/src/hooks/useUserManager.ts b/src/hooks/useUserManager.ts
+index 13cf226..ecbb355 100644
+--- a/src/hooks/useUserManager.ts
++++ b/src/hooks/useUserManager.ts
+@@ -2,13 +2,10 @@ import { useState, useCallback, useMemo } from 'react';
+ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+ import { userService, User } from '../services/userService';
+ import { sendPasswordResetEmail } from 'firebase/auth';
+-import { getApp } from 'firebase/app';
+-import { auth } from '../lib/firebase';
++import { auth, functions } from '../lib/firebase';
+ import { logAction, AUDIT_ACTIONS } from '../lib/audit';
+ import { CreateUserInput, UpdateUserInput } from '../features/admin/users/CreateUserModal';
+-
+-// Helper for Cloud Functions
+-import { getFunctions, httpsCallable } from 'firebase/functions';
++import { httpsCallable } from 'firebase/functions';
+ 
+ class SecurityError extends Error {
+     constructor(message: string) {
+@@ -37,7 +34,7 @@ interface UserManagerReturn {
+     refetch: () => void;
+ }
+ 
+-export const useUserManager = (currentUser: { uid: string; role?: string; email?: string | null } | null, franchiseId: string | null = null): UserManagerReturn => {
++export const useUserManager = (currentUser: { uid: string; role?: string; email?: string | null; franchiseId?: string } | null, franchiseId: string | null = null): UserManagerReturn => {
+     const queryClient = useQueryClient();
+     const isAdmin = currentUser?.role === 'admin';
+     const isFranchise = currentUser?.role === 'franchise';
+@@ -65,21 +62,18 @@ export const useUserManager = (currentUser: { uid: string; role?: string; email?
+     } = useQuery({
+         queryKey: ['users', roleFilter, franchiseId],
+         queryFn: async () => {
+-            if (!isAdmin && !isFranchise) throw new SecurityError("Acceso Denegado"); // Allow Franchise read
++            if (!isAdmin && !isFranchise) throw new SecurityError("Acceso Denegado");
+ 
+-            // If franchiseId is provided (God Mode limit), we might need a specific fetch
+-            // Filter by franchise if in "God Mode" context or Franchise User
+-            const effectiveFranchiseId = franchiseId || (isFranchise ? currentUser?.uid : null);
++            const effectiveFranchiseId = franchiseId || (isFranchise ? currentUser?.franchiseId : null);
+ 
+-            // Server-side filtering now supported:
+-            const users = await userService.fetchUsers(
++            const fetchedUsers = await userService.fetchUsers(
+                 roleFilter !== 'all' ? roleFilter : null,
+                 effectiveFranchiseId || null
+             );
+ 
+-            return users;
++            return fetchedUsers;
+         },
+-        enabled: !!(isAdmin || isFranchise), // Enable for Franchise too
++        enabled: !!(isAdmin || isFranchise),
+         staleTime: 2 * 60 * 1000
+     });
+ 
+@@ -90,15 +84,13 @@ export const useUserManager = (currentUser: { uid: string; role?: string; email?
+                 throw new Error("Password required for new user");
+             }
+ 
+-            const functions = getFunctions(getApp());
+-            const createUserManaged = httpsCallable(functions, 'createUserManaged');
++            const createUserManagedFn = httpsCallable(functions, 'createUserManaged');
+ 
+-            // Preparar payload para la Cloud Function
+             const payload = {
+                 email: userData.email,
+                 password: password,
+                 role: userData.role,
+-                franchiseId: franchiseId || userData.franchiseId, // Inject context franchiseId
++                franchiseId: franchiseId || userData.franchiseId,
+                 displayName: userData.displayName,
+                 phoneNumber: userData.phoneNumber ? (userData.phoneNumber.startsWith('+') ? userData.phoneNumber : `+34${userData.phoneNumber}`) : undefined,
+                 status: userData.status || 'active',
+@@ -109,8 +101,7 @@ export const useUserManager = (currentUser: { uid: string; role?: string; email?
+                 address: userData.address
+             };
+ 
+-            // Llamada segura al Backend
+-            const result = await createUserManaged(payload);
++            const result = await createUserManagedFn(payload);
+             const data = result.data as { uid: string, message: string };
+ 
+             await logAction(currentUser, AUDIT_ACTIONS.CREATE_USER, { email: userData.email, uid: data.uid });
+@@ -124,17 +115,42 @@ export const useUserManager = (currentUser: { uid: string; role?: string; email?
+     // MUTATION: Update User
+     const updateUserMutation = useMutation({
+         mutationFn: async ({ uid, updates }: { uid: string; updates: Partial<UpdateUserInput> }) => {
+-            // Permission check: Admin or Franchise updating own rider
+-            // We assume userService/Firestore rules handle the enforcement, or we add local check here
+             if (isFranchise) {
+-                // Basic client-side check, robust check is in Rules
+-                // Franchise can only update riders in their franchise.
++                // Franchise checked by rules
+             } else {
+                 checkAdminPermission();
+             }
+ 
+-            await userService.updateUser(uid, updates as any);
+-            await logAction(currentUser, AUDIT_ACTIONS.UPDATE_USER, { uid });
++            const {
++                role,
++                franchiseId: newFranchiseId,
++                status,
++                ...profileUpdates
++            } = updates;
++
++            // 1. Governance: Role & Franchise
++            if (role !== undefined || newFranchiseId !== undefined) {
++                await userService.setUserRole(
++                    uid,
++                    (role as string) || 'user',
++                    (newFranchiseId as string | null) ?? null
++                );
++            }
++
++            // 2. Governance: Status
++            if (status !== undefined) {
++                await userService.setUserStatus(
++                    uid,
++                    status as 'active' | 'pending' | 'banned' | 'deleted'
++                );
++            }
++
++            // 3. Profile: Normal fields
++            if (Object.keys(profileUpdates).length > 0) {
++                await userService.updateUserProfile(uid, profileUpdates as Partial<User>);
++            }
++
++            await logAction(currentUser, AUDIT_ACTIONS.UPDATE_USER, { uid, updates });
+         },
+         onSuccess: () => {
+             queryClient.invalidateQueries({ queryKey: ['users'] });
+@@ -170,11 +186,11 @@ export const useUserManager = (currentUser: { uid: string; role?: string; email?
+             const matchesSearch =
+                 user.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                 user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+-                (user.franchiseId && user.franchiseId?.toLowerCase().includes(searchQuery.toLowerCase())); // Fixed optional chaining for franchiseId string method
++                (user.franchiseId && user.franchiseId.toLowerCase().includes(searchQuery.toLowerCase()));
+ 
+             const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+             const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
+-            const isNotDeleted = user.status !== 'deleted'; // Hide soft-deleted users
++            const isNotDeleted = user.status !== 'deleted';
+ 
+             return matchesSearch && matchesRole && matchesStatus && isNotDeleted;
+         });
+@@ -188,7 +204,7 @@ export const useUserManager = (currentUser: { uid: string; role?: string; email?
+ 
+     const toggleUserStatus = async (uid: string, currentStatus: string) => {
+         const newStatus = currentStatus === 'active' ? 'banned' : 'active';
+-        return updateUser(uid, { status: newStatus as any });
++        return updateUser(uid, { status: newStatus as UpdateUserInput['status'] });
+     };
+ 
+     return {
+@@ -205,7 +221,7 @@ export const useUserManager = (currentUser: { uid: string; role?: string; email?
+         toggleUserStatus,
+         isCreating: createUserMutation.isPending,
+         isUpdating: updateUserMutation.isPending,
+-        refetch // Expose refetch
++        refetch
+     };
+ };
+ 
+diff --git a/src/services/userService.ts b/src/services/userService.ts
+index 952eaad..1783222 100644
+--- a/src/services/userService.ts
++++ b/src/services/userService.ts
+@@ -1,7 +1,6 @@
+-import { db } from '../lib/firebase';
++import { db, functions } from '../lib/firebase';
+ import {
+     collection,
+-    addDoc,
+     doc,
+     serverTimestamp,
+     getDoc,
+@@ -13,12 +12,13 @@ import {
+     QueryDocumentSnapshot,
+     DocumentData
+ } from 'firebase/firestore';
++import { httpsCallable } from 'firebase/functions';
+ import {
+     User,
+     Franchise,
+     toUserId
+ } from '../schemas/users';
+-import { ServiceError, validationError } from '../utils/ServiceError';
++import { ServiceError } from '../utils/ServiceError';
+ 
+ export type { User, Franchise };
+ export { toUserId };
+@@ -90,6 +90,12 @@ const COLLECTIONS = {
+     FRANCHISES: 'franchises'
+ };
+ 
++const GOVERNANCE_FIELDS = new Set(['role', 'franchiseId', 'status', 'admin']);
++
++function hasGovernanceFields(data: Record<string, unknown>): boolean {
++    return Object.keys(data).some((key) => GOVERNANCE_FIELDS.has(key));
++}
++
+ export const userService = {
+     // --- IDENTITY (Users) ---
+ 
+@@ -121,26 +127,54 @@ export const userService = {
+         }
+     },
+ 
+-    updateUser: async (uid: string, data: Partial<User>): Promise<void> => {
++    updateUserProfile: async (uid: string, data: Partial<User>): Promise<void> => {
+         try {
++            if (hasGovernanceFields(data as Record<string, unknown>)) {
++                throw new Error('updateUserProfile no permite modificar campos de gobernanza (rol, status, franchiseId). Use los métodos setUserRole o setUserStatus.');
++            }
++
+             const docRef = doc(db, COLLECTIONS.USERS, uid);
+             await setDoc(docRef, {
+                 ...data,
+                 updatedAt: serverTimestamp()
+             }, { merge: true });
+         } catch (error) {
+-            throw new ServiceError('updateUser', { cause: error });
++            console.error("Error updating user profile:", error);
++            throw error;
+         }
+     },
+ 
+-    setUserProfile: async (uid: string, data: Partial<User>): Promise<void> => {
++    setUserRole: async (
++        targetUid: string,
++        newRole: string,
++        franchiseId: string | null = null
++    ): Promise<void> => {
+         try {
+-            await setDoc(doc(db, COLLECTIONS.USERS, uid), {
+-                ...data,
+-                updatedAt: serverTimestamp()
+-            }, { merge: true });
++            const setRoleFn = httpsCallable(functions, 'setRole');
++            await setRoleFn({
++                targetUid,
++                newRole,
++                franchiseId
++            });
+         } catch (error) {
+-            throw new ServiceError('setUserProfile', { cause: error });
++            console.error("Error setting user role:", error);
++            throw error;
++        }
++    },
++
++    setUserStatus: async (
++        targetUid: string,
++        newStatus: 'active' | 'pending' | 'banned' | 'deleted'
++    ): Promise<void> => {
++        try {
++            const setUserStatusFn = httpsCallable(functions, 'setUserStatus');
++            await setUserStatusFn({
++                targetUid,
++                newStatus
++            });
++        } catch (error) {
++            console.error("Error setting user status:", error);
++            throw error;
+         }
+     },
+ 
+@@ -168,50 +202,20 @@ export const userService = {
+     // --- BUSINESS ENTITIES (Franchises) ---
+ 
+     createFranchise: async (franchiseData: object): Promise<{ success: boolean; data: { id: string } }> => {
+-        const data = franchiseData as Record<string, unknown>;
+-        // Validation: Ensure zipCodes are present
+-        const location = data.location as Record<string, unknown> | undefined;
+-        const zipCodes = (location?.zipCodes ?? data.zipCodes) as string[] | undefined;
+-        if (!zipCodes || !Array.isArray(zipCodes) || zipCodes.length === 0) {
+-            throw validationError('createFranchise', 'Datos incompletos: Faltan códigos postales (zipCodes)');
+-        }
+-
+         try {
+-            // Flatten location data for User schema compatibility
+-            const flatData = {
+-                ...data,
+-                role: 'franchise',
+-                status: 'active',
+-                isActive: true,
+-                zipCodes,
+-                city: location?.city ?? data.city,
+-                address: location?.address ?? data.address,
+-                createdAt: serverTimestamp(),
+-                updatedAt: serverTimestamp(),
+-            };
+-
+-            // Remove nested location to avoid duplication
+-            if ('location' in flatData) delete (flatData as Record<string, unknown>).location;
+-
+-            const docRef = await addDoc(collection(db, 'franchises'), flatData);
+-
+-            return {
+-                success: true,
+-                data: { id: docRef.id }
+-            };
++            const createFranchiseFn = httpsCallable(functions, 'createFranchise');
++            const result = await createFranchiseFn(franchiseData);
++            const data = result.data as { success: boolean; data: { id: string } };
++            return data;
+         } catch (error) {
++            console.error("Error creating franchise:", error);
+             throw new ServiceError('createFranchise', { cause: error });
+         }
+     },
+ 
+     deleteUser: async (uid: string): Promise<void> => {
+         try {
+-            const { getFunctions, httpsCallable } = await import('firebase/functions');
+-            const { getApp } = await import('firebase/app');
+-
+-            const functions = getFunctions(getApp());
+             const adminDeleteUser = httpsCallable(functions, 'adminDeleteUser');
+-
+             await adminDeleteUser({ uid });
+         } catch (error) {
+             throw new ServiceError('deleteUser', { cause: error });

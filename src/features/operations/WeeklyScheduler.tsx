@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, Save, Zap, Filter, XCircle } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { getShiftDuration, getRiderInitials } from '../../utils/colorPalette';
@@ -268,7 +268,29 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
 
     // ... (Existing logic) ...
 
-    const handleAutoFix = async () => {
+    const handleAuditoria = useCallback(async () => {
+        if (!weekData?.shifts || weekData.shifts.length === 0) {
+            alert("El cuadrante está vacío. Añade turnos antes de auditar.");
+            return;
+        }
+        setIsAuditing(true);
+        setSheriffResult(null);
+        try {
+            const result = await validateWeeklySchedule(weekData.shifts);
+            if (result) {
+                setSheriffResult(result);
+            } else {
+                alert("El Sheriff no ha podido validar el cuadrante. Inténtalo de nuevo.");
+            }
+        } catch (error) {
+            console.error("Error en auditoría:", error);
+            alert("Error de conexión con el Sheriff.");
+        } finally {
+            setIsAuditing(false);
+        }
+    }, [weekData?.shifts]);
+
+    const handleAutoFix = useCallback(async () => {
         if (!sheriffResult || !weekData) return;
 
         setIsFixing(true);
@@ -340,9 +362,9 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
         } finally {
             setIsFixing(false);
         }
-    };
+    }, [sheriffResult, weekData, riders, franchiseId, currentWeekId, referenceDate, updateWeekData, handleAuditoria]);
 
-    const handleGeneration = async () => {
+    const handleGeneration = useCallback(async () => {
         if (!genPrompt.trim()) return;
         setIsGenerating(true);
         try {
@@ -400,7 +422,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
         } finally {
             setIsGenerating(false);
         }
-    };
+    }, [genPrompt, weekData, referenceDate, riders, franchiseId, currentWeekId, updateWeekData]);
 
     const handleOpenNew = (dateIsoString?: string) => {
         if (readOnly) return;
@@ -418,7 +440,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
 
     // const handleCopyWeek = async () => { ... } // Kept commented as in original if not used
 
-    const handleSaveShift = async (shiftPayload: any) => {
+    const handleSaveShift = useCallback(async (shiftPayload: any) => {
         // Internal save logic extracted for reuse in callbacks
         const saveInternal = async (payload: any) => {
             try {
@@ -483,10 +505,10 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
 
         // No conflicts
         await saveInternal(shiftPayload);
-    };
+    }, [weekData, editingShift, currentWeekId, referenceDate, franchiseId, updateWeekData]);
 
 
-    const handleDeleteShift = async (shiftId: string, e?: React.MouseEvent) => {
+    const handleDeleteShift = useCallback(async (shiftId: string, e?: React.MouseEvent) => {
         if (e) e.stopPropagation();
 
         const performDelete = async () => {
@@ -515,7 +537,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
             isDestructive: true,
             onConfirm: performDelete
         });
-    };
+    }, [weekData, currentWeekId, franchiseId, updateWeekData]);
 
     // KEYBOARD SHORTCUTS
     React.useEffect(() => {
@@ -837,27 +859,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
 
     const onSaveAll = () => saveWeek(franchiseId, currentWeekId, weekData as WeekData);
 
-    const handleAuditoria = async () => {
-        if (!weekData?.shifts || weekData.shifts.length === 0) {
-            alert("El cuadrante está vacío. Añade turnos antes de auditar.");
-            return;
-        }
-        setIsAuditing(true);
-        setSheriffResult(null);
-        try {
-            const result = await validateWeeklySchedule(weekData.shifts);
-            if (result) {
-                setSheriffResult(result);
-            } else {
-                alert("El Sheriff no ha podido validar el cuadrante. Inténtalo de nuevo.");
-            }
-        } catch (error) {
-            console.error("Error en auditoría:", error);
-            alert("Error de conexión con el Sheriff.");
-        } finally {
-            setIsAuditing(false);
-        }
-    };
+
 
 
     const handleQuickFillCreate = async (newShifts: Partial<any>[]) => {

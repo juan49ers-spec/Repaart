@@ -1,0 +1,6 @@
+
+> synthetic-sagan@4.1.0 type-check
+> tsc --noEmit
+
+src/components/admin/FeatureFlagAdmin.tsx(2,10): error TS2614: Module '"../../context/FeatureFlags"' has no exported member 'useFeatureFlags'. Did you mean to use 'import useFeatureFlags from "../../context/FeatureFlags"' instead?
+src/context/__tests__/FeatureFlags.test.tsx(3,31): error TS2614: Module '"../FeatureFlags"' has no exported member 'useFeatureFlag'. Did you mean to use 'import useFeatureFlag from "../FeatureFlags"' instead?

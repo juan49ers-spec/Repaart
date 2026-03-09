@@ -18,7 +18,6 @@ export const TariffSnapshot: React.FC<Props> = ({ franchiseId, onConfigure }) =>
     useEffect(() => {
         if (!franchiseId) return;
 
-        const loadingTimeout = setTimeout(() => setLoading(true), 0);
         // Real-time listener for "Professional" rates (User Profile)
         const unsubscribe = onSnapshot(doc(db, 'users', franchiseId), (docSnap) => {
             if (docSnap.exists() && docSnap.data().logisticsRates) {
@@ -35,7 +34,6 @@ export const TariffSnapshot: React.FC<Props> = ({ franchiseId, onConfigure }) =>
         });
 
         return () => {
-            clearTimeout(loadingTimeout);
             unsubscribe();
         };
     }, [franchiseId]);

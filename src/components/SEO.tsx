@@ -20,17 +20,7 @@ interface SEOProps {
   twitterCard?: 'summary' | 'summary_large_image' | 'app' | 'player';
 }
 
-const defaultSEO = {
-  title: 'Repaart - Plataforma de Gestión de Franquicias',
-  description: 'Gestión completa de franquicias, finanzas, programación y academía para riders. Optimiza tu negocio con Repaart.',
-  image: '/og-image.png',
-  url: 'https://repaartfinanzas.web.app',
-  type: 'website' as const,
-  siteName: 'Repaart',
-  locale: 'es_ES',
-  twitterCard: 'summary_large_image' as const,
-  keywords: 'repaart, gestión de franquicias, finanzas, programación, academía, riders, delivery',
-};
+import { defaultSEO } from '../utils/seoUtils';
 
 export function SEO({
   title,
@@ -68,7 +58,7 @@ export function SEO({
     // Set meta tags
     setMetaTag('description', fullDescription);
     setMetaTag('keywords', fullKeywords);
-    
+
     // Open Graph
     setMetaProperty('og:type', fullType);
     setMetaProperty('og:title', fullTitle);
@@ -77,7 +67,7 @@ export function SEO({
     setMetaProperty('og:url', fullUrl);
     setMetaProperty('og:locale', fullLocale);
     setMetaProperty('og:site_name', fullSiteName);
-    
+
     // Article meta
     if (publishedTime) {
       setMetaProperty('article:published_time', publishedTime);
@@ -94,13 +84,13 @@ export function SEO({
     tags?.forEach((tag) => {
       setMetaProperty('article:tag', tag);
     });
-    
+
     // Twitter
     setMetaTag('twitter:card', fullTwitterCard);
     setMetaTag('twitter:title', fullTitle);
     setMetaTag('twitter:description', fullDescription);
     setMetaTag('twitter:image', fullImage);
-    
+
     // Robots
     if (noindex && nofollow) {
       setMetaTag('robots', 'noindex, nofollow');
@@ -111,15 +101,15 @@ export function SEO({
     } else {
       removeMetaTag('robots');
     }
-    
+
     // Canonical
     if (canonical) {
       setCanonicalLink(canonical);
     }
 
-  }, [fullTitle, fullDescription, fullKeywords, fullImage, fullUrl, fullLocale, 
-      fullSiteName, fullTwitterCard, fullType, publishedTime, modifiedTime, 
-      author, section, tags, noindex, nofollow, canonical]);
+  }, [fullTitle, fullDescription, fullKeywords, fullImage, fullUrl, fullLocale,
+    fullSiteName, fullTwitterCard, fullType, publishedTime, modifiedTime,
+    author, section, tags, noindex, nofollow, canonical]);
 
   return null; // This component doesn't render anything
 }
@@ -162,51 +152,10 @@ function setCanonicalLink(href: string) {
   link.setAttribute('href', href);
 }
 
-// Generate structured data for specific pages
-export const generateStructuredData = (type: 'WebSite' | 'Organization' | 'Article') => {
-  const data: Record<string, any> = {
-    '@context': 'https://schema.org',
-    '@type': type,
-  };
-
-  switch (type) {
-    case 'WebSite':
-      return {
-        ...data,
-        name: 'Repaart',
-        url: 'https://repaartfinanzas.web.app',
-        description: defaultSEO.description,
-        potentialAction: {
-          '@type': 'SearchAction',
-          target: 'https://repaartfinanzas.web.app/search?q={search_term_string}',
-          'query-input': 'required name=search_term_string',
-        },
-      };
-
-    case 'Organization':
-      return {
-        ...data,
-        name: 'Repaart',
-        url: 'https://repaartfinanzas.web.app',
-        logo: 'https://repaartfinanzas.web.app/logo.png',
-        description: defaultSEO.description,
-        contactPoint: {
-          '@type': 'ContactPoint',
-          telephone: '+1-XXX-XXX-XXXX',
-          contactType: 'customer service',
-        },
-      };
-
-    case 'Article':
-      return data;
-
-    default:
-      return data;
-  }
-};
+// Generate structured data moved to seoUtils.ts
 
 // Component for structured data
-export function StructuredData({ data }: { data: any }) {
+export function StructuredData({ data }: { data: Record<string, unknown> }) {
   useEffect(() => {
     const script = document.createElement('script');
     script.type = 'application/ld+json';
@@ -221,33 +170,4 @@ export function StructuredData({ data }: { data: any }) {
   return null;
 }
 
-// SEO presets for common pages
-export const SEOPresets = {
-  home: {
-    title: 'Inicio',
-    description: defaultSEO.description,
-  },
-  dashboard: {
-    title: 'Dashboard',
-    description: 'Panel de control principal de Repaart',
-  },
-  academy: {
-    title: 'Academia',
-    description: 'Plataforma de aprendizaje para riders y franquicias',
-  },
-  admin: {
-    title: 'Admin',
-    description: 'Panel de administración de Repaart',
-    noindex: true,
-  },
-  login: {
-    title: 'Login',
-    description: 'Inicia sesión en tu cuenta de Repaart',
-    noindex: true,
-  },
-  signup: {
-    title: 'Registro',
-    description: 'Regístrate en Repaart y empieza a gestionar tu franquicia',
-    noindex: true,
-  },
-};
+// SEOPresets moved to seoUtils.ts

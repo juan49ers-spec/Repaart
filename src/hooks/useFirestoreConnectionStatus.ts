@@ -22,7 +22,7 @@ import { logMessage } from '../services/errorLogger';
  * ```
  */
 export function useFirestoreConnectionStatus() {
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(() => typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
@@ -47,11 +47,9 @@ export function useFirestoreConnectionStatus() {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Estado inicial
-    const timeoutId = setTimeout(() => setIsOnline(navigator.onLine), 0);
+    // Estado inicial ya manejado por el inicializador de useState
 
     return () => {
-      clearTimeout(timeoutId);
       unsubscribe();
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);

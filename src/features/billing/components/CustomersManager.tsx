@@ -6,7 +6,7 @@
  * Incluye historial de facturas y métricas por cliente
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     Card,
     Table,
@@ -39,6 +39,7 @@ import { useInvoicing } from '../../../hooks/useInvoicing';
 import { CreateRestaurantModal } from '../../invoicing/components/CreateRestaurantModal';
 import { CustomerInvoiceHistory } from './CustomerInvoiceHistory';
 import { invoiceEngine } from '../../../services/billing/invoiceEngine';
+import { Timestamp } from 'firebase/firestore';
 
 interface Props {
     franchiseId: string;
@@ -83,25 +84,8 @@ export const CustomersManager: React.FC<Props> = ({ franchiseId }) => {
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     const [historyCustomer, setHistoryCustomer] = useState<{ id: string; name: string } | null>(null);
 
-    useEffect(() => {
-        loadCustomers();
-    }, [franchiseId]);
 
-    const loadCustomers = async () => {
-        try {
-            setLoading(true);
-            const data = await getRestaurants(franchiseId);
-            setCustomers(data || []);
-            loadCustomerStats(data || []);
-        } catch (error) {
-            console.error('Error loading customers:', error);
-            message.error('Error al cargar clientes');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const loadCustomerStats = async (customerList: Customer[]) => {
+    const loadCustomerStats = useCallback(async (customerList: Customer[]) => {
         if (!customerList.length) return;
 
         setLoadingStats(true);
@@ -122,9 +106,17 @@ export const CustomersManager: React.FC<Props> = ({ franchiseId }) => {
                     if (invoicesResult.success) {
                         const issuedInvoices = invoicesResult.data.filter(inv => inv.status !== 'RECTIFIED');
                         for (const inv of issuedInvoices) {
-                            const issueDate = inv.issueDate instanceof Date
-                                ? inv.issueDate
-                                : (inv.issueDate as any)?.toDate ? (inv.issueDate as any).toDate() : new Date((inv.issueDate as any)?.seconds * 1000);
+                            let issueDate: Date;
+
+                            if (inv.issueDate instanceof Date) {
+                                issueDate = inv.issueDate;
+                            } else if (inv.issueDate instanceof Timestamp) {
+                                issueDate = inv.issueDate.toDate();
+                            } else if (typeof inv.issueDate === 'object' && inv.issueDate !== null && 'seconds' in inv.issueDate) {
+                                issueDate = new Date((inv.issueDate as { seconds: number }).seconds * 1000);
+                            } else {
+                                issueDate = new Date();
+                            }
 
                             if (issueDate >= currentMonthStart) {
                                 currentMonthInvoiced += inv.total;
@@ -160,7 +152,26 @@ export const CustomersManager: React.FC<Props> = ({ franchiseId }) => {
         } finally {
             setLoadingStats(false);
         }
-    };
+    }, [franchiseId]);
+
+    const loadCustomers = useCallback(async () => {
+        try {
+            setLoading(true);
+            const data = (await getRestaurants(franchiseId)) as Customer[];
+            setCustomers(data || []);
+            loadCustomerStats(data || []);
+        } catch (error) {
+            console.error('Error loading customers:', error);
+            message.error('Error al cargar clientes');
+        } finally {
+            setLoading(false);
+        }
+    }, [getRestaurants, franchiseId, loadCustomerStats]);
+
+    useEffect(() => {
+        loadCustomers();
+    }, [loadCustomers]);
+
 
     const handleDelete = async (customerId: string) => {
         try {

@@ -56,7 +56,7 @@ interface Props {
 export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, onRefresh }) => {
   const [loading, setLoading] = useState(false);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
+
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | 'ALL'>('ALL');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<PaymentStatus | 'ALL'>('ALL');
@@ -103,7 +103,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
   // Initial load
   useEffect(() => {
     fetchInvoices();
-  }, [franchiseId, refreshTrigger]);
+  }, [fetchInvoices, refreshTrigger]);
 
   // Unique customers list for the filter dropdown
   const uniqueCustomers = useMemo(() => {
@@ -169,7 +169,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
   }, [invoices]);
 
   // Apply all filters
-  useEffect(() => {
+  const filteredInvoices = useMemo(() => {
     let filtered = [...invoices];
 
     if (searchText) {
@@ -212,7 +212,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
       });
     }
 
-    setFilteredInvoices(filtered);
+    return filtered;
   }, [invoices, searchText, statusFilter, paymentStatusFilter, customerFilter, amountFilterActive, amountRange, dateRange]);
 
   // Clear all filters

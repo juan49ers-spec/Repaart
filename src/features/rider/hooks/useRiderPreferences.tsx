@@ -74,14 +74,15 @@ const defaultPreferences: Omit<UserPreferences, 'userId'> = {
 export const useRiderPreferences = () => {
     const { user } = useAuth();
     const [preferences, setPreferences] = useState<UserPreferences | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(!!user?.uid);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!user?.uid) {
-            const timeoutId = setTimeout(() => setLoading(false), 0);
-            return () => clearTimeout(timeoutId);
+            return;
         }
+
+        queueMicrotask(() => setLoading(true));
 
         const preferencesRef = doc(db, 'user_preferences', user.uid);
 

@@ -58,16 +58,17 @@ export const QuickRepairButton: React.FC = () => {
                 }
             }, 2000);
 
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as { code?: string; message?: string };
             console.error('❌ Error:', error);
 
             let errorMsg = 'Error desconocido';
-            if (error.code === 'permission-denied') {
+            if (err.code === 'permission-denied') {
                 errorMsg = 'No tienes permisos. Contacta al administrador.';
-            } else if (error.code === 'not-found') {
+            } else if (err.code === 'not-found') {
                 errorMsg = 'Usuario no encontrado en Firestore.';
             } else {
-                errorMsg = error.message || 'Error actualizando el documento';
+                errorMsg = err.message || 'Error actualizando el documento';
             }
 
             setResult({

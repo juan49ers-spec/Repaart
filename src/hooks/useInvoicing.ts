@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -6,70 +7,72 @@ import { CreateInvoiceRequest, Invoice } from '../types/invoicing';
 export type { Invoice };
 
 // Backward compatibility type alias for deprecated components
-export type FranchiseRestaurant = any;
+export type FranchiseRestaurant = unknown;
 
 export const useInvoicing = () => {
     const { user } = useAuth();
 
-    const createRestaurant = async (data: any) => {
+    const createRestaurant = useCallback(async (data: { fiscalName: string, franchiseId?: string, [key: string]: unknown }) => {
         const payload = {
             ...data,
             franchiseId: data.franchiseId || ''
         };
         const fn = httpsCallable(functions, 'createRestaurant');
         return fn(payload);
-    };
+    }, []);
 
-    const getRestaurants = async (franchiseId: string) => {
+    const getRestaurants = useCallback(async (franchiseId: string) => {
         const fn = httpsCallable(functions, 'getRestaurants');
         const result = await fn({ franchiseId });
-        return (result.data as any).restaurants as any[];
-    };
+        const data = result.data as { restaurants: unknown[] };
+        return data.restaurants;
+    }, []);
 
-    const generateInvoice = async (data: CreateInvoiceRequest) => {
+    const generateInvoice = useCallback(async (data: CreateInvoiceRequest) => {
         const payload = {
             ...data,
             franchiseId: data.franchiseId || ''
         };
         const fn = httpsCallable(functions, 'generateInvoice');
         return fn(payload);
-    };
+    }, []);
 
-    const getInvoices = async (franchiseId: string) => {
+    const getInvoices = useCallback(async (franchiseId: string) => {
         console.log('[useInvoicing] Fetching invoices for franchiseId:', franchiseId);
         const fn = httpsCallable(functions, 'getInvoices');
         const result = await fn({ franchiseId });
-        return (result.data as any).invoices as Invoice[];
-    };
+        const data = result.data as { invoices: Invoice[] };
+        return data.invoices;
+    }, []);
 
-    const getFranchises = async () => {
+    const getFranchises = useCallback(async () => {
         try {
-            const getFranchisesFn = httpsCallable<{ franchiseId: string }, { franchises: any[] }>(functions, 'getFranchises');
+            const getFranchisesFn = httpsCallable<{ franchiseId: string }, { franchises: unknown[] }>(functions, 'getFranchises');
             const result = await getFranchisesFn({ franchiseId: user?.uid || '' });
             return result.data.franchises;
         } catch (error) {
             console.error('Error fetching franchises:', error);
             throw error;
         }
-    };
+    }, [user]);
 
-    const updateRestaurant = async (data: any) => {
+    const updateRestaurant = useCallback(async (data: { id: string, [key: string]: unknown }) => {
         const payload = {
             ...data,
             franchiseId: data.franchiseId || ''
         };
         const fn = httpsCallable(functions, 'updateRestaurant');
         return fn(payload);
-    };
+    }, []);
 
-    const deleteRestaurant = async (data: { id: string, franchiseId: string }) => {
+    const deleteRestaurant = useCallback(async (data: { id: string, franchiseId: string }) => {
         const payload = {
             ...data,
             franchiseId: data.franchiseId
         };
         const fn = httpsCallable(functions, 'deleteRestaurant');
         return fn(payload);
-    };
+    }, []);
 
     return {
         createRestaurant,

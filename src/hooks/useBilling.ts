@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
+import {
   flyderIntegrationService,
   FranchiseBillingConfig,
   RiderMonthlyBilling,
@@ -54,11 +54,13 @@ export function useBilling(
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    queueMicrotask(() => {
+      setLoading(true);
+      setError(null);
+    });
 
     const configRef = doc(db, 'billing_configs', franchiseId);
-    
+
     const unsubscribe = onSnapshot(
       configRef,
       (docSnap) => {
@@ -89,7 +91,7 @@ export function useBilling(
   useEffect(() => {
     if (!franchiseId || !config) return;
 
-    setLoading(true);
+    queueMicrotask(() => setLoading(true));
 
     // Calcular fechas del mes
     const startDate = `${month}-01`;

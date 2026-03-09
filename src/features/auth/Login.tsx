@@ -1,6 +1,6 @@
 import { useState, type FC, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, AuthUser } from '../../context/AuthContext';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { type FirebaseError } from 'firebase/app';
 import { doc, setDoc } from 'firebase/firestore';
@@ -44,7 +44,7 @@ const Login: FC = () => {
                 toast?.success('Inicio de sesión exitoso');
 
                 // Navegación explícita basada en el rol inyectado o por defecto
-                const userRole = result.user.role || role; // Intentamos usar el rol inyectado
+                const userRole = (result.user as AuthUser).role || role; // Intentamos usar el rol inyectado
                 if (userRole === 'rider') {
                     navigate('/rider/dashboard');
                 } else {

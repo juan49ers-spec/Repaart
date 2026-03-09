@@ -17,11 +17,16 @@ import { useState, useEffect, useCallback } from 'react';
  * ```
  */
 export function usePushNotifications() {
-  const [isSupported, setIsSupported] = useState(false);
-  const [permission, setPermission] = useState<NotificationPermission>('default');
+  const [isSupported] = useState(() =>
+    typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window
+  );
+  const [permission, setPermission] = useState<NotificationPermission>(() =>
+    typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
+  );
   const [subscription, setSubscription] = useState<PushSubscription | null>(null);
 
-  const checkSubscription = async () => {
+  const checkSubscription = useCallback(async () => {
+    if (!isSupported) return;
     try {
       const registration = await navigator.serviceWorker.ready;
       const existingSubscription = await registration.pushManager.getSubscription();
@@ -29,24 +34,15 @@ export function usePushNotifications() {
     } catch (error) {
       console.error('Error checking subscription:', error);
     }
-  };
+  }, [isSupported]);
 
   useEffect(() => {
-    // Verificar soporte
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-      setTimeout(() => {
-        setIsSupported(true);
-
-        // Obtener permiso actual
-        if ('Notification' in window) {
-          setPermission(Notification.permission);
-        }
-
-        // Verificar suscripción existente
+    if (isSupported) {
+      queueMicrotask(() => {
         checkSubscription();
-      }, 0);
+      });
     }
-  }, []);
+  }, [isSupported, checkSubscription]);
 
   const requestPermission = async (): Promise<NotificationPermission> => {
     if (!('Notification' in window)) return 'denied';

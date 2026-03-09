@@ -1,0 +1,472 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // --- AUTHENTICATION HELPERS ---
+    function isAuthed() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      let path = /databases/$(database)/documents/users/$(request.auth.uid);
+      return exists(path) ? get(path).data : {};
+    }
+    
+    function isAdmin() {
+      return isAuthed() && (
+        request.auth.token.role == 'admin' || 
+        request.auth.token.admin == true ||
+        getUserData().get('role', '') == 'admin' ||
+        getUserData().get('admin', false) == true
+      );
+    }
+    
+    function isFranchise() {
+      return isAuthed() && (
+        request.auth.token.role == 'franchise' || 
+        getUserData().get('role', '') == 'franchise'
+      );
+    }
+    
+    // Helper para billing module - verifica si usuario puede acceder a datos de una franquicia
+    function canAccessFranchise(franchiseId) {
+      return isAuthed();
+    }
+    
+    // --- VALIDATION HELPERS ---
+    function incomingData() {
+      return request.resource.data;
+    }
+    
+    function isNonEmptyString(fieldName) {
+      return incomingData()[fieldName] is string && incomingData()[fieldName].size() > 0;
+    }
+    
+    function isNumber(fieldName) {
+      return incomingData()[fieldName] is number;
+    }
+
+    // --- SCHEMA VALIDATORS ---
+    
+    function isValidFinancialRecord() {
+      return 
+        // Required Fields
+        isNonEmptyString('category') &&
+        isNumber('amount') &&
+        isNonEmptyString('franchiseId') &&
+        (incomingData().type == 'income' || incomingData().type == 'expense');
+    }
+    
+    function isValidFleetAsset() {
+      return
+        isNonEmptyString('plate') &&
+        isNonEmptyString('franchiseId') &&
+        incomingData().status in ['active', 'maintenance', 'out_of_service', 'deleted'];
+    }
+    
+    function isValidNotification() {
+      return
+        isNonEmptyString('title') &&
+        isNonEmptyString('message') &&
+        isNonEmptyString('userId') &&
+        incomingData().type in ['info', 'success', 'warning', 'error', 'SYSTEM', 'FINANCE_CLOSING', 'RATE_CHANGE', 'SUPPORT_TICKET', 'UNLOCK_REQUEST', 'MONTH_UNLOCKED', 'UNLOCK_REJECTED', 'ALERT', 'PREMIUM_SERVICE_REQUEST', 'shift_confirmed', 'shift_change_request', 'incident', 'SCHEDULE_PUBLISHED'];
+    }
+    
+    function isValidAnnouncement() {
+      return
+        isNonEmptyString('title') &&
+        isNonEmptyString('content') &&
+        incomingData().type in ['news', 'alert', 'poll'] &&
+        incomingData().priority in ['normal', 'high', 'critical'] &&
+        incomingData().targetAudience in ['all', 'specific'];
+    }
+    
+    function isValidTicket() {
+      return
+        isNonEmptyString('uid') &&
+        isNonEmptyString('subject') &&
+        isNonEmptyString('message') &&
+        incomingData().status in ['open', 'investigating', 'resolved', 'closed', 'pending_user'];
+    }
+    
+    function isValidShift() {
+      return
+        isNonEmptyString('franchiseId') &&
+        isNonEmptyString('date') &&
+        isNonEmptyString('startAt') &&
+        isNonEmptyString('endAt') &&
+        incomingData().riderId == null || isNonEmptyString('riderId');
+    }
+
+
+    // --- COLLECTION RULES ---
+
+    // USERS
+    match /users/{userId} {
+      allow read: if isAuthed() && (request.auth.uid == userId || isAdmin() || isFranchise());
+      
+      // CREATE: 
+      // 1. Admin puede crear cualquier usuario (generalmente via Cloud Function, pero esto da respaldo)
+      // 2. Usuario público puede Auto-Registrarse SOLO como 'rider'
+      allow create: if isAuthed() && (
+        isAdmin() || 
+        (request.auth.uid == userId && 
+         request.resource.data.role == 'rider' &&
+         (!request.resource.data.keys().hasAny(['franchiseId', 'admin', 'permissions']))
+        )
+      );
+
+      // UPDATE:
+      // 1. Admin puede todo
+      // 2. Usuario puede editar su perfil PERO NO su rol, status o franchiseId
+      // 3. Franquicia puede editar a sus riders (si franchiseId coincide)
+      allow update: if isAuthed() && (
+        isAdmin() || 
+        (request.auth.uid == userId && 
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'status', 'franchiseId', 'createdAt'])) ||
+        (isFranchise() && resource.data.franchiseId == request.auth.uid)
+      );
+      
+      allow list: if isAuthed();
+    }
+
+    // SESSIONS (Explicit Path to avoid nesting issues)
+    match /users/{userId}/sessions/{sessionId} {
+      allow read, write: if request.auth.uid == userId;
+    }
+
+    // USER PREFERENCES
+    match /user_preferences/{userId} {
+      allow read, write: if isAuthed() && request.auth.uid == userId;
+    }
+
+    // WORK SHIFTS
+    match /work_shifts/{shiftId} {
+      allow read: if isAuthed() && (isAdmin() || isFranchise() || resource.data.riderId == request.auth.uid);
+      // Riders can update their own shifts for: confirming, requesting changes
+      // Only admins and franchises can create/delete or reassign shifts
+      allow write: if isAuthed() && (
+        isAdmin() || 
+        isFranchise() ||
+        // Rider can update their own shift if they are assigned to it
+        (resource.data.riderId == request.auth.uid && isValidShift())
+      );
+    }
+    
+    // FINANCIAL DATA & SUMMARIES
+    match /financial_records/{recordId} {
+      allow read: if isAuthed() && (isAdmin() || isFranchise());
+      allow create: if isAuthed() && (isAdmin() || isFranchise()) && isValidFinancialRecord();
+      allow update: if isAuthed() && (isAdmin() || isFranchise()) && isValidFinancialRecord();
+      allow delete: if isAuthed() && (isAdmin() || isFranchise());
+    }
+    match /financial_data/{docId} {
+      allow read, write: if isAuthed() && (isAdmin() || isFranchise());
+    }
+    match /finance_closures/{closureId} {
+       allow read, write: if isAuthed() && (isAdmin() || isFranchise());
+    }
+    match /financial_summaries/{docId} {
+       allow read, write: if isAuthed() && (isAdmin() || isFranchise());
+    }
+
+    // SUPPORT TICKETS
+    match /tickets/{ticketId} {
+      // 1. Ownership / Direct Access (Fastest, no cross-collection fetch usually)
+      allow read: if isAuthed() && (
+        resource.data.userId == request.auth.uid || 
+        resource.data.uid == request.auth.uid || 
+        resource.data.createdBy == request.auth.uid ||
+        resource.data.franchiseId == request.auth.uid
+      );
+
+      // 2. Admin / Elevated Access (Requires cross-collection fetch)
+      allow read: if isAuthed() && (
+        isAdmin() ||
+        (isFranchise() && (
+           resource.data.userId == getUserData().franchiseId || 
+           resource.data.franchiseId == getUserData().franchiseId
+        ))
+      );
+      
+      // Write: owner, franchise owner, or admin
+      allow write: if isAuthed() && (
+        isAdmin() || 
+        resource.data.userId == request.auth.uid ||
+        resource.data.uid == request.auth.uid ||
+        resource.data.franchiseId == request.auth.uid
+      );
+      
+      // Messages subcollection: any party in the conversation can read/write
+      match /messages/{messageId} {
+        allow read: if isAuthed();
+        allow create: if isAuthed() && (
+          request.resource.data.senderId == request.auth.uid ||
+          isAdmin() ||
+          isFranchise()
+        );
+      }
+      
+      allow create: if isAuthed();
+    }
+    
+    // RIDER INCIDENTS & CHECKS
+    match /incidents/{incidentId} {
+        allow read: if isAuthed() && (isAdmin() || resource.data.riderId == request.auth.uid || isFranchise());
+        allow create: if isAuthed();
+        allow update: if isAuthed() && (isAdmin() || resource.data.riderId == request.auth.uid);
+    }
+    match /vehicle_checks/{checkId} {
+         allow read: if isAuthed() && (isAdmin() || resource.data.riderId == request.auth.uid || isFranchise());
+         allow create: if isAuthed();
+    }
+
+    // NOTIFICATIONS
+    match /notifications/{notificationId} {
+      allow get: if isAuthed() && (
+        resource.data.userId == request.auth.uid || 
+        isAdmin() ||
+        (isFranchise() && resource.data.userId == getUserData().franchiseId)
+      );
+      
+      allow list: if isAuthed() && (
+        request.query.filters.userId == request.auth.uid || 
+        isAdmin() ||
+        isFranchise()
+      );
+      
+      allow create: if isAuthed() && isValidNotification();
+      
+      allow write: if isAuthed() && (
+        request.auth.uid == resource.data.userId ||
+        isAdmin() ||
+        (isFranchise() && request.auth.uid == getUserData().franchiseId)
+      );
+    }
+    match /admin_notifications/{notifId} {
+      allow read, write: if isAuthed() && (isAdmin() || isFranchise());
+    }
+
+    // FEATURES & ROADMAP
+    match /feature_requests/{featureId} {
+      allow read: if isAuthed();
+      allow write: if isAuthed() && isAdmin();
+    }
+
+    // PREMIUM SERVICES
+    match /premium_services/{serviceId} {
+      allow read: if isAuthed();
+      allow write: if isAdmin();
+    }
+    
+    // DOCUMENT REQUESTS
+    match /document_requests/{requestId} {
+      allow read: if isAuthed() && (isAdmin() || resource.data.franchiseId == request.auth.uid);
+      allow create: if isAuthed() && isFranchise();
+      allow update: if isAdmin();
+    }
+
+    // OPERATIONS: FRANCHISES & WEEKS
+    match /franchises/{franchiseId} {
+      allow read: if isAuthed() && (request.auth.uid.lower() == franchiseId.lower() || isAdmin());
+      
+      // Allow franchises to update their own rates
+      allow update: if isAuthed() && (
+        isAdmin() || 
+        (isFranchise() && request.auth.uid.lower() == franchiseId.lower() && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rates', 'ratesUpdatedAt']))
+      );
+
+      // Allow initial creation by franchise if only setting rates
+      allow create: if isAuthed() && (
+        isAdmin() ||
+        (isFranchise() && request.auth.uid.lower() == franchiseId.lower() &&
+         request.resource.data.keys().hasOnly(['rates', 'ratesUpdatedAt']))
+      );
+      
+      allow delete: if isAuthed() && isAdmin();
+      
+      match /weeks/{weekId} {
+         allow read, write: if isAuthed() && (request.auth.uid.lower() == franchiseId.lower() || isAdmin());
+      }
+    }
+
+    
+    // FLEET ASSETS (Vehicles)
+    match /fleet_assets/{assetId} {
+      allow get: if isAuthed() && (isAdmin() || resource.data.franchiseId.lower() == request.auth.uid.lower());
+      allow list: if isAuthed();
+      allow create: if isAuthed() && (isAdmin() || isFranchise()) && isValidFleetAsset();
+      allow update: if isAuthed() && (isAdmin() || resource.data.franchiseId == request.auth.uid) && isValidFleetAsset();
+      allow delete: if isAuthed() && isAdmin();
+    }
+
+    // AUDIT LOGS
+    match /audit_logs/{logId} {
+      allow create: if isAuthed();
+      allow read: if isAuthed() && isAdmin();
+      allow update, delete: if false;
+    }
+    
+    // ANNOUNCEMENTS
+    match /announcements/{announcementId} {
+      allow read: if isAuthed();
+      allow write: if isAuthed() && isAdmin() && isValidAnnouncement();
+    }
+    
+    match /project_tasks/{taskId} {
+      allow read, write: if isAuthed() && isAdmin();
+    }
+    
+    // ACADEMY SYSTEM
+    match /academy_modules/{moduleId} {
+      allow read: if true;
+      allow write: if isAdmin() || isFranchise();
+    }
+    match /academy_lessons/{lessonId} {
+      allow read: if true;
+      allow write: if isAdmin() || isFranchise();
+    }
+    match /academy_progress/{progressId} {
+      allow read: if isAuthed();
+      allow write: if isAuthed() && (
+        isAdmin() || 
+        (resource == null && request.resource.data.user_id == request.auth.uid) ||
+        (resource != null && resource.data.user_id == request.auth.uid)
+      );
+    }
+    match /quiz_results/{resultId} {
+      allow read: if isAuthed() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow create: if isAuthed();
+      allow update: if isAuthed() && isAdmin();
+    }
+    match /academy_encyclopedia_categories/{categoryId} {
+      allow read: if isAuthed();
+      allow write: if isAuthed() && isAdmin();
+    }
+    match /academy_encyclopedia_articles/{articleId} {
+      allow read: if isAuthed();
+      allow write: if isAuthed() && isAdmin();
+    }
+    
+    // LEGACY: academy_encyclopedia
+    match /academy_encyclopedia/{cardId} {
+      allow read: if isAuthed();
+      allow write: if isAuthed() && (isAdmin() || isFranchise());
+    }
+    
+    // SETTINGS
+    match /settings/{settingId} {
+      allow read: if isAuthed();
+      allow write: if isAuthed() && isAdmin();
+    }
+
+    // RESOURCES
+    match /resources/{resourceId} {
+      allow read: if isAuthed();
+      allow write: if isAuthed() && isAdmin();
+    }
+
+    // GUIDES
+    match /guides/{guideId} {
+        allow read: if isAuthed();
+        allow write: if isAuthed() && isAdmin();
+    }
+    
+    // ORDERS HISTORY (Flyder)
+    match /orders/{orderId} {
+      allow read: if isAuthed() && (
+        isAdmin() ||
+        isFranchise()
+      );
+      allow create: if isAuthed() && isAdmin();
+      allow update, delete: if isAuthed() && isAdmin();
+      
+      // Allow list for admins and franchises
+      allow list: if isAuthed() && (isAdmin() || isFranchise());
+    }
+
+    // REGISTRATION REQUESTS
+    match /registration_requests/{requestId} {
+      allow read: if isAdmin();
+      allow create: if isAuthed();
+      allow write: if isAdmin();
+    }
+
+    // STORES
+    match /stores/{storeId} {
+      allow get: if isAuthed() && (isAdmin() || resource.data.franchiseId.lower() == request.auth.uid.lower());
+      allow list: if isAuthed() && (isAdmin() || isFranchise());
+      allow create: if isAuthed() && (isAdmin() || isFranchise());
+      allow update: if isAuthed() && (isAdmin() || resource.data.franchiseId == request.auth.uid);
+      allow delete: if isAuthed() && isAdmin();
+    }
+
+    // RIDERS
+    match /riders/{riderId} {
+      allow get: if isAuthed() && (isAdmin() || resource.data.franchiseId.lower() == request.auth.uid.lower());
+      allow list: if isAuthed() && (isAdmin() || isFranchise());
+      allow create: if isAuthed() && (isAdmin() || isFranchise());
+      allow update: if isAuthed() && (isAdmin() || resource.data.franchiseId == request.auth.uid);
+      allow delete: if isAuthed() && isAdmin();
+    }
+
+    // DEFAULT DENY
+    match /riders/{riderId} {
+      allow get: if isAuthed() && (isAdmin() || resource.data.franchiseId.lower() == request.auth.uid.lower());
+      allow list: if isAuthed() && (isAdmin() || isFranchise());
+      allow create: if isAuthed() && (isAdmin() || isFranchise());
+      allow update: if isAuthed() && (isAdmin() || resource.data.franchiseId == request.auth.uid);
+      allow delete: if isAuthed() && isAdmin();
+    }
+    
+    // =============================================================================
+    // BILLING & TREASURY MODULE
+    // =============================================================================
+    
+    // INVOICES - Inmutables after ISSUED
+    match /invoices/{invoiceId} {
+      allow read: if canAccessFranchise(resource.data.franchiseId);
+      allow create: if canAccessFranchise(request.resource.data.franchiseId);
+      
+      // Solo se puede actualizar si está en DRAFT
+      allow update: if canAccessFranchise(resource.data.franchiseId) 
+                    && resource.data.status == 'DRAFT';
+      
+      // Solo se puede borrar si está en DRAFT
+      allow delete: if canAccessFranchise(resource.data.franchiseId) 
+                    && resource.data.status == 'DRAFT';
+    }
+    
+    // Invoice history (audit trail) - read-only after creation
+    match /invoices_history/{historyId} {
+      allow read, write: if canAccessFranchise(
+        get(/databases/$(database)/documents/invoices/$(request.resource.data.invoiceId)).data.franchiseId
+      );
+    }
+    
+    // PAYMENT RECEIPTS
+    match /payment_receipts/{receiptId} {
+      allow read: if canAccessFranchise(
+        get(/databases/$(database)/documents/invoices/$(request.resource.data.invoiceId)).data.franchiseId
+      );
+      allow create, update: if canAccessFranchise(
+        get(/databases/$(database)/documents/invoices/$(request.resource.data.invoiceId)).data.franchiseId
+      );
+    }
+    
+    // TAX VAULT (Fiscal closing - admin only for write operations)
+    match /tax_vault/{taxVaultId} {
+      allow read: if canAccessFranchise(resource.data.franchiseId);
+      
+      // Solo admins pueden cerrar/abrir meses
+      allow create, update: if isAdmin();
+      allow delete: if false;
+    }
+    
+    // DEFAULT DENY - Temporalmente permite usuarios autenticados mientras depuramos
+    match /{document=**} {
+      allow read, write: if isAuthed();
+    }
+  }
+}

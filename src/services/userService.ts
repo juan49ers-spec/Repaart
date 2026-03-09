@@ -144,6 +144,10 @@ export const userService = {
         }
     },
 
+    updateUser: async (uid: string, data: Partial<User>): Promise<void> => {
+        return userService.updateUserProfile(uid, data);
+    },
+
     setUserRole: async (
         targetUid: string,
         newRole: string,
