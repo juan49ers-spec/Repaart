@@ -1015,38 +1015,19 @@ const Academy = () => {
                                         transition={{ duration: 0.3 }}
                                         className="mb-6"
                                     >
-                                        <div className="relative bg-black rounded-2xl overflow-hidden shadow-2xl cursor-pointer" onClick={() => setIsVideoExpanded(true)}>
-                                            <motion.div
-                                                animate={{
-                                                    height: isVideoExpanded ? 'auto' : '300px'
-                                                }}
-                                                transition={{ duration: 0.4, ease: 'easeInOut' }}
-                                                className="relative overflow-hidden"
-                                            >
-                                                {!isVideoExpanded && (
-                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10 transition-opacity hover:bg-black/30">
-                                                        <div className="w-20 h-20 bg-white/90 dark:bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center shadow-2xl">
-                                                            <Play className="w-10 h-10 text-red-600 ml-1" />
-                                                        </div>
-                                                        <p className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white font-bold text-sm">
-                                                            Click para expandir
-                                                        </p>
-                                                    </div>
-                                                )}
-
-                                                <div className="aspect-video">
-                                                    <iframe
-                                                        ref={videoRef}
-                                                        src={`https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1&playsinline=1&showinfo=0&iv_load_policy=3&controls=1&disablekb=1&fs=0&widget_referrer=${encodeURIComponent(window.location.href)}`}
-                                                        title={currentLesson?.title || ''}
-                                                        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                        allowFullScreen
-                                                        className="absolute inset-0 w-full h-full"
-                                                        loading="lazy"
-                                                        sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
-                                                    />
-                                                </div>
-                                            </motion.div>
+                                        <div className="relative bg-black rounded-2xl overflow-hidden shadow-2xl">
+                                            <div className="aspect-video relative">
+                                                <iframe
+                                                    ref={videoRef}
+                                                    src={`https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1&playsinline=1&showinfo=0&iv_load_policy=3&controls=1&disablekb=1&fs=0&widget_referrer=${encodeURIComponent(window.location.href)}`}
+                                                    title={currentLesson?.title || ''}
+                                                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                    allowFullScreen
+                                                    className="absolute inset-0 w-full h-full"
+                                                    loading="lazy"
+                                                    sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
+                                                />
+                                            </div>
                                         </div>
 
                                         {/* Video Info */}
@@ -1067,17 +1048,6 @@ const Academy = () => {
                                                     </p>
                                                 </div>
                                             </div>
-                                            {isVideoExpanded && (
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setIsVideoExpanded(false);
-                                                    }}
-                                                    className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-300 transition-colors"
-                                                >
-                                                    Minimizar
-                                                </button>
-                                            )}
                                         </motion.div>
                                     </motion.div>
                                 )}
