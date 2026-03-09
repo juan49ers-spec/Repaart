@@ -51,7 +51,6 @@ const Academy = () => {
     const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
     const [selectedView, setSelectedView] = useState<'video' | 'text'>('video');
     const [showInitialModal, setShowInitialModal] = useState(false);
-    const [isVideoExpanded, setIsVideoExpanded] = useState(false);
     const [celebration, setCelebration] = useState<{
         isOpen: boolean;
         type: 'module_complete' | 'level_up';

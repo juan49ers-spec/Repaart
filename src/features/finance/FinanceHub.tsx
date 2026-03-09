@@ -10,7 +10,7 @@ type ActiveTab = 'invoicing' | 'results';
 export const FinanceHub: React.FC<{ franchiseId?: string }> = ({ franchiseId: propFranchiseId }) => {
     const { user } = useAuth();
     const { getModuleStatus } = useInvoicingModule();
-    const [activeTab, setActiveTab] = useState<ActiveTab>('invoicing');
+    const [activeTab, setActiveTab] = useState<ActiveTab>('results');
     const [invoicingEnabled, setInvoicingEnabled] = useState<boolean | null>(null);
     const [loadingStatus, setLoadingStatus] = useState(true);
 
