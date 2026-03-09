@@ -264,7 +264,6 @@ const Academy = () => {
     const handleBackToLessons = () => {
         setSelectedLessonId(null);
         setSelectedView('video');
-        setIsVideoExpanded(false);
     };
 
     const handleSelectModule = (modId: string) => {
@@ -280,8 +279,6 @@ const Academy = () => {
         if (!lesson) {
             return;
         }
-
-        setIsVideoExpanded(false);
 
         // Quiz lessons go directly — no video/text modal
         if (lesson.content_type === 'quiz') {
