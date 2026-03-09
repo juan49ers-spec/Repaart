@@ -774,10 +774,16 @@ const Academy = () => {
                                             <div className="relative h-40 bg-slate-900 overflow-hidden">
                                                 {lessonYtId ? (
                                                     <img
-                                                        src={`https://img.youtube.com/vi/${lessonYtId}/hqdefault.jpg`}
+                                                        src={`https://img.youtube.com/vi/${lessonYtId}/maxresdefault.jpg`}
                                                         alt={lesson.title}
                                                         className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
                                                         loading="lazy"
+                                                        onError={(e) => {
+                                                            // Si maxresdefault (1080p) no existe, retrocedemos al hqdefault
+                                                            if (e.currentTarget.src.includes('maxresdefault.jpg')) {
+                                                                e.currentTarget.src = `https://img.youtube.com/vi/${lessonYtId}/hqdefault.jpg`;
+                                                            }
+                                                        }}
                                                     />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
