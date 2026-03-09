@@ -12,7 +12,7 @@ import repaartLogoFull from '../../assets/repaart-logo-full.png';
 import yamimotoLogo from '../../assets/YamimotoCapa-1.png';
 import flyderTransparent from '../../assets/flyder-logo-new-transparent.png';
 
-import { OptimizedImage } from '../../components/ui/media/OptimizedImage';
+
 
 const Login: FC = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -233,11 +233,11 @@ const Login: FC = () => {
             {/* RIGHT SIDE - IMAGE (Desktop Only) */}
             <div className="hidden lg:block lg:w-[55%] relative overflow-hidden bg-slate-900">
                 <div className="absolute inset-0 opacity-40 mix-blend-overlay z-10 bg-slate-900"></div>
-                <OptimizedImage
+                <img
                     src={riderImage}
                     alt="Repaart Operations"
-                    className="absolute inset-0 w-full h-full opacity-90 scale-105"
-                    priority={true}
+                    className="absolute inset-0 w-full h-full object-cover opacity-90 scale-105"
+                    loading="eager"
                 />
 
                 {/* Dark Overlay for Text Contrast */}
