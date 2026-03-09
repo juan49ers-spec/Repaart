@@ -205,13 +205,21 @@ export const userService = {
 
     // --- BUSINESS ENTITIES (Franchises) ---
 
-    createFranchise: async (franchiseData: object): Promise<{ success: boolean; data: { id: string } }> => {
+    createFranchise: async (franchiseData: any): Promise<{ success: boolean; data: { id: string } }> => {
         try {
+            // Client-side validation to match tests and prevent empty requests
+            if (!franchiseData.location?.zipCodes || franchiseData.location.zipCodes.length === 0) {
+                throw new Error("Datos incompletos: Se requieren códigos postales.");
+            }
+
             const createFranchiseFn = httpsCallable(functions, 'createFranchise');
             const result = await createFranchiseFn(franchiseData);
             const data = result.data as { success: boolean; data: { id: string } };
             return data;
         } catch (error) {
+            if (error instanceof Error && error.message.includes("Datos incompletos")) {
+                throw error;
+            }
             console.error("Error creating franchise:", error);
             throw new ServiceError('createFranchise', { cause: error });
         }

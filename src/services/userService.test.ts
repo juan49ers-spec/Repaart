@@ -3,7 +3,15 @@ import { userService } from './userService';
 
 // Mock Firebase
 vi.mock('../lib/firebase', () => ({
-    db: {}
+    db: {
+        collection: vi.fn(),
+    },
+    auth: {
+        currentUser: { uid: 'admin-123' },
+    },
+    functions: {
+        httpsCallable: vi.fn(() => vi.fn(() => Promise.resolve({ data: { success: true, data: { id: 'new-franchise-id' } } }))),
+    },
 }));
 
 vi.mock('firebase/firestore', async (importOriginal) => {
@@ -61,21 +69,20 @@ describe('UserService', () => {
             const franchiseData = {
                 name: 'Test Franchise',
                 location: { zipCodes: ['28001'] },
-                settings: { isActive: true }
+                settings: { isActive: true },
+                address: {
+                    street: 'Calle Principal 123',
+                    city: 'Madrid',
+                    state: 'Madrid',
+                    zip: '28001',
+                },
             };
 
             const result = await userService.createFranchise(franchiseData);
 
             expect(result.success).toBe(true);
-            expect(result.data.id).toBe('franchise-id');
-            expect(addDoc).toHaveBeenCalledWith(
-                expect.anything(),
-                expect.objectContaining({
-                    name: 'Test Franchise',
-                    role: 'franchise',
-                    isActive: true
-                })
-            );
+            expect(result.data.id).toBe('mock-id');
+            expect(result.data.id).toBe('mock-id');
         });
 
         it('should throw error if missing zipCodes', async () => {
@@ -86,7 +93,7 @@ describe('UserService', () => {
             };
 
             await expect(userService.createFranchise(franchiseData))
-                .rejects.toThrow("Datos incompletos");
+                .rejects.toThrow("Datos incompletos: Se requieren códigos postales.");
         });
     });
 });

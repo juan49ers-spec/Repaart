@@ -1,39 +1,60 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import DeliveryScheduler from '../DeliveryScheduler';
 
 // Mock lucide-react icons
-vi.mock('lucide-react', () => ({
-    Loader2: (props: any) => <div data-testid="loader-icon" {...props} />,
-    PenLine: (props: any) => <div data-testid="penline-icon" {...props} />,
-    ChevronLeft: (props: any) => <div data-testid="chevron-left" {...props} />,
-    ChevronRight: (props: any) => <div data-testid="chevron-right" {...props} />,
-    Calendar: (props: any) => <div data-testid="calendar-icon" {...props} />,
-    Users: (props: any) => <div data-testid="users-icon" {...props} />,
-    Clock: (props: any) => <div data-testid="clock-icon" {...props} />,
-    Settings: (props: any) => <div data-testid="settings-icon" {...props} />,
-    Plus: (props: any) => <div data-testid="plus-icon" {...props} />,
-    Save: (props: any) => <div data-testid="save-icon" {...props} />,
-    Trash2: (props: any) => <div data-testid="trash-icon" {...props} />,
-    AlertCircle: (props: any) => <div data-testid="alert-icon" {...props} />,
-    CheckCircle: (props: any) => <div data-testid="check-icon" {...props} />,
-    X: (props: any) => <div data-testid="x-icon" {...props} />,
-    HelpCircle: (props: any) => <div data-testid="help-icon" {...props} />,
-    Shield: (props: any) => <div data-testid="shield-icon" {...props} />,
-    Info: (props: any) => <div data-testid="info-icon" {...props} />,
-    Sun: (props: any) => <div data-testid="sun-icon" {...props} />,
-    Moon: (props: any) => <div data-testid="moon-icon" {...props} />,
-    Utensils: (props: any) => <div data-testid="utensils-icon" {...props} />,
-    Star: (props: any) => <div data-testid="star-icon" {...props} />,
-    Zap: (props: any) => <div data-testid="zap-icon" {...props} />,
-    Sparkles: (props: any) => <div data-testid="sparkles-icon" {...props} />,
-    MoreHorizontal: (props: any) => <div data-testid="more-icon" {...props} />,
-    Copy: (props: any) => <div data-testid="copy-icon" {...props} />,
-    Bike: (props: any) => <div data-testid="bike-icon" {...props} />,
-    Eye: (props: any) => <div data-testid="eye-icon" {...props} />,
-    BadgeCheck: (props: any) => <div data-testid="badge-check-icon" {...props} />,
-    XCircle: (props: any) => <div data-testid="x-circle-icon" {...props} />,
-}));
+vi.mock('lucide-react', () => {
+    const IconMock = (dataTestId: string) => {
+        const Component = ({ ...props }: any) => <div data-testid={dataTestId} {...props} />;
+        Component.displayName = `Icon(${dataTestId})`;
+        return Component;
+    };
+    return {
+        Loader2: IconMock('loader-icon'),
+        PenLine: IconMock('penline-icon'),
+        ChevronLeft: IconMock('chevron-left'),
+        ChevronRight: IconMock('chevron-right'),
+        Calendar: IconMock('calendar-icon'),
+        Users: IconMock('users-icon'),
+        Clock: IconMock('clock-icon'),
+        Settings: IconMock('settings-icon'),
+        Plus: IconMock('plus-icon'),
+        Save: IconMock('save-icon'),
+        Trash2: IconMock('trash-icon'),
+        AlertCircle: IconMock('alert-icon'),
+        CheckCircle: IconMock('check-icon'),
+        X: IconMock('x-icon'),
+        LayoutTemplate: IconMock('layout-template-icon'),
+        RotateCcw: IconMock('rotate-ccw-icon'),
+        Copy: IconMock('copy-icon'),
+        ChevronDown: IconMock('chevron-down-icon'),
+        HelpCircle: IconMock('help-circle-icon'),
+        FileText: IconMock('file-text-icon'),
+        History: IconMock('history-icon'),
+        UserPlus: IconMock('user-plus-icon'),
+        CalendarRange: IconMock('calendar-range-icon'),
+        Filter: IconMock('filter-icon'),
+        Search: IconMock('search-icon'),
+        ArrowRight: IconMock('arrow-right-icon'),
+        Maximize2: IconMock('maximize-icon'),
+        Minimize2: IconMock('minimize-icon'),
+        ExternalLink: IconMock('external-link-icon'),
+        RefreshCw: IconMock('refresh-cw-icon'),
+        Sun: IconMock('sun-icon'),
+        Moon: IconMock('moon-icon'),
+        BadgeCheck: IconMock('badge-check-icon'),
+        XCircle: IconMock('x-circle-icon'),
+        Bike: IconMock('bike-icon'),
+        Eye: IconMock('eye-icon'),
+        MoreHorizontal: IconMock('more-icon'),
+        Zap: IconMock('zap-icon'),
+        Sparkles: IconMock('sparkles-icon'),
+        Star: IconMock('star-icon'),
+        Utensils: IconMock('utensils-icon'),
+        Shield: IconMock('shield-icon'),
+        Info: IconMock('info-icon'),
+    };
+});
 
 // Mock all dependencies
 vi.mock('../../../context/AuthContext', () => ({
@@ -161,14 +182,22 @@ describe('DeliveryScheduler Integration', () => {
     });
 
     describe('Initial Rendering', () => {
-        it('should render the scheduler container', () => {
-            const { container } = render(<DeliveryScheduler {...defaultProps} />);
-            expect(container.firstChild).toBeInTheDocument();
+        it('should render the scheduler container', async () => {
+            let container;
+            await act(async () => {
+                const result = render(<DeliveryScheduler {...defaultProps} />);
+                container = result.container;
+            });
+            expect(container!.firstChild).toBeInTheDocument();
         });
 
-        it('should render with correct root classes', () => {
-            const { container } = render(<DeliveryScheduler {...defaultProps} />);
-            const rootElement = container.firstChild as HTMLElement;
+        it('should render with correct root classes', async () => {
+            let container;
+            await act(async () => {
+                const result = render(<DeliveryScheduler {...defaultProps} />);
+                container = result.container;
+            });
+            const rootElement = container!.firstChild as HTMLElement;
             expect(rootElement).toHaveClass('flex');
             expect(rootElement).toHaveClass('flex-col');
             expect(rootElement).toHaveClass('h-full');
@@ -176,75 +205,104 @@ describe('DeliveryScheduler Integration', () => {
             expect(rootElement).toHaveClass('@container');
         });
 
-        it('should render the status bar', () => {
-            render(<DeliveryScheduler {...defaultProps} />);
-            expect(screen.getByTestId('scheduler-status-bar')).toBeInTheDocument();
+        it('should render the status bar', async () => {
+            await act(async () => {
+                render(<DeliveryScheduler {...defaultProps} />);
+            });
+            expect(await screen.findByTestId('scheduler-status-bar')).toBeInTheDocument();
         });
 
-        it('should display rider names in grid', () => {
-            render(<DeliveryScheduler {...defaultProps} />);
+        it('should display rider names in grid', async () => {
+            await act(async () => {
+                render(<DeliveryScheduler {...defaultProps} />);
+            });
             // Riders should appear alphabetically
-            expect(screen.getByText(/Ana/)).toBeInTheDocument();
+            expect(await screen.findByText(/Ana/)).toBeInTheDocument();
             expect(screen.getByText(/Juan/)).toBeInTheDocument();
         });
     });
 
     describe('Props Override', () => {
-        it('should use provided franchiseId over auth context', () => {
-            render(<DeliveryScheduler {...defaultProps} franchiseId="custom-franchise" />);
+        it('should use provided franchiseId over auth context', async () => {
+            await act(async () => {
+                render(<DeliveryScheduler {...defaultProps} franchiseId="custom-franchise" />);
+            });
             // Component should render without error with custom franchiseId
-            expect(screen.getByText(/Ana/)).toBeInTheDocument();
+            expect(await screen.findByText(/Ana/)).toBeInTheDocument();
         });
 
-        it('should respect readOnly prop', () => {
-            render(<DeliveryScheduler {...defaultProps} readOnly={true} />);
+        it('should respect readOnly prop', async () => {
+            await act(async () => {
+                render(<DeliveryScheduler {...defaultProps} readOnly={true} />);
+            });
             // Component should render in readOnly mode
-            expect(screen.getByText(/Ana/)).toBeInTheDocument();
+            expect(await screen.findByText(/Ana/)).toBeInTheDocument();
         });
     });
 
     describe('Container Layout', () => {
-        it('should use flex column layout', () => {
-            const { container } = render(<DeliveryScheduler {...defaultProps} />);
-            const rootElement = container.firstChild as HTMLElement;
+        it('should use flex column layout', async () => {
+            let container;
+            await act(async () => {
+                const result = render(<DeliveryScheduler {...defaultProps} />);
+                container = result.container;
+            });
+            const rootElement = container!.firstChild as HTMLElement;
             expect(rootElement).toHaveClass('flex');
             expect(rootElement).toHaveClass('flex-col');
         });
 
-        it('should have proper height class', () => {
-            const { container } = render(<DeliveryScheduler {...defaultProps} />);
-            const rootElement = container.firstChild as HTMLElement;
+        it('should have proper height class', async () => {
+            let container;
+            await act(async () => {
+                const result = render(<DeliveryScheduler {...defaultProps} />);
+                container = result.container;
+            });
+            const rootElement = container!.firstChild as HTMLElement;
             expect(rootElement).toHaveClass('h-full');
         });
 
-        it('should have background styling', () => {
-            const { container } = render(<DeliveryScheduler {...defaultProps} />);
-            const rootElement = container.firstChild as HTMLElement;
+        it('should have background styling', async () => {
+            let container;
+            await act(async () => {
+                const result = render(<DeliveryScheduler {...defaultProps} />);
+                container = result.container;
+            });
+            const rootElement = container!.firstChild as HTMLElement;
             expect(rootElement).toHaveClass('bg-slate-50');
         });
 
-        it('should have overflow handling', () => {
-            const { container } = render(<DeliveryScheduler {...defaultProps} />);
-            const rootElement = container.firstChild as HTMLElement;
+        it('should have overflow handling', async () => {
+            let container;
+            await act(async () => {
+                const result = render(<DeliveryScheduler {...defaultProps} />);
+                container = result.container;
+            });
+            const rootElement = container!.firstChild as HTMLElement;
             expect(rootElement).toHaveClass('overflow-hidden');
         });
     });
 
     describe('Date Navigation', () => {
-        it('should call onDateChange when date changes externally', () => {
+        it('should call onDateChange when date changes externally', async () => {
             const onDateChange = vi.fn();
-            render(<DeliveryScheduler {...defaultProps} onDateChange={onDateChange} />);
+            await act(async () => {
+                render(<DeliveryScheduler {...defaultProps} onDateChange={onDateChange} />);
+            });
             // Component renders correctly with date change handler
-            expect(screen.getByText(/Ana/)).toBeInTheDocument();
+            expect(await screen.findByText(/Ana/)).toBeInTheDocument();
         });
     });
 
     describe('Accessibility', () => {
-        it('should have proper semantic structure', () => {
-            const { container } = render(<DeliveryScheduler {...defaultProps} />);
+        it('should have proper semantic structure', async () => {
+            let container;
+            await act(async () => {
+                const result = render(<DeliveryScheduler {...defaultProps} />);
+                container = result.container;
+            });
             // Root should be a proper container
-            expect(container.firstChild).toBeTruthy();
+            expect(container!.firstChild).toBeTruthy();
         });
     });
 });
-

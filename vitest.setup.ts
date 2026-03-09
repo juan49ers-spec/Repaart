@@ -54,66 +54,6 @@ global.IntersectionObserver = class IntersectionObserver {
   unobserve() { }
 } as any;
 
-// Mock Firebase Firestore
-vi.mock('firebase/firestore', () => {
-  const mockDoc = vi.fn();
-  const mockCollection = vi.fn();
-  const mockQuery = vi.fn();
-
-  const mockFirestore = {
-    collection: mockCollection,
-    doc: mockDoc,
-    query: mockQuery,
-    where: vi.fn(),
-    orderBy: vi.fn(),
-    limit: vi.fn(),
-    getDoc: vi.fn(),
-    getDocs: vi.fn(),
-    addDoc: vi.fn(),
-    setDoc: vi.fn(),
-    updateDoc: vi.fn(),
-    deleteDoc: vi.fn(),
-    runTransaction: vi.fn(),
-    serverTimestamp: vi.fn(() => new Date()),
-    increment: vi.fn((amount: number) => amount),
-    arrayUnion: vi.fn((elements: any[]) => elements),
-    arrayRemove: vi.fn((elements: any[]) => elements),
-    writeBatch: vi.fn(() => ({
-      set: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-      commit: vi.fn()
-    }))
-  };
-
-  return {
-    getFirestore: vi.fn(() => mockFirestore),
-    collection: mockCollection,
-    doc: mockDoc,
-    query: mockQuery,
-    where: vi.fn(),
-    orderBy: vi.fn(),
-    limit: vi.fn(),
-    getDoc: vi.fn(),
-    getDocs: vi.fn(),
-    addDoc: vi.fn(),
-    setDoc: vi.fn(),
-    updateDoc: vi.fn(),
-    deleteDoc: vi.fn(),
-    runTransaction: vi.fn(),
-    serverTimestamp: vi.fn(() => new Date()),
-    increment: vi.fn((amount: number) => amount),
-    arrayUnion: vi.fn((elements: any[]) => elements),
-    arrayRemove: vi.fn((elements: any[]) => elements),
-    writeBatch: vi.fn(() => ({
-      set: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-      commit: vi.fn()
-    }))
-  };
-});
-
 // Mock Firebase app
 vi.mock('firebase/app', () => ({
   initializeApp: vi.fn(() => ({
@@ -156,62 +96,84 @@ vi.mock('firebase/firestore', () => {
     }
   }
 
+  const mockSnapshot = {
+    docs: [],
+    empty: true,
+    size: 0,
+    forEach: vi.fn(),
+    map: vi.fn(() => []),
+  };
+
+  const mockDocSnapshot = {
+    exists: vi.fn(() => false),
+    data: vi.fn(() => ({})),
+    id: 'mock-id',
+  };
+
   return {
-    getFirestore: vi.fn(() => ({})),
     initializeFirestore: vi.fn(() => ({})),
-    getDoc: vi.fn(),
-    getDocs: vi.fn(),
-    doc: vi.fn(),
-    collection: vi.fn(),
-    query: vi.fn(),
-    where: vi.fn(),
-    orderBy: vi.fn(),
-    addDoc: vi.fn(),
-    setDoc: vi.fn(),
-    updateDoc: vi.fn(),
-    deleteDoc: vi.fn(),
+    getDoc: vi.fn(() => Promise.resolve(mockDocSnapshot)),
+    getDocs: vi.fn(() => Promise.resolve(mockSnapshot)),
+    doc: vi.fn(() => ({ id: 'mock-id' })),
+    collection: vi.fn(() => ({ id: 'mock-collection' })),
+    query: vi.fn(() => ({})),
+    where: vi.fn(() => ({})),
+    orderBy: vi.fn(() => ({})),
+    limit: vi.fn(() => ({})),
+    addDoc: vi.fn(() => Promise.resolve({ id: 'new-doc-id' })),
+    setDoc: vi.fn(() => Promise.resolve()),
+    updateDoc: vi.fn(() => Promise.resolve()),
+    deleteDoc: vi.fn(() => Promise.resolve()),
     runTransaction: vi.fn(),
     serverTimestamp: vi.fn(() => new Date()),
     increment: vi.fn((n: number) => n),
-    enableNetwork: vi.fn(),
+    arrayUnion: vi.fn((...args: any[]) => args),
+    arrayRemove: vi.fn((...args: any[]) => args),
     disableNetwork: vi.fn(),
     persistentLocalCache: vi.fn(() => ({})),
     persistentMultipleTabManager: vi.fn(() => ({})),
-    Timestamp: MockTimestamp
+    onSnapshot: vi.fn((q, cb) => {
+      if (typeof cb === 'function') {
+        cb(mockSnapshot);
+      }
+      return vi.fn(); // Unsubscribe
+    }),
+    Timestamp: MockTimestamp,
+    writeBatch: vi.fn(() => ({
+      set: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      commit: vi.fn(() => Promise.resolve())
+    }))
   };
 });
 
 // Mock Firebase Storage
 vi.mock('firebase/storage', () => ({
-  getStorage: vi.fn(() => ({}))
+  getStorage: vi.fn(() => ({})),
+  ref: vi.fn(() => ({})),
+  uploadBytes: vi.fn(() => Promise.resolve({})),
+  getDownloadURL: vi.fn(() => Promise.resolve('https://example.com/mock-url')),
+  deleteObject: vi.fn(() => Promise.resolve())
 }));
 
 // Mock Firebase Functions
 vi.mock('firebase/functions', () => ({
   getFunctions: vi.fn(() => ({})),
-  httpsCallable: vi.fn(() => vi.fn())
+  httpsCallable: vi.fn(() => vi.fn(() => Promise.resolve({ data: { success: true, data: { id: 'mock-id' } } })))
 }));
 
 // Mock Firebase auth
 vi.mock('firebase/auth', () => ({
   getAuth: vi.fn(() => ({
     currentUser: null,
-    onAuthStateChanged: vi.fn()
+    onAuthStateChanged: vi.fn(),
+    signOut: vi.fn(() => Promise.resolve())
   })),
-  signInWithEmailAndPassword: vi.fn(),
-  signOut: vi.fn(),
-  onAuthStateChanged: vi.fn()
-}));
-
-// Mock the project's firebase.ts
-vi.mock('../src/lib/firebase', () => ({
-  db: {},
-  app: {},
-  auth: {},
-  functions: {},
-  enableOfflineMode: vi.fn(),
-  enableOnlineMode: vi.fn(),
-  isFirestoreEnabled: vi.fn(() => true)
+  signInWithEmailAndPassword: vi.fn(() => Promise.resolve({ user: { uid: 'mock-uid' } })),
+  signOut: vi.fn(() => Promise.resolve()),
+  onAuthStateChanged: vi.fn(),
+  sendPasswordResetEmail: vi.fn(() => Promise.resolve())
 }));
 
 // Mock Ant Design message
