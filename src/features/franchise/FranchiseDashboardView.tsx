@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Banknote, Activity, Bot } from 'lucide-react';
-import { formatMoney, FinancialReport, MonthlyData } from '../../lib/finance';
+import { ChevronLeft, ChevronRight, Activity, Bot } from 'lucide-react';
+import { FinancialReport, MonthlyData } from '../../lib/finance';
 import type { TrendItem } from '../../types/finance';
 import type { FinancialRecord } from './finance/types';
 import { TaxCalculations } from '../../hooks/useTaxCalculations';
@@ -15,9 +14,9 @@ import FranchiseHistoryView from './finance/FranchiseHistoryView';
 import ExpenseBreakdownWidget from './dashboard/widgets/ExpenseBreakdownWidget';
 import TakeHomeProfitWidget from './dashboard/widgets/TakeHomeProfitWidget';
 import RevenueAreaChart from './dashboard/widgets/RevenueAreaChart';
-import KPICard from './dashboard/widgets/KPICard';
 import HourlyCostWidget from './dashboard/widgets/HourlyCostWidget';
 import FinancialAdvisorWidget from './dashboard/widgets/FinancialAdvisorWidget';
+
 import WidgetLegendModal from './dashboard/WidgetLegendModal';
 import FinancialWorkflowGuide from './components/FinancialWorkflowGuide';
 import { GoalSettingModal } from './components/GoalSettingModal';
@@ -45,7 +44,7 @@ export interface FranchiseDashboardViewProps {
     effectiveMonth: string;
     readOnly: boolean;
     revenue: number;
-    orders: number;
+    orders?: number;
     totalExpenses: number;
     totalHours: number;
     revenueTrend: number;
@@ -77,7 +76,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
     effectiveMonth,
     readOnly,
     revenue,
-    orders,
+    orders: _orders,
     totalExpenses,
     totalHours,
     revenueTrend,
@@ -102,6 +101,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
     monthlyInvoicedAmount
 }: FranchiseDashboardViewProps) => {
     const { user } = useAuth();
+
     const [monthlyGoal, setMonthlyGoal] = useState(16000);
     const [showGoalModal, setShowGoalModal] = useState(false);
     const [goalModalMode, setGoalModalMode] = useState<'default' | 'monthly_kickoff'>('default');
@@ -129,12 +129,14 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
         checkKickoffAndLoadGoal();
     }, [user?.uid, effectiveMonth]);
 
+
+
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
             <div className="max-w-[1700px] mx-auto px-4 md:px-8 py-6">
 
                 {/* TACTICAL HEADER */}
-                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6 mt-4 relative">
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-4 mt-2 relative">
                     {/* Month Navigator */}
                     <div className="flex items-center gap-4">
                         <div className="flex items-center bg-white dark:bg-slate-800 rounded-2xl p-1 shadow-sm border border-slate-200 dark:border-slate-700">
@@ -216,106 +218,13 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                     </div>
                 </div>
 
-                {/* MAIN COCKPIT GRID */}
+
+                {/* MAIN COCKPIT HORIZONTAL MODULES */}
                 {!isHistoryView ? (
-                    <motion.div
-                        className="space-y-6"
-                        initial="hidden"
-                        animate="visible"
-                        variants={{
-                            hidden: {},
-                            visible: { transition: { staggerChildren: 0.08 } }
-                        }}
-                    >
+                    <div className="flex flex-col gap-6">
+                        <DynamicBanner />
 
-                        <motion.div variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}>
-                            <DynamicBanner />
-                        </motion.div>
-
-                        {/* CORE TELEMETRY ROW */}
-                        <motion.div
-                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-                            variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
-                        >
-
-
-                            {(() => {
-                                // Live Fallbacks for Dashboard before Month Close
-                                const liveRevenue = revenue > 0 ? revenue : (monthlyInvoicedAmount || 0);
-                                const liveLaborCost = Number(rawData?.salaries || 0) > 0 ? Number(rawData?.salaries) : totalHours * 7.5; // Base 7.5€/h estimation
-                                const liveTotalExpenses = totalExpenses > 0 ? totalExpenses : liveLaborCost;
-
-                                return (
-                                    <>
-                                        {/* Core KPIs */}
-                                        <ErrorBoundary>
-                                            <div onClick={() => {
-                                                if (readOnly) return;
-                                                setGoalModalMode('default');
-                                                setShowGoalModal(true);
-                                            }} className="h-full">
-                                                <KPICard
-                                                    title="Ingresos Netos"
-                                                    value={formatMoney(liveRevenue) + '€'}
-                                                    trend={Number(revenueTrend.toFixed(1))}
-                                                    trendData={trendData?.map(d => d.revenue || 0)}
-                                                    icon={<Banknote />}
-                                                    color="ruby"
-                                                    monthlyGoal={monthlyGoal}
-                                                    rawValue={liveRevenue}
-                                                    orders={orders}
-                                                    totalHours={totalHours}
-                                                    bestDay="FRIDAY"
-                                                />
-                                            </div>
-                                        </ErrorBoundary>
-
-                                        {/* Operating Profit / Wallet */}
-                                        <ErrorBoundary>
-                                            <div className="h-full">
-                                                <TakeHomeProfitWidget
-                                                    revenue={liveRevenue}
-                                                    totalExpenses={liveTotalExpenses}
-                                                    annualNetProfit={report?.metrics?.profitPerRider || 0}
-                                                    onDetailClick={() => setIsWizardOpen(true)}
-                                                />
-                                            </div>
-                                        </ErrorBoundary>
-
-                                        {/* Tax Vault Station */}
-                                        <ErrorBoundary>
-                                            <div className="h-full">
-                                                <TaxVaultWidget
-                                                    taxes={taxes || null}
-                                                    minimal
-                                                    currentMonth={effectiveMonth}
-                                                    historicalData={formattedTrendData as any}
-                                                />
-                                            </div>
-                                        </ErrorBoundary>
-
-                                        {/* Resource Efficiency */}
-                                        <ErrorBoundary>
-                                            <div className="h-full">
-                                                <HourlyCostWidget
-                                                    totalCost={liveTotalExpenses}
-                                                    totalHours={totalHours}
-                                                    trend={0}
-                                                    laborCost={liveLaborCost}
-                                                    otherCosts={liveTotalExpenses - liveLaborCost}
-                                                />
-                                            </div>
-                                        </ErrorBoundary>
-                                    </>
-                                );
-                            })()}
-                        </motion.div>
-
-                        {/* ANALYTICS RADAR LAYER */}
-                        <motion.div
-                            className="grid grid-cols-1 lg:grid-cols-12 gap-6"
-                            variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
-                        >
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                             {(() => {
                                 const liveRevenue = revenue > 0 ? revenue : (monthlyInvoicedAmount || 0);
                                 const liveLaborCost = Number(rawData?.salaries || 0) > 0 ? Number(rawData?.salaries) : totalHours * 7.5;
@@ -323,52 +232,92 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
 
                                 return (
                                     <>
-                                        {/* Financial Health Score */}
-                                        <ErrorBoundary>
-                                            <div className="lg:col-span-5">
-                                                <FinancialAdvisorWidget
-                                                    revenue={liveRevenue}
-                                                    expenses={liveTotalExpenses}
-                                                    margin={liveRevenue > 0 ? ((liveRevenue - liveTotalExpenses) / liveRevenue) * 100 : 0}
-                                                    hourlyCost={totalHours > 0 ? liveTotalExpenses / totalHours : 0}
-                                                    taxReserve={liveRevenue * 0.21}
-                                                    trend={revenueTrend}
-                                                    onOpenAdvisor={() => setIsAdvisorOpen(true)}
-                                                />
-                                            </div>
-                                        </ErrorBoundary>
+                                        {/* Row 1: Core Metrics & Intelligence (4 Columns) */}
+                                        <div className="col-span-1">
+                                            <ErrorBoundary>
+                                                <div className="h-full bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700">
+                                                    <TakeHomeProfitWidget
+                                                        revenue={liveRevenue}
+                                                        totalExpenses={liveTotalExpenses}
+                                                        annualNetProfit={report?.metrics?.profitPerRider || 0}
+                                                        onDetailClick={() => setIsWizardOpen(true)}
+                                                    />
+                                                </div>
+                                            </ErrorBoundary>
+                                        </div>
 
-                                        {/* Breakdown Terminal */}
-                                        <ErrorBoundary>
-                                            <div className="lg:col-span-7 h-full">
-                                                <ExpenseBreakdownWidget breakdown={fullExpenseBreakdown.length > 0 ? fullExpenseBreakdown : [{ label: 'Carga Laboral', amount: liveLaborCost, color: '#f59e0b' }]} />
+                                        <div className="col-span-1">
+                                            <ErrorBoundary>
+                                                <div className="h-full bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700">
+                                                    <TaxVaultWidget
+                                                        taxes={taxes || null}
+                                                        minimal
+                                                        currentMonth={effectiveMonth}
+                                                        historicalData={trendData as unknown as DashboardTrendItem[]}
+                                                    />
+                                                </div>
+                                            </ErrorBoundary>
+                                        </div>
+
+                                        <div className="col-span-1">
+                                            <ErrorBoundary>
+                                                <div className="h-full bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700">
+                                                    <FinancialAdvisorWidget
+                                                        revenue={liveRevenue}
+                                                        expenses={liveTotalExpenses}
+                                                        margin={liveRevenue > 0 ? ((liveRevenue - liveTotalExpenses) / liveRevenue) * 100 : 0}
+                                                        hourlyCost={totalHours > 0 ? liveTotalExpenses / totalHours : 0}
+                                                        taxReserve={liveRevenue * 0.21}
+                                                        trend={revenueTrend}
+                                                        onOpenAdvisor={() => setIsAdvisorOpen(true)}
+                                                    />
+                                                </div>
+                                            </ErrorBoundary>
+                                        </div>
+
+                                        <div className="col-span-1">
+                                            <ErrorBoundary>
+                                                <div className="h-full bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700">
+                                                    <HourlyCostWidget
+                                                        totalCost={liveTotalExpenses}
+                                                        totalHours={totalHours}
+                                                        trend={0}
+                                                        laborCost={liveLaborCost}
+                                                        otherCosts={liveTotalExpenses - liveLaborCost}
+                                                    />
+                                                </div>
+                                            </ErrorBoundary>
+                                        </div>
+
+                                        {/* Row 2: Charts and Breakdowns */}
+                                        <div className="col-span-1 md:col-span-2 lg:col-span-3 p-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 transition-all hover:border-slate-300 dark:hover:border-slate-700">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="h-3 w-1 bg-indigo-500 rounded-full" />
+                                                    <h3 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[.2em]">Evolución Mensual</h3>
+                                                </div>
                                             </div>
-                                        </ErrorBoundary>
+                                            <div className="h-[280px]">
+                                                <RevenueAreaChart data={formattedTrendData} />
+                                            </div>
+                                        </div>
+
+                                        <div className="col-span-1 md:col-span-2 lg:col-span-1">
+                                            <ErrorBoundary>
+                                                <div className="h-full bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700">
+                                                    <ExpenseBreakdownWidget breakdown={fullExpenseBreakdown.length > 0 ? fullExpenseBreakdown : [{ label: 'Carga Laboral', amount: liveLaborCost, color: '#6366f1' }]} />
+                                                </div>
+                                            </ErrorBoundary>
+                                        </div>
                                     </>
                                 );
                             })()}
-                        </motion.div>
-
-                        {/* TIMELINE EVOLUTION */}
-                        <ErrorBoundary>
-                            <motion.div
-                                className="workstation-card workstation-scanline p-6"
-                                variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
-                            >
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="h-6 w-1 bg-ruby-600 rounded-full" />
-                                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-[.3em]">Evolución Temporal</h3>
-                                </div>
-                                <div className="h-[300px]">
-                                    <RevenueAreaChart data={formattedTrendData} />
-                                </div>
-                            </motion.div>
-                        </ErrorBoundary>
-
-                    </motion.div>
+                        </div>
+                    </div>
                 ) : (
                     <FranchiseHistoryView franchiseId={franchiseId || ''} />
                 )}
+
 
                 {/* MODALS & OVERLAYS */}
                 {isWizardOpen && (

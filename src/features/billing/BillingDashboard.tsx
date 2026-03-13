@@ -337,6 +337,36 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
 
     return (
         <div className="pt-2">
+            {/* Action Buttons - Responsive row above tabs */}
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+                <Button
+                    type="default"
+                    size="middle"
+                    icon={<Building2 size={16} />}
+                    onClick={() => setIsFranchiseModalOpen(true)}
+                    className="h-9 px-3 sm:px-4 flex items-center gap-2"
+                >
+                    <span className="font-bold text-xs hidden sm:inline">Datos Franquicia</span>
+                </Button>
+                <Button
+                    type="default"
+                    size="middle"
+                    icon={<Target size={16} className="text-ruby-600" />}
+                    onClick={() => setShowGuide(true)}
+                    className="h-9 px-3 sm:px-4 flex items-center gap-2"
+                >
+                    <span className="font-bold text-xs text-ruby-600 hidden sm:inline">Guía</span>
+                </Button>
+                <Button
+                    type="primary"
+                    icon={<Plus size={18} strokeWidth={2.5} />}
+                    onClick={handleCreateInvoice}
+                    className="bg-emerald-600 hover:bg-emerald-500 border-none h-10 sm:h-11 px-4 sm:px-6 flex items-center gap-2 rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.4)] hover:shadow-[0_0_20px_rgba(16,185,129,0.6)] hover:scale-105 transition-all duration-300 animate-pulse-emerald relative z-10 ml-auto"
+                >
+                    <span className="font-bold text-xs sm:text-sm tracking-wide uppercase">Nueva Factura</span>
+                </Button>
+            </div>
+
             <Tabs
                 activeKey={activeTab}
                 onChange={setActiveTab}
@@ -344,36 +374,6 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
                 className="billing-tabs"
                 type="card"
                 size="large"
-                tabBarExtraContent={
-                    <div className="flex items-center gap-2">
-                        <Button
-                            type="default"
-                            size="middle"
-                            icon={<Building2 size={16} />}
-                            onClick={() => setIsFranchiseModalOpen(true)}
-                            className="h-9 px-4 flex items-center gap-2"
-                        >
-                            <span className="font-bold text-xs">Datos Franquicia</span>
-                        </Button>
-                        <Button
-                            type="default"
-                            size="middle"
-                            icon={<Target size={16} className="text-ruby-600" />}
-                            onClick={() => setShowGuide(true)}
-                            className="h-9 px-4 flex items-center gap-2 border-ruby-100 hover:border-ruby-200 hover:bg-ruby-50/50"
-                        >
-                            <span className="font-bold text-xs text-ruby-600">Guía</span>
-                        </Button>
-                        <Button
-                            type="primary"
-                            icon={<Plus size={20} strokeWidth={2.5} />}
-                            onClick={handleCreateInvoice}
-                            className="bg-emerald-600 hover:bg-emerald-500 border-none h-11 px-6 flex items-center gap-2 rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.4)] hover:shadow-[0_0_20px_rgba(16,185,129,0.6)] hover:scale-105 transition-all duration-300 animate-pulse-emerald relative z-10"
-                        >
-                            <span className="font-bold text-sm tracking-wide uppercase">Nueva Factura</span>
-                        </Button>
-                    </div>
-                }
             />
 
             {/* Modal del Creador de Facturas */}
@@ -454,7 +454,7 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
                             <Input placeholder="Ej: Calle Mayor 123" />
                         </Form.Item>
 
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <Form.Item
                                 label="Código Postal"
                                 name="zipCode"

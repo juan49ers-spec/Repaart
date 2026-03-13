@@ -1,0 +1,189 @@
+
+ RUN  v4.0.18 C:/Users/Usuario/.gemini/antigravity/playground/repaart
+
+ ├ù src/services/billing/__tests__/adminInvoices.test.ts > adminInvoicesService - New Features > deleteDraftInvoice > should delete a draft invoice successfully 6ms
+   ÔåÆ expected "vi.fn()" to be called at least once
+ ├ù src/services/billing/__tests__/adminInvoices.test.ts > adminInvoicesService - New Features > deleteDraftInvoice > should throw error if invoice is not draft 5ms
+   ÔåÆ promise resolved "{ success: false, ÔÇª(1) }" instead of rejecting
+ ├ù src/services/billing/__tests__/adminInvoices.test.ts > adminInvoicesService - New Features > updateDraftDetails > should update draft details successfully 1ms
+   ÔåÆ expected "vi.fn()" to be called with arguments: [ undefined, ObjectContaining{ÔÇª} ][90m
+
+Number of calls: [1m0[22m
+[39m
+ ├ù src/services/billing/__tests__/adminInvoices.test.ts > adminInvoicesService - New Features > updateDraftDetails > should throw error if updating a non-draft invoice 1ms
+   ÔåÆ promise resolved "{ success: false, ÔÇª(1) }" instead of rejecting
+ ├ù src/services/billing/__tests__/adminInvoices.test.ts > adminInvoicesService - New Features > duplicateInvoice > should duplicate an invoice as a new draft 3ms
+   ÔåÆ expected { success: false, ÔÇª(1) } to be 'new-inv-789' // Object.is equality
+ ├ù src/services/billing/__tests__/adminInvoices.test.ts > adminInvoicesService - New Features > voidInvoice (improvement verification) > should void an invoice with reason and audit info 2ms
+   ÔåÆ expected "vi.fn()" to be called with arguments: [ undefined, ObjectContaining{ÔÇª} ][90m
+
+Received: 
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[2m    undefined,[22m
+[32m-   ObjectContaining {[90m
+[32m-     "status": "void",[90m
+[31m+   {[90m
+[31m+     "documentStatus": "void",[90m
+[31m+     "updatedAt": "mock-timestamp",[90m
+[31m+     "updatedBy": "admin-123",[90m
+[2m      "voidReason": "Error in data",[22m
+[2m      "voidedAt": "mock-timestamp",[22m
+[2m      "voidedBy": "admin-123",[22m
+[2m    },[22m
+[2m  ][22m
+[39m[90m
+
+Number of calls: [1m1[22m
+[39m
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ» Failed Tests 6 ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»
+
+ FAIL  src/services/billing/__tests__/adminInvoices.test.ts > adminInvoicesService - New Features > deleteDraftInvoice > should delete a draft invoice successfully
+AssertionError: expected "vi.fn()" to be called at least once
+ ÔØ» src/services/billing/__tests__/adminInvoices.test.ts:45:35
+     43|       await adminInvoicesService.deleteDraftInvoice(mockInvoiceId, mocÔÇª
+     44| 
+     45|       expect(firestore.deleteDoc).toHaveBeenCalled();
+       |                                   ^
+     46|     });
+     47| 
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[1/6]ÔÄ»
+
+ FAIL  src/services/billing/__tests__/adminInvoices.test.ts > adminInvoicesService - New Features > deleteDraftInvoice > should throw error if invoice is not draft
+AssertionError: promise resolved "{ success: false, ÔÇª(1) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "error": Error {
++     "message": "Solo se pueden eliminar borradores. Las facturas emitidas deben anularse.",
++   },
++   "success": false,
+  }
+
+ ÔØ» src/services/billing/__tests__/adminInvoices.test.ts:56:88
+     54|       vi.mocked(firestore.getDoc).mockResolvedValue(mockSnap as any);
+     55| 
+     56|       await expect(adminInvoicesService.deleteDraftInvoice(mockInvoiceÔÇª
+       |                                                                                        ^
+     57|         .rejects.toThrow('No se puede eliminar una factura que no est├®ÔÇª
+     58|     });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[2/6]ÔÄ»
+
+ FAIL  src/services/billing/__tests__/adminInvoices.test.ts > adminInvoicesService - New Features > updateDraftDetails > should update draft details successfully
+AssertionError: expected "vi.fn()" to be called with arguments: [ undefined, ObjectContaining{ÔÇª} ]
+
+Number of calls: 0
+
+ ÔØ» src/services/billing/__tests__/adminInvoices.test.ts:74:35
+     72|       await adminInvoicesService.updateDraftDetails(mockInvoiceId, updÔÇª
+     73| 
+     74|       expect(firestore.updateDoc).toHaveBeenCalledWith(
+       |                                   ^
+     75|         undefined, 
+     76|         expect.objectContaining({
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[3/6]ÔÄ»
+
+ FAIL  src/services/billing/__tests__/adminInvoices.test.ts > adminInvoicesService - New Features > updateDraftDetails > should throw error if updating a non-draft invoice
+AssertionError: promise resolved "{ success: false, ÔÇª(1) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "error": Error {
++     "message": "Solo se pueden editar borradores.",
++   },
++   "success": false,
+  }
+
+ ÔØ» src/services/billing/__tests__/adminInvoices.test.ts:91:92
+     89|       vi.mocked(firestore.getDoc).mockResolvedValue(mockSnap as any);
+     90| 
+     91|       await expect(adminInvoicesService.updateDraftDetails(mockInvoiceÔÇª
+       |                                                                                            ^
+     92|         .rejects.toThrow('Solo se pueden editar borradores');
+     93|     });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[4/6]ÔÄ»
+
+ FAIL  src/services/billing/__tests__/adminInvoices.test.ts > adminInvoicesService - New Features > duplicateInvoice > should duplicate an invoice as a new draft
+AssertionError: expected { success: false, ÔÇª(1) } to be 'new-inv-789' // Object.is equality
+
+- Expected: 
+"new-inv-789"
+
++ Received: 
+{
+  "error": ServiceError {
+    "message": "[duplicateInvoice] Cannot read properties of undefined (reading 'id')",
+    "code": "UNKNOWN",
+    "context": "duplicateInvoice",
+    "recoverable": true,
+    "timestamp": 1773345059259,
+    "name": "ServiceError",
+  },
+  "success": false,
+}
+
+ ÔØ» src/services/billing/__tests__/adminInvoices.test.ts:117:21
+    115|       const newId = await adminInvoicesService.duplicateInvoice(mockInÔÇª
+    116| 
+    117|       expect(newId).toBe('new-inv-789');
+       |                     ^
+    118|       expect(firestore.addDoc).toHaveBeenCalledWith(
+    119|         undefined,
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[5/6]ÔÄ»
+
+ FAIL  src/services/billing/__tests__/adminInvoices.test.ts > adminInvoicesService - New Features > voidInvoice (improvement verification) > should void an invoice with reason and audit info
+AssertionError: expected "vi.fn()" to be called with arguments: [ undefined, ObjectContaining{ÔÇª} ]
+
+Received: 
+
+  1st vi.fn() call:
+
+  [
+    undefined,
+-   ObjectContaining {
+-     "status": "void",
++   {
++     "documentStatus": "void",
++     "updatedAt": "mock-timestamp",
++     "updatedBy": "admin-123",
+      "voidReason": "Error in data",
+      "voidedAt": "mock-timestamp",
+      "voidedBy": "admin-123",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ÔØ» src/services/billing/__tests__/adminInvoices.test.ts:142:35
+    140|       await adminInvoicesService.voidInvoice(mockInvoiceId, 'Error in ÔÇª
+    141| 
+    142|       expect(firestore.updateDoc).toHaveBeenCalledWith(
+       |                                   ^
+    143|         undefined,
+    144|         expect.objectContaining({
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[6/6]ÔÄ»
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed (6)
+   Start at  20:50:57
+   Duration  1.44s (transform 106ms, setup 159ms, import 186ms, tests 19ms, environment 855ms)
+

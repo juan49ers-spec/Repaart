@@ -251,6 +251,22 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
         }
     };
 
+    const handleRepairAccess = async () => {
+        if (!currentUser) return;
+        setActionLoading(true);
+        try {
+            // Simulamos o ejecutamos una llamada que fuerce la regeneración de claims
+            // En este caso, el servidor ya lo hace al actualizar el campo 'role'
+            // Forzamos una actualización del mismo rol para disparar el trigger
+            await updateUser(currentUser.uid, { role: 'admin' });
+            toast?.success('Acceso reparado. Por favor, cierra sesión y vuelve a entrar para aplicar los cambios.');
+        } catch (err: unknown) {
+            toast?.error('Error al reparar acceso: ' + (err instanceof Error ? err.message : 'Error desconocido'));
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="h-[400px] flex items-center justify-center">
@@ -280,27 +296,41 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
 
             {/* --- TABS --- */}
             {!franchiseId && (
-                <div className="flex gap-2 pb-0 shrink-0 px-0 pt-0 mb-6 border-b border-slate-100 dark:border-slate-800">
-                    <button
-                        onClick={() => setActiveTab('structure')}
-                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${activeTab === 'structure' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}`}
-                    >
-                        <Building className="w-4 h-4" />
-                        <span>Franquicias y Admins</span>
-                        <span className={`ml-1 px-2 py-0.5 text-xs rounded-full font-bold transition-colors ${activeTab === 'structure' ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400'}`}>
-                            {structureCount}
-                        </span>
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('riders')}
-                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${activeTab === 'riders' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}`}
-                    >
-                        <Users className="w-4 h-4" />
-                        <span>Riders y Usuarios</span>
-                        <span className={`ml-1 px-2 py-0.5 text-xs rounded-full font-bold transition-colors ${activeTab === 'riders' ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400'}`}>
-                            {ridersCount}
-                        </span>
-                    </button>
+                <div className="flex items-center justify-between gap-2 pb-0 shrink-0 px-0 pt-0 mb-6 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setActiveTab('structure')}
+                            className={`px-4 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${activeTab === 'structure' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}`}
+                        >
+                            <Building className="w-4 h-4" />
+                            <span>Franquicias y Admins</span>
+                            <span className={`ml-1 px-2 py-0.5 text-xs rounded-full font-bold transition-colors ${activeTab === 'structure' ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400'}`}>
+                                {structureCount}
+                            </span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('riders')}
+                            className={`px-4 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${activeTab === 'riders' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}`}
+                        >
+                            <Users className="w-4 h-4" />
+                            <span>Riders y Usuarios</span>
+                            <span className={`ml-1 px-2 py-0.5 text-xs rounded-full font-bold transition-colors ${activeTab === 'riders' ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400'}`}>
+                                {ridersCount}
+                            </span>
+                        </button>
+                    </div>
+
+                    {isGlobalAdmin && (
+                        <button
+                            onClick={handleRepairAccess}
+                            disabled={actionLoading}
+                            className="mb-2 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-amber-600 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-800 transition-all flex items-center gap-2 active:scale-95 disabled:opacity-50"
+                            title="Haz clic aquí si tienes errores de permisos al crear facturas"
+                        >
+                            <ShieldAlert className="w-3.5 h-3.5" />
+                            Reparar Mi Acceso
+                        </button>
+                    )}
                 </div>
             )}
 

@@ -243,8 +243,8 @@ export const TaxVaultPanel: React.FC<Props> = ({ franchiseId, refreshTrigger }) 
                 }
                 className="mb-4 bg-slate-50/20"
             >
-                <Row gutter={12}>
-                    <Col span={8}>
+                <Row gutter={[12, 12]}>
+                    <Col xs={24} md={8}>
                         <Statistic
                             title={<span className="text-[10px] uppercase tracking-tight font-medium text-slate-400">IVA Repercutido</span>}
                             value={totalStats.ivaRepercutido}
@@ -253,7 +253,7 @@ export const TaxVaultPanel: React.FC<Props> = ({ franchiseId, refreshTrigger }) 
                             styles={{ content: { color: '#10b981', fontSize: '16px', fontWeight: 'bold' } }}
                         />
                     </Col>
-                    <Col span={8}>
+                    <Col xs={24} md={8}>
                         <Statistic
                             title={<span className="text-[10px] uppercase tracking-tight font-medium text-slate-400">IVA Soportado</span>}
                             value={totalStats.ivaSoportado}
@@ -262,7 +262,7 @@ export const TaxVaultPanel: React.FC<Props> = ({ franchiseId, refreshTrigger }) 
                             styles={{ content: { color: '#ef4444', fontSize: '16px', fontWeight: 'bold' } }}
                         />
                     </Col>
-                    <Col span={8}>
+                    <Col xs={24} md={8}>
                         <Statistic
                             title={<span className="text-[10px] uppercase tracking-tight font-medium text-slate-400">IVA Neto</span>}
                             value={totalStats.ivaRepercutido - totalStats.ivaSoportado}
@@ -284,7 +284,7 @@ export const TaxVaultPanel: React.FC<Props> = ({ franchiseId, refreshTrigger }) 
                 size="small"
                 title={<span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Tax Vault - Agregación de Impuestos</span>}
                 extra={
-                    <Space>
+                    <div className="flex flex-wrap items-center justify-end gap-2 w-full max-w-full">
                         <DatePicker.MonthPicker
                             size="small"
                             placeholder="Periodo"
@@ -306,7 +306,7 @@ export const TaxVaultPanel: React.FC<Props> = ({ franchiseId, refreshTrigger }) 
                         >
                             Exportar
                         </Button>
-                    </Space>
+                    </div>
                 }
             >
                 <Alert
@@ -319,6 +319,7 @@ export const TaxVaultPanel: React.FC<Props> = ({ franchiseId, refreshTrigger }) 
 
                 <Table
                     size="small"
+                    scroll={{ x: 600 }}
                     columns={columns}
                     dataSource={taxEntries}
                     rowKey="id"

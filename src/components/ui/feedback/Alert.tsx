@@ -65,23 +65,23 @@ export const Alert: React.FC<AlertProps> = ({
     <div
       role="alert"
       className={cn(
-        'relative p-4 rounded-xl border',
+        'relative p-3 rounded-lg border',
         'animate-in fade-in slide-in-from-top-2',
         style.bg,
         style.border,
         className
       )}
     >
-      <div className="flex gap-3">
-        <Icon className={cn('w-5 h-5 flex-shrink-0 mt-0.5', style.iconColor)} />
-        
-        <div className="flex-1">
+      <div className="flex gap-2">
+        <Icon className={cn('w-4 h-4 flex-shrink-0 mt-0.5', style.iconColor)} />
+
+        <div className="flex-1 min-w-0">
           {title && (
-            <h3 className={cn('font-semibold mb-1', style.text)}>
+            <h3 className={cn('font-semibold text-sm mb-0.5', style.text)}>
               {title}
             </h3>
           )}
-          <p className={cn('text-fluid-sm', style.text)}>
+          <p className={cn('text-xs leading-relaxed', style.text)}>
             {message}
           </p>
         </div>
@@ -91,13 +91,13 @@ export const Alert: React.FC<AlertProps> = ({
             onClick={onClose}
             aria-label="Cerrar"
             className={cn(
-              'flex-shrink-0 -mr-1 -mt-1 p-1 rounded-lg',
+              'flex-shrink-0 p-0.5 rounded-md',
               'hover:bg-black/5 dark:hover:bg-white/5',
               'transition-colors',
               style.text
             )}
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         )}
       </div>

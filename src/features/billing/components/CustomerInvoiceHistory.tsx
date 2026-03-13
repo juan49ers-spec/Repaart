@@ -6,20 +6,20 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-    Modal, 
-    Table, 
-    Tag, 
-    Spin, 
-    Empty, 
-    Row, 
+import {
+    Modal,
+    Table,
+    Tag,
+    Spin,
+    Empty,
+    Row,
     Col,
     Button,
     Tooltip
 } from 'antd';
-import { 
-    FileText, 
-    Euro, 
+import {
+    FileText,
+    Euro,
     CheckCircle,
     AlertTriangle,
     ExternalLink
@@ -45,7 +45,7 @@ interface CustomerStats {
     invoiceCount: number;
 }
 
-const formatCurrency = (amount: number) => 
+const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
 
 const formatDate = (date: Date | Timestamp | string) => {
@@ -199,8 +199,8 @@ export const CustomerInvoiceHistory: React.FC<Props> = ({
             ) : (
                 <div className="space-y-6">
                     {stats && (
-                        <Row gutter={16}>
-                            <Col span={6}>
+                        <Row gutter={[16, 16]}>
+                            <Col xs={12} md={6}>
                                 <div className="bg-slate-50 rounded-lg p-4 text-center">
                                     <div className="flex items-center justify-center gap-2 mb-1">
                                         <FileText className="w-4 h-4 text-slate-400" />
@@ -209,7 +209,7 @@ export const CustomerInvoiceHistory: React.FC<Props> = ({
                                     <div className="text-xs text-slate-500">Facturas</div>
                                 </div>
                             </Col>
-                            <Col span={6}>
+                            <Col xs={12} md={6}>
                                 <div className="bg-blue-50 rounded-lg p-4 text-center">
                                     <div className="flex items-center justify-center gap-2 mb-1">
                                         <Euro className="w-4 h-4 text-blue-500" />
@@ -218,7 +218,7 @@ export const CustomerInvoiceHistory: React.FC<Props> = ({
                                     <div className="text-xs text-blue-600">Total Facturado</div>
                                 </div>
                             </Col>
-                            <Col span={6}>
+                            <Col xs={12} md={6}>
                                 <div className="bg-green-50 rounded-lg p-4 text-center">
                                     <div className="flex items-center justify-center gap-2 mb-1">
                                         <CheckCircle className="w-4 h-4 text-green-500" />
@@ -227,7 +227,7 @@ export const CustomerInvoiceHistory: React.FC<Props> = ({
                                     <div className="text-xs text-green-600">Cobrado</div>
                                 </div>
                             </Col>
-                            <Col span={6}>
+                            <Col xs={12} md={6}>
                                 <div className={`rounded-lg p-4 text-center ${stats.totalPending > 0 ? 'bg-orange-50' : 'bg-slate-50'}`}>
                                     <div className="flex items-center justify-center gap-2 mb-1">
                                         {stats.totalPending > 0 ? (
@@ -259,6 +259,7 @@ export const CustomerInvoiceHistory: React.FC<Props> = ({
                             rowKey="id"
                             pagination={{ pageSize: 5, showSizeChanger: false }}
                             size="small"
+                            scroll={{ x: 700 }}
                         />
                     )}
                 </div>

@@ -459,30 +459,30 @@ const FlyderOrdersDashboard: React.FC = () => {
 
       {/* Table */}
       <div className="glass-card rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
+        <div>
           <table className="w-full">
             <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">ID</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Fecha</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Cliente</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Rider</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Estado</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Total</th>
+                <th className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider w-12">ID</th>
+                <th className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider">Fecha</th>
+                <th className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider">Cliente</th>
+                <th className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider">Rider</th>
+                <th className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider w-20">Estado</th>
+                <th className="px-3 py-2 text-right text-[10px] font-bold uppercase tracking-wider w-16">Total</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center">
+                  <td colSpan={6} className="px-3 py-8 text-center">
                     <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                     </div>
                   </td>
                 </tr>
               ) : filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-slate-500">
+                  <td colSpan={6} className="px-3 py-8 text-center text-slate-500">
                     No hay pedidos
                   </td>
                 </tr>
@@ -494,30 +494,30 @@ const FlyderOrdersDashboard: React.FC = () => {
                   return (
                     <React.Fragment key={order.id}>
                       <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer" onClick={() => toggleOrderExpansion(order.id)}>
-                        <td className="px-4 py-3 text-sm font-mono">
-                          <div className="flex items-center gap-2">
+                        <td className="px-3 py-2 text-xs font-mono">
+                          <div className="flex items-center gap-1.5">
                             <ChevronRight
                               className={cn(
-                                "w-4 h-4 transition-transform text-slate-400",
+                                "w-3.5 h-3.5 transition-transform text-slate-400 flex-shrink-0",
                                 isExpanded && "rotate-90"
                               )}
                             />
-                            #{String(order.id || '')}
+                            <span className="truncate">#{String(order.id || '')}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                        <td className="px-3 py-2 text-xs text-slate-600 dark:text-slate-400">
                           {formatDate(order.created_at)}
                         </td>
-                        <td className="px-4 py-3 text-sm">
-                          <span className="font-medium">{formatCustomerName(order)}</span>
+                        <td className="px-3 py-2 text-xs">
+                          <span className="font-medium truncate block max-w-[120px]">{formatCustomerName(order)}</span>
                         </td>
-                        <td className="px-4 py-3 text-sm">{String(order.rider_name || '-')}</td>
-                        <td className="px-4 py-3">
-                          <span className={cn("px-2 py-1 rounded-full text-xs font-medium", statusConfig.color)}>
+                        <td className="px-3 py-2 text-xs">{String(order.rider_name || '-')}</td>
+                        <td className="px-3 py-2">
+                          <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-medium", statusConfig.color)}>
                             {statusConfig.label}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm font-semibold">
+                        <td className="px-3 py-2 text-xs font-semibold text-right">
                           €{Number(order.total || 0).toFixed(2)}
                         </td>
                       </tr>

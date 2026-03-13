@@ -345,7 +345,7 @@ const AcademyAdmin = () => {
             module_id: selectedModule.id,
             title: 'Nueva Lección',
             content: '',
-            content_type: 'text',
+            content_type: 'video',
             duration: 10,
             order: newOrder,
             status: 'draft'

@@ -16,7 +16,7 @@ const NavigationSidebar: React.FC<NavigationSidebarProps> = ({ isAdmin, isFranch
         {
             id: 'direccion',
             label: 'dirección',
-            items: navItems.filter(i => ['Finanzas', 'Kanban'].includes(i.label))
+            items: navItems.filter(i => ['Finanzas', 'Kanban', 'Facturación'].includes(i.label))
         },
         {
             id: 'operacion',

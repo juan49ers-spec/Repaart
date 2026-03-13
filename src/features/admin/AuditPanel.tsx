@@ -101,64 +101,64 @@ const AuditPanel = () => {
 
             {/* HIGH DENSITY LOG TABLE */}
             <div className="workstation-card workstation-scanline overflow-hidden p-0 border-white/40 dark:border-white/5">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
+                <div>
+                    <table className="w-full text-left border-collapse table-fixed">
                         <thead>
                             <tr className="bg-slate-50/50 dark:bg-white/5 border-b border-slate-100 dark:border-white/5">
-                                <th className="w-40 px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">marca.tiempo</th>
-                                <th className="w-64 px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">identidad.actor</th>
-                                <th className="w-48 px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">protocolo.accion</th>
-                                <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">traza.carga</th>
-                                <th className="w-16 px-6 py-4"></th>
+                                <th className="w-28 px-3 py-2 text-[8px] font-black text-slate-400 uppercase tracking-widest font-mono">marca.tiempo</th>
+                                <th className="w-36 px-3 py-2 text-[8px] font-black text-slate-400 uppercase tracking-widest font-mono">identidad.actor</th>
+                                <th className="w-28 px-3 py-2 text-[8px] font-black text-slate-400 uppercase tracking-widest font-mono">protocolo.accion</th>
+                                <th className="px-3 py-2 text-[8px] font-black text-slate-400 uppercase tracking-widest font-mono">traza.carga</th>
+                                <th className="w-10 px-3 py-2"></th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50 dark:divide-white/5">
                             {logs.map(log => (
-                                <tr key={log.id} className="group/row hover:bg-slate-50/50 dark:hover:bg-white/5 transition-all">
-                                    <td className="px-6 py-4">
+                                <tr key={log.id} className="group/row hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors">
+                                    <td className="px-3 py-2">
                                         <div className="flex flex-col">
-                                            <span className="text-[11px] font-black text-slate-700 dark:text-slate-300 tabular-nums font-mono italic">
+                                            <span className="text-[10px] font-black text-slate-700 dark:text-slate-300 tabular-nums font-mono italic">
                                                 {formatTime(log.timestamp).split(' ')[0]}
                                             </span>
-                                            <span className="text-[9px] font-bold text-slate-400 font-mono mt-0.5">
+                                            <span className="text-[8px] font-bold text-slate-400 font-mono">
                                                 {formatTime(log.timestamp).split(' ')[1]}
                                             </span>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 flex items-center justify-center text-slate-400 group-hover/row:scale-110 transition-transform">
-                                                <User className="w-4 h-4" />
+                                    <td className="px-3 py-2">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 flex items-center justify-center text-slate-400 flex-shrink-0">
+                                                <User className="w-3 h-3" />
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="text-[11px] font-black text-slate-800 dark:text-slate-200 truncate leading-tight italic">{log.actorEmail}</p>
-                                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest font-mono">ID_{(log.actorId || '').slice(0, 8)}</p>
+                                                <p className="text-[10px] font-black text-slate-800 dark:text-slate-200 truncate leading-tight italic">{log.actorEmail}</p>
+                                                <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest font-mono">ID_{(log.actorId || '').slice(0, 6)}</p>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-3 py-2">
                                         <span className={cn(
-                                            "inline-flex px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border",
+                                            "inline-flex px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border",
                                             getActionStyle(log.action)
                                         )}>
                                             {log.action.toLowerCase().replace(/_/g, '.')}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-3 py-2">
                                         <div className="relative group/payload cursor-default">
-                                            <code className="text-[10px] bg-slate-100 dark:bg-black/40 p-2 rounded-xl text-slate-500 dark:text-slate-400 break-all block max-w-full font-mono border border-slate-200 dark:border-white/5 transition-all group-hover/row:border-ruby-600/30">
-                                                {JSON.stringify(log.details || {}).substring(0, 100)}{JSON.stringify(log.details || {}).length > 100 ? '...' : ''}
+                                            <code className="text-[9px] bg-slate-100 dark:bg-black/40 p-1.5 rounded text-slate-500 dark:text-slate-400 break-all block font-mono border border-slate-200 dark:border-white/5 transition-colors group-hover/row:border-ruby-600/30">
+                                                {JSON.stringify(log.details || {}).substring(0, 60)}{JSON.stringify(log.details || {}).length > 60 ? '...' : ''}
                                             </code>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 opacity-0 group-hover/row:opacity-100 transition-opacity">
-                                        <ArrowRight className="w-4 h-4 text-ruby-600" />
+                                    <td className="px-3 py-2 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                                        <ArrowRight className="w-3.5 h-3.5 text-ruby-600" />
                                     </td>
                                 </tr>
                             ))}
                             {logs.length === 0 && (
                                 <tr>
-                                    <td colSpan={5} className="py-20">
+                                    <td colSpan={5} className="py-16">
                                         <EmptyState
                                             icon={ShieldCheck}
                                             title="LOG.BUFFER.EMPTY"

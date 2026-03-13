@@ -92,12 +92,13 @@
     pointer-events: none;
 }
 
-/* Allow only interactive elements to be clickable */
+/* Allow interactive elements to be clickable */
 .protected-content button,
 .protected-content a,
 .protected-content input,
 .protected-content select,
 .protected-content textarea,
+.protected-content iframe,
 .protected-content [role="button"] {
     pointer-events: auto;
     cursor: pointer;
@@ -363,6 +364,7 @@ html {
 
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
+
     *,
     *::before,
     *::after {
@@ -445,8 +447,13 @@ html {
 
 /* Progress Bar Animation */
 @keyframes progressFill {
-    from { width: 0; }
-    to { width: var(--progress-width); }
+    from {
+        width: 0;
+    }
+
+    to {
+        width: var(--progress-width);
+    }
 }
 
 .progress-animated {

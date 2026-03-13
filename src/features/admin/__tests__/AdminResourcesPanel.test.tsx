@@ -13,7 +13,7 @@ vi.mock('../../../context/AuthContext', () => ({
 vi.mock('lucide-react', () => {
     const icons = {
         FileText: null, Image: null, File: null, Grid: null, List: null, Search: null, Trash2: null, Eye: null,
-        Download: null, Plus: null, Pin: null, FolderOpen: null, Shield: null, Briefcase: null, BookOpen: null,
+        Download: null, Plus: null, Pin: null, FolderOpen: null, Briefcase: null, BookOpen: null,
         Layout: null, Folder: null, RefreshCw: null, ShieldAlert: null, Wrench: null, Users: null, PlayCircle: null,
         Zap: null, Heart: null, Star: null, Award: null, Info: null, AlertTriangle: null, CheckCircle: null, AlertCircle: null,
         HelpCircle: null, Lightbulb: null, Target: null, Loader2: null, Check: null, ChevronRight: null,
@@ -75,26 +75,37 @@ vi.mock('../resources/SmartContractWizard', () => ({
     ) : null
 }));
 vi.mock('../resources/FiscalValidationModal', () => ({
-    default: ({ isOpen, onClose }: any) => isOpen ? (
+    default: ({ isOpen, onClose, onContinue, onEdit }: any) => isOpen ? (
         <div data-testid="fiscal-validation-modal">
             <button onClick={onClose}>Close</button>
+            <button onClick={onContinue} data-testid="fiscal-continue">Continue</button>
+            <button onClick={onEdit} data-testid="fiscal-edit">Edit</button>
         </div>
     ) : null
 }));
 vi.mock('../resources/FiscalDataForm', () => ({
-    default: ({ isOpen, onClose }: any) => isOpen ? (
+    default: ({ isOpen, onClose, onSuccess }: any) => isOpen ? (
         <div data-testid="fiscal-data-form">
             <button onClick={onClose}>Close</button>
+            <button onClick={onSuccess} data-testid="fiscal-success">Success</button>
         </div>
     ) : null
 }));
 vi.mock('../resources/TemplateSelector', () => ({
-    default: ({ isOpen, onClose }: any) => isOpen ? (
+    default: ({ isOpen, onClose, onSelectTemplate }: any) => isOpen ? (
         <div data-testid="template-selector">
             <button onClick={onClose}>Close</button>
+            <button onClick={() => onSelectTemplate({ content: 'test content' })} data-testid="select-template">Select</button>
         </div>
     ) : null
 }));
+vi.mock('react-hot-toast', () => ({
+    default: {
+        success: vi.fn(),
+        error: vi.fn()
+    }
+}));
+
 vi.mock('../../../services/resourceRequestService', () => ({
     resourceRequestService: {
         getPendingRequestsCount: vi.fn(() => 1),
@@ -323,13 +334,13 @@ describe('AdminResourcesPanel Integration', () => {
     });
 
     it('should handle token refresh', async () => {
+        const toast = (await import('react-hot-toast')).default;
         render(<AdminResourcesPanel />);
-        window.alert = vi.fn();
 
         fireEvent.click(screen.getByText(/Actualizar Token/i));
 
         await waitFor(() => {
-            expect(window.alert).toHaveBeenCalledWith(expect.stringMatching(/Token actualizado/i));
+            expect(toast.success).toHaveBeenCalledWith(expect.stringMatching(/Token actualizado/i));
         });
     });
 
@@ -349,18 +360,39 @@ describe('AdminResourcesPanel Integration', () => {
         expect(dashboard).toBeInTheDocument();
     });
 
-    it('should open smart contract wizard', async () => {
+    it('should open smart contract wizard and follow overlay sequence', async () => {
         render(<AdminResourcesPanel />);
 
         await waitFor(() => expect(adminSnapshotCallback).toBeTruthy());
         act(() => triggerSnapshot());
 
-        const wizardButton = await screen.findByText(/Generar Inteligente/i);
+        // We find the wizard button (in empty state or sidebar)
+        const wizardButton = await screen.findAllByText(/Generar/i);
         await act(async () => {
-            fireEvent.click(wizardButton);
+            fireEvent.click(wizardButton[0]);
         });
 
-        const modal = await screen.findByTestId('fiscal-validation-modal');
-        expect(modal).toBeInTheDocument();
+        // 1. Opens FiscalValidationModal
+        expect(screen.getByTestId('fiscal-validation-modal')).toBeInTheDocument();
+        
+        // 2. Click continue -> opens TemplateSelector
+        await act(async () => {
+            fireEvent.click(screen.getByTestId('fiscal-continue'));
+        });
+        expect(screen.queryByTestId('fiscal-validation-modal')).not.toBeInTheDocument();
+        expect(screen.getByTestId('template-selector')).toBeInTheDocument();
+
+        // 3. Select template -> opens Wizard
+        await act(async () => {
+            fireEvent.click(screen.getByTestId('select-template'));
+        });
+        expect(screen.queryByTestId('template-selector')).not.toBeInTheDocument();
+        expect(screen.getByTestId('smart-contract-wizard')).toBeInTheDocument();
+        
+        // 4. Close wizard
+        await act(async () => {
+            fireEvent.click(screen.getByText('Close Wizard'));
+        });
+        expect(screen.queryByTestId('smart-contract-wizard')).not.toBeInTheDocument();
     });
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { type FC, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { List, PieChart as PieChartIcon, Users, Bike, Car, Fuel, Building2, Smartphone, ShieldCheck, Briefcase, Landmark, FileText, MoreHorizontal, Wrench, Activity } from 'lucide-react';
 import { formatMoney } from '../../../../lib/finance';
@@ -51,7 +51,7 @@ const CustomTooltip = ({ active, payload, totalExpenses }: any) => {
     return null;
 };
 
-const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdown }) => {
+const ExpenseBreakdownWidget: FC<ExpenseBreakdownWidgetProps> = ({ breakdown }) => {
     const [viewMode, setViewMode] = useState<'list' | 'chart'>('list');
     const sortedData = [...breakdown].sort((a, b) => b.amount - a.amount);
     const totalExpenses = sortedData.reduce((sum, item) => sum + item.amount, 0);
@@ -64,9 +64,9 @@ const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdo
     }));
 
     return (
-        <div className="workstation-card workstation-scanline p-6 h-full flex flex-col group/card transition-all mechanical-press overflow-hidden min-h-[460px]">
+        <div className="workstation-card workstation-scanline p-4 h-full flex flex-col group/card transition-all mechanical-press overflow-hidden min-h-[350px]">
             {/* HEADER */}
-            <div className="flex items-center justify-between mb-4 shrink-0">
+            <div className="flex items-center justify-between mb-2 shrink-0">
                 <div className="flex items-center gap-3">
                     <div className="p-1.5 bg-rose-50 dark:bg-rose-900/20 rounded-lg">
                         <Activity className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
@@ -82,6 +82,8 @@ const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdo
                             "p-1.5 rounded transition-all",
                             viewMode === 'list' ? 'bg-ruby-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
                         )}
+                        title="Ver lista"
+                        aria-label="Ver lista"
                     >
                         <List className="w-3 h-3" />
                     </button>
@@ -91,6 +93,8 @@ const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdo
                             "p-1.5 rounded transition-all",
                             viewMode === 'chart' ? 'bg-ruby-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
                         )}
+                        title="Ver gráfico"
+                        aria-label="Ver gráfico"
                     >
                         <PieChartIcon className="w-3 h-3" />
                     </button>
@@ -110,8 +114,8 @@ const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdo
                                 return (
                                     <div key={index} className="group/item flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 hover:border-rose-200 dark:hover:border-rose-900/30 transition-all">
                                         <div className="flex items-center gap-3 flex-1 min-w-0">
-                                            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${color}15` }}>
-                                                <Icon className="w-4 h-4" style={{ color }} />
+                                            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${color}15` } as React.CSSProperties}>
+                                                <Icon className="w-4 h-4" style={{ color } as React.CSSProperties} />
                                             </div>
                                             <div className="min-w-0">
                                                 <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate capitalize">{item.label}</p>
@@ -121,7 +125,7 @@ const ExpenseBreakdownWidget: React.FC<ExpenseBreakdownWidgetProps> = ({ breakdo
                                         <div className="flex items-center gap-3 shrink-0">
                                             <span className="text-xs font-medium text-slate-400 tabular-nums">{percent.toFixed(0)}%</span>
                                             <div className="w-12 h-1.5 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
-                                                <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${percent}%`, backgroundColor: color }} />
+                                                <div className="h-full rounded-full transition-all duration-1000 w-[var(--progress-width)]" style={{ '--progress-width': `${percent}%`, backgroundColor: color } as React.CSSProperties} />
                                             </div>
                                         </div>
                                     </div>

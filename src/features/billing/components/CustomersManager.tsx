@@ -14,8 +14,6 @@ import {
     Space,
     Tag,
     Input,
-    Row,
-    Col,
     Tooltip,
     Popconfirm,
     message,
@@ -382,59 +380,62 @@ export const CustomersManager: React.FC<Props> = ({ franchiseId }) => {
 
     return (
         <div className="space-y-6">
-            <Card>
-                <Row gutter={[16, 16]} className="mb-6">
-                    <Col xs={24} md={12} lg={8}>
+            <Card className="overflow-hidden">
+                <div className="flex flex-col md:flex-row gap-4 mb-6">
+                    <div className="flex-1">
                         <Input
                             placeholder="Buscar por nombre, CIF o email..."
                             prefix={<Search className="w-4 h-4 text-slate-400" />}
                             value={searchText}
                             onChange={(e) => setSearchText(e.target.value)}
                             allowClear
+                            size="large"
                         />
-                    </Col>
-                    <Col xs={24} md={12} lg={16} className="flex justify-end">
+                    </div>
+                    <div className="flex-shrink-0 w-full md:w-auto">
                         <Button
                             type="primary"
                             icon={<Plus className="w-4 h-4" />}
                             onClick={() => setIsCreateModalOpen(true)}
-                            className="bg-indigo-600 hover:bg-indigo-700"
+                            className="bg-indigo-600 hover:bg-indigo-700 w-full md:w-auto h-10"
                         >
-                            Nuevo Cliente
+                            <span className="font-bold">Nuevo Cliente</span>
                         </Button>
-                    </Col>
-                </Row>
+                    </div>
+                </div>
 
-                <Table
-                    columns={columns}
-                    dataSource={filteredCustomers}
-                    rowKey="id"
-                    loading={loading}
-                    pagination={{
-                        pageSize: 10,
-                        showSizeChanger: true,
-                        showTotal: (total) => `${total} clientes`
-                    }}
-                    locale={{
-                        emptyText: (
-                            <div className="text-center py-8">
-                                <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                                <div className="text-slate-500 mb-2">No hay clientes registrados</div>
-                                <div className="text-sm text-slate-400 mb-4">
-                                    Crea tu primer cliente para comenzar a facturar
+                <div>
+                    <Table
+                        columns={columns}
+                        dataSource={filteredCustomers}
+                        rowKey="id"
+                        loading={loading}
+                        pagination={{
+                            pageSize: 10,
+                            showSizeChanger: true,
+                            showTotal: (total) => `${total} clientes`
+                        }}
+                        locale={{
+                            emptyText: (
+                                <div className="text-center py-8">
+                                    <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                                    <div className="text-slate-500 mb-2">No hay clientes registrados</div>
+                                    <div className="text-sm text-slate-400 mb-4">
+                                        Crea tu primer cliente para comenzar a facturar
+                                    </div>
+                                    <Button
+                                        type="primary"
+                                        icon={<Plus className="w-4 h-4" />}
+                                        onClick={() => setIsCreateModalOpen(true)}
+                                        className="bg-indigo-600 hover:bg-indigo-700 h-10"
+                                    >
+                                        Crear Cliente
+                                    </Button>
                                 </div>
-                                <Button
-                                    type="primary"
-                                    icon={<Plus className="w-4 h-4" />}
-                                    onClick={() => setIsCreateModalOpen(true)}
-                                    className="bg-indigo-600 hover:bg-indigo-700"
-                                >
-                                    Crear Cliente
-                                </Button>
-                            </div>
-                        )
-                    }}
-                />
+                            )
+                        }}
+                    />
+                </div>
             </Card>
 
             <CreateRestaurantModal

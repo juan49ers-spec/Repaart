@@ -131,52 +131,52 @@ export const TimeControlDashboard: React.FC<TimeControlDashboardProps> = ({
 
       {/* Tabla de Horas Trabajadas */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200">
-          <h2 className="text-lg font-semibold">Horas Trabajadas</h2>
+        <div className="px-4 py-3 border-b border-slate-200">
+          <h2 className="text-base font-semibold">Horas Trabajadas</h2>
         </div>
-        
-        <div className="overflow-x-auto">
+
+        <div>
           <table className="w-full">
-            <thead className="bg-slate-50">
+            <thead className="bg-slate-50 dark:bg-slate-900/50">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-slate-500">Rider</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-slate-500">Turnos</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-slate-500">Horas Totales</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-slate-500">Estado</th>
+                <th className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Rider</th>
+                <th className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 w-16">Turnos</th>
+                <th className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 w-16">Horas</th>
+                <th className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 w-20">Estado</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
               {workedHours.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-slate-500">
-                    No hay datos de turnos para esta fecha
+                  <td colSpan={4} className="px-3 py-6 text-center text-slate-500">
+                    No hay datos de turnos
                   </td>
                 </tr>
               ) : (
                 workedHours.map((report: { riderId: string; riderName: string; shiftsCount: number; totalHours: number }) => (
-                  <tr key={report.riderId} className="hover:bg-slate-50">
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-slate-900">{report.riderName}</div>
-                      <div className="text-sm text-slate-500">ID: {report.riderId.slice(0, 8)}...</div>
+                  <tr key={report.riderId} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <td className="px-3 py-2">
+                      <div className="font-medium text-sm text-slate-900 dark:text-slate-100">{report.riderName}</div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400">ID: {report.riderId.slice(0, 6)}...</div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {report.shiftsCount} turnos
+                    <td className="px-3 py-2">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-800">
+                        {report.shiftsCount}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="font-medium">{report.totalHours.toFixed(2)}h</div>
+                    <td className="px-3 py-2">
+                      <div className="font-mono text-xs font-semibold">{report.totalHours.toFixed(1)}h</div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        report.totalHours >= 8 
-                          ? 'bg-green-100 text-green-800' 
+                    <td className="px-3 py-2">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium ${
+                        report.totalHours >= 8
+                          ? 'bg-emerald-100 text-emerald-800'
                           : report.totalHours >= 4
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-red-100 text-red-800'
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-rose-100 text-rose-800'
                       }`}>
-                        {report.totalHours >= 8 ? 'Completo' 
-                          : report.totalHours >= 4 ? 'Parcial' 
+                        {report.totalHours >= 8 ? 'Completo'
+                          : report.totalHours >= 4 ? 'Parcial'
                           : 'Mínimo'}
                       </span>
                     </td>

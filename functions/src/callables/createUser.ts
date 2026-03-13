@@ -70,7 +70,7 @@ export const createUserManaged = functions.region('us-central1').https.onCall(as
         newUid = userRecord.uid;
 
         // 5. AUTO-GENERATE FRANCHISE ID (Correlative) for new franchises
-        finalFranchiseId = franchiseId || (callerRole === 'franchise' ? callerFranchiseId : null);
+        finalFranchiseId = franchiseId || (callerRole === 'franchise' ? (callerFranchiseId ?? null) : null);
 
         if (role === 'franchise') {
             console.log(`[createUserManaged] Role is franchise, generating sequential ID...`);
@@ -104,6 +104,16 @@ export const createUserManaged = functions.region('us-central1').https.onCall(as
         await admin.auth().setCustomUserClaims(newUid, claims);
 
         // 7. Create Firestore Mirror
+        // SECURITY: Strict whitelist to prevent injecting unsanitized data (e.g. passwords)
+        const allowedFields = ['displayName', 'phoneNumber', 'cif', 'legalName', 'address', 'pack', 'settings'];
+        const sanitizedProfileData: any = {};
+        
+        for (const field of allowedFields) {
+            if (profileData[field] !== undefined) {
+                sanitizedProfileData[field] = profileData[field];
+            }
+        }
+
         const userProfile: any = {
             uid: newUid,
             email,
@@ -112,7 +122,7 @@ export const createUserManaged = functions.region('us-central1').https.onCall(as
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             createdBy: context.auth.uid,
-            ...profileData
+            ...sanitizedProfileData
         };
 
         if (finalFranchiseId) {

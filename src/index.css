@@ -4,17 +4,17 @@
 @theme {
   --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
 
-  --color-indigo-50: #f0f4f8;
-  --color-indigo-100: #d9e2ec;
-  --color-indigo-200: #bcccdc;
-  --color-indigo-300: #9fb3c8;
-  --color-indigo-400: #829ab1;
-  --color-indigo-500: #627d98;
-  --color-indigo-600: #486581;
-  --color-indigo-700: #334e68;
-  --color-indigo-800: #243b53;
-  --color-indigo-900: #102a43;
-  --color-indigo-950: #0a1c2e;
+  --color-indigo-50: hsl(210 20% 96%);
+  --color-indigo-100: hsl(210 22% 92%);
+  --color-indigo-200: hsl(210 24% 80%);
+  --color-indigo-300: hsl(210 26% 70%);
+  --color-indigo-400: hsl(210 28% 60%);
+  --color-indigo-500: hsl(210 22% 49%);
+  --color-indigo-600: hsl(210 28% 39%);
+  --color-indigo-700: hsl(210 34% 30%);
+  --color-indigo-800: hsl(210 40% 23%);
+  --color-indigo-900: hsl(210 61% 16%);
+  --color-indigo-950: hsl(210 64% 11%);
 }
 
 /* ============================================== */
@@ -487,24 +487,24 @@
   --color-brand-950: oklch(0.18 0.06 289.4);
 
   /* Ruby Palette (Branding) */
-  --color-ruby-50: #fff1f2;
-  --color-ruby-100: #ffe4e6;
-  --color-ruby-200: #fecdd3;
-  --color-ruby-300: #fda4af;
-  --color-ruby-400: #fb7185;
-  --color-ruby-500: #f43f5e;
-  --color-ruby-600: #e11d48;
-  --color-ruby-700: #be123c;
-  --color-ruby-800: #9f1239;
-  --color-ruby-900: #881337;
-  --color-ruby-950: #4c0519;
+  --color-ruby-50: hsl(354 100% 97%);
+  --color-ruby-100: hsl(355 100% 95%);
+  --color-ruby-200: hsl(353 96% 90%);
+  --color-ruby-300: hsl(352 95% 82%);
+  --color-ruby-400: hsl(351 93% 71%);
+  --color-ruby-500: hsl(350 89% 60%);
+  --color-ruby-600: hsl(347 77% 50%);
+  --color-ruby-700: hsl(345 83% 41%);
+  --color-ruby-800: hsl(344 80% 35%);
+  --color-ruby-900: hsl(342 75% 30%);
+  --color-ruby-950: hsl(342 87% 16%);
 
   /* Indigo Palette (Operations) */
-  --color-indigo-50: #f5f3ff;
-  --color-indigo-100: #ede9fe;
-  --color-indigo-500: #6366f1;
-  --color-indigo-600: #4f46e5;
-  --color-indigo-700: #4338ca;
+  --color-indigo-50: hsl(250 100% 98%);
+  --color-indigo-100: hsl(252 87% 96%);
+  --color-indigo-500: hsl(239 84% 67%);
+  --color-indigo-600: hsl(243 75% 59%);
+  --color-indigo-700: hsl(244 55% 51%);
 }
 
 html,
@@ -515,24 +515,24 @@ body {
 
 :root {
   /* Light Mode Colors - Finance Admin Style */
-  --bg-primary: #f8fafc;
-  --bg-card: #ffffff;
-  --text-primary: #0f172a;
-  --text-secondary: #64748b;
-  --border: #e2e8f0;
+  --bg-primary: hsl(210 40% 98%);
+  --bg-card: hsl(0 0% 100%);
+  --text-primary: hsl(222 47% 11%);
+  --text-secondary: hsl(215 16% 47%);
+  --border: hsl(214 32% 91%);
 
   /* Accent Colors */
-  --primary: #6366f1;
-  --secondary: #8b5cf6;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
+  --primary: hsl(239 84% 67%);
+  --secondary: hsl(259 91% 66%);
+  --success: hsl(158 82% 39%);
+  --warning: hsl(38 92% 50%);
+  --danger: hsl(0 84% 60%);
 
   /* Glow Colors */
-  --glow-primary: rgba(99, 102, 241, 0.3);
-  --glow-secondary: rgba(139, 92, 246, 0.3);
-  --glow-success: rgba(16, 185, 129, 0.3);
-  --glow-danger: rgba(239, 68, 68, 0.3);
+  --glow-primary: hsla(239, 84%, 67%, 0.3);
+  --glow-secondary: hsla(259, 91%, 66%, 0.3);
+  --glow-success: hsla(158, 82%, 39%, 0.3);
+  --glow-danger: hsla(0, 84%, 60%, 0.3);
 
   /* Glass Backgrounds */
   --glass-light: rgba(255, 255, 255, 0.65);
@@ -550,15 +550,15 @@ body {
 
 .dark {
   /* Dark Mode Colors - Enhanced Contrast (WCAG AA) */
-  --bg-primary: #000000;
+  --bg-primary: hsl(0 0% 0%);
   /* Absolute Black for OLED */
-  --bg-card: #1c1c1e;
+  --bg-card: hsl(240 5% 11%);
   /* iOS System Gray 6 */
-  --text-primary: #f1f5f9;
-  /* Enhanced contrast from #f2f2f7 */
-  --text-secondary: #94a3b8;
-  /* Enhanced contrast from #aeaeb2 */
-  --border: #2c2c2e;
+  --text-primary: hsl(210 40% 96%);
+  /* Enhanced contrast */
+  --text-secondary: hsl(215 20% 65%);
+  /* Enhanced contrast */
+  --border: hsl(240 3% 18%);
   /* iOS Separator */
 
   /* Glass Backgrounds */
@@ -909,7 +909,7 @@ textarea,
 select {
   min-height: 48px;
   padding: 0.75rem 1rem;
-  font-size: 16px;
+  font-size: 1rem;
   /* Prevent iOS zoom */
 }
 
@@ -920,7 +920,7 @@ select {
   select {
     min-height: 40px;
     padding: 0.5rem 0.75rem;
-    font-size: 14px;
+    font-size: 0.875rem;
   }
 }
 

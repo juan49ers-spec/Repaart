@@ -34,53 +34,53 @@ const FranchiseDirectory: FC<FranchiseDirectoryProps> = ({ franchises, onSelectF
                         <input type="text" placeholder="Buscar..." className="bg-transparent border-none text-sm focus:outline-none text-slate-600 placeholder-slate-400 w-32" />
                     </div>
                 </div>
-                <div className="overflow-x-auto">
+                <div>
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="text-xs font-bold text-slate-500 uppercase bg-slate-50/50 border-b border-slate-100">
-                                <th className="px-6 py-4 pl-8">Franquicia</th>
-                                <th className="px-6 py-4 text-center">Estado</th>
-                                <th className="px-6 py-4 text-right">Ingresos</th>
-                                <th className="px-6 py-4 text-right">Beneficio</th>
-                                <th className="px-6 py-4" />
+                            <tr className="text-[10px] font-bold text-slate-500 uppercase bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-700">
+                                <th className="px-4 py-2">Franquicia</th>
+                                <th className="px-4 py-2 text-center w-12">Estado</th>
+                                <th className="px-4 py-2 text-right w-24">Ingresos</th>
+                                <th className="px-4 py-2 text-right w-24">Beneficio</th>
+                                <th className="px-4 py-2 w-10" />
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-50">
+                        <tbody className="divide-y divide-slate-50 dark:divide-slate-700">
                             {franchises.map((f) => (
                                 <tr
                                     key={f.id}
                                     onClick={() => setSelectedScorecard(f)}
-                                    className="hover:bg-blue-50/40 transition-colors group cursor-pointer"
+                                    className="hover:bg-blue-50/40 dark:hover:bg-slate-700/50 transition-colors group cursor-pointer"
                                 >
-                                    <td className="px-6 py-4 pl-8">
+                                    <td className="px-4 py-2">
                                         <div className="flex items-center">
-                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-xs font-black text-slate-500 mr-4 shadow-sm group-hover:from-blue-100 group-hover:to-blue-200 group-hover:text-blue-600 transition-all">
+                                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-[10px] font-black text-slate-500 mr-3 shadow-sm group-hover:from-blue-100 group-hover:to-blue-200 group-hover:text-blue-600 transition-all">
                                                 {f.name.substring(0, 2)}
                                             </div>
-                                            <div>
-                                                <p className="font-bold text-slate-800 group-hover:text-blue-700 transition-colors">{f.name}</p>
-                                                <p className="text-xs text-slate-400">{f.email}</p>
+                                            <div className="min-w-0">
+                                                <p className="font-bold text-sm text-slate-800 dark:text-slate-200 group-hover:text-blue-700 transition-colors truncate">{f.name}</p>
+                                                <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{f.email}</p>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-center">
+                                    <td className="px-4 py-2 text-center">
                                         {f.metrics.profit > 0 ? (
-                                            <span className="inline-flex w-3 h-3 rounded-full bg-emerald-500 shadow-sm border border-white ring-2 ring-emerald-100" />
+                                            <span className="inline-flex w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm border border-white dark:border-slate-800" />
                                         ) : (
-                                            <span className="inline-flex w-3 h-3 rounded-full bg-rose-500 shadow-sm border border-white ring-2 ring-rose-100" />
+                                            <span className="inline-flex w-2.5 h-2.5 rounded-full bg-rose-500 shadow-sm border border-white dark:border-slate-800" />
                                         )}
                                     </td>
-                                    <td className="px-6 py-4 text-right text-slate-600 font-bold uppercase tracking-wider">{formatMoney(f.metrics.revenue, 0)}€</td>
-                                    <td className={`px-6 py-4 text-right font-black ${f.metrics.profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    <td className="px-4 py-2 text-right text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider font-mono">{formatMoney(f.metrics.revenue, 0)}€</td>
+                                    <td className={`px-4 py-2 text-right font-black text-xs ${f.metrics.profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                                         {formatMoney(f.metrics.profit, 0)}€
                                     </td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="px-4 py-2 text-right">
                                         <button
                                             onClick={(e: MouseEvent<HTMLButtonElement>) => { e.stopPropagation(); onSelectFranchise(f.id, f.name); }}
-                                            className="text-slate-400 hover:text-blue-600 transition-colors p-2 hover:bg-slate-100 rounded-full"
+                                            className="text-slate-400 hover:text-blue-600 transition-colors p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
                                             title="Editar Datos"
                                         >
-                                            <Sliders className="w-4 h-4" />
+                                            <Sliders className="w-3.5 h-3.5" />
                                         </button>
                                     </td>
                                 </tr>

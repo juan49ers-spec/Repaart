@@ -287,23 +287,23 @@ const AdminOrdersHistory: React.FC = () => {
       </div>
 
       <div className="glass-card rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
+        <div>
           <table className="w-full">
             <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">ID</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Fecha</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Rider</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Franquicia</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Distancia</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Estado</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase">Monto</th>
+                <th className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider w-16">ID</th>
+                <th className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider">Fecha</th>
+                <th className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider">Rider</th>
+                <th className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider">Franquicia</th>
+                <th className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider w-14">Dist</th>
+                <th className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider w-20">Estado</th>
+                <th className="px-3 py-2 text-right text-[10px] font-bold uppercase tracking-wider w-16">Monto</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
               {filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-slate-500">
+                  <td colSpan={7} className="px-3 py-8 text-center text-slate-500">
                     No hay pedidos
                   </td>
                 </tr>
@@ -312,19 +312,19 @@ const AdminOrdersHistory: React.FC = () => {
                   const statusConfig = getStatusConfig(order.status);
                   return (
                     <tr key={order.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                      <td className="px-4 py-3 text-sm font-mono">#{order.id.slice(-8)}</td>
-                      <td className="px-4 py-3 text-sm">
-                        {order.createdAt?.toDate?.().toLocaleString('es-ES')}
+                      <td className="px-3 py-2 text-xs font-mono truncate">#{order.id.slice(-6)}</td>
+                      <td className="px-3 py-2 text-xs">
+                        {order.createdAt?.toDate?.().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                       </td>
-                      <td className="px-4 py-3 text-sm">{order.riderName || order.riderId}</td>
-                      <td className="px-4 py-3 text-sm">{order.franchiseName || order.franchiseId}</td>
-                      <td className="px-4 py-3 text-sm">{order.distance?.toFixed(2)} km</td>
-                      <td className="px-4 py-3">
-                        <span className={cn("px-2 py-1 rounded-full text-xs font-medium", statusConfig.color)}>
+                      <td className="px-3 py-2 text-xs truncate max-w-[80px]">{order.riderName || order.riderId}</td>
+                      <td className="px-3 py-2 text-xs truncate max-w-[80px]">{order.franchiseName || order.franchiseId}</td>
+                      <td className="px-3 py-2 text-xs">{order.distance?.toFixed(1)} km</td>
+                      <td className="px-3 py-2">
+                        <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-medium", statusConfig.color)}>
                           {statusConfig.label}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm font-semibold">€{order.amount?.toFixed(2)}</td>
+                      <td className="px-3 py-2 text-xs font-semibold text-right">€{order.amount?.toFixed(2)}</td>
                     </tr>
                   );
                 })

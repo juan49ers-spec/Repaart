@@ -22,6 +22,7 @@ import NotificationsPage from './features/user/NotificationsPage';
 const WeeklyScheduler = lazyWithRetry(() => import('./features/operations/WeeklyScheduler'));
 const AdminFlyderDashboard = lazyWithRetry(() => import('./features/admin/flyder/AdminFlyderDashboard'));
 const UserManagementPanel = lazyWithRetry(() => import('./features/admin/users/UserManagementPanel'));
+const AdminBillingDashboard = lazyWithRetry(() => import('./features/admin/billing/AdminBillingDashboard'));
 import DevSandbox from './pages/DevSandbox';
 
 // Other Panels (Mapped from legacy ViewSwitcher)
@@ -278,6 +279,12 @@ function App() {
                             <Route path="admin/audit" element={
                                 <ProtectedRoute requireAdmin={true}>
                                     <AuditPanel />
+                                </ProtectedRoute>
+                            } />
+
+                            <Route path="admin/billing" element={
+                                <ProtectedRoute requireAdmin={true}>
+                                    <AdminBillingDashboard />
                                 </ProtectedRoute>
                             } />
 

@@ -237,60 +237,60 @@ export const DashboardInvoiceTable: React.FC<Props> = ({ invoices, onRefresh }) 
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+            <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
                 <table className="w-full text-left text-sm">
                     <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 font-medium border-b border-slate-200 dark:border-slate-700">
                         <tr>
-                            <th className="px-4 py-3">Factura</th>
-                            <th className="px-4 py-3">Cliente</th>
-                            <th className="px-4 py-3">Fecha</th>
-                            <th className="px-4 py-3 text-right">Total</th>
-                            <th className="px-4 py-3 text-right">Pagado</th>
-                            <th className="px-4 py-3 text-right">Pendiente</th>
-                            <th className="px-4 py-3 text-center">Estado</th>
-                            <th className="px-4 py-3 text-center">Pago</th>
-                            <th className="px-4 py-3 text-center">Acciones</th>
+                            <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider">Factura</th>
+                            <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider">Cliente</th>
+                            <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider">Fecha</th>
+                            <th className="px-3 py-2 text-right text-[10px] font-bold uppercase tracking-wider w-20">Total</th>
+                            <th className="px-3 py-2 text-right text-[10px] font-bold uppercase tracking-wider w-20">Pagado</th>
+                            <th className="px-3 py-2 text-right text-[10px] font-bold uppercase tracking-wider w-20">Pendiente</th>
+                            <th className="px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wider w-16">Estado</th>
+                            <th className="px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wider w-16">Pago</th>
+                            <th className="px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wider w-20">Acciones</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                         {invoices.map((inv) => (
                             <tr key={inv.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                                <td className="px-4 py-3 font-medium text-slate-900 dark:text-white font-mono text-xs">{inv.fullNumber}</td>
-                                <td className="px-4 py-3">
-                                    <div className="font-medium text-slate-900 dark:text-white text-sm">{inv.customerSnapshot?.fiscalName}</div>
-                                    <div className="text-xs text-slate-500">{inv.customerSnapshot?.cif}</div>
+                                <td className="px-3 py-2 font-medium text-slate-900 dark:text-white font-mono text-[11px]">{inv.fullNumber}</td>
+                                <td className="px-3 py-2">
+                                    <div className="font-medium text-slate-900 dark:text-white text-xs truncate max-w-[120px]">{inv.customerSnapshot?.fiscalName}</div>
+                                    <div className="text-[10px] text-slate-500 truncate">{inv.customerSnapshot?.cif}</div>
                                 </td>
-                                <td className="px-4 py-3 text-slate-500 text-sm">{formatDate(inv.issueDate)}</td>
-                                <td className="px-4 py-3 text-right font-medium text-slate-900 dark:text-white font-mono text-sm">{formatCurrency(inv.total)}</td>
-                                <td className="px-4 py-3 text-right font-mono text-sm text-green-600">{formatCurrency(inv.totalPaid || 0)}</td>
-                                <td className="px-4 py-3 text-right font-mono text-sm text-amber-600">{formatCurrency(inv.remainingAmount || inv.total)}</td>
-                                <td className="px-4 py-3 text-center">{getStatusBadge(inv.status)}</td>
-                                <td className="px-4 py-3 text-center">{getPaymentStatusBadge(inv.paymentStatus, inv.totalPaid || 0, inv.total)}</td>
-                                <td className="px-4 py-3">
-                                    <div className="flex items-center justify-center gap-1">
+                                <td className="px-3 py-2 text-slate-500 text-[11px]">{formatDate(inv.issueDate)}</td>
+                                <td className="px-3 py-2 text-right font-medium text-slate-900 dark:text-white font-mono text-xs">{formatCurrency(inv.total)}</td>
+                                <td className="px-3 py-2 text-right font-mono text-xs text-green-600">{formatCurrency(inv.totalPaid || 0)}</td>
+                                <td className="px-3 py-2 text-right font-mono text-xs text-amber-600">{formatCurrency(inv.remainingAmount || inv.total)}</td>
+                                <td className="px-3 py-2 text-center">{getStatusBadge(inv.status)}</td>
+                                <td className="px-3 py-2 text-center">{getPaymentStatusBadge(inv.paymentStatus, inv.totalPaid || 0, inv.total)}</td>
+                                <td className="px-3 py-2">
+                                    <div className="flex items-center justify-center gap-0.5">
                                         {inv.status === 'DRAFT' && (
                                             <>
-                                                <button onClick={() => handleEdit(inv)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded" title="Editar">
-                                                    <Edit2 className="w-4 h-4" />
+                                                <button onClick={() => handleEdit(inv)} className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded" title="Editar">
+                                                    <Edit2 className="w-3.5 h-3.5" />
                                                 </button>
                                                 <Popconfirm title="¿Eliminar factura?" onConfirm={() => handleDelete(inv)} okText="Sí" cancelText="No">
-                                                    <button className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded" title="Eliminar">
-                                                        <Trash2 className="w-4 h-4" />
+                                                    <button className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded" title="Eliminar">
+                                                        <Trash2 className="w-3.5 h-3.5" />
                                                     </button>
                                                 </Popconfirm>
-                                                <button onClick={() => handleIssue(inv)} className="p-1.5 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded" title="Emitir">
-                                                    <CheckCircle className="w-4 h-4" />
+                                                <button onClick={() => handleIssue(inv)} className="p-1 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded" title="Emitir">
+                                                    <CheckCircle className="w-3.5 h-3.5" />
                                                 </button>
                                             </>
                                         )}
                                         {inv.status === 'ISSUED' && inv.paymentStatus !== 'PAID' && (
-                                            <button onClick={() => handlePayment(inv)} className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded" title="Registrar pago">
-                                                <CreditCard className="w-4 h-4" />
+                                            <button onClick={() => handlePayment(inv)} className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded" title="Registrar pago">
+                                                <CreditCard className="w-3.5 h-3.5" />
                                             </button>
                                         )}
                                         {inv.status !== 'DRAFT' && (
-                                            <button onClick={(e) => handleDownload(e, inv)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded" title="PDF">
-                                                <Download className="w-4 h-4" />
+                                            <button onClick={(e) => handleDownload(e, inv)} className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded" title="PDF">
+                                                <Download className="w-3.5 h-3.5" />
                                             </button>
                                         )}
                                     </div>

@@ -287,23 +287,23 @@ const AdminNetworkDashboard: React.FC<AdminNetworkDashboardProps> = ({ selectedM
                 </div>
 
                 {/* DESKTOP TABLE VIEW (Visible >= md) */}
-                <div className="hidden md:block overflow-x-auto">
+                <div className="hidden md:block">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                <th className="p-4 pl-6">Franquicia</th>
-                                <th className="p-4 text-right">Facturación & Tendencia</th>
-                                <th className="p-4 text-right">Margen Neto</th>
-                                <th className="p-4 text-center">Estado</th>
-                                <th className="p-4 text-center">Riesgo</th>
-                                <th className="p-4"></th>
+                            <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <th className="p-3 pl-4">Franquicia</th>
+                                <th className="p-3 text-right w-32">Facturación</th>
+                                <th className="p-3 text-right w-24">Margen</th>
+                                <th className="p-3 text-center w-20">Estado</th>
+                                <th className="p-3 text-center w-20">Riesgo</th>
+                                <th className="p-3 w-10"></th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredData.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="p-8 text-center text-slate-500">
-                                        No se encontraron resultados para los filtros actuales.
+                                    <td colSpan={6} className="p-6 text-center text-slate-500">
+                                        No se encontraron resultados
                                     </td>
                                 </tr>
                             )}
@@ -320,71 +320,71 @@ const AdminNetworkDashboard: React.FC<AdminNetworkDashboardProps> = ({ selectedM
                                         key={item.franchiseId}
                                         className="group border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
                                     >
-                                        <td className="p-4 pl-6">
-                                            <div className="font-bold text-slate-900 dark:text-white transition-colors">{item.franchiseName}</div>
-                                            <div className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider transition-colors">{item.franchiseId}</div>
+                                        <td className="p-3 pl-4">
+                                            <div className="font-bold text-sm text-slate-900 dark:text-white transition-colors truncate">{item.franchiseName}</div>
+                                            <div className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider transition-colors">{item.franchiseId}</div>
                                         </td>
-                                        <td className="p-4 text-right">
-                                            <div className="flex items-center justify-end gap-3">
+                                        <td className="p-3 text-right">
+                                            <div className="flex items-center justify-end gap-2">
                                                 {/* SPARKLINE */}
-                                                <div className="hidden md:block" title="Tendencia últimos 3 meses">
+                                                <div className="hidden lg:block" title="Tendencia">
                                                     <Sparkline trend={trend} />
                                                 </div>
-                                                <div className="font-bold text-slate-700 dark:text-slate-300 transition-colors">
+                                                <div className="font-bold text-sm text-slate-700 dark:text-slate-300 transition-colors tabular-nums">
                                                     {formatMoney(rev)}€
                                                 </div>
                                             </div>
                                             {/* Mini Bar */}
-                                            <div className="w-24 h-1 bg-slate-100 dark:bg-slate-800 rounded-full ml-auto mt-1 overflow-hidden">
+                                            <div className="w-20 h-1 bg-slate-100 dark:bg-slate-800 rounded-full ml-auto mt-1 overflow-hidden">
                                                 <div
                                                     className="h-full bg-indigo-500"
-                                                    style={{ width: `${Math.min((rev / (aggregates.totalRevenue || 1)) * 100 * 5, 100)}%` }} // Visual scaling based on avg
+                                                    style={{ width: `${Math.min((rev / (aggregates.totalRevenue || 1)) * 100 * 5, 100)}%` }}
                                                 />
                                             </div>
                                         </td>
-                                        <td className="p-4 text-right">
-                                            <div className={`font-bold transition-colors tabular-nums ${margin > 15 ? 'text-emerald-600 dark:text-emerald-400' : margin > 5 ? 'text-amber-600 dark:text-yellow-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                        <td className="p-3 text-right">
+                                            <div className={`font-bold text-sm transition-colors tabular-nums ${margin > 15 ? 'text-emerald-600 dark:text-emerald-400' : margin > 5 ? 'text-amber-600 dark:text-yellow-400' : 'text-rose-600 dark:text-rose-400'}`}>
                                                 {margin.toFixed(1)}%
                                             </div>
-                                            <div className="text-xs text-slate-500 dark:text-slate-500 transition-colors">
+                                            <div className="text-[10px] text-slate-500 dark:text-slate-500 transition-colors">
                                                 {formatMoney(prof)}€
                                             </div>
                                         </td>
-                                        <td className="p-4 text-center">
+                                        <td className="p-3 text-center">
                                             {item.status === 'submitted' ? (
-                                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold border border-emerald-500/20">
-                                                    <CheckCircle className="w-3 h-3" /> Submitted
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
+                                                    <CheckCircle className="w-3 h-3" /> OK
                                                 </span>
                                             ) : (
-                                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-bold border border-slate-200 dark:border-slate-700">
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] font-bold border border-slate-200 dark:border-slate-700">
                                                     <AlertCircle className="w-3 h-3" /> Pending
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="p-4 text-center">
+                                        <td className="p-3 text-center">
                                             <div className="flex justify-center group/tooltip relative">
                                                 {item.riskScore > 50 ? (
-                                                    <div className="w-8 h-8 rounded-full bg-rose-500/20 flex items-center justify-center animate-pulse cursor-help" title="Riesgo Crítico">
-                                                        <AlertTriangle className="w-4 h-4 text-rose-500" />
+                                                    <div className="w-7 h-7 rounded-full bg-rose-500/20 flex items-center justify-center animate-pulse cursor-help" title="Riesgo Crítico">
+                                                        <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
                                                     </div>
                                                 ) : item.riskScore > 20 ? (
-                                                    <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center cursor-help" title="Riesgo Moderado">
-                                                        <AlertTriangle className="w-4 h-4 text-yellow-500" />
+                                                    <div className="w-7 h-7 rounded-full bg-yellow-500/20 flex items-center justify-center cursor-help" title="Riesgo Moderado">
+                                                        <AlertTriangle className="w-3.5 h-3.5 text-yellow-500" />
                                                     </div>
                                                 ) : (
-                                                    <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center" title="Saludable">
-                                                        <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                                                    <div className="w-7 h-7 rounded-full bg-emerald-500/20 flex items-center justify-center" title="Saludable">
+                                                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                                                     </div>
                                                 )}
 
                                                 {/* INTELLIGENCE TOOLTIP */}
                                                 {item.riskFactors && item.riskFactors.length > 0 && (
-                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-slate-900 border border-slate-700 rounded-xl p-3 shadow-xl opacity-0 scale-90 group-hover/tooltip:opacity-100 group-hover/tooltip:scale-100 transition-all pointer-events-none z-50">
-                                                        <p className="text-xs font-bold text-slate-300 mb-1 border-b border-slate-800 pb-1">Factores de Riesgo</p>
+                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-44 bg-slate-900 border border-slate-700 rounded-lg p-2.5 shadow-xl opacity-0 scale-90 group-hover/tooltip:opacity-100 group-hover/tooltip:scale-100 transition-all pointer-events-none z-50">
+                                                        <p className="text-[10px] font-bold text-slate-300 mb-1 border-b border-slate-800 pb-1">Factores de Riesgo</p>
                                                         <ul className="space-y-1">
                                                             {item.riskFactors.map((factor, idx) => (
-                                                                <li key={idx} className="text-[10px] text-rose-400 flex items-start gap-1">
-                                                                    <div className="mt-0.5 min-w-[4px] min-h-[4px] rounded-full bg-rose-500" />
+                                                                <li key={idx} className="text-[9px] text-rose-400 flex items-start gap-1">
+                                                                    <div className="mt-0.5 min-w-[3px] min-h-[3px] rounded-full bg-rose-500" />
                                                                     {factor}
                                                                 </li>
                                                             ))}
@@ -393,13 +393,13 @@ const AdminNetworkDashboard: React.FC<AdminNetworkDashboardProps> = ({ selectedM
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="p-4 text-right">
+                                        <td className="p-3 text-right">
                                             <button
                                                 onClick={() => navigate(`/admin/finance/${item.franchiseId}`)}
                                                 aria-label="Ver detalles"
-                                                className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 dark:hover:bg-indigo-600 rounded-lg text-slate-500 dark:text-slate-400 hover:text-white dark:hover:text-white transition-all shadow-sm group-hover:shadow-indigo-500/20"
+                                                className="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 dark:hover:bg-indigo-600 rounded text-slate-500 dark:text-slate-400 hover:text-white dark:hover:text-white transition-all shadow-sm group-hover:shadow-indigo-500/20"
                                             >
-                                                <ArrowRight className="w-5 h-5" />
+                                                <ArrowRight className="w-4 h-4" />
                                             </button>
                                         </td>
                                     </tr>

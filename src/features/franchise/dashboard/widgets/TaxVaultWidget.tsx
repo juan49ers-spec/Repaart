@@ -1,4 +1,5 @@
-import { type FC, type CSSProperties, useState } from 'react';
+ 
+import { type FC, useState } from 'react';
 import { Landmark, Lock, Maximize2, Activity } from 'lucide-react';
 import { formatMoney, MonthlyData } from '../../../../lib/finance';
 import QuarterlyTaxModal from './QuarterlyTaxModal';
@@ -24,8 +25,8 @@ const TaxVaultWidget: FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, historic
     const safeTotal = totalTax * 1.0;
 
     return (
-        <div className="workstation-card workstation-scanline p-6 h-full flex flex-col group/card transition-all mechanical-press overflow-hidden">
-            <div className="flex items-center justify-between mb-4">
+        <div className="workstation-card workstation-scanline p-4 h-full flex flex-col group/card transition-all mechanical-press overflow-hidden">
+            <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-emerald-50 dark:bg-emerald-900/10 rounded-xl border border-emerald-100 dark:border-emerald-900/20">
                         <Landmark className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
@@ -52,9 +53,9 @@ const TaxVaultWidget: FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, historic
             </div>
 
             {/* MAIN VAULT DISPLAY */}
-            <div className="mb-5">
+            <div className="mb-3">
                 <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter italic tabular-nums">
+                    <span className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter italic tabular-nums">
                         {formatMoney(safeTotal)}€
                     </span>
                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest font-mono opacity-50">protegido</span>
@@ -74,8 +75,8 @@ const TaxVaultWidget: FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, historic
                     </div>
                     <div className="h-1 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-emerald-500 rounded-full transition-all duration-1000"
-                            style={{ width: `${Math.min((ivaAPagar / (totalTax || 1)) * 100, 100)}%` } as CSSProperties}
+                            className="h-full bg-emerald-500 rounded-full transition-all duration-1000 w-[var(--progress-width)]"
+                            style={{ '--progress-width': `${Math.min((ivaAPagar / (totalTax || 1)) * 100, 100)}%` } as React.CSSProperties}
                         />
                     </div>
                 </div>
@@ -87,8 +88,8 @@ const TaxVaultWidget: FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, historic
                     </div>
                     <div className="h-1 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-amber-500 rounded-full transition-all duration-1000"
-                            style={{ width: `${Math.min((irpfPago / (totalTax || 1)) * 100, 100)}%` } as CSSProperties}
+                            className="h-full bg-amber-500 rounded-full transition-all duration-1000 w-[var(--progress-width)]"
+                            style={{ '--progress-width': `${Math.min((irpfPago / (totalTax || 1)) * 100, 100)}%` } as React.CSSProperties}
                         />
                     </div>
                 </div>

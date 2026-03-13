@@ -1,30 +1,19 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { db, storage } from '../../lib/firebase';
-import { collection, deleteDoc, doc, query, orderBy, onSnapshot, updateDoc, Timestamp } from 'firebase/firestore';
+import { deleteDoc, doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
 import {
-    FileText,
-    Image as ImageIcon,
-    File,
     Grid,
     List as ListIcon,
     Search,
     Trash2,
-    Eye,
     Download,
     Plus,
-    Pin,
-    Shield,
-    Briefcase,
-    BookOpen,
-    Layout,
-    Folder,
-    RefreshCw,
     Sparkles,
     UploadCloud,
     FileUp,
     Archive,
-    ChevronDown,
     ChevronRight,
     ArrowUpDown,
     Home
@@ -32,8 +21,9 @@ import {
 import DocPreviewModal from '../../components/ui/overlays/DocPreviewModal';
 import ConfirmationModal from '../../components/ui/feedback/ConfirmationModal';
 import ResourceUploadModal from './resources/ResourceUploadModal';
-import { resourceRequestService } from '../../services/resourceRequestService';
 import { useAuth } from '../../context/AuthContext';
+import { AdminResourceGrid } from './resources/components/AdminResourceGrid';
+import { AdminResourceList } from './resources/components/AdminResourceList';
 import SmartContractWizard from './resources/SmartContractWizard';
 import FiscalValidationModal from './resources/FiscalValidationModal';
 import FiscalDataForm from './resources/FiscalDataForm';
@@ -41,8 +31,6 @@ import TemplateSelector from './resources/TemplateSelector';
 import { useFranchiseData } from '../../hooks/useFranchiseData';
 import { ContractTemplate } from './resources/templates/templateLibrary';
 import AdminGuidesPanel from './knowledge/AdminGuidesPanel';
-import ContractAnalyticsDashboard from './resources/ContractAnalyticsDashboard';
-
 import RequestsInbox from './resources/RequestsInbox';
 import ServiceManager from './services/ServiceManager';
 
@@ -58,8 +46,16 @@ interface Resource {
     createdAt?: Timestamp;
     isPinned?: boolean;
     isMock?: boolean;
-    [key: string]: any;
+    [key: string]: unknown;
 }
+
+import { FOLDERS } from './resources/domain/resource.constants';
+import { AdminResourceSidebar } from './resources/components/AdminResourceSidebar';
+import { AdminResourceMobileNav } from './resources/components/AdminResourceMobileNav';
+import { AdminResourceHeader, AdminResourceTab } from './resources/components/AdminResourceHeader';
+import { useAdminResources } from './resources/hooks/useAdminResources';
+import { calculateStorageStats, calculateFolderCounts, filterAndSortResources } from './resources/domain/resource.selectors';
+import { SortMode } from './resources/domain/resource.types';
 
 interface ConfirmDialogState {
     isOpen: boolean;
@@ -70,14 +66,7 @@ interface ConfirmDialogState {
     onConfirm: (() => void) | null;
 }
 
-// 🗂️ Unified Folder Structure (Same as Franchise)
-const FOLDERS = [
-    { id: 'contracts', label: 'Marco Legal & Contratos', icon: Shield, color: 'text-indigo-500' },
-    { id: 'manuals', label: 'Manuales Operativos', icon: BookOpen, color: 'text-emerald-500' },
-    { id: 'commercial', label: 'Dossiers Comerciales', icon: Briefcase, color: 'text-amber-500' },
-    { id: 'marketing', label: 'Activos de Marca', icon: Layout, color: 'text-rose-500' },
-    { id: 'general', label: 'Documentación General', icon: Folder, color: 'text-slate-500' },
-];
+
 
 // 📄 Mock Data removed for production
 const MOCK_RESOURCES: Resource[] = [];
@@ -89,19 +78,22 @@ const AdminResourcesPanel = () => {
     const { franchiseData, validation, isReady } = useFranchiseData(user?.uid);
 
     // Tab State (Global Navigation)
-    const [activeTab, setActiveTab] = useState<'vault' | 'guides' | 'requests' | 'services'>('vault');
+    const [activeTab, setActiveTab] = useState<AdminResourceTab>('vault');
     const [activeCategory, setActiveCategory] = useState<string>('contracts');
 
     // Data State
-    const [dbResources, setDbResources] = useState<Resource[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { dbResources, loading, pendingRequestsCount } = useAdminResources();
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
-    const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
 
-    // Modals State
-    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    // Modals & Overlays State
+    type OverlayType = 'none' | 'upload' | 'wizard' | 'fiscalValidation' | 'fiscalDataForm' | 'templateSelector';
+    const [activeOverlay, setActiveOverlay] = useState<OverlayType>('none');
+    
+    // Data tied to modals
     const [previewFile, setPreviewFile] = useState<Resource | null>(null);
+    const [templateContent, setTemplateContent] = useState('');
+    
     const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>({
         isOpen: false,
         title: '',
@@ -109,20 +101,12 @@ const AdminResourcesPanel = () => {
         onConfirm: null,
     });
 
-    // 🧠 Smart Contract Wizard State
-    const [isWizardOpen, setIsWizardOpen] = useState(false);
-    const [templateContent, setTemplateContent] = useState('');
-    const [showFiscalValidation, setShowFiscalValidation] = useState(false);
-    const [showFiscalDataForm, setShowFiscalDataForm] = useState(false);
-    const [isTemplateSelectorOpen, setIsTemplateSelectorOpen] = useState(false);
-
     // 🎯 Dropzone State
     const [isDraggingOver, setIsDraggingOver] = useState(false);
     const [droppedFile, setDroppedFile] = useState<File | null>(null);
 
     // 📊 Sidebar & Sort State
-    const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
-    const [sortMode, setSortMode] = useState<'newest' | 'oldest' | 'name_asc' | 'name_desc' | 'size_desc' | 'size_asc'>('newest');
+    const [sortMode, setSortMode] = useState<SortMode>('newest');
 
     // ☑️ Selection State
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -156,17 +140,26 @@ const AdminResourcesPanel = () => {
             isDestructive: true,
             confirmText: 'Eliminar todos',
             onConfirm: async () => {
-                for (const file of toDelete) {
-                    try {
-                        if (file.storagePath) {
-                            const storageRef = ref(storage, file.storagePath);
-                            await deleteObject(storageRef);
-                        }
-                        await deleteDoc(doc(db, 'resources', file.id));
-                    } catch (err) {
-                        console.error('Error deleting', file.id, err);
+                const deletePromises = toDelete.map(async (file) => {
+                    if (file.storagePath) {
+                        const storageRef = ref(storage, file.storagePath);
+                        await deleteObject(storageRef);
                     }
+                    await deleteDoc(doc(db, 'resources', file.id));
+                });
+
+                const results = await Promise.allSettled(deletePromises);
+                const successful = results.filter(r => r.status === 'fulfilled').length;
+                const failed = results.filter(r => r.status === 'rejected').length;
+
+                if (failed === 0) {
+                    toast.success(`${successful} recursos eliminados correctamente.`);
+                } else if (successful === 0) {
+                    toast.error(`Error al eliminar los ${failed} recursos seleccionados.`);
+                } else {
+                    toast.error(`Se eliminaron ${successful} recursos, pero fallaron ${failed}.`);
                 }
+
                 clearSelection();
                 setConfirmDialog(prev => ({ ...prev, isOpen: false }));
             },
@@ -182,77 +175,34 @@ const AdminResourcesPanel = () => {
     const handleOpenWizard = async () => {
         // Primero verificar datos fiscales
         if (!isReady) {
-            setShowFiscalValidation(true);
+            setActiveOverlay('fiscalValidation');
             return;
         }
 
         // Abrir selector de plantillas
-        setIsTemplateSelectorOpen(true);
+        setActiveOverlay('templateSelector');
     };
 
     const handleSelectTemplate = (template: ContractTemplate) => {
         setTemplateContent(template.content);
-        setIsTemplateSelectorOpen(false);
-        setIsWizardOpen(true);
-        setShowFiscalValidation(false);
+        setActiveOverlay('wizard');
     };
 
     const handleForceTokenRefresh = async () => {
         await forceTokenRefresh();
-        alert('Token actualizado. Intenta subir el documento nuevamente.');
+        toast.success('Token actualizado. Intenta subir el documento nuevamente.');
     };
 
-    // Fetch resources
-    useEffect(() => {
-        const q = query(collection(db, 'resources'), orderBy('createdAt', 'desc'));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const fetched: Resource[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Resource));
-            setDbResources(fetched);
-            setLoading(false);
-        }, (error) => {
-            console.error("Error fetching resources: ", error);
-            setLoading(false);
-        });
-
-        return () => unsubscribe();
-    }, []);
-
-    // Fetch Pending Requests Count
-    useEffect(() => {
-        const fetchPending = async () => {
-            const reqs = await resourceRequestService.getPendingRequests();
-            setPendingRequestsCount(reqs.length);
-        };
-        fetchPending();
-    }, []);
+    // Fetch Data (Handle by useAdminResources now)
 
     // Merge Mock & Real
-    const allResources = useMemo(() => {
-        return [...MOCK_RESOURCES, ...dbResources];
-    }, [dbResources]);
+    const allResources = [...MOCK_RESOURCES, ...dbResources] as Resource[];
 
     // Computed storage stats
-    const storageStats = useMemo(() => {
-        const totalBytes = allResources.reduce((acc, r) => acc + (r.size || 0), 0);
-        const maxBytes = 10 * 1024 * 1024 * 1024; // 10 GB
-        const percentage = Math.min((totalBytes / maxBytes) * 100, 100);
-        const formatStorage = (bytes: number) => {
-            if (bytes >= 1024 * 1024 * 1024) return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
-            if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-            if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
-            return bytes + ' B';
-        };
-        return { totalBytes, maxBytes, percentage, formatted: formatStorage(totalBytes) };
-    }, [allResources]);
+    const storageStats = calculateStorageStats(allResources);
 
     // Per-folder resource counts
-    const folderCounts = useMemo(() => {
-        const counts: Record<string, number> = {};
-        for (const folder of FOLDERS) {
-            counts[folder.id] = allResources.filter(r => (r.category || 'general') === folder.id).length;
-        }
-        return counts;
-    }, [allResources]);
+    const folderCounts = calculateFolderCounts(allResources);
 
     // Download handler
     const handleDownload = (file: Resource, e: React.MouseEvent) => {
@@ -263,53 +213,13 @@ const AdminResourcesPanel = () => {
     };
 
     // Filter Logic
-    const filteredResources = allResources.filter(r => {
-        // 1. Category Filter
-        if (activeCategory && (r.category || 'general') !== activeCategory) {
-            return false;
-        }
-        // 2. Search Filter
-        if (searchTerm) {
-            const lower = searchTerm.toLowerCase();
-            if (!(r.title || r.name || '').toLowerCase().includes(lower)) {
-                return false;
-            }
-        }
-        return true;
-    }).sort((a, b) => {
-        // 3. Sort (Pinned first, then by sortMode)
-        if (a.isPinned && !b.isPinned) return -1;
-        if (!a.isPinned && b.isPinned) return 1;
-
-        switch (sortMode) {
-            case 'newest': {
-                const aTime = a.createdAt?.toMillis?.() || 0;
-                const bTime = b.createdAt?.toMillis?.() || 0;
-                return bTime - aTime;
-            }
-            case 'oldest': {
-                const aTime = a.createdAt?.toMillis?.() || 0;
-                const bTime = b.createdAt?.toMillis?.() || 0;
-                return aTime - bTime;
-            }
-            case 'name_asc':
-                return (a.title || a.name || '').localeCompare(b.title || b.name || '');
-            case 'name_desc':
-                return (b.title || b.name || '').localeCompare(a.title || a.name || '');
-            case 'size_desc':
-                return (b.size || 0) - (a.size || 0);
-            case 'size_asc':
-                return (a.size || 0) - (b.size || 0);
-            default:
-                return 0;
-        }
-    });
+    const filteredResources = filterAndSortResources(allResources, activeCategory, searchTerm, sortMode);
 
 
     // Actions
     const handleDelete = (file: Resource) => {
         if (file.isMock) {
-            alert("No puedes eliminar archivos de ejemplo (Mock)");
+            toast.error("No puedes eliminar archivos de ejemplo (Mock)", { id: 'mock-delete' });
             return;
         }
 
@@ -327,9 +237,10 @@ const AdminResourcesPanel = () => {
                     }
                     await deleteDoc(doc(db, 'resources', file.id));
                     setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+                    toast.success('Recurso eliminado correctamente.');
                 } catch (error) {
                     console.error("Error deleting resource: ", error);
-                    alert("Error al eliminar el recurso.");
+                    toast.error("Error al eliminar el recurso.");
                 }
             },
         });
@@ -346,183 +257,37 @@ const AdminResourcesPanel = () => {
         }
     };
 
-    const formatBytes = (bytes?: number) => {
-        if (!bytes) return '0 B';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-    };
-
-    const getFileIcon = (type?: string) => {
-        if (type?.includes('pdf')) return <FileText className="w-10 h-10 text-rose-500" />;
-        if (type?.includes('image')) return <ImageIcon className="w-10 h-10 text-indigo-500" />;
-        if (type?.includes('zip')) return <Folder className="w-10 h-10 text-amber-500" />;
-        if (type?.includes('sheet') || type?.includes('excel')) return <FileText className="w-10 h-10 text-emerald-500" />;
-        if (type?.includes('presentation')) return <FileText className="w-10 h-10 text-orange-500" />;
-        return <File className="w-10 h-10 text-slate-400" />;
-    };
-
 
     return (
         <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-900 dark:text-slate-200 font-sans transition-colors duration-300">
 
             {/* HEADER with Global Navigation */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between p-4 md:p-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-20 gap-4">
-                <div>
-                    <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
-                        Conocimiento
-                        <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 text-[10px] font-bold border border-indigo-500/20 uppercase tracking-widest">Admin</span>
-                    </h2>
-                    <p className="hidden md:block text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">Gestión integral de documentación y guías.</p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                    <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl overflow-x-auto no-scrollbar whitespace-nowrap">
-                        <button
-                            onClick={() => setActiveTab('vault')}
-                            className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'vault' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                        >
-                            Bóveda Digital
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('guides')}
-                            className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'guides' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                        >
-                            Guías Interactivas
-                        </button>
-
-                        <button
-                            onClick={() => setActiveTab('requests')}
-                            className={`px-5 py-2 rounded-lg text-sm font-bold transition-all relative flex items-center gap-2 ${activeTab === 'requests' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                        >
-                            Solicitudes
-                            {pendingRequestsCount > 0 && (
-                                <span className="flex items-center justify-center bg-rose-500 text-white text-[10px] h-5 min-w-5 px-1 rounded-full border-2 border-slate-100 dark:border-slate-800">
-                                    {pendingRequestsCount}
-                                </span>
-                            )}
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('services')}
-                            className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'services' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                        >
-                            Servicios Premium
-                        </button>
-                    </div>
-
-                    <button
-                        onClick={handleForceTokenRefresh}
-                        className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                        title="Actualizar token de autenticación"
-                    >
-                        <RefreshCw className="w-4 h-4" />
-                        <span className="hidden sm:inline">Actualizar Token</span>
-                    </button>
-                </div>
-            </div>
+            <AdminResourceHeader 
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                pendingRequestsCount={pendingRequestsCount}
+                onForceTokenRefresh={handleForceTokenRefresh}
+            />
 
             {/* CONTENT AREA */}
             <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                 {activeTab === 'vault' ? (
                     <>
-                        {/* 📱 MOBILE CATEGORY SELECTOR (Vault) */}
-                        <div className="md:hidden shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 overflow-x-auto whitespace-nowrap p-4 no-scrollbar flex gap-2">
-                            {FOLDERS.map(folder => {
-                                const isActive = activeCategory === folder.id;
-                                return (
-                                    <button
-                                        key={folder.id}
-                                        onClick={() => setActiveCategory(folder.id)}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${isActive
-                                            ? 'bg-indigo-600 text-white shadow-lg'
-                                            : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
-                                            }`}
-                                    >
-                                        <folder.icon size={14} />
-                                        {folder.label}
-                                    </button>
-                                );
-                            })}
-                        </div>
+                        <AdminResourceMobileNav 
+                            folders={FOLDERS}
+                            activeCategory={activeCategory}
+                            setActiveCategory={setActiveCategory}
+                        />
 
-                        {/* 📂 SIDEBAR (Folders) - Desktop Only */}
-                        <aside className="hidden md:flex w-72 bg-white dark:bg-slate-900/50 border-r border-slate-200 dark:border-slate-800 flex-col pt-6 pb-4">
-                            <div className="px-6 mb-2">
-                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Estructura de Archivos</h3>
-                            </div>
-                            <nav className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar">
-                                {FOLDERS.map(folder => {
-                                    const isActive = activeCategory === folder.id;
-                                    return (
-                                        <button
-                                            key={folder.id}
-                                            onClick={() => setActiveCategory(folder.id)}
-                                            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group ${isActive
-                                                ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200 dark:ring-indigo-800'
-                                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                                                }`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <folder.icon className={`w-4 h-4 ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
-                                                {folder.label}
-                                            </div>
-                                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${isActive ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
-                                                {folderCounts[folder.id] || 0}
-                                            </span>
-                                        </button>
-                                    );
-                                })}
-                            </nav>
-
-                            <div className="p-4 mt-auto border-t border-slate-100 dark:border-slate-800 space-y-4">
-                                {/* Storage Widget */}
-                                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-100 dark:border-slate-700">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Almacenamiento</span>
-                                        <span className="text-[10px] font-bold text-indigo-500">{storageStats.formatted} / 10 GB</span>
-                                    </div>
-                                    <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-                                            style={{ width: `${Math.max(storageStats.percentage, 1)}%` }}
-                                        />
-                                    </div>
-                                </div>
-
-                                <button
-                                    onClick={() => setIsUploadModalOpen(true)}
-                                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-500/20 transition-all font-bold text-sm flex items-center justify-center gap-2 group"
-                                >
-                                    <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" />
-                                    Subir Nuevo Recurso
-                                </button>
-
-                                <button
-                                    onClick={handleOpenWizard}
-                                    className="w-full py-3 bg-slate-900 dark:bg-black text-white rounded-xl shadow-lg shadow-slate-900/10 transition-all font-black text-sm flex items-center justify-center gap-2 group border border-slate-800"
-                                >
-                                    <Sparkles className="w-4 h-4 text-indigo-400 group-hover:animate-pulse" />
-                                    Generar Inteligente
-                                </button>
-
-                                {/* Analytics Dashboard — Collapsible */}
-                                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                                    <button
-                                        onClick={() => setIsAnalyticsOpen(!isAnalyticsOpen)}
-                                        className="w-full flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider hover:text-slate-600 dark:hover:text-slate-300 transition-colors px-1 py-1"
-                                    >
-                                        <span>Analytics</span>
-                                        {isAnalyticsOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                                    </button>
-                                    {isAnalyticsOpen && (
-                                        <div className="mt-3 animate-in slide-in-from-top-2 fade-in duration-200">
-                                            <ContractAnalyticsDashboard />
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </aside>
+                        <AdminResourceSidebar 
+                            folders={FOLDERS}
+                            activeCategory={activeCategory}
+                            setActiveCategory={setActiveCategory}
+                            folderCounts={folderCounts}
+                            storageStats={storageStats}
+                            onUploadClick={() => setActiveOverlay('upload')}
+                            onOpenWizard={handleOpenWizard}
+                        />
 
                         {/* 📄 MAIN GRID */}
                         <main
@@ -536,7 +301,7 @@ const AdminResourcesPanel = () => {
                                 setIsDraggingOver(false);
                                 if (e.dataTransfer.files && e.dataTransfer.files[0]) {
                                     setDroppedFile(e.dataTransfer.files[0]);
-                                    setIsUploadModalOpen(true);
+                                    setActiveOverlay('upload');
                                 }
                             }}
                         >
@@ -680,7 +445,7 @@ const AdminResourcesPanel = () => {
 
                                         <div className="flex flex-col sm:flex-row gap-3">
                                             <button
-                                                onClick={() => setIsUploadModalOpen(true)}
+                                                onClick={() => setActiveOverlay('upload')}
                                                 className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-indigo-500/20 transition-all hover:-translate-y-0.5 group"
                                             >
                                                 <UploadCloud className="w-4 h-4 group-hover:animate-bounce" />
@@ -703,149 +468,25 @@ const AdminResourcesPanel = () => {
                                 ) : (
                                     <>
                                         {viewMode === 'grid' ? (
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                                {filteredResources.map((file) => (
-                                                    <div
-                                                        key={file.id}
-                                                        onClick={() => setPreviewFile(file)}
-                                                        className={`group bg-white dark:bg-slate-900 border rounded-[2rem] p-5 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col items-center text-center relative overflow-hidden ${selectedIds.has(file.id)
-                                                            ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/30 dark:bg-indigo-900/10'
-                                                            : 'border-slate-100 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500'
-                                                            }`}
-                                                    >
-                                                        {/* Selection Checkbox */}
-                                                        <div className="absolute top-3 left-3 z-20">
-                                                            <button
-                                                                onClick={(e) => toggleSelect(file.id, e)}
-                                                                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${selectedIds.has(file.id)
-                                                                    ? 'bg-indigo-600 border-indigo-600 text-white'
-                                                                    : 'border-slate-300 dark:border-slate-600 opacity-0 group-hover:opacity-100 hover:border-indigo-400'
-                                                                    }`}
-                                                            >
-                                                                {selectedIds.has(file.id) && (
-                                                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                                                    </svg>
-                                                                )}
-                                                            </button>
-                                                        </div>
-                                                        {file.isMock && (
-                                                            <div className="absolute top-3 left-3 z-10">
-                                                                <span className="bg-slate-100 dark:bg-slate-800 text-[9px] font-bold text-slate-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">EJEMPLO</span>
-                                                            </div>
-                                                        )}
-
-                                                        {/* Gradient Flash on Hover */}
-                                                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-transparent to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-
-                                                        {/* Admin Controls */}
-                                                        <div className="absolute top-2 right-2 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <button
-                                                                onClick={(e) => togglePin(file, e)}
-                                                                title={file.isPinned ? "Desfijar" : "Fijar"}
-                                                                className={`p-1.5 rounded-lg backdrop-blur-sm ${file.isPinned ? 'text-amber-400 bg-amber-400/10' : 'text-slate-400 hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-                                                            >
-                                                                <Pin size={14} className={file.isPinned ? 'fill-current' : ''} />
-                                                            </button>
-                                                            {!file.isMock && (
-                                                                <button
-                                                                    onClick={(e) => { e.stopPropagation(); handleDelete(file); }}
-                                                                    title="Eliminar recurso"
-                                                                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 backdrop-blur-sm"
-                                                                >
-                                                                    <Trash2 size={14} />
-                                                                </button>
-                                                            )}
-                                                        </div>
-
-                                                        <div className="w-20 h-20 mb-4 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300 mt-2">
-                                                            <div className="absolute inset-0 bg-indigo-50/50 dark:bg-indigo-900/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                            {getFileIcon(file.type)}
-                                                        </div>
-
-                                                        <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-tight mb-2 line-clamp-2 px-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                                                            {file.title || file.name}
-                                                        </h4>
-
-                                                        <span className="text-[10px] font-mono text-slate-400 mb-4">{formatBytes(file.size)}</span>
-
-                                                        <div className="mt-auto pt-4 w-full border-t border-slate-50 dark:border-slate-800 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-300">
-                                                            <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">Visualizar</span>
-                                                            <Eye className="w-4 h-4 text-indigo-500" />
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
+                                            <AdminResourceGrid 
+                                                filteredResources={filteredResources}
+                                                selectedIds={selectedIds}
+                                                toggleSelect={toggleSelect}
+                                                setPreviewFile={setPreviewFile}
+                                                togglePin={togglePin}
+                                                handleDelete={handleDelete}
+                                            />
                                         ) : (
-                                            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-                                                <table className="w-full text-left">
-                                                    <thead className="bg-slate-50 dark:bg-slate-950 text-xs uppercase font-bold text-slate-500 tracking-wider">
-                                                        <tr>
-                                                            <th className="p-4 pl-4 w-10">
-                                                                <button
-                                                                    onClick={selectedIds.size === filteredResources.length ? clearSelection : selectAll}
-                                                                    className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${selectedIds.size === filteredResources.length && filteredResources.length > 0
-                                                                        ? 'bg-indigo-600 border-indigo-600 text-white'
-                                                                        : 'border-slate-300 dark:border-slate-600 hover:border-indigo-400'
-                                                                        }`}
-                                                                >
-                                                                    {selectedIds.size === filteredResources.length && filteredResources.length > 0 && (
-                                                                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                                                        </svg>
-                                                                    )}
-                                                                </button>
-                                                            </th>
-                                                            <th className="p-4 pl-2">Documento</th>
-                                                            <th className="p-4">Tamaño</th>
-                                                            <th className="p-4">Fecha</th>
-                                                            <th className="p-4 text-right pr-6">Acciones</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-                                                        {filteredResources.map(file => (
-                                                            <tr key={file.id} className={`transition-colors group cursor-pointer ${selectedIds.has(file.id) ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}`} onClick={() => setPreviewFile(file)}>
-                                                                <td className="p-4 pl-4 w-10">
-                                                                    <button
-                                                                        onClick={(e) => toggleSelect(file.id, e)}
-                                                                        className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${selectedIds.has(file.id)
-                                                                            ? 'bg-indigo-600 border-indigo-600 text-white'
-                                                                            : 'border-slate-300 dark:border-slate-600 hover:border-indigo-400'
-                                                                            }`}
-                                                                    >
-                                                                        {selectedIds.has(file.id) && (
-                                                                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                                                            </svg>
-                                                                        )}
-                                                                    </button>
-                                                                </td>
-                                                                <td className="p-4 pl-2 font-medium text-slate-900 dark:text-white flex items-center gap-3">
-                                                                    <div className="transform scale-75">{getFileIcon(file.type)}</div>
-                                                                    <div>
-                                                                        {file.title || file.name}
-                                                                        {file.isMock && <span className="ml-2 text-[9px] bg-slate-100 px-1 rounded text-slate-400">EJEMPLO</span>}
-                                                                    </div>
-                                                                </td>
-                                                                <td className="p-4 text-slate-500 font-mono text-xs">{formatBytes(file.size)}</td>
-                                                                <td className="p-4 text-slate-500">{file.createdAt?.toDate?.().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) || '—'}</td>
-                                                                <td className="p-4 text-right pr-6">
-                                                                    <div className="flex justify-end gap-2">
-                                                                        <button onClick={(e) => handleDownload(file, e)} title="Descargar" className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-slate-100">
-                                                                            <Download className="w-4 h-4" />
-                                                                        </button>
-                                                                        {!file.isMock && (
-                                                                            <button onClick={(e) => { e.stopPropagation(); handleDelete(file); }} title="Eliminar" className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50">
-                                                                                <Trash2 className="w-4 h-4" />
-                                                                            </button>
-                                                                        )}
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            </div>
+                                            <AdminResourceList 
+                                                filteredResources={filteredResources}
+                                                selectedIds={selectedIds}
+                                                toggleSelect={toggleSelect}
+                                                selectAll={selectAll}
+                                                clearSelection={clearSelection}
+                                                setPreviewFile={setPreviewFile}
+                                                handleDelete={handleDelete}
+                                                handleDownload={handleDownload}
+                                            />
                                         )}
                                     </>
                                 )}
@@ -869,9 +510,9 @@ const AdminResourcesPanel = () => {
 
             {/* MODALS */}
             <ResourceUploadModal
-                isOpen={isUploadModalOpen}
-                onClose={() => { setIsUploadModalOpen(false); setDroppedFile(null); }}
-                onSuccess={() => { setDroppedFile(null); }}
+                isOpen={activeOverlay === 'upload'}
+                onClose={() => { setActiveOverlay('none'); setDroppedFile(null); }}
+                onSuccess={() => { setDroppedFile(null); setActiveOverlay('none'); }}
                 defaultCategory={activeCategory}
                 initialFile={droppedFile}
             />
@@ -884,8 +525,8 @@ const AdminResourcesPanel = () => {
 
             {/* 🧠 Smart Contract Wizard */}
             <SmartContractWizard
-                isOpen={isWizardOpen}
-                onClose={() => setIsWizardOpen(false)}
+                isOpen={activeOverlay === 'wizard'}
+                onClose={() => setActiveOverlay('none')}
                 templateName="PLANTILLA CONTRATO RESTAURANTES.md"
                 templateContent={templateContent}
                 franchiseData={franchiseData}
@@ -893,34 +534,30 @@ const AdminResourcesPanel = () => {
 
             {/* 💼 Fiscal Validation Modal */}
             <FiscalValidationModal
-                isOpen={showFiscalValidation}
-                onClose={() => setShowFiscalValidation(false)}
-                onContinue={() => {
-                    setShowFiscalValidation(false);
-                    setIsTemplateSelectorOpen(true);
-                }}
-                onEdit={() => {
-                    setShowFiscalValidation(false);
-                    setShowFiscalDataForm(true);
-                }}
+                isOpen={activeOverlay === 'fiscalValidation'}
+                onClose={() => setActiveOverlay('none')}
+                onContinue={() => setActiveOverlay('templateSelector')}
+                onEdit={() => setActiveOverlay('fiscalDataForm')}
                 validation={validation}
                 franchiseData={franchiseData}
             />
 
             {/* 📝 Fiscal Data Form */}
             <FiscalDataForm
-                isOpen={showFiscalDataForm}
-                onClose={() => setShowFiscalDataForm(false)}
+                isOpen={activeOverlay === 'fiscalDataForm'}
+                onClose={() => setActiveOverlay('none')}
                 onSuccess={() => {
-                    // Recargar datos del usuario
-                    window.location.reload();
+                    // Refrescar el estado en vez de recargar la página entera
+                    setActiveOverlay('none');
+                    // Opcional: Se podría notificar a `useAdminResources` u otro hook para forzar refetch
+                    toast.success('Datos fiscales guardados correctamente.');
                 }}
             />
 
             {/* 📄 Template Selector */}
             <TemplateSelector
-                isOpen={isTemplateSelectorOpen}
-                onClose={() => setIsTemplateSelectorOpen(false)}
+                isOpen={activeOverlay === 'templateSelector'}
+                onClose={() => setActiveOverlay('none')}
                 onSelectTemplate={handleSelectTemplate}
             />
 

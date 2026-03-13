@@ -76,32 +76,32 @@ const EmptyState: FC<EmptyStateProps> = ({
 
     return (
         <div className={cn(
-            'flex flex-col items-center justify-center p-8 md:p-16 text-center',
-            'bg-slate-50/50 dark:bg-slate-800/30 rounded-3xl',
+            'flex flex-col items-center justify-center p-6 md:p-10 text-center',
+            'bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl',
             'border border-dashed border-slate-200 dark:border-slate-700',
             'animate-fade-in-up',
             className
         )}>
             {/* Ilustración SVG o icono fallback */}
             {IllustrationSvg ? (
-                <div className="w-20 h-20 md:w-24 md:h-24 mb-4 opacity-60">
+                <div className="w-16 h-16 md:w-20 md:h-20 mb-3 opacity-60">
                     <IllustrationSvg className="w-full h-full" />
                 </div>
             ) : (
-                <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm mb-4 ring-4 ring-slate-50 dark:ring-slate-700">
-                    <FallbackIcon className="w-8 h-8 md:w-10 md:h-10 text-slate-400 dark:text-slate-500" />
+                <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm mb-3 ring-2 ring-slate-50 dark:ring-slate-700">
+                    <FallbackIcon className="w-6 h-6 md:w-8 md:h-8 text-slate-400 dark:text-slate-500" />
                 </div>
             )}
 
-            <h3 className="text-lg md:text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">
+            <h3 className="text-base md:text-lg font-bold text-slate-800 dark:text-slate-200 mb-1.5">
                 {title}
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mb-6 leading-relaxed">
+            <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 max-w-sm mb-5 leading-relaxed">
                 {description}
             </p>
 
             {actionLabel && onAction && (
-                <Button onClick={onAction} variant="primary">
+                <Button onClick={onAction} variant="primary" size="sm">
                     {actionLabel}
                 </Button>
             )}

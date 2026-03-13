@@ -41,7 +41,7 @@ export interface Restaurant {
 /**
  * Maps restaurant data to template placeholder keys.
  */
-export const mapRestaurantToPlaceholders = (restaurant: Restaurant, adminData: Record<string, any>): Record<string, string> => {
+export const mapRestaurantToPlaceholders = (restaurant: Restaurant, adminData: Record<string, unknown>): Record<string, string> => {
     const now = new Date();
 
     return {
@@ -52,21 +52,21 @@ export const mapRestaurantToPlaceholders = (restaurant: Restaurant, adminData: R
         'AÑO': now.getFullYear().toString(),
 
         // Franquiciado (Emisor)
-        'NOMBRE_DEL_FRANQUICIADO': adminData.legalName || adminData.displayName || '',
-        'CIF_FRANQUICIA': adminData.cif || adminData.taxId || '',
-        'DIRECCIÓN_FRANQUICIA': adminData.fiscalAddress || adminData.address || '',
-        'CIUDAD_FRANQUICIA': adminData.city || '',
-        'PROVINCIA_FRANQUICIA': adminData.province || '',
-        'CP_FRANQUICIA': adminData.postalCode || adminData.zipCode || '',
-        'REPRESENTANTE_LEGAL': adminData.legalRepresentative || adminData.representative || '',
-        'DNI_REPRESENTANTE': adminData.dniRepresentative || adminData.representativeDni || '',
-        'TELÉFONO_FRANQUICIA': adminData.phone || '',
-        'EMAIL_FRANQUICIA': adminData.email || '',
+        'NOMBRE_DEL_FRANQUICIADO': (adminData.legalName || adminData.displayName || '') as string,
+        'CIF_FRANQUICIA': (adminData.cif || adminData.taxId || '') as string,
+        'DIRECCIÓN_FRANQUICIA': (adminData.fiscalAddress || adminData.address || '') as string,
+        'CIUDAD_FRANQUICIA': (adminData.city || '') as string,
+        'PROVINCIA_FRANQUICIA': (adminData.province || '') as string,
+        'CP_FRANQUICIA': (adminData.postalCode || adminData.zipCode || '') as string,
+        'REPRESENTANTE_LEGAL': (adminData.legalRepresentative || adminData.representative || '') as string,
+        'DNI_REPRESENTANTE': (adminData.dniRepresentative || adminData.representativeDni || '') as string,
+        'TELÉFONO_FRANQUICIA': (adminData.phone || '') as string,
+        'EMAIL_FRANQUICIA': (adminData.email || '') as string,
 
         // Legacy (compatibilidad)
-        'NOMBRE DEL FRANQUICIADO': adminData.displayName || adminData.legalName || '',
-        'DNI': adminData.dni || adminData.cif || '',
-        'DIRECCIÓN DE TU OFICINA/BASE': adminData.address || '',
+        'NOMBRE DEL FRANQUICIADO': (adminData.displayName || adminData.legalName || '') as string,
+        'DNI': (adminData.dni || adminData.cif || '') as string,
+        'DIRECCIÓN DE TU OFICINA/BASE': (adminData.address || '') as string,
 
         // Restaurante (Cliente)
         'NOMBRE_RESTAURANTE': restaurant.fiscalName || '',

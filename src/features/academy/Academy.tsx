@@ -1,9 +1,10 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './academy-minimal.css';
 import './academy-lesson-detail.css';
 import './academy-lessons-grid.css';
 import ContentProtection from './components/ContentProtection';
+import YouTubeHDPlayer from './components/YouTubeHDPlayer';
 import LearningPath from './components/LearningPath';
 import CelebrationModal from './components/CelebrationModal';
 import XpProgressBar from './components/XpProgressBar';
@@ -37,12 +38,15 @@ import {
     Youtube,
     FileText,
     Lock,
-    Trophy,
-    Target,
     StickyNote,
     Loader2,
     ClipboardCheck
 } from 'lucide-react';
+
+interface UserModuleProgress {
+    completed_lessons: string[];
+    last_accessed?: string | number | Date;
+}
 
 const Academy = () => {
     const navigate = useNavigate();
@@ -64,7 +68,7 @@ const Academy = () => {
         subtitle: ''
     });
     const [notesOpen, setNotesOpen] = useState(false);
-    const videoRef = useRef<HTMLIFrameElement>(null);
+
 
     // Gamification Hooks
     const { profile: academyProfile, refetch: refreshProfile } = useAcademyProfile(user?.uid || null);
@@ -97,8 +101,8 @@ const Academy = () => {
         return filtered;
     }, [allLessons]);
 
-    const [progress, setProgress] = useState<any>(null);
-    const [allProgress, setAllProgress] = useState<Record<string, any>>({});
+    const [progress, setProgress] = useState<UserModuleProgress | null>(null);
+    const [allProgress, setAllProgress] = useState<Record<string, UserModuleProgress | null>>({});
     const { markComplete, loading: markingComplete } = useMarkLessonComplete();
     const { unmarkComplete, loading: unmarkingComplete } = useUnmarkLessonComplete();
 
@@ -157,7 +161,7 @@ const Academy = () => {
                     });
 
                     const results = await Promise.all(progressPromises);
-                    const allProgressData = results.reduce((acc: Record<string, any>, curr: Record<string, any>) => ({ ...acc, ...curr }), {});
+                    const allProgressData = results.reduce<Record<string, UserModuleProgress | null>>((acc, curr) => ({ ...acc, ...curr }), {});
                     console.log('[Academy] Progreso de todos los módulos cargado:', allProgressData);
                     setAllProgress(allProgressData);
                 } catch (error) {
@@ -196,7 +200,7 @@ const Academy = () => {
                     // Si subió de nivel, mostrar modal de celebración de nivel (Prioridad)
                     if (xpResult.levelUp) {
                         const newLevelInfo = calculateLevel(xpResult.newTotal);
-                        const levelIndex = ACADEMY_LEVELS.findIndex((l: any) => l.name === newLevelInfo.name) + 1;
+                        const levelIndex = ACADEMY_LEVELS.findIndex((l: { name: string }) => l.name === newLevelInfo.name) + 1;
                         setCelebration({
                             isOpen: true,
                             type: 'level_up',
@@ -207,7 +211,7 @@ const Academy = () => {
                     }
                     // Si no subió de nivel, ver si completó el módulo
                     else {
-                        const completedCount = lessons.filter((l: any) => (completedLessons || []).includes(l.id!) || l.id === lessonId).length;
+                        const completedCount = lessons.filter((l: AcademyLesson) => (completedLessons || []).includes(l.id!) || l.id === lessonId).length;
                         if (completedCount === lessons.length && activeModule) {
                             setCelebration({
                                 isOpen: true,
@@ -288,18 +292,11 @@ const Academy = () => {
         }
 
         const hasVideo = lesson.video_url && lesson.video_url.trim().length > 0;
-        const hasText = lesson.content && lesson.content.trim().length > 0;
 
-        // Always show modal if lesson has both video and text
-        if (hasVideo && hasText) {
-            setSelectedLessonId(lessonId);
-            setShowInitialModal(true);
-        } else {
-            // If only one type, go directly to it
-            setSelectedLessonId(lessonId);
-            setSelectedView(hasVideo ? 'video' : 'text');
-            setShowInitialModal(false);
-        }
+        // Siempre priorizar el video si existe, para entrar con cero clicks adicionales
+        setSelectedLessonId(lessonId);
+        setSelectedView(hasVideo ? 'video' : 'text');
+        setShowInitialModal(false);
     };
 
     const handlePreferredView = (view: 'video' | 'text') => {
@@ -333,26 +330,7 @@ const Academy = () => {
         return match ? match[1] : null;
     };
 
-    // Prevent iframe interactions
-    useEffect(() => {
-        const iframe = videoRef.current;
-        if (!iframe) return;
 
-        const preventIframeInteraction = (e: Event) => {
-            e.preventDefault();
-            e.stopPropagation();
-        };
-
-        iframe.addEventListener('contextmenu', preventIframeInteraction);
-        iframe.addEventListener('click', preventIframeInteraction as EventListener);
-        iframe.addEventListener('dblclick', preventIframeInteraction as EventListener);
-
-        return () => {
-            iframe.removeEventListener('contextmenu', preventIframeInteraction);
-            iframe.removeEventListener('click', preventIframeInteraction as EventListener);
-            iframe.removeEventListener('dblclick', preventIframeInteraction as EventListener);
-        };
-    }, [currentLesson?.video_url]);
 
     if (modulesLoading) {
         return (
@@ -384,97 +362,47 @@ const Academy = () => {
                 </div>
 
                 <div className="relative max-w-6xl mx-auto px-4 py-8 sm:py-16">
-                    {/* Header */}
+                    {/* Header Compacto - Estilo Admin */}
                     <motion.div
-                        initial={{ opacity: 0, y: 30 }}
+                        initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, ease: "easeOut" }}
-                        className="text-center mb-16"
+                        className="mb-8"
                     >
-                        {/* Badge de bienvenida */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.2 }}
-                        >
-                        </motion.div>
-
-                        {/* Título principal */}
-                        <motion.h1
-                            className="text-5xl sm:text-6xl font-black text-slate-900 dark:text-white mb-6 tracking-tight"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.3 }}
-                        >
-                        </motion.h1>
-
-                        {/* Stats globales */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.5 }}
-                            className="flex flex-wrap justify-center gap-6"
-                        >
-                            <div className="flex items-center gap-3 px-6 py-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-lg">
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                                    <BookOpen className="w-6 h-6 text-white" />
-                                </div>
-                                <div className="text-left">
-                                    <p className="text-2xl font-black text-slate-900 dark:text-white">{totalModules}</p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide">Módulos</p>
-                                </div>
+                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+                            <div className="text-left">
+                                <motion.h1
+                                    className="text-4xl font-black text-slate-900 dark:text-white tracking-tight"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                >
+                                    Academia <span className="text-blue-600">Repaart</span>
+                                </motion.h1>
+                                <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">Tu centro de formación profesional</p>
                             </div>
 
-                            <div className="flex items-center gap-3 px-6 py-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-lg">
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
-                                    <Trophy className="w-6 h-6 text-white" />
+                            {/* Stats Bloques Rectangulares */}
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                <div className="bg-white dark:bg-slate-900/40 p-3 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm flex flex-col justify-center min-w-[120px]">
+                                    <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Módulos</p>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-xl font-black text-slate-900 dark:text-white">{totalModules}</span>
+                                    </div>
                                 </div>
-                                <div className="text-left">
-                                    <p className="text-2xl font-black text-slate-900 dark:text-white">{completedModules}</p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide">Completados</p>
+                                <div className="bg-white dark:bg-slate-900/40 p-3 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm flex flex-col justify-center min-w-[120px]">
+                                    <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Completados</p>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-xl font-black text-emerald-500">{completedModules}</span>
+                                    </div>
+                                </div>
+                                <div className="bg-white dark:bg-slate-900/40 p-3 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm flex flex-col justify-center min-w-[120px] col-span-2 sm:col-span-1">
+                                    <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Progreso</p>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-xl font-black text-blue-500">{globalProgress}%</span>
+                                    </div>
                                 </div>
                             </div>
-
-                            <div className="flex items-center gap-3 px-6 py-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-lg">
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
-                                    <Target className="w-6 h-6 text-white" />
-                                </div>
-                                <div className="text-left">
-                                    <p className="text-2xl font-black text-slate-900 dark:text-white">{globalProgress}%</p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide">Progreso</p>
-                                </div>
-                            </div>
-                        </motion.div>
-
-                        {/* Barra de progreso global */}
-                        <motion.div
-                            initial={{ opacity: 0, scaleX: 0 }}
-                            animate={{ opacity: 1, scaleX: 1 }}
-                            transition={{ delay: 0.6, duration: 0.8 }}
-                            className="max-w-md mx-auto mt-8"
-                        >
-                            <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${globalProgress}%` }}
-                                    transition={{ delay: 0.8, duration: 1, ease: "easeOut" }}
-                                    className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 rounded-full"
-                                />
-                            </div>
-                        </motion.div>
+                        </div>
                     </motion.div>
-
-                    {/* XP Progress Widget */}
-                    {academyProfile && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.7 }}
-                            className="max-w-md mx-auto mt-6 mb-8"
-                        >
-                            <XpProgressBar profile={academyProfile} />
-                        </motion.div>
-                    )}
 
                     {/* Learning Path */}
                     {visibleModules.length > 0 ? (
@@ -993,10 +921,10 @@ const Academy = () => {
                                         </div>
                                         <div className="h-2 w-24 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                                             <div
-                                                className="h-full bg-blue-600 transition-all duration-300"
+                                                className="h-full bg-blue-600 transition-all duration-300 w-[var(--progress-width)]"
                                                 style={{
-                                                    width: `${((lessonsInOrder.findIndex(l => l.id === currentLesson?.id) + 1) / lessonsInOrder.length) * 100}%`
-                                                }}
+                                                    '--progress-width': `${((lessonsInOrder.findIndex(l => l.id === currentLesson?.id) + 1) / lessonsInOrder.length) * 100}%`
+                                                } as React.CSSProperties}
                                             />
                                         </div>
                                     </div>
@@ -1011,17 +939,11 @@ const Academy = () => {
                                         transition={{ duration: 0.3 }}
                                         className="mb-6"
                                     >
-                                        <div className="relative bg-black rounded-2xl overflow-hidden shadow-2xl">
+                                        <div className="relative bg-black rounded-xl shadow-2xl">
                                             <div className="aspect-video relative">
-                                                <iframe
-                                                    ref={videoRef}
-                                                    src={`https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1&playsinline=1&showinfo=0&iv_load_policy=3&controls=1&disablekb=1&fs=0&widget_referrer=${encodeURIComponent(window.location.href)}`}
+                                                <YouTubeHDPlayer
+                                                    videoId={youtubeId}
                                                     title={currentLesson?.title || ''}
-                                                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                    allowFullScreen
-                                                    className="absolute inset-0 w-full h-full"
-                                                    loading="lazy"
-                                                    sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
                                                 />
                                             </div>
                                         </div>
@@ -1114,7 +1036,7 @@ const Academy = () => {
 
                                 {/* Action Bar — not shown for quizzes (quiz auto-completes) */}
                                 {!isQuiz && (
-                                    <div className="sticky bottom-0 z-10 mt-6 pt-4 pb-2 bg-gradient-to-t from-slate-50 dark:from-slate-950 to-transparent">
+                                    <div className="mt-8 mb-4">
                                         <div className="flex items-center gap-3">
                                             <button
                                                 onClick={() => {
@@ -1128,7 +1050,7 @@ const Academy = () => {
                                                 }}
                                                 disabled={markingComplete || unmarkingComplete}
                                                 className={cn(
-                                                    'flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm uppercase tracking-wide transition-all shadow-lg hover:shadow-xl',
+                                                    'w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-bold text-sm uppercase tracking-wide transition-all shadow-lg hover:shadow-xl',
                                                     isCompleted
                                                         ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                                                         : 'bg-blue-600 hover:bg-blue-700 text-white'

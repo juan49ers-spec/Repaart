@@ -229,9 +229,9 @@ export const BillingWizard: React.FC<Props> = ({
                     <div>
                         <div className="flex justify-between items-center mb-2">
                             <Text strong>Cliente</Text>
-                            <Button 
-                                type="link" 
-                                size="small" 
+                            <Button
+                                type="link"
+                                size="small"
                                 icon={<Plus size={14} />}
                                 onClick={() => setIsCreateCustomerModalOpen(true)}
                             >
@@ -252,9 +252,9 @@ export const BillingWizard: React.FC<Props> = ({
                                 <div className="text-center py-4">
                                     <Text type="secondary">No hay clientes registrados</Text>
                                     <br />
-                                    <Button 
-                                        type="primary" 
-                                        size="small" 
+                                    <Button
+                                        type="primary"
+                                        size="small"
                                         className="mt-2"
                                         icon={<Plus size={14} />}
                                         onClick={() => setIsCreateCustomerModalOpen(true)}
@@ -299,7 +299,7 @@ export const BillingWizard: React.FC<Props> = ({
 
     const renderDataImport = () => (
         <Space direction="vertical" size="large" className="w-full">
-            <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
                 <div>
                     <Title level={5} className="!mb-0">Conceptos de Facturación</Title>
                     <Text type="secondary">Revisa los datos importados o añade conceptos manuales</Text>
@@ -323,6 +323,7 @@ export const BillingWizard: React.FC<Props> = ({
             </div>
 
             <Table
+                scroll={{ x: 700 }}
                 dataSource={lines}
                 pagination={false}
                 rowKey="id"
@@ -479,7 +480,7 @@ export const BillingWizard: React.FC<Props> = ({
         <Layout className="bg-transparent">
             <Content className="p-0">
                 <div className="max-w-[1200px] mx-auto px-6 py-8">
-                    <div className="flex justify-between items-center mb-10">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
                         <div>
                             <Title level={2} className="!mb-0">Asistente de Facturación</Title>
                             <Text type="secondary">Genera facturas profesionales basadas en actividad logística</Text>

@@ -409,34 +409,34 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
             </h2>
           </div>
           
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px]">
-              <thead className="bg-slate-50">
+          <div>
+            <table className="w-full">
+              <thead className="bg-slate-50 dark:bg-slate-900/50">
                 <tr>
-                  <th scope="col" className="px-3 sm:px-4 py-3 text-left text-xs sm:text-sm font-medium text-slate-600">Rider</th>
-                  <th scope="col" className="px-3 sm:px-4 py-3 text-right text-xs sm:text-sm font-medium text-slate-600">Horas</th>
-                  <th scope="col" className="px-3 sm:px-4 py-3 text-right text-xs sm:text-sm font-medium text-slate-600">Pedidos</th>
-                  <th scope="col" className="px-3 sm:px-4 py-3 text-right text-xs sm:text-sm font-medium text-slate-600">KM</th>
-                  <th scope="col" className="px-3 sm:px-4 py-3 text-right text-xs sm:text-sm font-medium text-slate-600">Bruto</th>
-                  <th scope="col" className="px-3 sm:px-4 py-3 text-right text-xs sm:text-sm font-medium text-slate-600">SS</th>
-                  <th scope="col" className="px-3 sm:px-4 py-3 text-right text-xs sm:text-sm font-medium text-slate-600">IRPF</th>
-                  <th scope="col" className="px-3 sm:px-4 py-3 text-right text-xs sm:text-sm font-medium text-slate-600">Neto</th>
+                  <th scope="col" className="px-2 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Rider</th>
+                  <th scope="col" className="px-2 py-2 text-right text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 w-14">Horas</th>
+                  <th scope="col" className="px-2 py-2 text-right text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 w-14">Pedidos</th>
+                  <th scope="col" className="px-2 py-2 text-right text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 w-14">KM</th>
+                  <th scope="col" className="px-2 py-2 text-right text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 w-16">Bruto</th>
+                  <th scope="col" className="px-2 py-2 text-right text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 w-16">SS</th>
+                  <th scope="col" className="px-2 py-2 text-right text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 w-16">IRPF</th>
+                  <th scope="col" className="px-2 py-2 text-right text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 w-16">Neto</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                 {riders.map((rider) => (
-                  <tr key={rider.riderId} className="hover:bg-slate-50">
-                    <td className="px-3 sm:px-4 py-3">
-                      <div className="font-medium text-sm">{rider.riderName}</div>
-                      <div className="text-xs text-slate-500">{rider.riderId.slice(0, 8)}...</div>
+                  <tr key={rider.riderId} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <td className="px-2 py-2">
+                      <div className="font-medium text-xs text-slate-900 dark:text-white truncate max-w-[100px]">{rider.riderName}</div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{rider.riderId.slice(0, 8)}...</div>
                     </td>
-                    <td className="px-3 sm:px-4 py-3 text-right text-sm">{rider.totalHours.toFixed(1)}h</td>
-                    <td className="px-3 sm:px-4 py-3 text-right text-sm">{rider.totalOrders}</td>
-                    <td className="px-3 sm:px-4 py-3 text-right text-sm">{rider.totalDistance.toFixed(1)}</td>
-                    <td className="px-3 sm:px-4 py-3 text-right text-sm font-medium">{rider.grossTotal.toFixed(2)}€</td>
-                    <td className="px-3 sm:px-4 py-3 text-right text-sm text-red-600">-{rider.socialSecurity.toFixed(2)}€</td>
-                    <td className="px-3 sm:px-4 py-3 text-right text-sm text-red-600">-{rider.irpfDeduction.toFixed(2)}€</td>
-                    <td className="px-3 sm:px-4 py-3 text-right text-sm font-bold text-green-600">{rider.netTotal.toFixed(2)}€</td>
+                    <td className="px-2 py-2 text-right text-xs text-slate-700 dark:text-slate-300">{rider.totalHours.toFixed(1)}h</td>
+                    <td className="px-2 py-2 text-right text-xs text-slate-700 dark:text-slate-300">{rider.totalOrders}</td>
+                    <td className="px-2 py-2 text-right text-xs text-slate-700 dark:text-slate-300">{rider.totalDistance.toFixed(1)}</td>
+                    <td className="px-2 py-2 text-right text-xs font-medium text-slate-900 dark:text-white">{rider.grossTotal.toFixed(2)}€</td>
+                    <td className="px-2 py-2 text-right text-xs text-rose-600 dark:text-rose-400">-{rider.socialSecurity.toFixed(2)}€</td>
+                    <td className="px-2 py-2 text-right text-xs text-rose-600 dark:text-rose-400">-{rider.irpfDeduction.toFixed(2)}€</td>
+                    <td className="px-2 py-2 text-right text-xs font-bold text-emerald-600 dark:text-emerald-400">{rider.netTotal.toFixed(2)}€</td>
                   </tr>
                 ))}
               </tbody>

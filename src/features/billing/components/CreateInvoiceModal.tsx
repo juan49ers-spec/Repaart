@@ -305,8 +305,8 @@ export const CreateInvoiceModal: React.FC<Props> = ({
                 layout="vertical"
                 onFinish={handleSubmit}
             >
-                <Row gutter={16}>
-                    <Col span={12}>
+                <Row gutter={[16, 16]}>
+                    <Col xs={24} md={12}>
                         <Form.Item
                             label="Cliente"
                             name="customerId"
@@ -322,7 +322,7 @@ export const CreateInvoiceModal: React.FC<Props> = ({
                             </Select>
                         </Form.Item>
                     </Col>
-                    <Col span={12}>
+                    <Col xs={24} md={12}>
                         <Form.Item
                             label="Tipo de Cliente"
                             name="customerType"
@@ -337,8 +337,8 @@ export const CreateInvoiceModal: React.FC<Props> = ({
                     </Col>
                 </Row>
 
-                <Row gutter={16}>
-                    <Col span={12}>
+                <Row gutter={[16, 16]}>
+                    <Col xs={24} md={12}>
                         <Form.Item
                             label="Fecha de Emisión"
                             name="issueDate"
@@ -350,7 +350,7 @@ export const CreateInvoiceModal: React.FC<Props> = ({
                             />
                         </Form.Item>
                     </Col>
-                    <Col span={12}>
+                    <Col xs={24} md={12}>
                         <Form.Item
                             label="Fecha de Vencimiento"
                             name="dueDate"
@@ -416,6 +416,7 @@ export const CreateInvoiceModal: React.FC<Props> = ({
                     className="mt-4"
                 >
                     <Table
+                        scroll={{ x: 800 }}
                         columns={columns}
                         dataSource={lines}
                         pagination={false}
@@ -428,20 +429,20 @@ export const CreateInvoiceModal: React.FC<Props> = ({
                     title={<div className="flex items-center gap-2"><Calculator className="w-4 h-4" /> Totales</div>}
                     className="mt-4"
                 >
-                    <Row gutter={16}>
-                        <Col span={8}>
+                    <Row gutter={[16, 16]}>
+                        <Col xs={24} md={8}>
                             <div className="flex justify-between">
                                 <span className="text-gray-600">Subtotal:</span>
                                 <span className="font-semibold">€{totals.subtotal.toFixed(2)}</span>
                             </div>
                         </Col>
-                        <Col span={8}>
+                        <Col xs={24} md={8}>
                             <div className="flex justify-between">
                                 <span className="text-gray-600">IVA:</span>
                                 <span className="font-semibold">€{totals.totalTax.toFixed(2)}</span>
                             </div>
                         </Col>
-                        <Col span={8}>
+                        <Col xs={24} md={8}>
                             <div className="flex justify-between text-lg">
                                 <span className="font-semibold">TOTAL:</span>
                                 <span className="font-bold text-blue-600">€{totals.total.toFixed(2)}</span>

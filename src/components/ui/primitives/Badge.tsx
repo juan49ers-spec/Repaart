@@ -22,14 +22,14 @@ export const Badge: React.FC<BadgeProps> = ({ children, intent = 'neutral', size
     };
 
     const sizes = {
-        sm: 'text-[10px] px-2 py-0.5',
-        md: 'text-xs px-2.5 py-1'
+        sm: 'text-[9px] px-1.5 py-0.5 rounded-md',
+        md: 'text-[10px] px-2 py-0.5 rounded-md'
     };
 
     return (
         <span className={`
-            inline-flex items-center gap-1.5 
-            border rounded-lg font-bold uppercase tracking-wider
+            inline-flex items-center gap-1
+            border font-semibold uppercase tracking-wide
             transition-colors duration-200
             ${styles[intent]}
             ${sizes[size]}
@@ -37,7 +37,7 @@ export const Badge: React.FC<BadgeProps> = ({ children, intent = 'neutral', size
         `}
             title={title}
         >
-            {icon && <span className="w-3 h-3">{icon}</span>}
+            {icon && <span className="w-3 h-3 flex items-center justify-center">{icon}</span>}
             {children}
         </span>
     );

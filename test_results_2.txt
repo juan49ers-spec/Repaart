@@ -1,0 +1,82 @@
+
+ RUN  v4.0.18 C:/Users/Usuario/.gemini/antigravity/playground/repaart
+
+stdout | src/services/billing/__tests__/adminInvoices.test.ts > adminInvoicesService - New Features > deleteDraftInvoice > should delete a draft invoice successfully
+[Billing] Draft inv-456 deleted by admin-123
+
+ Ô£ô src/services/billing/__tests__/adminInvoices.test.ts > adminInvoicesService - New Features > deleteDraftInvoice > should delete a draft invoice successfully 2ms
+ Ô£ô src/services/billing/__tests__/adminInvoices.test.ts > adminInvoicesService - New Features > deleteDraftInvoice > should return error if invoice is not draft 0ms
+ Ô£ô src/services/billing/__tests__/adminInvoices.test.ts > adminInvoicesService - New Features > updateDraftDetails > should update draft details successfully 2ms
+ Ô£ô src/services/billing/__tests__/adminInvoices.test.ts > adminInvoicesService - New Features > updateDraftDetails > should return error if updating a non-draft invoice 0ms
+ Ô£ô src/services/billing/__tests__/adminInvoices.test.ts > adminInvoicesService - New Features > duplicateInvoice > should duplicate an invoice as a new draft 1ms
+ ├ù src/services/billing/__tests__/adminInvoices.test.ts > adminInvoicesService - New Features > voidInvoice (improvement verification) > should void an invoice with reason and audit info 6ms
+   ÔåÆ expected "vi.fn()" to be called with arguments: [ undefined, ObjectContaining{ÔÇª} ][90m
+
+Received: 
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[32m-   undefined,[90m
+[32m-   ObjectContaining {[90m
+[31m+   {[90m
+[31m+     "id": "new-inv-789",[90m
+[31m+   },[90m
+[31m+   {[90m
+[2m      "documentStatus": "void",[22m
+[31m+     "updatedAt": "mock-timestamp",[90m
+[31m+     "updatedBy": "admin-123",[90m
+[2m      "voidReason": "Error in data",[22m
+[2m      "voidedAt": "mock-timestamp",[22m
+[2m      "voidedBy": "admin-123",[22m
+[2m    },[22m
+[2m  ][22m
+[39m[90m
+
+Number of calls: [1m1[22m
+[39m
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ» Failed Tests 1 ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»
+
+ FAIL  src/services/billing/__tests__/adminInvoices.test.ts > adminInvoicesService - New Features > voidInvoice (improvement verification) > should void an invoice with reason and audit info
+AssertionError: expected "vi.fn()" to be called with arguments: [ undefined, ObjectContaining{ÔÇª} ]
+
+Received: 
+
+  1st vi.fn() call:
+
+  [
+-   undefined,
+-   ObjectContaining {
++   {
++     "id": "new-inv-789",
++   },
++   {
+      "documentStatus": "void",
++     "updatedAt": "mock-timestamp",
++     "updatedBy": "admin-123",
+      "voidReason": "Error in data",
+      "voidedAt": "mock-timestamp",
+      "voidedBy": "admin-123",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ÔØ» src/services/billing/__tests__/adminInvoices.test.ts:158:35
+    156| 
+    157|       expect(result.success).toBe(true);
+    158|       expect(firestore.updateDoc).toHaveBeenCalledWith(
+       |                                   ^
+    159|         undefined,
+    160|         expect.objectContaining({
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[1/1]ÔÄ»
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  20:53:16
+   Duration  1.45s (transform 118ms, setup 172ms, import 208ms, tests 13ms, environment 840ms)
+

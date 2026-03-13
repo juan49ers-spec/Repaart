@@ -1,3 +1,4 @@
+ 
 import { useMemo, type FC } from 'react';
 import { AlertTriangle, TrendingUp, CheckCircle, Sparkles, TrendingDown, ShieldAlert, ArrowRight, MessageCircle } from 'lucide-react';
 import { formatMoney } from '../../../../lib/finance';
@@ -218,7 +219,7 @@ const ScoreRing: FC<{ score: number; size?: number }> = ({ score, size = 96 }) =
 
     return (
         <div className="flex flex-col items-center gap-2">
-            <div className="relative flex items-center justify-center" style={{ '--ring-size': `${size}px`, width: 'var(--ring-size)', height: 'var(--ring-size)' } as React.CSSProperties}>
+            <div className="relative flex items-center justify-center w-[var(--ring-size)] h-[var(--ring-size)]" style={{ '--ring-size': `${size}px` } as React.CSSProperties}>
                 <svg width={size} height={size} className="transform -rotate-90">
                     <circle
                         cx={center}
@@ -341,7 +342,7 @@ const FinancialAdvisorWidget: FC<FinancialAdvisorWidgetProps> = ({
             : null;
 
     return (
-        <div className="workstation-card workstation-scanline p-5 h-full flex flex-col group/card transition-all mechanical-press overflow-hidden">
+        <div className="workstation-card workstation-scanline p-4 h-full flex flex-col group/card transition-all mechanical-press overflow-hidden">
             {/* HEADER */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2.5">

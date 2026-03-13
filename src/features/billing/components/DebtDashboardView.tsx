@@ -241,8 +241,8 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
             {debtData && <HealthSemaphore />}
 
             {debtData && (
-                <Row gutter={12} className="mb-4">
-                    <Col span={8}>
+                <Row gutter={[12, 12]} className="mb-4">
+                    <Col xs={24} md={8}>
                         <Card size="small" className="bg-slate-50/30">
                             <Statistic
                                 title={<span className="flex items-center gap-2 text-[10px] uppercase tracking-tight font-medium text-slate-400"><DollarSign className="w-3 h-3" /> Deuda Total</span>}
@@ -253,7 +253,7 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
                             />
                         </Card>
                     </Col>
-                    <Col span={8}>
+                    <Col xs={24} md={8}>
                         <Card size="small" className="bg-slate-50/30">
                             <Statistic
                                 title={<span className="flex items-center gap-2 text-[10px] uppercase tracking-tight font-medium text-slate-400"><AlertTriangle className="w-3 h-3" /> Vencida</span>}
@@ -270,7 +270,7 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
                             />
                         </Card>
                     </Col>
-                    <Col span={8}>
+                    <Col xs={24} md={8}>
                         <Card size="small" className="bg-slate-50/30">
                             <Statistic
                                 title={<span className="flex items-center gap-2 text-[10px] uppercase tracking-tight font-medium text-slate-400"><Clock className="w-3 h-3" /> Corriente</span>}
@@ -322,7 +322,7 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
                 size="small"
                 title={<span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Deuda por Cliente</span>}
                 extra={
-                    <Space>
+                    <div className="flex flex-wrap items-center justify-end gap-2 w-full max-w-full">
                         <Select
                             placeholder="Filtrar"
                             size="small"
@@ -339,11 +339,12 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
                         </Select>
                         <Button size="small" icon={<Download className="w-3 h-3" />}>Exportar</Button>
                         <Button size="small" icon={<Mail className="w-3 h-3" />}>Avisos</Button>
-                    </Space>
+                    </div>
                 }
             >
                 <Table
                     size="small"
+                    scroll={{ x: 600 }}
                     columns={customerColumns}
                     dataSource={filteredCustomers}
                     rowKey="customerId"

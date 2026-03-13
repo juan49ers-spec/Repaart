@@ -1,3 +1,4 @@
+ 
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Wallet, Trophy, Activity, ShieldCheck } from 'lucide-react';
@@ -56,11 +57,39 @@ const MoneyRain = () => {
     return (
         <div className="fixed inset-0 pointer-events-none z-[10001] overflow-hidden">
             {items.map((item) => (
-                <div key={item.id} className="absolute top-[-50px] animate-fall-sway opacity-0" style={{ left: item.left, animationDelay: item.delay, animationDuration: item.duration, transform: `scale(${item.scale})` } as any} >
+                <div
+                    key={item.id}
+                    className="absolute top-[-50px] animate-fall-sway opacity-0"
+                    style={{
+                        '--item-left': item.left,
+                        '--item-delay': item.delay,
+                        '--item-duration': item.duration,
+                        '--item-scale': item.scale
+                    } as React.CSSProperties}
+                >
                     <div className="drop-shadow-md">{renderItem(item.type)}</div>
                 </div>
             ))}
-            <style>{`@keyframes fall-sway { 0% { transform: translateY(-50px) rotate(0deg) translateX(0px); opacity: 0; } 10% { opacity: 1; } 25% { transform: translateY(25vh) rotate(45deg) translateX(30px); } 50% { transform: translateY(50vh) rotate(-45deg) translateX(-30px); } 75% { transform: translateY(75vh) rotate(20deg) translateX(15px); } 100% { transform: translateY(110vh) rotate(0deg) translateX(0px); opacity: 0; } } .animate-fall-sway { animation-name: fall-sway; animation-timing-function: ease-in-out; animation-iteration-count: 1; animation-fill-mode: forwards; }`}</style>
+            <style>{`
+                @keyframes fall-sway { 
+                    0% { transform: translateY(-50px) rotate(0deg) translateX(0px); opacity: 0; } 
+                    10% { opacity: 1; } 
+                    25% { transform: translateY(25vh) rotate(45deg) translateX(30px); } 
+                    50% { transform: translateY(50vh) rotate(-45deg) translateX(-30px); } 
+                    75% { transform: translateY(75vh) rotate(20deg) translateX(15px); } 
+                    100% { transform: translateY(110vh) rotate(0deg) translateX(0px); opacity: 0; } 
+                } 
+                .animate-fall-sway { 
+                    animation-name: fall-sway; 
+                    animation-timing-function: ease-in-out; 
+                    animation-iteration-count: 1; 
+                    animation-fill-mode: forwards; 
+                    left: var(--item-left);
+                    animation-delay: var(--item-delay);
+                    animation-duration: var(--item-duration);
+                    transform: scale(var(--item-scale));
+                }
+            `}</style>
         </div>
     );
 };
@@ -81,9 +110,31 @@ const StormRain = () => {
     return (
         <div className="fixed inset-0 pointer-events-none z-[10001] overflow-hidden bg-slate-900/10">
             {items.map((item) => (
-                <div key={item.id} className="absolute top-[-20px] w-[2px] h-4 bg-slate-400 dark:bg-slate-500 rounded-full opacity-60 animate-rain" style={{ left: item.left, animationDelay: item.delay, animationDuration: item.duration, } as any} />
+                <div
+                    key={item.id}
+                    className="absolute top-[-20px] w-[2px] h-4 bg-slate-400 dark:bg-slate-500 rounded-full opacity-60 animate-rain"
+                    style={{
+                        '--rain-left': item.left,
+                        '--rain-delay': item.delay,
+                        '--rain-duration': item.duration
+                    } as React.CSSProperties}
+                />
             ))}
-            <style>{`@keyframes rain { 0% { transform: translateY(-20px) scaleY(1); opacity: 0; } 10% { opacity: 0.8; } 100% { transform: translateY(110vh) scaleY(1.5); opacity: 0; } } .animate-rain { animation-name: rain; animation-timing-function: linear; animation-iteration-count: infinite; }`}</style>
+            <style>{`
+                @keyframes rain { 
+                    0% { transform: translateY(-20px) scaleY(1); opacity: 0; } 
+                    10% { opacity: 0.8; } 
+                    100% { transform: translateY(110vh) scaleY(1.5); opacity: 0; } 
+                } 
+                .animate-rain { 
+                    animation-name: rain; 
+                    animation-timing-function: linear; 
+                    animation-iteration-count: infinite; 
+                    left: var(--rain-left);
+                    animation-delay: var(--rain-delay);
+                    animation-duration: var(--rain-duration);
+                }
+            `}</style>
         </div>
     );
 };
@@ -115,9 +166,9 @@ const TakeHomeProfitWidget: React.FC<TakeHomeProfitWidgetProps> = ({
     const isProfitable = (annualNetProfit || 0) > 0;
 
     return (
-        <div className="workstation-card workstation-scanline p-6 h-full flex flex-col group/card transition-all mechanical-press overflow-hidden">
+        <div className="workstation-card workstation-scanline p-4 h-full flex flex-col group/card transition-all mechanical-press overflow-hidden">
             {/* HEADER */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                     <div className="p-1.5 bg-ruby-50 dark:bg-ruby-900/10 rounded-lg">
                         <Wallet className="w-3.5 h-3.5 text-ruby-600" />
@@ -137,9 +188,9 @@ const TakeHomeProfitWidget: React.FC<TakeHomeProfitWidgetProps> = ({
             </div>
 
             {/* MAIN VALUE DISPLAY */}
-            <div className="mb-5">
+            <div className="mb-3">
                 <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight tabular-nums">
+                    <span className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight tabular-nums">
                         {formatMoney(takeHomeProfit)}€
                     </span>
                     <span className="text-xs font-medium text-slate-400 ml-1">liquidez</span>
@@ -147,7 +198,7 @@ const TakeHomeProfitWidget: React.FC<TakeHomeProfitWidgetProps> = ({
             </div>
 
             {/* HIGH-DENSITY BREAKDOWN */}
-            <div className="space-y-1 mb-6">
+            <div className="space-y-1 mb-3">
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
                     <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Ingresos Netos</span>
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-200 tabular-nums">+{formatMoney(revenue)}€</span>

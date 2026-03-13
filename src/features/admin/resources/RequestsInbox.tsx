@@ -22,7 +22,7 @@ interface Resource {
     title?: string;
     name?: string;
     category?: string;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 const RequestsInbox = () => {
@@ -87,7 +87,7 @@ const RequestsInbox = () => {
                 }
                 const selectedRes = resources.find(r => r.id === selectedResourceId);
                 // Pass category name if possible in future service update
-                await resourceRequestService.fulfillRequest(selectedRequest.id, selectedResourceId, user.uid, selectedRes?.category);
+                await resourceRequestService.fulfillRequest(selectedRequest.id, selectedResourceId, user.uid, selectedRes?.category as string | undefined);
             } else {
                 if (!rejectionReason.trim()) {
                     alert("Debes indicar un motivo para el rechazo.");

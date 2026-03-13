@@ -5,11 +5,13 @@ import {
     GraduationCap,
     LayoutGrid,
     Settings,
-    Zap
+    Zap,
+    CreditCard
 } from 'lucide-react';
 
 export const adminNavItems = [
     { path: '/dashboard', label: 'Finanzas', icon: Activity },
+    { path: '/admin/billing', label: 'Facturación', icon: CreditCard },
     { path: '/admin/flyder', label: 'Flyder', icon: Zap, highlight: true },
     { path: '/admin/resources', label: 'Recursos', icon: FileText },
     { path: '/admin/support', label: 'Soporte', icon: LifeBuoy },

@@ -99,3 +99,40 @@
 .animate-pulse-emerald {
   animation: pulse-emerald 2s ease-in-out infinite;
 }
+
+/* === RESPONSIVE BILLING === */
+
+/* Mobile: smaller tabs */
+@media (max-width: 640px) {
+  .billing-tabs .ant-tabs-tab {
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+  }
+
+  .billing-tabs .ant-tabs-nav {
+    margin-bottom: 12px;
+  }
+
+  /* Allow tabs to scroll horizontally */
+  .billing-tabs .ant-tabs-nav-list {
+    flex-wrap: nowrap;
+  }
+
+  /* Smaller modal on mobile */
+  .invoice-creator-modal .ant-modal-content {
+    border-radius: 12px;
+  }
+
+  /* Stack form grid cols on mobile */
+  .billing-tabs .grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tablet adjustments */
+@media (max-width: 768px) {
+  .billing-tabs .ant-tabs-tab {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+  }
+}
