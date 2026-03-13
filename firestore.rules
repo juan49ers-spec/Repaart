@@ -11,7 +11,10 @@ service cloud.firestore {
     // Todo pivota sobre los custom claims sellados en Auth.
     
     function isAdmin() {
-      return isAuthed() && request.auth.token.role == 'admin';
+      return isAuthed() && (
+        request.auth.token.role == 'admin' || 
+        request.auth.token.admin == true
+      );
     }
     
     function isFranchise() {
@@ -454,6 +457,11 @@ service cloud.firestore {
     // BILLING & TREASURY MODULE
     // =============================================================================
     
+    // ADMIN INVOICES (HQ Billing)
+    match /admin_invoices/{invoiceId} {
+      allow read, write: if isAdmin();
+    }
+    
     // INVOICES - Inmutables after ISSUED
     match /invoices/{invoiceId} {
       allow read: if canManageFinances(resource.data.franchiseId);
@@ -491,6 +499,16 @@ service cloud.firestore {
       // Solo admins pueden cerrar/abrir meses
       allow create, update: if isAdmin();
       allow delete: if false;
+    }
+
+    // SEQUENCE COUNTERS
+    match /counters/{counterId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ADMIN SEQUENCE COUNTERS (New specific path)
+    match /admin_counters/{counterId} {
+      allow read, write: if isAdmin();
     }
     
     // CUALQUIER OTRA COLECCIÓN ESTÁ DENEGADA POR DEFECTO. NO HAY WILDCARD.

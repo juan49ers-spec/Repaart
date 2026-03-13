@@ -9,6 +9,7 @@ if (admin.apps.length === 0) {
 export { calculateWeekStats } from './triggers/onWeekWrite';
 export { onIncidentCreated } from './triggers/onIncident';
 export { deleteUserSync } from './triggers/onUserDelete';
+export { syncUserClaims } from './triggers/onUserWrite';
 
 // Export Callable Functions
 export { createUserManaged } from './callables/createUser';

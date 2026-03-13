@@ -12,7 +12,7 @@ export const repairCustomClaims = functions.region('us-central1').https.onCall(a
         throw new functions.https.HttpsError('unauthenticated', 'Debe estar autenticado.');
     }
 
-    const { targetUserId } = data;
+    const targetUserId = data?.targetUserId;
     const callerRole = (context.auth.token.role as UserRole) || 'user';
 
     // Only admin can repair other users' claims

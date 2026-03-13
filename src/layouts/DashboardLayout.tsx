@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Header, { HeaderProps } from './components/Header';
 import BottomTabBar from './components/BottomTabBar';
-import ChatAssistant from './components/ChatAssistant';
 import PageHelpModal from '../components/ui/modals/PageHelpModal';
 import CommandPalette from '../components/ui/CommandPalette';
 import { pageHelpData, PageHelpContent } from '../constants/pageHelpData';
-import { useAppStore } from '../store/useAppStore';
 import ImpersonationBanner from '../components/ImpersonationBanner';
 
 interface DashboardLayoutProps {
@@ -32,14 +30,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     isFranchise,
     targetFranchiseName,
     onExport,
-    chatData,
+    // chatData,
     outletContext,
     isRider
 }) => {
-    const {
-        isChatOpen,
-        toggleChat: setIsChatOpen
-    } = useAppStore();
 
     const [helpContent, setHelpContent] = useState<PageHelpContent | null>(null);
 
@@ -78,13 +72,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 isFranchise={isFranchise}
             />
 
-            {/* Controlled Chat Assistant */}
-            <ChatAssistant
-                contextData={chatData?.report}
-                isOpen={isChatOpen || false}
-                onClose={() => setIsChatOpen(false)}
-            />
-
+            {/* Page Help Modal */}
             <PageHelpModal
                 isOpen={!!helpContent}
                 content={helpContent}
