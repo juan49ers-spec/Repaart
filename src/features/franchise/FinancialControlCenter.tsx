@@ -10,7 +10,8 @@ import { FinancialHeader } from './finance/components/FinancialHeader';
 import { FinancialFooter } from './finance/components/FinancialFooter';
 import { FinancialBreakdownChart } from './finance/components/FinancialBreakdownChart';
 import { useFinancialDataLoad } from './finance/hooks/useFinancialDataLoad';
-import { FinancialRecord, OrderCounts, ExpenseData, FRANCHISE_CONFIG, REAL_DIST_FACTORS } from './finance/types';
+import { FinancialRecord, OrderCounts, ExpenseData, REAL_DIST_FACTORS } from './finance/types';
+import { calculateExpenses } from '../../lib/finance';
 import { LogisticsRate } from '../../types/franchise';
 
 // --- HELPER: KM ESTIMATION (UPDATED) ---
@@ -104,8 +105,6 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
             if (!isNaN(calculatedIncome)) {
                 const hasOrderCounts = Object.values(orders).some(v => v > 0);
 
-                // Only overwrite if we have counts (>0) OR if the subtotal was already calculated but changed
-                // This prevents the 0-overwrite when invoices are loaded but orders are still 0
                 if (hasOrderCounts && Math.abs(calculatedIncome - totalIncome) > 0.01) {
                     setTotalIncome(calculatedIncome);
                 }
@@ -191,11 +190,9 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
         const variableCosts = (expenses.fuel ?? 0) + (expenses.repairs ?? 0) + rentingTotal + (expenses.incidents ?? 0) + (expenses.other ?? 0) + royaltyAmount;
         const totalExpenses = fixedCosts + variableCosts;
         const grossMargin = totalIncome - totalExpenses;
-        const amortizationCost = FRANCHISE_CONFIG.entryFee / FRANCHISE_CONFIG.amortizationMonths;
-        const netResultAfterAmortization = grossMargin - amortizationCost;
         const totalOrders = Object.values(orders).reduce((sum, count) => sum + count, 0);
         const estimatedKm = estimateTotalKm(orders, logisticsRates);
-        return { totalExpenses, profit: grossMargin, fixedCosts, variableCosts, royaltyAmount, netResultAfterAmortization, totalOrders, estimatedKm };
+        return { totalExpenses, profit: grossMargin, fixedCosts, variableCosts, royaltyAmount, totalOrders, estimatedKm };
     };
 
     const stats = calculateStats();
@@ -205,7 +202,14 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
         setSaving(true);
         try {
             const persistenceStatus = shouldLock ? 'approved' : status;
-            const persistenceData: any = {
+            // 3. GENERATE FINAL REPORT
+            const report = calculateExpenses(totalIncome || 0, stats.totalOrders || 0, {
+                ...expenses,
+                totalHours
+            });
+
+            // 4. PREPARE PAYLOAD
+            const persistenceData: Partial<FinancialRecord> = {
                 month, totalHours, totalIncome, revenue: totalIncome, grossIncome: totalIncome,
                 salaries: expenses.payroll, socialSecurity: expenses.socialSecurity, quota: expenses.quota, insurance: expenses.insurance,
                 gasoline: expenses.fuel, repairs: expenses.repairs,
@@ -214,9 +218,10 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                 agencyFee: expenses.agencyFee, prlFee: expenses.prlFee, accountingFee: expenses.accountingFee, services: expenses.professionalServices,
                 appFlyder: expenses.appFlyder, marketing: expenses.marketing, incidents: expenses.incidents, otherExpenses: expenses.other,
                 repaartServices: expenses.repaartServices,
-                totalExpenses: stats.totalExpenses, profit: stats.profit,
+                totalExpenses: report.totalExpenses, profit: report.taxes.netProfitPostTax,
                 orders: stats.totalOrders, ordersDetail: orders, cancelledOrders,
-                status: persistenceStatus, is_locked: false,
+                status: persistenceStatus, is_locked: shouldLock,
+                isLocked: shouldLock,
                 royaltyPercent: expenses.royaltyPercent, irpfPercent: expenses.irpfPercent,
                 updatedAt: new Date().toISOString()
             };
@@ -317,8 +322,8 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                                                 }`}>
                                                 {stats.profit.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
                                             </p>
-                                            <p className="text-[10px] font-medium text-slate-400 mt-1 uppercase tracking-wider">
-                                                Beneficio Neto Estimado
+                                            <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mt-1 uppercase tracking-wider">
+                                                Beneficio Operativo (EBITDA)
                                             </p>
 
                                             <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-3 gap-3">
@@ -342,6 +347,7 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                                                     </p>
                                                 </div>
                                             </div>
+
                                         </div>
                                     </div>
                                 </div>

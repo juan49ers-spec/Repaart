@@ -192,11 +192,11 @@ const Login: FC = () => {
                                 className="w-full py-4 px-6 bg-slate-900 dark:bg-white hover:bg-black dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold tracking-wide rounded-xl transition-all duration-150 flex items-center justify-center gap-2 shadow-xl shadow-slate-900/10 hover:shadow-slate-900/20 transform hover:-translate-y-0.5 active:scale-[0.98]"
                                 disabled={loading}
                             >
-                                {loading ? (
-                                    <Loader2 className="animate-spin h-5 w-5" />
-                                ) : (
-                                    <span>{isLogin ? 'Acceder al Portal' : 'Crear Cuenta'}</span>
-                                )}
+                                 {loading ? (
+                                     <Loader2 className="animate-spin h-5 w-5" />
+                                 ) : (
+                                     <span>{isLogin ? 'Acceder al Portal' : 'Crear Cuenta'}</span>
+                                 )}
                             </button>
                         </div>
                     </form>

@@ -75,6 +75,10 @@ scripts/audit_user.*
 service-account.json
 nul
 
+# OpenCode sessions (API keys, auth tokens)
+.opencode/sessions/
+.opencode/auth.json
+
 # Heavy Context Killers
 probe_output.txt
 _PROYECTO_COMPLETO.txt

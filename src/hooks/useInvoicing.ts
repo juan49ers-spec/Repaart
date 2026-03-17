@@ -38,7 +38,7 @@ export const useInvoicing = () => {
     }, []);
 
     const getInvoices = useCallback(async (franchiseId: string) => {
-        console.log('[useInvoicing] Fetching invoices for franchiseId:', franchiseId);
+
         const fn = httpsCallable(functions, 'getInvoices');
         const result = await fn({ franchiseId });
         const data = result.data as { invoices: Invoice[] };

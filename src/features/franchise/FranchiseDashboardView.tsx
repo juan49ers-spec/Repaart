@@ -265,7 +265,12 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                                                     <FinancialAdvisorWidget
                                                         revenue={liveRevenue}
                                                         expenses={liveTotalExpenses}
-                                                        margin={liveRevenue > 0 ? ((liveRevenue - liveTotalExpenses) / liveRevenue) * 100 : 0}
+                                                        margin={(() => {
+                                                            if (liveRevenue <= 0) return 0;
+                                                            const opProfit = liveRevenue - liveTotalExpenses;
+                                                            const tax = opProfit > 0 ? opProfit * 0.20 : 0;
+                                                            return ((opProfit - tax) / liveRevenue) * 100;
+                                                        })()}
                                                         hourlyCost={totalHours > 0 ? liveTotalExpenses / totalHours : 0}
                                                         taxReserve={liveRevenue * 0.21}
                                                         trend={revenueTrend}

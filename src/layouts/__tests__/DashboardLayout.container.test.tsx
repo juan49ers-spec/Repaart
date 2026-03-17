@@ -43,10 +43,6 @@ vi.mock('../components/BottomTabBar', () => ({
   default: () => <nav data-testid="bottom-tab-bar">TabBar</nav>
 }));
 
-vi.mock('../components/ChatAssistant', () => ({
-  default: () => <div data-testid="chat-assistant">Chat</div>
-}));
-
 vi.mock('../../components/ui/modals/PageHelpModal', () => ({
   default: () => <div data-testid="page-help-modal">Help</div>
 }));
@@ -133,7 +129,6 @@ describe('DashboardLayout Container Queries', () => {
     expect(screen.getByTestId('impersonation-banner')).toBeInTheDocument();
     expect(screen.getByTestId('header')).toBeInTheDocument();
     expect(screen.getByTestId('bottom-tab-bar')).toBeInTheDocument();
-    expect(screen.getByTestId('chat-assistant')).toBeInTheDocument();
     expect(screen.getByTestId('command-palette')).toBeInTheDocument();
   });
 });

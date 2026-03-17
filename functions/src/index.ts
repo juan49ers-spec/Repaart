@@ -42,3 +42,6 @@ export {
 
 // Push Notifications
 export { subscribeToPush, unsubscribeFromPush, sendPushNotification } from './callables/pushNotifications';
+
+// Debug
+export { debugFinancePermissions } from './callables/debugFinance';

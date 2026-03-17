@@ -10,6 +10,8 @@ vi.mock('lucide-react', () => ({
   Calendar: (props: any) => <div data-testid="calendar-icon" {...props} />,
   ArrowUp: (props: any) => <div data-testid="arrow-up-icon" {...props} />,
   ArrowDown: (props: any) => <div data-testid="arrow-down-icon" {...props} />,
+  ArrowUpRight: (props: any) => <div data-testid="arrow-up-right-icon" {...props} />,
+  ArrowDownRight: (props: any) => <div data-testid="arrow-down-right-icon" {...props} />,
   Sun: (props: any) => <div data-testid="sun-icon" {...props} />,
   Moon: (props: any) => <div data-testid="moon-icon" {...props} />,
   Zap: (props: any) => <div data-testid="zap-icon" {...props} />,
@@ -37,12 +39,12 @@ describe('RiderStatsOverview', () => {
 
     it('renders performance overview section', () => {
         render(<RiderStatsOverview myShifts={mockShifts} />);
-        expect(screen.getByText('Rendimiento Semanal')).toBeInTheDocument();
+        expect(screen.getByText('Progreso Semanal')).toBeInTheDocument();
     });
 
     it('renders without crashing', () => {
         render(<RiderStatsOverview myShifts={mockShifts} />);
-        expect(screen.getByText('Horas Trabajadas')).toBeInTheDocument();
+        expect(screen.getByText('Turnos')).toBeInTheDocument();
     });
 
     it('handles empty shifts array', () => {
@@ -52,6 +54,6 @@ describe('RiderStatsOverview', () => {
 
     it('displays trend comparison with last week', () => {
         render(<RiderStatsOverview myShifts={mockShifts} />);
-        expect(screen.getByText(/Comparativa con semana anterior/i)).toBeInTheDocument();
+        expect(screen.getByText(/vs semana anterior/i)).toBeInTheDocument();
     });
 });

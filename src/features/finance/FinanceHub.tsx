@@ -25,15 +25,9 @@ export const FinanceHub: React.FC<{ franchiseId?: string }> = ({ franchiseId: pr
             }
 
             try {
-                console.log('[FinanceHub] Checking invoicing status for:', {
-                    propFranchiseId,
-                    userFranchiseId: user?.franchiseId,
-                    userUid: user?.uid,
-                    finalId: targetFranchiseId,
-                    userEmail: user?.email
-                });
+
                 const status = await getModuleStatus(targetFranchiseId);
-                console.log('[FinanceHub] Invoicing status response:', status);
+
                 setInvoicingEnabled(status.enabled);
             } catch (error) {
                 console.error('Error checking invoicing status:', error);

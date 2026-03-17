@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { Clock, TrendingUp, Calendar, ArrowUp, ArrowDown, Sun, Moon, Zap, Check } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Sun, Moon, Zap, Award, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { startOfWeek, endOfWeek, isWithinInterval, sub, differenceInHours } from 'date-fns';
 
 export interface ShiftData {
@@ -12,6 +12,10 @@ interface RiderStatsOverviewProps {
     myShifts: ShiftData[];
 }
 
+/**
+ * RiderStatsOverview: Rediseño "Clean Apple"
+ * Enfocado en claridad, tipografía robusta y legibilidad.
+ */
 const RiderStatsOverview: React.FC<RiderStatsOverviewProps> = ({ myShifts }) => {
     const stats = useMemo(() => {
         const now = new Date();
@@ -39,31 +43,24 @@ const RiderStatsOverview: React.FC<RiderStatsOverviewProps> = ({ myShifts }) => 
         const lastWeekHours = calculateHours(lastWeekShifts);
         const targetHours = 40;
         const percent = Math.min((thisWeekHours / targetHours) * 100, 100);
-        const hoursDifference = thisWeekHours - lastWeekHours;
-        const trendPercent = lastWeekHours > 0 ? ((hoursDifference / lastWeekHours) * 100) : 0;
+        const trendPercent = lastWeekHours > 0 ? (((thisWeekHours - lastWeekHours) / lastWeekHours) * 100) : 0;
 
         const countShiftsByType = (shifts: ShiftData[]) => {
             let dayShifts = 0;
+            let afternoonShifts = 0;
             let nightShifts = 0;
 
             shifts.forEach(s => {
                 const hour = new Date(s.startAt).getHours();
-                if (hour >= 6 && hour < 14) {
-                    dayShifts++;
-                } else if (hour >= 14 || hour < 6) {
-                    nightShifts++;
-                }
+                if (hour >= 6 && hour < 14) dayShifts++;
+                else if (hour >= 14 && hour < 22) afternoonShifts++;
+                else nightShifts++;
             });
 
-            return {
-                day: dayShifts,
-                night: nightShifts,
-                total: shifts.length
-            };
+            return { day: dayShifts, afternoon: afternoonShifts, night: nightShifts, total: shifts.length };
         };
 
-        const thisWeekDistribution = countShiftsByType(thisWeekShifts);
-        const lastWeekDistribution = countShiftsByType(lastWeekShifts);
+        const dist = countShiftsByType(thisWeekShifts);
 
         return {
             thisWeekHours,
@@ -71,196 +68,136 @@ const RiderStatsOverview: React.FC<RiderStatsOverviewProps> = ({ myShifts }) => 
             target: targetHours,
             percent,
             trend: trendPercent,
-            totalShifts: thisWeekDistribution.total,
-            dayShifts: thisWeekDistribution.day,
-            nightShifts: thisWeekDistribution.night,
-            dayShiftsChange: thisWeekDistribution.day - lastWeekDistribution.day,
-            nightShiftsChange: thisWeekDistribution.night - lastWeekDistribution.night
+            totalShifts: dist.total,
+            dayShifts: dist.day,
+            afternoonShifts: dist.afternoon,
+            nightShifts: dist.night
         };
     }, [myShifts]);
 
     return (
-        <div className="rider-stats-overview">
-            <div className="mb-5">
-                <h2 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight">
-                    Rendimiento Semanal
-                </h2>
-            </div>
-
-            <div className="glass-premium rounded-3xl p-6 relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />
-                <div className="absolute bottom-0 left-0 w-1 h-full bg-gradient-to-b from-emerald-500 via-emerald-400 to-emerald-500/20" />
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-transparent" />
-
-                <div className="relative z-10">
-                    {/* Main Stats */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-8">
-                        <div className="flex flex-col items-start gap-2">
-                            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.25em] flex items-center gap-2">
-                                <Clock size={12} /> Horas Trabajadas
-                            </span>
+        <div className="space-y-8">
+            {/* Primary Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Main Progress Circle / Bar */}
+                <div className="flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Progreso Semanal</span>
                             <div className="flex items-baseline gap-2">
-                                <span className="text-4xl font-black text-white tracking-tighter">
-                                    {stats.thisWeekHours.toFixed(1)}
-                                </span>
-                                <span className="text-xl font-bold text-slate-500">/ {stats.target}h</span>
+                                <span className="text-5xl font-black text-slate-900 tracking-tighter">{stats.thisWeekHours.toFixed(1)}</span>
+                                <span className="text-lg font-bold text-slate-400">/ {stats.target}h</span>
                             </div>
                         </div>
-
-                        {/* Progress Bar */}
-                        <div className="flex flex-col items-end gap-3 w-full sm:w-auto">
-                            <div className="flex items-center gap-2">
-                                <TrendingUp size={14} className={stats.trend >= 0 ? "text-emerald-400" : "text-rose-400"} />
-                                <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${stats.trend >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                                    {stats.trend >= 0 ? '+' : ''}{stats.trend.toFixed(1)}%
-                                </span>
+                        <div className={`flex flex-col items-end ${stats.trend >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                            <div className="flex items-center gap-1">
+                                {stats.trend >= 0 ? <ArrowUpRight size={20} /> : <ArrowDownRight size={20} />}
+                                <span className="text-xl font-black">{Math.abs(stats.trend).toFixed(0)}%</span>
                             </div>
-                            <div className="w-full sm:w-32 h-2 bg-slate-900/50 rounded-full overflow-hidden border border-white/10">
-                                <div
-                                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-300 transition-all duration-1000 ease-out"
-                                    style={{ width: `${stats.percent}%` }}
-                                />
-                            </div>
+                            <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">vs semana anterior</span>
                         </div>
                     </div>
-
-                    {/* Secondary Stats Grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {/* Total Shifts */}
-                        <div className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-slate-800/50 border border-white/5 hover:bg-slate-700/50 transition-colors">
-                            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400">
-                                <Calendar size={16} />
-                            </div>
-                            <div className="text-center">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Turnos</span>
-                                <span className="text-xl font-bold text-slate-700 dark:text-slate-300">{stats.totalShifts}</span>
-                            </div>
-                        </div>
-
-                        {/* Day Shifts */}
-                        <div className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-colors">
-                            <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400">
-                                <Sun size={16} />
-                            </div>
-                            <div className="text-center">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-amber-600/70">Mediodía</span>
-                                <span className="text-xl font-bold text-amber-700 dark:text-amber-400">
-                                    {stats.dayShifts}
-                                    {stats.dayShiftsChange !== 0 && (
-                                        <span className={`text-xs ml-1 ${stats.dayShiftsChange > 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                                            {stats.dayShiftsChange > 0 ? '+' : ''}{stats.dayShiftsChange}
-                                        </span>
-                                    )}
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Night Shifts */}
-                        <div className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-slate-700/50 border border-slate-600/20 hover:bg-slate-600/50 transition-colors">
-                            <div className="w-10 h-10 rounded-xl bg-slate-700/50 flex items-center justify-center text-slate-400">
-                                <Moon size={16} />
-                            </div>
-                            <div className="text-center">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Noche</span>
-                                <span className="text-xl font-bold text-slate-400">
-                                    {stats.nightShifts}
-                                    {stats.nightShiftsChange !== 0 && (
-                                        <span className={`text-xs ml-1 ${stats.nightShiftsChange > 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                                            {stats.nightShiftsChange > 0 ? '+' : ''}{stats.nightShiftsChange}
-                                        </span>
-                                    )}
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Efficiency */}
-                        <div className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors">
-                            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                                <Zap size={16} />
-                            </div>
-                            <div className="text-center">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600/70">Eficiencia</span>
-                                <span className="text-xl font-bold text-emerald-700 dark:text-emerald-400">
-                                    {stats.totalShifts > 0 ? (stats.thisWeekHours / stats.totalShifts).toFixed(1) : '0'}h
-                                </span>
-                            </div>
-                        </div>
+                    
+                    <div className="relative h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
+                        <div 
+                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all duration-1000 ease-out shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+                            style={{ width: `${stats.percent}%` }}
+                        />
                     </div>
-
-                    {/* Comparison with Last Week */}
-                    <div className="mt-8 pt-6 border-t border-white/5">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-                            <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                                <TrendingUp size={14} className="text-indigo-500" />
-                                Comparativa con semana anterior
-                            </h3>
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Semana anterior:</span>
-                                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{stats.lastWeekHours.toFixed(1)}h</span>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 p-4 rounded-2xl bg-slate-100/50 dark:bg-slate-800/30 border border-white/5">
-                            {stats.trend >= 0 ? (
-                                <div className="flex items-center gap-2">
-                                    <ArrowUp size={20} className="text-emerald-500" />
-                                    <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                                        {Math.abs(stats.trend)}% mejor
-                                    </span>
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-2">
-                                    <ArrowDown size={20} className="text-rose-500" />
-                                    <span className="text-sm font-bold text-rose-600 dark:text-rose-400">
-                                        {Math.abs(stats.trend)}% peor
-                                    </span>
-                                </div>
-                            )}
-                        </div>
+                    
+                    <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                        <span>Inicio de semana</span>
+                        <span className={stats.percent >= 100 ? 'text-emerald-500' : ''}>
+                            {stats.percent >= 100 ? 'Objetivo Cumplido' : `${(stats.target - stats.thisWeekHours).toFixed(1)}h restantes`}
+                        </span>
                     </div>
+                </div>
 
-                    {/* Weekly Goal Indicator */}
-                    {stats.percent >= 100 ? (
-                        <div className="mt-6 p-4 bg-gradient-to-r from-emerald-500/10 to-emerald-600/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center gap-3">
-                            <Check size={20} className="text-emerald-500" />
-                            <div className="flex-1 text-center">
-                                <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400">
-                                    ¡Objetivo semanal alcanzado! 🎉
-                                </span>
-                                <span className="text-xs text-emerald-600 dark:text-emerald-500 block mt-1">
-                                    {stats.totalShifts} turnos completados esta semana
-                                </span>
-                            </div>
-                        </div>
-                    ) : stats.percent >= 80 ? (
-                        <div className="mt-6 p-4 bg-gradient-to-r from-indigo-500/10 to-indigo-600/10 border border-indigo-500/20 rounded-2xl flex items-center justify-center gap-3">
-                            <Check size={20} className="text-indigo-400" />
-                            <div className="flex-1 text-center">
-                                <span className="text-sm font-bold text-indigo-700 dark:text-indigo-400">
-                                    ¡Casi ahí!
-                                </span>
-                                <span className="text-xs text-indigo-600 dark:text-indigo-500 block mt-1">
-                                    Faltan {(40 - stats.thisWeekHours).toFixed(1)}h para objetivo
-                                </span>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="mt-6 p-4 bg-gradient-to-r from-slate-100/50 to-slate-200/50 border border-slate-200/50 rounded-2xl flex items-center justify-center gap-3">
-                            <Clock size={20} className="text-slate-600" />
-                            <div className="flex-1 text-center">
-                                <span className="text-sm font-bold text-slate-600">
-                                    Continúa trabajando
-                                </span>
-                                <span className="text-xs text-slate-500 block mt-1">
-                                    Faltan {(40 - stats.thisWeekHours).toFixed(1)}h para objetivo
-                                </span>
-                            </div>
-                        </div>
-                    )}
+                {/* Quick Stats Grid */}
+                <div className="grid grid-cols-2 gap-4">
+                    <StatCard 
+                        icon={<CalendarIcon />} 
+                        label="Turnos" 
+                        value={stats.totalShifts.toString()} 
+                        sub="Completados"
+                    />
+                    <StatCard 
+                        icon={<Zap size={18} className="text-sky-500" />} 
+                        label="Eficiencia" 
+                        value={stats.totalShifts > 0 ? (stats.thisWeekHours / stats.totalShifts).toFixed(1) : '0'} 
+                        sub="Horas/Turno"
+                    />
                 </div>
             </div>
+
+            {/* Distribution Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <DistributionCard 
+                    icon={<Sun size={18} className="text-amber-500" />} 
+                    label="Mañana" 
+                    count={stats.dayShifts} 
+                    color="bg-amber-50"
+                />
+                <DistributionCard 
+                    icon={<Sun size={18} className="text-orange-500" />} 
+                    label="Tarde" 
+                    count={stats.afternoonShifts} 
+                    color="bg-orange-50"
+                />
+                <DistributionCard 
+                    icon={<Moon size={18} className="text-indigo-500" />} 
+                    label="Noche" 
+                    count={stats.nightShifts} 
+                    color="bg-indigo-50"
+                />
+            </div>
+
+            {/* Motivation Banner */}
+            {stats.percent >= 80 && (
+                <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-6 flex items-center gap-6 animate-in slide-in-from-bottom-2 duration-500">
+                    <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                        <Award size={24} />
+                    </div>
+                    <div>
+                        <p className="font-black text-emerald-900 uppercase text-xs tracking-widest">¡Excelente ritmo!</p>
+                        <p className="text-emerald-700 text-sm">Estás a solo unas horas de completar tu objetivo semanal.</p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
+
+// --- PRIVATE HELPERS ---
+
+const StatCard = ({ icon, label, value, sub }: any) => (
+    <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow group">
+        <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-slate-50 rounded-lg group-hover:bg-white group-hover:shadow-sm transition-all">{icon}</div>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
+        </div>
+        <div className="flex items-baseline gap-1">
+            <span className="text-2xl font-black text-slate-900">{value}</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase">{sub}</span>
+        </div>
+    </div>
+);
+
+const DistributionCard = ({ icon, label, count, color }: any) => (
+    <div className={`${color} rounded-2xl p-5 flex items-center justify-between border border-white/50 backdrop-blur-sm shadow-sm`}>
+        <div className="flex items-center gap-4">
+            <div className="bg-white p-2 rounded-xl shadow-sm">{icon}</div>
+            <span className="font-black text-slate-800 uppercase text-[10px] tracking-widest">{label}</span>
+        </div>
+        <span className="text-xl font-black text-slate-900">{count}</span>
+    </div>
+);
+
+const CalendarIcon = () => (
+    <div className="relative w-4 h-4">
+        <div className="absolute inset-0 border-2 border-indigo-500 rounded-sm" />
+        <div className="absolute top-0 inset-x-0 h-1 bg-indigo-500" />
+    </div>
+);
 
 export default RiderStatsOverview;

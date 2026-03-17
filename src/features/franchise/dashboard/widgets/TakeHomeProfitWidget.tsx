@@ -204,8 +204,12 @@ const TakeHomeProfitWidget: React.FC<TakeHomeProfitWidgetProps> = ({
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-200 tabular-nums">+{formatMoney(revenue)}€</span>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Gastos Totales</span>
-                    <span className="text-xs font-bold text-rose-600 tabular-nums">-{formatMoney(totalExpenses + estimatedTax)}€</span>
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Gasto Estructural</span>
+                    <span className="text-xs font-bold text-rose-600 tabular-nums">-{formatMoney(totalExpenses)}€</span>
+                </div>
+                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide text-[10px]">Impuestos (Est.)</span>
+                    <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 tabular-nums">-{formatMoney(estimatedTax)}€</span>
                 </div>
             </div>
 

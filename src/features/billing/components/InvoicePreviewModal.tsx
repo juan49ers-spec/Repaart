@@ -40,6 +40,7 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
         if (isOpen && invoice?.franchiseId) {
             loadFreshIssuerData();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, invoice?.franchiseId]);
 
     // Cargar datos actualizados de la empresa desde Firestore
@@ -89,6 +90,7 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
         if (isOpen && invoice && !isLoadingIssuer) {
             generatePreview();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, invoice, selectedTemplate, freshIssuerData, isLoadingIssuer]);
 
     // Limpiar URL cuando se cierra
@@ -121,6 +123,7 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
                 issuerSnapshot,
                 // Asegurar que customerSnapshot tiene datos
                 customerSnapshot: invoice.customerSnapshot || {
+                    id: 'preview',
                     fiscalName: 'Sin nombre',
                     cif: 'N/A',
                     address: { street: 'N/A', city: 'N/A', zipCode: 'N/A', province: 'N/A', country: 'España' }
@@ -226,6 +229,8 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
                                 <button
                                     onClick={onClose}
                                     className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                    title="Cerrar vista previa"
+                                    aria-label="Cerrar vista previa"
                                 >
                                     <X className="w-5 h-5 text-slate-500" />
                                 </button>

@@ -91,7 +91,7 @@ export const academyService = {
                         where('status', '==', status),
                         orderBy('order', 'asc')
                     );
-                } catch (indexError) {
+                } catch {
                     console.warn("[academyService] Índice compuesto no encontrado, usando filtro client-side");
                     q = query(
                         collection(db, COLLECTIONS.MODULES),
@@ -105,7 +105,7 @@ export const academyService = {
                 );
             }
             const snapshot = await getDocs(q);
-            let modules = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as AcademyModule));
+            let modules = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...(docSnap.data() as Record<string, unknown>) } as AcademyModule));
 
             // Filtro client-side si es necesario
             if (status && status !== 'all') {
@@ -188,8 +188,8 @@ export const academyService = {
                         where('status', '==', status),
                         orderBy('order', 'asc')
                     );
-                } catch (indexError) {
-                    console.warn("[academyService] Índice compuesto no encontrado, usando filtro client-side", indexError);
+                } catch {
+                    console.warn("[academyService] Índice compuesto no encontrado, usando filtro client-side");
                     q = query(
                         collection(db, COLLECTIONS.LESSONS),
                         where('module_id', '==', moduleId),
@@ -204,7 +204,7 @@ export const academyService = {
                 );
             }
             const snapshot = await getDocs(q);
-            let lessons = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as AcademyLesson));
+            let lessons = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...(docSnap.data() as Record<string, unknown>) } as AcademyLesson));
 
             if (status && status !== 'all') {
                 lessons = lessons.filter(l => l.status === status);

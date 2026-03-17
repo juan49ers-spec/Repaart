@@ -1,4 +1,0 @@
-
-> synthetic-sagan@4.1.0 type-check
-> tsc --noEmit
-

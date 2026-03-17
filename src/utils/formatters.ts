@@ -2,7 +2,8 @@
 const EUR_FORMATTER = new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency: 'EUR',
-    maximumFractionDigits: 0
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
 });
 
 const PERCENT_FORMATTER = new Intl.NumberFormat('es-ES', {

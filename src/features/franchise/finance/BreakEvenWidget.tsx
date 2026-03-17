@@ -35,7 +35,11 @@ const BreakEvenWidget = ({ trendData }: { trendData: any[] }) => {
     // trendData in useFranchiseFinance comes from financeService, which builds it back-to-front (monthsBack to 0).
     // Let's verify sort. The loop goes i=monthsBack down to 0. So it is Oldest -> Newest. Correct.
 
-    const currentMonth = chartData[chartData.length - 1] || {};
+    const currentMonth = chartData[chartData.length - 1] || {
+        actual: 0,
+        required: 0,
+        avgTicket: 0
+    };
     const isProfitable = (currentMonth.actual || 0) >= (currentMonth.required || 0);
 
     return (

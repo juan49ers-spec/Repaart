@@ -1,6 +1,0 @@
-src/context/AuthContext.tsx(303,24): error TS2304: Cannot find name 'useCallback'.
-src/context/AuthContext.tsx(331,32): error TS2304: Cannot find name 'useCallback'.
-src/context/AuthContext.tsx(339,31): error TS2304: Cannot find name 'useCallback'.
-src/context/AuthContext.tsx(346,31): error TS2304: Cannot find name 'useCallback'.
-src/context/AuthContext.tsx(436,27): error TS2304: Cannot find name 'useCallback'.
-src/features/billing/components/InvoiceListView.tsx(800,21): error TS17001: JSX elements cannot have multiple attributes with the same name.

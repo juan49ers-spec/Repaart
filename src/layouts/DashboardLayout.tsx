@@ -51,7 +51,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         onOpenHelp: openHelp
     };
 
-    console.log("[DashboardLayout] Rendering. Children present:", !!children);
+
 
     return (
         <div className="print:hidden viewport-fixed bg-slate-50 dark:bg-slate-950 font-sans relative transition-colors duration-300">

@@ -1,10 +1,10 @@
 import React from 'react';
-import { Bell, BellOff } from 'lucide-react';
+import { LucideIcon, CheckCircle2 } from 'lucide-react';
 
 export interface NotificationPreference {
     id: string;
     label: string;
-    icon: React.ComponentType<{ size?: number }>;
+    icon: LucideIcon;
     enabled: boolean;
     onChange: (enabled: boolean) => void;
 }
@@ -13,76 +13,81 @@ export interface RiderPreferencesProps {
     preferences: NotificationPreference[];
 }
 
+/**
+ * RiderPreferences: Rediseño "Clean Apple"
+ * Foco en controles interactivos claros, tipografía minimalista y lenguaje visual de iOS/Premium.
+ */
 const RiderPreferences: React.FC<RiderPreferencesProps> = ({ preferences }) => {
     return (
-        <div className="rider-preferences">
-            <div className="px-6">
-                <div className="glass-premium rounded-[2rem] p-6 relative overflow-hidden">
-                    <div className="absolute top-0 bottom-0 left-0 w-1 bg-gradient-to-b from-rose-500 to-rose-400" />
+        <div className="space-y-6">
+            <div className="flex items-center justify-between mb-8">
+                <div>
+                    <h3 className="text-xl font-black text-slate-900 tracking-tighter uppercase">Preferencias</h3>
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Canales de Notificación</p>
+                </div>
+            </div>
 
-                    <div className="relative z-10">
-                        <h3 className="text-sm font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
-                            <Bell size={16} className="text-rose-500" />
-                            Preferencias de Notificaciones
-                        </h3>
+            <div className="grid grid-cols-1 gap-4">
+                {preferences.map((pref) => {
+                    const Icon = pref.icon;
+                    return (
+                        <div
+                            key={pref.id}
+                            onClick={() => pref.onChange(!pref.enabled)}
+                            className={`
+                                cursor-pointer flex items-center justify-between p-6 rounded-3xl border transition-all duration-300 group
+                                ${pref.enabled 
+                                    ? 'bg-emerald-50/40 border-emerald-200' 
+                                    : 'bg-white border-slate-100 hover:border-slate-200 shadow-sm'}
+                            `}
+                        >
+                            <div className="flex items-center gap-6">
+                                <div className={`
+                                    w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300
+                                    ${pref.enabled 
+                                        ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' 
+                                        : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100'}
+                                `}>
+                                    <Icon size={24} />
+                                </div>
+                                <div className="text-left">
+                                    <span className={`block font-black uppercase text-[10px] tracking-widest transition-colors ${pref.enabled ? 'text-emerald-900' : 'text-slate-800'}`}>
+                                        {pref.label}
+                                    </span>
+                                    <span className={`text-xs font-medium transition-colors ${pref.enabled ? 'text-emerald-700/70' : 'text-slate-400'}`}>
+                                        {pref.enabled ? 'Recibiendo alertas críticas' : 'Avisos desactivados'}
+                                    </span>
+                                </div>
+                            </div>
 
-                        <div className="space-y-3">
-                            {preferences.map((pref) => {
-                                const Icon = pref.icon;
-                                const IconOff = pref.enabled ? BellOff : Bell;
-                                return (
-                                    <div
-                                        key={pref.id}
-                                        className={`
-                                            flex items-center justify-between p-4 rounded-xl
-                                            transition-all duration-300
-                                            ${pref.enabled
-                                                ? 'bg-slate-50 dark:bg-slate-800/30 border border-rose-200 dark:border-rose-900/30'
-                                                : 'bg-slate-100/50 dark:bg-slate-800/20 border border-slate-200 dark:border-white/5'
-                                            }
-                                        `}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className={`
-                                                w-10 h-10 rounded-full flex items-center justify-center
-                                                transition-colors duration-300
-                                                ${pref.enabled
-                                                    ? 'bg-rose-100 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400'
-                                                    : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
-                                                }
-                                            `}>
-                                                {pref.enabled ? <Icon size={18} /> : <IconOff size={18} />}
-                                            </div>
-                                            <div>
-                                                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest block">
-                                                    {pref.label}
-                                                </span>
-                                                <span className="text-[9px] text-slate-500 dark:text-slate-400">
-                                                    {pref.enabled ? 'Activado' : 'Desactivado'}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <button
-                                            onClick={() => pref.onChange(!pref.enabled)}
-                                            className={`
-                                                relative w-12 h-7 rounded-full transition-all duration-300
-                                                ${pref.enabled
-                                                    ? 'bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.5)]'
-                                                    : 'bg-slate-300 dark:bg-slate-600'
-                                                }
-                                            `}
-                                        >
-                                            <div className={`
-                                                absolute top-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-all duration-300
-                                                ${pref.enabled ? 'left-5.5' : 'left-0.5'}
-                                            `} />
-                                        </button>
-                                    </div>
-                                );
-                            })}
+                            <button
+                                className={`
+                                    relative w-12 h-6 rounded-full transition-all duration-300 flex items-center px-1
+                                    ${pref.enabled ? 'bg-emerald-500' : 'bg-slate-200'}
+                                `}
+                                title={`Alternar ${pref.label}`}
+                                aria-label={`Alternar ${pref.label}`}
+                            >
+                                <div className={`
+                                    w-4 h-4 bg-white rounded-full shadow-md transition-all duration-300
+                                    ${pref.enabled ? 'translate-x-6' : 'translate-x-0'}
+                                `} />
+                            </button>
                         </div>
-                    </div>
+                    );
+                })}
+            </div>
+
+            {/* Privacy Note */}
+            <div className="mt-10 p-6 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-4">
+                <div className="p-2 bg-white rounded-lg shadow-sm">
+                    <CheckCircle2 size={16} className="text-emerald-500" />
+                </div>
+                <div>
+                    <p className="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-1">Privacidad de Datos</p>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter leading-relaxed">
+                        Tus preferencias son privadas y solo se utilizan para enviarte información relevante sobre tus turnos y la operativa de Repaart.
+                    </p>
                 </div>
             </div>
         </div>

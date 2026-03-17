@@ -23,12 +23,20 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, isFranchise, isRider }) => {
 
                 {/* LEFT: Hyper-Premium Brand Island */}
                 <div className="pointer-events-auto">
-                    <NavLink to="/" className="group">
-                        <div className="glass-premium brand-island-glow px-6 py-3 rounded-[24px] shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-500">
-                            <RepaartLogo
-                                className="h-9 lg:h-8 w-auto text-slate-800 dark:text-white transition-all duration-500 group-hover:drop-shadow-[0_0_8px_rgba(225,29,72,0.5)]"
-                                iconOnly={false}
-                            />
+                    <NavLink to="/" className="group flex items-center">
+                        <div className="relative glass-premium-dark border border-white/20 px-5 py-2.5 rounded-[20px] shadow-2xl transition-all duration-500 ease-out 
+                            group-hover:scale-[1.03] group-hover:-translate-y-0.5 group-active:scale-[0.97]
+                            flex items-center gap-3 overflow-hidden">
+                            
+                            {/* Animated Background Highlight */}
+                            <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                            
+                            <div className="relative flex items-center justify-center">
+                                <RepaartLogo
+                                    className="h-8 lg:h-9 w-auto transition-all duration-500 group-hover:drop-shadow-[0_0_12px_rgba(99,102,241,0.4)]"
+                                    iconOnly={false}
+                                />
+                            </div>
                         </div>
                     </NavLink>
                 </div>

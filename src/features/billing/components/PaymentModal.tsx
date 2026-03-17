@@ -26,6 +26,7 @@ import { Modal, Form, Input, InputNumber, Button, Select, DatePicker, Alert, Row
 import { billingController } from '../../../services/billing';
 import type { AddPaymentRequest, Invoice } from '../../../types/invoicing';
 import { formatCurrency } from '../../../utils/formatters';
+import { useAuth } from '../../../context/AuthContext';
 import dayjs from 'dayjs';
 
 interface Props {
@@ -48,6 +49,7 @@ export const PaymentModal: React.FC<Props> = ({
     invoice
 }) => {
     const isRectification = invoice.status === 'RECTIFIED';
+    const { user } = useAuth();
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [paymentAmount, setPaymentAmount] = useState(0);
@@ -124,7 +126,7 @@ export const PaymentModal: React.FC<Props> = ({
             console.log('[PaymentModal] Form values:', values);
             console.log('[PaymentModal] Request:', request);
 
-            const result = await billingController.addPayment(request, 'current_user');
+            const result = await billingController.addPayment(request, user?.uid ?? 'unknown');
 
             console.log('[PaymentModal] Payment result:', result);
             console.log('[PaymentModal] Result success:', result.success);

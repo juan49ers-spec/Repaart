@@ -540,11 +540,11 @@ export const projectMonthEnd = (currentValue: number): number => {
 
 // --- ENTERPRISE FINANCIAL ANALYSIS ---
 
-const currencyFormatter = new Intl.NumberFormat('es-MX', {
+const currencyFormatter = new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency: 'EUR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
 });
 
 export const formatCurrency = (amount: number | null | undefined): string => {

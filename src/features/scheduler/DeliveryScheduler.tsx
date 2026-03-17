@@ -18,7 +18,7 @@ import ConfirmationModal from '../../components/ui/feedback/ConfirmationModal';
 import { SheriffReportModal } from './SheriffReportModal';
 import { RecurringShiftModal } from './components/RecurringShiftModal';
 import { Shift } from '../../schemas/scheduler';
-import { ShiftInput } from '../../services/shiftService';
+
 
 import { useWeeklySchedule } from '../../hooks/useWeeklySchedule';
 import { useAuth } from '../../context/AuthContext';
@@ -26,6 +26,7 @@ import { getRiderColor } from '../../utils/riderColors';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { format, startOfWeek, addDays, parseISO, setHours, setMinutes, differenceInMinutes, isToday, getISOWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
+
 import { useFleetStore } from '../../store/useFleetStore';
 import { useVehicleStore } from '../../store/useVehicleStore';
 import { shiftService } from '../../services/shiftService';
@@ -557,36 +558,19 @@ const DeliveryScheduler: React.FC<{
         if (!safeFranchiseId || isPublishing || readOnly) return;
         setIsPublishing(true);
         try {
-            for (const id of deletedIds) {
-                await shiftService.deleteShift(id);
-            }
-            for (const s of localShifts) {
-                const shiftData: ShiftInput = {
-                    franchiseId: safeFranchiseId,
-                    riderId: String(s.riderId),
-                    riderName: s.riderName || rosterRiders.find((r) => String(r.id) === String(s.riderId))?.fullName || 'Rider',
-                    motoId: s.motoId || null,
-                    motoPlate: s.motoPlate || '',
-                    startAt: s.startAt,
-                    endAt: s.endAt,
-                    isConfirmed: s.isConfirmed
-                };
-
-                const isTrulyNew = (typeof s.id === 'string' && s.id.startsWith('draft-')) || !(weekData?.shifts || []).some(rs => rs.id === s.id);
-
-                if (isTrulyNew) {
-                    await shiftService.createShift(shiftData as ShiftInput);
-                } else {
-                    await shiftService.updateShift(String(s.id), shiftData as Partial<ShiftInput>);
-                }
-            }
+            await shiftService.publishWeeklySchedule(
+                safeFranchiseId,
+                localShifts,
+                deletedIds,
+                weekData?.shifts || []
+            );
 
             // Notify Admin about the published schedule
             try {
                 await notificationService.notify(
                     'SCHEDULE_PUBLISHED',
                     safeFranchiseId,
-                    'Franquicia', // idealmente obtener el nombre real
+                    'Franquicia',
                     {
                         title: 'Horario Publicado',
                         message: `La franquicia ha publicado su horario para la semana.`,
@@ -594,18 +578,15 @@ const DeliveryScheduler: React.FC<{
                         metadata: { franchiseId: safeFranchiseId }
                     }
                 );
-                console.log("NOTIFICACIÓN DE PUBLICACIÓN ENVIADA");
             } catch (err) {
                 console.warn("Error enviando notificación", err);
             }
 
             setLocalShifts([]);
             setDeletedIds(new Set());
-            // alert("✅ Calendario publicado exitosamente.");
         } catch (error) {
-            const err = error as Error;
-            console.error(err);
-            alert("Error al publicar.");
+            console.error(error);
+            alert("Error al publicar el calendario.");
         } finally {
             setIsPublishing(false);
         }

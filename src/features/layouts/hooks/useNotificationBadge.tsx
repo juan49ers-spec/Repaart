@@ -27,7 +27,7 @@ const useNotificationBadge = () => {
         const targetIds = [user.uid];
         if (user.franchiseId) targetIds.push(user.franchiseId);
 
-        console.log('👤 [useNotificationBadge] User data:', { uid: user.uid, franchiseId: user.franchiseId, targetIds });
+
 
         const qFilter = targetIds.length === 1
             ? where('userId', '==', targetIds[0])

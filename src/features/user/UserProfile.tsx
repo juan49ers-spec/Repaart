@@ -1,5 +1,5 @@
 import { useState, Suspense, lazy, type FC, useRef, type ChangeEvent, type ElementType } from 'react';
-import { User, Lock, Bell, LogOut, CheckCircle, AlertTriangle, Camera, Mail, Sparkles, Shield } from 'lucide-react'; import { useAuth } from '../../context/AuthContext';
+import { User, Lock, Bell, LogOut, CheckCircle, AlertTriangle, Camera, Mail, Shield } from 'lucide-react'; import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/ui/inputs/Button';
 import { updateProfile } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -144,27 +144,23 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
                             onChange={handleFileChange}
                             className="hidden"
                             accept="image/*"
+                            aria-label="Cambiar avatar"
                         />
 
                         {/* User Identity */}
                         <div className="flex-1 text-center md:text-left space-y-1 md:space-y-2">
-                            <div className="inline-flex items-center gap-1.5 md:gap-2 px-2.5 py-1 md:px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100/50 backdrop-blur-sm shadow-sm mb-2">
-                                <Sparkles className="w-3 md:w-3.5 h-3 md:h-3.5 text-indigo-500" />
-                                <span className="text-[10px] md:text-xs font-bold text-indigo-700 uppercase tracking-widest">
-                                    {roleConfig?.role === 'admin' ? 'Admin Global' : 'Franquiciado'}
-                                </span>
-                            </div>
-                            <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-800 tracking-tight">
+
+                            <h1 className="text-xl md:text-3xl font-extrabold text-[#1a1f36] tracking-tight uppercase">
                                 {user.displayName || 'Usuario'}
                             </h1>
-                            <div className="flex items-center justify-center md:justify-start gap-4 text-slate-500 font-medium">
-                                <div className="flex items-center gap-2 bg-white/50 px-3 py-1 rounded-lg border border-slate-200/50">
+                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2 text-slate-500 font-medium pt-1">
+                                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200/60 shadow-sm transition-shadow hover:shadow-md">
                                     <Mail className="w-4 h-4 text-slate-400" />
-                                    <span>{user.email}</span>
+                                    <span className="text-sm font-semibold text-slate-600">{user.email}</span>
                                 </div>
-                                <span className="hidden md:inline text-slate-300">|</span>
-                                <div className="text-sm text-slate-400">
-                                    ID: <span className="font-mono">{user.uid.slice(0, 8)}...</span>
+                                <span className="hidden md:inline text-slate-300 font-light">|</span>
+                                <div className="text-sm font-bold text-slate-400 tracking-wider">
+                                    ID: <span className="font-mono text-slate-500">{user.uid}</span>
                                 </div>
                             </div>
                         </div>

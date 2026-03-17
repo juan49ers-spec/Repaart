@@ -24,7 +24,7 @@ export const useInvoicingModule = () => {
         const result = await fn({ franchiseId });
         const data = result.data as RawInvoicingStatus;
 
-        console.log('[useInvoicingModule] Raw response:', data);
+
 
         // Helper para parsear fechas de Firestore (pueden venir como string o como objeto {seconds, nanoseconds})
         const parseDate = (d: any): Date | null => {
@@ -45,7 +45,7 @@ export const useInvoicingModule = () => {
             activatedAt: parseDate(data?.activatedAt)
         };
 
-        console.log('[useInvoicingModule] Parsed status:', status);
+
 
         return status;
     }, []);

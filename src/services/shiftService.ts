@@ -14,7 +14,8 @@ import {
     Unsubscribe,
     DocumentData,
     getDocs,
-    getDoc
+    getDoc,
+    writeBatch
 } from 'firebase/firestore';
 import { ServiceError, validationError } from '../utils/ServiceError';
 
@@ -674,6 +675,62 @@ export const shiftService = {
             await Promise.all(deletePromises);
         } catch (error) {
             throw new ServiceError('deleteRecurringSeries', { cause: error });
+        }
+    },
+
+    /**
+     * Publish weekly schedule using atomic batch
+     */
+    publishWeeklySchedule: async (
+        franchiseId: string,
+        localShifts: any[],
+        deletedIds: Set<string>,
+        existingRemoteShifts: any[] = []
+    ): Promise<void> => {
+        if (!franchiseId) throw validationError('publishWeeklySchedule', 'Franchise ID is required');
+
+        const batch = writeBatch(db);
+
+        try {
+            // 1. Handle Deletions
+            deletedIds.forEach(id => {
+                batch.delete(doc(db, COLLECTION, id));
+            });
+
+            // 2. Handle Creations and Updates
+            for (const s of localShifts) {
+                const shiftData = {
+                    franchiseId: franchiseId,
+                    riderId: s.riderId || null,
+                    riderName: s.riderName || 'Sin asignar',
+                    motoId: s.motoId || null,
+                    motoPlate: s.motoPlate || '',
+                    startAt: Timestamp.fromDate(new Date(s.startAt)),
+                    endAt: Timestamp.fromDate(new Date(s.endAt)),
+                    isConfirmed: s.isConfirmed ?? false,
+                    isDraft: false, // Once published, it's not a draft anymore
+                    updatedAt: serverTimestamp()
+                };
+
+                const isTrulyNew = (typeof s.id === 'string' && s.id.startsWith('draft-')) || 
+                                 !existingRemoteShifts.some(rs => rs.id === s.id);
+
+                if (isTrulyNew) {
+                    const newShiftRef = doc(collection(db, COLLECTION));
+                    batch.set(newShiftRef, {
+                        ...shiftData,
+                        createdAt: serverTimestamp(),
+                        type: 'standard',
+                        status: 'scheduled'
+                    });
+                } else {
+                    batch.update(doc(db, COLLECTION, String(s.id)), shiftData);
+                }
+            }
+
+            await batch.commit();
+        } catch (error) {
+            throw new ServiceError('publishWeeklySchedule', { cause: error });
         }
     }
 };

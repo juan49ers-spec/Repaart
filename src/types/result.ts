@@ -6,8 +6,8 @@
  */
 
 export type Result<T, E = Error> =
-    | { success: true; data: T }
-    | { success: false; error: E };
+    | { success: true; data: T; error?: never }
+    | { success: false; error: E; data?: never };
 
 /**
  * Helper constructors

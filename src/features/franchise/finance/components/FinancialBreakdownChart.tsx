@@ -8,7 +8,6 @@ interface FinancialBreakdownChartProps {
         fixedCosts: number;
         variableCosts: number;
         royaltyAmount: number;
-        netResultAfterAmortization: number;
     };
     expenses: any;
 }
@@ -56,9 +55,21 @@ export const FinancialBreakdownChart: React.FC<FinancialBreakdownChartProps> = (
             </div>
 
             <div className="mt-6 grid grid-cols-2 gap-4 text-center">
-                <div className="p-4 bg-emerald-50/50 dark:bg-emerald-500/5 rounded-2xl border border-emerald-100 dark:border-emerald-500/10 transition-all hover:bg-emerald-50 dark:hover:bg-emerald-500/10">
-                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-widest mb-1">Beneficio Neto</p>
-                    <p className="text-xl font-black text-emerald-700 dark:text-emerald-300">{stats.netResultAfterAmortization.toFixed(2)}€</p>
+                <div className={`p-4 rounded-2xl border transition-all ${
+                    stats.profit >= 0 
+                        ? 'bg-emerald-50/50 dark:bg-emerald-500/5 border-emerald-100 dark:border-emerald-500/10 hover:bg-emerald-50' 
+                        : 'bg-rose-50/50 dark:bg-rose-500/5 border-rose-100 dark:border-rose-500/10 hover:bg-rose-50'
+                }`}>
+                    <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${
+                        stats.profit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                    }`}>
+                        EBITDA
+                    </p>
+                    <p className={`text-xl font-black ${
+                        stats.profit >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'
+                    }`}>
+                        {stats.profit.toFixed(2)}€
+                    </p>
                 </div>
                 <div className="p-4 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-700/50 transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50">
                     <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mb-1">Margen</p>

@@ -989,7 +989,7 @@ export const invoiceEngine = {
             const querySnap = await getDocs(q);
             const invoices = querySnap.docs.map(docSnap => ({
                 id: docSnap.id,
-                ...docSnap.data()
+                ...(docSnap.data() as Record<string, unknown>)
             } as Invoice));
 
             return ok(invoices);
@@ -1053,7 +1053,7 @@ export const invoiceEngine = {
             const querySnap = await getDocs(q);
             const invoices = querySnap.docs.map(docSnap => ({
                 id: docSnap.id,
-                ...docSnap.data()
+                ...(docSnap.data() as Record<string, unknown>)
             } as Invoice));
 
             return ok(invoices);

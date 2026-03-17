@@ -40,8 +40,10 @@ export interface ExpenseData {
 }
 
 export interface FinancialRecord {
+    month?: string;
     revenue?: number;
     totalIncome?: number;
+    grossIncome?: number;
     totalHours?: number;
     cancelledOrders?: number;
     status?: 'pending' | 'draft' | 'submitted' | 'approved' | 'unlock_requested' | 'locked' | 'open';
@@ -71,13 +73,17 @@ export interface FinancialRecord {
     repaartServices?: number;
     royaltyPercent?: number;
     irpfPercent?: number;
+    totalExpenses?: number;
+    profit?: number;
+    orders?: number;
+    is_locked?: boolean;
+    isLocked?: boolean;
+    updatedAt?: any;
 }
 
 
 export const FRANCHISE_CONFIG = {
     packType: 'PREMIUM',
-    entryFee: 3000,
-    amortizationMonths: 12,
     laborCostHour: 11.64,
     targetPPH: 3.2,
     flyderFee: 0.35,

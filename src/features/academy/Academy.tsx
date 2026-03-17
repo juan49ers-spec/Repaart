@@ -3,13 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import './academy-minimal.css';
 import './academy-lesson-detail.css';
 import './academy-lessons-grid.css';
-import ContentProtection from './components/ContentProtection';
-import YouTubeHDPlayer from './components/YouTubeHDPlayer';
 import LearningPath from './components/LearningPath';
 import CelebrationModal from './components/CelebrationModal';
-import XpProgressBar from './components/XpProgressBar';
-import LessonNotes from './components/LessonNotes';
-import QuizPlayer from './components/QuizPlayer';
+import AcademySidebar from './components/AcademySidebar';
+import ModuleOverview from './components/ModuleOverview';
+import LessonView from './components/LessonView';
 import { EmptyState, LoadingState } from './components/AcademyStates';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -22,25 +20,15 @@ import {
     useAcademyProfile,
     useAwardXp
 } from '../../hooks/academy';
-import { AcademyLesson, academyService } from '../../services/academyService';
+import { academyService } from '../../services/academyService';
 import { calculateLevel, getXpForLesson, ACADEMY_LEVELS } from '../../lib/academyGamification';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '../../lib/utils';
 import toast from 'react-hot-toast';
 import {
     BookOpen,
-    Play,
-    CheckCircle,
-    Clock,
-    ArrowLeft,
-    ChevronRight,
-    ChevronLeft,
-    Youtube,
-    FileText,
     Lock,
-    StickyNote,
-    Loader2,
-    ClipboardCheck
+    Youtube,
+    FileText
 } from 'lucide-react';
 
 interface UserModuleProgress {
@@ -69,19 +57,17 @@ const Academy = () => {
     });
     const [notesOpen, setNotesOpen] = useState(false);
 
-
     // Gamification Hooks
-    const { profile: academyProfile, refetch: refreshProfile } = useAcademyProfile(user?.uid || null);
+    const { refetch: refreshProfile } = useAcademyProfile(user?.uid || null);
     const { awardXp } = useAwardXp();
 
-    // Cargar todos los módulos y filtrar por status
+    // Cargar todos los módulos
     const { modules: allModules, loading: modulesLoading } = useAcademyModules('all');
 
-    // Filtrar solo módulos activos para franquicias (admin ve todos)
+    // Filtrar módulos visibles según rol
     const visibleModules = useMemo(() => {
         const isAdmin = user?.role === 'admin' || user?.email?.includes('admin');
         if (isAdmin) return allModules;
-        // Para franquicias: solo módulos con status 'active'
         return allModules.filter(m => m.status === 'active');
     }, [allModules, user]);
 
@@ -89,30 +75,15 @@ const Academy = () => {
     const { lessons: allLessons, loading: lessonsLoading } = useAcademyLessons(moduleId || null, 'all');
     const { lessons: allModulesLessons } = useAcademyAllLessons(visibleModules, 'published');
 
-
-
-    // Filtrar lecciones publicadas (o sin campo status definido para compatibilidad)
+    // Lecciones del módulo actual
     const lessons = useMemo(() => {
-        console.log('[Academy] Todas las lecciones del módulo:', allLessons);
-        console.log('[Academy] Status de las lecciones:', allLessons.map(l => ({ id: l.id, title: l.title, status: l.status })));
-        // Mostrar lecciones publicadas O borradores (para que los admin puedan verlas)
-        const filtered = allLessons.filter(l => l.status === 'published' || l.status === 'draft' || !l.status);
-        console.log('[Academy] Lecciones filtradas (published):', filtered);
-        return filtered;
+        return allLessons.filter(l => l.status === 'published' || l.status === 'draft' || !l.status);
     }, [allLessons]);
 
     const [progress, setProgress] = useState<UserModuleProgress | null>(null);
     const [allProgress, setAllProgress] = useState<Record<string, UserModuleProgress | null>>({});
     const { markComplete, loading: markingComplete } = useMarkLessonComplete();
     const { unmarkComplete, loading: unmarkingComplete } = useUnmarkLessonComplete();
-
-    // Verificar que el módulo esté activo para franquicias
-    const activeModule = useMemo(() => {
-        if (!module) return null;
-        // Si el módulo no está activo, no mostrarlo
-        if (module.status !== 'active') return null;
-        return module;
-    }, [module]);
 
     const completedLessons = useMemo(() => progress?.completed_lessons || [], [progress]);
     const lessonsInOrder = useMemo(() => {
@@ -121,11 +92,7 @@ const Academy = () => {
 
     const currentLesson = useMemo(() => {
         if (selectedLessonId) {
-            const foundLesson = lessons.find(l => l.id === selectedLessonId);
-            if (foundLesson) {
-                return foundLesson;
-            }
-            return null;
+            return lessons.find(l => l.id === selectedLessonId) || null;
         }
         if (lessons.length > 0) {
             const firstUncompleted = lessons.find(l => !completedLessons.includes(l.id!));
@@ -134,36 +101,25 @@ const Academy = () => {
         return null;
     }, [lessons, selectedLessonId, completedLessons]);
 
-    // Cargar progreso cuando cambian el usuario o el módulo
+    // Cargar progreso
     useEffect(() => {
         const fetchProgress = async () => {
             if (user?.uid && moduleId) {
-                // Cargar progreso del módulo específico
                 try {
                     const data = await academyService.getUserProgress(user.uid, moduleId);
-                    console.log('[Academy] Progreso cargado:', data);
                     setProgress(data);
                 } catch (error) {
                     console.error('Error fetching progress:', error);
                 }
             } else if (user?.uid && !moduleId && visibleModules.length > 0) {
-                // Cargar progreso de TODOS los módulos visibles para la vista principal
                 try {
-                    const progressPromises = visibleModules.map(async (module) => {
-                        if (!module.id) return { [`module-${Math.random()}`]: null };
-                        try {
-                            const data = await academyService.getUserProgress(user.uid, module.id);
-                            return { [module.id]: data };
-                        } catch (error) {
-                            console.error(`Error fetching progress for module ${module.id}:`, error);
-                            return { [module.id]: null };
-                        }
+                    const progressPromises = visibleModules.map(async (m) => {
+                        if (!m.id) return { [`temp-${Math.random()}`]: null };
+                        const data = await academyService.getUserProgress(user.uid, m.id);
+                        return { [m.id]: data };
                     });
-
                     const results = await Promise.all(progressPromises);
-                    const allProgressData = results.reduce<Record<string, UserModuleProgress | null>>((acc, curr) => ({ ...acc, ...curr }), {});
-                    console.log('[Academy] Progreso de todos los módulos cargado:', allProgressData);
-                    setAllProgress(allProgressData);
+                    setAllProgress(results.reduce((acc, curr) => ({ ...acc, ...curr }), {}));
                 } catch (error) {
                     console.error('Error fetching all progress:', error);
                 }
@@ -174,33 +130,18 @@ const Academy = () => {
 
     const handleLessonComplete = async (lessonId: string) => {
         if (!user?.uid || !moduleId) return;
-
         try {
             await markComplete(user.uid, moduleId, lessonId);
-
-            // Recompensar con XP
             const lesson = lessons.find(l => l.id === lessonId);
             if (lesson && lesson.content_type) {
-                const lessonType = lesson.content_type === 'quiz' ? 'quiz' : (lesson.content_type === 'video' ? 'video' : 'text');
-                const xpAmount = getXpForLesson(lessonType);
+                const xpAmount = getXpForLesson(lesson.content_type === 'quiz' ? 'quiz' : (lesson.content_type === 'video' ? 'video' : 'text'));
                 const xpResult = await awardXp(user.uid, lessonId, xpAmount);
                 if (xpResult && xpResult.awarded) {
                     refreshProfile();
-
-                    // Notificar ganancia de XP vía toast (siempre)
-                    toast.success(`¡Has ganado ${xpResult.xpGained} XP!`, {
-                        icon: '⚡',
-                        style: {
-                            background: '#1e293b',
-                            color: '#fff',
-                            borderRadius: '12px',
-                        }
-                    });
-
-                    // Si subió de nivel, mostrar modal de celebración de nivel (Prioridad)
+                    toast.success(`¡Has ganado ${xpResult.xpGained} XP!`, { icon: '⚡' });
                     if (xpResult.levelUp) {
                         const newLevelInfo = calculateLevel(xpResult.newTotal);
-                        const levelIndex = ACADEMY_LEVELS.findIndex((l: { name: string }) => l.name === newLevelInfo.name) + 1;
+                        const levelIndex = ACADEMY_LEVELS.findIndex(l => l.name === newLevelInfo.name) + 1;
                         setCelebration({
                             isOpen: true,
                             type: 'level_up',
@@ -208,15 +149,13 @@ const Academy = () => {
                             subtitle: `¡Has alcanzado el Nivel ${levelIndex}!`,
                             xpGained: xpResult.xpGained
                         });
-                    }
-                    // Si no subió de nivel, ver si completó el módulo
-                    else {
-                        const completedCount = lessons.filter((l: AcademyLesson) => (completedLessons || []).includes(l.id!) || l.id === lessonId).length;
-                        if (completedCount === lessons.length && activeModule) {
+                    } else {
+                        const completedCount = lessons.filter(l => completedLessons.includes(l.id!) || l.id === lessonId).length;
+                        if (completedCount === lessons.length && module) {
                             setCelebration({
                                 isOpen: true,
                                 type: 'module_complete',
-                                title: activeModule.title,
+                                title: module.title,
                                 subtitle: '¡Módulo Completado!',
                                 xpGained: xpResult.xpGained
                             });
@@ -224,120 +163,53 @@ const Academy = () => {
                     }
                 }
             }
-
-            // Forzar re-fetch del progreso después de marcar la lección como completada
             const newProgress = await academyService.getUserProgress(user.uid, moduleId);
             setProgress(newProgress);
         } catch (error) {
-            console.error('Error marking lesson complete:', error);
+            console.error('Error marking complete:', error);
         }
     };
 
     const handleLessonUncomplete = async (lessonId: string) => {
         if (!user?.uid || !moduleId) return;
-
         try {
             await unmarkComplete(user.uid, moduleId, lessonId);
-
-            // Forzar re-fetch del progreso después de desmarcar la lección
             const newProgress = await academyService.getUserProgress(user.uid, moduleId);
             setProgress(newProgress);
         } catch (error) {
-            console.error('Error unmarking lesson complete:', error);
+            console.error('Error unmarking complete:', error);
         }
     };
 
-    const getProgressPercentage = () => {
-        if (lessons.length === 0) return 0;
-        const completedCount = lessons.filter(l => completedLessons.includes(l.id!)).length;
-        const percentage = Math.round((completedCount / lessons.length) * 100);
-        console.log('[Academy] Cálculo de progreso:', {
-            lessonsLength: lessons.length,
-            completedCount,
-            percentage,
-            completedLessons,
-            lessons: lessons.map(l => ({ id: l.id, title: l.title }))
-        });
-        return percentage;
-    };
-
-    const handleBackToModules = () => {
-        navigate('/academy');
-    };
-
+    const handleBackToModules = () => navigate('/academy');
     const handleBackToLessons = () => {
         setSelectedLessonId(null);
         setSelectedView('video');
     };
 
     const handleSelectModule = (modId: string) => {
-        // Reset lesson selection when changing modules
         setSelectedLessonId(null);
-        setSelectedView('video');
-        setShowInitialModal(false);
         navigate(`/academy/${modId}`);
     };
 
     const handleSelectLesson = (lessonId: string) => {
         const lesson = lessons.find(l => l.id === lessonId);
-        if (!lesson) {
-            return;
-        }
-
-        // Quiz lessons go directly — no video/text modal
+        if (!lesson) return;
         if (lesson.content_type === 'quiz') {
             setSelectedLessonId(lessonId);
-            setShowInitialModal(false);
             return;
         }
-
-        const hasVideo = lesson.video_url && lesson.video_url.trim().length > 0;
-
-        // Siempre priorizar el video si existe, para entrar con cero clicks adicionales
+        const hasVideo = !!lesson.video_url;
         setSelectedLessonId(lessonId);
         setSelectedView(hasVideo ? 'video' : 'text');
-        setShowInitialModal(false);
-    };
-
-    const handlePreferredView = (view: 'video' | 'text') => {
-        setSelectedView(view);
-        setShowInitialModal(false);
-    };
-
-    const handleNavigatePrevious = () => {
-        const currentIndex = lessonsInOrder.findIndex(l => l.id === currentLesson?.id);
-        if (currentIndex > 0) {
-            const prevLesson = lessonsInOrder[currentIndex - 1];
-            if (prevLesson?.id) {
-                handleSelectLesson(prevLesson.id);
-            }
-        }
-    };
-
-    const handleNavigateNext = () => {
-        const currentIndex = lessonsInOrder.findIndex(l => l.id === currentLesson?.id);
-        if (currentIndex < lessonsInOrder.length - 1) {
-            const nextLesson = lessonsInOrder[currentIndex + 1];
-            if (nextLesson?.id) {
-                handleSelectLesson(nextLesson.id);
-            }
-        }
-    };
-
-    const extractYouTubeId = (url: string) => {
-        const regex = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/;
-        const match = url.match(regex);
-        return match ? match[1] : null;
     };
 
 
 
     if (modulesLoading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-slate-950 dark:via-purple-950/20 dark:to-slate-900">
-                <div className="max-w-6xl mx-auto px-4 py-8 sm:py-16">
-                    <LoadingState />
-                </div>
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-8">
+                <LoadingState />
             </div>
         );
     }
@@ -347,91 +219,44 @@ const Academy = () => {
         const completedModules = visibleModules.filter(m => {
             const moduleLessons = allModulesLessons.filter(l => l.module_id === m.id);
             const moduleProgress = allProgress[m.id || ''];
-            const moduleCompletedLessons = moduleProgress?.completed_lessons || [];
-            const moduleCompletedCount = moduleLessons.filter(l => l.id && moduleCompletedLessons.includes(l.id)).length;
-            return moduleLessons.length > 0 && moduleCompletedCount === moduleLessons.length;
+            const moduleCompleted = moduleProgress?.completed_lessons || [];
+            return moduleLessons.length > 0 && moduleLessons.every(l => l.id && moduleCompleted.includes(l.id));
         }).length;
         const globalProgress = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
 
         return (
-            <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-slate-950 dark:via-purple-950/20 dark:to-slate-900">
-                {/* Background Decorations */}
-                <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                    <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-300/30 dark:bg-purple-600/10 rounded-full blur-3xl" />
-                    <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-300/30 dark:bg-pink-600/10 rounded-full blur-3xl" />
-                </div>
-
-                <div className="relative max-w-6xl mx-auto px-4 py-8 sm:py-16">
-                    {/* Header Compacto - Estilo Admin */}
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mb-8"
-                    >
-                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
-                            <div className="text-left">
-                                <motion.h1
-                                    className="text-4xl font-black text-slate-900 dark:text-white tracking-tight"
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                >
-                                    Academia <span className="text-blue-600">Repaart</span>
-                                </motion.h1>
-                                <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">Tu centro de formación profesional</p>
-                            </div>
-
-                            {/* Stats Bloques Rectangulares */}
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                <div className="bg-white dark:bg-slate-900/40 p-3 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm flex flex-col justify-center min-w-[120px]">
-                                    <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Módulos</p>
-                                    <div className="flex items-baseline gap-2">
-                                        <span className="text-xl font-black text-slate-900 dark:text-white">{totalModules}</span>
-                                    </div>
-                                </div>
-                                <div className="bg-white dark:bg-slate-900/40 p-3 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm flex flex-col justify-center min-w-[120px]">
-                                    <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Completados</p>
-                                    <div className="flex items-baseline gap-2">
-                                        <span className="text-xl font-black text-emerald-500">{completedModules}</span>
-                                    </div>
-                                </div>
-                                <div className="bg-white dark:bg-slate-900/40 p-3 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm flex flex-col justify-center min-w-[120px] col-span-2 sm:col-span-1">
-                                    <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Progreso</p>
-                                    <div className="flex items-baseline gap-2">
-                                        <span className="text-xl font-black text-blue-500">{globalProgress}%</span>
-                                    </div>
-                                </div>
-                            </div>
+            <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-slate-950 dark:via-purple-950/20 dark:to-slate-900 px-4 py-8 sm:py-16">
+                <div className="max-w-6xl mx-auto">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+                        <div>
+                            <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                                Academia <span className="text-blue-600">Repaart</span>
+                            </h1>
+                            <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">Tu centro de formación profesional</p>
                         </div>
-                    </motion.div>
-
-                    {/* Learning Path */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {[
+                                { label: 'Módulos', val: totalModules, color: 'text-slate-900 dark:text-white' },
+                                { label: 'Completados', val: completedModules, color: 'text-emerald-500' },
+                                { label: 'Progreso', val: `${globalProgress}%`, color: 'text-blue-500' }
+                            ].map((s, i) => (
+                                <div key={i} className="bg-white dark:bg-slate-900/40 p-3 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm min-w-[120px]">
+                                    <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{s.label}</p>
+                                    <span className={cn("text-xl font-black", s.color)}>{s.val}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                     {visibleModules.length > 0 ? (
                         <LearningPath
                             modules={visibleModules}
                             completedLessons={completedLessons}
-                            allLessons={allModulesLessons
-                                .filter((l): l is AcademyLesson & { id: string; module_id: string } =>
-                                    typeof l.id === 'string' && typeof l.module_id === 'string'
-                                )
-                                .map(l => ({ id: l.id, module_id: l.module_id }))
-                            }
-                            currentModuleId={activeModule?.id}
+                            allLessons={allModulesLessons.filter((l): l is any => !!l.id && !!l.module_id)}
+                            currentModuleId={module?.id}
                             onSelectModule={handleSelectModule}
                             allProgress={allProgress}
                         />
-                    ) : (
-                        <EmptyState />
-                    )}
-
-                    {/* Celebration Modal */}
-                    <CelebrationModal
-                        isOpen={celebration.isOpen}
-                        onClose={() => setCelebration({ ...celebration, isOpen: false })}
-                        type={celebration.type}
-                        title={celebration.title}
-                        subtitle={celebration.subtitle}
-                        xpGained={celebration.xpGained}
-                    />
+                    ) : <EmptyState />}
                 </div>
             </div>
         );
@@ -440,672 +265,121 @@ const Academy = () => {
     if (moduleLoading || lessonsLoading) {
         return (
             <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-12 h-12 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">Cargando módulo...</p>
-                </div>
+                <LoadingState />
             </div>
         );
     }
 
-    if (!activeModule) {
+    if (!module || (user?.role !== 'admin' && module.status !== 'active')) {
         return (
-            <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center">
-                <div className="text-center">
-                    <BookOpen className="w-16 h-16 text-slate-400 dark:text-slate-600 mx-auto mb-4" />
-                    <p className="text-lg font-semibold text-slate-600 dark:text-slate-400">Módulo no encontrado o no disponible</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-500 mt-2">Este módulo no está publicado o ha sido desactivado</p>
-                    <button
-                        onClick={handleBackToModules}
-                        className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-colors"
-                    >
-                        Volver a módulos
-                    </button>
-                </div>
+            <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col items-center justify-center p-4 text-center">
+                <BookOpen className="w-16 h-16 text-slate-300 mb-4" />
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Módulo no disponible</h2>
+                <button onClick={handleBackToModules} className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-xl">Volver</button>
             </div>
         );
     }
 
     const isCompleted = currentLesson?.id ? completedLessons.includes(currentLesson.id) : false;
-    const youtubeId = currentLesson?.video_url ? extractYouTubeId(currentLesson.video_url || '') : null;
-    const hasVideo = !!currentLesson?.video_url && currentLesson.video_url.trim().length > 0 && !!youtubeId;
-    const hasText = !!currentLesson?.content && currentLesson.content.trim().length > 0;
-    const isQuiz = currentLesson?.content_type === 'quiz' && currentLesson?.quiz && currentLesson.quiz.length > 0;
+    const hasVideo = !!currentLesson?.video_url;
+    const hasText = !!currentLesson?.content;
+
+    function cn(...classes: any[]) {
+        return classes.filter(Boolean).join(' ');
+    }
 
     return (
-        <div className="academy-container h-screen flex flex-col lg:flex-row" key={progress?.completed_lessons?.join(',') || 'no-progress'}>
-            {/* Initial Selection Modal */}
+        <div className="academy-container h-screen flex flex-col">
             <AnimatePresence>
                 {showInitialModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowInitialModal(false)}>
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            transition={{ duration: 0.2 }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            onClick={e => e.stopPropagation()}
+                            className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full p-8"
                         >
-                            <div className="p-6">
-                                <div className="text-center mb-6">
-                                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                                        <BookOpen className="w-8 h-8 text-white" />
-                                    </div>
-                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                                        ¿Cómo prefieres aprender?
-                                    </h2>
-                                    <p className="text-slate-600 dark:text-slate-400 text-sm">
-                                        Esta lección tiene video y contenido escrito. Elige con qué quieres comenzar.
-                                    </p>
+                            <div className="text-center mb-8">
+                                <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                    <BookOpen className="w-8 h-8 text-white" />
                                 </div>
-
-                                <div className="space-y-3">
-                                    {hasVideo && (
-                                        <button
-                                            onClick={() => handlePreferredView('video')}
-                                            className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                                        >
-                                            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                                                <Youtube className="w-6 h-6" />
-                                            </div>
-                                            <div className="text-left flex-1">
-                                                <div className="font-bold">Ver Video</div>
-                                                <div className="text-sm opacity-90">Aprende visualmente</div>
-                                            </div>
-                                        </button>
-                                    )}
-                                    {hasText && (
-                                        <button
-                                            onClick={() => handlePreferredView('text')}
-                                            className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                                        >
-                                            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                                                <FileText className="w-6 h-6" />
-                                            </div>
-                                            <div className="text-left flex-1">
-                                                <div className="font-bold">Leer Contenido</div>
-                                                <div className="text-sm opacity-90">Aprende a tu ritmo</div>
-                                            </div>
-                                        </button>
-                                    )}
-                                </div>
+                                <h2 className="text-2xl font-bold dark:text-white">¿Cómo quieres empezar?</h2>
                             </div>
-                            <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700">
-                                <p className="text-xs text-center text-slate-500 dark:text-slate-400">
-                                    Podrás cambiar entre video y texto cuando quieras
-                                </p>
+                            <div className="space-y-4">
+                                {hasVideo && (
+                                    <button onClick={() => { setSelectedView('video'); setShowInitialModal(false); }}
+                                        className="w-full flex items-center gap-4 p-4 bg-red-600 text-white rounded-2xl font-bold">
+                                        <Youtube className="w-6 h-6" /> Ver Video
+                                    </button>
+                                )}
+                                {hasText && (
+                                    <button onClick={() => { setSelectedView('text'); setShowInitialModal(false); }}
+                                        className="w-full flex items-center gap-4 p-4 bg-blue-600 text-white rounded-2xl font-bold">
+                                        <FileText className="w-6 h-6" /> Leer Texto
+                                    </button>
+                                )}
                             </div>
                         </motion.div>
                     </div>
                 )}
             </AnimatePresence>
 
-            {/* Sidebar - Desktop only */}
-            <aside className="academy-sidebar">
-                <div className="academy-sidebar-header">
-                    <button
-                        onClick={handleBackToModules}
-                        className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 text-sm font-semibold mb-3 transition-colors"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span>Volver a módulos</span>
-                    </button>
-                    <h2 className="academy-sidebar-title">{activeModule.title}</h2>
-                    <p className="academy-sidebar-description line-clamp-2">{activeModule.description}</p>
-                </div>
-
-                <div className="academy-sidebar-progress">
-                    <div className="academy-sidebar-progress-header">
-                        <span className="academy-sidebar-progress-label">Tu progreso</span>
-                        <span className="academy-sidebar-progress-percentage">{getProgressPercentage()}%</span>
-                    </div>
-                    <div className="academy-sidebar-progress-bar">
-                        <motion.div
-                            className="academy-module-progress-fill"
-                            initial={{ width: 0 }}
-                            animate={{ width: `${getProgressPercentage()}%` }}
-                            transition={{ duration: 0.5 }}
+            <div className="flex flex-1 overflow-hidden h-[calc(100vh-64px)]">
+                <AcademySidebar
+                    lessons={lessonsInOrder}
+                    selectedLessonId={currentLesson?.id || null}
+                    completedLessons={completedLessons}
+                    onSelectLesson={handleSelectLesson}
+                />
+                
+                <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 relative">
+                    {!selectedLessonId ? (
+                        <ModuleOverview
+                            module={module}
+                            lessons={lessonsInOrder}
+                            completedLessons={completedLessons}
+                            onSelectLesson={handleSelectLesson}
+                            lessonsLoading={lessonsLoading}
+                            moduleId={moduleId}
                         />
-                    </div>
-                </div>
-
-                {/* Gamification Widget */}
-                {academyProfile && (
-                    <div className="px-4 pb-2">
-                        <XpProgressBar profile={academyProfile} compact />
-                    </div>
-                )}
-
-                <div className="academy-lessons-list">
-                    {lessonsInOrder.map((lesson, index) => {
-                        const lessonCompleted = completedLessons.includes(lesson.id!);
-                        const isSelected = currentLesson?.id === lesson.id;
-                        const isLocked = !lessonCompleted && index > 0 && !completedLessons.includes(lessonsInOrder[index - 1].id!);
-                        const hasVideo = lesson.video_url && lesson.video_url.trim().length > 0;
-                        const hasText = lesson.content && lesson.content.trim().length > 0;
-
-                        return (
-                            <motion.button
-                                key={lesson.id}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: index * 0.02 }}
-                                onClick={() => !isLocked && handleSelectLesson(lesson.id!)}
-                                disabled={isLocked}
-                                className={cn(
-                                    'academy-lesson-item w-full text-left',
-                                    isSelected && 'active',
-                                    lessonCompleted && 'completed',
-                                    isLocked && 'disabled'
-                                )}
-                            >
-                                <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
-                                                {isLocked ? 'bg-slate-200 dark:bg-slate-700 text-slate-500' :
-                                                 lessonCompleted ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' :
-                                                 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'}">
-                                        {isLocked ? <Lock className="w-4 h-4" /> :
-                                            lessonCompleted ? <CheckCircle className="w-5 h-5" /> :
-                                                index + 1}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-semibold text-slate-900 dark:text-white text-sm mb-1 truncate">
-                                            {lesson.title}
-                                        </h4>
-                                        <div className="flex items-center gap-2 text-xs">
-                                            {lesson.content_type === 'quiz' ? (
-                                                <span className="flex items-center gap-1 text-purple-600 dark:text-purple-400">
-                                                    <ClipboardCheck className="w-3 h-3" />
-                                                    Quiz
-                                                </span>
-                                            ) : (
-                                                <>
-                                                    {hasVideo && (
-                                                        <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
-                                                            <Youtube className="w-3 h-3" />
-                                                            Video
-                                                        </span>
-                                                    )}
-                                                    {hasText && (
-                                                        <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
-                                                            <FileText className="w-3 h-3" />
-                                                            Texto
-                                                        </span>
-                                                    )}
-                                                </>
-                                            )}
-                                            <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                                                <Clock className="w-3 h-3" />
-                                                {lesson.duration}m
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.button>
-                        );
-                    })}
-                </div>
-            </aside>
-
-            <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950">
-                {!selectedLessonId ? (
-                    <div className="max-w-6xl mx-auto px-4 pt-1">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.4 }}
-                            className="academy-lesson-header"
-                        >
-                            <h1 className="academy-title">{activeModule.title}</h1>
-                            <p className="academy-description">{activeModule.description}</p>
-
-                            <div className="flex flex-wrap items-center gap-3 mt-2">
-                                <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-full border border-blue-200 dark:border-blue-800">
-                                    <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                    <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">{lessons.length} lecciones</span>
-                                </div>
-                                <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-full border border-emerald-200 dark:border-emerald-800">
-                                    <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                                    <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">{getProgressPercentage()} completado</span>
-                                </div>
+                    ) : (
+                        currentLesson ? (
+                            <LessonView
+                                currentLesson={currentLesson}
+                                lessonsInOrder={lessonsInOrder}
+                                onBack={handleBackToLessons}
+                                onNavigate={handleSelectLesson}
+                                onComplete={(id, completed) => completed ? handleLessonComplete(id) : handleLessonUncomplete(id)}
+                                isCompleted={isCompleted}
+                                markingComplete={markingComplete}
+                                unmarkingComplete={unmarkingComplete}
+                                moduleId={moduleId}
+                                userId={user?.uid || ''}
+                                notesOpen={notesOpen}
+                                setNotesOpen={setNotesOpen}
+                                selectedView={selectedView}
+                                setSelectedView={setSelectedView}
+                            />
+                        ) : (
+                            <div className="h-full flex flex-col items-center justify-center">
+                                <Lock className="w-16 h-16 text-amber-500 mb-4" />
+                                <p className="text-lg font-bold">Lección no disponible</p>
+                                <button onClick={handleBackToLessons} className="mt-4 text-blue-600 font-bold">Ver catálogo</button>
                             </div>
-                        </motion.div>
+                        )
+                    )}
+                </main>
+            </div>
 
-                        <div className="academy-lessons-grid">
-                            {lessonsInOrder.map((lesson, index) => {
-                                const lessonCompleted = completedLessons.includes(lesson.id!);
-                                const lessonYtId = lesson.video_url ? extractYouTubeId(lesson.video_url) : null;
-                                const isLocked = !lessonCompleted && index > 0 && !completedLessons.includes(lessonsInOrder[index - 1].id!);
-
-                                return (
-                                    <motion.div
-                                        key={lesson.id}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: index * 0.05 }}
-                                        className="h-full"
-                                    >
-                                        <div
-                                            onClick={() => !isLocked && handleSelectLesson(lesson.id!)}
-                                            className={cn(
-                                                'relative bg-white dark:bg-slate-900 rounded-2xl shadow-lg border-2 transition-all overflow-hidden cursor-pointer group',
-                                                isLocked
-                                                    ? 'border-slate-200 dark:border-slate-700 opacity-60'
-                                                    : 'border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-xl'
-                                            )}
-                                        >
-                                            {/* Thumbnail Section */}
-                                            <div className="relative h-40 bg-slate-900 overflow-hidden">
-                                                {lessonYtId ? (
-                                                    <img
-                                                        src={`https://img.youtube.com/vi/${lessonYtId}/maxresdefault.jpg`}
-                                                        alt={lesson.title}
-                                                        className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-                                                        loading="lazy"
-                                                        onError={(e) => {
-                                                            // Si maxresdefault (1080p) no existe, retrocedemos al hqdefault
-                                                            if (e.currentTarget.src.includes('maxresdefault.jpg')) {
-                                                                e.currentTarget.src = `https://img.youtube.com/vi/${lessonYtId}/hqdefault.jpg`;
-                                                            }
-                                                        }}
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
-                                                        <FileText className="w-16 h-16 text-slate-600" />
-                                                    </div>
-                                                )}
-
-                                                {/* Number Badge */}
-                                                <div className="absolute top-3 left-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg">
-                                                    <span className="text-sm font-bold text-slate-900 dark:text-white">
-                                                        {index + 1}
-                                                    </span>
-                                                </div>
-
-                                                {/* Type Badge */}
-                                                <div className="absolute top-3 right-3 flex gap-2">
-                                                    {lesson.content_type === 'quiz' ? (
-                                                        <div className="bg-purple-500/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-lg">
-                                                            <ClipboardCheck className="w-4 h-4 text-white" />
-                                                        </div>
-                                                    ) : (
-                                                        <>
-                                                            {lessonYtId && (
-                                                                <div className="bg-red-500/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-lg">
-                                                                    <Youtube className="w-4 h-4 text-white" />
-                                                                </div>
-                                                            )}
-                                                            {lesson.content && lesson.content.trim().length > 0 && (
-                                                                <div className="bg-blue-500/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-lg">
-                                                                    <FileText className="w-4 h-4 text-white" />
-                                                                </div>
-                                                            )}
-                                                        </>
-                                                    )}
-                                                </div>
-
-                                                {/* Completion Badge */}
-                                                {lessonCompleted && (
-                                                    <div className="absolute bottom-3 right-3 bg-emerald-500 px-2 py-1 rounded-lg shadow-lg">
-                                                        <CheckCircle className="w-4 h-4 text-white" />
-                                                    </div>
-                                                )}
-
-                                                {/* Lock Overlay */}
-                                                {isLocked && (
-                                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center">
-                                                        <Lock className="w-10 h-10 text-slate-300" />
-                                                    </div>
-                                                )}
-
-                                                {/* Duration Badge */}
-                                                <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-lg">
-                                                    <div className="flex items-center gap-1.5 text-white text-xs font-semibold">
-                                                        <Clock className="w-3.5 h-3.5" />
-                                                        {lesson.duration}m
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Content Section */}
-                                            <div className="p-4">
-                                                <h3 className="font-bold text-slate-900 dark:text-white text-base mb-2 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                                    {lesson.title}
-                                                </h3>
-                                                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                                                    <span className="flex items-center gap-1.5">
-                                                        {lessonCompleted ? (
-                                                            <>
-                                                                <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                                                                Completado
-                                                            </>
-                                                        ) : isLocked ? (
-                                                            <>
-                                                                <Lock className="w-3.5 h-3.5" />
-                                                                Bloqueado
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <Play className="w-3.5 h-3.5" />
-                                                                Disponible
-                                                            </>
-                                                        )}
-                                                    </span>
-                                                    <span>
-                                                        {lesson.content_type === 'quiz' ? 'Evaluación' : lessonYtId && lesson.content ? 'Video + Texto' : lessonYtId ? 'Video' : 'Texto'}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                );
-                            })}
-
-                            {lessons.length === 0 && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    className="col-span-full"
-                                >
-                                    <div className="academy-empty-state">
-                                        {lessonsLoading ? (
-                                            <>
-                                                <Loader2 className="academy-empty-icon animate-spin" />
-                                                <p className="academy-empty-title">Cargando lecciones...</p>
-                                                <p className="academy-empty-description">Por favor espera un momento</p>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <BookOpen className="academy-empty-icon" />
-                                                <p className="academy-empty-title">No hay lecciones disponibles</p>
-                                                <p className="academy-empty-description">
-                                                    Este módulo aún no tiene contenido publicado.
-                                                    <br />
-                                                    <span className="text-xs text-slate-400 mt-2 block">
-                                                        Módulo ID: {moduleId}
-                                                    </span>
-                                                </p>
-                                            </>
-                                        )}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </div>
-                    </div>
-                ) : (
-                    <div className="academy-lesson-detail">
-                        <div className="max-w-6xl mx-auto px-4 pt-2">
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.4 }}
-                                className="h-full flex flex-col"
-                            >
-                                {/* Header */}
-                                <div className="academy-lesson-header flex justify-between items-center mb-4">
-                                    <button
-                                        onClick={handleBackToLessons}
-                                        className="academy-lesson-back-button"
-                                    >
-                                        <ArrowLeft className="w-4 h-4" />
-                                        Volver a lecciones
-                                    </button>
-
-                                    <button
-                                        onClick={() => setNotesOpen(true)}
-                                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 transition-all"
-                                    >
-                                        <StickyNote className="w-4 h-4" />
-                                        Mis Notas
-                                    </button>
-                                </div>
-
-                                {/* Title */}
-                                <h1 className="academy-lesson-title-large">{currentLesson?.title}</h1>
-
-                                {/* Tabs Toggle — not shown for quizzes */}
-                                {!isQuiz && (hasVideo || hasText) && (
-                                    <div className="mb-4">
-                                        <div className="academy-lesson-tabs">
-                                            {hasVideo && (
-                                                <button
-                                                    onClick={() => setSelectedView('video')}
-                                                    className={selectedView === 'video' ? 'active' : ''}
-                                                >
-                                                    <Youtube className="w-4 h-4" />
-                                                    <span className="ml-2">Video</span>
-                                                </button>
-                                            )}
-                                            {hasText && (
-                                                <button
-                                                    onClick={() => setSelectedView('text')}
-                                                    className={selectedView === 'text' ? 'active' : ''}
-                                                >
-                                                    <FileText className="w-4 h-4" />
-                                                    <span className="ml-2">Contenido</span>
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Navigation Bar - Above Content */}
-                                <div className="flex items-center justify-between mb-6 px-1">
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={handleNavigatePrevious}
-                                            disabled={lessonsInOrder.findIndex(l => l.id === currentLesson?.id) <= 0}
-                                            className={cn(
-                                                'flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm',
-                                                lessonsInOrder.findIndex(l => l.id === currentLesson?.id) <= 0 && 'opacity-50 cursor-not-allowed'
-                                            )}
-                                        >
-                                            <ChevronLeft className="w-4 h-4" />
-                                            <span className="hidden sm:inline">Anterior</span>
-                                        </button>
-                                        <button
-                                            onClick={handleNavigateNext}
-                                            disabled={lessonsInOrder.findIndex(l => l.id === currentLesson?.id) >= lessonsInOrder.length - 1}
-                                            className={cn(
-                                                'flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm',
-                                                lessonsInOrder.findIndex(l => l.id === currentLesson?.id) >= lessonsInOrder.length - 1 && 'opacity-50 cursor-not-allowed'
-                                            )}
-                                        >
-                                            <span className="hidden sm:inline">Siguiente</span>
-                                            <ChevronRight className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                                            {lessonsInOrder.findIndex(l => l.id === currentLesson?.id) + 1} / {lessonsInOrder.length}
-                                        </div>
-                                        <div className="h-2 w-24 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-blue-600 transition-all duration-300 w-[var(--progress-width)]"
-                                                style={{
-                                                    '--progress-width': `${((lessonsInOrder.findIndex(l => l.id === currentLesson?.id) + 1) / lessonsInOrder.length) * 100}%`
-                                                } as React.CSSProperties}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Video Section */}
-                                {hasVideo && selectedView === 'video' && youtubeId && (
-                                    <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        transition={{ duration: 0.3 }}
-                                        className="mb-6"
-                                    >
-                                        <div className="relative bg-black rounded-xl shadow-2xl">
-                                            <div className="aspect-video relative">
-                                                <YouTubeHDPlayer
-                                                    videoId={youtubeId}
-                                                    title={currentLesson?.title || ''}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Video Info */}
-                                        <motion.div
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            transition={{ delay: 0.2 }}
-                                            className="mt-4 flex items-center justify-between"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                                                    <Youtube className="w-5 h-5 text-red-600 dark:text-red-400" />
-                                                </div>
-                                                <div>
-                                                    <h3 className="font-semibold text-slate-900 dark:text-white">Video Tutorial</h3>
-                                                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                                                        {currentLesson?.duration} minutos
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    </motion.div>
-                                )}
-
-                                {/* Video Loading/Error State */}
-                                {hasVideo && selectedView === 'video' && !youtubeId && (
-                                    <div className="mb-6 p-8 bg-slate-100 dark:bg-slate-800 rounded-2xl text-center">
-                                        <Youtube className="w-16 h-16 text-slate-400 dark:text-slate-600 mx-auto mb-4" />
-                                        <p className="text-slate-600 dark:text-slate-400 font-medium">
-                                            Video no disponible
-                                        </p>
-                                        <p className="text-sm text-slate-500 dark:text-slate-500 mt-2">
-                                            El URL del video no es válido o no está disponible
-                                        </p>
-                                    </div>
-                                )}
-
-                                {/* Content Section */}
-                                {hasText && selectedView === 'text' && currentLesson?.content && (
-                                    <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        transition={{ duration: 0.3 }}
-                                        className="mb-6"
-                                    >
-                                        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
-                                            <div className="p-6 border-b border-slate-200 dark:border-slate-800">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                                                        <FileText className="w-5 h-5 text-white" />
-                                                    </div>
-                                                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Contenido de la Lección</h2>
-                                                </div>
-                                            </div>
-                                            <ContentProtection>
-                                                <div className="p-6">
-                                                    <div
-                                                        className="prose prose-lg dark:prose-invert max-w-none"
-                                                        dangerouslySetInnerHTML={{ __html: currentLesson.content }}
-                                                    />
-                                                </div>
-                                            </ContentProtection>
-                                        </div>
-                                    </motion.div>
-                                )}
-
-                                {/* Quiz Section */}
-                                {isQuiz && currentLesson?.quiz && currentLesson.id && moduleId && user?.uid && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className="mb-6"
-                                    >
-                                        <QuizPlayer
-                                            questions={currentLesson.quiz}
-                                            lessonId={currentLesson.id}
-                                            moduleId={moduleId}
-                                            userId={user.uid}
-                                            onComplete={(passed) => {
-                                                if (passed && currentLesson.id) {
-                                                    handleLessonComplete(currentLesson.id);
-                                                }
-                                            }}
-                                        />
-                                    </motion.div>
-                                )}
-
-                                {/* Action Bar — not shown for quizzes (quiz auto-completes) */}
-                                {!isQuiz && (
-                                    <div className="mt-8 mb-4">
-                                        <div className="flex items-center gap-3">
-                                            <button
-                                                onClick={() => {
-                                                    if (currentLesson?.id) {
-                                                        if (isCompleted) {
-                                                            handleLessonUncomplete(currentLesson.id);
-                                                        } else {
-                                                            handleLessonComplete(currentLesson.id);
-                                                        }
-                                                    }
-                                                }}
-                                                disabled={markingComplete || unmarkingComplete}
-                                                className={cn(
-                                                    'w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-bold text-sm uppercase tracking-wide transition-all shadow-lg hover:shadow-xl',
-                                                    isCompleted
-                                                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                                                        : 'bg-blue-600 hover:bg-blue-700 text-white'
-                                                )}
-                                            >
-                                                <CheckCircle className={cn("w-5 h-5", isCompleted && "fill-current")} />
-                                                {isCompleted ? '✓ Completada (Click para desmarcar)' : 'Marcar como Completada'}
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Notes Panel */}
-                                {currentLesson?.id && (
-                                    <LessonNotes
-                                        lessonId={currentLesson.id}
-                                        isOpen={notesOpen}
-                                        onClose={() => setNotesOpen(false)}
-                                    />
-                                )}
-                            </motion.div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Mensaje cuando se intentó acceder a una lección no disponible */}
-                {selectedLessonId && !currentLesson && lessons.length > 0 && (
-                    <div className="h-full flex items-center justify-center px-4">
-                        <div className="text-center max-w-md">
-                            <Lock className="w-16 h-16 text-amber-500 dark:text-amber-600 mx-auto mb-4" />
-                            <p className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-2">
-                                Lección no disponible
-                            </p>
-                            <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
-                                Esta lección no está publicada o ha sido desactivada temporalmente.
-                            </p>
-                            <button
-                                onClick={() => setSelectedLessonId(null)}
-                                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-colors"
-                            >
-                                Ver lecciones disponibles
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {!currentLesson && !selectedLessonId && lessons.length === 0 && (
-                    <div className="h-full flex items-center justify-center px-4">
-                        <div className="text-center">
-                            <BookOpen className="w-16 h-16 text-slate-400 dark:text-slate-600 mx-auto mb-4" />
-                            <p className="text-lg font-semibold text-slate-600 dark:text-slate-400">No hay lecciones</p>
-                        </div>
-                    </div>
-                )}
-            </main>
+            <CelebrationModal
+                isOpen={celebration.isOpen}
+                onClose={() => setCelebration({ ...celebration, isOpen: false })}
+                type={celebration.type}
+                title={celebration.title}
+                subtitle={celebration.subtitle}
+                xpGained={celebration.xpGained}
+            />
         </div>
     );
 };

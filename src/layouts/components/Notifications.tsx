@@ -34,7 +34,7 @@ interface NotificationsProps {
 
 const Notifications: React.FC<NotificationsProps> = ({ isAdmin = false }) => {
     const { user } = useAuth();
-    console.log('👤 [Notifications] User data:', { uid: user?.uid, franchiseId: user?.franchiseId, email: user?.email });
+
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState<UINotification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -103,7 +103,7 @@ const Notifications: React.FC<NotificationsProps> = ({ isAdmin = false }) => {
 
                 unsubscribe = onSnapshot(q, (snapshot) => {
                     const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UINotification));
-                    console.log('🔔 [Notifications] Franchise notifications received:', list.length, 'items:', list);
+
                     setNotifications(list);
                     setUnreadCount(list.filter(n => !n.read).length);
                 }, (error) => {

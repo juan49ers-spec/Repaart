@@ -85,11 +85,13 @@ export const useFinancialDataLoad = ({ franchiseId, month, initialData, user }: 
                 const startDate = new Date(currentYear, currentMonthIndex, 1);
                 const endDate = new Date(currentYear, currentMonthIndex + 1, 0, 23, 59, 59);
 
-                // Improved Resilient Fetching
+                // Improved Resilient Fetching - Use real UID for franchise users to bypass slug resolution issues
+                const targetId = (user?.role === 'franchise' && user?.uid) ? user.uid : franchiseId;
+
                 const [data, yearlyData, monthInvoiced, monthShifts] = await Promise.all([
                     (async () => {
                         try {
-                            return initialData || await financeService.getFinancialData(franchiseId, month) as FinancialRecord;
+                            return initialData || await financeService.getFinancialData(targetId, month) as FinancialRecord;
                         } catch (e: any) {
                             console.error('[FinanceLoad] Failed to load main record:', e.message);
                             return null;
@@ -97,7 +99,7 @@ export const useFinancialDataLoad = ({ franchiseId, month, initialData, user }: 
                     })(),
                     (async () => {
                         try {
-                            return await financeService.getFinancialYearlyData(franchiseId, currentYear);
+                            return await financeService.getFinancialYearlyData(targetId, currentYear);
                         } catch (e: any) {
                             console.error('[FinanceLoad] Failed to load yearly data:', e.message);
                             return [];
@@ -105,7 +107,7 @@ export const useFinancialDataLoad = ({ franchiseId, month, initialData, user }: 
                     })(),
                     (async () => {
                         try {
-                            return await invoiceEngine.getInvoicedIncomeForMonth(franchiseId, month);
+                            return await invoiceEngine.getInvoicedIncomeForMonth(targetId, month);
                         } catch (e: any) {
                             console.error('[FinanceLoad] Failed to load invoiced income:', e.message);
                             return { subtotal: 0, total: 0, ordersDetail: {} };
@@ -113,7 +115,7 @@ export const useFinancialDataLoad = ({ franchiseId, month, initialData, user }: 
                     })(),
                     (async () => {
                         try {
-                            return await shiftService.getShiftsInRange(franchiseId, startDate, endDate);
+                            return await shiftService.getShiftsInRange(targetId, startDate, endDate);
                         } catch (e: any) {
                             console.error('[FinanceLoad] Failed to load shifts:', e.message);
                             return [];
@@ -176,8 +178,7 @@ export const useFinancialDataLoad = ({ franchiseId, month, initialData, user }: 
 
                         if (recordMonthIndex >= 0 && recordMonthIndex < currentMonthIndex) {
                             let val = 0;
-                            if (typeof r.netResultAfterAmortization === 'number') val = r.netResultAfterAmortization;
-                            else if (typeof r.profit === 'number') val = r.profit;
+                            if (typeof r.profit === 'number') val = r.profit;
                             else val = (Number(r.revenue || r.totalIncome || 0) - Number(r.expenses || r.totalExpenses || 0));
 
                             calculatedYtd += val;
@@ -188,8 +189,11 @@ export const useFinancialDataLoad = ({ franchiseId, month, initialData, user }: 
                 setPrevMonthsYtd(calculatedYtd);
 
                 let profile;
-                if (user?.role === 'franchise' && user?.uid) profile = await userService.getUserProfile(user.uid);
-                else profile = await userService.getUserByFranchiseId(franchiseId);
+                if (targetId === user?.uid) {
+                    profile = await userService.getUserProfile(targetId);
+                } else {
+                    profile = await userService.getUserByFranchiseId(targetId);
+                }
 
                 if (profile && profile.logisticsRates) setLogisticsRates(profile.logisticsRates);
                 if (data) setRecord(data as FinancialRecord);

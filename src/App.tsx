@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
@@ -14,6 +14,7 @@ import RequireActiveStatus from './layouts/RequireActiveStatus';
 import DashboardSkeleton from './components/ui/layout/DashboardSkeleton';
 import Login from './features/auth/Login';
 import NotFound from './layouts/pages/NotFound';
+import DebugFirestore from './components/debug/DebugFirestore';
 // Page Components
 import DashboardSwitcher from './layouts/components/DashboardSwitcher';
 import UserProfile from './features/user/UserProfile';
@@ -63,7 +64,7 @@ import { ErrorBoundaryWithToast } from './components/error/ErrorBoundary';
 
 function App() {
     const { user, loading: authLoading, roleConfig, logout, isAdmin, impersonatedFranchiseId } = useAuth();
-    console.log("[App] Rendering. AuthLoading:", authLoading, "User:", user?.email);
+
 
     // Global UI State from Store
     const {
@@ -96,17 +97,7 @@ function App() {
         ? targetFranchiseId
         : (profileFranchiseId || profileName || userUid || null)) as string | null;
 
-    // 🔥 IDENTITY PROBE 🔥
-    useEffect(() => {
-        if (user) {
-            console.log(`[Identity] 👤 User: ${user.email}`);
-            console.log(`[Identity] 🔑 Role: ${roleConfig?.role}`);
-            console.log(`[Identity] 🏢 Profile Slug: ${profileFranchiseId}`);
-            console.log(`[Identity] 🏷️  Profile Name: ${profileName}`);
-            console.log(`[Identity] 🆔 UID: ${userUid}`);
-            console.log(`[Identity] 🎯 Final Target ID: ${dataHookFranchiseId}`);
-        }
-    }, [user, roleConfig, dataHookFranchiseId, profileFranchiseId, profileName, userUid]);
+
 
     const {
         rawData: currentData,
@@ -385,6 +376,9 @@ function App() {
                     },
                 }}
             />
+
+            {/* Debug Tool - solo en desarrollo */}
+            {import.meta.env.DEV && <DebugFirestore />}
         </>
     );
 }

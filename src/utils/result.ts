@@ -29,12 +29,14 @@
 export interface Success<T> {
   readonly success: true;
   readonly data: T;
+  readonly error?: never;
 }
 
 // Failure variant
 export interface Failure<E> {
   readonly success: false;
   readonly error: E;
+  readonly data?: never;
 }
 
 // Result type - discriminated union
