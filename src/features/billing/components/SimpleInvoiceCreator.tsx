@@ -26,7 +26,6 @@ import {
     Trash2,
     Save,
     X,
-    Truck,
     FileText,
     Settings2
 } from 'lucide-react';
@@ -447,17 +446,10 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                                     <Space>
                                         <Button
                                             type="dashed"
-                                            icon={<Truck size={16} />}
-                                            onClick={() => addLine('logistics')}
-                                        >
-                                            Línea de logística
-                                        </Button>
-                                        <Button
-                                            type="dashed"
                                             icon={<Plus size={16} />}
                                             onClick={() => addLine('service')}
                                         >
-                                            Otro concepto
+                                            Añadir concepto
                                         </Button>
                                     </Space>
                                 </div>
@@ -503,7 +495,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                                                                         // Update multiple fields at once for this line
                                                                         setLines(prev => prev.map(l => l.id === line.id ? {
                                                                             ...l,
-                                                                            description: `Servicio logístico ${rangeName} (${price.toFixed(2)}€)`,
+                                                                            description: rangeName,
                                                                             unitPrice: price,
                                                                             logisticsRange: selectedRate.id || rangeName, // Store range ID
                                                                             amount: l.quantity * price,
