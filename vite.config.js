@@ -180,53 +180,11 @@ export default defineConfig(async ({ mode }) => {
       ]
     },
     build: {
+      sourcemap: true,
       rollupOptions: {
         output: {
-          manualChunks: (id) => {
-            // Normalize path separators for Windows compatibility
-            const normalizedId = id.replace(/\\/g, '/');
-
-            // CRITICAL: React MUST be in a single chunk to prevent
-            // "Cannot read createContext" errors. This rule MUST be FIRST.
-            if (
-              normalizedId.includes('node_modules/react/') ||
-              normalizedId.includes('node_modules/react-dom/') ||
-              normalizedId.includes('node_modules/react-router') ||
-              normalizedId.includes('node_modules/scheduler/') ||
-              normalizedId.includes('react/jsx-runtime') ||
-              normalizedId.includes('react/jsx-dev-runtime')
-            ) {
-              return 'vendor-react';
-            }
-            // Firebase bundle - does NOT depend on React
-            if (normalizedId.includes('firebase')) {
-              return 'vendor-firebase';
-            }
-            // Google AI - does NOT depend on React
-            if (normalizedId.includes('@google/generative-ai')) {
-              return 'vendor-ai';
-            }
-            // Email service - does NOT depend on React
-            if (normalizedId.includes('@emailjs/browser')) {
-              return 'vendor-email';
-            }
-            // PDF generation - does NOT depend on React
-            if (normalizedId.includes('jspdf') || normalizedId.includes('html2canvas')) {
-              return 'vendor-pdf';
-            }
-            // Confetti - does NOT depend on React
-            if (normalizedId.includes('canvas-confetti')) {
-              return 'vendor-confetti';
-            }
-            // HLS/Dash streaming libs - do NOT depend on React
-            if (normalizedId.includes('hls.js') || normalizedId.includes('dashjs')) {
-              return 'vendor-streaming';
-            }
-            // NOTE: The following ARE chunked but in the main bundle because
-            // they depend on React and must load AFTER React:
-            // - recharts, react-player, framer-motion, @dnd-kit
-            // - lucide-react, @ant-design/icons, @yudiel/react-qr-scanner
-          }
+          // Removemos manualChunks para dejar la división default de Vite
+          // manualChunks estaba causando problemas de dependencias circulares y errores de 'Cannot access X before initialization'
         }
       }
     },
