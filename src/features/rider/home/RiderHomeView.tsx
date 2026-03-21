@@ -17,9 +17,11 @@ import {
 } from 'lucide-react';
 
 import { riderService } from '../../../services/riderService';
+import { shiftService } from '../../../services/shiftService';
 import { IncidentReportModal } from './modals/IncidentReportModal';
 import { VehicleChecklistModal } from './modals/VehicleChecklistModal';
 import { cn } from '../../../lib/utils';
+import toast from 'react-hot-toast';
 
 const RiderHomeView: React.FC = () => {
     const { user } = useAuth() as { user: AuthUser | null };
@@ -60,7 +62,28 @@ const RiderHomeView: React.FC = () => {
     }, [myShifts, currentTime]);
 
     const isOnline = !!activeShift;
-    const platformLevel = { level: 'PRO' };
+
+    // Consecutive days with at least one shift (completed or active)
+    const streak = useMemo(() => {
+        const workedDays = new Set(
+            myShifts
+                .filter(s => s.status === 'completed' || s.status === 'active')
+                .map(s => s.date)
+        );
+        const today = new Date();
+        let count = 0;
+        for (let i = 0; i < 30; i++) {
+            const d = new Date(today);
+            d.setDate(today.getDate() - i);
+            const key = format(d, 'yyyy-MM-dd');
+            if (workedDays.has(key)) {
+                count++;
+            } else if (i > 0) {
+                break; // gap found — streak ends
+            }
+        }
+        return count;
+    }, [myShifts]);
 
     const nextShift = useMemo(() => {
         return myShifts
@@ -85,19 +108,23 @@ const RiderHomeView: React.FC = () => {
         return { hours: totalHours, count: weeksShifts.length, target: 40 };
     }, [myShifts, currentTime]);
 
-    const handleClockInComplete = () => {
-        setCelebrationActive(true);
-        setTimeout(() => {
-            setCelebrationActive(false);
-        }, 2000);
+    const handleClockInComplete = async () => {
+        if (!nextShift?.shiftId) return;
+        try {
+            await shiftService.startShift(nextShift.shiftId);
+            setCelebrationActive(true);
+            setTimeout(() => setCelebrationActive(false), 2000);
+        } catch {
+            toast.error('Error al iniciar el turno');
+        }
     };
 
     return (
         <div className="relative min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 pb-safe">
             {/* Ambient Background Effects */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-gradient-to-br from-emerald-500/5 via-indigo-500/5 to-purple-500/5 rounded-full blur-3xl animate-orb" />
-                <div className="absolute bottom-0 right-0 w-64 h-64 bg-gradient-to-tl from-amber-500/5 via-orange-500/5 to-rose-500/5 rounded-full blur-2xl" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 sm:w-64 sm:h-64 md:w-96 md:h-96 bg-gradient-to-br from-emerald-500/5 via-indigo-500/5 to-purple-500/5 rounded-full blur-3xl animate-orb" />
+                <div className="absolute bottom-0 right-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 bg-gradient-to-tl from-amber-500/5 via-orange-500/5 to-rose-500/5 rounded-full blur-2xl" />
             </div>
 
             {/* PREMIUM HEADER */}
@@ -140,7 +167,7 @@ const RiderHomeView: React.FC = () => {
                                     <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20">
                                         <Flame size={12} className="text-amber-500" />
                                         <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest">
-                                            STREAK: 12
+                                            STREAK: {streak}
                                         </span>
                                     </div>
                                 </div>
@@ -268,10 +295,10 @@ const RiderHomeView: React.FC = () => {
                             </div>
                             <div>
                                 <div className="text-2xl font-black text-white tracking-tighter leading-none">
-                                    {platformLevel?.level || 'N/A'}
+                                    PRO V1
                                 </div>
                                 <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">
-                                    BAT 92%
+                                    NIVEL ACTIVO
                                 </p>
                             </div>
                         </div>
@@ -321,7 +348,16 @@ const RiderHomeView: React.FC = () => {
                 <div className="relative mt-8">
                     {activeShift ? (
                         <button
-                            onClick={() => alert("Finalizando turno...")}
+                            type="button"
+                            onClick={async () => {
+                                if (!activeShift?.shiftId) return;
+                                try {
+                                    await shiftService.endShift(activeShift.shiftId);
+                                    toast.success('Turno finalizado correctamente');
+                                } catch {
+                                    toast.error('Error al finalizar el turno');
+                                }
+                            }}
                             className="w-full h-24 rounded-[2rem] glass-premium-v2 border-rose-500/30 group hover:border-rose-500/50 transition-all duration-500 flex items-center justify-center gap-6 hover:scale-[1.02]"
                         >
                             <div className="w-16 h-16 rounded-2xl bg-rose-500/10 flex items-center justify-center border border-rose-500/20 group-hover:bg-rose-500/20 transition-all">
@@ -347,7 +383,7 @@ const RiderHomeView: React.FC = () => {
                     {/* Celebration Effect */}
                     {celebrationActive && (
                         <div className="absolute inset-0 pointer-events-none">
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-emerald-500/20 via-indigo-500/20 to-purple-500/20 rounded-full blur-3xl animate-ping" />
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 sm:w-64 sm:h-64 md:w-96 md:h-96 bg-gradient-to-br from-emerald-500/20 via-indigo-500/20 to-purple-500/20 rounded-full blur-3xl animate-ping" />
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                                 <div className="flex flex-col items-center justify-center gap-4 animate-slide-up">
                                     <div className="w-20 h-20 rounded-full bg-emerald-500 flex items-center justify-center shadow-2xl">
@@ -422,7 +458,7 @@ const RiderHomeView: React.FC = () => {
                                 <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                                     <Navigation size={18} className="text-emerald-500" />
                                     <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
-                                        ZONA CENTRO
+                                        {nextShift.franchiseId || 'TURNO ASIGNADO'}
                                     </span>
                                 </div>
                             </div>
@@ -437,11 +473,16 @@ const RiderHomeView: React.FC = () => {
                 onClose={() => setIsIncidentModalOpen(false)}
                 onSubmit={async (data) => {
                     if (!user?.uid) return;
+                    const shiftFranchiseId = activeShift?.franchiseId || nextShift?.franchiseId || user.franchiseId;
+                    if (!shiftFranchiseId) {
+                        toast.error('No se puede reportar: turno sin franquicia asignada.');
+                        return;
+                    }
                     await riderService.reportIncident(user.uid, {
                         type: data.type,
                         description: data.description,
                         isUrgent: data.isUrgent,
-                        franchiseId: user.franchiseId || ''
+                        franchiseId: shiftFranchiseId
                     });
                 }}
             />
@@ -450,10 +491,15 @@ const RiderHomeView: React.FC = () => {
                 onClose={() => setIsChecklistModalOpen(false)}
                 onSubmit={async (data) => {
                     if (!user?.uid) return;
+                    const shiftFranchiseId = activeShift?.franchiseId || nextShift?.franchiseId || user.franchiseId;
+                    if (!shiftFranchiseId) {
+                        toast.error('No se puede enviar checklist: turno sin franquicia asignada.');
+                        return;
+                    }
                     await riderService.submitChecklist(user.uid, {
                         items: data.items,
                         vehicleId: nextShift?.motoPlate || activeShift?.motoPlate || '',
-                        franchiseId: user.franchiseId || ''
+                        franchiseId: shiftFranchiseId
                     });
                 }}
             />

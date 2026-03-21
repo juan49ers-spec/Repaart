@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { LucideIcon } from 'lucide-react';
 
 export interface RiderQuickAction {
@@ -15,10 +14,6 @@ export interface RiderQuickActionsProps {
     actions: RiderQuickAction[];
 }
 
-/**
- * RiderQuickActions: Rediseño "Clean Apple"
- * Botones de acción táctiles, con micro-interacciones y diseño minimalista.
- */
 const RiderQuickActions: React.FC<RiderQuickActionsProps> = ({ actions }) => {
     if (actions.length === 0) return null;
 
@@ -30,23 +25,23 @@ const RiderQuickActions: React.FC<RiderQuickActionsProps> = ({ actions }) => {
                     <button
                         key={action.id}
                         onClick={action.onClick}
-                        className="group relative flex flex-col items-center gap-4 p-6 bg-slate-50 hover:bg-white rounded-[2rem] border border-slate-100 hover:border-emerald-200 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 active:scale-95"
+                        className="group relative flex flex-col items-center gap-4 p-5 bg-white rounded-xl border-2 border-slate-200 hover:border-slate-900 transition-colors active:bg-slate-50"
                     >
-                        <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover:text-emerald-500 group-hover:bg-emerald-50 group-hover:shadow-emerald-100 transition-all duration-300 border border-slate-100">
-                            <Icon size={24} />
+                        <div className="w-14 h-14 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                            <Icon size={24} strokeWidth={2.5}/>
                         </div>
                         <div className="text-center space-y-1">
-                            <span className="block text-[10px] font-black text-slate-800 uppercase tracking-widest group-hover:text-emerald-600 transition-colors">
+                            <span className="block text-sm font-bold text-slate-900">
                                 {action.label}
                             </span>
                             {action.description && (
-                                <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+                                <span className="block text-xs font-semibold text-slate-500">
                                     {action.description}
                                 </span>
                             )}
                         </div>
                         {action.badge && (
-                            <span className="absolute top-4 right-4 px-2 py-0.5 bg-rose-500 text-white text-[8px] font-black rounded-full shadow-lg border-2 border-white animate-in zoom-in duration-300">
+                            <span className="absolute top-3 right-3 px-2 py-0.5 bg-rose-500 text-white text-[10px] font-black tracking-wider rounded-md border-2 border-white">
                                 {action.badge}
                             </span>
                         )}

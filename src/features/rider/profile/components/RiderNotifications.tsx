@@ -147,28 +147,28 @@ const RiderNotifications: React.FC<RiderNotificationsProps> = ({ user, toast }) 
     };
 
     const getIcon = (type: string) => {
-        const baseClass = "w-8 h-8 rounded-full flex items-center justify-center shrink-0 border shadow-sm";
+        const baseClass = "w-8 h-8 rounded-md flex items-center justify-center shrink-0 border border-slate-200 bg-white";
 
         switch (type) {
             case 'shift_confirmed':
-                return <div className={`${baseClass} bg-emerald-50 text-emerald-600 border-emerald-100`}><CheckCircle size={16} /></div>;
+                return <div className={`${baseClass} text-emerald-600`}><CheckCircle size={16} /></div>;
             case 'shift_change_request':
             case 'shift_modified':
-                return <div className={`${baseClass} bg-amber-50 text-amber-600 border-amber-100`}><AlertTriangle size={16} /></div>;
+                return <div className={`${baseClass} text-amber-600`}><AlertTriangle size={16} /></div>;
             case 'shift_rejected':
-                return <div className={`${baseClass} bg-rose-50 text-rose-600 border-rose-100`}><X size={16} /></div>;
+                return <div className={`${baseClass} text-rose-600`}><X size={16} /></div>;
             case 'availability_update':
-                return <div className={`${baseClass} bg-blue-50 text-blue-600 border-blue-100`}><Clock size={16} /></div>;
+                return <div className={`${baseClass} text-blue-600`}><Clock size={16} /></div>;
             case 'week_closed':
-                return <div className={`${baseClass} bg-purple-50 text-purple-600 border-purple-100`}><CheckCircle2 size={16} /></div>;
+                return <div className={`${baseClass} text-purple-600`}><CheckCircle2 size={16} /></div>;
             case 'FINANCE_CLOSING':
-                return <div className={`${baseClass} bg-emerald-50 text-emerald-600 border-emerald-100`}><DollarSign size={16} /></div>;
+                return <div className={`${baseClass} text-emerald-600`}><DollarSign size={16} /></div>;
             case 'SUPPORT_TICKET':
-                return <div className={`${baseClass} bg-indigo-50 text-indigo-600 border-indigo-100`}><Bell size={16} /></div>;
+                return <div className={`${baseClass} text-indigo-600`}><Bell size={16} /></div>;
             case 'GUIDE_TIP':
-                return <div className={`${baseClass} bg-cyan-50 text-cyan-600 border-cyan-100`}><BookOpen size={16} /></div>;
+                return <div className={`${baseClass} text-cyan-600`}><BookOpen size={16} /></div>;
             default:
-                return <div className={`${baseClass} bg-slate-50 text-slate-600 border-slate-100`}><Bell size={16} /></div>;
+                return <div className={`${baseClass} text-slate-600`}><Bell size={16} /></div>;
         }
     };
 
@@ -176,7 +176,7 @@ const RiderNotifications: React.FC<RiderNotificationsProps> = ({ user, toast }) 
         switch (priority) {
             case 'high': return 'border-l-4 border-l-rose-500';
             case 'low': return 'border-l-4 border-l-slate-300';
-            default: return 'border-l-4 border-l-amber-500';
+            default: return 'border-l-4 border-l-slate-900';
         }
     };
 
@@ -188,53 +188,54 @@ const RiderNotifications: React.FC<RiderNotificationsProps> = ({ user, toast }) 
     });
 
     return (
-        <div className="rider-notifications">
+        <div className="w-full">
             <div className="mb-6">
-                <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-4">
+                <h2 className="text-xl font-black text-slate-900 mb-1">
                     Notificaciones
                     {unreadCount > 0 && (
-                        <span className="ml-2 px-3 py-1 rounded-full bg-rose-500 text-white text-[10px] font-bold uppercase tracking-widest">
+                        <span className="ml-2 px-2 py-0.5 rounded bg-rose-500 text-white text-[10px] font-bold uppercase tracking-widest">
                             {unreadCount} nueva{unreadCount > 1 ? 's' : ''}
                         </span>
                     )}
                 </h2>
+                <p className="text-sm font-semibold text-slate-500">Mantente al tanto de tus actualizaciones.</p>
             </div>
 
-            <div className="glass-card rounded-2xl p-6 mb-6">
-                <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 mb-6">
+                <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                     <div className="flex flex-wrap gap-2">
                         <button
                             onClick={() => setFilter('all')}
-                            className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${filter === 'all'
-                                    ? 'bg-indigo-600 text-white shadow-md'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            className={`px-4 py-2 border rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${filter === 'all'
+                                    ? 'bg-slate-900 border-slate-900 text-white'
+                                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                                 }`}
                         >
                             Todas
                         </button>
                         <button
                             onClick={() => setFilter('shifts')}
-                            className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${filter === 'shifts'
-                                    ? 'bg-indigo-600 text-white shadow-md'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            className={`px-4 py-2 border rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${filter === 'shifts'
+                                    ? 'bg-slate-900 border-slate-900 text-white'
+                                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                                 }`}
                         >
                             Turnos
                         </button>
                         <button
                             onClick={() => setFilter('availability')}
-                            className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${filter === 'availability'
-                                    ? 'bg-indigo-600 text-white shadow-md'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            className={`px-4 py-2 border rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${filter === 'availability'
+                                    ? 'bg-slate-900 border-slate-900 text-white'
+                                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                                 }`}
                         >
                             Disponibilidad
                         </button>
                         <button
                             onClick={() => setFilter('general')}
-                            className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${filter === 'general'
-                                    ? 'bg-indigo-600 text-white shadow-md'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            className={`px-4 py-2 border rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${filter === 'general'
+                                    ? 'bg-slate-900 border-slate-900 text-white'
+                                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                                 }`}
                         >
                             General
@@ -244,28 +245,28 @@ const RiderNotifications: React.FC<RiderNotificationsProps> = ({ user, toast }) 
                     {unreadCount > 0 && (
                         <button
                             onClick={markAllAsRead}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-medium hover:bg-emerald-100 transition-all"
+                            className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg bg-white text-slate-900 text-[11px] font-bold uppercase tracking-wider hover:bg-slate-50 transition-all shrink-0"
                         >
                             <Check size={14} />
-                            Marcar todas como leídas
+                            Marcar leídas
                         </button>
                     )}
                 </div>
             </div>
 
             {loading ? (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center border border-slate-200 dark:border-slate-800">
+                <div className="bg-white rounded-xl p-12 text-center border border-slate-200">
                     <div className="flex flex-col items-center gap-4">
-                        <BellRing className="w-12 h-12 text-indigo-500 animate-pulse" />
-                        <p className="text-slate-600 dark:text-slate-400">Cargando notificaciones...</p>
+                        <BellRing className="w-10 h-10 text-slate-300 animate-pulse" />
+                        <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Cargando notificaciones...</p>
                     </div>
                 </div>
             ) : filteredNotifications.length === 0 ? (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center border border-slate-200 dark:border-slate-800">
+                <div className="bg-white rounded-xl p-12 text-center border border-slate-200">
                     <div className="flex flex-col items-center gap-4">
-                        <Bell className="w-12 h-12 text-slate-400" />
-                        <p className="font-bold text-slate-900 dark:text-white">No hay notificaciones</p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                        <Bell className="w-10 h-10 text-slate-300" />
+                        <p className="font-bold text-slate-900">No hay notificaciones</p>
+                        <p className="text-sm font-semibold text-slate-500">
                             {filter === 'all'
                                 ? 'No tienes notificaciones recientes.'
                                 : 'No hay notificaciones en esta categoría.'}
@@ -273,15 +274,15 @@ const RiderNotifications: React.FC<RiderNotificationsProps> = ({ user, toast }) 
                     </div>
                 </div>
             ) : (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                     {filteredNotifications.map((notification) => (
                         <div
                             key={notification.id}
                             onClick={() => !notification.read && markAsRead(notification.id)}
                             className={`
-                                p-4 flex gap-4 border-b border-slate-100 dark:border-slate-800
-                                hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer
-                                ${notification.read ? 'opacity-60' : 'opacity-100'}
+                                p-4 flex gap-4 border-b border-slate-200 last:border-0
+                                hover:bg-slate-50 transition-all cursor-pointer
+                                ${notification.read ? 'opacity-60 bg-white' : 'bg-slate-50'}
                                 ${getPriorityColor(notification.priority)}
                             `}
                         >
@@ -290,12 +291,12 @@ const RiderNotifications: React.FC<RiderNotificationsProps> = ({ user, toast }) 
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-start justify-between mb-1">
-                                    <h4 className="font-bold text-slate-900 dark:text-white text-sm">{notification.title}</h4>
-                                    <span className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap ml-2">
+                                    <h4 className="font-bold text-slate-900 text-sm">{notification.title}</h4>
+                                    <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider ml-2">
                                         {formatTimeAgo(notification.createdAt)}
                                     </span>
                                 </div>
-                                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                                <p className="text-sm font-semibold text-slate-600 leading-relaxed">
                                     {notification.message}
                                 </p>
                                 {notification.shiftId && (
@@ -304,7 +305,7 @@ const RiderNotifications: React.FC<RiderNotificationsProps> = ({ user, toast }) 
                                             e.stopPropagation();
                                             navigate(`/scheduler?shift=${notification.shiftId}`);
                                         }}
-                                        className="mt-2 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                                        className="mt-2 text-[11px] font-bold uppercase tracking-wider text-slate-900 hover:text-slate-600"
                                     >
                                         Ver turno
                                     </button>
@@ -334,10 +335,10 @@ const RiderNotifications: React.FC<RiderNotificationsProps> = ({ user, toast }) 
             )}
 
             {filteredNotifications.length > 0 && (
-                <div className="mt-4 text-center">
+                <div className="mt-6 text-center">
                     <button
                         onClick={() => setShowAllRead(!showAllRead)}
-                        className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-all"
+                        className="flex items-center justify-center gap-2 px-6 py-2 border border-slate-200 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold uppercase tracking-wider transition-all mx-auto"
                     >
                         <span>{showAllRead ? 'Ocultar' : 'Ver'} leídas</span>
                         <ChevronDown size={16} className={showAllRead ? 'rotate-180' : ''} />

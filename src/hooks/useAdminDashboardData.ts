@@ -1,147 +1,105 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { financeService } from '../services/financeService';
-// userService import removed as unused
 import { franchiseService } from '../services/franchiseService';
 import { isOk } from '../types/result';
 
-// --- MOCK REMOVED: generateTrend se va a la basura ---
+// ── Query Key ─────────────────────────────────────────────────────────────────
 
-export const useAdminDashboardData = (selectedMonth: string) => {
-    const [stats, setStats] = useState({
-        totalRevenue: 0,
-        totalProfit: 0,
-        margin: 0,
-        franchiseCount: 0
-    });
-    const [trendData, setTrendData] = useState<any[]>([]);
-    const [franchises, setFranchises] = useState<any[]>([]);
+export const adminDashboardQueryKey = (month: string) =>
+    ['admin-dashboard', month] as const;
 
-    const [loading, setLoading] = useState(true);
-    const [isFetching, setIsFetching] = useState(false); // Para revalidaciones silenciosas
-    const [error, setError] = useState<string | null>(null);
+// ── Query Function ────────────────────────────────────────────────────────────
 
-    const loadDashboardData = useCallback(async () => {
-        try {
-            setIsFetching(true);
-            setError(null);
+async function fetchAdminDashboardData(selectedMonth: string) {
+    const targetMonth = selectedMonth || new Date().toISOString().slice(0, 7);
 
-            // 1. Cargar Franquicias (Entidades reales, no users)
-            const franchiseResult = await franchiseService.getAllFranchises();
-
-            if (!franchiseResult.success) {
-                console.error('❌ Error cargando franquicias:', franchiseResult.error);
-            }
-
-            // 2. Cargar Resúmenes Financieros del Mes (Para obtener revenue real)
-            // Use dynamic import or assume db is available if imported. 
-            // Better to use the service pattern if possible, but for now inlining for fix consistency.
-            const { collection, query, where, getDocs } = await import('firebase/firestore');
-            const { db } = await import('../lib/firebase');
-
-            // Ensure selectedMonth is valid YYYY-MM
-            const targetMonth = selectedMonth || new Date().toISOString().slice(0, 7);
-
-            const q = query(
+    // 1. Franchises + 2. Financial summaries + 3. Trend (parallel)
+    const [franchiseResult, summariesSnap, realTrend] = await Promise.all([
+        franchiseService.getAllFranchises(),
+        getDocs(
+            query(
                 collection(db, 'financial_summaries'),
                 where('month', '==', targetMonth)
-            );
+            )
+        ),
+        financeService.getFinancialTrend(null, 6),
+    ]);
 
-            const summariesSnap = await getDocs(q);
-            const financialMap = new Map();
-
-            summariesSnap.forEach(doc => {
-                const data = doc.data();
-                if (data.franchiseId) {
-                    financialMap.set(String(data.franchiseId).trim(), data);
-                }
-            });
-
-            const franchiseList = isOk(franchiseResult) ? franchiseResult.data.map(f => {
-                const cleanId = String(f.id).trim();
-                const summary = financialMap.get(cleanId);
-                return {
-                    ...f,
-                    uid: f.id,
-                    active: f.status === 'active' || f.status === 'warning',
-                    revenue: summary ? (summary.revenue || summary.totalIncome || 0) : 0 // Populate revenue
-                };
-            }) : [];
-
-            setFranchises(franchiseList);
-
-            // 3. Cargar Tendencia REAL (Últimos 6 meses)
-            const realTrend = await financeService.getFinancialTrend(null, 6);
-            // Map income to revenue for Chart compatibility
-            const mappedTrend = realTrend.map(item => ({
-                ...item,
-                revenue: item.income
-            }));
-            setTrendData(mappedTrend);
-
-            // 4. Calcular KPIs del MES SELECCIONADO (no acumulado)
-            // Buscar datos específicos del mes seleccionado con matching robusto
-            let selectedMonthData = realTrend.find(item => {
-                try {
-                    if (!item.month && !item.fullDate) return false;
-                    const dateValue = item.month || item.fullDate;
-
-                    // Si ya es formato YYYY-MM, comparar directamente
-                    if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}$/)) {
-                        return dateValue === selectedMonth;
-                    }
-
-                    // Sino, convertir a Date
-                    const itemMonth = new Date(dateValue).toISOString().slice(0, 7);
-                    return itemMonth === selectedMonth;
-                } catch {
-                    return false;
-                }
-            });
-
-            // FALLBACK: Si no encontramos el mes exacto, usar el mes más reciente
-            if (!selectedMonthData && realTrend.length > 0) {
-                selectedMonthData = realTrend[realTrend.length - 1];
-            }
-
-            let totalRevenue = 0;
-            let totalExpenses = 0;
-
-            if (selectedMonthData) {
-                totalRevenue = selectedMonthData.income || 0;
-                totalExpenses = selectedMonthData.expenses || 0;
-            }
-
-            const totalProfit = totalRevenue - totalExpenses;
-            const margin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
-
-            setStats({
-                totalRevenue,
-                totalProfit,
-                margin,
-                franchiseCount: franchiseList.filter(f => f.active).length
-            });
-
-        } catch (err: any) {
-            console.error("Dashboard Data Error:", err);
-            setError(err.message || "Error cargando datos del dashboard");
-        } finally {
-            setLoading(false);
-            setIsFetching(false);
+    // Build financial summary map
+    const financialMap = new Map<string, any>();
+    summariesSnap.forEach(doc => {
+        const data = doc.data();
+        if (data.franchiseId) {
+            financialMap.set(String(data.franchiseId).trim(), data);
         }
-    }, [selectedMonth]); // Recargar si cambia el mes
+    });
 
-    // Initial Load
-    useEffect(() => {
-        loadDashboardData();
-    }, [loadDashboardData]);
+    // Enrich franchises with revenue
+    const franchises = isOk(franchiseResult)
+        ? franchiseResult.data.map(f => {
+              const cleanId = String(f.id).trim();
+              const summary = financialMap.get(cleanId);
+              return {
+                  ...f,
+                  uid: f.id,
+                  active: f.status === 'active' || f.status === 'warning',
+                  revenue: summary ? (summary.revenue || summary.totalIncome || 0) : 0,
+              };
+          })
+        : [];
+
+    // Map trend income → revenue for chart compatibility
+    const trendData = realTrend.map(item => ({ ...item, revenue: item.income }));
+
+    // KPIs for the selected month
+    const selectedMonthData = realTrend.find(item => {
+        try {
+            const dateValue = item.month || item.fullDate;
+            if (!dateValue) return false;
+            if (typeof dateValue === 'string' && /^\d{4}-\d{2}$/.test(dateValue)) {
+                return dateValue === selectedMonth;
+            }
+            return new Date(dateValue).toISOString().slice(0, 7) === selectedMonth;
+        } catch {
+            return false;
+        }
+    }) ?? realTrend[realTrend.length - 1];
+
+    const totalRevenue  = selectedMonthData?.income   ?? 0;
+    const totalExpenses = selectedMonthData?.expenses ?? 0;
+    const totalProfit   = totalRevenue - totalExpenses;
+    const margin        = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+
+    const stats = {
+        totalRevenue,
+        totalProfit,
+        margin,
+        franchiseCount: franchises.filter(f => f.active).length,
+    };
+
+    return { stats, trendData, franchises };
+}
+
+// ── Hook ──────────────────────────────────────────────────────────────────────
+
+export const useAdminDashboardData = (selectedMonth: string) => {
+    const queryClient = useQueryClient();
+
+    const { data, isLoading, isFetching, error, refetch } = useQuery({
+        queryKey: adminDashboardQueryKey(selectedMonth),
+        queryFn: () => fetchAdminDashboardData(selectedMonth),
+        staleTime: 2 * 60 * 1000, // 2 min — dashboards don't need sub-second freshness
+    });
 
     return {
-        stats,
-        trendData,
-        franchises,
-        loading,
+        stats:     data?.stats     ?? { totalRevenue: 0, totalProfit: 0, margin: 0, franchiseCount: 0 },
+        trendData: data?.trendData ?? [],
+        franchises:data?.franchises ?? [],
+        loading:   isLoading,
         isFetching,
-        error,
-        refresh: loadDashboardData
+        error:     error ? (error as Error).message : null,
+        refresh:   () => queryClient.invalidateQueries({ queryKey: adminDashboardQueryKey(selectedMonth) }),
     };
 };

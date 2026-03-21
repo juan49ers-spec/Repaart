@@ -78,6 +78,9 @@ export const UserSchema = z.object({
     zipCodes: z.array(z.string()).optional(),
     monthlyRevenueGoal: z.number().optional(),
     logisticsRates: z.array(z.any()).optional(), // Added for Franchise compatibility
+    riderHourlyRate: z.number().optional(),      // €/h base para riders (configurable por franquicia)
+    socialSecurityRate: z.number().optional(),   // Tasa SS sobre nómina bruta (ej: 0.32 = 32%)
+    pricingModel: z.string().optional(),
 
     notifications: z.record(z.string(), z.boolean()).optional(),
 

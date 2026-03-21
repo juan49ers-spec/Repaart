@@ -225,12 +225,12 @@ const Academy = () => {
         const globalProgress = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
 
         return (
-            <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-slate-950 dark:via-purple-950/20 dark:to-slate-900 px-4 py-8 sm:py-16">
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 px-4 py-8 sm:py-12">
                 <div className="max-w-6xl mx-auto">
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
                         <div>
-                            <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-                                Academia <span className="text-blue-600">Repaart</span>
+                            <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+                                Academia <span className="text-indigo-600">Repaart</span>
                             </h1>
                             <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">Tu centro de formación profesional</p>
                         </div>
@@ -240,9 +240,9 @@ const Academy = () => {
                                 { label: 'Completados', val: completedModules, color: 'text-emerald-500' },
                                 { label: 'Progreso', val: `${globalProgress}%`, color: 'text-blue-500' }
                             ].map((s, i) => (
-                                <div key={i} className="bg-white dark:bg-slate-900/40 p-3 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm min-w-[120px]">
-                                    <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{s.label}</p>
-                                    <span className={cn("text-xl font-black", s.color)}>{s.val}</span>
+                                <div key={i} className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm min-w-[120px]">
+                                    <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">{s.label}</p>
+                                    <span className={cn("text-xl font-bold", s.color)}>{s.val}</span>
                                 </div>
                             ))}
                         </div>

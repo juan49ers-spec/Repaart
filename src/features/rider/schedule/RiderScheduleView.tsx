@@ -8,6 +8,8 @@ import MobileAgendaView from '../../operations/MobileAgendaView';
 import { ShiftEvent } from '../../operations/ShiftCard';
 import { shiftService, Shift } from '../../../services/shiftService';
 import { useAuth, AuthUser } from '../../../context/AuthContext';
+import { CheckCircle2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 // Helper to generate day columns
 const getWeekDays = (start: Date) => {
@@ -77,6 +79,21 @@ const RiderScheduleView: React.FC = () => {
         }, {} as Record<string, ShiftEvent[]>);
     }, [shifts]);
 
+    // Shifts pending rider confirmation
+    const unconfirmedShifts = React.useMemo(
+        () => shifts.filter(s => !s.isConfirmed && !s.isDraft),
+        [shifts]
+    );
+
+    const handleConfirmShift = async (shiftId: string) => {
+        try {
+            await shiftService.confirmShift(shiftId);
+            toast.success('Turno confirmado');
+        } catch {
+            toast.error('Error al confirmar el turno');
+        }
+    };
+
     // Metrics
     const totalHours = React.useMemo(() => {
         return shifts.reduce((acc, s) => {
@@ -136,6 +153,32 @@ const RiderScheduleView: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Pending confirmation banner */}
+            {unconfirmedShifts.length > 0 && (
+                <div className="mx-3 mb-2 rounded-2xl bg-amber-500/10 border border-amber-500/20 p-4 space-y-3">
+                    <p className="text-[10px] font-black text-amber-400 uppercase tracking-[0.2em]">
+                        {unconfirmedShifts.length} turno{unconfirmedShifts.length > 1 ? 's' : ''} por confirmar
+                    </p>
+                    {unconfirmedShifts.map(shift => (
+                        <div key={shift.shiftId} className="flex items-center justify-between bg-white/5 rounded-xl px-3 py-2">
+                            <span className="text-sm font-bold text-white tabular-nums">
+                                {format(new Date(shift.startAt), 'EEE d MMM', { locale: es })}
+                                {' · '}
+                                {format(new Date(shift.startAt), 'HH:mm')}–{format(new Date(shift.endAt), 'HH:mm')}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => handleConfirmShift(shift.shiftId)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-transform"
+                            >
+                                <CheckCircle2 size={12} />
+                                Confirmar
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            )}
 
             <MobileAgendaView
                 days={agendaDays}

@@ -153,12 +153,10 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
     );
 
     return (
-        <div className="h-full flex flex-col bg-gradient-to-br from-slate-50 to-indigo-50/20 dark:bg-slate-950 text-slate-900 dark:text-slate-200 transition-colors relative overflow-hidden">
-
-            <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[radial-gradient(#6366f1_1px,transparent_1px)] bg-[length:24px_24px]" />
+        <div className="h-full flex flex-col bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 transition-colors relative overflow-hidden">
 
             {/* Header */}
-            <div className="px-5 py-3 border-b border-white/50 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl relative z-10 shrink-0 flex justify-between items-center">
+            <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 relative z-10 shrink-0 flex justify-between items-center">
                 <div className="flex items-center gap-2.5">
                     <div className="w-7 h-7 rounded-lg bg-slate-200 dark:bg-slate-800 flex items-center justify-center shadow-inner">
                         <HelpCircle className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
@@ -184,7 +182,7 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
             </div>
 
             {/* Ultra-Compact Form Content */}
-            <form onSubmit={handleSubmit} className="flex-1 p-6 relative z-10 overflow-y-auto custom-scrollbar flex flex-col min-h-0 bg-white/40 dark:bg-slate-900/40">
+            <form onSubmit={handleSubmit} className="flex-1 p-6 relative z-10 overflow-y-auto custom-scrollbar flex flex-col min-h-0 bg-white dark:bg-slate-900">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 h-full content-start pb-4">
 
                     {/* AI SUGGESTION BANNER */}
@@ -229,7 +227,7 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
 
                     {/* Row 1: Asunto (Full) */}
                     <div className="lg:col-span-12 space-y-1.5 shrink-0">
-                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-1 font-mono">Asunto</label>
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-1">Asunto</label>
                         <input
                             type="text"
                             placeholder="Resumen del problema..."
@@ -242,7 +240,7 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
 
                     {/* Row 2: Category (4) + Priority (8) */}
                     <div className="lg:col-span-4 space-y-1.5 shrink-0">
-                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-1 font-mono">Categoría</label>
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-1">Categoría</label>
                         <div className="relative group">
                             <select
                                 value={formData.category}
@@ -262,7 +260,7 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
                     </div>
 
                     <div className="lg:col-span-8 space-y-1.5 shrink-0">
-                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-1 font-mono">Urgencia</label>
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-1">Urgencia</label>
                         <div className="grid grid-cols-3 gap-3">
                             {['low', 'medium', 'high'].map((level) => (
                                 <PriorityCard
@@ -285,7 +283,7 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
                     {/* Row 3: Description (Left) + File Upload (Right) - Fill Remaining Space */}
                     <div className="lg:col-span-7 flex flex-col space-y-1.5 min-h-[150px]">
                         <div className="flex justify-between items-center pl-1 pr-1">
-                            <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider font-mono">Detalles</label>
+                            <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Detalles</label>
                             <span className={`text-[10px] font-bold ${formData.description.length > 450 ? 'text-amber-500' : 'text-slate-400'}`}>
                                 {formData.description.length}/500
                             </span>
@@ -300,7 +298,7 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
                     </div>
 
                     <div className="lg:col-span-5 flex flex-col space-y-1.5 min-h-[150px]">
-                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-1 font-mono">Evidencia</label>
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-1">Evidencia</label>
                         <div className="flex-1 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-lg p-2 flex flex-col items-center justify-center text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group bg-slate-50/30 dark:bg-slate-900/30 min-h-[120px]">
                             <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 dark:text-indigo-400 rounded-full flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                                 <Plus className="w-5 h-5" />
@@ -316,7 +314,7 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
             </form>
 
             {/* Ultra-Compact Footer */}
-            <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md relative z-20 flex justify-between items-center shrink-0">
+            <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 relative z-20 flex justify-between items-center shrink-0">
                 <div className="flex items-center gap-2">
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Respuesta estimada</p>
                     <span className="text-indigo-500 dark:text-indigo-400 font-semibold">&lt; 24h</span>

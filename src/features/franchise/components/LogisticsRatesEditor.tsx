@@ -65,8 +65,8 @@ export const LogisticsRatesEditor: React.FC<LogisticsRatesEditorProps> = ({
     return (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             {/* Header */}
-            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                <h4 className="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+            <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                <h4 className="text-[13px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
                     <DollarSign className="w-4 h-4 text-emerald-500" /> Tarifas por Distancia
                 </h4>
                 {!readOnly && (
@@ -82,27 +82,28 @@ export const LogisticsRatesEditor: React.FC<LogisticsRatesEditorProps> = ({
             </div>
 
             {rates.length > 0 ? (
-                <div className="divide-y divide-slate-100">
+                <div className="overflow-x-auto">
+                <div className="divide-y divide-slate-100 min-w-[300px]">
                     {/* Header Row */}
-                    <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50/30 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    <div className="grid grid-cols-12 gap-2 px-4 py-2 bg-slate-50/30 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                         <div className="col-span-1 text-center">#</div>
-                        <div className="col-span-5 md:col-span-6">Distancia (KM)</div>
-                        <div className="col-span-4 md:col-span-4 text-right pr-8">Precio</div>
-                        <div className="col-span-2 md:col-span-1"></div>
+                        <div className="col-span-6">Distancia (KM)</div>
+                        <div className="col-span-4 text-right pr-6">Precio</div>
+                        <div className="col-span-1"></div>
                     </div>
 
                     {rates.map((rate, index) => (
-                        <div key={index} className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-slate-50 transition-colors group">
+                        <div key={index} className="grid grid-cols-12 gap-2 px-4 py-2 items-center hover:bg-slate-50 transition-colors group border-b border-transparent hover:border-slate-100 last:border-none">
                             {/* Index */}
                             <div className="col-span-1 flex justify-center">
-                                <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-500 text-xs font-bold flex items-center justify-center border border-slate-200">
+                                <div className="w-5 h-5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold flex items-center justify-center border border-slate-200">
                                     {index + 1}
                                 </div>
                             </div>
 
                             {/* Inputs */}
-                            <div className="col-span-5 md:col-span-6 flex items-center gap-3">
-                                <div className="relative w-20 md:w-24">
+                            <div className="col-span-6 md:col-span-6 flex items-center gap-2">
+                                <div className="relative w-16 md:w-20">
                                     <input
                                         type="number"
                                         step="0.1"
@@ -110,11 +111,11 @@ export const LogisticsRatesEditor: React.FC<LogisticsRatesEditorProps> = ({
                                         onChange={(e) => handleChange(index, 'min', e.target.value)}
                                         disabled={readOnly}
                                         aria-label={`Distancia mínima rango ${index + 1}`}
-                                        className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-2 text-center text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none disabled:bg-slate-50 disabled:text-slate-500"
+                                        className="w-full bg-white border border-slate-200 rounded-lg py-1 px-1.5 text-center text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none disabled:bg-slate-50 disabled:text-slate-500"
                                     />
                                 </div>
                                 <span className="text-slate-300 font-bold" aria-hidden="true">-</span>
-                                <div className="relative w-20 md:w-24">
+                                <div className="relative w-16 md:w-20">
                                     <input
                                         type="number"
                                         step="0.1"
@@ -122,15 +123,15 @@ export const LogisticsRatesEditor: React.FC<LogisticsRatesEditorProps> = ({
                                         onChange={(e) => handleChange(index, 'max', e.target.value)}
                                         disabled={readOnly}
                                         aria-label={`Distancia máxima rango ${index + 1}`}
-                                        className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-2 text-center text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none disabled:bg-slate-50 disabled:text-slate-500"
+                                        className="w-full bg-white border border-slate-200 rounded-lg py-1 px-1.5 text-center text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none disabled:bg-slate-50 disabled:text-slate-500"
                                     />
                                 </div>
-                                <span className="text-xs font-bold text-slate-400 hidden md:inline-block" aria-hidden="true">km</span>
+                                <span className="text-[10px] uppercase font-bold text-slate-400 hidden md:inline-block tracking-wider" aria-hidden="true">km</span>
                             </div>
 
                             {/* Price */}
-                            <div className="col-span-4 md:col-span-4 flex items-center justify-end gap-2 pr-4 md:pr-8">
-                                <div className="relative w-24 md:w-28">
+                            <div className="col-span-4 md:col-span-4 flex items-center justify-end gap-2 pr-2 md:pr-4">
+                                <div className="relative w-24">
                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs" aria-hidden="true">€</span>
                                     <input
                                         type="number"
@@ -139,26 +140,27 @@ export const LogisticsRatesEditor: React.FC<LogisticsRatesEditorProps> = ({
                                         onChange={(e) => handleChange(index, 'price', e.target.value)}
                                         disabled={readOnly}
                                         aria-label={`Precio rango ${index + 1}`}
-                                        className="w-full bg-white border border-slate-200 rounded-lg py-1.5 pl-6 pr-3 text-right text-sm font-bold text-emerald-600 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none disabled:bg-slate-50 disabled:text-slate-500"
+                                        className="w-full bg-white border border-slate-200 rounded-lg py-1 pl-6 pr-3 text-right text-sm font-bold text-emerald-600 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none disabled:bg-slate-50 disabled:text-slate-500"
                                     />
                                 </div>
                             </div>
 
                             {/* Delete */}
-                            <div className="col-span-2 md:col-span-1 flex justify-end">
+                            <div className="col-span-1 md:col-span-1 flex justify-end">
                                 {!readOnly && (
                                     <button
                                         type="button"
                                         onClick={() => handleRemove(index)}
                                         aria-label={`Eliminar rango ${index + 1}`}
-                                        className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                                        className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                                     >
-                                        <Trash2 className="w-4 h-4" aria-hidden="true" />
+                                        <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                                     </button>
                                 )}
                             </div>
                         </div>
                     ))}
+                </div>
                 </div>
             ) : (
                 <div className="p-12 flex flex-col items-center justify-center text-center">

@@ -54,8 +54,8 @@ export const RiderProfileView: React.FC = () => {
         <div className="relative min-h-[calc(100vh-64px)] overflow-y-auto bg-slate-50/50 pb-20">
             {/* --- PRO DESIGN: MESH GRADIENT & BACKGROUND --- */}
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-5%] right-[-10%] w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[100px] animate-pulse" />
-                <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-sky-500/10 rounded-full blur-[120px] animate-pulse delay-1000" />
+                <div className="absolute top-[-5%] right-[-10%] w-[250px] h-[250px] sm:w-[350px] sm:h-[350px] md:w-[500px] md:h-[500px] bg-emerald-500/10 rounded-full blur-[100px] animate-pulse" />
+                <div className="absolute bottom-[-10%] left-[-10%] w-[300px] h-[300px] sm:w-[450px] sm:h-[450px] md:w-[600px] md:h-[600px] bg-sky-500/10 rounded-full blur-[120px] animate-pulse delay-1000" />
             </div>
 
             <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-8 flex flex-col gap-8">
@@ -263,7 +263,7 @@ const NavButton = ({ active, onClick, icon: Icon, label, count = 0 }: any) => (
     <button
         onClick={onClick}
         className={`
-            relative flex items-center gap-3 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300
+            relative z-10 px-4 md:px-5 py-2.5 text-xs md:text-sm font-bold uppercase tracking-wider transition-all whitespace-nowrap duration-300
             ${active 
                 ? 'bg-slate-900 text-white shadow-xl translate-y-[-2px]' 
                 : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'}

@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/react';
 
-const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN || process.env.VITE_SENTRY_DSN;
-const SENTRY_ENVIRONMENT = import.meta.env.VITE_SENTRY_ENVIRONMENT || process.env.VITE_SENTRY_ENVIRONMENT || 'development';
+const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
+const SENTRY_ENVIRONMENT = import.meta.env.VITE_SENTRY_ENVIRONMENT || import.meta.env.MODE || 'development';
 
 export const initSentry = () => {
   // Only initialize Sentry in production or when DSN is provided
@@ -45,7 +45,7 @@ export const initSentry = () => {
       },
       
       // Set release
-      release: process.env.VITE_APP_VERSION || 'latest',
+      release: import.meta.env.VITE_APP_VERSION || 'latest',
     });
     
     console.log('Sentry initialized successfully');

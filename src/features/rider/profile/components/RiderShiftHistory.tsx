@@ -104,19 +104,19 @@ const RiderShiftHistory: React.FC<RiderShiftHistoryProps> = ({ user, showMessage
     };
 
     const getIcon = (type: string) => {
-        const baseClass = "w-10 h-10 rounded-full flex items-center justify-center shrink-0 border shadow-sm";
+        const baseClass = "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border border-slate-200 bg-white";
 
         switch (type) {
             case 'added':
-                return <div className={`${baseClass} bg-emerald-50 text-emerald-600 border-emerald-100`}><Plus size={18} /></div>;
+                return <div className={`${baseClass} text-slate-900`}><Plus size={16} /></div>;
             case 'removed':
-                return <div className={`${baseClass} bg-rose-50 text-rose-600 border-rose-100`}><Trash2 size={18} /></div>;
+                return <div className={`${baseClass} text-rose-600`}><Trash2 size={16} /></div>;
             case 'modified':
-                return <div className={`${baseClass} bg-amber-50 text-amber-600 border-amber-100`}><Edit3 size={18} /></div>;
+                return <div className={`${baseClass} text-amber-600`}><Edit3 size={16} /></div>;
             case 'requested':
-                return <div className={`${baseClass} bg-blue-50 text-blue-600 border-blue-100`}><FileText size={18} /></div>;
+                return <div className={`${baseClass} text-slate-600`}><FileText size={16} /></div>;
             default:
-                return <div className={`${baseClass} bg-slate-50 text-slate-600 border-slate-100`}><Clock size={18} /></div>;
+                return <div className={`${baseClass} text-slate-600`}><Clock size={16} /></div>;
         }
     };
 
@@ -132,11 +132,11 @@ const RiderShiftHistory: React.FC<RiderShiftHistoryProps> = ({ user, showMessage
 
     const getTypeColor = (type: string) => {
         switch (type) {
-            case 'added': return 'text-emerald-600 bg-emerald-50 border-emerald-100';
-            case 'removed': return 'text-rose-600 bg-rose-50 border-rose-100';
-            case 'modified': return 'text-amber-600 bg-amber-50 border-amber-100';
-            case 'requested': return 'text-blue-600 bg-blue-50 border-blue-100';
-            default: return 'text-slate-600 bg-slate-50 border-slate-100';
+            case 'added': return 'text-slate-900 bg-slate-100';
+            case 'removed': return 'text-rose-700 bg-rose-50';
+            case 'modified': return 'text-amber-700 bg-amber-50';
+            case 'requested': return 'text-slate-700 bg-slate-100';
+            default: return 'text-slate-600 bg-slate-100';
         }
     };
 
@@ -156,66 +156,65 @@ const RiderShiftHistory: React.FC<RiderShiftHistoryProps> = ({ user, showMessage
     };
 
     return (
-        <div className="rider-shift-history">
+        <div className="w-full">
             <div className="mb-6">
-                <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-4">
-                    Historial de Turnos
-                </h2>
+                <h2 className="text-xl font-black text-slate-900 mb-1">Historial de Turnos</h2>
+                <p className="text-sm font-semibold text-slate-500">Consulta los cambios recientes en tu programación.</p>
             </div>
 
-            <div className="glass-card rounded-2xl p-6 mb-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 mb-6">
                 <div className="flex flex-wrap gap-2 items-center mb-6">
                     <button
                         onClick={() => setFilter('all')}
-                        className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${filter === 'all'
-                                ? 'bg-indigo-600 text-white shadow-md'
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        className={`px-4 py-2 border rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${filter === 'all'
+                                ? 'bg-slate-900 border-slate-900 text-white'
+                                : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                             }`}
                     >
                         Todos
                     </button>
                     <button
                         onClick={() => setFilter('added')}
-                        className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${filter === 'added'
-                                ? 'bg-indigo-600 text-white shadow-md'
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        className={`px-4 py-2 border rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${filter === 'added'
+                                ? 'bg-slate-900 border-slate-900 text-white'
+                                : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                             }`}
                     >
                         Agregados
                     </button>
                     <button
                         onClick={() => setFilter('removed')}
-                        className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${filter === 'removed'
-                                ? 'bg-indigo-600 text-white shadow-md'
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        className={`px-4 py-2 border rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${filter === 'removed'
+                                ? 'bg-slate-900 border-slate-900 text-white'
+                                : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                             }`}
                     >
                         Eliminados
                     </button>
                     <button
                         onClick={() => setFilter('modified')}
-                        className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${filter === 'modified'
-                                ? 'bg-indigo-600 text-white shadow-md'
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        className={`px-4 py-2 border rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${filter === 'modified'
+                                ? 'bg-slate-900 border-slate-900 text-white'
+                                : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                             }`}
                     >
                         Modificados
                     </button>
                     <button
                         onClick={() => setFilter('requested')}
-                        className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${filter === 'requested'
-                                ? 'bg-indigo-600 text-white shadow-md'
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        className={`px-4 py-2 border rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${filter === 'requested'
+                                ? 'bg-slate-900 border-slate-900 text-white'
+                                : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                             }`}
                     >
                         Solicitudes
                     </button>
                 </div>
 
-                <div className="text-center mb-4">
+                <div className="text-center">
                     <button
                         onClick={() => setShowAll(!showAll)}
-                        className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-all"
+                        className="flex items-center justify-center gap-2 px-6 py-2 border border-slate-200 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold uppercase tracking-wider transition-all mx-auto"
                     >
                         <span>{showAll ? 'Ver menos' : 'Ver todos'}</span>
                         <ChevronDown size={16} className={showAll ? 'rotate-180' : ''} />
@@ -224,18 +223,18 @@ const RiderShiftHistory: React.FC<RiderShiftHistoryProps> = ({ user, showMessage
             </div>
 
             {loading ? (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center border border-slate-200 dark:border-slate-800">
+                <div className="bg-white rounded-xl p-12 text-center border border-slate-200">
                     <div className="flex flex-col items-center gap-4">
-                        <Calendar className="w-12 h-12 text-indigo-500 animate-pulse" />
-                        <p className="text-slate-600 dark:text-slate-400">Cargando historial...</p>
+                        <Calendar className="w-10 h-10 text-slate-300 animate-pulse" />
+                        <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Cargando historial...</p>
                     </div>
                 </div>
             ) : displayedChanges.length === 0 ? (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center border border-slate-200 dark:border-slate-800">
+                <div className="bg-white rounded-xl p-12 text-center border border-slate-200">
                     <div className="flex flex-col items-center gap-4">
-                        <FileText className="w-12 h-12 text-slate-400" />
-                        <p className="font-bold text-slate-900 dark:text-white">No hay cambios recientes</p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                        <FileText className="w-10 h-10 text-slate-300" />
+                        <p className="font-bold text-slate-900">No hay cambios recientes</p>
+                        <p className="text-sm font-semibold text-slate-500">
                             {filter === 'all'
                                 ? 'No tienes cambios en tus turnos recientes.'
                                 : 'No hay cambios de este tipo.'}
@@ -248,9 +247,9 @@ const RiderShiftHistory: React.FC<RiderShiftHistoryProps> = ({ user, showMessage
                         <div
                             key={change.id}
                             className={`
-                                bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800
-                                transition-all cursor-pointer hover:shadow-md
-                                ${!change.read ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''}
+                                bg-white rounded-xl border border-slate-200
+                                transition-all cursor-pointer hover:border-slate-400
+                                ${!change.read ? 'bg-slate-50' : ''}
                             `}
                             onClick={() => !change.read && markAsRead(change.id)}
                         >
@@ -261,17 +260,17 @@ const RiderShiftHistory: React.FC<RiderShiftHistoryProps> = ({ user, showMessage
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between mb-1">
-                                            <span className={`text-sm font-bold uppercase tracking-wider px-2 py-1 rounded-lg ${getTypeColor(change.type)}`}>
+                                            <span className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded ${getTypeColor(change.type)}`}>
                                                 {getTypeLabel(change.type)}
                                             </span>
-                                            <span className="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap ml-2">
+                                            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider ml-2">
                                                 {formatTimeAgo(change.createdAt)}
                                             </span>
                                         </div>
 
                                         {change.reason && (
-                                            <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-                                                <span className="font-medium">Motivo:</span> {change.reason}
+                                            <p className="text-sm font-semibold text-slate-600 mb-2">
+                                                <span className="text-slate-900">Motivo:</span> {change.reason}
                                             </p>
                                         )}
 
@@ -280,7 +279,7 @@ const RiderShiftHistory: React.FC<RiderShiftHistoryProps> = ({ user, showMessage
                                                 e.stopPropagation();
                                                 handleExpand(change.id);
                                             }}
-                                            className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+                                            className="text-[11px] font-bold uppercase tracking-wider text-slate-900 hover:text-slate-600 flex items-center gap-1"
                                         >
                                             {expandedId === change.id ? 'Ocultar detalles' : 'Ver detalles'}
                                             <ArrowUp size={12} className={expandedId === change.id ? '' : 'rotate-180'} />
@@ -289,20 +288,20 @@ const RiderShiftHistory: React.FC<RiderShiftHistoryProps> = ({ user, showMessage
                                 </div>
 
                                 {expandedId === change.id && (
-                                    <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                    <div className="mt-4 pt-4 border-t border-slate-100">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             {change.oldData && (
                                                 <div className="space-y-2">
                                                     <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Datos Anteriores</h4>
-                                                    <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                                                        <p className="text-sm text-slate-700 dark:text-slate-300">
-                                                            <span className="font-medium">Fecha:</span> {change.oldData.startAt ? new Date(change.oldData.startAt).toLocaleDateString('es-ES') : 'N/A'}
+                                                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                                                        <p className="text-sm font-semibold text-slate-600">
+                                                            <span className="text-slate-900 mr-2">Fecha:</span> {change.oldData.startAt ? new Date(change.oldData.startAt).toLocaleDateString('es-ES') : 'N/A'}
                                                         </p>
-                                                        <p className="text-sm text-slate-700 dark:text-slate-300">
-                                                            <span className="font-medium">Hora inicio:</span> {change.oldData.startTime || 'N/A'}
+                                                        <p className="text-sm font-semibold text-slate-600">
+                                                            <span className="text-slate-900 mr-2">Hora inicio:</span> {change.oldData.startTime || 'N/A'}
                                                         </p>
-                                                        <p className="text-sm text-slate-700 dark:text-slate-300">
-                                                            <span className="font-medium">Hora fin:</span> {change.oldData.endTime || 'N/A'}
+                                                        <p className="text-sm font-semibold text-slate-600">
+                                                            <span className="text-slate-900 mr-2">Hora fin:</span> {change.oldData.endTime || 'N/A'}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -311,28 +310,28 @@ const RiderShiftHistory: React.FC<RiderShiftHistoryProps> = ({ user, showMessage
                                             {change.newData && (
                                                 <div className="space-y-2">
                                                     <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Datos Nuevos</h4>
-                                                    <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-100 dark:border-emerald-800">
-                                                        <p className="text-sm text-slate-700 dark:text-slate-300">
-                                                            <span className="font-medium">Fecha:</span> {change.newData.startAt ? new Date(change.newData.startAt).toLocaleDateString('es-ES') : 'N/A'}
+                                                    <div className="p-3 bg-white border border-slate-200 rounded-lg">
+                                                        <p className="text-sm font-semibold text-slate-600">
+                                                            <span className="text-slate-900 mr-2">Fecha:</span> {change.newData.startAt ? new Date(change.newData.startAt).toLocaleDateString('es-ES') : 'N/A'}
                                                         </p>
-                                                        <p className="text-sm text-slate-700 dark:text-slate-300">
-                                                            <span className="font-medium">Hora inicio:</span> {change.newData.startTime || 'N/A'}
+                                                        <p className="text-sm font-semibold text-slate-600">
+                                                            <span className="text-slate-900 mr-2">Hora inicio:</span> {change.newData.startTime || 'N/A'}
                                                         </p>
-                                                        <p className="text-sm text-slate-700 dark:text-slate-300">
-                                                            <span className="font-medium">Hora fin:</span> {change.newData.endTime || 'N/A'}
+                                                        <p className="text-sm font-semibold text-slate-600">
+                                                            <span className="text-slate-900 mr-2">Hora fin:</span> {change.newData.endTime || 'N/A'}
                                                         </p>
                                                     </div>
                                                 </div>
                                             )}
                                         </div>
 
-                                        <div className="flex justify-end pt-2">
+                                        <div className="flex justify-end pt-4">
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     handleViewShift(change.shiftId);
                                                 }}
-                                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700 transition-all"
+                                                className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg bg-white text-slate-900 text-xs font-bold tracking-wider hover:bg-slate-50 transition-all uppercase"
                                             >
                                                 <Calendar size={14} />
                                                 Ver turno

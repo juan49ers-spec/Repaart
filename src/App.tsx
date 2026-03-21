@@ -12,13 +12,14 @@ import ProtectedRoute from './features/auth/ProtectedRoute';
 import RequireRole from './layouts/RequireRole';
 import RequireActiveStatus from './layouts/RequireActiveStatus';
 import DashboardSkeleton from './components/ui/layout/DashboardSkeleton';
-import Login from './features/auth/Login';
 import NotFound from './layouts/pages/NotFound';
 import DebugFirestore from './components/debug/DebugFirestore';
 // Page Components
-import DashboardSwitcher from './layouts/components/DashboardSwitcher';
+const DashboardSwitcher = lazyWithRetry(() => import('./layouts/components/DashboardSwitcher'));
 import UserProfile from './features/user/UserProfile';
-import NotificationsPage from './features/user/NotificationsPage';
+
+const Login = lazyWithRetry(() => import('./features/auth/Login'));
+const NotificationsPage = lazyWithRetry(() => import('./features/user/NotificationsPage'));
 
 const WeeklyScheduler = lazyWithRetry(() => import('./features/operations/WeeklyScheduler'));
 const AdminFlyderDashboard = lazyWithRetry(() => import('./features/admin/flyder/AdminFlyderDashboard'));
@@ -114,7 +115,7 @@ function App() {
 
     // Handle Admin Select
     const handleAdminSelectFranchise = React.useCallback((id: string, name: string) => {
-        console.log(`[Admin] Selecting Franchise: ${name} (${id})`);
+        if (import.meta.env.DEV) console.log(`[Admin] Selecting Franchise: ${name} (${id})`);
         setTargetFranchiseId(id);
         setTargetFranchiseName(name);
     }, []);

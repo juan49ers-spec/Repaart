@@ -155,7 +155,7 @@ const FranchiseRateConfigurator: React.FC<FranchiseRateConfiguratorProps> = ({ f
 
     if (loading) {
         return (
-            <div className="p-12 text-center text-slate-400 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+            <div className="p-6 sm:p-8 md:p-12 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto mb-4" />
                 Cargando configuración...
             </div>
@@ -163,19 +163,19 @@ const FranchiseRateConfigurator: React.FC<FranchiseRateConfiguratorProps> = ({ f
     }
 
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden animate-in fade-in duration-500">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in fade-in duration-500">
             {/* Premium Header */}
-            <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-800/50">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 bg-emerald-100 dark:bg-emerald-500/10 rounded-xl shadow-sm">
-                            <RotateCw className={`w-6 h-6 text-emerald-600 dark:text-emerald-400 ${migratedFromLegacy ? 'animate-spin' : ''}`} />
+            <div className="p-4 md:p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-emerald-100 dark:bg-emerald-500/10 rounded-xl">
+                            <RotateCw className={`w-5 h-5 text-emerald-600 dark:text-emerald-400 ${migratedFromLegacy ? 'animate-spin' : ''}`} />
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                                 {migratedFromLegacy ? 'Migración Pendiente' : 'Estructura de Tarifas'}
                             </h3>
-                            <p className="text-slate-500 dark:text-slate-400 mt-1">
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                                 {migratedFromLegacy
                                     ? 'Hemos detectado tarifas antiguas. Guarda para completar la migración.'
                                     : 'Gestiona los precios base por distancia para tu franquicia'
@@ -187,19 +187,19 @@ const FranchiseRateConfigurator: React.FC<FranchiseRateConfiguratorProps> = ({ f
             </div>
 
             {/* Content */}
-            <div className="p-6 md:p-8 space-y-6">
+            <div className="p-4 md:p-5 space-y-4">
                 {error && (
-                    <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-600 dark:text-rose-400 p-4 rounded-xl text-sm flex items-center gap-3">
-                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                    <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-600 dark:text-rose-400 p-3 rounded-xl text-sm flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
                         <span className="font-medium">{error}</span>
                     </div>
                 )}
 
                 {migratedFromLegacy && (
-                    <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-400 p-4 rounded-xl text-sm flex items-start gap-3">
-                        <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-400 p-3 rounded-xl text-sm flex items-start gap-2">
+                        <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
                         <div>
-                            <span className="font-bold block mb-1">Actualización Necesaria</span>
+                            <span className="font-bold block mb-0.5">Actualización Necesaria</span>
                             Tus tarifas se han importado del sistema antiguo. Por favor, revísalas y pulsa &quot;Guardar&quot; para completar la actualización al nuevo formato &quot;Usuario-Céntrico&quot;.
                         </div>
                     </div>
@@ -211,29 +211,29 @@ const FranchiseRateConfigurator: React.FC<FranchiseRateConfiguratorProps> = ({ f
                 />
 
                 {/* Info Banner */}
-                <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 rounded-xl p-4 flex items-start gap-3 text-sm text-blue-800 dark:text-blue-300">
-                    <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 rounded-xl p-3 flex items-start gap-2 text-sm text-blue-800 dark:text-blue-300">
+                    <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
                     <div>
-                        <span className="font-bold block mb-1">Sincronización Automática</span>
+                        <span className="font-bold block mb-0.5">Sincronización Automática</span>
                         Cualquier cambio aquí se reflejará inmediatamente en el Perfil de Franquicia y en el cálculo de Income.
                     </div>
                 </div>
 
                 {/* Save Bar */}
-                <div className="flex justify-end pt-6 border-t border-slate-100 dark:border-slate-700">
+                <div className="flex justify-end pt-4 border-t border-slate-200 dark:border-slate-800">
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center gap-3 hover:-translate-y-0.5 active:translate-y-0"
+                        className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg disabled:opacity-70 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                     >
                         {saving ? (
                             <>
-                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                 Guardando...
                             </>
                         ) : (
                             <>
-                                <Save className="w-5 h-5" />
+                                <Save className="w-4 h-4" />
                                 {migratedFromLegacy ? 'Guardar y Completar Migración' : 'Guardar Configuración'}
                             </>
                         )}

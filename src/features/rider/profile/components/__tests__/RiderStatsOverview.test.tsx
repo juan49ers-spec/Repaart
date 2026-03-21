@@ -4,19 +4,19 @@ import '@testing-library/jest-dom';
 import RiderStatsOverview from '../RiderStatsOverview';
 
 // Mock lucide-react icons
-vi.mock('lucide-react', () => ({
-  Clock: (props: any) => <div data-testid="clock-icon" {...props} />,
-  TrendingUp: (props: any) => <div data-testid="trending-up-icon" {...props} />,
-  Calendar: (props: any) => <div data-testid="calendar-icon" {...props} />,
-  ArrowUp: (props: any) => <div data-testid="arrow-up-icon" {...props} />,
-  ArrowDown: (props: any) => <div data-testid="arrow-down-icon" {...props} />,
-  ArrowUpRight: (props: any) => <div data-testid="arrow-up-right-icon" {...props} />,
-  ArrowDownRight: (props: any) => <div data-testid="arrow-down-right-icon" {...props} />,
-  Sun: (props: any) => <div data-testid="sun-icon" {...props} />,
-  Moon: (props: any) => <div data-testid="moon-icon" {...props} />,
-  Zap: (props: any) => <div data-testid="zap-icon" {...props} />,
-  Check: (props: any) => <div data-testid="check-icon" {...props} />,
-}));
+vi.mock('lucide-react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('lucide-react')>();
+  return {
+    ...actual,
+    Sun: (props: any) => <div data-testid="sun-icon" {...props} />,
+    Moon: (props: any) => <div data-testid="moon-icon" {...props} />,
+    Zap: (props: any) => <div data-testid="zap-icon" {...props} />,
+    Award: (props: any) => <div data-testid="award-icon" {...props} />,
+    ArrowUpRight: (props: any) => <div data-testid="arrow-up-right-icon" {...props} />,
+    ArrowDownRight: (props: any) => <div data-testid="arrow-down-right-icon" {...props} />,
+    CheckCircle2: (props: any) => <div data-testid="check-circle-icon" {...props} />,
+  };
+});
 
 describe('RiderStatsOverview', () => {
     const mockShifts = [
@@ -39,7 +39,7 @@ describe('RiderStatsOverview', () => {
 
     it('renders performance overview section', () => {
         render(<RiderStatsOverview myShifts={mockShifts} />);
-        expect(screen.getByText('Progreso Semanal')).toBeInTheDocument();
+        expect(screen.getByText('Progreso')).toBeInTheDocument();
     });
 
     it('renders without crashing', () => {
@@ -52,8 +52,8 @@ describe('RiderStatsOverview', () => {
         expect(screen.getByText('0.0')).toBeInTheDocument();
     });
 
-    it('displays trend comparison with last week', () => {
+    it('displays trend percentage indicator', () => {
         render(<RiderStatsOverview myShifts={mockShifts} />);
-        expect(screen.getByText(/vs semana anterior/i)).toBeInTheDocument();
+        expect(screen.getByTestId('arrow-up-right-icon')).toBeInTheDocument();
     });
 });

@@ -33,7 +33,7 @@ export function useWebVitals(reportHandler?: ReportHandler) {
       // Send to Vercel Analytics if in production
       if (import.meta.env.PROD && vitalsUrl) {
         const body = JSON.stringify({
-          dsn: process.env.VERCEL_ANALYTICS_ID,
+          dsn: import.meta.env.VITE_VERCEL_ANALYTICS_ID,
           id: metric.id,
           name: metric.name,
           value: metric.value,

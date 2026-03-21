@@ -1,0 +1,16 @@
+bg-[#F8F9FA]">
+        <Loader2 className="animate-spin text-slate-400" size={32} />
+    </div>
+);
+
+const TabButton = ({ active, onClick, label, count = 0 }: { active: boolean, onClick: () => void, label: string, count?: number }) => (
+    <button
+        onClick={onClick}
+        className={`
+            relative z-10 px-4 md:px-5 py-2.5 text-xs md:text-sm font-bold uppercase tracking-wider transition-all whitespace-nowrap
+            ${active 
+                ? 'text-slate-900 border-b-2 border-slate-900' 
+                : 'text-slate-500 hover:text-slate-700'
+            }
+        `}
+    >

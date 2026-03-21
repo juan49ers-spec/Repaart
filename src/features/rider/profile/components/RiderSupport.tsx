@@ -7,12 +7,7 @@ interface RiderSupportProps {
     skills?: string[];
 }
 
-/**
- * RiderSupport: Rediseño "Clean Apple"
- * Sistema de soporte integrado con habilidades.
- * Enfoque en claridad de estados y facilidad de creación de tickets.
- */
-export const RiderSupport: React.FC<RiderSupportProps> = ({ skills = [] }) => {
+const RiderSupport: React.FC<RiderSupportProps> = ({ skills = [] }) => {
     const { tickets, isLoading, error, fetchTickets, createTicket } = useRiderSupport();
     const [isCreating, setIsCreating] = useState(false);
     const [newTicket, setNewTicket] = useState<{
@@ -57,15 +52,15 @@ export const RiderSupport: React.FC<RiderSupportProps> = ({ skills = [] }) => {
 
     if (isCreating) {
         return (
-            <div className="space-y-8 animate-in fade-in zoom-in-95 duration-300">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-6">
+            <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
+                <div className="flex items-center justify-between border-b border-slate-200/60 pb-5">
                     <div>
-                        <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Nuevo Ticket</h3>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Soporte Operativo</p>
+                        <h3 className="text-xl font-bold text-slate-900 tracking-tight">Nuevo Ticket</h3>
+                        <p className="text-sm font-medium text-slate-500 mt-1">Soporte Operativo</p>
                     </div>
                     <button 
                         onClick={() => setIsCreating(false)}
-                        className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-rose-50 hover:text-rose-500 transition-all"
+                        className="p-2 bg-slate-100/50 text-slate-500 rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-all border border-slate-200/50"
                         title="Cancelar creación de ticket"
                         aria-label="Cancelar creación de ticket"
                     >
@@ -73,27 +68,27 @@ export const RiderSupport: React.FC<RiderSupportProps> = ({ skills = [] }) => {
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Asunto del problema</label>
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-600 ml-1">Asunto del problema</label>
                         <input
                             type="text"
                             value={newTicket.subject}
                             onChange={(e) => setNewTicket({ ...newTicket, subject: e.target.value })}
-                            className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all font-bold text-slate-800"
+                            className="w-full px-5 py-3.5 bg-white/60 backdrop-blur-md border border-slate-200/60 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-300 transition-all font-medium text-slate-800 shadow-sm"
                             placeholder="Ej: Problema con el arranque de la moto"
                             required
                         />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Categoría</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-semibold text-slate-600 ml-1">Categoría</label>
                             <select
                                 id="ticket-category"
                                 value={newTicket.category}
                                 onChange={(e) => setNewTicket({ ...newTicket, category: e.target.value as 'question' | 'technical' | 'billing' | 'skills' })}
-                                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all font-bold text-slate-800 appearance-none"
+                                className="w-full px-5 py-3.5 bg-white/60 backdrop-blur-md border border-slate-200/60 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-300 transition-all font-medium text-slate-800 appearance-none shadow-sm cursor-pointer"
                                 aria-label="Categoría"
                             >
                                 <option value="question">Pregunta General</option>
@@ -104,12 +99,12 @@ export const RiderSupport: React.FC<RiderSupportProps> = ({ skills = [] }) => {
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Descripción detallada</label>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-600 ml-1">Descripción detallada</label>
                         <textarea
                             value={newTicket.message}
                             onChange={(e) => setNewTicket({ ...newTicket, message: e.target.value })}
-                            className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all font-bold text-slate-800 min-h-[160px] resize-none"
+                            className="w-full px-5 py-3.5 bg-white/60 backdrop-blur-md border border-slate-200/60 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-300 transition-all font-medium text-slate-800 min-h-[140px] resize-none shadow-sm"
                             placeholder="Cuéntanos qué sucede..."
                             required
                         />
@@ -118,7 +113,7 @@ export const RiderSupport: React.FC<RiderSupportProps> = ({ skills = [] }) => {
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full py-5 bg-slate-900 hover:bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-slate-200/50 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                        className="w-full py-4 bg-slate-900 hover:bg-emerald-600 text-white rounded-2xl font-semibold text-sm shadow-xl shadow-slate-200/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
                         {isSubmitting ? 'Enviando Reporte...' : 'Enviar Ticket de Soporte'}
@@ -129,47 +124,47 @@ export const RiderSupport: React.FC<RiderSupportProps> = ({ skills = [] }) => {
     }
 
     return (
-        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {error && (
-                <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-600 animate-bounce">
+                <div className="p-4 bg-rose-50/80 backdrop-blur-sm border border-rose-200/60 rounded-2xl flex items-center gap-3 text-rose-600 animate-bounce">
                     <AlertCircle size={20} />
-                    <p className="text-xs font-black uppercase tracking-tight">{error}</p>
+                    <p className="text-sm font-semibold">{error}</p>
                 </div>
             )}
 
             {/* Skills Section */}
-            <section className="space-y-6">
-                <div className="flex items-center justify-between px-2">
+            <section className="space-y-4">
+                <div className="flex items-center justify-between px-1">
                     <div>
-                        <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter flex items-center gap-2">
+                        <h3 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
                             <Award size={20} className="text-emerald-500" /> Mis Habilidades
                         </h3>
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Certificaciones de Campo</p>
+                        <p className="text-sm font-medium text-slate-500 mt-0.5">Certificaciones de Campo</p>
                     </div>
                     <button 
                         onClick={handleRequestSkill} 
-                        className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all"
+                        className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl font-semibold text-xs border border-emerald-100 hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
                     >
                         Solicitar Nueva
                     </button>
                 </div>
-                <div className="bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100 shadow-inner">
+                <div className="bg-white/40 backdrop-blur-md p-6 sm:p-8 rounded-[2rem] border border-slate-200/60 shadow-inner">
                     <RiderSkills skills={skills} />
                 </div>
             </section>
 
             {/* Tickets Section */}
-            <section className="space-y-6">
-                <div className="flex items-center justify-between px-2">
+            <section className="space-y-4">
+                <div className="flex items-center justify-between px-1">
                     <div>
-                        <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter flex items-center gap-2">
+                        <h3 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
                             <MessageSquare size={20} className="text-sky-500" /> Historial de Soporte
                         </h3>
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Gestión de Incidencias</p>
+                        <p className="text-sm font-medium text-slate-500 mt-0.5">Gestión de Incidencias</p>
                     </div>
                     <button 
                         onClick={() => setIsCreating(true)}
-                        className="p-2.5 bg-slate-900 text-white rounded-xl hover:bg-sky-500 transition-all shadow-lg shadow-slate-200"
+                        className="p-2 bg-slate-900 text-white rounded-xl hover:bg-sky-500 transition-all shadow-lg shadow-slate-200"
                         title="Crear nuevo ticket"
                         aria-label="Crear nuevo ticket"
                     >
@@ -178,48 +173,48 @@ export const RiderSupport: React.FC<RiderSupportProps> = ({ skills = [] }) => {
                 </div>
 
                 {isLoading && !tickets.length ? (
-                    <div className="flex justify-center py-20">
+                    <div className="flex justify-center py-16">
                         <Loader2 className="animate-spin text-emerald-500" size={32} />
                     </div>
                 ) : tickets.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-slate-300 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm">
-                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-                            <MessageSquare size={32} className="opacity-20" />
+                    <div className="flex flex-col items-center justify-center py-16 text-slate-400 bg-white/40 backdrop-blur-md border border-slate-200/60 rounded-[2rem] shadow-sm">
+                        <div className="w-16 h-16 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center mb-4">
+                            <MessageSquare size={32} className="opacity-40" />
                         </div>
-                        <p className="font-black uppercase text-[10px] tracking-widest">Sin tickets activos</p>
-                        <p className="text-[9px] font-bold uppercase tracking-widest opacity-60 mt-1">Todo funciona correctamente</p>
+                        <p className="font-semibold text-sm">Sin tickets activos</p>
+                        <p className="text-xs font-medium opacity-80 mt-1">Todo funciona correctamente</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1 gap-3">
                         {tickets.map((ticket) => (
                             <button 
                                 key={ticket.id} 
-                                className="w-full flex items-center justify-between p-6 bg-white border border-slate-100 rounded-[2rem] hover:border-sky-200 hover:shadow-xl hover:shadow-sky-500/5 transition-all group group"
+                                className="w-full flex items-center justify-between p-4 sm:p-5 bg-white/60 backdrop-blur-md border border-slate-200/60 rounded-2xl hover:border-sky-300/60 hover:shadow-lg hover:shadow-sky-500/5 transition-all group"
                             >
-                                <div className="flex items-center gap-6">
+                                <div className="flex items-center gap-4 sm:gap-5">
                                     <div className={`
-                                        w-12 h-12 rounded-2xl flex items-center justify-center transition-all
-                                        ${ticket.status === 'resolved' ? 'bg-emerald-50 text-emerald-500' : 'bg-sky-50 text-sky-500'}
+                                        w-12 h-12 rounded-[1rem] flex items-center justify-center transition-all border
+                                        ${ticket.status === 'resolved' ? 'bg-emerald-50 border-emerald-100 text-emerald-500' : 'bg-sky-50 border-sky-100 text-sky-500'}
                                     `}>
                                         <MessageSquare size={20} />
                                     </div>
                                     <div className="text-left">
-                                        <div className="flex items-center gap-3 mb-1">
-                                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-xs font-medium text-slate-400">
                                                 {ticket.updatedAt?.toDate().toLocaleDateString() || 'Reciente'}
                                             </span>
-                                            <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${
-                                                ticket.status === 'resolved' ? 'border-emerald-100 text-emerald-600 bg-emerald-50/50' : 'border-sky-100 text-sky-600 bg-sky-50/50'
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                                                ticket.status === 'resolved' ? 'border-emerald-100 text-emerald-700 bg-emerald-50' : 'border-sky-100 text-sky-700 bg-sky-50'
                                             }`}>
                                                 {ticket.status === 'resolved' ? 'Resuelto' : 'En Gestión'}
                                             </span>
                                         </div>
-                                        <h4 className="font-black text-slate-800 uppercase text-[11px] tracking-tight group-hover:text-sky-600 transition-colors">
+                                        <h4 className="font-semibold text-slate-800 text-sm group-hover:text-sky-700 transition-colors">
                                             {ticket.subject}
                                         </h4>
                                     </div>
                                 </div>
-                                <ChevronRight size={18} className="text-slate-300 group-hover:text-sky-400 group-hover:translate-x-2 transition-all" />
+                                <ChevronRight size={20} className="text-slate-300 group-hover:text-sky-400 group-hover:translate-x-1 transition-all" />
                             </button>
                         ))}
                     </div>
@@ -230,3 +225,4 @@ export const RiderSupport: React.FC<RiderSupportProps> = ({ skills = [] }) => {
 };
 
 export default RiderSupport;
+

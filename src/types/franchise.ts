@@ -10,6 +10,8 @@ export interface FranchiseMetadata {
     location?: string;
     status?: string;
     uid?: string; // User ID associated with franchise
+    riderHourlyRate?: number;    // €/h base para riders (configurable por franquicia)
+    socialSecurityRate?: number; // Tasa de SS sobre nómina bruta (ej: 0.32 = 32%)
     [key: string]: any;
 }
 

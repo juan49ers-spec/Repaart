@@ -34,6 +34,10 @@ import { shiftService } from '../../../../services/shiftService';
 import { userService } from '../../../../services/userService';
 import { LogisticsRate } from '../../../../types/franchise';
 
+// Fallbacks de estimación salarial — se sobreescriben con los valores del perfil de franquicia
+const DEFAULT_HOURLY_RATE = 8.5;     // €/h base si la franquicia no tiene tarifa configurada
+const DEFAULT_SS_RATE = 0.32;        // 32% de cotización SS si la franquicia no tiene tasa configurada
+
 interface Props {
     franchiseId: string;
     month: string;
@@ -88,47 +92,58 @@ export const useFinancialDataLoad = ({ franchiseId, month, initialData, user }: 
                 // Improved Resilient Fetching - Use real UID for franchise users to bypass slug resolution issues
                 const targetId = (user?.role === 'franchise' && user?.uid) ? user.uid : franchiseId;
 
-                const [data, yearlyData, monthInvoiced, monthShifts] = await Promise.all([
+                const [data, yearlyData, monthInvoiced, monthShifts, profile] = await Promise.all([
                     (async () => {
                         try {
                             return initialData || await financeService.getFinancialData(targetId, month) as FinancialRecord;
-                        } catch (e: any) {
-                            console.error('[FinanceLoad] Failed to load main record:', e.message);
+                        } catch (e: unknown) {
+                            console.error('[FinanceLoad] Failed to load main record:', e instanceof Error ? e.message : e);
                             return null;
                         }
                     })(),
                     (async () => {
                         try {
                             return await financeService.getFinancialYearlyData(targetId, currentYear);
-                        } catch (e: any) {
-                            console.error('[FinanceLoad] Failed to load yearly data:', e.message);
+                        } catch (e: unknown) {
+                            console.error('[FinanceLoad] Failed to load yearly data:', e instanceof Error ? e.message : e);
                             return [];
                         }
                     })(),
                     (async () => {
                         try {
                             return await invoiceEngine.getInvoicedIncomeForMonth(targetId, month);
-                        } catch (e: any) {
-                            console.error('[FinanceLoad] Failed to load invoiced income:', e.message);
+                        } catch (e: unknown) {
+                            console.error('[FinanceLoad] Failed to load invoiced income:', e instanceof Error ? e.message : e);
                             return { subtotal: 0, total: 0, ordersDetail: {} };
                         }
                     })(),
                     (async () => {
                         try {
                             return await shiftService.getShiftsInRange(targetId, startDate, endDate);
-                        } catch (e: any) {
-                            console.error('[FinanceLoad] Failed to load shifts:', e.message);
+                        } catch (e: unknown) {
+                            console.error('[FinanceLoad] Failed to load shifts:', e instanceof Error ? e.message : e);
                             return [];
+                        }
+                    })(),
+                    (async () => {
+                        try {
+                            return targetId === user?.uid
+                                ? await userService.getUserProfile(targetId)
+                                : await userService.getUserByFranchiseId(targetId);
+                        } catch (e: unknown) {
+                            console.error('[FinanceLoad] Failed to load franchise profile:', e instanceof Error ? e.message : e);
+                            return null;
                         }
                     })()
                 ]);
 
                 if (data) setRecord(data);
                 if (monthInvoiced) setInvoicedIncome(monthInvoiced);
+                if (profile?.logisticsRates) setLogisticsRates(profile.logisticsRates);
 
                 // Calculate operative hours from shifts
                 let totalMin = 0;
-                (monthShifts || []).forEach((shift: any) => {
+                (monthShifts || []).forEach((shift: { startAt: string; endAt: string }) => {
                     const start = new Date(shift.startAt);
                     const end = new Date(shift.endAt);
                     const diffMs = end.getTime() - start.getTime();
@@ -137,10 +152,11 @@ export const useFinancialDataLoad = ({ franchiseId, month, initialData, user }: 
                 const hours = Math.round((totalMin / 60) * 100) / 100;
                 setOperativeHours(hours);
 
-                // Simple heuristic for payroll (this could be refined with actual rider rates)
-                // Assuming average 10€/h for simulation if not explicitly set
-                const estimPayroll = hours * 8.5; // Base estimate
-                const estimSS = estimPayroll * 0.32; // SS estimate
+                // Use franchise-configured rates if available, otherwise fall back to defaults
+                const hourlyRate = profile?.riderHourlyRate ?? DEFAULT_HOURLY_RATE;
+                const ssRate = profile?.socialSecurityRate ?? DEFAULT_SS_RATE;
+                const estimPayroll = hours * hourlyRate;
+                const estimSS = estimPayroll * ssRate;
                 setCalculatedRiderExpenses({
                     payroll: Math.round(estimPayroll * 100) / 100,
                     socialSecurity: Math.round(estimSS * 100) / 100
@@ -157,15 +173,15 @@ export const useFinancialDataLoad = ({ franchiseId, month, initialData, user }: 
                             const parts = r.month.split('-');
                             recordYear = parseInt(parts[0]);
                             recordMonthIndex = parseInt(parts[1]) - 1;
-                        } else if ((r as any).date) {
+                        } else if ((r as Record<string, unknown>).date) {
                             try {
-                                const dVal = (r as any).date;
-                                const d = dVal.toDate ? dVal.toDate() : new Date(dVal);
+                                const dVal = (r as Record<string, unknown>).date;
+                                const d = (dVal && typeof dVal === 'object' && 'toDate' in dVal) ? (dVal as { toDate: () => Date }).toDate() : new Date(dVal as string);
                                 recordYear = d.getFullYear();
                                 recordMonthIndex = d.getMonth();
                             } catch (e) { console.warn("Date parse error", e); }
-                        } else if ((r as any).id && typeof (r as any).id === 'string') {
-                            const parts = ((r as any).id as string).split('_');
+                        } else if ((r as Record<string, unknown>).id && typeof (r as Record<string, unknown>).id === 'string') {
+                            const parts = ((r as Record<string, unknown>).id as string).split('_');
                             const potentialDate = parts[parts.length - 1];
                             if (potentialDate && potentialDate.match(/^\d{4}-\d{2}$/)) {
                                 const dParts = potentialDate.split('-');
@@ -187,16 +203,6 @@ export const useFinancialDataLoad = ({ franchiseId, month, initialData, user }: 
                 }
 
                 setPrevMonthsYtd(calculatedYtd);
-
-                let profile;
-                if (targetId === user?.uid) {
-                    profile = await userService.getUserProfile(targetId);
-                } else {
-                    profile = await userService.getUserByFranchiseId(targetId);
-                }
-
-                if (profile && profile.logisticsRates) setLogisticsRates(profile.logisticsRates);
-                if (data) setRecord(data as FinancialRecord);
 
             } catch (err) {
                 console.error("Error loading data", err);

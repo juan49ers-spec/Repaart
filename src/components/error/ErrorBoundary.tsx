@@ -123,7 +123,7 @@ function PageFallback({ message, isRecoverable, isNetwork, onRetry, devError }: 
           {message}
         </p>
 
-        {process.env.NODE_ENV === 'development' && devError && (
+        {import.meta.env.DEV && devError && (
           <div className="mb-6 p-4 bg-slate-100 dark:bg-slate-800 rounded-lg text-left overflow-auto">
             <pre className="text-xs text-slate-700 dark:text-slate-300 font-mono whitespace-pre-wrap">
               {devError.message}

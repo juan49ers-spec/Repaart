@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth, AuthUser } from '../../../context/AuthContext';
 import { supportService, SupportTicket } from '../../support/SupportService';
 
 export const useRiderSupport = () => {
@@ -37,15 +37,15 @@ export const useRiderSupport = () => {
     }, [user?.uid]);
 
     const createTicket = async (subject: string, category: SupportTicket['category'], message: string) => {
-        const currentUser = user as any;
-        if (!user?.uid || !currentUser?.franchiseId) {
-            throw new Error('Usuario no identificado');
+        const currentUser = user as AuthUser;
+        if (!currentUser?.uid || !currentUser?.franchiseId) {
+            throw new Error('No se puede crear el ticket: el rider no tiene franquicia asignada.');
         }
 
         setIsLoading(true);
         try {
             await supportService.createTicket({
-                userId: user.uid,
+                userId: currentUser.uid,
                 franchiseId: currentUser.franchiseId,
                 franchiseName: '', // Logic to get franchise name if needed, or backend handles it. Optional for now.
                 subject,

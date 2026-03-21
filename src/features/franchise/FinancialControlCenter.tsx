@@ -1,42 +1,21 @@
 import React, { useState, useEffect } from 'react';
-
 import { AnimatePresence } from 'framer-motion';
-import confetti from 'canvas-confetti';
 import { useAuth } from '../../context/AuthContext';
-import { notificationService } from '../../services/notificationService';
 import { RevenueStep } from './finance/components/RevenueStep';
 import { ExpensesStep } from './finance/components/ExpensesStep';
 import { FinancialHeader } from './finance/components/FinancialHeader';
 import { FinancialFooter } from './finance/components/FinancialFooter';
 import { FinancialBreakdownChart } from './finance/components/FinancialBreakdownChart';
 import { useFinancialDataLoad } from './finance/hooks/useFinancialDataLoad';
-import { FinancialRecord, OrderCounts, ExpenseData, REAL_DIST_FACTORS } from './finance/types';
-import { calculateExpenses } from '../../lib/finance';
-import { LogisticsRate } from '../../types/franchise';
-
-// --- HELPER: KM ESTIMATION (UPDATED) ---
-const estimateTotalKm = (orders: OrderCounts, rates: LogisticsRate[]): number => {
-    if (!rates || rates.length === 0) {
-        const km0_4 = (orders['0-4 km'] || 0) * REAL_DIST_FACTORS.range_0_4;
-        const km4_5 = (orders['4-5 km'] || 0) * REAL_DIST_FACTORS.range_4_5;
-        const km5_6 = (orders['5-6 km'] || 0) * REAL_DIST_FACTORS.range_5_7;
-        const km6_7 = (orders['6-7 km'] || 0) * REAL_DIST_FACTORS.range_5_7;
-        const kmGt7 = (orders['>7 km'] || 0) * REAL_DIST_FACTORS.range_7_plus;
-        return km0_4 + km4_5 + km5_6 + km6_7 + kmGt7;
-    }
-
-    let totalKm = 0;
-    Object.entries(orders).forEach(([range, count]) => {
-        const rate = rates.find(r => r.name === range || `${r.min}-${r.max} km` === range);
-        if (rate) {
-            const avgDist = (rate.min + rate.max) / 2;
-            totalKm += count * avgDist;
-        }
-    });
-    return totalKm;
-};
-
-// --- MAIN COMPONENT ---
+import { useFinancialSave } from './finance/hooks/useFinancialSave';
+import { FinancialRecord, OrderCounts, ExpenseData } from './finance/types';
+import {
+    calculateStats,
+    calculateIncomeFromOrders,
+    mapInvoicedDataToOrders,
+    mapRecordToExpenses,
+    mapRecordToOrders
+} from './finance/services/financeCalculations';
 
 interface FinancialControlCenterProps {
     franchiseId: string;
@@ -53,23 +32,14 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
 }) => {
     const { user } = useAuth();
 
-    // 1. Load Data Hook
     const {
-        loading,
-        logisticsRates,
-        record,
-        invoicedIncome,
-        operativeHours,
-        calculatedRiderExpenses
-    } = useFinancialDataLoad({
-        franchiseId, month, initialData, user
-    });
+        loading, logisticsRates, record, invoicedIncome, operativeHours, calculatedRiderExpenses
+    } = useFinancialDataLoad({ franchiseId, month, initialData, user });
 
-    const [saving, setSaving] = useState(false);
+    const { saving, handleSave } = useFinancialSave({ franchiseId, month, onSave, onClose });
+
     const [status, setStatus] = useState<'pending' | 'draft' | 'submitted' | 'approved' | 'unlock_requested' | 'locked' | 'open'>('draft');
     const [step, setStep] = useState<1 | 2 | 3>(1);
-
-    // State
     const [orders, setOrders] = useState<OrderCounts>({});
     const [cancelledOrders, setCancelledOrders] = useState(0);
     const [totalIncome, setTotalIncome] = useState(initialData?.revenue || initialData?.totalIncome || suggestedIncome || 0);
@@ -82,171 +52,66 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
         royaltyPercent: 5, irpfPercent: 20, repaartServices: 0, socialSecurity: 0
     });
 
-    const isLocked = false; // El perfil franquicia siempre puede modificar
+    const isLocked = false;
 
-    // --- LOGIC ---
-
-    // Calculate Income based on Logistics Rates
+    // --- Auto-cálculo de ingresos desde pedidos ---
     useEffect(() => {
-        if (logisticsRates.length > 0) {
-            let calculatedIncome = 0;
-            const normalize = (s: string) => s.toLowerCase().replace(/\s/g, '').replace(/,/g, '.').replace('.1-', '-');
-
-            Object.entries(orders).forEach(([range, count]) => {
-                const normRange = normalize(range);
-                const rate = logisticsRates.find(r =>
-                    normalize(r.name || '') === normRange ||
-                    normalize(`${r.min}-${r.max} km`) === normRange
-                );
-                if (rate && typeof rate.price === 'number') calculatedIncome += count * rate.price;
-            });
-
-            // Auto Update Income ONLY if we have actual valid counts
-            if (!isNaN(calculatedIncome)) {
-                const hasOrderCounts = Object.values(orders).some(v => v > 0);
-
-                if (hasOrderCounts && Math.abs(calculatedIncome - totalIncome) > 0.01) {
-                    setTotalIncome(calculatedIncome);
-                }
+        if (logisticsRates.length === 0) return;
+        const calculatedIncome = calculateIncomeFromOrders(orders, logisticsRates);
+        if (!isNaN(calculatedIncome)) {
+            const hasOrderCounts = Object.values(orders).some(v => v > 0);
+            if (hasOrderCounts && Math.abs(calculatedIncome - totalIncome) > 0.01) {
+                setTotalIncome(calculatedIncome);
             }
         }
     }, [orders, logisticsRates, totalIncome]);
 
-    // React to suggestedIncome changes if no initialData
-    React.useEffect(() => {
+    // --- Reaccionar a suggestedIncome si no hay initialData ---
+    useEffect(() => {
         if (suggestedIncome && (!initialData?.revenue && !initialData?.totalIncome)) {
             setTotalIncome(suggestedIncome);
         }
     }, [suggestedIncome, initialData]);
 
-    // Initialize State from Loaded Record or Invoiced Data
+    // --- Inicializar estado desde record cargado o datos de facturación ---
     useEffect(() => {
         if (record && Object.keys(record).length > 0) {
-            mapDataToState(record);
+            setTotalIncome(record.revenue || record.totalIncome || 0);
+            setTotalHours(record.totalHours || 0);
+            setCancelledOrders(record.cancelledOrders || 0);
+            setStatus(record.status || 'draft');
+            setOrders(mapRecordToOrders(record));
+            setExpenses(mapRecordToExpenses(record));
         } else if (!loading && invoicedIncome && logisticsRates.length > 0) {
-            const hasInvoicedData = invoicedIncome.subtotal > 0 || (invoicedIncome.ordersDetail && Object.keys(invoicedIncome.ordersDetail).length > 0);
+            const hasInvoicedData = invoicedIncome.subtotal > 0 ||
+                (invoicedIncome.ordersDetail && Object.keys(invoicedIncome.ordersDetail).length > 0);
 
             if (hasInvoicedData) {
-                const normalize = (s: string) => s.toLowerCase().replace(/\s/g, '').replace(/,/g, '.').replace('.1-', '-');
                 const activeRangeNames = logisticsRates.map(r => r.name || `${r.min}-${r.max} km`);
-
-                const mappedOrders: OrderCounts = {};
-                activeRangeNames.forEach(r => mappedOrders[r] = 0);
-
                 if (invoicedIncome.ordersDetail) {
-                    Object.entries(invoicedIncome.ordersDetail).forEach(([invKey, count]) => {
-                        const normInv = normalize(invKey);
-                        const match = activeRangeNames.find(r => normalize(r) === normInv);
-                        if (match) {
-                            mappedOrders[match] = (mappedOrders[match] || 0) + count;
-                        } else {
-                            mappedOrders[invKey] = count;
-                        }
-                    });
+                    setOrders(mapInvoicedDataToOrders(invoicedIncome.ordersDetail, activeRangeNames));
                 }
-
-                setOrders(mappedOrders);
                 setTotalIncome(invoicedIncome.subtotal);
                 setStatus('draft');
             }
         }
     }, [record, loading, invoicedIncome, logisticsRates]);
 
-    const mapDataToState = (data: FinancialRecord) => {
-        setTotalIncome(data.revenue || data.totalIncome || 0);
-        setTotalHours(data.totalHours || 0);
-        setCancelledOrders(data.cancelledOrders || 0);
-        setStatus(data.status || 'draft');
+    // --- Stats calculadas (lógica pura) ---
+    const stats = calculateStats(totalIncome, expenses, orders, logisticsRates);
 
-        const reconstructedOrders: OrderCounts = {};
-        if (data.ordersDetail) Object.assign(reconstructedOrders, data.ordersDetail);
-        else {
-            if (data.ordersNew0To4) reconstructedOrders['0-4 km'] = data.ordersNew0To4;
-            if (data.ordersNew4To5) reconstructedOrders['4-5 km'] = data.ordersNew4To5;
-            if (data.ordersNew5To6) reconstructedOrders['5-6 km'] = data.ordersNew5To6;
-            if (data.ordersNew6To7) reconstructedOrders['6-7 km'] = data.ordersNew6To7;
-            if (data.ordersNewGt7) reconstructedOrders['>7 km'] = data.ordersNewGt7;
-        }
-        setOrders(reconstructedOrders);
-        setExpenses({
-            payroll: data.salaries || 0, quota: data.quota || 0, insurance: data.insurance || 0,
-            fuel: data.gasoline || 0, repairs: data.repairs || 0,
-            renting: { count: data.motoCount || 0, pricePerUnit: (data.motoCount && Number.isFinite(Number(data.rentingCost))) ? Number(data.rentingCost) / data.motoCount : 154 },
-            agencyFee: data.agencyFee || 0, prlFee: data.prlFee || 0, accountingFee: data.accountingFee || 0,
-            professionalServices: data.services || 0, appFlyder: data.appFlyder || 0, marketing: data.marketing || 0,
-            incidents: data.incidents || 0, other: data.otherExpenses || 0,
-            royaltyPercent: data.royaltyPercent ?? 5, irpfPercent: data.irpfPercent ?? 20,
-            repaartServices: data.repaartServices || 0, socialSecurity: data.socialSecurity || 0
+    // --- Handlers de guardado ---
+    const handleSaveData = (shouldLock: boolean) => {
+        handleSave({
+            shouldLock,
+            totalIncome,
+            totalHours,
+            expenses,
+            orders,
+            cancelledOrders,
+            status,
+            stats
         });
-    };
-
-    const calculateStats = () => {
-        const rentingTotal = (expenses.renting?.count ?? 0) * (expenses.renting?.pricePerUnit ?? 0);
-        const royaltyAmount = totalIncome * ((expenses.royaltyPercent || 5) / 100);
-        const fixedCosts = (expenses.payroll ?? 0) + (expenses.socialSecurity ?? 0) + (expenses.quota ?? 0) +
-            (expenses.insurance ?? 0) + (expenses.agencyFee ?? 0) + (expenses.prlFee ?? 0) +
-            (expenses.accountingFee ?? 0) + (expenses.professionalServices ?? 0) + (expenses.appFlyder ?? 0) + (expenses.marketing ?? 0) +
-            (expenses.repaartServices ?? 0);
-        const variableCosts = (expenses.fuel ?? 0) + (expenses.repairs ?? 0) + rentingTotal + (expenses.incidents ?? 0) + (expenses.other ?? 0) + royaltyAmount;
-        const totalExpenses = fixedCosts + variableCosts;
-        const grossMargin = totalIncome - totalExpenses;
-        const totalOrders = Object.values(orders).reduce((sum, count) => sum + count, 0);
-        const estimatedKm = estimateTotalKm(orders, logisticsRates);
-        return { totalExpenses, profit: grossMargin, fixedCosts, variableCosts, royaltyAmount, totalOrders, estimatedKm };
-    };
-
-    const stats = calculateStats();
-
-    const handleSaveData = async (shouldLock: boolean = false) => {
-        if (!onSave) return;
-        setSaving(true);
-        try {
-            const persistenceStatus = shouldLock ? 'approved' : status;
-            // 3. GENERATE FINAL REPORT
-            const report = calculateExpenses(totalIncome || 0, stats.totalOrders || 0, {
-                ...expenses,
-                totalHours
-            });
-
-            // 4. PREPARE PAYLOAD
-            const persistenceData: Partial<FinancialRecord> = {
-                month, totalHours, totalIncome, revenue: totalIncome, grossIncome: totalIncome,
-                salaries: expenses.payroll, socialSecurity: expenses.socialSecurity, quota: expenses.quota, insurance: expenses.insurance,
-                gasoline: expenses.fuel, repairs: expenses.repairs,
-                motoCount: expenses.renting?.count ?? 0,
-                rentingCost: (expenses.renting?.count ?? 0) * (expenses.renting?.pricePerUnit ?? 0),
-                agencyFee: expenses.agencyFee, prlFee: expenses.prlFee, accountingFee: expenses.accountingFee, services: expenses.professionalServices,
-                appFlyder: expenses.appFlyder, marketing: expenses.marketing, incidents: expenses.incidents, otherExpenses: expenses.other,
-                repaartServices: expenses.repaartServices,
-                totalExpenses: report.totalExpenses, profit: report.taxes.netProfitPostTax,
-                orders: stats.totalOrders, ordersDetail: orders, cancelledOrders,
-                status: persistenceStatus, is_locked: shouldLock,
-                isLocked: shouldLock,
-                royaltyPercent: expenses.royaltyPercent, irpfPercent: expenses.irpfPercent,
-                updatedAt: new Date().toISOString()
-            };
-
-            await onSave(persistenceData);
-            if (shouldLock) {
-                confetti({
-                    particleCount: 150,
-                    spread: 70,
-                    origin: { y: 0.6 },
-                    colors: ['#4f46e5', '#818cf8', '#c7d2fe']
-                });
-                await notificationService.notify('FINANCE_CLOSING', franchiseId, 'Franquicia', {
-                    title: `Cierre: ${month}`, message: 'Cierre procesado.', priority: 'normal',
-                    metadata: { month, profit: stats.profit, status: 'approved' }
-                });
-                onClose();
-            } else {
-                alert("Guardado como borrador");
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setSaving(false);
-        }
     };
 
     if (loading) return (
@@ -313,13 +178,11 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                                     />
 
                                     <div className="flex flex-col gap-4">
-                                        {/* Result Card */}
                                         <div className="flex-1 bg-white dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-200/60 dark:border-white/5 flex flex-col justify-center text-center">
                                             <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-3">
                                                 Resultado Final
                                             </p>
-                                            <p className={`text-4xl sm:text-5xl font-black tracking-tighter tabular-nums ${stats.profit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
-                                                }`}>
+                                            <p className={`text-4xl sm:text-5xl font-black tracking-tighter tabular-nums ${stats.profit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                                                 {stats.profit.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
                                             </p>
                                             <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mt-1 uppercase tracking-wider">
@@ -341,13 +204,11 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                                                 </div>
                                                 <div>
                                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Margen</p>
-                                                    <p className={`text-sm font-black tabular-nums ${(stats.profit / (totalIncome || 1)) * 100 >= 15 ? 'text-emerald-600' : 'text-amber-600'
-                                                        }`}>
+                                                    <p className={`text-sm font-black tabular-nums ${(stats.profit / (totalIncome || 1)) * 100 >= 15 ? 'text-emerald-600' : 'text-amber-600'}`}>
                                                         {((stats.profit / (totalIncome || 1)) * 100).toFixed(1)}%
                                                     </p>
                                                 </div>
                                             </div>
-
                                         </div>
                                     </div>
                                 </div>

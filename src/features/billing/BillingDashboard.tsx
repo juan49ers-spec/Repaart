@@ -9,15 +9,15 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Users, Settings2, FileText, AlertTriangle, Building2, Target, Shield } from 'lucide-react';
-import { Tabs, Button, Modal, Form, Input, message, Badge } from 'antd';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+import { Tabs, Button, Modal, Badge } from 'antd';
 import { CustomersManager } from './components/CustomersManager';
 import { InvoiceListView } from './components/InvoiceListView';
 import { InvoiceStatsCards } from './components/InvoiceStatsCards';
 import { DebtDashboardView } from './components/DebtDashboardView';
 import { TaxVaultPanel } from './components/TaxVaultPanel';
 import { SimpleInvoiceCreator } from './components/SimpleInvoiceCreator';
+import { CompanyDataModal } from './components/CompanyDataModal';
+import { useCompanyData } from './hooks/useCompanyData';
 import FranchiseRateConfigurator from '../franchise/FranchiseRateConfigurator';
 import BillingWorkflowGuide from '../franchise/components/BillingWorkflowGuide';
 import { invoiceEngine } from '../../services/billing';
@@ -33,80 +33,10 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
     const [isFranchiseModalOpen, setIsFranchiseModalOpen] = useState(false);
     const [showGuide, setShowGuide] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
-    const [loading, setLoading] = useState(true);
-    const [companyForm] = Form.useForm();
     const [overdueCount, setOverdueCount] = useState(0);
     const [overdueAmount, setOverdueAmount] = useState(0);
 
-    const [companyData, setCompanyData] = useState<{
-        legalName: string;
-        cif: string;
-        address: string;
-        zipCode: string;
-        city: string;
-        province: string;
-        phone: string;
-    } | null>(null);
-
-    useEffect(() => {
-        if (isFranchiseModalOpen && companyData) {
-            companyForm.setFieldsValue(companyData);
-        }
-    }, [isFranchiseModalOpen, companyData, companyForm]);
-
-    useEffect(() => {
-        const loadCompanyData = async () => {
-            try {
-                setLoading(true);
-                const [franchiseDoc, userDoc] = await Promise.all([
-                    getDoc(doc(db, 'franchises', franchiseId)),
-                    getDoc(doc(db, 'users', franchiseId))
-                ]);
-
-                let mergedData = {
-                    legalName: '',
-                    cif: '',
-                    address: '',
-                    zipCode: '',
-                    city: '',
-                    province: '',
-                    phone: ''
-                };
-
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    mergedData = {
-                        ...mergedData,
-                        legalName: userData.legalName || userData.displayName || '',
-                        cif: userData.cif || '',
-                        phone: userData.phone || userData.phoneNumber || '',
-                        address: userData.address || ''
-                    };
-                }
-
-                if (franchiseDoc.exists()) {
-                    const data = franchiseDoc.data();
-                    mergedData = {
-                        ...mergedData,
-                        legalName: data.legalName || data.name || mergedData.legalName,
-                        cif: data.cif || mergedData.cif,
-                        phone: data.phone || data.phoneNumber || data.contactPhone || mergedData.phone,
-                        address: data.address?.street || mergedData.address,
-                        zipCode: data.address?.zipCode || '',
-                        city: data.address?.city || '',
-                        province: data.address?.province || ''
-                    };
-                }
-
-                setCompanyData(mergedData);
-            } catch (error) {
-                console.error('Error loading company data:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        loadCompanyData();
-    }, [franchiseId]);
+    const { companyData, loading: companyLoading, saveCompanyData } = useCompanyData(franchiseId);
 
     // Calcular deuda vencida para el badge del tab
     const fetchOverdueData = useCallback(async () => {
@@ -135,52 +65,6 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
     const handleCreateInvoice = () => {
         setIsWizardOpen(true);
     };
-
-    const handleSaveCompanyData = async (values: {
-        legalName: string;
-        cif: string;
-        address: string;
-        zipCode: string;
-        city: string;
-        province: string;
-        phone: string;
-    }) => {
-        try {
-            setLoading(true);
-            const franchiseRef = doc(db, 'franchises', franchiseId);
-            await setDoc(franchiseRef, {
-                legalName: values.legalName,
-                cif: values.cif,
-                phone: values.phone,
-                address: {
-                    street: values.address,
-                    zipCode: values.zipCode,
-                    city: values.city,
-                    province: values.province
-                },
-                updatedAt: serverTimestamp()
-            }, { merge: true });
-
-            setCompanyData(values);
-            message.success('Datos de empresa actualizados');
-            setIsFranchiseModalOpen(false);
-        } catch (error) {
-            console.error('Error saving company data:', error);
-            message.error('Error al guardar datos');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const refreshInvoices = useCallback(async () => {
-        setLoading(true);
-        await invoiceEngine.getInvoicesByFranchise(franchiseId);
-        setLoading(false);
-    }, [franchiseId]);
-
-    useEffect(() => {
-        refreshInvoices();
-    }, [refreshInvoices, refreshTrigger]);
 
     const formatCurrency = (amount: number) =>
         new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
@@ -398,105 +282,13 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
             </Modal>
 
             {/* Modal de Datos de Franquicia */}
-            <Modal
-                title={
-                    <div className="flex items-center gap-2">
-                        <Building2 className="w-5 h-5 text-indigo-600" />
-                        <span>Datos de la Empresa</span>
-                    </div>
-                }
-                open={isFranchiseModalOpen}
-                onCancel={() => setIsFranchiseModalOpen(false)}
-                footer={null}
-                width={600}
-                centered
-            >
-                <div className="py-4">
-                    <p className="text-slate-500 mb-6 text-sm">
-                        Estos datos aparecerán como emisor en todas tus facturas. Es obligatorio completarlos antes de crear facturas.
-                    </p>
-
-                    <Form
-                        form={companyForm}
-                        layout="vertical"
-                        onFinish={handleSaveCompanyData}
-                        autoComplete="off"
-                    >
-                        <Form.Item
-                            label="Nombre / Razón Social"
-                            name="legalName"
-                            rules={[{ required: true, message: 'El nombre es obligatorio' }]}
-                        >
-                            <Input placeholder="Ej: Repaart Logistics S.L." />
-                        </Form.Item>
-
-                        <Form.Item
-                            label="DNI / CIF"
-                            name="cif"
-                            rules={[{ required: true, message: 'El CIF es obligatorio' }]}
-                        >
-                            <Input placeholder="Ej: B12345678" />
-                        </Form.Item>
-
-                        <Form.Item
-                            label="Teléfono de Contacto"
-                            name="phone"
-                            rules={[{ required: true, message: 'El teléfono es obligatorio para facturación' }]}
-                        >
-                            <Input placeholder="Ej: 600000000" />
-                        </Form.Item>
-
-                        <Form.Item
-                            label="Dirección"
-                            name="address"
-                            rules={[{ required: true, message: 'La dirección es obligatoria' }]}
-                        >
-                            <Input placeholder="Ej: Calle Mayor 123" />
-                        </Form.Item>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <Form.Item
-                                label="Código Postal"
-                                name="zipCode"
-                                rules={[{ required: true, message: 'Requerido' }]}
-                            >
-                                <Input placeholder="Ej: 28001" />
-                            </Form.Item>
-
-                            <Form.Item
-                                label="Ciudad"
-                                name="city"
-                                rules={[{ required: true, message: 'Requerido' }]}
-                                className="col-span-2"
-                            >
-                                <Input placeholder="Ej: Madrid" />
-                            </Form.Item>
-                        </div>
-
-                        <Form.Item
-                            label="Provincia"
-                            name="province"
-                            rules={[{ required: true, message: 'La provincia es obligatoria' }]}
-                        >
-                            <Input placeholder="Ej: Madrid" />
-                        </Form.Item>
-
-                        <div className="flex justify-end gap-3 mt-6">
-                            <Button onClick={() => setIsFranchiseModalOpen(false)}>
-                                Cancelar
-                            </Button>
-                            <Button
-                                type="primary"
-                                htmlType="submit"
-                                loading={loading}
-                                className="bg-indigo-600 hover:bg-indigo-700"
-                            >
-                                Guardar Datos
-                            </Button>
-                        </div>
-                    </Form>
-                </div>
-            </Modal>
+            <CompanyDataModal
+                isOpen={isFranchiseModalOpen}
+                onClose={() => setIsFranchiseModalOpen(false)}
+                companyData={companyData}
+                onSave={saveCompanyData}
+                loading={companyLoading}
+            />
 
             {/* Guía Interactiva de Facturación */}
             <BillingWorkflowGuide

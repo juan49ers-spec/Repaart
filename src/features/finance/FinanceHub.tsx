@@ -42,14 +42,16 @@ export const FinanceHub: React.FC<{ franchiseId?: string }> = ({ franchiseId: pr
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500 max-w-[1600px] mx-auto p-6">
-            {/* Unified Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
+            {/* Compact Header */}
+            <div className="flex items-center gap-3 mb-1">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm shadow-emerald-500/20">
+                    <Wallet className="w-5 h-5 text-white" />
+                </div>
                 <div>
-                    <h1 className="text-3xl font-black text-slate-900 dark:text-white flex items-center gap-3">
-                        <Wallet className="w-8 h-8 text-emerald-600" />
+                    <h1 className="text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent leading-tight">
                         Finanzas & Facturación
                     </h1>
-                    <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">
+                    <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">
                         Control integral de ingresos, gastos y contabilidad
                     </p>
                 </div>

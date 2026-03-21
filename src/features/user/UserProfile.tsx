@@ -150,7 +150,7 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
                         {/* User Identity */}
                         <div className="flex-1 text-center md:text-left space-y-1 md:space-y-2">
 
-                            <h1 className="text-xl md:text-3xl font-extrabold text-[#1a1f36] tracking-tight uppercase">
+                            <h1 className="text-xl md:text-3xl font-bold text-slate-900 tracking-tight">
                                 {user.displayName || 'Usuario'}
                             </h1>
                             <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2 text-slate-500 font-medium pt-1">

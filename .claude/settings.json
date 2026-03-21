@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -rn \"user\\\\.franchiseId\\\\|roleConfig\\\\|AuthUser\" src/context/ --include=*.tsx --include=*.ts)"
+    ]
+  }
+}

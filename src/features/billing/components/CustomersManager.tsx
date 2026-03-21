@@ -379,9 +379,9 @@ export const CustomersManager: React.FC<Props> = ({ franchiseId }) => {
     ];
 
     return (
-        <div className="space-y-6">
-            <Card className="overflow-hidden">
-                <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="space-y-4">
+            <Card className="overflow-hidden border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900" styles={{ body: { padding: '16px' } }}>
+                <div className="flex flex-col md:flex-row gap-3 mb-4">
                     <div className="flex-1">
                         <Input
                             placeholder="Buscar por nombre, CIF o email..."
@@ -389,7 +389,6 @@ export const CustomersManager: React.FC<Props> = ({ franchiseId }) => {
                             value={searchText}
                             onChange={(e) => setSearchText(e.target.value)}
                             allowClear
-                            size="large"
                         />
                     </div>
                     <div className="flex-shrink-0 w-full md:w-auto">
@@ -397,9 +396,9 @@ export const CustomersManager: React.FC<Props> = ({ franchiseId }) => {
                             type="primary"
                             icon={<Plus className="w-4 h-4" />}
                             onClick={() => setIsCreateModalOpen(true)}
-                            className="bg-indigo-600 hover:bg-indigo-700 w-full md:w-auto h-10"
+                            className="bg-slate-900 hover:bg-slate-800 dark:bg-indigo-600 dark:hover:bg-indigo-700 w-full md:w-auto h-8 px-4 rounded-lg font-medium text-sm transition-colors border-0"
                         >
-                            <span className="font-bold">Nuevo Cliente</span>
+                            Nuevo Cliente
                         </Button>
                     </div>
                 </div>
@@ -410,8 +409,10 @@ export const CustomersManager: React.FC<Props> = ({ franchiseId }) => {
                         dataSource={filteredCustomers}
                         rowKey="id"
                         loading={loading}
+                        size="small"
                         pagination={{
                             pageSize: 10,
+                            size: "small",
                             showSizeChanger: true,
                             showTotal: (total) => `${total} clientes`
                         }}
@@ -427,7 +428,7 @@ export const CustomersManager: React.FC<Props> = ({ franchiseId }) => {
                                         type="primary"
                                         icon={<Plus className="w-4 h-4" />}
                                         onClick={() => setIsCreateModalOpen(true)}
-                                        className="bg-indigo-600 hover:bg-indigo-700 h-10"
+                                        className="bg-slate-900 hover:bg-slate-800 dark:bg-indigo-600 dark:hover:bg-indigo-700 h-10 rounded-lg font-medium transition-colors border-0"
                                     >
                                         Crear Cliente
                                     </Button>
