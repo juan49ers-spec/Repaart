@@ -65,7 +65,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
     // Datos de la factura
     const [customerId, setCustomerId] = useState<string>('');
     const [issueDate, setIssueDate] = useState<dayjs.Dayjs>(dayjs());
-    const [dueDate, setDueDate] = useState<dayjs.Dayjs>(dayjs().add(30, 'days'));
+    const [dueDate, setDueDate] = useState<dayjs.Dayjs>(dayjs().add(5, 'days'));
 
     // Líneas de la factura
     const [lines, setLines] = useState<InvoiceLine[]>([]);
@@ -381,8 +381,8 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                                         onChange={(date) => {
                                             if (date) {
                                                 setIssueDate(date);
-                                                // Auto-update due date to 30 days later
-                                                setDueDate(date.add(30, 'days'));
+                                                // Auto-update due date to 5 days later
+                                                setDueDate(date.add(5, 'days'));
                                             }
                                         }}
                                         format="DD/MM/YYYY"
@@ -397,6 +397,32 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                                         onChange={(date) => date && setDueDate(date)}
                                         format="DD/MM/YYYY"
                                     />
+                                    <div className="flex gap-2 mt-2">
+                                        <Button 
+                                            size="small" 
+                                            type="dashed" 
+                                            className="text-xs" 
+                                            onClick={() => setDueDate(issueDate.add(7, 'days'))}
+                                        >
+                                            +7 días
+                                        </Button>
+                                        <Button 
+                                            size="small" 
+                                            type="dashed" 
+                                            className="text-xs" 
+                                            onClick={() => setDueDate(issueDate.add(15, 'days'))}
+                                        >
+                                            +15 días
+                                        </Button>
+                                        <Button 
+                                            size="small" 
+                                            type="dashed" 
+                                            className="text-xs" 
+                                            onClick={() => setDueDate(issueDate.add(30, 'days'))}
+                                        >
+                                            +30 días
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         </Card>
