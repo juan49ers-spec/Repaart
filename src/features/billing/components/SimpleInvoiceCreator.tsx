@@ -470,111 +470,126 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                                     {lines.map((line) => (
                                         <div
                                             key={line.id}
-                                            className="border border-slate-200 dark:border-slate-700 rounded-lg p-4"
+                                            className="relative bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow duration-200"
                                         >
-                                            <Row gutter={[16, 16]}>
-                                                {/* Selector de Tarifa */}
+                                            {/* Cabecera / Eliminar */}
+                                            <div className="absolute top-4 right-4 z-10">
+                                                <Popconfirm
+                                                    title="¿Eliminar este concepto?"
+                                                    onConfirm={() => removeLine(line.id)}
+                                                    okText="Eliminar"
+                                                    okButtonProps={{ danger: true }}
+                                                >
+                                                    <Button
+                                                        type="text"
+                                                        danger
+                                                        title="Eliminar línea"
+                                                        className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center w-8 h-8 rounded-full"
+                                                        icon={<Trash2 size={16} />}
+                                                    />
+                                                </Popconfirm>
+                                            </div>
+
+                                            <div className="flex flex-col gap-5">
+                                                {/* Selector de Tarifa Destacado */}
                                                 {rates.length > 0 && (
-                                                    <Col span={24}>
-                                                        <Text type="secondary" className="text-xs block mb-1">
-                                                            Tarifa configurada (opcional)
-                                                        </Text>
+                                                    <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-100 dark:border-slate-750 pr-14 transition-colors hover:bg-slate-100 dark:hover:bg-slate-900">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <div className="bg-indigo-100 dark:bg-indigo-900/50 p-1.5 rounded-md text-indigo-600 dark:text-indigo-400">
+                                                                <Settings2 size={16} />
+                                                            </div>
+                                                            <Text className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                                                                Aplicar tarifa configurada
+                                                            </Text>
+                                                            <span className="text-xs text-slate-400 font-normal ml-1">(Opcional)</span>
+                                                        </div>
                                                         <Select
-                                                            className="w-full"
-                                                            placeholder="Seleccionar tarifa..."
+                                                            className="w-full shadow-sm"
+                                                            size="large"
+                                                            placeholder="Seleccionar tarifa para auto-completar concepto y precio..."
                                                             allowClear
                                                             onChange={(value) => {
                                                                 if (value) {
-                                                                    // value es el índice de la tarifa seleccionada
                                                                     const rateIndex = parseInt(value as string);
                                                                     const selectedRate = rates[rateIndex];
                                                                     if (selectedRate) {
                                                                         const price = Number(selectedRate.price) || 0;
                                                                         const rangeName = selectedRate.name || `${selectedRate.min}-${selectedRate.max}km`;
 
-                                                                        // Update multiple fields at once for this line
                                                                         setLines(prev => prev.map(l => l.id === line.id ? {
                                                                             ...l,
                                                                             description: rangeName,
                                                                             unitPrice: price,
-                                                                            logisticsRange: selectedRate.id || rangeName, // Store range ID
+                                                                            logisticsRange: selectedRate.id || rangeName,
                                                                             amount: l.quantity * price,
                                                                             taxAmount: (l.quantity * price) * l.taxRate,
                                                                             total: (l.quantity * price) * (1 + l.taxRate)
                                                                         } : l));
 
-                                                                        message.success(`Tarifa aplicada: ${rangeName} - ${price.toFixed(2)}€`);
+                                                                        message.success(`Tarifa aplicada: ${rangeName}`);
                                                                     }
                                                                 }
                                                             }}
                                                             options={rates.map((rate: any, idx: number) => ({
-                                                                label: `${rate.min}-${rate.max}km: ${Number(rate.price).toFixed(2)}€`,
+                                                                label: `${rate.name || `${rate.min}-${rate.max}km`} — ${Number(rate.price).toFixed(2)}€`,
                                                                 value: idx.toString()
                                                             }))}
                                                         />
-                                                    </Col>
+                                                    </div>
                                                 )}
 
-                                                <Col span={12}>
-                                                    <Text type="secondary" className="text-xs block mb-1">
-                                                        Concepto
-                                                    </Text>
-                                                    <Input
-                                                        placeholder="Descripción del servicio"
-                                                        value={line.description}
-                                                        onChange={(e) => updateLine(line.id, 'description', e.target.value)}
-                                                    />
-                                                </Col>
-
-                                                <Col span={4}>
-                                                    <Text type="secondary" className="text-xs block mb-1">
-                                                        Cantidad
-                                                    </Text>
-                                                    <InputNumber
-                                                        className="w-full"
-                                                        min={0}
-                                                        value={line.quantity}
-                                                        onChange={(val) => updateLine(line.id, 'quantity', val || 0)}
-                                                    />
-                                                </Col>
-
-                                                <Col span={4}>
-                                                    <Text type="secondary" className="text-xs block mb-1">
-                                                        Precio (€)
-                                                    </Text>
-                                                    <InputNumber
-                                                        className="w-full"
-                                                        min={0}
-                                                        precision={2}
-                                                        value={line.unitPrice}
-                                                        onChange={(val) => updateLine(line.id, 'unitPrice', val || 0)}
-                                                    />
-                                                </Col>
-
-                                                <Col span={3}>
-                                                    <Text type="secondary" className="text-xs block mb-1">
-                                                        Total
-                                                    </Text>
-                                                    <div className="text-lg font-semibold text-indigo-600">
-                                                        {line.total.toFixed(2)} €
-                                                    </div>
-                                                </Col>
-
-                                                <Col span={1}>
-                                                    <Popconfirm
-                                                        title="¿Eliminar esta línea?"
-                                                        onConfirm={() => removeLine(line.id)}
-                                                        okText="Eliminar"
-                                                        okButtonProps={{ danger: true }}
-                                                    >
-                                                        <Button
-                                                            type="text"
-                                                            danger
-                                                            icon={<Trash2 size={16} />}
+                                                {/* Componentes de la línea */}
+                                                <div className="grid grid-cols-12 gap-4 items-end pt-1">
+                                                    <div className="col-span-12 md:col-span-5">
+                                                        <Text type="secondary" className="text-xs font-semibold uppercase tracking-wider mb-1.5 block text-slate-500">
+                                                            Concepto
+                                                        </Text>
+                                                        <Input
+                                                            size="large"
+                                                            placeholder="Descripción del servicio"
+                                                            value={line.description}
+                                                            onChange={(e) => updateLine(line.id, 'description', e.target.value)}
+                                                            className="shadow-sm"
                                                         />
-                                                    </Popconfirm>
-                                                </Col>
-                                            </Row>
+                                                    </div>
+
+                                                    <div className="col-span-4 md:col-span-2">
+                                                        <Text type="secondary" className="text-xs font-semibold uppercase tracking-wider mb-1.5 block text-slate-500">
+                                                            Cantidad
+                                                        </Text>
+                                                        <InputNumber
+                                                            size="large"
+                                                            className="w-full shadow-sm"
+                                                            min={0}
+                                                            value={line.quantity}
+                                                            onChange={(val) => updateLine(line.id, 'quantity', val || 0)}
+                                                        />
+                                                    </div>
+
+                                                    <div className="col-span-4 md:col-span-2">
+                                                        <Text type="secondary" className="text-xs font-semibold uppercase tracking-wider mb-1.5 block text-slate-500">
+                                                            Precio (€)
+                                                        </Text>
+                                                        <InputNumber
+                                                            size="large"
+                                                            className="w-full shadow-sm"
+                                                            min={0}
+                                                            precision={2}
+                                                            value={line.unitPrice}
+                                                            onChange={(val) => updateLine(line.id, 'unitPrice', val || 0)}
+                                                        />
+                                                    </div>
+
+                                                    <div className="col-span-4 md:col-span-3">
+                                                        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-lg p-3 border border-indigo-100/50 dark:border-indigo-800/50 flex flex-col items-end justify-center h-[40px] mt-auto shadow-inner">
+                                                            <Text type="secondary" className="text-[10px] font-bold uppercase tracking-wider text-indigo-500/80 dark:text-indigo-400/80 leading-none mb-1">Total Línea</Text>
+                                                            <div className="text-lg font-black text-indigo-700 dark:text-indigo-300 leading-none">
+                                                                {line.total.toFixed(2)} €
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
