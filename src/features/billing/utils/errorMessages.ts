@@ -71,6 +71,13 @@ export const getBillingErrorMessage = (error: BillingError): ErrorMessage => {
             suggestion: 'Verifica que el importe sea positivo y menor que la factura original'
         },
 
+        // Factura duplicada
+        'DUPLICATE_INVOICE': {
+            title: 'Factura duplicada',
+            message: 'Ya existe una factura para este cliente en el mismo período.',
+            suggestion: 'Revisa las facturas existentes antes de crear una nueva'
+        },
+
         // Errores de empresa
         'COMPANY_DATA_MISSING': {
             title: 'Datos de empresa incompletos',

@@ -143,44 +143,8 @@ export const invoiceEngine = {
                 phone: customerData.phone || ''
             };
 
-            // Check for duplicate invoices (same customer + same month/year)
-            const issueDateObj = issueDate ? new Date(issueDate) : new Date();
-            const month = issueDateObj.getMonth();
-            const year = issueDateObj.getFullYear();
-
-            // Calculate start and end of month
-            const monthStart = new Date(year, month, 1);
-            const monthEnd = new Date(year, month + 1, 0, 23, 59, 59);
-
-            const existingInvoicesQuery = query(
-                collection(db, INVOICES_COLLECTION),
-                where('franchiseId', '==', franchiseId),
-                where('customerId', '==', customerId),
-                where('status', 'in', ['DRAFT', 'ISSUED']),
-                where('issueDate', '>=', monthStart),
-                where('issueDate', '<=', monthEnd),
-                limit(1)
-            );
-
-            const existingInvoicesSnap = await getDocs(existingInvoicesQuery);
-
-            if (!existingInvoicesSnap.empty) {
-                const existingInvoice = existingInvoicesSnap.docs[0].data();
-                console.warn('[invoiceEngine] Duplicate invoice detected:', {
-                    customerId,
-                    month: month + 1,
-                    year,
-                    existingInvoiceNumber: existingInvoice.fullNumber
-                });
-
-                return err({
-                    type: 'DUPLICATE_INVOICE',
-                    franchiseId,
-                    customerId,
-                    period: `${month + 1}/${year}`,
-                    existingInvoiceNumber: existingInvoice.fullNumber
-                });
-            }
+            // NOTE: Duplicate detection removed — es válido crear múltiples facturas
+            // al mismo cliente en el mismo mes (diferentes servicios, complementarias, etc.)
 
             interface FranchiseData {
                 legalName?: string;
