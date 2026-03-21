@@ -793,28 +793,9 @@ export const invoiceEngine = {
                 });
             }
 
-            // Delete related data in cascade
-            // 1. Delete payment receipts
-            const paymentsRef = collection(db, 'payment_receipts');
-            const paymentsQuery = query(paymentsRef, where('invoiceId', '==', invoiceId));
-            const paymentsSnap = await getDocs(paymentsQuery);
-
-            if (!paymentsSnap.empty) {
-                console.log(`[invoiceEngine] Deleting ${paymentsSnap.size} payment receipts for invoice ${invoiceId}`);
-                const batch = paymentsSnap.docs.map(docSnap => deleteDoc(docSnap.ref));
-                await Promise.all(batch);
-            }
-
-            // 2. Delete tax vault entries
-            const taxVaultRef = collection(db, 'tax_vault');
-            const taxVaultQuery = query(taxVaultRef, where('invoiceId', '==', invoiceId));
-            const taxVaultSnap = await getDocs(taxVaultQuery);
-
-            if (!taxVaultSnap.empty) {
-                console.log(`[invoiceEngine] Deleting ${taxVaultSnap.size} tax vault entries for invoice ${invoiceId}`);
-                const batch = taxVaultSnap.docs.map(docSnap => deleteDoc(docSnap.ref));
-                await Promise.all(batch);
-            }
+            // Un borrador (DRAFT) no tiene recibos de pago ni entradas fiscales.
+            // Las reglas de Firestore además prohíben el borrado en esas colecciones por el cliente.
+            // Por lo tanto, simplemente eliminamos el documento de la factura.
 
             // 3. Finally delete the invoice
             await deleteDoc(invoiceRef);
