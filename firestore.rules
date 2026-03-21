@@ -574,8 +574,11 @@ service cloud.firestore {
         canManageFinances(resource.data.franchiseId)
       );
       
-      // Delete: solo admin (integridad contable)
-      allow delete: if isAuthed() && isAdmin();
+      // Delete: admin o franchise dueña (solo drafts borrables por la franquicia)
+      allow delete: if isAuthed() && (
+        isAdmin() || 
+        (isFranchise() && resource.data.franchiseId == request.auth.uid && resource.data.status == 'DRAFT')
+      );
     }
 
     // CUALQUIER OTRA COLECCIÓN ESTÁ DENEGADA POR DEFECTO. NO HAY WILDCARD.
