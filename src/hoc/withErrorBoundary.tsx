@@ -1,11 +1,10 @@
-import React from 'react';
+import React, { type ErrorInfo } from 'react';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
 interface ErrorBoundaryProps {
     children: React.ReactNode;
     fallback?: React.ReactNode;
-    onError?: (error: any, errorInfo: any) => void;
-    resetOnError?: boolean;
+    onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
 export function withErrorBoundary<P extends object>(
