@@ -12,11 +12,49 @@ import {
 } from 'lucide-react';
 import { cn } from '../../../../lib/utils';
 
+interface CorrectedFranchise {
+  oldName: string;
+  newName: string;
+  flyderId: number;
+}
+
+interface CreatedFranchise {
+  name: string;
+  flyderId: number;
+}
+
+interface CorrectResult {
+  results: {
+    corrected: CorrectedFranchise[];
+    created: CreatedFranchise[];
+    alreadyExist: unknown[];
+    mappingsCreated: unknown[];
+    errors: unknown[];
+  };
+}
+
+interface FranchiseStatusEntry {
+  name: string;
+  flyderBusinessId?: number;
+}
+
+interface MappingEntry {
+  flyderBusinessName: string;
+  flyderBusinessId: number;
+}
+
+interface FranchiseStatusData {
+  franchiseCount: number;
+  mappingCount: number;
+  franchises: FranchiseStatusEntry[];
+  mappings: MappingEntry[];
+}
+
 export const FixFranchisesButton: React.FC = () => {
   const [correcting, setCorrecting] = useState(false);
   const [listing, setListing] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [franchiseStatus, setFranchiseStatus] = useState<any>(null);
+  const [result, setResult] = useState<CorrectResult | null>(null);
+  const [franchiseStatus, setFranchiseStatus] = useState<FranchiseStatusData | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,10 +64,10 @@ export const FixFranchisesButton: React.FC = () => {
     try {
       const listFn = httpsCallable(functions, 'listFranchiseStatus');
       const response = await listFn({});
-      const data = response.data as any;
+      const data = response.data as unknown as FranchiseStatusData;
       setFranchiseStatus(data);
-    } catch (err: any) {
-      setError(err.message || 'Error listando franquicias');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error listando franquicias');
     } finally {
       setListing(false);
     }
@@ -61,17 +99,17 @@ export const FixFranchisesButton: React.FC = () => {
     try {
       const correctFn = httpsCallable(functions, 'correctAndCreateFranchises');
       const response = await correctFn({});
-      const data = response.data as any;
+      const data = response.data as unknown as CorrectResult;
       setResult(data);
-      
+
       const msg = `✅ Completado:\n` +
         `${data.results.corrected.length} corregidas\n` +
         `${data.results.created.length} creadas\n` +
         `${data.results.mappingsCreated.length} mapeos creados`;
-      
+
       alert(msg);
-    } catch (err: any) {
-      setError(err.message || 'Error corrigiendo franquicias');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error corrigiendo franquicias');
       console.error(err);
     } finally {
       setCorrecting(false);
@@ -177,7 +215,7 @@ export const FixFranchisesButton: React.FC = () => {
                     ✏️ Franquicias corregidas:
                   </p>
                   <div className="space-y-1">
-                    {result.results.corrected.map((f: any, i: number) => (
+                    {result.results.corrected.map((f, i) => (
                       <div key={i} className="text-sm text-amber-600 dark:text-amber-400 flex items-center gap-2">
                         <Edit3 className="w-3 h-3" />
                         {f.oldName} → {f.newName} (ID: {f.flyderId})
@@ -193,7 +231,7 @@ export const FixFranchisesButton: React.FC = () => {
                     ✅ Franquicias creadas:
                   </p>
                   <div className="space-y-1">
-                    {result.results.created.map((f: any, i: number) => (
+                    {result.results.created.map((f, i) => (
                       <div key={i} className="text-sm text-green-600 dark:text-green-400 flex items-center gap-2">
                         <Check className="w-3 h-3" />
                         {f.name} (Flyder ID: {f.flyderId})
@@ -241,7 +279,7 @@ export const FixFranchisesButton: React.FC = () => {
                 <div className="space-y-3">
                   <div className="text-xs font-medium text-slate-500 mb-1">Franquicias:</div>
                   <div className="space-y-1 max-h-48 overflow-y-auto">
-                    {franchiseStatus.franchises.map((f: any, i: number) => (
+                    {franchiseStatus.franchises.map((f, i) => (
                       <div key={i} className="text-sm text-slate-600 dark:text-slate-400 flex items-center justify-between py-1 border-b border-slate-200 dark:border-slate-700 last:border-0">
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{f.name}</span>
@@ -261,7 +299,7 @@ export const FixFranchisesButton: React.FC = () => {
                   
                   <div className="text-xs font-medium text-slate-500 mb-1 mt-3">Mapeos:</div>
                   <div className="space-y-1 max-h-32 overflow-y-auto">
-                    {franchiseStatus.mappings.map((m: any, i: number) => (
+                    {franchiseStatus.mappings.map((m, i) => (
                       <div key={i} className="text-xs text-slate-500 flex items-center justify-between py-0.5">
                         <span>{m.flyderBusinessName} (ID: {m.flyderBusinessId})</span>
                       </div>

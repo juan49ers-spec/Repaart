@@ -28,7 +28,7 @@ interface FranchiseMapping {
   flyderBusinessId: number;
   flyderBusinessName: string;
   repaartFranchiseId: string;
-  createdAt: any;
+  createdAt: unknown;
 }
 
 interface SyncProgress {
@@ -42,6 +42,42 @@ interface SyncProgress {
   estimatedTotalBatches: number;
 }
 
+interface FranchiseOpResult {
+  results: {
+    created: unknown[];
+    alreadyExist: unknown[];
+    errors: unknown[];
+    updated: unknown[];
+    notFound: unknown[];
+    skipped: unknown[];
+    mappingsCreated: unknown[];
+  };
+}
+
+interface FranchiseStat {
+  name: string;
+  flyderBusinessId?: number;
+  orderCount: number;
+}
+
+interface OrderStats {
+  totalOrders: number;
+  flyderOrders: number;
+  repaartOnlyOrders: number;
+  franchiseStats: FranchiseStat[];
+}
+
+interface MissingBusiness {
+  name: string;
+  flyderId: number;
+  orderCount: number;
+}
+
+interface BusinessesStatus {
+  totalBusinesses: number;
+  missingMappings: MissingBusiness[];
+}
+
 export const FlyderSyncPanel: React.FC = () => {
   const [mappings, setMappings] = useState<FranchiseMapping[]>([]);
   const [loading, setLoading] = useState(false);
@@ -50,15 +86,15 @@ export const FlyderSyncPanel: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [creatingMain, setCreatingMain] = useState(false);
-  const [createResult, setCreateResult] = useState<any>(null);
+  const [createResult, setCreateResult] = useState<FranchiseOpResult | null>(null);
   const [assigningIds, setAssigningIds] = useState(false);
-  const [assignResult, setAssignResult] = useState<any>(null);
+  const [assignResult, setAssignResult] = useState<FranchiseOpResult | null>(null);
   const [ensuring, setEnsuring] = useState(false);
-  const [ensureResult, setEnsureResult] = useState<any>(null);
+  const [ensureResult, setEnsureResult] = useState<FranchiseOpResult | null>(null);
   const [counting, setCounting] = useState(false);
-  const [orderStats, setOrderStats] = useState<any>(null);
+  const [orderStats, setOrderStats] = useState<OrderStats | null>(null);
   const [checkingBusinesses, setCheckingBusinesses] = useState(false);
-  const [businessesStatus, setBusinessesStatus] = useState<any>(null);
+  const [businessesStatus, setBusinessesStatus] = useState<BusinessesStatus | null>(null);
   const [creatingMappings, setCreatingMappings] = useState(false);
   const [creatingTest, setCreatingTest] = useState(false);
 
@@ -91,11 +127,11 @@ export const FlyderSyncPanel: React.FC = () => {
     try {
       const createFn = httpsCallable(functions, 'createMainFlyderFranchises');
       const response = await createFn({});
-      const data = response.data as any;
+      const data = response.data as unknown as FranchiseOpResult;
       setCreateResult(data);
       setSuccess(`Franquicias creadas: ${data.results.created.length}`);
-    } catch (err: any) {
-      setError(err.message || 'Error creando franquicias');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error creando franquicias');
       console.error(err);
     } finally {
       setCreatingMain(false);
@@ -124,11 +160,11 @@ export const FlyderSyncPanel: React.FC = () => {
     try {
       const assignFn = httpsCallable(functions, 'assignFlyderIdsToFranchises');
       const response = await assignFn({});
-      const data = response.data as any;
+      const data = response.data as unknown as FranchiseOpResult;
       setAssignResult(data);
       setSuccess(`IDs asignados: ${data.results.updated.length}`);
-    } catch (err: any) {
-      setError(err.message || 'Error asignando IDs');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error asignando IDs');
       console.error(err);
     } finally {
       setAssigningIds(false);
@@ -157,11 +193,11 @@ export const FlyderSyncPanel: React.FC = () => {
     try {
       const ensureFn = httpsCallable(functions, 'ensureMainFranchisesExist');
       const response = await ensureFn({});
-      const data = response.data as any;
+      const data = response.data as unknown as FranchiseOpResult;
       setEnsureResult(data);
       setSuccess(`Franquicias aseguradas: ${data.results.created.length} creadas, ${data.results.updated.length} actualizadas`);
-    } catch (err: any) {
-      setError(err.message || 'Error asegurando franquicias');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error asegurando franquicias');
       console.error(err);
     } finally {
       setEnsuring(false);
@@ -176,10 +212,10 @@ export const FlyderSyncPanel: React.FC = () => {
     try {
       const countFn = httpsCallable(functions, 'countRepaartOrders');
       const response = await countFn({});
-      const data = response.data as any;
+      const data = response.data as unknown as { stats: OrderStats };
       setOrderStats(data.stats);
-    } catch (err: any) {
-      setError(err.message || 'Error contando pedidos');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error contando pedidos');
       console.error(err);
     } finally {
       setCounting(false);
@@ -194,10 +230,10 @@ export const FlyderSyncPanel: React.FC = () => {
     try {
       const checkFn = httpsCallable(functions, 'getFlyderBusinessesWithOrders');
       const response = await checkFn({});
-      const data = response.data as any;
+      const data = response.data as unknown as BusinessesStatus;
       setBusinessesStatus(data);
-    } catch (err: any) {
-      setError(err.message || 'Error verificando franquicias');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error verificando franquicias');
       console.error(err);
     } finally {
       setCheckingBusinesses(false);
@@ -211,11 +247,11 @@ export const FlyderSyncPanel: React.FC = () => {
     try {
       const createFn = httpsCallable(functions, 'createMissingMappings');
       const response = await createFn({});
-      const data = response.data as any;
+      const data = response.data as unknown as FranchiseOpResult;
       setSuccess(`Mapeos creados: ${data.results.created.length}`);
       loadMappings();
-    } catch (err: any) {
-      setError(err.message || 'Error creando mapeos');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error creando mapeos');
       console.error(err);
     } finally {
       setCreatingMappings(false);
@@ -229,11 +265,11 @@ export const FlyderSyncPanel: React.FC = () => {
     try {
       const createFn = httpsCallable(functions, 'createTestFranchise');
       const response = await createFn({});
-      const data = response.data as any;
+      const data = response.data as unknown as { action: string };
       setSuccess(`Franquicia de test ${data.action === 'created' ? 'creada' : 'ya existía'}`);
       loadMappings();
-    } catch (err: any) {
-      setError(err.message || 'Error creando franquicia de test');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error creando franquicia de test');
       console.error(err);
     } finally {
       setCreatingTest(false);
@@ -251,10 +287,10 @@ export const FlyderSyncPanel: React.FC = () => {
     try {
       const listMappingsFn = httpsCallable(functions, 'listFranchiseMappings');
       const result = await listMappingsFn({});
-      const data = result.data as any;
+      const data = result.data as unknown as { mappings: FranchiseMapping[] };
       setMappings(data.mappings || []);
-    } catch (err: any) {
-      setError(err.message || 'Error cargando mapeos');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error cargando mapeos');
       console.error(err);
     } finally {
       setLoading(false);
@@ -277,8 +313,8 @@ export const FlyderSyncPanel: React.FC = () => {
       setSuccess('Mapeo creado exitosamente');
       setFormData({ flyderBusinessId: '', flyderBusinessName: '', repaartFranchiseId: '' });
       loadMappings();
-    } catch (err: any) {
-      setError(err.message || 'Error creando mapeo');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error creando mapeo');
       console.error(err);
     }
   };
@@ -321,15 +357,15 @@ export const FlyderSyncPanel: React.FC = () => {
           batchSize: 500
         });
 
-        const data = result.data as any;
+        const data = result.data as unknown as { progress: SyncProgress };
         totalSynced += data.progress.syncedOrders;
         totalSkipped += data.progress.skippedOrders;
         totalFailed += data.progress.failedOrders;
-        
+
         console.log(`${month.label}: ${data.progress.syncedOrders} sincronizados`);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(`Error en ${month.label}:`, err);
-        setError(`Error en ${month.label}: ${err.message}`);
+        setError(`Error en ${month.label}: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
 
@@ -686,7 +722,7 @@ export const FlyderSyncPanel: React.FC = () => {
                     Pedidos por Franquicia:
                   </p>
                   <div className="space-y-1 max-h-48 overflow-y-auto">
-                    {orderStats.franchiseStats.map((f: any, i: number) => (
+                    {orderStats.franchiseStats.map((f, i) => (
                       <div key={i} className="flex items-center justify-between text-sm py-1 border-b border-slate-200 dark:border-slate-700 last:border-0">
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{f.name}</span>
@@ -790,7 +826,7 @@ export const FlyderSyncPanel: React.FC = () => {
                       ⚠️ Franquicias sin mapeo ({businessesStatus.missingMappings.length}):
                     </p>
                     <div className="space-y-1 max-h-32 overflow-y-auto">
-                      {businessesStatus.missingMappings.map((b: any, i: number) => (
+                      {businessesStatus.missingMappings.map((b, i) => (
                         <div key={i} className="text-sm text-red-600 dark:text-red-400 flex justify-between">
                           <span>{b.name} (ID: {b.flyderId})</span>
                           <span className="font-bold">{b.orderCount} pedidos</span>
