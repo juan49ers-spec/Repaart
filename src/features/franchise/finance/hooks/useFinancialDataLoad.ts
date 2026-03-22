@@ -74,6 +74,7 @@ export const useFinancialDataLoad = ({ franchiseId, month, initialData, user }: 
     });
     const [operativeHours, setOperativeHours] = useState(0);
     const [calculatedRiderExpenses, setCalculatedRiderExpenses] = useState({ payroll: 0, socialSecurity: 0 });
+    const [franchisePack, setFranchisePack] = useState<'basic' | 'premium' | 'admin'>('basic');
 
     useEffect(() => {
         async function loadData() {
@@ -162,6 +163,8 @@ export const useFinancialDataLoad = ({ franchiseId, month, initialData, user }: 
                     socialSecurity: Math.round(estimSS * 100) / 100
                 });
 
+                setFranchisePack(profile?.pack || 'basic');
+
                 let calculatedYtd = 0;
 
                 if (Array.isArray(yearlyData)) {
@@ -220,6 +223,7 @@ export const useFinancialDataLoad = ({ franchiseId, month, initialData, user }: 
         prevMonthsYtd,
         invoicedIncome,
         operativeHours,
-        calculatedRiderExpenses
+        calculatedRiderExpenses,
+        franchisePack
     };
 };

@@ -60,10 +60,10 @@ const FranchiseHistoryView: React.FC<FranchiseHistoryViewProps> = ({ franchiseId
     const isTrendingUp = lastRecord && ((lastRecord.profit / lastRecord.revenue) * 100) > avgMargin;
 
     return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out">
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out">
 
             {/* COMPACT SUMMARY CARDS */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <KPICard
                     title="Facturación Histórica"
                     value={formatMoney(totalRev) + '€'}
@@ -96,8 +96,8 @@ const FranchiseHistoryView: React.FC<FranchiseHistoryViewProps> = ({ franchiseId
             </div>
 
             {/* MAIN CHART */}
-            <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
+            <div className="bg-white border border-slate-100 rounded-xl p-3 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
                     <div>
                         <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 tracking-tight">
                             Evolución Financiera
@@ -117,7 +117,7 @@ const FranchiseHistoryView: React.FC<FranchiseHistoryViewProps> = ({ franchiseId
                     </div>
                 </div>
 
-                <div className="h-[250px] w-full">
+                <div className="h-[200px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart data={sortedRecords} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
                             <defs>

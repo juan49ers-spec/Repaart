@@ -111,7 +111,7 @@ export const mapInvoicedDataToOrders = (
 
 // --- Mapeo de FinancialRecord a ExpenseData ---
 
-export const mapRecordToExpenses = (data: FinancialRecord): ExpenseData => ({
+export const mapRecordToExpenses = (data: FinancialRecord, defaultRoyalty: number = 5): ExpenseData => ({
     payroll: data.salaries || 0,
     quota: data.quota || 0,
     insurance: data.insurance || 0,
@@ -131,7 +131,7 @@ export const mapRecordToExpenses = (data: FinancialRecord): ExpenseData => ({
     marketing: data.marketing || 0,
     incidents: data.incidents || 0,
     other: data.otherExpenses || 0,
-    royaltyPercent: data.royaltyPercent ?? 5,
+    royaltyPercent: data.royaltyPercent ?? defaultRoyalty,
     irpfPercent: data.irpfPercent ?? 20,
     repaartServices: data.repaartServices || 0,
     socialSecurity: data.socialSecurity || 0

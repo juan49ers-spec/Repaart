@@ -17,6 +17,7 @@ interface KPICardProps {
     orders?: number;
     totalHours?: number;
     bestDay?: string;
+    unit?: string;
 }
 
 const KPICard: React.FC<KPICardProps> = ({
@@ -31,7 +32,8 @@ const KPICard: React.FC<KPICardProps> = ({
     orders,
     totalHours,
     bestDay,
-    subtext
+    subtext,
+    unit
 }) => {
     const colorMap: Record<string, string> = {
         blue: '#3b82f6',
@@ -47,7 +49,9 @@ const KPICard: React.FC<KPICardProps> = ({
 
     const numericValue = rawValue !== undefined
         ? rawValue
-        : (typeof value === 'string' ? parseFloat(value.replace(/\./g, '').replace(',', '.')) : value);
+        : (typeof value === 'string' ? parseFloat(value.replace(/\./g, '').replace(',', '.')) : typeof value === 'number' ? value : 0);
+
+    const displayUnit = unit !== undefined ? unit : (typeof value === 'string' && value.includes('€') ? '€' : 'unidades');
 
     const goalProgress = monthlyGoal && numericValue
         ? Math.min((numericValue / monthlyGoal) * 100, 100)
@@ -57,7 +61,7 @@ const KPICard: React.FC<KPICardProps> = ({
     const chartData = trendData?.map((val, i) => ({ i, val })) || [];
 
     return (
-        <div className="@container workstation-card workstation-scanline p-6 h-full flex flex-col group/card relative overflow-hidden transition-all mechanical-press">
+        <div className="@container workstation-card workstation-scanline p-4 md:p-5 flex flex-col group/card relative overflow-hidden transition-all mechanical-press">
 
             {/* TACTICAL ALERT BANNER */}
             {isCriticalDrop && (
@@ -68,21 +72,21 @@ const KPICard: React.FC<KPICardProps> = ({
             )}
 
             {/* HEADER TERMINAL */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2 md:gap-3">
                     {icon && (
-                        <div className="p-1.5 bg-slate-50 dark:bg-white/5 rounded-lg border border-slate-100 dark:border-white/5 text-slate-400 group-hover/card:text-ruby-600 transition-colors">
+                        <div className="p-1.5 bg-slate-50 dark:bg-white/5 rounded-md border border-slate-100 dark:border-white/5 text-slate-400 group-hover/card:text-ruby-600 transition-colors">
                             {React.isValidElement(icon)
-                                ? React.cloneElement(icon as React.ReactElement<{ size?: number }>, { size: 16 })
+                                ? React.cloneElement(icon as React.ReactElement<{ size?: number }>, { size: 14 })
                                 : icon}
                         </div>
                     )}
                     <div>
-                        <h3 className="text-base font-semibold text-slate-900 dark:text-white leading-tight">
+                        <h3 className="text-sm font-semibold text-slate-900 dark:text-white leading-tight">
                             {title}
                         </h3>
                         {subtext && (
-                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                            <p className="text-[10px] md:text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
                                 {subtext}
                             </p>
                         )}
@@ -90,7 +94,7 @@ const KPICard: React.FC<KPICardProps> = ({
                 </div>
                 {trend !== undefined && (
                     <div className={cn(
-                        "text-xs font-bold px-2 py-1 rounded-md tabular-nums",
+                        "text-[10px] md:text-xs font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-md tabular-nums",
                         isPositive ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50'
                     )}>
                         {isPositive ? '+' : '-'}{Math.abs(trend).toFixed(1)}%
@@ -99,15 +103,15 @@ const KPICard: React.FC<KPICardProps> = ({
             </div>
 
             {/* PRIMARY VALUE STATION */}
-            <div className="mb-4">
+            <div className="mb-2 md:mb-3 z-10">
                 <div className="flex items-baseline gap-1">
                     <AnimatedCounter
                         value={numericValue || 0}
                         formatted
                         duration={1400}
-                        className="text-2xl @[280px]:text-3xl font-bold text-slate-900 dark:text-white tracking-tight"
+                        className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white tracking-tight"
                     />
-                    <span className="text-xs font-medium text-slate-400 ml-1">unidades</span>
+                    <span className="text-[10px] md:text-xs font-medium text-slate-400 ml-1">{displayUnit}</span>
                 </div>
             </div>
 
@@ -175,7 +179,7 @@ const KPICard: React.FC<KPICardProps> = ({
 
             {/* TACTICAL SPARKLINE */}
             {trendData && trendData.length > 0 && (
-                <div className="mt-auto -mx-4 -mb-4 h-16 relative overflow-hidden opacity-30 group-hover/card:opacity-60 transition-all duration-700">
+                <div className="mt-auto -mx-4 -mb-4 h-10 relative overflow-hidden opacity-30 group-hover/card:opacity-60 transition-all duration-700">
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={chartData}>
                             <defs>

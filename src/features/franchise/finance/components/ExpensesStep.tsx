@@ -123,6 +123,19 @@ export const ExpensesStep: React.FC<ExpensesStepProps> = ({
                     </div>
 
                     <div className="flex items-center gap-3">
+                        {/* Legend */}
+                        <div className="hidden md:flex items-center gap-3 mr-2 bg-slate-50 dark:bg-slate-800/50 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
+                            <div className="flex items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity">
+                                <span className="w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(99,102,241,0.5)]"></span>
+                                <span className="text-[7.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">+IVA</span>
+                            </div>
+                            <div className="w-px h-3 bg-slate-200 dark:bg-slate-700"></div>
+                            <div className="flex items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity">
+                                <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]"></span>
+                                <span className="text-[7.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Exento</span>
+                            </div>
+                        </div>
+
                         <button
                             onClick={syncWithLogistics}
                             className="group flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 text-[8px] font-bold uppercase tracking-tight transition-all border border-slate-200 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-500/30 shadow-sm"
@@ -152,9 +165,9 @@ export const ExpensesStep: React.FC<ExpensesStepProps> = ({
                             icon={<Users className="w-3.5 h-3.5" />}
                             highlight={true}
                         >
-                            <ProfessionalInput label="Salarios Netos" value={expenses.payroll} onChange={(v) => setExpenses(e => ({ ...e, payroll: v }))} prefix="€" size="small" />
-                            <ProfessionalInput label="Seg. Sociales" value={expenses.socialSecurity} onChange={(v) => setExpenses(e => ({ ...e, socialSecurity: v }))} prefix="€" size="small" />
-                            <ProfessionalInput label="Cuota Autónomo" value={expenses.quota} onChange={(v) => setExpenses(e => ({ ...e, quota: v }))} prefix="€" size="small" />
+                            <ProfessionalInput label="Salarios Netos" value={expenses.payroll} onChange={(v) => setExpenses(e => ({ ...e, payroll: v }))} prefix="€" size="small" taxType="exempt" />
+                            <ProfessionalInput label="Seg. Sociales" value={expenses.socialSecurity} onChange={(v) => setExpenses(e => ({ ...e, socialSecurity: v }))} prefix="€" size="small" taxType="exempt" />
+                            <ProfessionalInput label="Cuota Autónomo" value={expenses.quota} onChange={(v) => setExpenses(e => ({ ...e, quota: v }))} prefix="€" size="small" taxType="exempt" />
                             <ProfessionalInput label="Horas Operativas" value={totalHours} onChange={setTotalHours} type="number" size="small" />
                         </Section>
 
@@ -163,15 +176,15 @@ export const ExpensesStep: React.FC<ExpensesStepProps> = ({
                             title="Logística y Flota"
                             icon={<Truck className="w-3.5 h-3.5" />}
                         >
-                            <ProfessionalInput label="Vehículos (Uds)" value={expenses.renting?.count} onChange={(v) => setExpenses(e => ({ ...e, renting: { ...e.renting!, count: v } }))} size="small" />
-                            <ProfessionalInput label="Precio Renting/Ud" value={expenses.renting?.pricePerUnit} onChange={(v) => setExpenses(e => ({ ...e, renting: { ...e.renting!, pricePerUnit: v } }))} prefix="€" size="small" />
+                            <ProfessionalInput label="Vehículos (Uds)" value={expenses.renting?.count} onChange={(v) => setExpenses(e => ({ ...e, renting: { ...e.renting!, count: v } }))} size="small" taxType="standard" />
+                            <ProfessionalInput label="Precio Renting/Ud" value={expenses.renting?.pricePerUnit} onChange={(v) => setExpenses(e => ({ ...e, renting: { ...e.renting!, pricePerUnit: v } }))} prefix="€" size="small" taxType="standard" />
 
                             <div className="flex flex-col justify-center px-2 py-0.5 bg-slate-100/50 dark:bg-slate-900/50 rounded-md border border-slate-200/60 dark:border-slate-800">
                                 <span className="text-[7px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tight mb-0.5">Subtotal Renting</span>
                                 <span className="text-[10px] font-black text-slate-800 dark:text-slate-200 tabular-nums tracking-tight">{formatMoney(rentingTotal)}€</span>
                             </div>
 
-                            <ProfessionalInput label="Gasto Gasolina" value={expenses.fuel} onChange={(v) => setExpenses(e => ({ ...e, fuel: v }))} prefix="€" size="small" />
+                            <ProfessionalInput label="Gasto Gasolina" value={expenses.fuel} onChange={(v) => setExpenses(e => ({ ...e, fuel: v }))} prefix="€" size="small" taxType="standard" />
                         </Section>
 
                         {/* Estructura */}
@@ -183,9 +196,9 @@ export const ExpensesStep: React.FC<ExpensesStepProps> = ({
                                 <span className="text-[7px] text-indigo-500 dark:text-indigo-400 font-bold uppercase tracking-tight mb-0.5">Royalty Base</span>
                                 <span className="text-[10px] font-black text-indigo-700 dark:text-indigo-300 tabular-nums tracking-tight">{formatMoney(royaltyAmount)}€</span>
                             </div>
-                            <ProfessionalInput label="% Royalty Final" value={expenses.royaltyPercent} onChange={(v) => setExpenses(e => ({ ...e, royaltyPercent: v }))} suffix="%" size="small" />
-                            <ProfessionalInput label="App Flyder (Tech)" value={expenses.appFlyder} onChange={(v) => setExpenses(e => ({ ...e, appFlyder: v }))} prefix="€" size="small" />
-                            <ProfessionalInput label="Gestoría / Asesoría" value={expenses.agencyFee} onChange={(v) => setExpenses(e => ({ ...e, agencyFee: v }))} prefix="€" size="small" />
+                            <ProfessionalInput label="% Royalty Final" value={expenses.royaltyPercent} onChange={(v) => setExpenses(e => ({ ...e, royaltyPercent: v }))} suffix="%" size="small" taxType="standard" />
+                            <ProfessionalInput label="App Flyder (Tech)" value={expenses.appFlyder} onChange={(v) => setExpenses(e => ({ ...e, appFlyder: v }))} prefix="€" size="small" taxType="standard" />
+                            <ProfessionalInput label="Gestoría / Asesoría" value={expenses.agencyFee} onChange={(v) => setExpenses(e => ({ ...e, agencyFee: v }))} prefix="€" size="small" taxType="standard" />
                         </Section>
 
                         {/* Varios */}
@@ -193,12 +206,12 @@ export const ExpensesStep: React.FC<ExpensesStepProps> = ({
                             title="Gastos Extraordinarios"
                             icon={<Wallet className="w-3.5 h-3.5" />}
                         >
-                            <ProfessionalInput label="Seguros RC/Flota" value={expenses.insurance} onChange={(v) => setExpenses(e => ({ ...e, insurance: v }))} prefix="€" size="small" />
-                            <ProfessionalInput label="Mantenimiento" value={expenses.repairs} onChange={(v) => setExpenses(e => ({ ...e, repairs: v }))} prefix="€" size="small" />
-                            <ProfessionalInput label="Marketing" value={expenses.marketing} onChange={(v) => setExpenses(e => ({ ...e, marketing: v }))} prefix="€" size="small" />
-                            <ProfessionalInput label="Servicios Repaart" value={expenses.repaartServices} onChange={(v) => setExpenses(e => ({ ...e, repaartServices: v }))} prefix="€" size="small" />
-                            <ProfessionalInput label="Incidencias" value={expenses.incidents} onChange={(v) => setExpenses(e => ({ ...e, incidents: v }))} prefix="€" size="small" />
-                            <ProfessionalInput label="Otros Gastos" value={expenses.other} onChange={(v) => setExpenses(e => ({ ...e, other: v }))} prefix="€" size="small" />
+                            <ProfessionalInput label="Seguros RC/Flota" value={expenses.insurance} onChange={(v) => setExpenses(e => ({ ...e, insurance: v }))} prefix="€" size="small" taxType="exempt" />
+                            <ProfessionalInput label="Mantenimiento" value={expenses.repairs} onChange={(v) => setExpenses(e => ({ ...e, repairs: v }))} prefix="€" size="small" taxType="standard" />
+                            <ProfessionalInput label="Marketing" value={expenses.marketing} onChange={(v) => setExpenses(e => ({ ...e, marketing: v }))} prefix="€" size="small" taxType="standard" />
+                            <ProfessionalInput label="Servicios Repaart" value={expenses.repaartServices} onChange={(v) => setExpenses(e => ({ ...e, repaartServices: v }))} prefix="€" size="small" taxType="standard" />
+                            <ProfessionalInput label="Incidencias" value={expenses.incidents} onChange={(v) => setExpenses(e => ({ ...e, incidents: v }))} prefix="€" size="small" taxType="standard" />
+                            <ProfessionalInput label="Otros Gastos" value={expenses.other} onChange={(v) => setExpenses(e => ({ ...e, other: v }))} prefix="€" size="small" taxType="standard" />
                         </Section>
 
                     </div>

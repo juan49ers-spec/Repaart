@@ -33,7 +33,7 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
     const { user } = useAuth();
 
     const {
-        loading, logisticsRates, record, invoicedIncome, operativeHours, calculatedRiderExpenses
+        loading, logisticsRates, record, invoicedIncome, operativeHours, calculatedRiderExpenses, franchisePack
     } = useFinancialDataLoad({ franchiseId, month, initialData, user });
 
     const { saving, handleSave } = useFinancialSave({ franchiseId, month, onSave, onClose });
@@ -46,12 +46,16 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
     const [cancelledOrders, setCancelledOrders] = useState(0);
     const [totalIncome, setTotalIncome] = useState(initialData?.revenue || initialData?.totalIncome || suggestedIncome || 0);
     const [totalHours, setTotalHours] = useState(0);
+
+    // Calculamos el royalty que le corresponde a ESTA franquicia
+    const defaultRoyalty = franchisePack === 'premium' ? 3 : 1;
+
     const [expenses, setExpenses] = useState<ExpenseData>({
         payroll: 0, quota: 0, insurance: 0, fuel: 0, repairs: 0,
         renting: { count: 0, pricePerUnit: 0 },
         agencyFee: 0, prlFee: 0, accountingFee: 0, professionalServices: 0,
         appFlyder: 0, marketing: 0, incidents: 0, other: 0,
-        royaltyPercent: 5, irpfPercent: 20, repaartServices: 0, socialSecurity: 0
+        royaltyPercent: defaultRoyalty, irpfPercent: 20, repaartServices: 0, socialSecurity: 0
     });
 
     const isLocked = false;
@@ -86,7 +90,13 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
             setCancelledOrders(record.cancelledOrders || 0);
             setStatus(record.status || 'draft');
             setOrders(mapRecordToOrders(record));
-            setExpenses(mapRecordToExpenses(record));
+            
+            // Forzamos siempre el Royalty correcto según su plan actual (1% o 3%)
+            // esto reescribe un "5" obsoleto si había quedado guardado en borradores previos.
+            const mappedParams = mapRecordToExpenses(record, defaultRoyalty);
+            mappedParams.royaltyPercent = defaultRoyalty; 
+            
+            setExpenses(mappedParams);
         } else if (!loading && invoicedIncome && logisticsRates.length > 0) {
             const hasInvoicedData = invoicedIncome.subtotal > 0 ||
                 (invoicedIncome.ordersDetail && Object.keys(invoicedIncome.ordersDetail).length > 0);
@@ -100,7 +110,12 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                 setStatus('open');
             }
         }
-    }, [record, loading, invoicedIncome, logisticsRates]);
+        
+        // Efecto secundario: si no había record pero ya tenemos el pack, 
+        // asegurar que 'expenses' tenga el porcentaje del plan correspondiente
+        setExpenses(prev => ({ ...prev, royaltyPercent: defaultRoyalty }));
+        
+    }, [record, loading, invoicedIncome, logisticsRates, defaultRoyalty]);
 
     // --- Stats calculadas (lógica pura) ---
     const stats = calculateStats(totalIncome, expenses, orders, logisticsRates);
