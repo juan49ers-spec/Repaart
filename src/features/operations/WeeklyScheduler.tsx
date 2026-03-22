@@ -694,6 +694,28 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
             }
         });
 
+        // Detect conflicts: same rider, overlapping shifts on the same day
+        Object.keys(groupedEvents).forEach(dayKey => {
+            const dayEvents = groupedEvents[dayKey];
+            for (let i = 0; i < dayEvents.length; i++) {
+                const a = dayEvents[i];
+                if (!a.riderId || a.riderId === 'unassigned') continue;
+                for (let j = i + 1; j < dayEvents.length; j++) {
+                    const b = dayEvents[j];
+                    if (b.riderId !== a.riderId) continue;
+                    // Overlap: intervals intersect (touching at a single point is NOT a conflict)
+                    const startA = a.visualStart.getTime();
+                    const endA = a.visualEnd.getTime();
+                    const startB = b.visualStart.getTime();
+                    const endB = b.visualEnd.getTime();
+                    if (startA < endB && startB < endA) {
+                        a.isConflict = true;
+                        b.isConflict = true;
+                    }
+                }
+            }
+        });
+
         return groupedEvents;
     }, [weekData?.shifts]);
 
