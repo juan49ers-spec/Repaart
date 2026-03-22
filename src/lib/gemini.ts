@@ -111,7 +111,7 @@ export const generateGuideContent = async (rawText: string): Promise<{
 
     ACTUA COMO: Director de Operaciones de una Franquicia de Reparto (Repaart).
     TAREA: Analiza el siguiente "Texto Crudo" y transfórmalo en una Guía Operativa Profesional COMPLETA.
-    
+
     TEXTO CRUDO:
     "${rawText}"
 
@@ -134,7 +134,7 @@ export const generateGuideContent = async (rawText: string): Promise<{
        - Estructura: Introducción, Pasos/Procedimiento, Consideraciones Finales.
        - Tono profesional, instructivo y claro.
 
-    IMPORTANTE: 
+    IMPORTANTE:
     - EL RESULTADO DEBE SER UN JSON VÁLIDO.
     - NO uses Markdown (\`\`\`json) para envolver la respuesta. Devuelve SOLO el texto JSON plano.
     - ESCAPA todas las comillas dobles (") dentro de los valores de texto con backslash (\\").
@@ -186,29 +186,44 @@ export const generateGuideContent = async (rawText: string): Promise<{
 
         if (listResp.ok) {
             const data = await listResp.json();
-            const availableModels = data.models?.map((m: any) => m.name) || [];
+            const availableModels = data.models?.map((m: { name: string }) => m.name) || [];
             console.error("📋 Available Models:", availableModels);
             throw new Error(`Tus modelos disponibles son: ${availableModels.join(", ")}. Por favor, contacta al desarrollador con esta lista.`);
         } else {
             const err = await listResp.json();
             diagMessage = `Error de Diagnóstico (${listResp.status}): ${err.error?.message || listResp.statusText}`;
         }
-    } catch (diagError: any) {
+    } catch (diagError: unknown) {
         console.error("Diagnostic failed:", diagError);
         // If we manually threw the list of models, allow it to bubble up
-        if (diagError.message.includes("Tus modelos disponibles")) {
+        if (diagError instanceof Error && diagError.message.includes("Tus modelos disponibles")) {
             throw diagError;
         }
-        if (!diagMessage) diagMessage = diagError.message;
+        if (!diagMessage) diagMessage = diagError instanceof Error ? diagError.message : String(diagError);
     }
 
     throw new Error(`Fallo Total de Conexión. Diagnóstico: ${diagMessage || "Imposible contactar con Google API"}. Verifica tu API KEY.`);
 };
 
+interface FinancialMonthlyData {
+    month?: string;
+    totalIncome?: number;
+    profit?: number;
+    revenue?: number;
+    orders?: number;
+    expenses?: {
+        payroll?: number;
+        insurance?: number;
+        fuel?: number;
+        repairs?: number;
+        marketing?: number;
+    };
+}
+
 /**
  * Analyzes monthly financial data and provides a strategic executive summary
  */
-export const analyzeFinancialMonthlyReport = async (financialData: any): Promise<{
+export const analyzeFinancialMonthlyReport = async (financialData: FinancialMonthlyData): Promise<{
     summary: string;
     strengths: string[];
     weaknesses: string[];
@@ -221,10 +236,10 @@ export const analyzeFinancialMonthlyReport = async (financialData: any): Promise
         month: financialData.month,
         revenue: financialData.totalIncome,
         profit: financialData.profit,
-        margin: financialData.revenue > 0 ? (financialData.profit / financialData.revenue * 100).toFixed(1) + '%' : '0%',
+        margin: (financialData.revenue ?? 0) > 0 ? ((financialData.profit ?? 0) / (financialData.revenue ?? 1) * 100).toFixed(1) + '%' : '0%',
         orders: financialData.orders,
         costs: {
-            personnel: financialData.expenses?.payroll + financialData.expenses?.insurance,
+            personnel: (financialData.expenses?.payroll ?? 0) + (financialData.expenses?.insurance ?? 0),
             fuel: financialData.expenses?.fuel,
             repairs: financialData.expenses?.repairs,
             marketing: financialData.expenses?.marketing
@@ -233,9 +248,9 @@ export const analyzeFinancialMonthlyReport = async (financialData: any): Promise
 
     const prompt = `
     ACTUA COMO: Auditor Financiero Senior de "Repaart" (Franquicia de Logística).
-    
+
     TAREA: Analiza este cierre mensual y genera un reporte ejecutivo MUY BREVE y DIRECTO.
-    
+
     DATOS DEL MES:
     ${JSON.stringify(contextData, null, 2)}
 
@@ -255,11 +270,11 @@ export const analyzeFinancialMonthlyReport = async (financialData: any): Promise
     }
     `;
 
-    return await generateJson(prompt);
+    return generateJson(prompt) as Promise<{ summary: string; strengths: string[]; weaknesses: string[]; recommendation: string; sentiment: 'positive' | 'neutral' | 'negative' | 'critical' } | null>;
 };
 
 // Internal Helper for JSON Generation (Reuses the robust logic)
-const generateJson = async (promptText: string): Promise<any> => {
+const generateJson = async (promptText: string): Promise<unknown> => {
     const API_KEY = import.meta.env.VITE_GOOGLE_AI_KEY || '';
     if (!API_KEY) return null;
 
@@ -327,13 +342,13 @@ export const suggestSupportSolution = async (subject: string, description: strin
     }
     `;
 
-    return await generateJson(prompt);
+    return generateJson(prompt) as Promise<{ suggestion: string; confidence: number; isSolvable: boolean } | null>;
 };
 
 /**
  * Validates a weekly schedule for operational risks
  */
-export const validateWeeklySchedule = async (shifts: any[]): Promise<{
+export const validateWeeklySchedule = async (shifts: { startAt: string; endAt: string; riderName?: string }[]): Promise<{
     score: number;
     status: 'optimal' | 'warning' | 'critical';
     feedback: string;
@@ -372,13 +387,17 @@ export const validateWeeklySchedule = async (shifts: any[]): Promise<{
     }
     `;
 
-    return await generateJson(prompt);
+    return generateJson(prompt) as Promise<{ score: number; status: 'optimal' | 'warning' | 'critical'; feedback: string; missingCoverage: string[] } | null>;
 };
 
 /**
  * Generates NEW shifts to fix coverage gaps
  */
-export const generateScheduleFix = async (currentShifts: any[], riders: any[], missingCoverage: string[]): Promise<{
+export const generateScheduleFix = async (
+    currentShifts: { startAt: string; endAt: string; riderName?: string }[],
+    riders: { id: string; fullName: string }[],
+    missingCoverage: string[]
+): Promise<{
     newShifts: {
         riderId: string;
         startDay: string; // "YYYY-MM-DD"
@@ -434,7 +453,7 @@ export const generateScheduleFix = async (currentShifts: any[], riders: any[], m
     }
     `;
 
-    return await generateJson(prompt);
+    return generateJson(prompt) as Promise<{ newShifts: { riderId: string; startDay: string; startHour: number; duration: number; reason: string }[]; explanation: string } | null>;
 };
 
 /**
@@ -442,7 +461,7 @@ export const generateScheduleFix = async (currentShifts: any[], riders: any[], m
  */
 export const generateFullSchedule = async (
     userPrompt: string,
-    riders: any[],
+    riders: { id: string; fullName: string }[],
     weekStart: string, // YYYY-MM-DD
     weekEnd: string // YYYY-MM-DD
 ): Promise<{
@@ -461,7 +480,7 @@ export const generateFullSchedule = async (
     const prompt = `
     ACTUA COMO: Planificador Experto de Logística "Repaart".
     TAREA: Crea un cuadrante de turnos COMPLETO para la semana del ${weekStart} al ${weekEnd}.
-    
+
     INSTRUCCIÓN DEL USUARIO:
     "${userPrompt}"
 
@@ -483,5 +502,5 @@ export const generateFullSchedule = async (
     }
     `;
 
-    return await generateJson(prompt);
+    return generateJson(prompt) as Promise<{ shifts: { riderId: string; startDay: string; startHour: number; duration: number; reason: string }[]; explanation: string } | null>;
 };

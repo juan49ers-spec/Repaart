@@ -107,8 +107,9 @@ export function getVitalRating(
 export function useVitalsTracker() {
   useWebVitals((metric) => {
     // Send to analytics service (e.g., Google Analytics, Sentry)
-    if ((window as any).gtag) {
-      (window as any).gtag('event', metric.name, {
+    const w = window as Window & { gtag?: (...args: unknown[]) => void; Sentry?: { addBreadcrumb: (data: unknown) => void } };
+    if (w.gtag) {
+      w.gtag('event', metric.name, {
         event_category: 'Web Vitals',
         event_label: metric.id,
         value: Math.round(metric.value),
@@ -120,8 +121,8 @@ export function useVitalsTracker() {
     }
 
     // Track performance in Sentry
-    if ((window as any).Sentry) {
-      (window as any).Sentry.addBreadcrumb({
+    if (w.Sentry) {
+      w.Sentry.addBreadcrumb({
         category: 'performance',
         message: `${metric.name}: ${metric.value}ms (${metric.rating})`,
         level: getVitalRating(

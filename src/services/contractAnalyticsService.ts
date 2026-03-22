@@ -70,7 +70,7 @@ export class ContractAnalyticsService {
     async incrementContract(month: string, duration: number, templateId?: string): Promise<void> {
         try {
             const docRef = doc(db, ANALYTICS_COLLECTION, this.userId);
-            const updates: any = {
+            const updates: Record<string, unknown> = {
                 contractsGenerated: increment(1),
                 [`contractsByMonth.${month}`]: increment(1),
                 totalEditingTime: increment(duration),
@@ -126,7 +126,7 @@ export class ContractAnalyticsService {
     async trackAISuggestion(accepted: boolean): Promise<void> {
         try {
             const docRef = doc(db, ANALYTICS_COLLECTION, this.userId);
-            const updates: any = {
+            const updates: Record<string, unknown> = {
                 aiSuggestionsTotal: increment(1),
                 lastUpdated: serverTimestamp()
             };
@@ -142,7 +142,7 @@ export class ContractAnalyticsService {
     }
 
     // Sincronizar datos locales con Firebase (para migración)
-    async syncLocalData(localData: any): Promise<void> {
+    async syncLocalData(localData: Record<string, unknown>): Promise<void> {
         try {
             const docRef = doc(db, ANALYTICS_COLLECTION, this.userId);
             const current = await this.getAnalytics();
@@ -152,23 +152,26 @@ export class ContractAnalyticsService {
             // Fusionar datos locales con datos de Firebase
             const mergedData = {
                 ...current,
-                contractsGenerated: current.contractsGenerated + (localData.contractsGenerated || 0),
-                totalEditingTime: current.totalEditingTime + (localData.totalEditingTime || 0),
-                aiSuggestionsAccepted: current.aiSuggestionsAccepted + (localData.aiSuggestionsAccepted || 0),
-                aiSuggestionsTotal: current.aiSuggestionsTotal + (localData.aiSuggestionsTotal || 0),
+                contractsGenerated: current.contractsGenerated + ((localData.contractsGenerated as number) || 0),
+                totalEditingTime: current.totalEditingTime + ((localData.totalEditingTime as number) || 0),
+                aiSuggestionsAccepted: current.aiSuggestionsAccepted + ((localData.aiSuggestionsAccepted as number) || 0),
+                aiSuggestionsTotal: current.aiSuggestionsTotal + ((localData.aiSuggestionsTotal as number) || 0),
                 lastUpdated: serverTimestamp()
             };
 
             // Fusionar objetos anidados
+            const mergedNested = mergedData as unknown as Record<string, Record<string, number>>;
+            const currentNested = current as unknown as Record<string, Record<string, number>>;
             ['contractsByMonth', 'snippetsUsed', 'templatesUsed', 'exportsByFormat'].forEach(key => {
-                if (localData[key]) {
-                    Object.entries(localData[key]).forEach(([subKey, value]) => {
-                        const currentValue = (current as any)[key]?.[subKey] || 0;
+                const localNested = localData[key] as Record<string, number> | undefined;
+                if (localNested) {
+                    Object.entries(localNested).forEach(([subKey, value]) => {
+                        const currentValue = currentNested[key]?.[subKey] || 0;
                         const localValue = value as number;
-                        if (!mergedData[key as keyof AnalyticsData]) {
-                            (mergedData as any)[key] = {};
+                        if (!mergedNested[key]) {
+                            mergedNested[key] = {};
                         }
-                        (mergedData as any)[key][subKey] = currentValue + localValue;
+                        mergedNested[key][subKey] = currentValue + localValue;
                     });
                 }
             });

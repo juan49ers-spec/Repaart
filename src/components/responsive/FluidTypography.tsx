@@ -5,16 +5,19 @@
  * and responsive sizing based on viewport width.
  */
 
+import React from 'react';
 
+interface FluidTextProps extends React.HTMLAttributes<HTMLElement> {
+    as?: React.ElementType;
+}
 
-export const FluidText = ({ as: Component = 'p', className, style, children, ...props }: any) => {
+export const FluidText = ({ as: Component = 'p', className, style, children, ...props }: FluidTextProps) => {
     return (
         <Component
             className={className}
             style={{
                 ...style,
                 fontSize: 'clamp(var(--font-size-sm), 2vw + 0.5rem, var(--font-size-base))',
-                ...props.style
             }}
             {...props}
         >
@@ -23,7 +26,12 @@ export const FluidText = ({ as: Component = 'p', className, style, children, ...
     );
 };
 
-export const FluidHeading = ({ as: Component = 'h1', className, style, children, level = 1, ...props }: any) => {
+interface FluidHeadingProps extends React.HTMLAttributes<HTMLElement> {
+    as?: React.ElementType;
+    level?: 1 | 2 | 3 | 4 | 5 | 6;
+}
+
+export const FluidHeading = ({ as: Component = 'h1', className, style, children, level = 1, ...props }: FluidHeadingProps) => {
     const fontSizeLevel = {
         1: 'clamp(var(--font-size-2xl), 5vw + 1rem, var(--font-size-4xl))',
         2: 'clamp(var(--font-size-xl), 4vw + 1rem, var(--font-size-3xl))',
@@ -40,7 +48,6 @@ export const FluidHeading = ({ as: Component = 'h1', className, style, children,
                 ...style,
                 fontSize: fontSizeLevel[level as keyof typeof fontSizeLevel],
                 lineHeight: 'clamp(1.1, 0.5vw + 0.9, 1.3)',
-                ...props.style
             }}
             {...props}
         >
@@ -49,14 +56,13 @@ export const FluidHeading = ({ as: Component = 'h1', className, style, children,
     );
 };
 
-export const FluidContainer = ({ className, style, children, ...props }: any) => {
+export const FluidContainer = ({ className, style, children, ...props }: React.HTMLAttributes<HTMLDivElement>) => {
     return (
         <div
             className={className}
             style={{
                 ...style,
                 padding: 'clamp(var(--space-4), 2vw + var(--space-2), var(--space-8))',
-                ...props.style
             }}
             {...props}
         >
@@ -65,7 +71,11 @@ export const FluidContainer = ({ className, style, children, ...props }: any) =>
     );
 };
 
-export const FluidGrid = ({ className, style, children, gap = 4, ...props }: any) => {
+interface FluidGridProps extends React.HTMLAttributes<HTMLDivElement> {
+    gap?: number;
+}
+
+export const FluidGrid = ({ className, style, children, gap = 4, ...props }: FluidGridProps) => {
     return (
         <div
             className={className}
@@ -74,7 +84,6 @@ export const FluidGrid = ({ className, style, children, gap = 4, ...props }: any
                 display: 'grid',
                 gap: `var(--space-${gap})`,
                 gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, clamp(250px, 20vw, 350px)), 1fr))`,
-                ...props.style
             }}
             {...props}
         >
@@ -83,7 +92,7 @@ export const FluidGrid = ({ className, style, children, gap = 4, ...props }: any
     );
 };
 
-export const FluidFlex = ({ className, style, children, ...props }: any) => {
+export const FluidFlex = ({ className, style, children, ...props }: React.HTMLAttributes<HTMLDivElement>) => {
     return (
         <div
             className={className}
@@ -92,7 +101,6 @@ export const FluidFlex = ({ className, style, children, ...props }: any) => {
                 display: 'flex',
                 flexWrap: 'wrap',
                 gap: 'clamp(var(--space-2), 2vw + var(--space-1), var(--space-6))',
-                ...props.style
             }}
             {...props}
         >
@@ -101,7 +109,7 @@ export const FluidFlex = ({ className, style, children, ...props }: any) => {
     );
 };
 
-export const FluidButton = ({ className, style, children, ...props }: any) => {
+export const FluidButton = ({ className, style, children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => {
     return (
         <button
             className={className}
@@ -109,7 +117,6 @@ export const FluidButton = ({ className, style, children, ...props }: any) => {
                 ...style,
                 padding: 'clamp(var(--space-2), 2vw + var(--space-1), var(--space-4))',
                 fontSize: 'clamp(var(--font-size-sm), 1.5vw + 0.5rem, var(--font-size-base))',
-                ...props.style
             }}
             {...props}
         >
@@ -118,7 +125,7 @@ export const FluidButton = ({ className, style, children, ...props }: any) => {
     );
 };
 
-export const FluidInput = ({ className, style, ...props }: any) => {
+export const FluidInput = ({ className, style, ...props }: React.InputHTMLAttributes<HTMLInputElement>) => {
     return (
         <input
             className={className}
@@ -126,21 +133,23 @@ export const FluidInput = ({ className, style, ...props }: any) => {
                 ...style,
                 padding: 'clamp(var(--space-2), 2vw + var(--space-1), var(--space-4))',
                 fontSize: 'clamp(var(--font-size-sm), 1.5vw + 0.5rem, var(--font-size-base))',
-                ...props.style
             }}
             {...props}
         />
     );
 };
 
-export const ResponsiveSpacing = ({ className, style, children, multiplier = 1, ...props }: any) => {
+interface ResponsiveSpacingProps extends React.HTMLAttributes<HTMLDivElement> {
+    multiplier?: number;
+}
+
+export const ResponsiveSpacing = ({ className, style, children, multiplier = 1, ...props }: ResponsiveSpacingProps) => {
     return (
         <div
             className={className}
             style={{
                 ...style,
                 padding: `calc(clamp(var(--space-4), 4vw, var(--space-12)) * ${multiplier})`,
-                ...props.style
             }}
             {...props}
         >

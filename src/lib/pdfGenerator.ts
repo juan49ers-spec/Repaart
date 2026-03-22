@@ -1,4 +1,5 @@
 import { formatMoney } from './finance';
+import type { CellHookData } from 'jspdf-autotable';
 // import { jsPDF } from 'jspdf';
 // import autoTable from 'jspdf-autotable';
 // Dynamic imports used in function for performance
@@ -107,7 +108,7 @@ export const generatePDFReport = async (report: ReportData | null, franchiseName
         });
 
         // --- TAXES ---
-        yPos = (doc as any).lastAutoTable.finalY + 15;
+        yPos = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
         doc.setFontSize(12);
         doc.text("LIQUIDACIÓN IVA ESTIMADA", 15, yPos);
 
@@ -127,7 +128,7 @@ export const generatePDFReport = async (report: ReportData | null, franchiseName
             columnStyles: {
                 1: { halign: 'right', fontStyle: 'bold' }
             },
-            didParseCell: function (data: any) {
+            didParseCell: function (data: CellHookData) {
                 if (data.row.index === 2) {
                     data.cell.styles.fontStyle = 'bold';
                     data.cell.styles.fillColor = [241, 245, 249];
@@ -136,7 +137,7 @@ export const generatePDFReport = async (report: ReportData | null, franchiseName
         });
 
         // --- BREAKDOWN ---
-        yPos = (doc as any).lastAutoTable.finalY + 15;
+        yPos = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
         doc.setFontSize(12);
         doc.text("DESGLOSE DE COSTES", 15, yPos);
 
@@ -179,8 +180,8 @@ export const generatePDFReport = async (report: ReportData | null, franchiseName
         doc.text("Documento generado automáticamente por REPAART System.", 15, pageHeight - 10);
 
         doc.save(`REPAART_Informe_${month}_${new Date().toISOString().split('T')[0]}.pdf`);
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Critical PDF Error:", error);
-        alert(`Error generando el PDF: ${error.message}`);
+        alert(`Error generando el PDF: ${error instanceof Error ? error.message : String(error)}`);
     }
 };

@@ -11,13 +11,17 @@
 import type { Invoice } from '../../types/invoicing';
 
 // Utility: Format date
-const formatDate = (date: any): string => {
+const formatDate = (date: unknown): string => {
     if (!date) return '-';
     let d: Date;
     if (date instanceof Date) d = date;
-    else if (typeof date.toDate === 'function') d = date.toDate();
-    else if (date.seconds) d = new Date(date.seconds * 1000);
-    else d = new Date(date);
+    else if (typeof date === 'object' && date !== null && typeof (date as { toDate?: unknown }).toDate === 'function') {
+        d = (date as { toDate: () => Date }).toDate();
+    } else if (typeof date === 'object' && date !== null && typeof (date as { seconds?: unknown }).seconds === 'number') {
+        d = new Date((date as { seconds: number }).seconds * 1000);
+    } else {
+        d = new Date(date as string | number);
+    }
     return d.toISOString().split('T')[0];
 };
 
@@ -120,13 +124,22 @@ export const exportToExcel = (invoice: Invoice): Uint8Array => {
  * Simple XLSX content generator
  * Note: For production, use a proper library like 'xlsx'
  */
-const generateXLSXContent = (workbook: any): string => {
+interface XLSXSheet {
+    name: string;
+    data: (string | number)[][];
+}
+
+interface XLSXWorkbook {
+    sheets: XLSXSheet[];
+}
+
+const generateXLSXContent = (workbook: XLSXWorkbook): string => {
     // This is a placeholder - real XLSX requires binary format
     // For now, we'll create a TSV that Excel can open
     let content = '';
-    workbook.sheets.forEach((sheet: any) => {
+    workbook.sheets.forEach((sheet) => {
         content += `=== ${sheet.name} ===\n`;
-        sheet.data.forEach((row: any[]) => {
+        sheet.data.forEach((row) => {
             content += row.join('\t') + '\n';
         });
         content += '\n';
