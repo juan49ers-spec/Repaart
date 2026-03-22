@@ -52,15 +52,17 @@ docs/
 - **Config dinámica:** Nunca hardcodear rates, UIDs o constantes de negocio; usar valores del perfil con fallback a defaults nombrados
 - **Firebase:** Siempre usar `merge: true` en `setDoc` salvo sobreescritura intencional
 
-## Estado Actual (actualizado: 2026-03-21)
+## Estado Actual (actualizado: 2026-03-22)
 
 | Check | Estado |
 |-------|--------|
 | Build | ✅ OK |
 | TypeScript | ✅ 0 errores |
-| Tests | ✅ 76/76 archivos · 516/516 tests |
+| Tests | ✅ 77/77 archivos · 518/518 tests |
 | Lint | ⚠️ ~808 warnings (`any`) |
 | Bundle | ⚠️ 5 chunks >500KB |
+| Sentry | ✅ Inicializado + ErrorBoundary conectado |
+| E2E CI | ✅ Job `e2e-smoke` en ci-cd.yml (requiere secrets GitHub) |
 
 ## Comandos de Verificación
 

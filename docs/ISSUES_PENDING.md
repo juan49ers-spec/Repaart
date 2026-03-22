@@ -1,6 +1,6 @@
 # Issues y Bugs Pendientes
 
-**Última actualización:** 2026-03-21
+**Última actualización:** 2026-03-22
 
 ---
 
@@ -53,7 +53,7 @@ hasChanges={false} // TODO: Track changes
 - `src/features/admin/dashboard/IntelligenceGrid.tsx`
 - `src/features/admin/dashboard/PowerMetrics.tsx`
 
-**Problema:** Logs de debug en código de producción.
+**Problema:** Logs de debug en código de producción. (Los del módulo Sentry — `src/lib/sentry/index.ts` — ya se eliminaron en sesión 2026-03-22.)
 
 **Solución:**
 ```typescript
@@ -63,6 +63,19 @@ if (import.meta.env.DEV) {
 ```
 
 **Prioridad:** BAJA (no funcional, solo limpieza)
+
+---
+
+### #8: GitHub Secrets para E2E en CI
+
+**Descripción:** El job `e2e-smoke` en `.github/workflows/ci-cd.yml` requiere dos secrets de GitHub: `TEST_USER_EMAIL` y `TEST_USER_PASSWORD` con credenciales de un usuario de test dedicado en Firebase.
+
+**Acción requerida:**
+
+1. Crear usuario de test en Firebase Console (Authentication)
+2. En GitHub → Settings → Secrets → añadir `TEST_USER_EMAIL` y `TEST_USER_PASSWORD`
+
+**Prioridad:** MEDIA (el CI fallará en e2e hasta que se configuren)
 
 ---
 
@@ -93,6 +106,9 @@ if (import.meta.env.DEV) {
 | #3 (anterior) | `franchiseId` incorrecto en modales de rider | 2026-03-21 |
 | #4 (anterior) | Coste de rider con tarifa hardcoded | 2026-03-21 |
 | #5 (anterior) | Componente muerto `CoverageStats.tsx` | 2026-03-21 |
+| Sentry inactivo | `initSentry()` nunca se llamaba; ErrorBoundary sin Sentry | 2026-03-22 |
+| IVA combustible | Deducción revertida a 100% en `finance.ts` | 2026-03-22 |
+| IVA doble cómputo | `Math.max` en `useTaxCalculations.ts` | 2026-03-22 |
 
 ---
 
@@ -101,7 +117,7 @@ if (import.meta.env.DEV) {
 | Categoría | Pendientes | Resueltos |
 |-----------|------------|-----------|
 | Críticos | 0 | 1 |
-| Medios | 1 | 3 |
+| Medios | 2 | 3 |
 | Bajos/Mejoras | 3 | 2 |
 
-**Total pendientes:** 4 (1 medio, 3 bajos)
+**Total pendientes:** 5 (2 medios, 3 bajos)
