@@ -8,11 +8,11 @@ export interface ShiftData {
     userId?: string | null;
     riderId?: string | null;
     riderName?: string;
-    start?: string; // ISO string 
+    start?: string; // ISO string
     end?: string; // ISO string
     startAt?: string; // Mapping compatibility
     endAt?: string;   // Mapping compatibility
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 export interface ShiftOperationResult {
@@ -25,14 +25,14 @@ export interface ShiftOperationResult {
 interface Moto {
     id: string;
     plate: string;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 export const useShiftOperations = (
     franchiseId: string | null,
     // weekData and updateWeekData might be used in future or internally, keeping signatures compatible
-    _weekData?: any,
-    _updateWeekData?: any,
+    _weekData?: unknown,
+    _updateWeekData?: unknown,
     motos: Moto[] = []
 ) => {
     const [isSaving, setIsSaving] = useState(false);
@@ -60,9 +60,9 @@ export const useShiftOperations = (
             }
 
             return { success: true };
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Shift Operation Error:", error);
-            return { success: false, error: error.message || String(error) };
+            return { success: false, error: error instanceof Error ? error.message : String(error) };
         } finally {
             setIsSaving(false);
         }
@@ -72,13 +72,13 @@ export const useShiftOperations = (
         try {
             await shiftService.deleteShift(shiftId);
             return { success: true };
-        } catch (error: any) {
-            return { success: false, error: error.message || String(error) };
+        } catch (error: unknown) {
+            return { success: false, error: error instanceof Error ? error.message : String(error) };
         }
     }, []);
 
-    const quickFillShifts = useCallback(async (params: any): Promise<ShiftOperationResult> => {
-        const { date, riders } = params; // Expect riders to be passed
+    const quickFillShifts = useCallback(async (params: unknown): Promise<ShiftOperationResult> => {
+        const { date, riders } = params as { date: string; riders: { id: string; fullName: string }[] }; // Expect riders to be passed
         if (!date || !riders || !Array.isArray(riders)) {
             return { success: false, error: "Missing date or riders for smart fill" };
         }
@@ -124,9 +124,9 @@ export const useShiftOperations = (
             await Promise.all(promises);
             return { success: true, count };
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Smart Fill Error:", error);
-            return { success: false, error: error.message };
+            return { success: false, error: error instanceof Error ? error.message : String(error) };
         } finally {
             setIsSaving(false);
         }

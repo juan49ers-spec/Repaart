@@ -287,7 +287,7 @@ const ShiftPlanner: FC<ShiftPlannerProps> = ({
         }
     };
 
-    const onQuickFillWrapper = async (data: Record<string, any>) => {
+    const onQuickFillWrapper = async (data: unknown) => {
         const res = await quickFillShifts(data);
         if (res.success) notify(`${res.count || 0} turnos generados`);
         else notify(res.error || 'Error en Auto-Fill', 'error');

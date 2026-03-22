@@ -16,11 +16,11 @@ import ConfirmationModal from '../../components/ui/feedback/ConfirmationModal';
 import { getRiderColorMap } from '../../utils/riderColors';
 import { validateWeeklySchedule, generateScheduleFix, generateFullSchedule } from '../../lib/gemini';
 import { BadgeCheck, AlertTriangle, ShieldCheck, Wand2, Sparkles } from 'lucide-react';
-import { useOperationsIntel, intelService } from '../../services/intelService';
+import { useOperationsIntel, intelService, IntellectualEvent } from '../../services/intelService';
 
 
 
-const getDayDemandLevel = (dayDate: string, dayIntel: any[]) => {
+const getDayDemandLevel = (dayDate: string, dayIntel: IntellectualEvent[]) => {
     const hasCritical = dayIntel.some(e => e.severity === 'critical');
     const hasWarning = dayIntel.some(e => e.severity === 'warning');
     const dayOfWeek = new Date(dayDate).getDay(); // 0: Sun, 5: Fri, 6: Sat
@@ -51,7 +51,7 @@ interface VisualEvent extends Shift {
     isConfirmed?: boolean;
     changeRequested?: boolean;
     changeReason?: string | null;
-    layout?: any;
+    layout?: unknown;
     isConflict?: boolean;
 }
 
@@ -201,7 +201,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
 
     // --- UI Local State ---
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingShift, setEditingShift] = useState<any | null>(null);
+    const [editingShift, setEditingShift] = useState<Shift | null>(null);
     const [selectedDateForNew, setSelectedDateForNew] = useState<string | null>(null);
     const [isQuickFillOpen, setIsQuickFillOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -440,16 +440,16 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
 
     // const handleCopyWeek = async () => { ... } // Kept commented as in original if not used
 
-    const handleSaveShift = useCallback(async (shiftPayload: any) => {
+    const handleSaveShift = useCallback(async (shiftPayload: Shift) => {
         // Internal save logic extracted for reuse in callbacks
-        const saveInternal = async (payload: any) => {
+        const saveInternal = async (payload: Shift) => {
             try {
                 setIsProcessing(true);
                 const currentShifts = weekData?.shifts || [];
                 let updatedShifts: Shift[];
 
                 if (editingShift) {
-                    updatedShifts = currentShifts.map((s: any) => (s.shiftId === payload.shiftId || s.id === payload.shiftId) ? payload : s);
+                    updatedShifts = currentShifts.map((s: Shift) => (s.shiftId === payload.shiftId || s.id === payload.shiftId) ? payload : s);
                 } else {
                     updatedShifts = [...currentShifts, payload];
                 }
@@ -465,7 +465,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                 await WeekService.saveWeek(toFranchiseId(franchiseId), toWeekId(currentWeekId), updatedWeekData);
                 updateWeekData(updatedWeekData);
                 setIsModalOpen(false);
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error("Error saving shift:", error);
                 alert("Error al guardar el turno.");
             } finally {
@@ -876,7 +876,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
 
     const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); e.currentTarget.classList.add('bg-blue-500/10', 'border-blue-400/50'); };
     const handleDragLeave = (e: React.DragEvent) => { e.currentTarget.classList.remove('bg-blue-500/10', 'border-blue-400/50'); };
-    const handleEditShift = (shift: any) => { setEditingShift(shift); setSelectedDateForNew(null); setIsModalOpen(true); };
+    const handleEditShift = (shift: ShiftEvent) => { setEditingShift(shift); setSelectedDateForNew(null); setIsModalOpen(true); };
     const handleColumnClick = (e: React.MouseEvent, dateIso: string) => { if (e.target === e.currentTarget) handleOpenNew(dateIso); };
 
     const onSaveAll = () => saveWeek(franchiseId, currentWeekId, weekData as WeekData);
@@ -884,7 +884,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
 
 
 
-    const handleQuickFillCreate = async (newShifts: Partial<any>[]) => {
+    const handleQuickFillCreate = async (newShifts: Partial<Shift>[]) => {
         if (!newShifts.length) return;
         setIsProcessing(true);
         try {
@@ -1415,7 +1415,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
             <ShiftModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                onSave={handleSaveShift}
+                onSave={(data) => handleSaveShift(data as unknown as Shift)}
                 initialData={editingShift}
                 riders={riders}
                 motos={motos}
@@ -1440,7 +1440,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
                 onClose={() => setIsQuickFillOpen(false)}
                 onRefresh={refresh}
                 franchiseId={franchiseId}
-                onCreateShifts={handleQuickFillCreate as any}
+                onCreateShifts={handleQuickFillCreate}
                 riders={riders}
                 motos={motos}
                 weekDays={days}

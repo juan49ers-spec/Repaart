@@ -278,7 +278,7 @@ export const shiftService = {
         start: Date,
         end: Date,
         callback: (shifts: Shift[]) => void,
-        onError?: (error: any) => void
+        onError?: (error: unknown) => void
     ): Unsubscribe => {
         const startTs = Timestamp.fromDate(start);
         const endTs = Timestamp.fromDate(end);
@@ -384,7 +384,7 @@ export const shiftService = {
         franchiseId: string,
         templateName: string,
         templateType: 'verano' | 'invierno' | 'especial',
-        shifts: any[]
+        shifts: Partial<Shift>[]
     ): Promise<string> => {
         if (!franchiseId) throw validationError('saveWeekTemplate', 'Franchise ID is required');
 
@@ -420,7 +420,7 @@ export const shiftService = {
         id: string;
         name: string;
         type: 'verano' | 'invierno' | 'especial';
-        shifts: any[];
+        shifts: Shift[];
         createdAt: Date;
     }>> => {
         try {
@@ -683,9 +683,9 @@ export const shiftService = {
      */
     publishWeeklySchedule: async (
         franchiseId: string,
-        localShifts: any[],
+        localShifts: Partial<Shift>[],
         deletedIds: Set<string>,
-        existingRemoteShifts: any[] = []
+        existingRemoteShifts: Partial<Shift>[] = []
     ): Promise<void> => {
         if (!franchiseId) throw validationError('publishWeeklySchedule', 'Franchise ID is required');
 
