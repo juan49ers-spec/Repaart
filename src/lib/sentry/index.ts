@@ -47,10 +47,6 @@ export const initSentry = () => {
       // Set release
       release: import.meta.env.VITE_APP_VERSION || 'latest',
     });
-    
-    console.log('Sentry initialized successfully');
-  } else {
-    console.log('Sentry DSN not configured, skipping initialization');
   }
 };
 
