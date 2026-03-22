@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Input, DatePicker, Select, message, Card, Row, Col, InputNumber, Tooltip } from 'antd';
 import { Edit, Trash2, Plus, Info } from 'lucide-react';
-import type { Invoice, InvoiceLine } from '../../../types/invoicing';
+import type { Invoice, InvoiceLine, TaxBreakdown, CustomerSnapshot } from '../../../types/invoicing';
 import { invoiceEngine } from '../../../services/billing';
 import dayjs from 'dayjs';
 
@@ -23,7 +23,7 @@ export const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [lines, setLines] = useState<InvoiceLine[]>([]);
-  const [customers, setCustomers] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<CustomerSnapshot[]>([]);
   const [loadingCustomers, setLoadingCustomers] = useState(false);
 
   // Cargar clientes y líneas cuando se abre el modal
@@ -34,11 +34,11 @@ export const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
         setLines(invoice.lines || []);
 
         // Cargar datos en el formulario
-        const toDate = (date: any): Date => {
+        const toDate = (date: unknown): Date => {
           if (!date) return new Date();
-          if (date.toDate) return date.toDate();
-          if (date.seconds) return new Date(date.seconds * 1000);
-          return new Date(date);
+          if (typeof date === 'object' && date !== null && 'toDate' in date && typeof (date as { toDate: unknown }).toDate === 'function') return (date as { toDate: () => Date }).toDate();
+          if (typeof date === 'object' && date !== null && 'seconds' in date) return new Date((date as { seconds: number }).seconds * 1000);
+          return new Date(date as string | number | Date);
         };
 
         form.setFieldsValue({
@@ -69,7 +69,7 @@ export const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
       const customersData = querySnap.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      }));
+      } as CustomerSnapshot));
 
       setCustomers(customersData);
     } catch (error) {
@@ -93,7 +93,7 @@ export const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
     setLines([...lines, newLine]);
   };
 
-  const updateLine = (id: string, field: keyof InvoiceLine, value: any) => {
+  const updateLine = (id: string, field: keyof InvoiceLine, value: InvoiceLine[keyof InvoiceLine]) => {
     setLines(lines.map(line => {
       if (line.id === id) {
         const updated = { ...line, [field]: value };
@@ -137,7 +137,7 @@ export const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
         lines: lines.map(l => ({ ...l, total: l.amount || 0 })),
         subtotal: totals.subtotal,
         total: totals.total,
-        taxBreakdown: lines.reduce((acc: any[], line) => {
+        taxBreakdown: lines.reduce((acc: TaxBreakdown[], line) => {
           const existing = acc.find(t => t.taxRate === line.taxRate);
           if (existing) {
             existing.taxableBase += line.amount;
@@ -162,15 +162,15 @@ export const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
       } else {
         message.error(`Error: ${result.error.type}`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[EditInvoiceModal] Error updating invoice:', error);
-      message.error(`Error: ${error.message || 'Error al actualizar la factura'}`);
+      message.error(`Error: ${error instanceof Error ? error.message : 'Error al actualizar la factura'}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const customerOptions = customers.map((c: any) => ({
+  const customerOptions = customers.map((c) => ({
     label: `${c.fiscalName} (${c.cif})`,
     value: c.id
   }));

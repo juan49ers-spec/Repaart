@@ -1,86 +1,173 @@
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import Header, { HeaderProps } from './components/Header';
+import Header from './components/Header';
+import InputSidebar from './components/InputSidebar';
 import BottomTabBar from './components/BottomTabBar';
-import PageHelpModal from '../components/ui/modals/PageHelpModal';
-import CommandPalette from '../components/ui/CommandPalette';
+import ChatAssistant from './components/ChatAssistant';
+import PageHelpModal from '../ui/modals/PageHelpModal';
 import { pageHelpData, PageHelpContent } from '../constants/pageHelpData';
-import ImpersonationBanner from '../components/ImpersonationBanner';
 
+// Define explicit types for props
+import { useAppStore } from '../store/useAppStore';
+
+// Define explicit types for props
 interface DashboardLayoutProps {
     children?: React.ReactNode;
     isAdmin: boolean;
     isFranchise: boolean;
-    isRider?: boolean;
     viewMode?: string;
     setViewMode?: (mode: string) => void;
     franchiseView?: string;
     setFranchiseView?: (view: string) => void;
     targetFranchiseName?: string | null;
+
+    // Data Control Props
+    // selectedMonth & onMonthChange REMOVED (Handled by Store)
+    // viewPeriod?: string; -> REMOVED
+    // setViewPeriod?: (period: string) => void; -> REMOVED
+
+    onLogout: () => void;
     onExport: () => void;
     onPrint?: () => void;
+    onCalculate?: (values: any) => void;
+
+    sidebarData?: any;
+    readOnly?: boolean;
     saving?: boolean;
-    chatData?: { report: unknown };
-    outletContext?: unknown;
+
+    chatData?: { report: any };
+    outletContext?: any;
 }
 
+import ImpersonationBanner from '../components/ImpersonationBanner';
+
+/**
+ *  DashboardLayout
+ * Wrapper for the main dashboard shell (Sidebar + Header + Bottom Tab Bar).
+ * Handles persistent layout state like isSidebarOpen.
+ */
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     children,
+    // Navigation / View Props
     isAdmin,
     isFranchise,
+    viewMode,
+    setViewMode,
+    franchiseView,
+    setFranchiseView,
     targetFranchiseName,
-    onExport,
-    // chatData,
-    outletContext,
-    isRider
-}) => {
 
+    // Data Control Props
+    // selectedMonth, -> REMOVED
+    // onMonthChange, -> REMOVED
+    // viewPeriod, -> REMOVED
+    // setViewPeriod, -> REMOVED
+
+    // Actions
+    onLogout,
+    onExport,
+    onPrint,
+    onCalculate,
+
+    // Sidebar Data
+    sidebarData,
+    readOnly = false,
+    saving = false,
+
+    // Chat Props
+    // isChatOpen, -> REMOVED
+    // setIsChatOpen, -> REMOVED
+    chatData,
+    outletContext
+}) => {
+    const {
+        isSidebarOpen,
+        toggleSidebar: setIsSidebarOpen,
+        isChatOpen,
+        toggleChat: setIsChatOpen
+    } = useAppStore();
+
+    // const [isSidebarOpen, setIsSidebarOpen] = useState(false); -> REMOVED
     const [helpContent, setHelpContent] = useState<PageHelpContent | null>(null);
+
+    // Mobile Chat Toggle
+    // const handleToggleChat = () => setIsChatOpen(!isChatOpen); -> REMOVED
 
     const openHelp = (id: string) => {
         const content = pageHelpData[id] || null;
         setHelpContent(content);
     };
 
-    const headerProps: HeaderProps = {
-        isAdmin,
-        isFranchise,
-        isRider,
+    // Header Props Bundle
+    const headerProps = {
+        isAdmin, isFranchise, viewMode, setViewMode, franchiseView, setFranchiseView,
+        // isSidebarOpen, setIsSidebarOpen, selectedMonth, -> REMOVED
+        // viewPeriod, setViewPeriod, -> REMOVED
         targetFranchiseName: targetFranchiseName || undefined,
-        onExport,
+        saving, onLogout,
+        onExport, onPrint,
+        // onMonthChange, -> REMOVED
         onOpenHelp: openHelp
     };
 
-
-
     return (
-        <div className="print:hidden viewport-fixed bg-slate-50 dark:bg-slate-950 font-sans relative transition-colors duration-300">
-            <ImpersonationBanner />
-            <Header {...headerProps} />
+        <div className="print:hidden min-h-screen bg-slate-50 dark:bg-slate-950 flex overflow-hidden font-sans relative transition-colors duration-300">
+            {/* Mobile Overlay */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-slate-900/20 z-40 md:hidden backdrop-blur-sm transition-opacity duration-300"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
 
-            {/* Main Content Area - Fixed Viewport with independent scroll */}
-            <main className="scrollable-area w-full relative z-0 content-safe-bottom @container">
-                <div className="content-wrapper py-2 md:pt-4 md:pb-8 animate-slide-up mx-auto">
-                    {/* Pass context to Outlet */}
-                    {children ? children : <Outlet context={outletContext || {}} />}
-                </div>
-            </main>
+            {/* Sidebar (Input Panel) */}
+            <InputSidebar
+                // isOpen={isSidebarOpen} -> REMOVED
+                // onClose={() => setIsSidebarOpen(false)} -> REMOVED
+                initialData={sidebarData}
+                // selectedMonth={selectedMonth} -> REMOVED
+                // onMonthChange={onMonthChange} -> REMOVED
+                onCalculate={onCalculate || (() => { })}
+                readOnly={readOnly}
+                // onToggleChat={handleToggleChat} -> REMOVED
+                onOpenHelp={openHelp}
+            />
+
+            {/* Main Content Area */}
+            <div className={`flex-1 flex flex-col transition-all duration-300 w-full ${isSidebarOpen ? 'md:ml-96' : 'ml-0'}`}>
+                <ImpersonationBanner />
+                <Header {...headerProps} />
+
+                {/* Content Injection with correct mobile padding */}
+                <main className="flex-1 overflow-y-auto w-full relative z-0" style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom))' }}>
+                    <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+                        {/* Pass context to Outlet */}
+                        {outletContext ? <Outlet context={{ ...outletContext }} /> : children}
+                    </div>
+                </main>
+            </div>
 
             {/* Bottom Tab Bar (Mobile Only) */}
             <BottomTabBar
                 isAdmin={isAdmin}
                 isFranchise={isFranchise}
+            // Legacy view props might be ignored by new BottomTabBar with NavLinks, 
+            // but kept for interface compatibility if needed transiently
             />
 
-            {/* Page Help Modal */}
+            {/* Controlled Chat Assistant */}
+            <ChatAssistant
+                contextData={chatData?.report}
+                isOpen={isChatOpen || false}
+                onClose={() => setIsChatOpen(false)}
+            />
+
             <PageHelpModal
                 isOpen={!!helpContent}
                 content={helpContent}
                 onClose={() => setHelpContent(null)}
             />
-
-            <CommandPalette />
-        </div>
+        </div >
     );
 };
 

@@ -33,8 +33,8 @@ import { getBillingErrorMessage } from '../utils/errorMessages';
 import { billingController } from '../../../services/billing';
 import { useInvoicing } from '../../../hooks/useInvoicing';
 import { CreateRestaurantModal } from '../../invoicing/components/CreateRestaurantModal';
-import type { CreateInvoiceRequest } from '../../../types/invoicing';
-import type { InvoiceLine } from '../../../types/invoicing';
+import type { CreateInvoiceRequest, InvoiceLine, CustomerSnapshot } from '../../../types/invoicing';
+import type { LogisticsRate } from '../../../types/franchise';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -54,13 +54,13 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
 
     // Estados del formulario
     const [loading, setLoading] = useState(false);
-    const [customers, setCustomers] = useState<any[]>([]);
+    const [customers, setCustomers] = useState<CustomerSnapshot[]>([]);
     const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
     const [isInitializing, setIsInitializing] = useState(true);
     const [isCreateCustomerModalOpen, setIsCreateCustomerModalOpen] = useState(false);
 
     // Tarifas configuradas
-    const [rates, setRates] = useState<any[]>([]);
+    const [rates, setRates] = useState<LogisticsRate[]>([]);
 
     // Datos de la factura
     const [customerId, setCustomerId] = useState<string>('');
@@ -105,7 +105,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
             if (userDocSnap.exists() && userDocSnap.data()?.logisticsRates) {
                 const ratesData = userDocSnap.data().logisticsRates;
                 console.log('[SimpleInvoiceCreator] Found logisticsRates in users:', ratesData);
-                setRates(Array.isArray(ratesData) ? ratesData : []);
+                setRates(Array.isArray(ratesData) ? ratesData as LogisticsRate[] : []);
             } else if (userDocSnap.exists() && userDocSnap.data()?.rates) {
                 // Fallback a rates (formato antiguo)
                 const ratesData = userDocSnap.data().rates;
@@ -135,7 +135,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                 if (franchiseDocSnap.exists() && franchiseDocSnap.data()?.logisticsRates) {
                     const ratesData = franchiseDocSnap.data().logisticsRates;
                     console.log('[SimpleInvoiceCreator] Found logisticsRates in franchises:', ratesData);
-                    setRates(Array.isArray(ratesData) ? ratesData : []);
+                    setRates(Array.isArray(ratesData) ? ratesData as LogisticsRate[] : []);
                 } else if (franchiseDocSnap.exists() && franchiseDocSnap.data()?.rates) {
                     const ratesData = franchiseDocSnap.data().rates;
                     console.log('[SimpleInvoiceCreator] Found legacy rates in franchises:', ratesData);
@@ -167,7 +167,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
         try {
             setIsLoadingCustomers(true);
             const restaurants = await getRestaurants(franchiseId);
-            setCustomers(restaurants || []);
+            setCustomers((restaurants || []) as CustomerSnapshot[]);
         } catch (error) {
             console.error('[SimpleInvoiceCreator] Error loading customers:', error);
             message.error('Error al cargar clientes');
@@ -192,7 +192,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
     };
 
     // Actualizar línea
-    const updateLine = (id: string, field: keyof InvoiceLine, value: any) => {
+    const updateLine = (id: string, field: keyof InvoiceLine, value: InvoiceLine[keyof InvoiceLine]) => {
         setLines(lines.map(line => {
             if (line.id === id) {
                 const updated = { ...line, [field]: value };
@@ -255,7 +255,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
 
             if (result.success) {
                 message.success('Factura creada correctamente');
-                onSuccess((result.data as any).id || 'success');
+                onSuccess((result.data as { id?: string }).id || 'success');
             } else {
                 // Mostrar mensaje de error amigable en español
                 const errorInfo = getBillingErrorMessage(result.error);
@@ -273,13 +273,13 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                     duration: 6
                 });
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error creating invoice:', error);
             message.error({
                 content: (
                     <div>
                         <div className="font-bold">Error al crear la factura</div>
-                        <div className="text-sm mt-1">{error?.message || 'Error inesperado'}</div>
+                        <div className="text-sm mt-1">{error instanceof Error ? error.message : 'Error inesperado'}</div>
                     </div>
                 ),
                 duration: 5
@@ -289,7 +289,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
         }
     };
 
-    const customerOptions = customers.map((c: any) => ({
+    const customerOptions = customers.map((c) => ({
         label: `${c.fiscalName} (${c.cif})`,
         value: c.id
     }));
@@ -556,7 +556,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                                                                     }
                                                                 }
                                                             }}
-                                                            options={rates.map((rate: any, idx: number) => ({
+                                                            options={rates.map((rate, idx: number) => ({
                                                                 label: `${rate.name || `${rate.min}-${rate.max}km`} — ${Number(rate.price).toFixed(2)}€`,
                                                                 value: idx.toString()
                                                             }))}

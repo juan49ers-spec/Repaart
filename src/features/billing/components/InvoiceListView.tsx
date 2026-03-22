@@ -39,7 +39,7 @@ import {
 import {
   Table, Tag, Space, Button, Tooltip, Modal, message, Popconfirm, Select, Col, Input, Row, DatePicker, Dropdown, Divider, Slider, Progress, Alert
 } from 'antd';
-import type { Invoice, InvoiceStatus, PaymentStatus } from '../../../types/invoicing';
+import type { Invoice, InvoiceStatus, PaymentStatus, CustomerSnapshot } from '../../../types/invoicing';
 import { invoiceEngine, downloadExport, invoicePdfGenerator } from '../../../services/billing';
 import { InvoicePreviewModal } from './InvoicePreviewModal';
 import { EditInvoiceModal } from './EditInvoiceModal';
@@ -60,7 +60,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | 'ALL'>('ALL');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<PaymentStatus | 'ALL'>('ALL');
-  const [dateRange, setDateRange] = useState<any>(null);
+  const [dateRange, setDateRange] = useState<[import('dayjs').Dayjs, import('dayjs').Dayjs] | null>(null);
   const [customerFilter, setCustomerFilter] = useState<string | null>(null);
   const [amountRange, setAmountRange] = useState<[number, number]>([0, 0]);
   const [amountFilterActive, setAmountFilterActive] = useState(false);
@@ -207,7 +207,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
       filtered = filtered.filter(inv => {
         const issueDate = inv.issueDate instanceof Date
           ? inv.issueDate
-          : new Date((inv.issueDate as any).seconds * 1000);
+          : new Date((inv.issueDate as unknown as { seconds: number }).seconds * 1000);
         return issueDate >= start && issueDate <= end;
       });
     }
@@ -240,10 +240,10 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
     const rows = dataToExport.map(inv => {
       const issueDate = inv.issueDate instanceof Date
         ? inv.issueDate
-        : new Date((inv.issueDate as any).seconds * 1000);
+        : new Date((inv.issueDate as unknown as { seconds: number }).seconds * 1000);
       const dueDate = inv.dueDate instanceof Date
         ? inv.dueDate
-        : new Date((inv.dueDate as any).seconds * 1000);
+        : new Date((inv.dueDate as unknown as { seconds: number }).seconds * 1000);
       return [
         inv.fullNumber,
         inv.series,
@@ -349,8 +349,8 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
           if (errorCount > 0) {
             message.error(`${errorCount} facturas no pudieron eliminarse`);
           }
-        } catch (error: any) {
-          message.error(`Error al eliminar: ${error.message}`);
+        } catch (error: unknown) {
+          message.error(`Error al eliminar: ${error instanceof Error ? error.message : 'Error desconocido'}`);
         }
       }
     });
@@ -396,8 +396,8 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
           if (errorCount > 0) {
             message.error(`${errorCount} facturas no pudieron emitirse`);
           }
-        } catch (error: any) {
-          message.error(`Error al emitir: ${error.message}`);
+        } catch (error: unknown) {
+          message.error(`Error al emitir: ${error instanceof Error ? error.message : 'Error desconocido'}`);
         }
       }
     });
@@ -426,8 +426,8 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
       } else {
         message.error(`Error: ${result.error.type}`);
       }
-    } catch (error: any) {
-      message.error(`Error al emitir factura: ${error.message}`);
+    } catch (error: unknown) {
+      message.error(`Error al emitir factura: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
   };
 
@@ -443,8 +443,8 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
       } else {
         message.error(`Error: ${result.error.type}`);
       }
-    } catch (error: any) {
-      message.error(`Error al eliminar factura: ${error.message}`);
+    } catch (error: unknown) {
+      message.error(`Error al eliminar factura: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
   };
 
@@ -489,8 +489,8 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
       } else {
         message.error(`Error: ${result.error.type}`);
       }
-    } catch (error: any) {
-      message.error(`Error al eliminar factura: ${error.message}`);
+    } catch (error: unknown) {
+      message.error(`Error al eliminar factura: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
   };
 
@@ -619,7 +619,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
       key: 'customer',
       width: 200,
       ellipsis: true,
-      render: (customer: any) => (
+      render: (customer: CustomerSnapshot) => (
         <div className="min-w-0">
           <div className="font-bold truncate text-[11px] text-slate-900 dark:text-slate-100" title={customer.fiscalName}>
             {customer.fiscalName}
@@ -683,7 +683,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
       title: 'Resumen Financiero',
       key: 'financialSummary',
       width: 180,
-      render: (_: any, record: Invoice) => (
+      render: (_: unknown, record: Invoice) => (
         <div className="flex items-center justify-between gap-2 p-1 bg-slate-50 dark:bg-slate-900/50 rounded border border-slate-100 dark:border-slate-800">
           <div className="flex flex-col gap-0.5">
             <div className="flex items-center gap-1.5 leading-none">
@@ -723,7 +723,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
       key: 'actions',
       width: 180,
       fixed: 'right' as const,
-      render: (_: any, record: Invoice) => (
+      render: (_: unknown, record: Invoice) => (
         <Space size={4} align="center" className="flex-nowrap">
           {record.status === 'DRAFT' && (
             <>
@@ -1194,10 +1194,10 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
           expandedRowRender: (record: Invoice) => {
             const issueDate = record.issueDate instanceof Date
               ? record.issueDate
-              : new Date((record.issueDate as any).seconds * 1000);
+              : new Date((record.issueDate as unknown as { seconds: number }).seconds * 1000);
             const dueDate = record.dueDate instanceof Date
               ? record.dueDate
-              : new Date((record.dueDate as any).seconds * 1000);
+              : new Date((record.dueDate as unknown as { seconds: number }).seconds * 1000);
             const paymentPercent = record.total > 0
               ? Math.round((record.totalPaid / record.total) * 100)
               : 0;
@@ -1223,7 +1223,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
                     <span className="text-[10px] text-slate-400 uppercase font-bold">Dirección</span>
                     <p className="text-[10px] text-slate-600">
                       {record.customerSnapshot?.address
-                        ? `${(record.customerSnapshot.address as any).street || ''}, ${(record.customerSnapshot.address as any).city || ''}`
+                        ? `${record.customerSnapshot.address.street || ''}, ${record.customerSnapshot.address.city || ''}`
                         : 'Sin dirección'
                       }
                     </p>
@@ -1729,7 +1729,7 @@ Ejemplos válidos:
         }}
         onTemplateChange={(template) => {
           if (previewInvoice) {
-            previewInvoice.template = template as any;
+            previewInvoice.template = template as 'modern' | 'classic' | 'minimal' | 'corporate';
           }
         }}
       />

@@ -58,8 +58,8 @@ export const TaxVaultPanel: React.FC<Props> = ({ franchiseId, refreshTrigger }) 
             } as TaxVaultEntry));
 
             setTaxEntries(entries);
-        } catch (error: any) {
-            message.error(`Error al cargar impuestos: ${error.message}`);
+        } catch (error: unknown) {
+            message.error(`Error al cargar impuestos: ${error instanceof Error ? error.message : 'Error desconocido'}`);
         } finally {
             setLoading(false);
         }
@@ -84,8 +84,8 @@ export const TaxVaultPanel: React.FC<Props> = ({ franchiseId, refreshTrigger }) 
             } else {
                 message.error(`Error: ${result.error.type}`);
             }
-        } catch (error: any) {
-            message.error(`Error al cerrar mes: ${error.message}`);
+        } catch (error: unknown) {
+            message.error(`Error al cerrar mes: ${error instanceof Error ? error.message : 'Error desconocido'}`);
         } finally {
             setLoading(false);
         }
@@ -103,8 +103,8 @@ export const TaxVaultPanel: React.FC<Props> = ({ franchiseId, refreshTrigger }) 
             } else {
                 message.error(`Error al sincronizar: ${result.error.type}`);
             }
-        } catch (error: any) {
-            message.error(`Error al sincronizar: ${error.message}`);
+        } catch (error: unknown) {
+            message.error(`Error al sincronizar: ${error instanceof Error ? error.message : 'Error desconocido'}`);
         } finally {
             setLoading(false);
         }
@@ -127,8 +127,8 @@ export const TaxVaultPanel: React.FC<Props> = ({ franchiseId, refreshTrigger }) 
             } else {
                 message.error(`Error: ${result.error.type}`);
             }
-        } catch (error: any) {
-            message.error(`Error al solicitar desbloqueo: ${error.message}`);
+        } catch (error: unknown) {
+            message.error(`Error al solicitar desbloqueo: ${error instanceof Error ? error.message : 'Error desconocido'}`);
         } finally {
             setLoading(false);
         }
@@ -195,7 +195,7 @@ export const TaxVaultPanel: React.FC<Props> = ({ franchiseId, refreshTrigger }) 
         {
             title: 'Total IVA',
             key: 'totalIva',
-            render: (_: any, record: TaxVaultEntry) => {
+            render: (_: unknown, record: TaxVaultEntry) => {
                 const total = record.ivaRepercutido - record.ivaSoportado;
                 return (
                     <span className={`font-bold ${total >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -207,7 +207,7 @@ export const TaxVaultPanel: React.FC<Props> = ({ franchiseId, refreshTrigger }) 
         {
             title: 'Acciones',
             key: 'actions',
-            render: (_: any, record: TaxVaultEntry) => (
+            render: (_: unknown, record: TaxVaultEntry) => (
                 <Space>
                     {!record.isLocked && (
                         <Tooltip title="Recalcular datos del periodo (corrige discrepancias)">
