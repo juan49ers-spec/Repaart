@@ -1,24 +1,29 @@
-import React, { useState, useContext, useEffect, useRef } from 'react';
-import { FranchiseId } from '../../../schemas/scheduler';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useForm, SubmitHandler, Controller } from 'react-hook-form';
-import { LogisticsRatesEditor } from '../../franchise/components/LogisticsRatesEditor';
+import React, { useState, useContext, useEffect, useMemo, useRef } from 'react';
+import { ToastContext } from '../../../context/contexts';
+import { useForm, useFieldArray, SubmitHandler } from 'react-hook-form';
 import {
     Building, MapPin, Save, User, Camera,
-    Mail, Lock, ArrowLeft
+    Mail, Phone, Shield, Trash2, Plus, DollarSign, Lock as LockIcon
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
-import { ToastContext } from '../../../context/contexts';
-import { userService, User as AppUser } from '../../../services/userService';
+import { userService, UserProfile } from '../../../services/userService';
 import { updateProfile } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../../lib/firebase';
 import { notificationService } from '../../../services/notificationService';
 
-import { LogisticsRate } from '../../../types/franchise';
+// --- INTERFACES ---
 
-// Removed local LogisticsRate interface
+interface LogisticsRate {
+    id?: string;
+    min: number;
+    max: number;
+    price: number;
+    name: string;
+}
+
+
 
 interface FranchiseProfileFormData {
     // Franchise Data
@@ -35,11 +40,14 @@ interface FranchiseProfileFormData {
     zipCodes: string[];
     logisticsRates: LogisticsRate[];
 
+
     // User Data (Personal)
     userDisplayName: string;
     userPhone: string;
     userPhotoURL: string;
 }
+
+
 
 interface FranchiseProfileProps {
     franchiseId?: string;
@@ -48,9 +56,8 @@ interface FranchiseProfileProps {
 
 const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
     const { user, isAdmin } = useAuth();
-    const { addToast } = useContext(ToastContext) || { addToast: () => { } };
-    const navigate = useNavigate();
-    const location = useLocation();
+    const toastCtx = useContext(ToastContext);
+    const addToast = useMemo(() => toastCtx?.addToast || (() => { }), [toastCtx]);
 
     // If no franchiseId provided, we assume we are editing the current user's franchise profile
     // But if we are an admin editing another franchise, we might not want to edit *that user's personal profile* 
@@ -63,19 +70,8 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const initialRatesRef = useRef<LogisticsRate[]>([]);
 
-    // Handle Deep Linking to Tabs
-    useEffect(() => {
-        const state = location.state as { tab?: string } | null;
-        if (state && state.tab) {
-            const targetTab = state.tab;
-            if (['user', 'general', 'logistics'].includes(targetTab)) {
-                setActiveTab(targetTab);
-            }
-        }
-    }, [location.state]);
-
     // --- RHF CONFIGURATION ---
-    const { register, control, handleSubmit, reset, watch, setValue, formState: { isDirty } } = useForm<FranchiseProfileFormData>({
+    const { register, control, handleSubmit, reset, watch, setValue, getValues, formState: { isDirty } } = useForm<FranchiseProfileFormData>({
         defaultValues: {
             legalName: '',
             name: '',
@@ -96,7 +92,10 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
         }
     });
 
-
+    const { fields: rateFields, append: appendRate, remove: removeRate } = useFieldArray({
+        control,
+        name: "logisticsRates" as const
+    });
 
     const watchedUserPhoto = watch('userPhotoURL');
 
@@ -109,7 +108,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
             try {
                 // 1. Load Franchise Data
                 const franchiseData = await userService.getUserProfile(targetId);
-                const data = (franchiseData || {}) as AppUser;
+                const data = (franchiseData || {}) as UserProfile;
 
                 // 2. Load User Data (if self)
                 let userData = {
@@ -130,16 +129,15 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                     }
                 }
 
-                const legacyData = data as Record<string, unknown>;
                 reset({
                     // Franchise
-                    legalName: (legacyData.legalName as string) || (legacyData.businessName as string) || '',
-                    name: data.displayName || (legacyData.franchiseName as string) || '',
-                    cif: data.cif || (legacyData.taxId as string) || '',
+                    legalName: (data as any).legalName || (data as any).businessName || '',
+                    name: data.name || (data as any).franchiseName || '',
+                    cif: data.cif || (data as any).taxId || '',
                     city: data.city || '',
                     address: data.address || '',
                     email: data.email || (targetId === user?.uid ? (user?.email || '') : ''),
-                    phone: data.phoneNumber || '', // Business phone
+                    phone: data.phone || '', // Business phone (was data.phone)
                     franchiseId: data.franchiseId || '',
                     role: data.role || 'franchise',
                     zipCodes: data.zipCodes || [],
@@ -155,9 +153,8 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                 // Save initial rates for comparison
                 initialRatesRef.current = data.logisticsRates || [];
 
-            } catch (e) {
-                const errorMessage = e instanceof Error ? e.message : String(e);
-                addToast("Error al cargar perfil: " + errorMessage, "error");
+            } catch (e: any) {
+                addToast("Error al cargar perfil: " + (e.message || String(e)), "error");
             }
         };
         loadProfile();
@@ -182,7 +179,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
 
             setValue('userPhotoURL', downloadURL, { shouldDirty: true });
             addToast("Foto de perfil actualizada", "success");
-        } catch (error) {
+        } catch (error: any) {
             console.error("[FranchiseProfile] Avatar upload failed:", error);
             addToast("Error al subir imagen", "error");
         } finally {
@@ -214,14 +211,14 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
             // 2. Update Franchise Profile (Business)
             const cleanFranchiseId = (data.franchiseId || '').toUpperCase().replace(/\s+/g, '-').trim();
             const franchisePayload = {
-                displayName: data.name,
                 legalName: data.legalName,
+                name: data.name,
                 cif: data.cif,
                 address: data.address,
-                email: data.email,
-                phoneNumber: data.phone,
+                email: data.email, // Business Email
+                phone: data.phone, // Business Phone
                 role: data.role,
-                franchiseId: cleanFranchiseId as FranchiseId,
+                franchiseId: cleanFranchiseId,
                 pack: data.pack,
                 zipCodes: data.zipCodes,
 
@@ -290,82 +287,55 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
 
             addToast("Perfil unificado guardado correctamente", "success");
             reset(data); // Reset form state
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            addToast("Error al guardar: " + errorMessage, "error");
+        } catch (error: any) {
+            addToast("Error al guardar: " + error.message, "error");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 overflow-y-auto pb-24">
+        <div className="flex flex-col h-full bg-slate-50 overflow-y-auto pb-20">
 
-            <div className="max-w-[1600px] mx-auto w-full px-6 md:px-10 pt-10 relative z-10 flex flex-col gap-10">
+            {/* Banner Superior - Light Theme Gradient */}
+            <div className="h-48 w-full bg-gradient-to-r from-slate-200 to-slate-100 relative border-b border-slate-200">
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20" />
+                <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-slate-50 to-transparent" />
+            </div>
 
-
-
-                {/* --- BACK BUTTON (Admin View) --- */}
-                {!isSelfProfile && (
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="self-start flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-lg text-white font-bold text-sm transition-all border border-white/20 shadow-lg"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Volver
-                    </button>
-                )}
+            <div className="max-w-[1600px] mx-auto w-full px-6 md:px-10 -mt-20 relative z-10 flex flex-col gap-10">
 
                 {/* --- HEADER IDENTITY SECTION --- */}
                 <div className="flex flex-col md:flex-row items-end gap-6 pb-6 border-b border-slate-200/60">
                     {/* Avatar / Logo */}
-                    {isSelfProfile ? (
-                        <div className="relative group">
-                            <button
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                className="relative cursor-pointer"
-                                aria-label="Cambiar foto de perfil"
-                            >
-                                <div className="w-32 h-32 rounded-full border-4 border-white shadow-2xl overflow-hidden bg-white flex items-center justify-center relative">
-                                    {watchedUserPhoto ? (
-                                        <img src={watchedUserPhoto} alt="Foto de perfil" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="text-4xl font-black text-slate-300">
-                                            {user?.email?.charAt(0).toUpperCase()}
-                                        </div>
-                                    )}
-
-                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-[2px]">
-                                        <Camera className="w-8 h-8 text-white drop-shadow-md" aria-hidden="true" />
-                                    </div>
+                    <div className="relative group cursor-pointer" onClick={() => isSelfProfile && fileInputRef.current?.click()}>
+                        <div className="w-32 h-32 rounded-full border-4 border-white shadow-2xl overflow-hidden bg-white flex items-center justify-center relative">
+                            {watchedUserPhoto ? (
+                                <img src={watchedUserPhoto} alt="Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="text-4xl font-black text-slate-300">
+                                    {user?.email?.charAt(0).toUpperCase()}
                                 </div>
-                                {/* Online Status Dot */}
-                                <div className="absolute bottom-2 right-2 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full shadow-sm" aria-hidden="true"></div>
-                            </button>
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                className="hidden"
-                                accept="image/*"
-                                onChange={handleAvatarChange}
-                                aria-label="Seleccionar imagen de perfil"
-                            />
+                            )}
+
+                            {isSelfProfile && (
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-[2px]">
+                                    <Camera className="w-8 h-8 text-white drop-shadow-md" />
+                                </div>
+                            )}
                         </div>
-                    ) : (
-                        <div className="relative">
-                            <div className="w-32 h-32 rounded-full border-4 border-white shadow-2xl overflow-hidden bg-white flex items-center justify-center relative">
-                                {watchedUserPhoto ? (
-                                    <img src={watchedUserPhoto} alt="Foto de perfil" className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="text-4xl font-black text-slate-300">
-                                        {user?.email?.charAt(0).toUpperCase()}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="absolute bottom-2 right-2 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full shadow-sm" aria-hidden="true"></div>
-                        </div>
-                    )}
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleAvatarChange}
+                            disabled={!isSelfProfile}
+                            title="Cambiar foto de perfil"
+                        />
+                        {/* Online Status Dot */}
+                        <div className="absolute bottom-2 right-2 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full shadow-sm"></div>
+                    </div>
 
                     {/* Text Info */}
                     <div className="flex-1 mb-2">
@@ -373,7 +343,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                             {isSelfProfile ? (watch('userDisplayName') || 'Tu Perfil') : (watch('name') || 'Franquicia')}
                         </h1>
                         <div className="flex items-center gap-3 text-slate-500 font-medium mt-1">
-                            <Mail className="w-4 h-4" aria-hidden="true" />
+                            <Mail className="w-4 h-4" />
                             <span>{user?.email}</span>
                             <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
                                 {isAdmin ? 'Administrador' : 'Franquicia'}
@@ -407,7 +377,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                             <button
                                 key={tab.id}
                                 type="button"
-                                onClick={() => setActiveTab(tab.id)}
+                                onClick={() => setActiveTab(tab.id as any)}
                                 className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all duration-200 ${activeTab === tab.id
                                     ? 'bg-white text-slate-800 shadow-md translate-y-[-1px]'
                                     : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
@@ -430,33 +400,22 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
 
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nombre Completo</label>
-                                        <div className="relative group h-12">
-                                            <input
-                                                {...register('userDisplayName')}
-                                                autoComplete="name"
-                                                inputMode="text"
-                                                className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm"
-                                                placeholder="Tu nombre real"
-                                            />
+                                        <div className="relative group">
+                                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                                            <input {...register('userDisplayName')} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm" placeholder="Tu nombre real" />
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Teléfono Personal</label>
-                                        <div className="relative group h-12">
-                                            <input
-                                                {...register('userPhone')}
-                                                type="tel"
-                                                autoComplete="tel"
-                                                inputMode="tel"
-                                                className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm"
-                                                placeholder="+34 600 000 000"
-                                            />
+                                        <div className="relative group">
+                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                                            <input {...register('userPhone')} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm" placeholder="+34 600 000 000" />
                                         </div>
                                     </div>
 
                                     <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl flex items-start gap-3">
-                                        <Lock className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" aria-hidden="true" />
+                                        <LockIcon className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
                                         <div>
                                             <h4 className="text-sm font-bold text-indigo-900">Seguridad de la Cuenta</h4>
                                             <p className="text-xs text-indigo-700/80 mt-1">Para cambiar tu contraseña o email, contacta con soporte o usa la opción de recuperación en el login.</p>
@@ -471,74 +430,46 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                 {/* NOMBRE COMERCIAL */}
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nombre Comercial</label>
-                                    <div className="relative group h-12">
-                                        <input
-                                            {...register('name')}
-                                            autoComplete="organization"
-                                            inputMode="text"
-                                            className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
-                                            placeholder="Ej: Burger King Centro"
-                                        />
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nombre Comercial (Sede)</label>
+                                    <div className="relative group">
+                                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                                        <input {...register('name')} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="Ej: Burger King Centro" />
                                     </div>
                                 </div>
 
                                 {/* RAZON SOCIAL */}
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Razón Social</label>
-                                    <div className="relative group h-12">
-                                        <input
-                                            {...register('legalName')}
-                                            autoComplete="organization-title"
-                                            inputMode="text"
-                                            className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
-                                            placeholder="Ej: Burger King Spain S.L."
-                                        />
+                                    <div className="relative group">
+                                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                                        <input {...register('legalName')} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="Ej: Burger King Spain S.L." />
                                     </div>
                                 </div>
 
                                 {/* CIF */}
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">CIF / NIF</label>
-                                    <div className="relative group h-12">
-                                        <input
-                                            {...register('cif')}
-                                            autoComplete="off"
-                                            inputMode="text"
-                                            className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
-                                            placeholder="B12345678"
-                                        />
+                                    <div className="relative group">
+                                        <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                                        <input {...register('cif')} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="B12345678" />
                                     </div>
                                 </div>
 
                                 {/* TELEFONO EMPRESA */}
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Teléfono de Contacto (Público)</label>
-                                    <div className="relative group h-12">
-                                        <input
-                                            {...register('phone')}
-                                            type="tel"
-                                            autoComplete="tel"
-                                            inputMode="tel"
-                                            className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
-                                            placeholder="+34 600 000 000"
-                                        />
+                                    <div className="relative group">
+                                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                                        <input {...register('phone')} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="+34 600 000 000" />
                                     </div>
                                 </div>
 
                                 {/* EMAIL EMPRESA */}
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Email Operativo</label>
-                                    <div className="relative group h-12">
-                                        <input
-                                            {...register('email')}
-                                            type="email"
-                                            autoComplete="email"
-                                            inputMode="email"
-                                            spellCheck={false}
-                                            className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
-                                            placeholder="contacto@restaurante.com"
-                                        />
+                                    <div className="relative group">
+                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                                        <input {...register('email')} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="contacto@restaurante.com" />
                                     </div>
                                 </div>
 
@@ -546,14 +477,9 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                 {/* CIUDAD (LOCALIDAD) */}
                                 <div className="space-y-2 col-span-1 md:col-span-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Localidad (Para el Tiempo)</label>
-                                    <div className="relative group h-12">
-                                        <input
-                                            {...register('city', { required: true })}
-                                            autoComplete="address-level2"
-                                            inputMode="text"
-                                            className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
-                                            placeholder="Ej: Barcelona"
-                                        />
+                                    <div className="relative group">
+                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                                        <input {...register('city', { required: true })} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="Ej: Barcelona" />
                                     </div>
                                     <p className="text-[10px] text-slate-400 ml-1">Escribe solo la ciudad. El sistema asumirá que es en España.</p>
                                 </div>
@@ -561,14 +487,9 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                                 {/* DIRECCION */}
                                 <div className="space-y-2 col-span-1 md:col-span-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Dirección Completa</label>
-                                    <div className="relative group h-12">
-                                        <input
-                                            {...register('address')}
-                                            autoComplete="street-address"
-                                            inputMode="text"
-                                            className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
-                                            placeholder="Calle Ejemplo 123, Ciudad"
-                                        />
+                                    <div className="relative group">
+                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                                        <input {...register('address')} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="Calle Ejemplo 123, Ciudad" />
                                     </div>
                                 </div>
                             </div>
@@ -577,16 +498,120 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                         {/* TAB: LOGISTICS */}
                         {activeTab === 'logistics' && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                <Controller
-                                    control={control}
-                                    name="logisticsRates"
-                                    render={({ field }) => (
-                                        <LogisticsRatesEditor
-                                            rates={field.value}
-                                            onChange={field.onChange}
-                                        />
+                                {/* SECTION 2: TARIFAS (COMPACT GRID) */}
+                                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                                    <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                                        <h4 className="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                                            <DollarSign className="w-4 h-4 text-emerald-500" /> Tarifas por Distancia
+                                        </h4>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const currentRates = getValues().logisticsRates;
+                                                const lastRate = currentRates && currentRates.length > 0 ? currentRates[currentRates.length - 1] : null;
+                                                const newMin = lastRate ? (Number(lastRate.max) || 0) : 0;
+                                                const newMax = newMin + 2;
+                                                appendRate({ min: newMin, max: newMax, price: 0, name: `${newMin}-${newMax} km` });
+                                            }}
+                                            className="text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                                        >
+                                            <Plus className="w-3 h-3" /> Añadir Rango
+                                        </button>
+                                    </div>
+
+                                    {rateFields.length > 0 ? (
+                                        <div className="divide-y divide-slate-100">
+                                            {/* Header Row */}
+                                            <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50/30 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                                <div className="col-span-1 text-center">#</div>
+                                                <div className="col-span-5 md:col-span-6">Distancia (KM)</div>
+                                                <div className="col-span-4 md:col-span-4 text-right pr-8">Precio</div>
+                                                <div className="col-span-2 md:col-span-1"></div>
+                                            </div>
+
+                                            {/* Rows */}
+                                            {rateFields.map((field, index) => (
+                                                <div key={field.id} className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-slate-50 transition-colors group">
+
+                                                    {/* Index */}
+                                                    <div className="col-span-1 flex justify-center">
+                                                        <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-500 text-xs font-bold flex items-center justify-center border border-slate-200">
+                                                            {index + 1}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Distance Range Inputs */}
+                                                    <div className="col-span-5 md:col-span-6 flex items-center gap-3">
+                                                        <div className="relative w-20 md:w-24">
+                                                            <input
+                                                                type="number"
+                                                                step="0.1"
+                                                                {...register(`logisticsRates.${index}.min` as const, { valueAsNumber: true })}
+                                                                className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-2 text-center text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                                                                placeholder="0"
+                                                            />
+                                                        </div>
+                                                        <span className="text-slate-300 font-bold">-</span>
+                                                        <div className="relative w-20 md:w-24">
+                                                            <input
+                                                                type="number"
+                                                                step="0.1"
+                                                                {...register(`logisticsRates.${index}.max` as const, { valueAsNumber: true })}
+                                                                className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-2 text-center text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                                                                placeholder="Max"
+                                                            />
+                                                        </div>
+                                                        <span className="text-xs font-bold text-slate-400 hidden md:inline-block">km</span>
+
+                                                        {/* Hidden Name Input */}
+                                                        <input type="hidden" {...register(`logisticsRates.${index}.name` as const)} />
+                                                    </div>
+
+                                                    {/* Price Input */}
+                                                    <div className="col-span-4 md:col-span-4 flex items-center justify-end gap-2 pr-4 md:pr-8">
+                                                        <div className="relative w-24 md:w-28">
+                                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
+                                                            <input
+                                                                type="number"
+                                                                step="0.01"
+                                                                {...register(`logisticsRates.${index}.price` as const, { valueAsNumber: true })}
+                                                                className="w-full bg-white border border-slate-200 rounded-lg py-1.5 pl-6 pr-3 text-right text-sm font-bold text-emerald-600 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                                                                placeholder="0.00"
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Delete Action */}
+                                                    <div className="col-span-2 md:col-span-1 flex justify-end">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeRate(index)}
+                                                            className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                                            title="Eliminar tarifa"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="p-12 flex flex-col items-center justify-center text-center">
+                                            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                                                <MapPin className="w-8 h-8 text-slate-300 p-0" />
+                                            </div>
+                                            <h3 className="text-slate-900 font-bold mb-1">Sin tarifas configuradas</h3>
+                                            <p className="text-slate-500 text-sm mb-6 max-w-xs mx-auto">Configura los precios de envío según la distancia para calcular los costes automáticamente.</p>
+                                            <button
+                                                type="button"
+                                                onClick={() => appendRate({ min: 0, max: 3, price: 3.50, name: '0-3 km' })}
+                                                className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-95 flex items-center gap-2"
+                                            >
+                                                <Plus className="w-4 h-4" /> Crear Primera Tarifa
+                                            </button>
+                                        </div>
                                     )}
-                                />
+                                </div>
                             </div>
                         )}
 
@@ -595,15 +620,15 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                 </form>
 
                 {/* FOOTER ACTIONS - Fixed at bottom */}
-                <form onSubmit={handleSubmit(onSubmit)} className="fixed bottom-0 left-0 right-0 md:left-64 z-50 p-4 border-t border-slate-200 bg-white/90 backdrop-blur-sm flex justify-end shrink-0">
+                <div className="p-4 border-t border-slate-200 bg-white/90 backdrop-blur-sm flex justify-end shrink-0 fixed bottom-0 left-0 right-0 md:left-64 z-50">
                     <button
-                        type="submit"
+                        onClick={handleSubmit(onSubmit)}
                         disabled={loading || !isDirty}
-                        className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-blue-500/20"
+                        className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <Save className="w-4 h-4" aria-hidden="true" /> {loading ? 'Guardando…' : 'Guardar Cambios'}
+                        <Save className="w-4 h-4" /> {loading ? 'Guardando...' : 'Guardar Cambios'}
                     </button>
-                </form>
+                </div>
             </div>
         </div>
     );
