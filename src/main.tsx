@@ -11,6 +11,7 @@ import ErrorBoundary from './components/ui/feedback/ErrorBoundary';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { registerServiceWorker, checkConnectivity } from './services/pwaService';
+import { initSentry } from './lib/sentry';
 
 // Cargar utilidades de debug en desarrollo
 if (import.meta.env.DEV) {
@@ -48,6 +49,8 @@ const queryClient = new QueryClient({
         }
     }
 });
+
+initSentry();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Failed to find root element');
