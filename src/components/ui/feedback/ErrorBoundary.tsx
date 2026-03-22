@@ -1,5 +1,6 @@
 import { Component, type ReactNode, type ErrorInfo } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { captureException } from '../../../services/errorLogger';
 
 interface ErrorBoundaryProps {
     children: ReactNode;
@@ -21,7 +22,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     }
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-        // Log Error silently
+        captureException(error, { extra: { componentStack: errorInfo.componentStack } });
         console.error('[CRITICAL UI FAIL]:', error, errorInfo);
     }
 

@@ -248,6 +248,17 @@ export function clearUserContext(): void {
   }
 }
 
+/**
+ * Capture an exception and send to Sentry with optional extra context.
+ * Convenience wrapper over logError for ErrorBoundary integration.
+ */
+export function captureException(
+  error: Error,
+  options: { extra?: Record<string, unknown> } = {}
+): string | null {
+  return logError(error, { context: options.extra });
+}
+
 // Export singleton instance
 export const ErrorLogger = {
   logError,
@@ -255,6 +266,7 @@ export const ErrorLogger = {
   addBreadcrumb,
   setUserContext,
   clearUserContext,
+  captureException,
 };
 
 export default ErrorLogger;
