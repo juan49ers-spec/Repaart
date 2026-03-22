@@ -68,13 +68,13 @@ if (import.meta.env.DEV) {
 
 ---
 
-### #6: ~808 warnings de tipo `any` en lint
+### #6: ~606 warnings de tipo `any` en lint (bajando desde 809)
 
-**Descripción:** El linter reporta ~808 warnings por uso de `any`. No son errores bloqueantes pero reducen la seguridad de tipos.
+**Descripción:** El linter reporta ~606 warnings, principalmente `any`. No son errores bloqueantes. Se han eliminado 203 en sesión 2026-03-22 (servicios billing/finance, flyder, scheduler, kanban, franchise, gemini, fleet, pdf...). La mayoría restante está en archivos de test.
 
 **Prioridad:** BAJA (mejora técnica progresiva)
 
-**Abordaje recomendado:** Resolver por módulo, empezando por los servicios Firebase.
+**Abordaje recomendado:** Continuar por archivos de test (son los que más concentran `any` residual).
 
 ---
 
@@ -98,6 +98,7 @@ if (import.meta.env.DEV) {
 | #4 (anterior)     | Coste de rider con tarifa hardcoded                       | 2026-03-21 |
 | #5 (anterior)     | Componente muerto `CoverageStats.tsx`                     | 2026-03-21 |
 | #3 (isConflict)   | Detección de turnos solapados en WeeklyScheduler          | 2026-03-22 |
+| #4 (hasChanges)   | hasUnsavedChanges ya implementado en DeliveryScheduler    | 2026-03-22 |
 | Sentry inactivo   | `initSentry()` nunca se llamaba; ErrorBoundary sin Sentry | 2026-03-22 |
 | IVA combustible   | Deducción revertida a 100% en `finance.ts`                | 2026-03-22 |
 | IVA doble cómputo | `Math.max` en `useTaxCalculations.ts`                     | 2026-03-22 |
@@ -109,7 +110,7 @@ if (import.meta.env.DEV) {
 | Categoría      | Pendientes | Resueltos |
 | -------------- | ---------- | --------- |
 | Críticos       | 0          | 1         |
-| Medios         | 1          | 4         |
-| Bajos/Mejoras  | 3          | 3         |
+| Medios         | 1          | 5         |
+| Bajos/Mejoras  | 2          | 4         |
 
-**Total pendientes:** 4 (1 medio, 3 bajos)
+**Total pendientes:** 3 (1 medio, 2 bajos)
