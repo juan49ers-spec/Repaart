@@ -234,13 +234,14 @@ import { setUserContext, clearUserContext } from '../services/errorLogger';
 
 - [ ] **Step 3: Llamar setUserContext tras el login exitoso**
 
-En el bloque `if (firebaseUser)`, justo después de `setUser(authUser)`:
+En `AuthContext.tsx`, el bloque de login está en las líneas ~90-96. Insertar `setUserContext` **después de la línea 96** (`setIsAdmin(data.role === 'admin')`):
 
 ```typescript
-// ANTES:
+// ANTES (líneas 94-96):
 setUser(authUser);
 setRoleConfig(data);
 setIsAdmin(data.role === 'admin');
+// fin del bloque if (data)
 
 // DESPUÉS:
 setUser(authUser);
@@ -258,10 +259,10 @@ setUserContext(
 
 - [ ] **Step 4: Llamar clearUserContext en el logout**
 
-En el bloque `else` (cuando `firebaseUser` es null), justo después de `setUser(null)`:
+El bloque else (logout) está en las líneas ~99-102. Insertar `clearUserContext()` **después de la línea 102** (`clearAuthCache()`):
 
 ```typescript
-// ANTES:
+// ANTES (líneas 99-102):
 setUser(null);
 setRoleConfig(null);
 setIsAdmin(false);
@@ -307,6 +308,8 @@ git commit -m "feat(sentry): set user context in Sentry on login/logout"
 - Create: `src/components/ui/feedback/__tests__/ErrorBoundary.test.tsx`
 
 - [ ] **Step 1: Escribir el test que falla primero (TDD)**
+
+> ⚠️ **Nota importante:** Ya existe `src/components/error/__tests__/ErrorBoundary.test.tsx` para un ErrorBoundary DISTINTO. Este step crea un archivo NUEVO para el ErrorBoundary de `ui/feedback/`, que actualmente no tiene tests.
 
 Crear `src/components/ui/feedback/__tests__/ErrorBoundary.test.tsx`:
 
@@ -507,10 +510,10 @@ Esto garantiza que solo se buildea y deployea si los smoke tests pasan.
 - [ ] **Step 4: Verificar sintaxis YAML**
 
 ```bash
-npx js-yaml .github/workflows/ci-cd.yml
+npx --yes js-yaml .github/workflows/ci-cd.yml && echo "YAML válido"
 ```
 
-Esperado: no hay errores de parseo.
+Esperado: imprime `YAML válido` sin errores. Alternativa si no funciona: abrir el archivo en GitHub o usar el validador online de GitHub Actions Syntax.
 
 - [ ] **Step 5: Commit**
 
