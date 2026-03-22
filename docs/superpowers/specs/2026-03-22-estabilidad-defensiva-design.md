@@ -13,9 +13,9 @@ REPAART es un SaaS en producción con 516 tests unitarios pasando y 0 errores de
 
 1. **Sentry está instalado pero nunca inicializado** — `initSentry()` se exporta en `src/lib/sentry/index.ts` pero no se llama en ningún punto de entrada de la app. Ningún error de producción llega a Sentry.
 2. **ErrorBoundary no está conectado a Sentry** — `componentDidCatch` solo hace `console.error`. Si un componente falla, el error no se captura.
-3. **E2E desactivado en CI** — 13 archivos spec existen en `tests/e2e/` pero no hay job e2e en `.github/workflows/ci-cd.yml`. Los flujos críticos nunca se verifican automáticamente.
+3. **E2E desactivado en CI** — 12 archivos spec existen en `tests/e2e/` pero no hay job e2e en `.github/workflows/ci-cd.yml`. Los flujos críticos nunca se verifican automáticamente.
 
-Además hay ruido de calidad menor: `console.log` en producción y 4 errores de lint en `withErrorBoundary.tsx`.
+Además hay ruido de calidad menor: `console.log` en el módulo Sentry y 2 warnings de lint en `withErrorBoundary.tsx`.
 
 ---
 
@@ -25,9 +25,9 @@ Además hay ruido de calidad menor: `console.log` en producción y 4 errores de 
 
 - Activar Sentry con contexto de usuario y franquicia
 - Conectar ErrorBoundary a Sentry
-- Limpiar console.logs de producción (4 archivos admin + `initSentry`)
-- Corregir errores de lint en `withErrorBoundary.tsx`
-- Añadir job e2e en CI con Firebase Emulator (smoke test: auth + flujos críticos)
+- Limpiar `console.log` en `src/lib/sentry/index.ts` (2 líneas)
+- Corregir 2 warnings de lint en `withErrorBoundary.tsx` + eliminar prop muerta `resetOnError`
+- Añadir job `e2e-smoke` en CI con secrets de GitHub (smoke test: auth + flujos críticos)
 
 ### Excluido (fuera de alcance)
 
@@ -161,13 +161,6 @@ e2e-smoke:
         retention-days: 7
 ```
 
-**Nota:** Los tests e2e actuales usan Firebase real. Opciones para credenciales en CI:
-
-- **Opción A (recomendada):** Secrets de GitHub con usuario de test dedicado en Firebase
-- **Opción B (más robusta, más trabajo):** Firebase Emulator en CI con datos seed
-
-Se usa la Opción A en esta iteración. Secrets requeridos: `TEST_USER_EMAIL`, `TEST_USER_PASSWORD`.
-
 ---
 
 ## Criterios de éxito
@@ -203,5 +196,4 @@ Cada paso es un commit o PR independiente.
 | `src/lib/sentry/index.ts` | Eliminar `console.log` en líneas 51 y 53 |
 | `src/components/ui/feedback/ErrorBoundary.tsx` | Conectar `captureException` en `componentDidCatch` |
 | `src/hoc/withErrorBoundary.tsx` | Reemplazar `any` → `Error`/`ErrorInfo`, eliminar `resetOnError` |
-| `.github/workflows/ci-cd.yml` | Añadir job `e2e-smoke` |
 | `.github/workflows/ci-cd.yml` | Añadir job `e2e-smoke` |
