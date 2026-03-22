@@ -2,10 +2,33 @@ import React from 'react';
 import { AlertTriangle, CheckCircle, Search, TrendingUp, Brain, Zap, Target, Activity } from 'lucide-react';
 import { formatMoney } from '../../../lib/finance';
 
+interface BreakdownItem {
+    id?: string;
+    name: string;
+    value: number;
+}
+
+interface FinanceReport {
+    breakdown?: BreakdownItem[];
+    taxes?: { margin: number };
+}
+
+interface TrendDataPoint {
+    value: number;
+    [key: string]: unknown;
+}
+
+interface InsightItem {
+    type: 'warning' | 'success' | 'info';
+    title: string;
+    message: string;
+    icon: React.ReactNode;
+}
+
 interface SmartInsightsProps {
     mode?: 'franchise' | 'admin';
     // Franchise Props
-    report?: any;
+    report?: FinanceReport;
     revenue?: number;
     orders?: number;
     // Admin Props
@@ -15,8 +38,8 @@ interface SmartInsightsProps {
         margin: number;
         franchiseCount: number;
     };
-    trendData?: any[];
-    alerts?: any[];
+    trendData?: TrendDataPoint[];
+    alerts?: unknown[];
 }
 
 const SmartInsightsWidget: React.FC<SmartInsightsProps> = ({
@@ -29,7 +52,7 @@ const SmartInsightsWidget: React.FC<SmartInsightsProps> = ({
     alerts
 }) => {
     // --- LOGIC: THE DETECTIVE ---
-    const insights: any[] = [];
+    const insights: InsightItem[] = [];
 
     // ==========================================
     // 🛡️ ADMIN MODE LOGIC
@@ -134,7 +157,7 @@ const SmartInsightsWidget: React.FC<SmartInsightsProps> = ({
         }
 
         // 2. FUEL CHECK (Gasoline)
-        const fuelExpense = report.breakdown.find((i: any) => i.id === 'fuel' || i.name.toLowerCase().includes('gasolina') || i.name.toLowerCase().includes('combustible'));
+        const fuelExpense = report.breakdown.find((i: BreakdownItem) => i.id === 'fuel' || i.name.toLowerCase().includes('gasolina') || i.name.toLowerCase().includes('combustible'));
         if (fuelExpense && revenue > 0) {
             const fuelRatio = (fuelExpense.value / revenue) * 100;
             if (fuelRatio > 8) {
@@ -148,7 +171,7 @@ const SmartInsightsWidget: React.FC<SmartInsightsProps> = ({
         }
 
         // 3. REPAIRS CHECK
-        const repairExpense = report.breakdown.find((i: any) => i.id === 'repairs' || i.name.toLowerCase().includes('reparaci'));
+        const repairExpense = report.breakdown.find((i: BreakdownItem) => i.id === 'repairs' || i.name.toLowerCase().includes('reparaci'));
         if (repairExpense && repairExpense.value > 300) {
             insights.push({
                 type: 'warning',
@@ -159,7 +182,7 @@ const SmartInsightsWidget: React.FC<SmartInsightsProps> = ({
         }
 
         // 4. ANOMALY IN "OTHERS"
-        const otherExpense = report.breakdown.find((i: any) => i.id === 'other' || i.name.toLowerCase().includes('otros'));
+        const otherExpense = report.breakdown.find((i: BreakdownItem) => i.id === 'other' || i.name.toLowerCase().includes('otros'));
         if (otherExpense && otherExpense.value > 500) {
             insights.push({
                 type: 'info',

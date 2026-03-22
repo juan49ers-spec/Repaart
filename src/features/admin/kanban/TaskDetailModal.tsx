@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Calendar, CheckSquare, Tag, AlignLeft, Plus, Trash2, Clock, ArrowRight, Layers, CheckCircle2 } from 'lucide-react';
 import { KanbanTask } from '../../../hooks/useKanban';
+import { Timestamp } from 'firebase/firestore';
 import { format, isToday, isYesterday } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAuth } from '../../../context/AuthContext';
@@ -22,7 +23,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, isOpen, onClose
     const [newTag, setNewTag] = useState('');
     const [tags, setTags] = useState(task.tags || []);
     const [dueDate, setDueDate] = useState<string>(
-        (task.dueDate as any)?.toDate ? format((task.dueDate as any).toDate(), 'yyyy-MM-dd') : ''
+        (task.dueDate as Timestamp)?.toDate ? format((task.dueDate as Timestamp).toDate(), 'yyyy-MM-dd') : ''
     );
 
     // Comments Logic
@@ -96,7 +97,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, isOpen, onClose
         const comment = {
             id: crypto.randomUUID(),
             text: newComment.trim(),
-            createdAt: new Date() as any, // Local optimistic date (handled by dual check in render)
+            createdAt: new Date() as unknown as Timestamp, // Local optimistic date (handled by dual check in render)
             userId: user.uid,
             userName: user.displayName || 'Usuario'
         };
@@ -262,7 +263,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, isOpen, onClose
                             {/* Comments List */}
                             <div className="space-y-5 relative pl-3.5 border-l border-slate-100 dark:border-slate-800 ml-3.5">
                                 {comments.map((comment) => {
-                                    const date = (comment.createdAt as any)?.toDate ? (comment.createdAt as any).toDate() : new Date(comment.createdAt as any);
+                                    const date = (comment.createdAt as Timestamp)?.toDate ? (comment.createdAt as Timestamp).toDate() : new Date(comment.createdAt as unknown as string);
 
                                     let dateLabel = format(date, "d MMM yyyy", { locale: es });
                                     if (isToday(date)) dateLabel = "Hoy";

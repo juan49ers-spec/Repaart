@@ -3,6 +3,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { CheckCircle2, Clock } from 'lucide-react';
 import { KanbanTask } from '../../../hooks/useKanban';
+import { Timestamp } from 'firebase/firestore';
 import { format, isPast, isToday, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -28,7 +29,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ task, onCardClick }) => {
 
     const dateStatus = useMemo(() => {
         if (!task.dueDate) return null;
-        const date = (task.dueDate as any)?.toDate ? (task.dueDate as any).toDate() : new Date(task.dueDate as any);
+        const date = (task.dueDate as Timestamp)?.toDate ? (task.dueDate as Timestamp).toDate() : new Date(task.dueDate as unknown as string);
         if (isPast(date) && !isToday(date)) return 'overdue';
         if (isToday(date)) return 'today';
         if (date <= addDays(new Date(), 3)) return 'upcoming';
@@ -37,7 +38,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ task, onCardClick }) => {
 
     const formattedDate = useMemo(() => {
         if (!task.dueDate) return null;
-        const date = (task.dueDate as any)?.toDate ? (task.dueDate as any).toDate() : new Date(task.dueDate as any);
+        const date = (task.dueDate as Timestamp)?.toDate ? (task.dueDate as Timestamp).toDate() : new Date(task.dueDate as unknown as string);
         return format(date, 'd MMM', { locale: es });
     }, [task.dueDate]);
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../../context/AuthContext'; // Verify path
+import { useAuth, AuthUser } from '../../../context/AuthContext'; // Verify path
 import { supportService, SupportTicket, PremiumRequest } from '../../support/SupportService'; // Verify Import
 import { notificationService } from '../../../services/notificationService';
 import { MessageSquare, Star, Plus, Clock } from 'lucide-react';
@@ -50,7 +50,7 @@ const SupportDashboard = () => {
         try {
             // Assume user has franchiseId or use user.uid as identifier for now
             // Ideally use user.franchiseId
-            const fId = (user as any).franchiseId || user?.uid;
+            const fId = (user as AuthUser).franchiseId || user?.uid;
 
             if (activeTab === 'tickets') {
                 const data = await supportService.getTickets(fId);
@@ -67,9 +67,9 @@ const SupportDashboard = () => {
     };
 
     const handleCreateTicket = async () => {
-        const fId = (user as any).franchiseId || user?.uid;
+        const fId = (user as AuthUser).franchiseId || user?.uid;
         // Need franchise Name ideally
-        const fName = (user as any).franchiseName || 'Mi Franquicia';
+        const fName = (user as AuthUser & { franchiseName?: string }).franchiseName || 'Mi Franquicia';
 
         await supportService.createTicket({
             userId: user?.uid || '',
@@ -77,8 +77,8 @@ const SupportDashboard = () => {
             franchiseName: fName,
             subject: newTicket.subject,
             message: newTicket.message,
-            category: newTicket.category as any,
-            priority: newTicket.priority as any
+            category: newTicket.category as SupportTicket['category'],
+            priority: newTicket.priority as SupportTicket['priority']
         });
 
         // Notify Admin
@@ -100,8 +100,8 @@ const SupportDashboard = () => {
     };
 
     const handleRequestService = async (service: typeof SERVICES_CATALOG[0]) => {
-        const fId = (user as any).franchiseId || user?.uid;
-        const fName = (user as any).franchiseName || 'Mi Franquicia';
+        const fId = (user as AuthUser).franchiseId || user?.uid;
+        const fName = (user as AuthUser & { franchiseName?: string }).franchiseName || 'Mi Franquicia';
 
         if (confirm(`¿Deseas solicitar el servicio: ${service.name}?`)) {
             await supportService.requestPremiumService({

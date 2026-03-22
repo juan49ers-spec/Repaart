@@ -6,6 +6,7 @@ import {
 import { doc, collection, query, where, orderBy, limit, getDocs, Timestamp, updateDoc, onSnapshot, addDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import { type User } from 'firebase/auth';
+import { type AuthUser } from '../../../context/AuthContext';
 import { formatTimeAgo } from '../../../utils/dateHelpers';
 import { auditService } from '../../admin/services/auditService';
 
@@ -24,7 +25,7 @@ interface NotificationItem {
     createdAt: Timestamp;
     read: boolean;
     priority?: 'high' | 'normal' | 'low';
-    metadata?: any;
+    metadata?: Record<string, unknown>;
     status?: 'pending' | 'resolved' | 'rejected';
     // Admin specific fields
     franchiseName?: string;
@@ -62,8 +63,8 @@ const NotificationsTab: FC<NotificationsTabProps> = ({ user, franchiseId, isAdmi
                 // Safe franchise ID check
                 if (franchiseId) targetIds.push(franchiseId);
                 // Also check if user object has it attached
-                if ((user as any).franchiseId && (user as any).franchiseId !== franchiseId) {
-                    targetIds.push((user as any).franchiseId);
+                if ((user as AuthUser).franchiseId && (user as AuthUser).franchiseId !== franchiseId) {
+                    targetIds.push((user as AuthUser).franchiseId as string);
                 }
 
                 console.log("Fetching FRANCHISE notifications for:", targetIds);
@@ -97,7 +98,7 @@ const NotificationsTab: FC<NotificationsTabProps> = ({ user, franchiseId, isAdmi
     }, [user, franchiseId, isAdmin]);
 
     // --- ACTIONS (REAL BUSINESS LOGIC) ---
-    const handleAction = async (id: string, action: 'approve' | 'reject', type: string, metadata?: any) => {
+    const handleAction = async (id: string, action: 'approve' | 'reject', type: string, metadata?: Record<string, unknown>) => {
         setProcessingId(id);
 
         // 1. Optimistic Update (UI Feedback)
@@ -122,8 +123,8 @@ const NotificationsTab: FC<NotificationsTabProps> = ({ user, franchiseId, isAdmi
 
             // 3. EXECUTE BUSINESS LOGIC BASED ON TYPE
             if (type === 'UNLOCK_REQUEST') {
-                const franchiseId = (metadata?.franchiseId || (user as any).franchiseId);
-                const monthYear = metadata?.monthYear; // Expected format: '01-2026' or similar
+                const franchiseId = (metadata?.franchiseId || (user as AuthUser).franchiseId) as string | undefined;
+                const monthYear = metadata?.monthYear as string | undefined; // Expected format: '01-2026' or similar
 
                 if (action === 'approve' && franchiseId && monthYear) {
                     // A: Unlock the Financial Month
@@ -171,7 +172,7 @@ const NotificationsTab: FC<NotificationsTabProps> = ({ user, franchiseId, isAdmi
                         userId: franchiseId, // Notify the franchise
                         type: 'MONTH_UNLOCKED',
                         title: 'Solicitud Aprobada',
-                        message: `Se ha desbloqueado el mes de ${metadata?.monthLabel || monthYear}. Ya puedes realizar modificaciones.`,
+                        message: `Se ha desbloqueado el mes de ${(metadata?.monthLabel as string) || monthYear}. Ya puedes realizar modificaciones.`,
                         read: false,
                         createdAt: Timestamp.now(),
                         priority: 'high',
@@ -186,7 +187,7 @@ const NotificationsTab: FC<NotificationsTabProps> = ({ user, franchiseId, isAdmi
                         userId: franchiseId,
                         type: 'UNLOCK_REJECTED',
                         title: 'Solicitud Rechazada',
-                        message: `No se ha aprobado el desbloqueo del mes de ${metadata?.monthLabel || monthYear}. Contacta con soporte para más detalles.`,
+                        message: `No se ha aprobado el desbloqueo del mes de ${(metadata?.monthLabel as string) || monthYear}. Contacta con soporte para más detalles.`,
                         read: false,
                         createdAt: Timestamp.now(),
                         priority: 'normal'
@@ -199,10 +200,10 @@ const NotificationsTab: FC<NotificationsTabProps> = ({ user, franchiseId, isAdmi
                     );
                 }
             } else if (type === 'shift_change_request') {
-                const shiftId = metadata?.shiftId;
-                const newStart = metadata?.newStart; // ISO String
-                const newEnd = metadata?.newEnd;     // ISO String
-                const riderId = metadata?.riderId;
+                const shiftId = metadata?.shiftId as string | undefined;
+                const newStart = metadata?.newStart as string | undefined; // ISO String
+                const newEnd = metadata?.newEnd as string | undefined;     // ISO String
+                const riderId = metadata?.riderId as string | undefined;
 
                 if (action === 'approve' && shiftId && newStart && newEnd) {
                     // A: Update the Shift
@@ -218,7 +219,7 @@ const NotificationsTab: FC<NotificationsTabProps> = ({ user, franchiseId, isAdmi
                     console.log(`[Shift] Shift ${shiftId} updated to ${newStart} - ${newEnd}`);
 
                     // --- AUDIT LOG ---
-                    await auditService.logAction(user, 'APPROVE', 'work_shift', shiftId,
+                    await auditService.logAction(user, 'APPROVE', 'work_shift', shiftId as string,
                         { after: { startAt: newStart, endAt: newEnd, status: 'scheduled' } },
                         { reason: 'Shift Change Request Approved', notificationId: id }
                     );
@@ -239,7 +240,7 @@ const NotificationsTab: FC<NotificationsTabProps> = ({ user, franchiseId, isAdmi
 
                 } else if (action === 'reject' && shiftId) {
                     // Just clear the flag without changing times
-                    const shiftRef = doc(db, "work_shifts", shiftId);
+                    const shiftRef = doc(db, "work_shifts", shiftId as string);
                     await updateDoc(shiftRef, {
                         changeRequested: false,
                         changeReason: null, // Clear reason
@@ -247,7 +248,7 @@ const NotificationsTab: FC<NotificationsTabProps> = ({ user, franchiseId, isAdmi
                     });
 
                     // --- AUDIT LOG ---
-                    await auditService.logAction(user, 'REJECT', 'work_shift', shiftId,
+                    await auditService.logAction(user, 'REJECT', 'work_shift', shiftId as string,
                         { after: { changeRequested: false } },
                         { reason: 'Shift Change Request Rejected', notificationId: id }
                     );
@@ -428,7 +429,7 @@ const NotificationsTab: FC<NotificationsTabProps> = ({ user, franchiseId, isAdmi
                                         </p>
 
                                         {/* --- SMART CONTEXT DATA (If Applicable) --- */}
-                                        {(notification.metadata || (notification as any).franchiseName) && (
+                                        {(notification.metadata || notification.franchiseName) && (
                                             <div className="mb-4 bg-slate-50 rounded-xl p-3 border border-slate-100 text-xs">
                                                 {/* Logic to display specific metadata based on type */}
                                                 {notification.type === 'UNLOCK_REQUEST' && (
@@ -436,17 +437,17 @@ const NotificationsTab: FC<NotificationsTabProps> = ({ user, franchiseId, isAdmi
                                                         <div className="flex items-center gap-4 mb-2">
                                                             <div>
                                                                 <span className="block text-slate-400 uppercase tracking-wider font-bold text-[10px]">Cierre Auditado</span>
-                                                                <span className="font-mono font-bold text-slate-700">{notification.metadata?.monthLabel || notification.metadata?.monthYear || '---'}</span>
+                                                                <span className="font-mono font-bold text-slate-700">{(notification.metadata?.monthLabel as string) || (notification.metadata?.monthYear as string) || '---'}</span>
                                                             </div>
                                                             <div className="w-px h-8 bg-slate-200"></div>
                                                             <div>
                                                                 <span className="block text-slate-400 uppercase tracking-wider font-bold text-[10px]">Solicitante</span>
-                                                                <span className="font-bold text-slate-700">{notification.metadata?.requestorName || notification.franchiseName || 'Usuario'}</span>
+                                                                <span className="font-bold text-slate-700">{(notification.metadata?.requestorName as string) || notification.franchiseName || 'Usuario'}</span>
                                                             </div>
                                                         </div>
                                                         <ClosurePreview
-                                                            franchiseId={notification.metadata?.franchiseId || (user as any).franchiseId}
-                                                            monthYear={notification.metadata?.monthYear}
+                                                            franchiseId={(notification.metadata?.franchiseId || (user as AuthUser).franchiseId) as string}
+                                                            monthYear={notification.metadata?.monthYear as string}
                                                             user={user}
                                                         />
                                                     </div>
@@ -465,7 +466,7 @@ const NotificationsTab: FC<NotificationsTabProps> = ({ user, franchiseId, isAdmi
                                                                 <span className="block text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-1">Turno Actual</span>
                                                                 <div className="font-mono text-slate-700 font-bold">
                                                                     {notification.metadata.currentStart && notification.metadata.currentEnd
-                                                                        ? `${new Date(notification.metadata.currentStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(notification.metadata.currentEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                                                                        ? `${new Date(notification.metadata.currentStart as string).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(notification.metadata.currentEnd as string).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                                                                         : 'Sin asignar'}
                                                                 </div>
                                                             </div>
@@ -477,14 +478,14 @@ const NotificationsTab: FC<NotificationsTabProps> = ({ user, franchiseId, isAdmi
                                                                 <span className="block text-[9px] uppercase tracking-wider text-emerald-600 font-bold mb-1">Nuevo Horario</span>
                                                                 <div className="font-mono text-emerald-700 font-black">
                                                                     {notification.metadata.newStart && notification.metadata.newEnd
-                                                                        ? `${new Date(notification.metadata.newStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(notification.metadata.newEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                                                                        ? `${new Date(notification.metadata.newStart as string).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(notification.metadata.newEnd as string).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                                                                         : '??:?? - ??:??'}
                                                                 </div>
                                                             </div>
                                                         </div>
                                                         {notification.metadata.reason && (
                                                             <div className="text-slate-500 italic bg-amber-50/50 p-2 rounded border border-amber-100/50">
-                                                                &ldquo;{notification.metadata.reason}&rdquo;
+                                                                &ldquo;{notification.metadata.reason as string}&rdquo;
                                                             </div>
                                                         )}
                                                     </div>
@@ -551,7 +552,7 @@ const NotificationsTab: FC<NotificationsTabProps> = ({ user, franchiseId, isAdmi
 };
 
 const ClosurePreview: FC<{ franchiseId: string; monthYear: string; user: User }> = ({ franchiseId, monthYear, user }) => {
-    const [data, setData] = useState<any>(null);
+    const [data, setData] = useState<Record<string, unknown> | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -583,25 +584,27 @@ const ClosurePreview: FC<{ franchiseId: string; monthYear: string; user: User }>
 
     const formatCurrency = (amount: number) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount || 0);
 
+    const closureData = data as { totalRevenue: number; totalExpenses: number; netParam?: number; unlockedBy?: string };
+
     return (
         <div className="mt-2 bg-white/50 border border-slate-200 rounded-xl p-3 flex flex-wrap gap-4 shadow-sm backdrop-blur-sm">
             <div className="flex flex-col">
                 <span className="text-[9px] uppercase tracking-widest text-slate-400 font-bold">Ingresos</span>
-                <span className="text-sm font-black text-emerald-600 font-mono">{formatCurrency(data.totalRevenue)}</span>
+                <span className="text-sm font-black text-emerald-600 font-mono">{formatCurrency(closureData.totalRevenue)}</span>
             </div>
             <div className="w-px h-8 bg-slate-200 self-center"></div>
             <div className="flex flex-col">
                 <span className="text-[9px] uppercase tracking-widest text-slate-400 font-bold">Gastos</span>
-                <span className="text-sm font-black text-rose-500 font-mono">{formatCurrency(data.totalExpenses)}</span>
+                <span className="text-sm font-black text-rose-500 font-mono">{formatCurrency(closureData.totalExpenses)}</span>
             </div>
             <div className="w-px h-8 bg-slate-200 self-center"></div>
             <div className="flex flex-col">
                 <span className="text-[9px] uppercase tracking-widest text-slate-400 font-bold">Beneficio Neto</span>
-                <span className={`text-sm font-black font-mono ${data.netParam > 0 ? 'text-indigo-600' : 'text-slate-600'}`}>
-                    {formatCurrency(data.netParam || (data.totalRevenue - data.totalExpenses))}
+                <span className={`text-sm font-black font-mono ${(closureData.netParam ?? 0) > 0 ? 'text-indigo-600' : 'text-slate-600'}`}>
+                    {formatCurrency(closureData.netParam || (closureData.totalRevenue - closureData.totalExpenses))}
                 </span>
             </div>
-            {data.unlockedBy && (
+            {closureData.unlockedBy && (
                 <div className="ml-auto flex items-center gap-1 text-[9px] bg-amber-50 text-amber-600 px-2 py-1 rounded border border-amber-100">
                     <LockIcon size={10} />
                     PREVIAMENTE DESBLOQUEADO
