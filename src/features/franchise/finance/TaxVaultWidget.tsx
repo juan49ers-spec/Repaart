@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
 import { formatMoney, MonthlyData } from '../../../lib/finance';
-import { Landmark, Maximize2, Activity } from 'lucide-react';
+import { Landmark, Maximize2, Activity, ChevronDown, ChevronUp } from 'lucide-react';
 import { TaxCalculations } from '../../../hooks/useTaxCalculations';
 import QuarterlyTaxModal from '../dashboard/widgets/QuarterlyTaxModal';
+import { Invoice } from '../../../types/invoicing';
 
 interface TaxVaultWidgetProps {
     taxes: TaxCalculations | null;
     minimal?: boolean;
     currentMonth?: string;
     historicalData?: MonthlyData[];
+    currentInvoices?: Invoice[];
 }
 
-const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, historicalData }) => {
+const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, historicalData, currentInvoices }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [invoicesExpanded, setInvoicesExpanded] = useState(false);
 
     if (!taxes) return null;
 
@@ -54,10 +57,16 @@ const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, hi
             {/* HIGH-DENSITY PROGRESS TRACKING */}
             <div className="space-y-4 flex-1">
                 <div className="group/bar">
-                    <div className="flex justify-between items-end mb-1 px-1">
+                    <div 
+                        className={`flex justify-between items-end mb-1 px-1 cursor-pointer transition-colors rounded-md p-1 -mx-1 ${invoicesExpanded ? 'bg-indigo-50/50 dark:bg-indigo-900/20' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                        onClick={() => setInvoicesExpanded(!invoicesExpanded)}
+                    >
                         <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">IVA</span>
+                            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">IVA Repercutido</span>
+                            {currentInvoices && currentInvoices.length > 0 && (
+                                invoicesExpanded ? <ChevronUp className="w-3 h-3 text-slate-400" /> : <ChevronDown className="w-3 h-3 text-slate-400" />
+                            )}
                         </div>
                         <span className="text-xs font-bold text-slate-700 dark:text-slate-300 tabular-nums">{formatMoney(ivaPayable)}€</span>
                     </div>
@@ -67,6 +76,34 @@ const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, hi
                             style={{ width: `${Math.min((ivaPayable / (totalTaxLiability || 1)) * 100, 100)}%` }}
                         />
                     </div>
+                    {/* EXPANDABLE INVOICES SECTION */}
+                    {invoicesExpanded && currentInvoices && currentInvoices.length > 0 && (
+                        <div className="mt-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700 p-2 text-[10px] overflow-hidden animate-in fade-in slide-in-from-top-1 max-h-40 overflow-y-auto custom-scrollbar">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="border-b border-slate-200 dark:border-slate-700">
+                                        <th className="font-semibold text-slate-500 dark:text-slate-400 pb-1">Factura</th>
+                                        <th className="font-semibold text-slate-500 dark:text-slate-400 pb-1 text-right">Base</th>
+                                        <th className="font-semibold text-slate-500 dark:text-slate-400 pb-1 text-right">IVA</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {currentInvoices.map((inv) => {
+                                        const subtotal = inv.subtotal || 0;
+                                        const total = inv.total || 0;
+                                        const iva = total - subtotal;
+                                        return (
+                                            <tr key={inv.id} className="border-b border-slate-100/50 dark:border-slate-700/50 last:border-0 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
+                                                <td className="py-1.5 text-slate-600 dark:text-slate-300 font-mono truncate max-w-[80px]" title={inv.fullNumber}>{inv.fullNumber}</td>
+                                                <td className="py-1.5 text-slate-600 dark:text-slate-300 tabular-nums text-right">{formatMoney(subtotal)}€</td>
+                                                <td className="py-1.5 font-semibold text-indigo-600 dark:text-indigo-400 tabular-nums text-right">{formatMoney(iva)}€</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
 
                 <div className="group/bar">

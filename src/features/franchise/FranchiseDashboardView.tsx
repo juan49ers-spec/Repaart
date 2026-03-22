@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Activity, Bot } from 'lucide-react';
 import { FinancialReport, MonthlyData } from '../../lib/finance';
 import type { TrendItem } from '../../types/finance';
 import type { FinancialRecord } from './finance/types';
+import type { Invoice } from '../../types/invoicing';
 import { TaxCalculations } from '../../hooks/useTaxCalculations';
 
 
@@ -69,6 +70,7 @@ export interface FranchiseDashboardViewProps {
     onMonthChange: (month: string) => void;
     onUpdateFinance: (data: Partial<MonthlyData>) => Promise<void>;
     monthlyInvoicedAmount?: number;
+    currentInvoices?: Invoice[];
 }
 
 const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
@@ -98,7 +100,8 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
     setShowGuide,
     onMonthChange,
     onUpdateFinance,
-    monthlyInvoicedAmount
+    monthlyInvoicedAmount,
+    currentInvoices
 }: FranchiseDashboardViewProps) => {
     const { user } = useAuth();
 
@@ -206,15 +209,38 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                         </button>
 
                         {/* Action Primary: Close Month */}
-                        {!readOnly && (
-                            <button
-                                onClick={() => setIsWizardOpen(true)}
-                                className="px-4 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-all mechanical-press shadow-sm flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white border border-red-400 hover:shadow-md hover:scale-[1.01]"
-                            >
-                                <Activity className="w-3.5 h-3.5" />
-                                <span>ejecutar.cierre</span>
-                            </button>
-                        )}
+                        {!readOnly && (() => {
+                            // Using type assertion to any to access potentially missing fields in rawData
+                            const rawDataAny = rawData as any;
+                            const rawStatus = rawDataAny?.status;
+                            const rawLocked = rawDataAny?.isLocked;
+                            const hasData = rawDataAny?.revenue || rawDataAny?.totalIncome;
+                            
+                            const status = rawStatus || (rawLocked ? 'locked' : (!hasData ? 'open' : 'draft'));
+                            
+                            return (
+                                <div className="relative">
+                                    <div className="absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 px-2 py-0.5 bg-slate-800 dark:bg-slate-700 text-white rounded shadow-md border border-slate-700/50 flex items-center gap-1.5 whitespace-nowrap z-40 pointer-events-none animate-in fade-in slide-in-from-bottom-1">
+                                        <span className="text-[8px] font-bold uppercase tracking-widest text-slate-400">Estado:</span>
+                                        <span className="text-[9px] font-bold uppercase tracking-wider">
+                                            {status === 'draft' && <span className="flex items-center gap-1 text-yellow-400"><span className="w-1.5 h-1.5 rounded-full bg-yellow-400"></span> Borrador</span>}
+                                            {status === 'approved' && <span className="flex items-center gap-1 text-emerald-400"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Aprobado</span>}
+                                            {status === 'locked' && <span className="flex items-center gap-1 text-slate-300"><span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Cerrado</span>}
+                                            {status === 'open' && <span className="flex items-center gap-1 text-indigo-300"><span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span> Abierto</span>}
+                                        </span>
+                                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 dark:bg-slate-700 border-r border-b border-slate-700/50 rotate-45"></div>
+                                    </div>
+
+                                    <button
+                                        onClick={() => setIsWizardOpen(true)}
+                                        className="px-4 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-all mechanical-press shadow-sm flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white border border-red-400 hover:shadow-md hover:scale-[1.01]"
+                                    >
+                                        <Activity className="w-3.5 h-3.5" />
+                                        <span>ejecutar.cierre</span>
+                                    </button>
+                                </div>
+                            );
+                        })()}
                     </div>
                 </div>
 
@@ -254,6 +280,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                                                         minimal
                                                         currentMonth={effectiveMonth}
                                                         historicalData={trendData as unknown as DashboardTrendItem[]}
+                                                        currentInvoices={currentInvoices}
                                                     />
                                                 </div>
                                             </ErrorBoundary>

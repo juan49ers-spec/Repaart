@@ -44,6 +44,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
     const [isAdvisorOpen, setIsAdvisorOpen] = useState(false);
     const [monthlyInvoicedAmount, setMonthlyInvoicedAmount] = useState(0);
     const [invoicedIva, setInvoicedIva] = useState(0);
+    const [currentInvoices, setCurrentInvoices] = useState<Invoice[]>([]);
 
     // Tactical UI States (Restored)
     const [isWizardOpen, setIsWizardOpen] = useState(false);
@@ -82,7 +83,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
             if (activeFranchiseId) {
                 try {
                     const invoices: Invoice[] = await getInvoices(activeFranchiseId);
-                    const currentMonthInvoices = invoices.filter((inv: Invoice) => {
+                    const filteredInvoices = invoices.filter((inv: Invoice) => {
                         let date: Date;
                         const issueDate = inv.issueDate as unknown as TimestampLike;
 
@@ -97,11 +98,12 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
                         return date.toISOString().slice(0, 7) === effectiveMonth && inv.status === 'ISSUED';
                     });
 
-                    const total = currentMonthInvoices.reduce((sum: number, inv: Invoice) => sum + (inv.subtotal || 0), 0);
-                    const totalIva = currentMonthInvoices.reduce((sum: number, inv: Invoice) => sum + ((inv.total || 0) - (inv.subtotal || 0)), 0);
+                    const total = filteredInvoices.reduce((sum: number, inv: Invoice) => sum + (inv.subtotal || 0), 0);
+                    const totalIva = filteredInvoices.reduce((sum: number, inv: Invoice) => sum + ((inv.total || 0) - (inv.subtotal || 0)), 0);
 
                     setMonthlyInvoicedAmount(total);
                     setInvoicedIva(totalIva);
+                    setCurrentInvoices(filteredInvoices);
                 } catch (error) {
                     console.error("Error fetching invoices for automation:", error);
                 }
@@ -168,6 +170,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
                 onMonthChange={setEffectiveMonth}
                 onUpdateFinance={updateFinance}
                 monthlyInvoicedAmount={monthlyInvoicedAmount}
+                currentInvoices={currentInvoices}
             />
 
             {/* AI Finance Advisor Chat */}

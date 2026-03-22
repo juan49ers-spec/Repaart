@@ -7,6 +7,7 @@ interface FinancialHeaderProps {
     setStep: (step: 1 | 2 | 3) => void;
     onClose: () => void;
     isLocked: boolean;
+    status: string;
     onOpenGuide?: () => void;
 }
 
@@ -16,16 +17,22 @@ const steps = [
     { id: 3 as const, label: 'Revisión' },
 ];
 
-export const FinancialHeader: React.FC<FinancialHeaderProps> = ({ month, step, setStep, onClose, isLocked, onOpenGuide }) => {
+export const FinancialHeader: React.FC<FinancialHeaderProps> = ({ month, step, setStep, onClose, isLocked, status, onOpenGuide }) => {
     return (
         <div className="h-10 bg-white dark:bg-slate-900 flex items-center justify-between px-4 shrink-0 relative z-20 border-b border-slate-200/50 dark:border-white/5">
             {/* Left: Title */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
                 <div className="p-1 bg-indigo-600 rounded-md text-white">
                     <Activity className="w-3 h-3" strokeWidth={2.5} />
                 </div>
                 <div>
-                    <h1 className="text-[9px] font-bold text-slate-800 dark:text-white tracking-tight leading-none uppercase">Cierre Financiero</h1>
+                    <div className="flex items-center gap-2">
+                        <h1 className="text-[9px] font-bold text-slate-800 dark:text-white tracking-tight leading-none uppercase">Cierre Financiero</h1>
+                        {status === 'draft' && <span className="px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-wider bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">Borrador</span>}
+                        {status === 'approved' && <span className="px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Aprobado</span>}
+                        {status === 'locked' && <span className="px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">Cerrado</span>}
+                        {(!status || status === 'open') && <span className="px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-wider bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400">Abierto</span>}
+                    </div>
                     <p className="text-[7px] text-slate-400 font-semibold tracking-wider uppercase mt-px">{month}</p>
                 </div>
             </div>
@@ -43,7 +50,7 @@ export const FinancialHeader: React.FC<FinancialHeaderProps> = ({ month, step, s
                             {idx > 0 && <div className="w-6 h-px bg-slate-200 dark:bg-slate-700 hidden lg:block" />}
                             <button
                                 role="tab"
-                                aria-selected={isActive}
+                                aria-selected={isActive ? "true" : "false"}
                                 onClick={() => !isLocked && setStep(s.id)}
                                 className={`flex items-center gap-1 px-2 py-1 border-b-2 transition-all text-[8px] font-bold uppercase tracking-tight ${isActive ? activeColor : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
                                     }`}

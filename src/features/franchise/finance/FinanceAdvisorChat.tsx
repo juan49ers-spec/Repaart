@@ -793,24 +793,24 @@ Puedo ayudarte con cosas como:
                                     <div className="space-y-4">
                                         {/* Score */}
                                         <div className="text-center py-3">
-                                            <div className="relative inline-flex items-center justify-center w-24 h-24">
-                                                <svg width={96} height={96} className="transform -rotate-90">
-                                                    <circle cx={48} cy={48} r={40} fill="none" stroke="#e2e8f0" strokeWidth={8} />
+                                            <div className="relative inline-flex items-center justify-center w-28 h-28">
+                                                <svg width={112} height={112} viewBox="0 0 112 112" className="transform -rotate-90">
+                                                    <circle cx={56} cy={56} r={46} fill="none" stroke="#e2e8f0" strokeWidth={6} />
                                                     <circle
-                                                        cx={48} cy={48} r={40} fill="none"
-                                                        stroke="currentColor" strokeWidth={8}
-                                                        strokeDasharray={2 * Math.PI * 40}
-                                                        strokeDashoffset={2 * Math.PI * 40 * (1 - totalScore / 100)}
+                                                        cx={56} cy={56} r={46} fill="none"
+                                                        stroke="currentColor" strokeWidth={6}
+                                                        strokeDasharray={2 * Math.PI * 46}
+                                                        strokeDashoffset={2 * Math.PI * 46 * (1 - totalScore / 100)}
                                                         strokeLinecap="round"
                                                         className={cn("transition-all duration-1000 ease-out", scoreStroke)}
                                                     />
                                                 </svg>
                                                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                                    <span className={cn("text-2xl font-black tabular-nums", scoreText)}>{totalScore}</span>
-                                                    <span className="text-[9px] font-bold text-slate-400 uppercase">/100</span>
+                                                    <span className={cn("text-3xl font-bold tabular-nums", scoreText)}>{totalScore}</span>
+                                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">/100</span>
                                                 </div>
                                             </div>
-                                            <p className={cn("mt-1.5 text-sm font-bold", scoreText)}>{scoreLabelText}</p>
+                                            <p className={cn("mt-1.5 text-sm font-semibold", scoreText)}>{scoreLabelText}</p>
                                         </div>
 
                                         {/* Factors */}

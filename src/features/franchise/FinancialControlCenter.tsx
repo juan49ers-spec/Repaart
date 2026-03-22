@@ -38,7 +38,9 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
 
     const { saving, handleSave } = useFinancialSave({ franchiseId, month, onSave, onClose });
 
-    const [status, setStatus] = useState<'pending' | 'draft' | 'submitted' | 'approved' | 'unlock_requested' | 'locked' | 'open'>('draft');
+    const [status, setStatus] = useState<'pending' | 'draft' | 'submitted' | 'approved' | 'unlock_requested' | 'locked' | 'open'>(
+        (initialData?.status as any) || 'open'
+    );
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [orders, setOrders] = useState<OrderCounts>({});
     const [cancelledOrders, setCancelledOrders] = useState(0);
@@ -61,6 +63,7 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
         if (!isNaN(calculatedIncome)) {
             const hasOrderCounts = Object.values(orders).some(v => v > 0);
             if (hasOrderCounts && Math.abs(calculatedIncome - totalIncome) > 0.01) {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setTotalIncome(calculatedIncome);
             }
         }
@@ -69,6 +72,7 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
     // --- Reaccionar a suggestedIncome si no hay initialData ---
     useEffect(() => {
         if (suggestedIncome && (!initialData?.revenue && !initialData?.totalIncome)) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setTotalIncome(suggestedIncome);
         }
     }, [suggestedIncome, initialData]);
@@ -76,6 +80,7 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
     // --- Inicializar estado desde record cargado o datos de facturación ---
     useEffect(() => {
         if (record && Object.keys(record).length > 0) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setTotalIncome(record.revenue || record.totalIncome || 0);
             setTotalHours(record.totalHours || 0);
             setCancelledOrders(record.cancelledOrders || 0);
@@ -92,7 +97,7 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                     setOrders(mapInvoicedDataToOrders(invoicedIncome.ordersDetail, activeRangeNames));
                 }
                 setTotalIncome(invoicedIncome.subtotal);
-                setStatus('draft');
+                setStatus('open');
             }
         }
     }, [record, loading, invoicedIncome, logisticsRates]);
@@ -133,6 +138,7 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                     setStep={(s) => !isLocked && setStep(s)}
                     onClose={onClose}
                     isLocked={isLocked}
+                    status={status}
                     onOpenGuide={onOpenGuide}
                 />
 
@@ -143,8 +149,6 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                                 <RevenueStep
                                     orders={orders}
                                     setOrders={setOrders}
-                                    cancelledOrders={cancelledOrders}
-                                    setCancelledOrders={setCancelledOrders}
                                     totalIncome={totalIncome}
                                     setTotalIncome={setTotalIncome}
                                     isLocked={isLocked}
@@ -177,35 +181,39 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                                         expenses={expenses}
                                     />
 
-                                    <div className="flex flex-col gap-4">
-                                        <div className="flex-1 bg-white dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-200/60 dark:border-white/5 flex flex-col justify-center text-center">
-                                            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-3">
-                                                Resultado Final
-                                            </p>
-                                            <p className={`text-4xl sm:text-5xl font-black tracking-tighter tabular-nums ${stats.profit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                                                {stats.profit.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
-                                            </p>
-                                            <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mt-1 uppercase tracking-wider">
-                                                Beneficio Operativo (EBITDA)
-                                            </p>
+                                    <div className="flex flex-col h-full">
+                                        <div className="flex-1 bg-white dark:bg-slate-900/50 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-white/5 flex flex-col relative overflow-hidden shadow-sm">
+                                            {/* Main Centered Content */}
+                                            <div className="flex-1 flex flex-col justify-center items-center text-center pb-4">
+                                                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">
+                                                    Resultado Final
+                                                </p>
+                                                <p className={`text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight tabular-nums ${stats.profit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                                    {stats.profit.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                                                </p>
+                                                <p className={`text-[10px] font-bold mt-2 uppercase tracking-widest ${stats.profit >= 0 ? 'text-emerald-600/80 dark:text-emerald-400/80' : 'text-rose-600/80 dark:text-rose-400/80'}`}>
+                                                    Beneficio Operativo (EBITDA)
+                                                </p>
+                                            </div>
 
-                                            <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-3 gap-3">
+                                            {/* Bottom Stats Grid */}
+                                            <div className="mt-auto pt-6 border-t border-slate-100 dark:border-slate-800/60 grid grid-cols-3 gap-4 text-center">
                                                 <div>
-                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Ingresos</p>
-                                                    <p className="text-sm font-black text-slate-700 dark:text-slate-200 tabular-nums">
+                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Ingresos</p>
+                                                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200 tabular-nums">
                                                         {totalIncome.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Gastos</p>
-                                                    <p className="text-sm font-black text-rose-600 dark:text-rose-400 tabular-nums">
+                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Gastos</p>
+                                                    <p className="text-sm font-bold text-rose-600 dark:text-rose-400 tabular-nums">
                                                         -{stats.totalExpenses.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Margen</p>
-                                                    <p className={`text-sm font-black tabular-nums ${(stats.profit / (totalIncome || 1)) * 100 >= 15 ? 'text-emerald-600' : 'text-amber-600'}`}>
-                                                        {((stats.profit / (totalIncome || 1)) * 100).toFixed(1)}%
+                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">M. Ventas</p>
+                                                    <p className={`text-sm font-bold tabular-nums ${stats.profit > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                                        {totalIncome > 0 ? ((stats.profit / totalIncome) * 100).toFixed(1) : 0}%
                                                     </p>
                                                 </div>
                                             </div>
@@ -225,6 +233,7 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                     onConfirm={() => handleSaveData(true)}
                     isLocked={isLocked}
                     saving={saving}
+                    status={status}
                 />
             </div>
         </div>
