@@ -23,10 +23,13 @@ export const useTaxCalculations = (report: FinancialReport | null, invoicedIva: 
             };
         }
 
-        const ivaCollected = (report.taxes.ivaRepercutido || 0) + invoicedIva;
+        // To avoid double-counting the VAT from actual invoices (invoicedIva) that might
+        // already be included inside the general 'revenue', we take the maximum between
+        // the general 21% estimate over everything OR the explicit B2B invoices VAT.
+        const ivaCollected = Math.max(report.taxes.ivaRepercutido || 0, invoicedIva);
         const ivaDeductible = report.taxes.ivaSoportado || 0;
 
-        // Recalculate payable IVA with the additional invoiced IVA
+        // Recalculate payable IVA with the consolidated input
         const ivaPayable = Math.max(0, ivaCollected - ivaDeductible);
         const irpfPayable = report.taxes.irpfPago || 0;
 

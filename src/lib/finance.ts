@@ -366,7 +366,7 @@ export const calculateExpenses = (
 
     // --- TAX ESTIMATION ---
     const ivaPercent = 0.21;
-    // Items that typically carry VAT
+    // Items that carry VAT deduction at 100%
     const taxableExpensesBase =
         rentingCost +
         agencyFee +

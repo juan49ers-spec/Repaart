@@ -121,7 +121,7 @@ export const mapRecordToExpenses = (data: FinancialRecord): ExpenseData => ({
         count: data.motoCount || 0,
         pricePerUnit: (data.motoCount && Number.isFinite(Number(data.rentingCost)))
             ? Number(data.rentingCost) / data.motoCount
-            : 154
+            : 159
     },
     agencyFee: data.agencyFee || 0,
     prlFee: data.prlFee || 0,

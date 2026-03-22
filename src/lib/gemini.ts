@@ -41,7 +41,8 @@ export const initGeminiChat = async (): Promise<boolean> => {
     try {
         const genAI = new GoogleGenerativeAI(API_KEY);
         const model: GenerativeModel = genAI.getGenerativeModel({
-            model: "gemini-pro"
+            model: "gemini-1.5-flash",
+            systemInstruction: SYSTEM_INSTRUCTION
         });
 
         chatSession = model.startChat({
