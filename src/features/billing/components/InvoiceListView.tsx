@@ -498,8 +498,18 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
   const handleViewPdf = (invoice: Invoice) => {
     if (invoice.pdfUrl) {
       setPreviewPdfUrl(invoice.pdfUrl);
+    } else if (invoice.status === 'ISSUED' || invoice.status === 'RECTIFIED') {
+      try {
+        const pdfBuffer = invoicePdfGenerator.generateInvoicePdf(invoice);
+        const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        setPreviewPdfUrl(url);
+      } catch (error) {
+        console.error('Error generating PDF preview:', error);
+        message.error('Error al generar la vista previa del PDF.');
+      }
     } else {
-      message.warning('PDF no disponible. La factura debe estar emitida para tener PDF.');
+      message.warning('La factura debe estar emitida para tener PDF.');
     }
   };
 

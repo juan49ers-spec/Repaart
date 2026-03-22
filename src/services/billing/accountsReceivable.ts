@@ -43,20 +43,20 @@ const INVOICES_COLLECTION = 'invoices';
 const PAYMENTS_COLLECTION = 'payment_receipts';
 
 /**
- * Helper: Calculate days overdue
+ * Helper: Calculate days since a given date (used for issueDate to check rules)
  */
-function calculateDaysOverdue(dueDate: Date | { seconds: number; nanoseconds: number }): number {
+function calculateDaysSinceDate(dateObj: Date | { seconds: number; nanoseconds: number }): number {
     const now = new Date();
-    const due = dueDate instanceof Date ? dueDate : new Date(dueDate.seconds * 1000);
-    const diffTime = now.getTime() - due.getTime();
+    const date = dateObj instanceof Date ? dateObj : new Date(dateObj.seconds * 1000);
+    const diffTime = now.getTime() - date.getTime();
     return Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
 }
 
 /**
- * Helper: Classify debt as current or overdue
+ * Helper: Classify debt as current or overdue based on the 5-day rule
  */
-function classifyDebt(daysOverdue: number): 'current' | 'overdue' {
-    return daysOverdue > 0 ? 'overdue' : 'current';
+function classifyDebt(daysSinceIssue: number): 'current' | 'overdue' {
+    return daysSinceIssue > 5 ? 'overdue' : 'current';
 }
 
 /**
@@ -382,8 +382,8 @@ export const accountsReceivable = {
 
             unpaidInvoices.forEach(invoice => {
                 const customerId = invoice.customerId;
-                const daysOverdue = calculateDaysOverdue(invoice.dueDate);
-                const debtClassification = classifyDebt(daysOverdue);
+                const daysSinceIssue = calculateDaysSinceDate(invoice.issueDate);
+                const debtClassification = classifyDebt(daysSinceIssue);
 
                 const invoiceDebt: InvoiceDebt = {
                     invoiceId: invoice.id,
@@ -393,7 +393,7 @@ export const accountsReceivable = {
                     totalAmount: invoice.total,
                     paidAmount: invoice.totalPaid,
                     remainingAmount: invoice.remainingAmount,
-                    daysOverdue,
+                    daysOverdue: daysSinceIssue,
                     status: invoice.status,
                     paymentStatus: invoice.paymentStatus
                 };
@@ -491,8 +491,8 @@ export const accountsReceivable = {
             let overdueDebt = 0;
 
             unpaidInvoices.forEach(invoice => {
-                const daysOverdue = calculateDaysOverdue(invoice.dueDate);
-                const debtClassification = classifyDebt(daysOverdue);
+                const daysSinceIssue = calculateDaysSinceDate(invoice.issueDate);
+                const debtClassification = classifyDebt(daysSinceIssue);
 
                 invoicesDebt.push({
                     invoiceId: invoice.id,
@@ -502,7 +502,7 @@ export const accountsReceivable = {
                     totalAmount: invoice.total,
                     paidAmount: invoice.totalPaid,
                     remainingAmount: invoice.remainingAmount,
-                    daysOverdue,
+                    daysOverdue: daysSinceIssue,
                     status: invoice.status,
                     paymentStatus: invoice.paymentStatus
                 });

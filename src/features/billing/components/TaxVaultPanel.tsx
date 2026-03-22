@@ -20,7 +20,7 @@ import { Card, Table, Button, Space, Alert, Row, Col, Statistic, Tag, Modal, mes
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import { monthlyCloseWizard } from '../../../services/billing';
-import type { TaxVaultEntry } from '../../../types/invoicing';
+import type { TaxVaultEntry, Invoice } from '../../../types/invoicing';
 import { formatCurrency } from '../../../utils/formatters';
 import dayjs from 'dayjs';
 
@@ -143,9 +143,16 @@ export const TaxVaultPanel: React.FC<Props> = ({ franchiseId, refreshTrigger }) 
             title: 'Periodo',
             dataIndex: 'period',
             key: 'period',
-            render: (period: string) => (
-                <span className="font-mono">{period}</span>
-            )
+            render: (period: string) => {
+                const month = parseInt(period.split('-')[1] || '1', 10);
+                const trimester = Math.ceil(month / 3);
+                return (
+                    <div className="flex flex-col">
+                        <span className="font-mono text-[13px]">{period}</span>
+                        <span className="text-[10px] uppercase text-slate-500 font-semibold">{trimester}º Trimestre</span>
+                    </div>
+                );
+            }
         },
         {
             title: 'Estado',
@@ -323,6 +330,9 @@ export const TaxVaultPanel: React.FC<Props> = ({ franchiseId, refreshTrigger }) 
                     columns={columns}
                     dataSource={taxEntries}
                     rowKey="id"
+                    expandable={{
+                        expandedRowRender: record => <TaxVaultInvoiceDetail invoiceIds={record.invoiceIds} />
+                    }}
                     loading={loading}
                     pagination={{
                         pageSize: 10,
@@ -401,6 +411,156 @@ export const TaxVaultPanel: React.FC<Props> = ({ franchiseId, refreshTrigger }) 
                     showIcon
                 />
             </Modal>
+        </div>
+    );
+};
+
+const TaxVaultInvoiceDetail: React.FC<{ invoiceIds: string[] }> = ({ invoiceIds }) => {
+    const [invoices, setInvoices] = useState<Invoice[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (!invoiceIds || invoiceIds.length === 0) return;
+        fetchInvoices();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [invoiceIds]);
+
+    const fetchInvoices = async () => {
+        try {
+            setLoading(true);
+            const chunks = [];
+            for (let i = 0; i < invoiceIds.length; i += 10) {
+                chunks.push(invoiceIds.slice(i, i + 10));
+            }
+
+            const promises = chunks.map(chunk => {
+                const q = query(
+                    collection(db, 'invoices'),
+                    where('__name__', 'in', chunk)
+                );
+                return getDocs(q);
+            });
+
+            const snapshots = await Promise.all(promises);
+            const loadedInvoices = snapshots.flatMap(snap =>
+                snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Invoice))
+            );
+
+            // Sort by issue date descending
+            loadedInvoices.sort((a, b) => {
+                const dateA = a.issueDate instanceof Date ? a.issueDate : new Date((a.issueDate as unknown as { seconds: number }).seconds * 1000);
+                const dateB = b.issueDate instanceof Date ? b.issueDate : new Date((b.issueDate as unknown as { seconds: number }).seconds * 1000);
+                return dateB.getTime() - dateA.getTime();
+            });
+
+            setInvoices(loadedInvoices);
+        } catch (error: unknown) {
+            console.error('Error fetching invoices details:', error);
+            message.error('Error al cargar detalle de facturas.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const detailColumns = [
+        {
+            title: 'Número',
+            dataIndex: 'fullNumber',
+            key: 'fullNumber',
+            render: (text: string) => <span className="font-mono text-xs font-semibold text-slate-700">{text}</span>
+        },
+        {
+            title: 'Fecha Emisión',
+            key: 'issueDate',
+            render: (_: unknown, record: Invoice) => {
+                const date = record.issueDate instanceof Date ? record.issueDate : new Date((record.issueDate as unknown as { seconds: number }).seconds * 1000);
+                return <span className="text-slate-500">{dayjs(date).format('DD/MM/YYYY')}</span>;
+            }
+        },
+        {
+            title: 'Cliente',
+            key: 'customer',
+            render: (_: unknown, record: Invoice) => (
+                <span className="truncate max-w-[150px] block" title={record.customerSnapshot?.fiscalName}>
+                    {record.customerSnapshot?.fiscalName || 'Desconocido'}
+                </span>
+            )
+        },
+        {
+            title: 'Base Imponible',
+            dataIndex: 'subtotal',
+            key: 'subtotal',
+            align: 'right' as const,
+            render: (val: number) => <span className="text-slate-600">{formatCurrency(val)}</span>
+        },
+        {
+            title: 'IVA %',
+            key: 'taxRate',
+            align: 'right' as const,
+            render: (_: unknown, record: Invoice) => {
+                if (!record.taxBreakdown || record.taxBreakdown.length === 0) return <span className="text-slate-400">0%</span>;
+                return <span className="text-slate-500">{record.taxBreakdown.map(tb => `${tb.taxRate * 100}%`).join(', ')}</span>;
+            }
+        },
+        {
+            title: 'IVA Repercutido',
+            key: 'taxAmount',
+            align: 'right' as const,
+            render: (_: unknown, record: Invoice) => {
+                const totalTax = record.taxBreakdown?.reduce((sum, tb) => sum + tb.taxAmount, 0) || 0;
+                return <span className="text-blue-600 font-medium">{formatCurrency(totalTax)}</span>;
+            }
+        },
+        {
+            title: 'Total',
+            dataIndex: 'total',
+            key: 'total',
+            align: 'right' as const,
+            render: (val: number) => <span className="font-bold text-slate-800">{formatCurrency(val)}</span>
+        }
+    ];
+
+    if (!invoiceIds || invoiceIds.length === 0) {
+        return <div className="p-4 text-center text-slate-500 text-sm">No hay facturas asociadas a este periodo.</div>;
+    }
+
+    return (
+        <div className="bg-slate-50 p-4 border-y border-slate-200 shadow-inner">
+            <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3">Detalle de Facturas Emitidas ({invoices.length})</h4>
+            <Table
+                columns={detailColumns}
+                dataSource={invoices}
+                rowKey="id"
+                pagination={false}
+                size="small"
+                loading={loading}
+                className="shadow-sm border border-slate-200 rounded-md overflow-hidden bg-white"
+                summary={pageData => {
+                    const totalBase = pageData.reduce((sum, inv) => sum + (inv.subtotal || 0), 0);
+                    const totalIva = pageData.reduce((sum, inv) => sum + (inv.taxBreakdown?.reduce((t, tb) => t + tb.taxAmount, 0) || 0), 0);
+                    const totalAmount = pageData.reduce((sum, inv) => sum + (inv.total || 0), 0);
+
+                    return (
+                        <Table.Summary>
+                            <Table.Summary.Row className="bg-slate-50 border-t border-slate-200">
+                                <Table.Summary.Cell index={0} colSpan={3} align="right">
+                                    <span className="text-xs uppercase tracking-tight font-bold text-slate-600">Total Desglose</span>
+                                </Table.Summary.Cell>
+                                <Table.Summary.Cell index={1} align="right">
+                                    <span className="font-semibold text-slate-700">{formatCurrency(totalBase)}</span>
+                                </Table.Summary.Cell>
+                                <Table.Summary.Cell index={2} />
+                                <Table.Summary.Cell index={3} align="right">
+                                    <span className="font-bold text-blue-600">{formatCurrency(totalIva)}</span>
+                                </Table.Summary.Cell>
+                                <Table.Summary.Cell index={4} align="right">
+                                    <span className="font-bold text-slate-900">{formatCurrency(totalAmount)}</span>
+                                </Table.Summary.Cell>
+                            </Table.Summary.Row>
+                        </Table.Summary>
+                    );
+                }}
+            />
         </div>
     );
 };

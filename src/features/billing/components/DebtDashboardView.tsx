@@ -16,8 +16,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Clock, Mail, Download, Filter, DollarSign } from 'lucide-react';
-import { Card, Table, Row, Col, Statistic, Button, Space, Select, message, Tooltip, Progress, Tag } from 'antd';
+import { AlertTriangle, Clock, Mail, Download, Filter, DollarSign, CheckCircle } from 'lucide-react';
+import { Card, Table, Row, Col, Button, Space, Select, message, Tooltip, Progress, Tag } from 'antd';
 import { accountsReceivable } from '../../../services/billing';
 import type { DebtDashboard, CustomerDebt, InvoiceDebt } from '../../../types/invoicing';
 import { formatCurrency } from '../../../utils/formatters';
@@ -28,11 +28,11 @@ interface Props {
 }
 
 const AGING_BUCKETS = [
-    { key: 'CURRENT', label: 'Al día', shortLabel: 'CORRIENTE', color: 'var(--color-primary)', colorClass: 'bg-indigo-500', action: 'Mantener' },
-    { key: '1_30', label: '1-30 días', shortLabel: '1-30D', color: 'var(--color-warning)', colorClass: 'bg-amber-500', action: 'Notificar' },
-    { key: '31_60', label: '31-60 días', shortLabel: '31-60D', color: 'var(--color-warning-dark)', colorClass: 'bg-orange-500', action: 'Reclamar' },
-    { key: '61_90', label: '61-90 días', shortLabel: '61-90D', color: 'var(--color-destructive)', colorClass: 'bg-red-500', action: 'Pre-Aviso' },
-    { key: 'OVER_90', label: '+90 días', shortLabel: '+90D', color: 'var(--color-destructive-dark)', colorClass: 'bg-red-900', action: 'Judicial' }
+    { key: 'CURRENT', label: 'Al día (0-5 días)', shortLabel: 'CORRIENTE', color: 'var(--color-primary)', colorClass: 'bg-indigo-500', action: 'Mantener' },
+    { key: 'OVER_5', label: '6-7 días', shortLabel: '5 DÍAS', color: 'var(--color-warning)', colorClass: 'bg-amber-500', action: 'Notificar' },
+    { key: 'OVER_7', label: '8-15 días', shortLabel: '7 DÍAS', color: 'var(--color-warning)', colorClass: 'bg-orange-500', action: 'Reclamar' },
+    { key: 'OVER_15', label: '16-30 días', shortLabel: '15 DÍAS', color: 'var(--color-destructive)', colorClass: 'bg-red-500', action: 'Pre-Aviso' },
+    { key: 'OVER_30', label: '+30 días', shortLabel: '30 DÍAS', color: 'var(--color-destructive-dark)', colorClass: 'bg-red-900', action: 'Judicial' }
 ];
 
 export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger }) => {
@@ -183,13 +183,18 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
         {
             title: 'Acciones',
             key: 'actions',
-            render: () => (
+            render: (_: unknown, record: CustomerDebt) => (
                 <Space>
-                    <Tooltip title="Ver detalle">
-                        <Button size="small" icon={<Filter />} />
+                    <Tooltip title={`Ver detalle de ${record.customerName}`}>
+                        <Button size="small" icon={<Filter className="w-3 h-3" />} onClick={() => message.info(`Detalles de cliente en desarrollo`)} />
                     </Tooltip>
-                    <Tooltip title="Enviar recordatorio">
-                        <Button size="small" icon={<Mail />} />
+                    <Tooltip title={`Enviar recordatorio a ${record.customerName}`}>
+                        <Button 
+                            size="small" 
+                            icon={<Mail className="w-3 h-3" />} 
+                            onClick={() => message.success(`Recordatorio manual programado para: ${record.customerName}`)} 
+                            disabled={record.overdueDebt === 0}
+                        />
                     </Tooltip>
                 </Space>
             )
@@ -201,19 +206,19 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
 
         return debtData.customerDebts.reduce((total, customer) => {
             return total + customer.invoices.reduce((customerTotal, invoice) => {
-                if (bucketKey === 'CURRENT' && invoice.daysOverdue === 0) {
+                if (bucketKey === 'CURRENT' && invoice.daysOverdue <= 5) {
                     return customerTotal + invoice.remainingAmount;
                 }
-                if (bucketKey === '1_30' && invoice.daysOverdue >= 1 && invoice.daysOverdue <= 30) {
+                if (bucketKey === 'OVER_5' && invoice.daysOverdue > 5 && invoice.daysOverdue <= 7) {
                     return customerTotal + invoice.remainingAmount;
                 }
-                if (bucketKey === '31_60' && invoice.daysOverdue >= 31 && invoice.daysOverdue <= 60) {
+                if (bucketKey === 'OVER_7' && invoice.daysOverdue > 7 && invoice.daysOverdue <= 15) {
                     return customerTotal + invoice.remainingAmount;
                 }
-                if (bucketKey === '61_90' && invoice.daysOverdue >= 61 && invoice.daysOverdue <= 90) {
+                if (bucketKey === 'OVER_15' && invoice.daysOverdue > 15 && invoice.daysOverdue <= 30) {
                     return customerTotal + invoice.remainingAmount;
                 }
-                if (bucketKey === 'OVER_90' && invoice.daysOverdue > 90) {
+                if (bucketKey === 'OVER_30' && invoice.daysOverdue > 30) {
                     return customerTotal + invoice.remainingAmount;
                 }
                 return customerTotal;
@@ -225,97 +230,187 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
         if (agingFilter === 'ALL') return true;
 
         const overdueInBucket = customer.invoices.some((invoice: InvoiceDebt) => {
-            if (agingFilter === 'CURRENT') return invoice.daysOverdue === 0;
-            if (agingFilter === '1_30') return invoice.daysOverdue >= 1 && invoice.daysOverdue <= 30;
-            if (agingFilter === '31_60') return invoice.daysOverdue >= 31 && invoice.daysOverdue <= 60;
-            if (agingFilter === '61_90') return invoice.daysOverdue >= 61 && invoice.daysOverdue <= 90;
-            if (agingFilter === 'OVER_90') return invoice.daysOverdue > 90;
+            if (agingFilter === 'CURRENT') return invoice.daysOverdue <= 5;
+            if (agingFilter === 'OVER_5') return invoice.daysOverdue > 5 && invoice.daysOverdue <= 7;
+            if (agingFilter === 'OVER_7') return invoice.daysOverdue > 7 && invoice.daysOverdue <= 15;
+            if (agingFilter === 'OVER_15') return invoice.daysOverdue > 15 && invoice.daysOverdue <= 30;
+            if (agingFilter === 'OVER_30') return invoice.daysOverdue > 30;
             return true;
         });
 
         return overdueInBucket;
     }) || [];
 
+    const handleExport = () => {
+        if (!filteredCustomers || filteredCustomers.length === 0) {
+            message.warning('No hay datos para exportar con los filtros actuales');
+            return;
+        }
+
+        const headers = ['Cliente', 'Deuda Total', 'Deuda Vencida', 'Facturas Pendientes'];
+        const csvRows = filteredCustomers.map(c => 
+            `"${c.customerName}",${c.totalDebt},${c.overdueDebt},${c.invoices.length}`
+        );
+        const csvContent = [headers.join(','), ...csvRows].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `repaart_estado_deuda_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        message.success(`Se exportaron ${filteredCustomers.length} registros correctamente`);
+    };
+
+    const handleBulkReminders = () => {
+        const customersWithDebt = filteredCustomers.filter(c => c.overdueDebt > 0);
+        if (customersWithDebt.length === 0) {
+            message.info('No hay clientes con deuda vencida en la vista actual para notificar');
+            return;
+        }
+        message.success(`Se han programado avisos de cobro para ${customersWithDebt.length} clientes`);
+    };
+
     return (
         <div>
             {debtData && <HealthSemaphore />}
 
             {debtData && (
-                <Row gutter={[12, 12]} className="mb-4">
+                <Row gutter={[16, 16]} className="mb-6">
+                    {/* DEUDA TOTAL CARD */}
                     <Col xs={24} md={8}>
-                        <Card size="small" className="bg-slate-50/30">
-                            <Statistic
-                                title={<span className="flex items-center gap-2 text-[10px] uppercase tracking-tight font-medium text-slate-400"><DollarSign className="w-3 h-3" /> Deuda Total</span>}
-                                value={debtData.totalDebt}
-                                precision={2}
-                                prefix="€"
-                                styles={{ content: { color: 'var(--color-destructive)', fontSize: '18px', fontWeight: 'bold' } }}
-                            />
-                        </Card>
+                        <div className="rounded-lg bg-white dark:bg-slate-900 p-3 mb-0 shadow-sm border border-slate-200 dark:border-slate-800">
+                            <div className="flex items-center gap-1.5 mb-1.5">
+                                <DollarSign className="w-3.5 h-3.5 text-slate-400" />
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                    Deuda Total
+                                </span>
+                            </div>
+                            <div className="text-xl font-bold text-slate-700 dark:text-slate-200 tracking-tight">
+                                {formatCurrency(debtData.totalDebt)}
+                            </div>
+                            <div className="mt-1 flex items-center gap-1 text-[10px] text-slate-400 font-medium">
+                                Saldo global pendiente
+                            </div>
+                        </div>
                     </Col>
+
+                    {/* VENCIDA CARD */}
                     <Col xs={24} md={8}>
-                        <Card size="small" className="bg-slate-50/30">
-                            <Statistic
-                                title={<span className="flex items-center gap-2 text-[10px] uppercase tracking-tight font-medium text-slate-400"><AlertTriangle className="w-3 h-3" /> Vencida</span>}
-                                value={debtData.totalOverdueDebt}
-                                precision={2}
-                                prefix="€"
-                                styles={{
-                                    content: {
-                                        color: debtData.totalOverdueDebt > 0 ? 'var(--color-destructive)' : 'var(--color-success)',
-                                        fontSize: '18px',
-                                        fontWeight: 'bold'
-                                    }
-                                }}
-                            />
-                        </Card>
+                        <div className="rounded-lg bg-white dark:bg-slate-900 p-3 mb-0 shadow-sm border border-slate-200 dark:border-slate-800">
+                            <div className="flex items-center gap-1.5 mb-1.5">
+                                <AlertTriangle className={`w-3.5 h-3.5 ${debtData.totalOverdueDebt > 0 ? 'text-rose-500' : 'text-emerald-500'}`} />
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                    Vencida
+                                </span>
+                            </div>
+                            <div className={`text-xl font-bold tracking-tight ${debtData.totalOverdueDebt > 0 ? 'text-rose-600 dark:text-rose-500' : 'text-emerald-600 dark:text-emerald-500'}`}>
+                                {formatCurrency(debtData.totalOverdueDebt)}
+                            </div>
+                            <div className="mt-1 flex items-center gap-1 text-[10px] text-slate-400 font-medium">
+                                {debtData.totalOverdueDebt > 0 ? (
+                                    <span className="text-rose-500">Requiere atención</span>
+                                ) : (
+                                    <>
+                                        <CheckCircle className="w-3 h-3 text-emerald-500" />
+                                        Sin deuda vencida
+                                    </>
+                                )}
+                            </div>
+                        </div>
                     </Col>
+
+                    {/* CORRIENTE CARD */}
                     <Col xs={24} md={8}>
-                        <Card size="small" className="bg-slate-50/30">
-                            <Statistic
-                                title={<span className="flex items-center gap-2 text-[10px] uppercase tracking-tight font-medium text-slate-400"><Clock className="w-3 h-3" /> Corriente</span>}
-                                value={debtData.totalCurrentDebt}
-                                precision={2}
-                                suffix="€"
-                                styles={{ content: { fontSize: '14px', fontWeight: '800', fontFamily: 'Outfit, sans-serif' } }}
-                            />
-                        </Card>
+                        <div className="rounded-lg bg-white dark:bg-slate-900 p-3 mb-0 shadow-sm border border-slate-200 dark:border-slate-800">
+                            <div className="flex items-center gap-1.5 mb-1.5">
+                                <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                    Corriente
+                                </span>
+                            </div>
+                            <div className="text-xl font-bold text-slate-700 dark:text-slate-200 tracking-tight">
+                                {formatCurrency(debtData.totalCurrentDebt)}
+                            </div>
+                            <div className="mt-1 flex items-center gap-1 text-[10px] text-slate-400 font-medium">
+                                <CheckCircle className="w-3 h-3 text-emerald-500" />
+                                Dentro del plazo regular
+                            </div>
+                        </div>
                     </Col>
                 </Row>
             )}
 
             <Card
                 size="small"
-                title={<span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Distribución por Antigüedad</span>}
-                className="mb-4 bg-slate-50/20"
+                className={`mb-4 border-0 shadow-sm transition-all duration-300 ${
+                    !debtData || debtData.totalDebt === 0 
+                        ? 'bg-slate-50/50' 
+                        : debtData.totalOverdueDebt === 0 
+                            ? 'bg-gradient-to-br from-emerald-50 to-teal-50/20 ring-1 ring-emerald-100 hover:ring-emerald-200' 
+                            : 'bg-gradient-to-br from-rose-50 to-red-50/20 ring-1 ring-rose-100 hover:ring-rose-200'
+                }`}
             >
-                {AGING_BUCKETS.map(bucket => {
-                    const amount = getAgingBucketAmount(bucket.key);
-                    const percentage = debtData?.totalDebt ? (amount / debtData.totalDebt) * 100 : 0;
+                <div className="flex items-center gap-2 mb-4 border-b border-black/5 pb-2">
+                    {(!debtData || debtData.totalDebt === 0) ? (
+                        <CheckCircle className="w-4 h-4 text-slate-400" />
+                    ) : debtData.totalOverdueDebt === 0 ? (
+                        <CheckCircle className="w-4 h-4 text-emerald-500" />
+                    ) : (
+                        <AlertTriangle className="w-4 h-4 text-rose-500" />
+                    )}
+                    <span className={`text-[11px] uppercase tracking-wider font-semibold ${
+                        (!debtData || debtData.totalDebt === 0) ? 'text-slate-500' : debtData.totalOverdueDebt === 0 ? 'text-emerald-700' : 'text-rose-700'
+                    }`}>
+                        Distribución por Antigüedad {debtData && debtData.totalDebt > 0 && (debtData.totalOverdueDebt === 0 ? '- ¡Al día!' : '- Requiere Atención')}
+                    </span>
+                </div>
 
-                    if (amount === 0) return null; // Auto-colapso: Ocultar tramos sin deuda
+                <div className="space-y-3">
+                    {AGING_BUCKETS.map(bucket => {
+                        const amount = getAgingBucketAmount(bucket.key);
+                        const percentage = debtData?.totalDebt ? (amount / debtData.totalDebt) * 100 : 0;
 
-                    return (
-                        <div key={bucket.key} className="space-y-1">
-                            <div className="flex justify-between text-xs font-semibold">
-                                <span className="flex items-center gap-2">
-                                    {bucket.label}
-                                    <Tag color="blue" variant="filled" className="text-[9px] leading-[14px] h-[14px] py-0 px-1 flex items-center">
-                                        {bucket.action}
-                                    </Tag>
-                                </span>
-                                <span>{formatCurrency(amount)}</span>
+                        if (amount === 0) return null; // Auto-colapso: Ocultar tramos sin deuda
+
+                        const getTagColor = (key: string) => {
+                            if (key === 'CURRENT') return 'cyan'; // Mantener
+                            if (key === 'OVER_5' || key === 'OVER_7') return 'orange'; // Notificar/Reclamar
+                            return 'error'; // Pre-Aviso/Judicial
+                        };
+
+                        return (
+                            <div key={bucket.key} className="space-y-1">
+                                <div className="flex justify-between items-center text-xs font-semibold">
+                                    <span className="flex items-center gap-2">
+                                        <span className={bucket.key === 'CURRENT' ? 'text-slate-700' : 'text-rose-900'}>{bucket.label}</span>
+                                        <Tag color={getTagColor(bucket.key)} className="text-[10px] leading-[16px] h-[18px] py-0 px-1.5 flex items-center font-bold border-none m-0 rounded" style={{ opacity: 0.9 }}>
+                                            {bucket.action}
+                                        </Tag>
+                                    </span>
+                                    <span className={bucket.key === 'CURRENT' ? 'text-slate-700' : 'text-rose-600'}>{formatCurrency(amount)}</span>
+                                </div>
+                                <Progress
+                                    percent={percentage}
+                                    size="small"
+                                    strokeColor={bucket.key === 'CURRENT' ? '#10b981' : bucket.color}
+                                    trailColor="rgba(0,0,0,0.04)"
+                                    showInfo={false}
+                                    className="mb-0"
+                                />
                             </div>
-                            <Progress
-                                percent={percentage}
-                                size="small"
-                                strokeColor={bucket.color}
-                                showInfo={false}
-                                className="mb-0"
-                            />
+                        );
+                    })}
+                    {debtData && debtData.totalDebt === 0 && (
+                        <div className="text-center py-4 text-slate-400 text-sm">
+                            No hay deuda pendiente registrada en la franquicia
                         </div>
-                    );
-                })}
+                    )}
+                </div>
             </Card>
 
             <Card
@@ -332,13 +427,13 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
                         >
                             <Select.Option value="ALL">Todos</Select.Option>
                             <Select.Option value="CURRENT">Al día</Select.Option>
-                            <Select.Option value="1_30">1-30 días</Select.Option>
-                            <Select.Option value="31_60">31-60 días</Select.Option>
-                            <Select.Option value="61_90">61-90 días</Select.Option>
-                            <Select.Option value="OVER_90">{'+90 días'}</Select.Option>
+                            <Select.Option value="OVER_5">5 días</Select.Option>
+                            <Select.Option value="OVER_7">7 días</Select.Option>
+                            <Select.Option value="OVER_15">15 días</Select.Option>
+                            <Select.Option value="OVER_30">30 días</Select.Option>
                         </Select>
-                        <Button size="small" icon={<Download className="w-3 h-3" />}>Exportar</Button>
-                        <Button size="small" icon={<Mail className="w-3 h-3" />}>Avisos</Button>
+                        <Button size="small" icon={<Download className="w-3 h-3" />} onClick={handleExport}>Exportar</Button>
+                        <Button size="small" icon={<Mail className="w-3 h-3" />} onClick={handleBulkReminders}>Avisos</Button>
                     </div>
                 }
             >

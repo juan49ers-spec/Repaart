@@ -18,6 +18,7 @@ import React, { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, DollarSign, Clock, AlertCircle, CheckCircle } from 'lucide-react';
 import { Card, Row, Col, Statistic } from 'antd';
 import { invoiceEngine } from '../../../services/billing';
+import dayjs from 'dayjs';
 
 interface Props {
     franchiseId: string;
@@ -53,9 +54,11 @@ export const InvoiceStatsCards: React.FC<Props> = ({ franchiseId, refreshTrigger
                 const totalInvoiced = issuedInvoices.reduce((sum, inv) => sum + inv.total, 0);
                 const pendingPayments = issuedInvoices.reduce((sum, inv) => sum + inv.remainingAmount, 0);
                 const paidInvoices = issuedInvoices.filter(inv => inv.paymentStatus === 'PAID').length;
-                const overdueInvoices = issuedInvoices.filter(inv =>
-                    inv.paymentStatus !== 'PAID' && inv.dueDate < new Date()
-                ).length;
+                const overdueInvoices = issuedInvoices.filter(inv => {
+                    const issueDate = inv.issueDate && (inv.issueDate as any).toDate ? (inv.issueDate as any).toDate() : new Date(inv.issueDate as any);
+                    const daysSinceIssue = dayjs().diff(dayjs(issueDate), 'day');
+                    return inv.paymentStatus !== 'PAID' && daysSinceIssue > 5;
+                }).length;
 
                 const collectionRate = totalInvoiced > 0
                     ? ((totalInvoiced - pendingPayments) / totalInvoiced) * 100

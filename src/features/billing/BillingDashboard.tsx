@@ -21,6 +21,7 @@ import { useCompanyData } from './hooks/useCompanyData';
 import FranchiseRateConfigurator from '../franchise/FranchiseRateConfigurator';
 import BillingWorkflowGuide from '../franchise/components/BillingWorkflowGuide';
 import { invoiceEngine } from '../../services/billing';
+import dayjs from 'dayjs';
 import './BillingDashboard.css';
 
 interface Props {
@@ -43,13 +44,14 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
         try {
             const result = await invoiceEngine.getInvoicesByFranchise(franchiseId);
             if (result.success) {
-                const now = new Date();
-                const overdue = result.data.filter(inv =>
-                    inv.status === 'ISSUED' &&
-                    inv.paymentStatus !== 'PAID' &&
-                    inv.remainingAmount > 0 &&
-                    inv.dueDate < now
-                );
+                const overdue = result.data.filter(inv => {
+                    const issueDate = inv.issueDate && (inv.issueDate as any).toDate ? (inv.issueDate as any).toDate() : new Date(inv.issueDate as any);
+                    const daysSinceIssue = dayjs().diff(dayjs(issueDate), 'day');
+                    return inv.status === 'ISSUED' &&
+                        inv.paymentStatus !== 'PAID' &&
+                        inv.remainingAmount > 0 &&
+                        daysSinceIssue > 5;
+                });
                 setOverdueCount(overdue.length);
                 setOverdueAmount(overdue.reduce((sum, inv) => sum + inv.remainingAmount, 0));
             }
@@ -59,6 +61,7 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
     }, [franchiseId]);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchOverdueData();
     }, [fetchOverdueData, refreshTrigger]);
 
