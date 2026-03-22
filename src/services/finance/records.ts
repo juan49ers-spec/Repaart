@@ -68,10 +68,10 @@ export const financeRecords = {
 
             const docRef = await addDoc(collection(db, COLLECTION), dataToSave);
             return ok(docRef.id);
-        } catch (error: any) {
+        } catch (error: unknown) {
             const sError = new ServiceError('addRecord', { cause: error });
             console.error("Error adding record:", sError);
-            return err({ type: 'UNKNOWN_ERROR', message: error.message || "Failed to add record", cause: error });
+            return err({ type: 'UNKNOWN_ERROR', message: error instanceof Error ? error.message : "Failed to add record", cause: error });
         }
     },
 
@@ -87,7 +87,7 @@ export const financeRecords = {
         try {
             const docRef = doc(db, COLLECTION, id);
 
-            const updates: any = {
+            const updates: Record<string, unknown> = {
                 status: newStatus,
                 updatedAt: serverTimestamp(),
                 updated_at: serverTimestamp()
@@ -109,10 +109,10 @@ export const financeRecords = {
 
             await updateDoc(docRef, updates);
             return ok(undefined);
-        } catch (error: any) {
+        } catch (error: unknown) {
             const sError = new ServiceError('updateStatus', { cause: error });
             console.error("Error updating status:", sError);
-            return err({ type: 'UNKNOWN_ERROR', message: error.message || "Failed to update record status", cause: error });
+            return err({ type: 'UNKNOWN_ERROR', message: error instanceof Error ? error.message : "Failed to update record status", cause: error });
         }
     },
 
@@ -151,10 +151,10 @@ export const financeRecords = {
 
             await deleteDoc(docRef);
             return ok(undefined);
-        } catch (error: any) {
+        } catch (error: unknown) {
             const sError = new ServiceError('deleteRecord', { cause: error });
             console.error("Error deleting record:", sError);
-            return err({ type: 'UNKNOWN_ERROR', message: error.message || "Failed to delete record", cause: error });
+            return err({ type: 'UNKNOWN_ERROR', message: error instanceof Error ? error.message : "Failed to delete record", cause: error });
         }
     },
 
@@ -165,7 +165,7 @@ export const financeRecords = {
     _reverseAggregation: async (
         franchiseId: string,
         monthKey: string,
-        data: any
+        data: Record<string, unknown>
     ): Promise<void> => {
         try {
             const summaryId = `${franchiseId}_${monthKey}`;
@@ -177,7 +177,7 @@ export const financeRecords = {
             const profit = getSafeNum(data.profit);
             const logisticsIncome = getSafeNum(data.logisticsIncome);
 
-            const updates: any = {
+            const updates: Record<string, unknown> = {
                 totalIncome: increment(-revenue),
                 totalExpenses: increment(-expenses),
                 grossIncome: increment(-revenue),
@@ -190,8 +190,9 @@ export const financeRecords = {
             };
 
             if (data.breakdown) {
-                Object.keys(data.breakdown).forEach(key => {
-                    const val = getSafeNum(data.breakdown[key]);
+                const breakdown = data.breakdown as Record<string, unknown>;
+                Object.keys(breakdown).forEach(key => {
+                    const val = getSafeNum(breakdown[key]);
                     if (val > 0) {
                         updates[`breakdown.${key}`] = increment(-val);
                     }

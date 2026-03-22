@@ -27,8 +27,11 @@ import type {
     BillingCalculationResult,
     DebtDashboard,
     MonthlyCloseResult,
-    BillingError
+    BillingError,
+    TaxVaultEntry,
+    CustomerDebt
 } from '../../../types/invoicing';
+import { InvoiceStatus } from '../../../types/invoicing';
 import type { Result } from '../../../types/result';
 
 /**
@@ -148,7 +151,7 @@ export const billingController = {
         franchiseId: string,
         status?: 'DRAFT' | 'ISSUED' | 'RECTIFIED'
     ): Promise<Result<Invoice[], BillingError>> => {
-        return invoiceEngine.getInvoicesByFranchise(franchiseId, status as any);
+        return invoiceEngine.getInvoicesByFranchise(franchiseId, status as InvoiceStatus | undefined);
     },
 
     // ==================== BILLING CALCULATION ====================
@@ -229,7 +232,7 @@ export const billingController = {
     getCustomerDebt: async (
         franchiseId: string,
         customerId: string
-    ): Promise<Result<any, BillingError>> => {
+    ): Promise<Result<CustomerDebt, BillingError>> => {
         return accountsReceivable.getCustomerDebt(franchiseId, customerId);
     },
 
@@ -257,7 +260,7 @@ export const billingController = {
     getTaxVaultEntry: async (
         franchiseId: string,
         period: string
-    ): Promise<Result<any, BillingError>> => {
+    ): Promise<Result<TaxVaultEntry, BillingError>> => {
         return monthlyCloseWizard.getTaxVaultEntry(franchiseId, period);
     },
 
@@ -281,8 +284,23 @@ export const billingController = {
 };
 
 /**
+ * Minimal HTTP request/response shapes for framework-agnostic route handlers
+ */
+interface RouteRequest {
+    body: Record<string, unknown>;
+    params: Record<string, string>;
+    query: Record<string, string>;
+    user?: { uid: string };
+}
+
+interface RouteResponse {
+    status: (code: number) => RouteResponse;
+    json: (data: unknown) => unknown;
+}
+
+/**
  * Type-safe API route handlers
- * 
+ *
  * These handlers can be used with Firebase Cloud Functions or any backend framework
  */
 export const billingRouteHandlers = {
@@ -290,23 +308,32 @@ export const billingRouteHandlers = {
      * POST /invoices
      * Create a new draft invoice
      */
-    createInvoice: async (req: any, res: any) => {
+    createInvoice: async (req: RouteRequest, res: RouteResponse) => {
         try {
-            const { franchiseId, customerId, customerType, items } = req.body;
+            const body = req.body as {
+                franchiseId: string;
+                customerId: string;
+                customerType: 'FRANCHISE' | 'RESTAURANT';
+                items: CreateInvoiceRequest['items'];
+                issueDate?: string;
+                dueDate?: string;
+                logisticsData?: CreateInvoiceRequest['logisticsData'];
+            };
+            const { franchiseId, customerId, customerType, items } = body;
             const userId = req.user?.uid;
-            
+
             if (!userId) {
                 return res.status(401).json({ error: 'Unauthorized' });
             }
-            
+
             const request: CreateInvoiceRequest = {
                 franchiseId,
                 customerId,
                 customerType,
-                issueDate: req.body.issueDate,
-                dueDate: req.body.dueDate,
+                issueDate: body.issueDate,
+                dueDate: body.dueDate,
                 items,
-                logisticsData: req.body.logisticsData
+                logisticsData: body.logisticsData
             };
             
             const result = await billingController.createInvoice(request, userId);
@@ -326,7 +353,7 @@ export const billingRouteHandlers = {
      * POST /invoices/:id/issue
      * Issue a draft invoice
      */
-    issueInvoice: async (req: any, res: any) => {
+    issueInvoice: async (req: RouteRequest, res: RouteResponse) => {
         try {
             const { id } = req.params;
             const userId = req.user?.uid;
@@ -357,16 +384,16 @@ export const billingRouteHandlers = {
      * POST /invoices/:id/rectify
      * Rectify an issued invoice
      */
-    rectifyInvoice: async (req: any, res: any) => {
+    rectifyInvoice: async (req: RouteRequest, res: RouteResponse) => {
         try {
             const { id } = req.params;
-            const { reason } = req.body;
+            const { reason } = req.body as { reason: string };
             const userId = req.user?.uid;
-            
+
             if (!userId) {
                 return res.status(401).json({ error: 'Unauthorized' });
             }
-            
+
             const request: RectifyInvoiceRequest = {
                 invoiceId: id,
                 reason,
@@ -390,7 +417,7 @@ export const billingRouteHandlers = {
      * GET /invoices/:id
      * Get invoice by ID
      */
-    getInvoice: async (req: any, res: any) => {
+    getInvoice: async (req: RouteRequest, res: RouteResponse) => {
         try {
             const { id } = req.params;
             
@@ -411,11 +438,11 @@ export const billingRouteHandlers = {
      * GET /invoices
      * Get invoices for a franchise
      */
-    getInvoices: async (req: any, res: any) => {
+    getInvoices: async (req: RouteRequest, res: RouteResponse) => {
         try {
             const { franchiseId, status } = req.query;
-            
-            const result = await billingController.getInvoices(franchiseId, status);
+
+            const result = await billingController.getInvoices(franchiseId, status as 'DRAFT' | 'ISSUED' | 'RECTIFIED' | undefined);
             
             if (result.success) {
                 res.status(200).json(result.data);
@@ -432,15 +459,22 @@ export const billingRouteHandlers = {
      * POST /payments
      * Add a payment to an invoice
      */
-    addPayment: async (req: any, res: any) => {
+    addPayment: async (req: RouteRequest, res: RouteResponse) => {
         try {
-            const { invoiceId, amount, paymentMethod, paymentDate, reference, notes } = req.body;
+            const { invoiceId, amount, paymentMethod, paymentDate, reference, notes } = req.body as {
+                invoiceId: string;
+                amount: number;
+                paymentMethod: AddPaymentRequest['paymentMethod'];
+                paymentDate?: string;
+                reference?: string;
+                notes?: string;
+            };
             const userId = req.user?.uid;
-            
+
             if (!userId) {
                 return res.status(401).json({ error: 'Unauthorized' });
             }
-            
+
             const request: AddPaymentRequest = {
                 invoiceId,
                 amount,
@@ -467,7 +501,7 @@ export const billingRouteHandlers = {
      * GET /debt/dashboard
      * Get debt dashboard for a franchise
      */
-    getDebtDashboard: async (req: any, res: any) => {
+    getDebtDashboard: async (req: RouteRequest, res: RouteResponse) => {
         try {
             const { franchiseId } = req.query;
             
@@ -488,10 +522,16 @@ export const billingRouteHandlers = {
      * POST /billing/calculate
      * Calculate billing based on logistics data
      */
-    calculateBilling: async (req: any, res: any) => {
+    calculateBilling: async (req: RouteRequest, res: RouteResponse) => {
         try {
-            const { franchiseId, customerId, customerType, period, logisticsRates } = req.body;
-            
+            const { franchiseId, customerId, customerType, period, logisticsRates } = req.body as {
+                franchiseId: string;
+                customerId: string;
+                customerType: 'FRANCHISE' | 'RESTAURANT';
+                period: CalculateBillingRequest['period'];
+                logisticsRates: CalculateBillingRequest['logisticsRates'];
+            };
+
             const request: CalculateBillingRequest = {
                 franchiseId,
                 customerId,
@@ -517,15 +557,15 @@ export const billingRouteHandlers = {
      * POST /tax-vault/monthly-close
      * Execute monthly close for a franchise
      */
-    executeMonthlyClose: async (req: any, res: any) => {
+    executeMonthlyClose: async (req: RouteRequest, res: RouteResponse) => {
         try {
-            const { franchiseId, period } = req.body;
+            const { franchiseId, period } = req.body as { franchiseId: string; period: string };
             const userId = req.user?.uid;
-            
+
             if (!userId) {
                 return res.status(401).json({ error: 'Unauthorized' });
             }
-            
+
             const request: MonthlyCloseRequest = {
                 franchiseId,
                 period,

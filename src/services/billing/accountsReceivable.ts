@@ -241,32 +241,33 @@ export const accountsReceivable = {
             );
 
             return ok(payment);
-        } catch (error: any) {
+        } catch (error: unknown) {
             const sError = new ServiceError('addPayment', { cause: error });
             console.error('[accountsReceivable.addPayment] Error adding payment:', sError);
             console.error('[accountsReceivable.addPayment] Error details:', {
-                message: error.message,
-                stack: error.stack,
-                cause: error.cause
+                message: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : undefined
             });
 
-            if (error.message === 'INVOICE_NOT_FOUND') {
+            if (error instanceof Error && error.message === 'INVOICE_NOT_FOUND') {
                 return err({
                     type: 'INVOICE_NOT_FOUND',
                     invoiceId: request.invoiceId
                 });
             }
 
-            if (error.message.startsWith('INVALID_PAYMENT:')) {
+            const errorMessage = error instanceof Error ? error.message : '';
+
+            if (errorMessage.startsWith('INVALID_PAYMENT:')) {
                 return err({
                     type: 'VALIDATION_ERROR',
                     field: 'invoiceStatus',
-                    message: error.message.split(':')[1]
+                    message: errorMessage.split(':')[1]
                 });
             }
 
-            if (error.message.startsWith('PAYMENT_EXCEEDS_TOTAL:')) {
-                const [, , total, payment, remaining] = error.message.split(':');
+            if (errorMessage.startsWith('PAYMENT_EXCEEDS_TOTAL:')) {
+                const [, , total, payment, remaining] = errorMessage.split(':');
                 return err({
                     type: 'PAYMENT_EXCEEDS_TOTAL',
                     invoiceId: request.invoiceId,
@@ -278,7 +279,7 @@ export const accountsReceivable = {
 
             return err({
                 type: 'UNKNOWN_ERROR',
-                message: error.message || 'Failed to add payment',
+                message: errorMessage || 'Failed to add payment',
                 cause: error
             });
         }
@@ -308,12 +309,12 @@ export const accountsReceivable = {
             } as PaymentReceipt;
 
             return ok(receipt);
-        } catch (error: any) {
+        } catch (error: unknown) {
             const sError = new ServiceError('getPaymentReceipt', { cause: error });
             console.error('Error getting payment receipt:', sError);
             return err({
                 type: 'UNKNOWN_ERROR',
-                message: error.message || 'Failed to get payment receipt',
+                message: error instanceof Error ? error.message : 'Failed to get payment receipt',
                 cause: error
             });
         }
@@ -339,12 +340,12 @@ export const accountsReceivable = {
             } as PaymentReceipt));
 
             return ok(payments);
-        } catch (error: any) {
+        } catch (error: unknown) {
             const sError = new ServiceError('getPaymentsByInvoice', { cause: error });
             console.error('Error getting payments:', sError);
             return err({
                 type: 'UNKNOWN_ERROR',
-                message: error.message || 'Failed to get payments',
+                message: error instanceof Error ? error.message : 'Failed to get payments',
                 cause: error
             });
         }
@@ -436,12 +437,12 @@ export const accountsReceivable = {
             };
 
             return ok(dashboard);
-        } catch (error: any) {
+        } catch (error: unknown) {
             const sError = new ServiceError('generateDebtDashboard', { cause: error });
             console.error('Error generating debt dashboard:', sError);
             return err({
                 type: 'UNKNOWN_ERROR',
-                message: error.message || 'Failed to generate debt dashboard',
+                message: error instanceof Error ? error.message : 'Failed to generate debt dashboard',
                 cause: error
             });
         }
@@ -524,12 +525,12 @@ export const accountsReceivable = {
             };
 
             return ok(customerDebt);
-        } catch (error: any) {
+        } catch (error: unknown) {
             const sError = new ServiceError('getCustomerDebt', { cause: error });
             console.error('Error getting customer debt:', sError);
             return err({
                 type: 'UNKNOWN_ERROR',
-                message: error.message || 'Failed to get customer debt',
+                message: error instanceof Error ? error.message : 'Failed to get customer debt',
                 cause: error
             });
         }

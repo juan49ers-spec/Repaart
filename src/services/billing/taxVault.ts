@@ -119,7 +119,7 @@ export const taxVaultObserver = {
                     // Create new tax vault entry
                     const totals = taxVaultObserver._calculateInvoiceTotals(invoice);
 
-                    const newTaxVault: TaxVaultEntry = {
+                    const newTaxVault = {
                         id: taxVaultId,
                         franchiseId: invoice.franchiseId,
                         period,
@@ -129,20 +129,20 @@ export const taxVaultObserver = {
                         isLocked: false,
                         invoiceIds: [invoiceId],
                         expenseRecordIds: [],
-                        createdAt: serverTimestamp() as any,
-                        updatedAt: serverTimestamp() as any
-                    } as any;
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp()
+                    };
 
                     transaction.set(taxVaultRef, newTaxVault);
                 }
             });
 
             return ok(undefined);
-        } catch (error: any) {
+        } catch (error: unknown) {
             const sError = new ServiceError('onInvoiceIssued', { cause: error });
             console.error('Error processing invoice issuance:', sError);
 
-            if (error.message === 'TAX_VAULT_LOCKED') {
+            if (error instanceof Error && error.message === 'TAX_VAULT_LOCKED') {
                 return err({
                     type: 'TAX_VAULT_LOCKED',
                     period: extractPeriod(new Date()),
@@ -152,7 +152,7 @@ export const taxVaultObserver = {
 
             return err({
                 type: 'UNKNOWN_ERROR',
-                message: error.message || 'Failed to process invoice issuance',
+                message: error instanceof Error ? error.message : 'Failed to process invoice issuance',
                 cause: error
             });
         }
@@ -223,7 +223,7 @@ export const taxVaultObserver = {
                     });
                 } else {
                     // Create new tax vault entry
-                    const newTaxVault: TaxVaultEntry = {
+                    const newTaxVault = {
                         id: taxVaultId,
                         franchiseId,
                         period,
@@ -233,20 +233,20 @@ export const taxVaultObserver = {
                         isLocked: false,
                         invoiceIds: [],
                         expenseRecordIds: [recordId],
-                        createdAt: serverTimestamp() as any,
-                        updatedAt: serverTimestamp() as any
-                    } as any;
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp()
+                    };
 
                     transaction.set(taxVaultRef, newTaxVault);
                 }
             });
 
             return ok(undefined);
-        } catch (error: any) {
+        } catch (error: unknown) {
             const sError = new ServiceError('onExpenseCreated', { cause: error });
             console.error('Error processing expense creation:', sError);
 
-            if (error.message === 'TAX_VAULT_LOCKED') {
+            if (error instanceof Error && error.message === 'TAX_VAULT_LOCKED') {
                 return err({
                     type: 'TAX_VAULT_LOCKED',
                     period: extractPeriod(recordDate),
@@ -256,7 +256,7 @@ export const taxVaultObserver = {
 
             return err({
                 type: 'UNKNOWN_ERROR',
-                message: error.message || 'Failed to process expense creation',
+                message: error instanceof Error ? error.message : 'Failed to process expense creation',
                 cause: error
             });
         }
@@ -356,7 +356,8 @@ export const monthlyCloseWizard = {
                 const totalTax = totalIvaRepercutido - totalIvaSoportado;
 
                 // Create or update tax vault entry
-                const taxVaultData: any = {
+                const existingData = taxVaultSnap.exists() ? (taxVaultSnap.data() as TaxVaultEntry) : null;
+                const taxVaultData = {
                     id: taxVaultId,
                     franchiseId,
                     period,
@@ -368,7 +369,7 @@ export const monthlyCloseWizard = {
                     lockedBy: requestedBy,
                     invoiceIds: invoices.map(inv => inv.id),
                     expenseRecordIds: expenses.map(exp => exp.id),
-                    createdAt: taxVaultSnap.exists() ? (taxVaultSnap.data() as any).createdAt : serverTimestamp(),
+                    createdAt: existingData ? existingData.createdAt : serverTimestamp(),
                     updatedAt: serverTimestamp()
                 };
 
@@ -377,7 +378,7 @@ export const monthlyCloseWizard = {
                 result = {
                     success: true,
                     period,
-                    taxVaultEntry: taxVaultData,
+                    taxVaultEntry: taxVaultData as unknown as TaxVaultEntry,
                     summary: {
                         totalInvoices: invoices.length,
                         totalIncome,
@@ -389,11 +390,11 @@ export const monthlyCloseWizard = {
             });
 
             return ok(result!);
-        } catch (error: any) {
+        } catch (error: unknown) {
             const sError = new ServiceError('executeMonthlyClose', { cause: error });
             console.error('Error executing monthly close:', sError);
 
-            if (error.message === 'MONTH_ALREADY_CLOSED') {
+            if (error instanceof Error && error.message === 'MONTH_ALREADY_CLOSED') {
                 return err({
                     type: 'MONTH_ALREADY_CLOSED',
                     period: request.period,
@@ -403,7 +404,7 @@ export const monthlyCloseWizard = {
 
             return err({
                 type: 'UNKNOWN_ERROR',
-                message: error.message || 'Failed to execute monthly close',
+                message: error instanceof Error ? error.message : 'Failed to execute monthly close',
                 cause: error
             });
         }
@@ -427,10 +428,10 @@ export const monthlyCloseWizard = {
 
             if (!taxVaultSnap.exists()) {
                 return err({
-                    type: 'NOT_FOUND',
-                    franchiseId,
-                    period
-                } as any);
+                    type: 'VALIDATION_ERROR',
+                    field: 'period',
+                    message: `Tax vault entry not found for franchise ${franchiseId} and period ${period}`
+                });
             }
 
             const taxVaultEntry = {
@@ -439,12 +440,12 @@ export const monthlyCloseWizard = {
             } as TaxVaultEntry;
 
             return ok(taxVaultEntry);
-        } catch (error: any) {
+        } catch (error: unknown) {
             const sError = new ServiceError('getTaxVaultEntry', { cause: error });
             console.error('Error getting tax vault entry:', sError);
             return err({
                 type: 'UNKNOWN_ERROR',
-                message: error.message || 'Failed to get tax vault entry',
+                message: error instanceof Error ? error.message : 'Failed to get tax vault entry',
                 cause: error
             });
         }
@@ -472,10 +473,10 @@ export const monthlyCloseWizard = {
 
             if (!taxVaultSnap.exists()) {
                 return err({
-                    type: 'NOT_FOUND',
-                    franchiseId,
-                    period
-                } as any);
+                    type: 'VALIDATION_ERROR',
+                    field: 'period',
+                    message: `Tax vault entry not found for franchise ${franchiseId} and period ${period}`
+                });
             }
 
             const taxVault = taxVaultSnap.data() as TaxVaultEntry;
@@ -501,12 +502,12 @@ export const monthlyCloseWizard = {
             // 4. Execute the unlock
 
             return ok(undefined);
-        } catch (error: any) {
+        } catch (error: unknown) {
             const sError = new ServiceError('requestMonthUnlock', { cause: error });
             console.error('Error requesting month unlock:', sError);
             return err({
                 type: 'UNKNOWN_ERROR',
-                message: error.message || 'Failed to request month unlock',
+                message: error instanceof Error ? error.message : 'Failed to request month unlock',
                 cause: error
             });
         }
@@ -583,7 +584,7 @@ export const monthlyCloseWizard = {
                 where('date', '<=', endDate)
             );
             const expensesSnap = await getDocs(expensesQuery);
-            const expenses = expensesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            const expenses = expensesSnap.docs.map(d => ({ id: d.id, ...d.data() } as { id: string; [key: string]: unknown }));
 
             // 4. Recalculate totals
             let totalIvaRepercutido = 0;
@@ -592,9 +593,10 @@ export const monthlyCloseWizard = {
             });
 
             let totalIvaSoportado = 0;
-            expenses.forEach((exp: any) => {
-                if (exp.breakdown?.iva) {
-                    totalIvaSoportado += exp.breakdown.iva;
+            expenses.forEach((exp) => {
+                const breakdown = exp.breakdown as Record<string, number> | undefined;
+                if (breakdown?.iva) {
+                    totalIvaSoportado += breakdown.iva;
                 }
             });
 
@@ -613,18 +615,18 @@ export const monthlyCloseWizard = {
                     updatedAt: serverTimestamp(),
                     updated_at: serverTimestamp(),
                     // Preserve createdAt if exists
-                    createdAt: taxVaultSnap.exists() ? (taxVaultSnap.data() as any).createdAt : serverTimestamp()
+                    createdAt: taxVaultSnap.exists() ? (taxVaultSnap.data() as TaxVaultEntry).createdAt : serverTimestamp()
                 }, { merge: true });
             });
 
             console.log(`[taxVault] Successfully recalculated period ${period}. New ivaRepercutido: ${totalIvaRepercutido}`);
             return ok(undefined);
-        } catch (error: any) {
+        } catch (error: unknown) {
             const sError = new ServiceError('recalculateMonthData', { cause: error });
             console.error('[taxVault] Error recalculating data:', sError);
             return err({
                 type: 'UNKNOWN_ERROR',
-                message: error.message || 'Failed to recalculate tax data',
+                message: error instanceof Error ? error.message : 'Failed to recalculate tax data',
                 cause: error
             });
         }

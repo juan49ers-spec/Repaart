@@ -84,7 +84,7 @@ export const financeSummary = {
             const docRef = doc(db, 'financial_summaries', docId);
 
             const existingSnap = await getDoc(docRef);
-            const existing: any = existingSnap.exists() ? existingSnap.data() : {};
+            const existing: Record<string, unknown> = existingSnap.exists() ? existingSnap.data() : {};
 
             const existingRevenue = Number(existing.totalIncome ?? existing.revenue ?? 0);
             const existingExpenses = Number(existing.totalExpenses ?? existing.expenses ?? 0);
@@ -98,16 +98,16 @@ export const financeSummary = {
             const nextExpenses = Number(hasExpenses ? (data.totalExpenses ?? data.expenses ?? 0) : existingExpenses);
             const nextProfit = nextRevenue - nextExpenses;
 
-            const nextStatus = (data.status ?? existingStatus ?? 'approved') as any;
+            const nextStatus = (data.status ?? existingStatus ?? 'approved') as MonthlyData['status'];
 
-            let nextIsLocked = (data.isLocked ?? (data as any).is_locked ?? existingIsLocked) as boolean;
+            let nextIsLocked = (data.isLocked ?? (data as Record<string, unknown>).is_locked ?? existingIsLocked) as boolean;
 
             if (nextStatus === 'open') nextIsLocked = false;
             else if (['submitted', 'locked', 'unlock_requested', 'approved'].includes(nextStatus)) {
                 nextIsLocked = true;
             }
 
-            const sanitizedData: any = {
+            const sanitizedData: Partial<MonthlyData> & Record<string, unknown> = {
                 ...data,
                 totalIncome: nextRevenue,
                 totalExpenses: nextExpenses,
@@ -179,12 +179,13 @@ export const financeSummary = {
         try {
             const data = await financeSummary.fetchClosures(franchiseId);
 
-            return data.filter((record: any) => {
+            return data.filter((record: MonthlyData) => {
                 if (record.month) {
                     return record.month.startsWith(`${year}-`);
                 }
                 if (record.date) {
-                    const d = record.date instanceof Date ? record.date : (record.date as any).toDate();
+                    const dateVal = record.date as unknown;
+                    const d = dateVal instanceof Date ? dateVal : (dateVal as { toDate: () => Date }).toDate();
                     return d.getFullYear() === year;
                 }
                 return false;
@@ -331,7 +332,7 @@ export const financeSummary = {
             let accProfit = 0;
             let accLogisticsOnly = 0;
 
-            const breakdown: any = {};
+            const breakdown: Record<string, number> = {};
 
             snap.docs.forEach(doc => {
                 const d = doc.data();
