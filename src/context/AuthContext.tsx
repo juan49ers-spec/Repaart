@@ -22,6 +22,7 @@ import {
     useAuth
 } from "./AuthContextCore";
 import { getUserData, clearAuthCache } from "./AuthServices";
+import { setUserContext, clearUserContext } from '../services/errorLogger';
 
 export {
     AuthContext,
@@ -94,12 +95,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     setUser(authUser);
                     setRoleConfig(data);
                     setIsAdmin(data.role === 'admin');
+                    setUserContext(
+                        authUser.uid,
+                        authUser.email ?? undefined,
+                        {
+                            role: data.role as string,
+                            franchiseId: data.franchiseId ?? null,
+                        }
+                    );
                 }
             } else {
                 setUser(null);
                 setRoleConfig(null);
                 setIsAdmin(false);
                 clearAuthCache();
+                clearUserContext();
             }
             setLoading(false);
         });
