@@ -1,6 +1,6 @@
 # Issues y Bugs Pendientes
 
-**Última actualización:** 2026-03-22
+**Última actualización:** 2026-03-23
 
 ---
 
@@ -68,13 +68,11 @@ if (import.meta.env.DEV) {
 
 ---
 
-### #6: ~505 warnings de tipo `any` en lint (bajando desde 809)
+### ~~#6: warnings de tipo `any` en lint~~ — RESUELTO EN CÓDIGO DE PRODUCCIÓN
 
-**Descripción:** El linter reporta ~505 warnings, principalmente `any`. Se han eliminado 304 en sesión 2026-03-23 (servicios billing/finance/flyder/scheduler/kanban/franchise/admin/types/hooks...). La mayoría restante está en archivos de test y archivos de usuario WIP.
+**Estado:** 0 warnings `no-explicit-any` en código de producción. 257 warnings totales restantes: todos en archivos de test (`__tests__/`) o de otros tipos (react-refresh, exhaustive-deps).
 
-**Prioridad:** BAJA (mejora técnica progresiva)
-
-**Abordaje recomendado:** Continuar por archivos de test (son los que más concentran `any` residual).
+**Historial:** 809 → 505 → 257 (todos fuera de producción). Sesión 2026-03-23.
 
 ---
 
@@ -97,6 +95,7 @@ if (import.meta.env.DEV) {
 | #5 (anterior)     | Componente muerto `CoverageStats.tsx`                     | 2026-03-21 |
 | #3 (isConflict)   | Detección de turnos solapados en WeeklyScheduler          | 2026-03-22 |
 | #4 (hasChanges)   | hasUnsavedChanges ya implementado en DeliveryScheduler    | 2026-03-22 |
+| #6 (any warnings) | 0 warnings `any` en producción (809→0)                    | 2026-03-23 |
 | Sentry inactivo   | `initSentry()` nunca se llamaba; ErrorBoundary sin Sentry | 2026-03-22 |
 | IVA combustible   | Deducción revertida a 100% en `finance.ts`                | 2026-03-22 |
 | IVA doble cómputo | `Math.max` en `useTaxCalculations.ts`                     | 2026-03-22 |
