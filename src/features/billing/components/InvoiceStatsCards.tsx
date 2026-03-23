@@ -83,7 +83,7 @@ export const InvoiceStatsCards: React.FC<Props> = ({ franchiseId, refreshTrigger
 
     return (
         <Row gutter={[16, 16]}>
-            <Col xs={24} sm={12} lg={6}>
+            <Col xs={24} sm={12} md={8} lg={6}>
                 <Card className="h-full hover:shadow-md transition-shadow">
                     <Statistic
                         title={
@@ -101,7 +101,7 @@ export const InvoiceStatsCards: React.FC<Props> = ({ franchiseId, refreshTrigger
                 </Card>
             </Col>
 
-            <Col xs={24} sm={12} lg={6}>
+            <Col xs={24} sm={12} md={8} lg={6}>
                 <Card className="h-full hover:shadow-md transition-shadow">
                     <Statistic
                         title={
@@ -121,7 +121,7 @@ export const InvoiceStatsCards: React.FC<Props> = ({ franchiseId, refreshTrigger
                 </Card>
             </Col>
 
-            <Col xs={24} sm={12} lg={6}>
+            <Col xs={24} sm={12} md={8} lg={6}>
                 <Card className="h-full hover:shadow-md transition-shadow">
                     <Statistic
                         title={
@@ -146,7 +146,7 @@ export const InvoiceStatsCards: React.FC<Props> = ({ franchiseId, refreshTrigger
                 </Card>
             </Col>
 
-            <Col xs={24} sm={12} lg={6}>
+            <Col xs={24} sm={12} md={8} lg={6}>
                 <Card className="h-full hover:shadow-md transition-shadow">
                     <Statistic
                         title={

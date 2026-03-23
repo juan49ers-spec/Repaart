@@ -219,7 +219,7 @@ const Notifications: React.FC<NotificationsProps> = ({ isAdmin = false }) => {
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 mt-4 w-[420px] bg-white/80 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/50 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300 ring-1 ring-black/5 origin-top-right">
+                <div className="absolute right-0 mt-4 w-[420px] max-w-[calc(100vw-1.5rem)] bg-white/80 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/50 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300 ring-1 ring-black/5 origin-top-right">
 
                     {/* Header */}
                     <div className="p-5 border-b border-slate-100/50 bg-white/50">

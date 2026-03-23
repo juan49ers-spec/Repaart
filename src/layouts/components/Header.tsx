@@ -71,11 +71,11 @@ const Header: React.FC<HeaderProps> = ({ isAdmin, isFranchise, isRider }) => {
 
                 {/* RIGHT: User Island */}
                 <div className="pointer-events-auto flex items-center gap-3">
-                    <div className="glass-card p-1.5 rounded-full border border-white/20 dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <div className="glass-card p-2.5 rounded-full border border-white/20 dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300">
                         <Notifications isAdmin={isAdmin} />
                     </div>
 
-                    <div className="glass-card p-1.5 rounded-full border border-white/20 dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <div className="glass-card p-2.5 rounded-full border border-white/20 dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300">
                         <UserMenu
                             isFranchise={isFranchise}
                             isRider={isRider}

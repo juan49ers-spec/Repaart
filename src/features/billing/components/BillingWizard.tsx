@@ -225,7 +225,7 @@ export const BillingWizard: React.FC<Props> = ({
     const renderSelection = () => (
         <Space direction="vertical" size="large" className="w-full">
             <Card title={<div className="flex items-center gap-2"><User size={18} /> Cliente y Periodo</div>}>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                     <div>
                         <div className="flex justify-between items-center mb-2">
                             <Text strong>Cliente</Text>
