@@ -5,7 +5,7 @@ import { db } from './firebase';
  * Sends an email to Admin (hola@repaart.es) when a new ticket is created.
  * Uses Firebase Extension: Trigger Email from Firestore
  */
-export const sendTicketCreatedEmail = async (ticket: any): Promise<boolean> => {
+export const sendTicketCreatedEmail = async (ticket: { subject: string; email: string; urgency?: string; message?: string; id?: string; category?: string }): Promise<boolean> => {
     try {
         await addDoc(collection(db, 'mail'), {
             to: ['hola@repaart.es'],

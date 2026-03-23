@@ -5,7 +5,7 @@ import { cn } from '../../../../lib/utils'; // Adjust path if needed
 interface IncidentReportModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: any) => Promise<void>;
+    onSubmit: (data: { type: IncidentType; isUrgent: boolean; description: string }) => Promise<void>;
 }
 
 type IncidentType = 'accident' | 'breakdown' | 'traffic' | 'other';

@@ -4,9 +4,14 @@ import { functions } from '../../../../lib/firebase';
 import { Beaker, RefreshCw, Check, AlertCircle } from 'lucide-react';
 import { cn } from '../../../../lib/utils';
 
+interface CreateFranchiseResult {
+  action: 'created' | 'exists';
+  franchiseId: string;
+}
+
 export const CreateTestFranchiseButton: React.FC = () => {
   const [creating, setCreating] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<CreateFranchiseResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleCreate = async () => {
@@ -24,10 +29,10 @@ export const CreateTestFranchiseButton: React.FC = () => {
     try {
       const createFn = httpsCallable(functions, 'createTestFranchise');
       const response = await createFn({});
-      const data = response.data as any;
+      const data = response.data as CreateFranchiseResult;
       setResult(data);
-    } catch (err: any) {
-      setError(err.message || 'Error creando franquicia');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error creando franquicia');
       console.error(err);
     } finally {
       setCreating(false);

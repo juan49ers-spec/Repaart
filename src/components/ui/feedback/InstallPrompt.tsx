@@ -3,11 +3,11 @@ import { Download } from 'lucide-react';
 import { Button } from '../primitives/Button';
 
 export const InstallPrompt: React.FC = () => {
-    const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+    const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
-        const handler = (e: any) => {
+        const handler = (e: BeforeInstallPromptEvent) => {
             // Prevent the mini-infobar from appearing on mobile
             e.preventDefault();
             // Stash the event so it can be triggered later.

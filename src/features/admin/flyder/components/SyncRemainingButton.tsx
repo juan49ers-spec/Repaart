@@ -3,9 +3,27 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '../../../../lib/firebase';
 import { Play, RefreshCw, Check, AlertCircle, Database } from 'lucide-react';
 
+interface SyncRemainingResult {
+  success: boolean;
+  message: string;
+  stats: {
+    synced: number;
+    skipped: number;
+    total?: number;
+    existing?: number;
+  };
+}
+
+interface SyncMonthData {
+  stats?: {
+    synced: number;
+    skipped: number;
+  };
+}
+
 export const SyncRemainingButton: React.FC = () => {
   const [syncing, setSyncing] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<SyncRemainingResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSync = async () => {
@@ -43,8 +61,8 @@ export const SyncRemainingButton: React.FC = () => {
           startDate: month.start,
           endDate: month.end
         });
-        const data = response.data as any;
-        
+        const data = response.data as SyncMonthData;
+
         if (data.stats) {
           totalSynced += data.stats.synced;
           totalSkipped += data.stats.skipped;
@@ -54,9 +72,9 @@ export const SyncRemainingButton: React.FC = () => {
         if (i < months.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 300));
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(`Error en ${month.label}:`, err);
-        setError(`Error en ${month.label}: ${err.message}`);
+        setError(`Error en ${month.label}: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
 

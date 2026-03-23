@@ -53,7 +53,7 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
             }, { merge: true });
 
             showMessage('success', 'Avatar actualizado correctamente');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error uploading avatar:", error);
             showMessage('error', 'Error al subir la imagen');
         } finally {

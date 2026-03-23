@@ -38,8 +38,8 @@ export const Seeder: React.FC = () => {
                         status: 'active'
                     });
                     console.log(`Rider created: ${r.fullName}`);
-                } catch (error: any) {
-                    if (error.code === 'auth/email-already-in-use' || error.message?.includes('already-in-use')) {
+                } catch (error: unknown) {
+                    if ((error instanceof Error && (error as Error & { code?: string }).code === 'auth/email-already-in-use') || (error instanceof Error && error.message?.includes('already-in-use'))) {
                         console.log(`Rider ${r.email} already exists. Skipping.`);
                     } else {
                         console.error(`Failed to create rider ${r.fullName}:`, error);

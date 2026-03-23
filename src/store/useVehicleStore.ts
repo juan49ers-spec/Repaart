@@ -34,7 +34,7 @@ export const useVehicleStore = create<VehicleState>((set) => ({
         set({ isLoading: true, error: null });
         try {
             // The service now handles standardized input or accepts the new schema
-            const newVehicle = await vehicleService.createVehicle(franchiseId, vehicleData as any);
+            const newVehicle = await vehicleService.createVehicle(franchiseId, vehicleData as import('../schemas/fleet').CreateVehicleInput);
             set(state => ({
                 vehicles: [newVehicle, ...state.vehicles],
                 isLoading: false

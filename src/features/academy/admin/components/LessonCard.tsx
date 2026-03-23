@@ -9,7 +9,9 @@ interface LessonCardProps {
     onToggleStatus: () => void;
     onDelete: () => void;
     // Drag & Drop
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     dragListeners?: Record<string, any>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     dragAttributes?: Record<string, any>;
     setNodeRef?: (node: HTMLElement | null) => void;
     style?: React.CSSProperties;

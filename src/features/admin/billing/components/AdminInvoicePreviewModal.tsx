@@ -3,7 +3,7 @@ import { X, FileText, Eye, CheckCircle, AlertTriangle, Download } from 'lucide-r
 import { motion, AnimatePresence } from 'framer-motion';
 import { invoicePdfGenerator } from '../../../../services/billing';
 import type { AdminInvoice, AdminInvoiceItem } from '../../../../types/billing';
-import type { Invoice, IssuerSnapshot, InvoiceLine } from '../../../../types/invoicing';
+import type { Invoice, IssuerSnapshot, InvoiceLine, CustomerSnapshot } from '../../../../types/invoicing';
 
 interface AdminInvoicePreviewModalProps {
     invoice: AdminInvoice | null;
@@ -55,7 +55,7 @@ export const AdminInvoicePreviewModal: React.FC<AdminInvoicePreviewModalProps> =
             phone: '+34 900 100 200'
         };
 
-        const customer: any = {
+        const customer: CustomerSnapshot = {
             id: adminInv.franchiseId,
             fiscalName: adminInv.customerSnapshot.legalName,
             cif: adminInv.customerSnapshot.taxId || '',
@@ -110,7 +110,7 @@ export const AdminInvoicePreviewModal: React.FC<AdminInvoicePreviewModalProps> =
             const mappedInvoice = mapToInvoice(invoice);
             
             const pdfBuffer = invoicePdfGenerator.generateInvoicePdf(mappedInvoice, {
-                template: selectedTemplate as any,
+                template: selectedTemplate,
                 lang: 'es',
                 showPaymentInfo: true
             });
@@ -219,7 +219,7 @@ export const AdminInvoicePreviewModal: React.FC<AdminInvoicePreviewModalProps> =
                                 {templates.map((template) => (
                                     <button
                                         key={template.id}
-                                        onClick={() => setSelectedTemplate(template.id as any)}
+                                        onClick={() => setSelectedTemplate(template.id as 'modern' | 'classic' | 'minimal' | 'corporate')}
                                         className={`w-full p-4 rounded-2xl text-left border-2 transition-all ${
                                             selectedTemplate === template.id
                                                 ? 'bg-white dark:bg-slate-800 border-indigo-500 shadow-md transform scale-[1.02]'

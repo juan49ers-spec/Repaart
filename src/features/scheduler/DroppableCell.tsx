@@ -12,7 +12,7 @@ interface DroppableCellProps {
     onClick?: (e: React.MouseEvent) => void;
     isToday: boolean;
     className?: string;
-    activeDragShift?: any;
+    activeDragShift?: { startAt: string | Date; endAt: string | Date; [key: string]: unknown };
     hour?: number;
 }
 

@@ -135,7 +135,7 @@ export const RecurringShiftModal: React.FC<RecurringShiftModalProps> = ({
                                         ].map((p) => (
                                             <button
                                                 key={p.id}
-                                                onClick={() => setPattern(p.id as any)}
+                                                onClick={() => setPattern(p.id as 'daily' | 'weekly' | 'monthly')}
                                                 className={cn(
                                                     "p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2",
                                                     pattern === p.id

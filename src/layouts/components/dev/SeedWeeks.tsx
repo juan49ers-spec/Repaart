@@ -58,9 +58,9 @@ const SeedWeeks: React.FC = () => {
         try {
             await WeekService.saveWeek(toFranchiseId(franchiseId), toWeekId(weekIdStr), sampleData);
             setStatus(`Success! Week ${weekIdStr} seeded.`);
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error(e);
-            setStatus('Error: ' + e.message);
+            setStatus('Error: ' + (e instanceof Error ? e.message : String(e)));
         }
     };
 

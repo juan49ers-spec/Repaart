@@ -26,7 +26,7 @@ export interface LogisticsSnapshotItem {
 
 export interface FinanceEntry {
     logisticsSnapshot?: LogisticsSnapshotItem[];
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 /**

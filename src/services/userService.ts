@@ -205,7 +205,7 @@ export const userService = {
 
     // --- BUSINESS ENTITIES (Franchises) ---
 
-    createFranchise: async (franchiseData: any): Promise<{ success: boolean; data: { id: string } }> => {
+    createFranchise: async (franchiseData: { location?: { zipCodes?: string[] }; [key: string]: unknown }): Promise<{ success: boolean; data: { id: string } }> => {
         try {
             // Client-side validation to match tests and prevent empty requests
             if (!franchiseData.location?.zipCodes || franchiseData.location.zipCodes.length === 0) {

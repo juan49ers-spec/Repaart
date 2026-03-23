@@ -27,16 +27,17 @@ export const useInvoicingModule = () => {
 
 
         // Helper para parsear fechas de Firestore (pueden venir como string o como objeto {seconds, nanoseconds})
-        const parseDate = (d: any): Date | null => {
+        const parseDate = (d: unknown): Date | null => {
             if (!d) return null;
             if (d instanceof Date) return d;
             if (typeof d === 'string') return new Date(d);
 
             // Manejo de Timestamps de Firestore serializados
-            if (d._seconds) return new Date(d._seconds * 1000);
-            if (d.seconds) return new Date(d.seconds * 1000);
+            const dObj = d as Record<string, number>;
+            if (dObj._seconds) return new Date(dObj._seconds * 1000);
+            if (dObj.seconds) return new Date(dObj.seconds * 1000);
 
-            const date = new Date(d);
+            const date = new Date(d as string | number);
             return isNaN(date.getTime()) ? null : date;
         };
 

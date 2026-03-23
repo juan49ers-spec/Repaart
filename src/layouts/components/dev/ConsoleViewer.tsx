@@ -58,7 +58,7 @@ const ConsoleViewer: React.FC<ConsoleViewerProps> = ({ isOpen, onClose }) => {
                         {/* Filter */}
                         <select
                             value={filterLevel}
-                            onChange={(e) => setFilterLevel(e.target.value as any)}
+                            onChange={(e) => setFilterLevel(e.target.value as LogLevel | 'all')}
                             className="bg-slate-800 border border-slate-700 text-white text-xs rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                             title="Filtrar por nivel"
                         >

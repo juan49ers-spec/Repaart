@@ -38,7 +38,12 @@ const QuarterlyTaxModal: React.FC<QuarterlyTaxModalProps> = ({ isOpen, onClose, 
         const includedMonths = new Set<number>();
 
         quarterData.forEach(monthData => {
-            const anyData = monthData as any;
+            type MonthDataExtended = {
+                month?: string; id?: string; grossIncome?: number;
+                breakdown?: Record<string, number>;
+                taxes?: { ivaAPagar?: number; irpfPago?: number };
+            };
+            const anyData = monthData as MonthDataExtended;
             const dataMonth = anyData.month || anyData.id;
             const revenue = monthData.revenue || monthData.totalIncome || anyData.grossIncome || 0;
 

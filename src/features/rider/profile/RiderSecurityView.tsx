@@ -44,11 +44,12 @@ export const RiderSecurityView: React.FC<RiderSecurityViewProps> = ({ compact = 
             toast.success('Contraseña actualizada correctamente');
             reset();
             if (!compact) navigate(-1);
-        } catch (error: any) {
-            if (error.code === 'auth/wrong-password') {
+        } catch (error: unknown) {
+            const e = error as { code?: string; message?: string };
+            if (e.code === 'auth/wrong-password') {
                 toast.error('La contraseña actual es incorrecta');
             } else {
-                toast.error('Error al actualizar: ' + error.message);
+                toast.error('Error al actualizar: ' + e.message);
             }
         } finally {
             setIsSaving(false);

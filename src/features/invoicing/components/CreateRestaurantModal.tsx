@@ -5,12 +5,13 @@ import { useInvoicing } from '../../../hooks/useInvoicing';
 import { X, Save, Building, MapPin, Mail, Phone, AlertCircle, CheckCircle } from 'lucide-react';
 import { message } from 'antd';
 import { validateSpanishFiscalId, formatFiscalId } from '../../../utils/spanishFiscalValidation';
+import type { FranchiseRestaurant } from '../../../types/invoicing';
 
 interface Props {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
-    restaurant?: any;
+    restaurant?: FranchiseRestaurant | null;
     franchiseId?: string;
 }
 
@@ -41,19 +42,20 @@ export const CreateRestaurantModal: React.FC<Props> = ({ isOpen, onClose, onSucc
 
     useEffect(() => {
         if (restaurant) {
+            const addr = typeof restaurant.address === 'object' && restaurant.address !== null ? restaurant.address : {};
             setFormData({
                 fiscalName: restaurant.fiscalName || '',
                 cif: restaurant.cif || '',
                 email: restaurant.email || '',
                 phone: restaurant.phone || '',
                 address: {
-                    street: restaurant.address?.street || '',
-                    city: restaurant.address?.city || '',
-                    zipCode: restaurant.address?.zipCode || '',
-                    province: restaurant.address?.province || '',
-                    country: restaurant.address?.country || 'ES'
+                    street: (addr as { street?: string }).street || '',
+                    city: (addr as { city?: string }).city || '',
+                    zipCode: (addr as { zipCode?: string }).zipCode || '',
+                    province: (addr as { province?: string }).province || '',
+                    country: (addr as { country?: string }).country || 'ES'
                 },
-                notes: restaurant.notes || ''
+                notes: String(restaurant.notes || '')
             });
             if (restaurant.cif) {
                 const result = validateSpanishFiscalId(restaurant.cif);
@@ -138,17 +140,18 @@ export const CreateRestaurantModal: React.FC<Props> = ({ isOpen, onClose, onSucc
             message.success(isEditing ? 'Cliente actualizado correctamente' : 'Cliente creado correctamente');
             onSuccess();
             onClose();
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const e = err as { code?: string; message?: string };
             let errorMessage = 'Error al guardar cliente';
 
-            if (err.code === 'permission-denied') {
+            if (e.code === 'permission-denied') {
                 errorMessage = 'No tienes permisos para crear clientes';
-            } else if (err.code === 'invalid-argument') {
+            } else if (e.code === 'invalid-argument') {
                 errorMessage = 'Datos inválidos. Verifica todos los campos';
-            } else if (err.code === 'unauthenticated') {
+            } else if (e.code === 'unauthenticated') {
                 errorMessage = 'Debes iniciar sesión nuevamente';
-            } else if (err.message) {
-                errorMessage = err.message;
+            } else if (e.message) {
+                errorMessage = e.message;
             }
 
             setError(errorMessage);

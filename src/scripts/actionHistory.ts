@@ -3,7 +3,7 @@ export interface HistoryAction {
     name: string;
     timestamp: Date;
     status: 'success' | 'error' | 'running';
-    result?: any;
+    result?: unknown;
     error?: string;
     duration?: number;
 }
@@ -43,7 +43,7 @@ export function getHistory(): HistoryAction[] {
 
         const parsed = JSON.parse(stored);
         // Convertir timestamps de string a Date
-        return parsed.map((item: any) => ({
+        return parsed.map((item: HistoryAction & { timestamp: string | Date }) => ({
             ...item,
             timestamp: new Date(item.timestamp)
         }));

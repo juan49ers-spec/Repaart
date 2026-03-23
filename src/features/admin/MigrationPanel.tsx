@@ -2,13 +2,31 @@ import React, { useState } from 'react';
 import { Database, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { migrateFranchiseIds, verifyMigration } from '../../scripts/migrateFranchiseIds';
 
+interface MigrationMapping {
+  franchiseId: string;
+  uid: string;
+  email: string;
+}
+
+interface MigrationResult {
+  success: boolean;
+  errors?: string[];
+  mappings?: MigrationMapping[];
+  updated?: {
+    financial_records: number;
+    shifts: number;
+    motos: number;
+    riders: number;
+  };
+}
+
 /**
  * Admin panel component to run the franchise ID migration
  * Should only be accessible to root admins
  */
 const MigrationPanel: React.FC = () => {
     const [status, setStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
-    const [result, setResult] = useState<any>(null);
+    const [result, setResult] = useState<MigrationResult | null>(null);
     const [isDryRun, setIsDryRun] = useState(true);
     const [showConfirm, setShowConfirm] = useState(false);
 
@@ -27,9 +45,9 @@ const MigrationPanel: React.FC = () => {
             const migrationResult = await migrateFranchiseIds(isDryRun);
             setResult(migrationResult);
             setStatus(migrationResult.success ? 'success' : 'error');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Migration error:', error);
-            setResult({ success: false, errors: [error.message] });
+            setResult({ success: false, errors: [error instanceof Error ? error.message : String(error)] });
             setStatus('error');
         }
     };
@@ -177,7 +195,7 @@ const MigrationPanel: React.FC = () => {
                             <div className="mb-4">
                                 <p className="text-sm font-bold text-white mb-2">Franchise Mappings:</p>
                                 <div className="space-y-2">
-                                    {result.mappings.map((m: any, i: number) => (
+                                    {result.mappings.map((m: MigrationMapping, i: number) => (
                                         <div key={i} className="text-[10px] font-bold uppercase tracking-wider bg-black/30 rounded p-2 text-slate-300">
                                             <span className="text-amber-400">{m.franchiseId}</span>
                                             {' → '}

@@ -28,7 +28,7 @@ const FranchiseOnboarding: React.FC<FranchiseOnboardingProps> = ({ onCancel, onC
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const handleChange = (field: keyof typeof INITIAL_DATA, value: any) => {
+    const handleChange = (field: keyof typeof INITIAL_DATA, value: string | number) => {
         setData(prev => ({ ...prev, [field]: value }));
     };
 

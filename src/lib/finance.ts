@@ -259,7 +259,7 @@ export const calculateMonthlyRevenue = (
 
     // 1. Prefer explicit stored revenue (Source of Truth from Manual Entry)
     // SUPPORT LEGACY/NESTED DATA: Check data.revenue, data.totalIncome, OR data.summary.grossIncome
-    const storedRevenue = parseFloat(String(data.revenue || data.totalIncome || (data as any).summary?.grossIncome || 0));
+    const storedRevenue = parseFloat(String(data.revenue || data.totalIncome || ((data as Record<string, unknown>).summary as Record<string, unknown> | undefined)?.grossIncome || 0));
     if (storedRevenue > 0) return storedRevenue;
 
     // 2. Fallback to calculation from orders (Legacy / Logistics only)

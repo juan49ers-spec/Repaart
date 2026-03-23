@@ -18,7 +18,7 @@ const SupportHub: React.FC = () => {
 
     // Default to ticket, but check location state for override
     const [activeTab, setActiveTab] = useState<'ticket' | 'services'>(() => {
-        return (location.state as any)?.activeTab === 'services' ? 'services' : 'ticket';
+        return (location.state as { activeTab?: string } | null)?.activeTab === 'services' ? 'services' : 'ticket';
     });
 
     const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);

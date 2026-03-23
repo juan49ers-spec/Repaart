@@ -7,7 +7,7 @@ import { cn } from '../../../../lib/utils';
 
 // Internal MoneyRain Component for gamification
 const MoneyRain = () => {
-    const [items, setItems] = useState<any[]>([]);
+    const [items, setItems] = useState<{ id: number; left: string; delay: string; duration: string; rotation: string; scale: number; type: string }[]>([]);
     React.useEffect(() => {
         const newItems = Array.from({ length: 40 }).map((_, i) => ({
             id: i,
@@ -96,7 +96,7 @@ const MoneyRain = () => {
 
 // Internal StormRain Component for negative results
 const StormRain = () => {
-    const [items, setItems] = useState<any[]>([]);
+    const [items, setItems] = useState<{ id: number; left: string; delay: string; duration: string }[]>([]);
     React.useEffect(() => {
         const newItems = Array.from({ length: 60 }).map((_, i) => ({
             id: i,

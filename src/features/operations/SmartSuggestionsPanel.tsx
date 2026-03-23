@@ -3,7 +3,7 @@ import { Lightbulb, X, AlertTriangle } from 'lucide-react';
 
 interface Shift {
     startAt: string | Date;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 interface WeekData {
@@ -19,7 +19,7 @@ const SmartSuggestionsPanel: React.FC<SmartSuggestionsPanelProps> = ({ weekData,
     const suggestions = useMemo(() => {
         if (!weekData?.shifts) return [];
 
-        const items: { type: string; icon: any; title: string; color: string }[] = [];
+        const items: { type: string; icon: React.ElementType; title: string; color: string }[] = [];
         const dayGroups: Record<string, number> = {};
 
         weekData.shifts.forEach(shift => {

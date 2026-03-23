@@ -24,7 +24,7 @@ import { useRef, useEffect, useCallback } from 'react';
  * </div>
  * ```
  */
-export function useThrottle<T extends (...args: any[]) => any>(
+export function useThrottle<T extends (...args: unknown[]) => unknown>(
   fn: T,
   delay: number
 ): T {

@@ -28,7 +28,7 @@ async function fetchAdminDashboardData(selectedMonth: string) {
     ]);
 
     // Build financial summary map
-    const financialMap = new Map<string, any>();
+    const financialMap = new Map<string, Record<string, unknown>>();
     summariesSnap.forEach(doc => {
         const data = doc.data();
         if (data.franchiseId) {

@@ -11,7 +11,7 @@ interface GuideData {
     icon?: string;
     isCritical?: boolean;
     content?: string;
-    updatedAt?: any;
+    updatedAt?: { toDate?: () => Date } | Date | string;
 }
 
 interface GuideViewerModalProps {
@@ -76,7 +76,7 @@ const GuideViewerModal: React.FC<GuideViewerModalProps> = ({ isOpen, onClose, gu
                         </div>
                         <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
-                            Actualizado: {guide.updatedAt?.toDate ? guide.updatedAt.toDate().toLocaleDateString() : 'Reciente'}
+                            Actualizado: {guide.updatedAt && typeof guide.updatedAt !== 'string' && !(guide.updatedAt instanceof Date) && guide.updatedAt.toDate ? guide.updatedAt.toDate().toLocaleDateString() : 'Reciente'}
                         </div>
                     </div>
                 </div>

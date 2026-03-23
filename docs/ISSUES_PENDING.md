@@ -68,9 +68,9 @@ if (import.meta.env.DEV) {
 
 ---
 
-### #6: ~606 warnings de tipo `any` en lint (bajando desde 809)
+### #6: ~505 warnings de tipo `any` en lint (bajando desde 809)
 
-**Descripción:** El linter reporta ~606 warnings, principalmente `any`. No son errores bloqueantes. Se han eliminado 203 en sesión 2026-03-22 (servicios billing/finance, flyder, scheduler, kanban, franchise, gemini, fleet, pdf...). La mayoría restante está en archivos de test.
+**Descripción:** El linter reporta ~505 warnings, principalmente `any`. Se han eliminado 304 en sesión 2026-03-23 (servicios billing/finance/flyder/scheduler/kanban/franchise/admin/types/hooks...). La mayoría restante está en archivos de test y archivos de usuario WIP.
 
 **Prioridad:** BAJA (mejora técnica progresiva)
 
@@ -78,13 +78,11 @@ if (import.meta.env.DEV) {
 
 ---
 
-### #7: 5 chunks >500KB en el bundle
+### ~~#7: 5 chunks >500KB en el bundle~~ — WON'T FIX
 
-**Descripción:** Vite reporta chunks grandes en producción que pueden afectar el tiempo de carga inicial.
+**Descripción:** Vite reporta chunks grandes. `manualChunks` fue removido explícitamente en el pasado porque causó errores de inicialización circular en runtime. Firebase SDK y Ant Design son intrínsecamente grandes. Con lazy loading ya activo, el impacto real en usuarios es bajo.
 
-**Prioridad:** BAJA (optimización)
-
-**Abordaje recomendado:** Analizar con `vite-bundle-analyzer` e implementar lazy loading en rutas pesadas.
+**Decisión:** Cerrado como won't fix. Reabrirlo solo si hay evidencia de impacto real en LCP/TTI.
 
 ---
 
@@ -111,6 +109,6 @@ if (import.meta.env.DEV) {
 | -------------- | ---------- | --------- |
 | Críticos       | 0          | 1         |
 | Medios         | 1          | 5         |
-| Bajos/Mejoras  | 2          | 4         |
+| Bajos/Mejoras  | 1          | 5         |
 
-**Total pendientes:** 3 (1 medio, 2 bajos)
+**Total pendientes:** 2 (1 medio, 1 bajo)

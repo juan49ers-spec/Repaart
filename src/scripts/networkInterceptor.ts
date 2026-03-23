@@ -1,4 +1,4 @@
-import { logFirestoreQuery } from './firestoreMonitor';
+import { logFirestoreQuery, FirestoreQuery } from './firestoreMonitor';
 
 const originalFetch = window.fetch;
 
@@ -15,7 +15,7 @@ export function startNetworkCapture() {
             // Format: .../databases/(default)/documents/users/UID...
             const pathParts = url.split('/documents/');
             let collection = 'unknown';
-            let type: any = 'getDocs';
+            let type: FirestoreQuery['type'] = 'getDocs';
 
             if (pathParts.length > 1) {
                 const path = pathParts[1];

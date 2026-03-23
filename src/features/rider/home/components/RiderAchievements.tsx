@@ -126,7 +126,7 @@ const RiderAchievements: React.FC<RiderAchievementsProps> = ({ achievements }) =
                         {['all', 'turns', 'performance', 'special', 'consistency'].map((cat) => (
                             <button
                                 key={cat}
-                                onClick={() => setSelectedCategory(cat as any)}
+                                onClick={() => setSelectedCategory(cat)}
                                 className={selectedCategory === cat ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all'}
                             >
                                 {cat === 'all' ? 'Todas' : cat === 'turns' ? 'Turnos' : cat === 'performance' ? 'Rendimiento' : cat === 'special' ? 'Especiales' : 'Consistencia'}

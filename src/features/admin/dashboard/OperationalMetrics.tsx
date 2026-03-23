@@ -59,7 +59,7 @@ const OperationalMetrics: React.FC<OperationalMetricsProps> = ({ franchises, onC
                                     }
                                 }))}
                                 margin={{ top: 0, right: 10, left: 10, bottom: 0 }}
-                                onClick={(state: any) => {
+                                onClick={(state: { activePayload?: Array<{ payload: Franchise }> }) => {
                                     if (state && state.activePayload) {
                                         if (onChartClick) {
                                             onChartClick(state.activePayload[0].payload);
@@ -108,7 +108,7 @@ const OperationalMetrics: React.FC<OperationalMetricsProps> = ({ franchises, onC
                                     }
                                 }))}
                                 margin={{ top: 0, right: 10, left: 10, bottom: 0 }}
-                                onClick={(state: any) => {
+                                onClick={(state: { activePayload?: Array<{ payload: Franchise }> }) => {
                                     if (state && state.activePayload) {
                                         if (onChartClick) {
                                             onChartClick(state.activePayload[0].payload);

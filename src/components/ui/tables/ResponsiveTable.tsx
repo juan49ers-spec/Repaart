@@ -4,7 +4,7 @@ import { cn } from '../../../lib/utils';
 interface Column<T> {
   key: keyof T | string;
   title: string;
-  render?: (value: any, record: T) => React.ReactNode;
+  render?: (value: unknown, record: T) => React.ReactNode;
   responsive?: {
     '@xs'?: boolean;
     '@sm'?: boolean;
@@ -41,7 +41,7 @@ interface ResponsiveTableProps<T> {
  * - @md (768px): Columnas secundarias
  * - @lg (1024px): Todas las columnas
  */
-export function ResponsiveTable<T extends Record<string, any>>({
+export function ResponsiveTable<T extends Record<string, unknown>>({
   data,
   columns,
   className = '',

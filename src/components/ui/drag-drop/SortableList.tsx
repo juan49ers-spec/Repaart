@@ -63,9 +63,9 @@ export function SortableItem({ id, children, className = '' }: SortableItemProps
 }
 
 interface SortableListProps {
-  items: Array<{ id: string; [key: string]: any }>;
-  onReorder: (newItems: Array<{ id: string; [key: string]: any }>) => void;
-  renderItem: (item: { id: string; [key: string]: any }, index: number) => React.ReactNode;
+  items: Array<{ id: string; [key: string]: unknown }>;
+  onReorder: (newItems: Array<{ id: string; [key: string]: unknown }>) => void;
+  renderItem: (item: { id: string; [key: string]: unknown }, index: number) => React.ReactNode;
   className?: string;
   itemClassName?: string;
 }

@@ -7,7 +7,8 @@ const CHECK_INTERVAL = 60 * 1000; // Check every minute
 const VERSION_URL = '/version.json';
 
 // Get current version from build
-import currentVersionData from '../../../public/version.json';
+import currentVersionDataRaw from '../../../public/version.json';
+const currentVersionData = currentVersionDataRaw as { version: string; buildTime?: number };
 
 export const VersionChecker: React.FC = () => {
     const [hasUpdate, setHasUpdate] = useState(false);
@@ -26,7 +27,7 @@ export const VersionChecker: React.FC = () => {
                 });
                 if (!res.ok) return;
 
-                const data = await res.json();
+                const data = await res.json() as { version?: string };
                 const localVersion = currentVersionData.version;
 
                 console.log(`[VersionChecker] Checking: Local=${localVersion} vs Remote=${data.version}`);

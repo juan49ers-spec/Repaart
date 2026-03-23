@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
 // Re-export zod types
-export const createUserSchema: z.ZodType<any>;
-export const updateUserSchema: z.ZodType<any>;
-export const financeSchema: z.ZodType<any>;
+export const createUserSchema: z.ZodType<unknown>;
+export const updateUserSchema: z.ZodType<unknown>;
+export const financeSchema: z.ZodType<unknown>;
 
 // User roles
 export type UserRole = 'admin' | 'franchise' | 'user' | 'driver' | 'staff';

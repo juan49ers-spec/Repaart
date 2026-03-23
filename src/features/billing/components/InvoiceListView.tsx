@@ -596,22 +596,33 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
     }
   ];
 
-  // Columns for the table - ULTRA COMPACT
+  // Columns for the table - Modern Clean Design
   const columns = [
     {
-      title: 'Número',
+      title: 'Factura',
       dataIndex: 'fullNumber',
       key: 'fullNumber',
-      width: 120,
+      width: 140,
       sorter: (a: Invoice, b: Invoice) => a.fullNumber.localeCompare(b.fullNumber),
-      render: (text: string, record: Invoice) => (
-        <div className="flex items-center gap-1 whitespace-nowrap">
-          <Tag color="blue" className="!m-0 !text-[10px] !px-1 !h-[18px] !leading-[18px] flex items-center">
-            {record.series}
-          </Tag>
-          <span className="text-[11px] font-medium text-slate-700 dark:text-slate-300">{text}</span>
-        </div>
-      )
+      render: (text: string, record: Invoice) => {
+        const issueDate = record.issueDate instanceof Date
+          ? record.issueDate
+          : new Date((record.issueDate as unknown as { seconds: number }).seconds * 1000);
+        return (
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
+              <span className="text-[12px] font-semibold text-slate-800 dark:text-slate-200">{text}</span>
+              {record.status === 'DRAFT' && (
+                <Tag color="blue" className="!m-0 !text-[9px] !px-1 !h-[16px] !leading-[16px]">Borrador</Tag>
+              )}
+              {record.status === 'RECTIFIED' && (
+                <Tag color="red" className="!m-0 !text-[9px] !px-1 !h-[16px] !leading-[16px]">Rectif.</Tag>
+              )}
+            </div>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{issueDate.toLocaleDateString('es-ES')}</span>
+          </div>
+        );
+      }
     },
     {
       title: 'Cliente',
@@ -620,140 +631,138 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
       width: 200,
       ellipsis: true,
       render: (customer: CustomerSnapshot) => (
-        <div className="min-w-0">
-          <div className="font-bold truncate text-[11px] text-slate-900 dark:text-slate-100" title={customer.fiscalName}>
+        <div className="flex flex-col min-w-0">
+          <span className="font-medium truncate text-[12px] text-slate-800 dark:text-slate-200" title={customer.fiscalName}>
             {customer.fiscalName}
-          </div>
-          <div className="text-[10px] font-medium text-slate-500 truncate">{customer.cif}</div>
+          </span>
+          <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">{customer.cif}</span>
         </div>
+      )
+    },
+    {
+      title: 'Importe',
+      key: 'total',
+      width: 100,
+      align: 'right' as const,
+      sorter: (a: Invoice, b: Invoice) => a.total - b.total,
+      render: (_: unknown, record: Invoice) => (
+        <span className="text-[13px] font-semibold text-slate-900 dark:text-slate-100">
+          €{record.total.toFixed(2)}
+        </span>
       )
     },
     {
       title: 'Estado',
       dataIndex: 'status',
       key: 'status',
-      width: 95,
+      width: 110,
       filters: [
-        { text: 'DRAFT', value: 'DRAFT' },
-        { text: 'ISSUED', value: 'ISSUED' },
-        { text: 'RECTIFIED', value: 'RECTIFIED' }
+        { text: 'Borrador', value: 'DRAFT' },
+        { text: 'Emitida', value: 'ISSUED' },
+        { text: 'Rectificada', value: 'RECTIFIED' }
       ],
       render: (status: InvoiceStatus) => {
         const statusConfig = {
-          DRAFT: { color: 'default', icon: <Clock />, text: 'BORRADOR' },
-          ISSUED: { color: 'success', icon: <CheckCircle />, text: 'EMITIDA' },
-          RECTIFIED: { color: 'error', icon: <AlertCircle />, text: 'RECTIF.' }
+          DRAFT: { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-600 dark:text-slate-300', icon: <Clock className="w-3 h-3" />, label: 'Borrador' },
+          ISSUED: { bg: 'bg-emerald-50 dark:bg-emerald-900/30', text: 'text-emerald-600 dark:text-emerald-400', icon: <CheckCircle className="w-3 h-3" />, label: 'Emitida' },
+          RECTIFIED: { bg: 'bg-red-50 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400', icon: <AlertCircle className="w-3 h-3" />, label: 'Rectificada' }
         };
-
         const config = statusConfig[status];
         return (
-          <Tag color={config.color} icon={config.icon} className="m-0 text-[10px] px-1 line-height-18">
-            {config.text}
-          </Tag>
+          <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${config.bg} ${config.text}`}>
+            {config.icon}
+            <span className="text-[10px] font-medium leading-4">{config.label}</span>
+          </div>
         );
       }
     },
     {
-      title: 'Estado Pago',
-      dataIndex: 'paymentStatus',
+      title: 'Cobro',
       key: 'paymentStatus',
-      width: 110,
+      width: 120,
       filters: [
         { text: 'Pendiente', value: 'PENDING' },
         { text: 'Parcial', value: 'PARTIAL' },
         { text: 'Pagado/Cobrado', value: 'PAID' }
       ],
-      render: (status: PaymentStatus, record: Invoice) => {
-        const isRectification = record.status === 'RECTIFIED';
-        const statusConfig = {
-          PENDING: { color: 'default', text: 'Pendiente' },
-          PARTIAL: { color: 'warning', text: 'Parcial' },
-          PAID: { color: 'success', text: isRectification ? 'Pagado' : 'Cobrado' }
+      render: (_: unknown, record: Invoice) => {
+        const status = record.paymentStatus;
+        const config = {
+          PENDING: { bg: 'bg-amber-50 dark:bg-amber-900/30', text: 'text-amber-600 dark:text-amber-400', label: 'Pendiente' },
+          PARTIAL: { bg: 'bg-indigo-50 dark:bg-indigo-900/30', text: 'text-indigo-600 dark:text-indigo-400', label: 'Parcial' },
+          PAID: { bg: 'bg-emerald-50 dark:bg-emerald-900/30', text: 'text-emerald-600 dark:text-emerald-400', label: record.status === 'RECTIFIED' ? 'Devuelto' : 'Cobrado' }
         };
+        const c = config[status];
 
-        const config = statusConfig[status];
         return (
-          <Tag color={config.color} className="m-0 text-[10px] px-1 line-height-18">
-            {config.text}
-          </Tag>
+          <div className="flex flex-col items-start gap-1">
+            <div className={`inline-flex items-center px-2 py-0.5 rounded-full ${c.bg} ${c.text}`}>
+              <span className="text-[10px] font-medium leading-4">{c.label}</span>
+            </div>
+            {record.remainingAmount > 0 && (
+              <span className="text-[10px] font-medium text-red-500 dark:text-red-400">
+                Faltan €{record.remainingAmount.toFixed(2)}
+              </span>
+            )}
+          </div>
         );
       }
     },
     {
-      title: 'Resumen Financiero',
-      key: 'financialSummary',
-      width: 180,
-      render: (_: unknown, record: Invoice) => (
-        <div className="flex items-center justify-between gap-2 p-1 bg-slate-50 dark:bg-slate-900/50 rounded border border-slate-100 dark:border-slate-800">
-          <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-1.5 leading-none">
-              <span className="text-[10px] uppercase text-slate-400 font-bold w-12">Total</span>
-              <span className="text-xs font-bold text-slate-900 dark:text-white">€{record.total.toFixed(2)}</span>
-            </div>
-            <div className="flex items-center gap-1.5 leading-none">
-              <span className="text-[10px] uppercase text-slate-400 font-bold w-12">Cobrado</span>
-              <span className="text-xs font-semibold text-emerald-600">€{record.totalPaid.toFixed(2)}</span>
-            </div>
-            {record.remainingAmount > 0 && (
-              <div className="flex items-center gap-1.5 leading-none border-t border-slate-200 dark:border-slate-700 mt-1 pt-1">
-                <span className="text-[10px] uppercase text-red-400 font-bold w-12">Deuda</span>
-                <span className="text-xs font-bold text-red-600">€{record.remainingAmount.toFixed(2)}</span>
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-col items-center gap-1 pl-2 border-l border-slate-200 dark:border-slate-700">
-            <Tooltip title="Ver PDF">
-              <Button
-                type="text"
-                size="small"
-                icon={<Eye style={{ width: 14 }} />}
-                disabled={!record.pdfUrl}
-                onClick={() => handleViewPdf(record)}
-                className="h-7 w-7 flex items-center justify-center p-0 text-indigo-600 hover:bg-indigo-50"
-              />
-            </Tooltip>
-            {!record.pdfUrl && <span className="text-[8px] text-slate-400">Sin PDF</span>}
-          </div>
-        </div>
-      )
-    },
-    {
       title: 'Acciones',
       key: 'actions',
-      width: 180,
+      width: 200,
       fixed: 'right' as const,
       render: (_: unknown, record: Invoice) => (
         <Space size={4} align="center" className="flex-nowrap">
+          <Tooltip title={record.pdfUrl || record.status !== 'DRAFT' ? 'Ver PDF' : 'Sin PDF'}>
+            <Button
+              type="text"
+              size="small"
+              disabled={!record.pdfUrl && record.status === 'DRAFT'}
+              icon={<FileText className="w-4 h-4" />}
+              onClick={(e) => { e.stopPropagation(); handleViewPdf(record); }}
+              className={`flex items-center justify-center p-0 transition-colors ${record.pdfUrl || record.status !== 'DRAFT' ? 'text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/30' : 'text-slate-300'}`}
+            />
+          </Tooltip>
+          
+          <Divider type="vertical" className="mx-1 h-4 bg-slate-200 dark:bg-slate-700" />
+
           {record.status === 'DRAFT' && (
             <>
               <Tooltip title="Vista Previa y Emitir">
                 <Button
                   type="primary"
                   size="small"
-                  icon={<Eye style={{ width: 12 }} />}
-                  onClick={() => openPreviewModal(record)}
-                  className="bg-emerald-500 hover:bg-emerald-600 text-[10px] h-5 px-1.5"
-                />
+                  icon={<CheckCircle style={{ width: 12 }} />}
+                  onClick={(e) => { e.stopPropagation(); openPreviewModal(record); }}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-[10px] h-6 px-2 border-none"
+                >
+                  Emitir
+                </Button>
               </Tooltip>
               <Tooltip title="Editar Borrador">
                 <Button
                   size="small"
-                  icon={<Edit style={{ width: 12 }} />}
-                  onClick={() => openEditModal(record)}
-                  className="text-[10px] h-5 px-1.5"
+                  type="text"
+                  icon={<Edit style={{ width: 14 }} />}
+                  onClick={(e) => { e.stopPropagation(); openEditModal(record); }}
+                  className="text-[10px] h-6 px-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
                 />
               </Tooltip>
               <Popconfirm
                 title="¿Eliminar borrador?"
-                onConfirm={() => handleDeleteDraft(record.id)}
+                onConfirm={(e) => { e?.stopPropagation(); handleDeleteDraft(record.id); }}
+                onCancel={(e) => e?.stopPropagation()}
               >
                 <Tooltip title="Eliminar Borrador">
                   <Button
                     danger
+                    type="text"
                     size="small"
-                    icon={<Trash2 style={{ width: 12 }} />}
-                    className="text-[10px] h-5 px-1.5"
+                    icon={<Trash2 style={{ width: 14 }} />}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-[10px] h-6 px-1.5 hover:bg-red-50 dark:hover:bg-red-900/20"
                   />
                 </Tooltip>
               </Popconfirm>
@@ -762,119 +771,103 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
 
           {record.status === 'ISSUED' && (
             <>
-              <Dropdown
-                menu={{ items: getExportMenuItems(record) }}
-                placement="bottomRight"
-                trigger={['click']}
-              >
-                <Tooltip title="Exportar / Descargar">
-                  <Button
-                    size="small"
-                    icon={<Download style={{ width: 12 }} />}
-                    className="text-[10px] h-5 px-1.5"
-                  />
-                </Tooltip>
-              </Dropdown>
               {record.remainingAmount > 0 && (
                 <Tooltip title="Registrar Cobro">
                   <Button
                     size="small"
                     type="primary"
                     icon={<DollarSign style={{ width: 12 }} />}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setSelectedInvoice(record);
                       setPaymentModalOpen(true);
                     }}
-                    className="bg-emerald-600 hover:bg-emerald-700 border-none text-[10px] h-5.5 px-2"
+                    className="bg-emerald-600 hover:bg-emerald-700 border-none text-[10px] h-6 px-2 shadow-sm"
                   >
-                    COBRO
+                    Cobrar
                   </Button>
                 </Tooltip>
               )}
-            </>
-          )}
+              
+              <Tooltip title="Eliminar factura emitida (ATENCIÓN: Causa un salto en la numeración)">
+                <Button
+                  size="small"
+                  danger
+                  type="text"
+                  icon={<Trash2 style={{ width: 14 }} />}
+                  onClick={(e) => { e.stopPropagation(); openDeleteReasonModal(record); }}
+                  className="text-xs text-[10px] h-6 px-1.5 hover:bg-red-50 dark:hover:bg-red-900/20"
+                />
+              </Tooltip>
 
-          {/* Any user: Force delete for ISSUED invoices with warning */}
-          {record.status === 'ISSUED' && (
-            <Tooltip title="Eliminar factura emitida (ATENCIÓN: Causa un salto en la numeración)">
-              <Button
-                size="small"
-                danger
-                icon={<Trash2 style={{ width: 12 }} />}
-                onClick={() => openDeleteReasonModal(record)}
-                className="text-xs text-[10px] h-5 px-1.5"
-              >
-                Eliminar
-              </Button>
-            </Tooltip>
-          )}
-
-          {record.status === 'RECTIFIED' && (
-            <>
               <Dropdown
                 menu={{ items: getExportMenuItems(record) }}
                 placement="bottomRight"
                 trigger={['click']}
               >
-                <Tooltip title="Exportar / Descargar">
+                <Tooltip title="Opciones">
                   <Button
                     size="small"
-                    icon={<Download style={{ width: 12 }} />}
-                    className="text-[10px] h-5 px-1.5"
+                    type="text"
+                    icon={<MoreVertical style={{ width: 14 }} />}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-[10px] h-6 px-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
                   />
                 </Tooltip>
               </Dropdown>
+            </>
+          )}
+
+          {record.status === 'RECTIFIED' && (
+            <>
               {record.remainingAmount > 0 && (
                 <Tooltip title="Registrar devolución">
                   <Button
                     type="primary"
                     size="small"
                     icon={<CreditCard style={{ width: 12 }} />}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setSelectedInvoice(record);
                       setPaymentModalOpen(true);
                     }}
-                    className="bg-orange-500 text-[10px] h-5 px-1.5"
+                    className="bg-orange-500 hover:bg-orange-600 border-none text-[10px] h-6 px-2 shadow-sm whitespace-nowrap"
                   >
                     Devolver
                   </Button>
                 </Tooltip>
               )}
-            </>
-          )}
+              
+              <Tooltip title="Eliminar factura rectificada (ATENCIÓN: Causa un salto en la numeración)">
+                <Button
+                  size="small"
+                  danger
+                  type="text"
+                  icon={<Trash2 style={{ width: 14 }} />}
+                  onClick={(e) => { e.stopPropagation(); openDeleteReasonModal(record); }}
+                  className="text-xs text-[10px] h-6 px-1.5 hover:bg-red-50 dark:hover:bg-red-900/20"
+                />
+              </Tooltip>
 
-          {/* Any user: Force delete for RECTIFIED invoices with warning */}
-          {record.status === 'RECTIFIED' && (
-            <Tooltip title="Eliminar factura rectificada (ATENCIÓN: Causa un salto en la numeración)">
-              <Button
-                size="small"
-                danger
-                icon={<Trash2 style={{ width: 12 }} />}
-                onClick={() => openDeleteReasonModal(record)}
-                className="text-xs text-[10px] h-5 px-1.5"
+              <Dropdown
+                menu={{ items: getExportMenuItems(record) }}
+                placement="bottomRight"
+                trigger={['click']}
               >
-                Eliminar
-              </Button>
-            </Tooltip>
+                <Tooltip title="Opciones">
+                  <Button
+                    size="small"
+                    type="text"
+                    icon={<MoreVertical style={{ width: 14 }} />}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-[10px] h-6 px-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  />
+                </Tooltip>
+              </Dropdown>
+            </>
           )}
         </Space>
       )
-    },
-    {
-      title: 'Estado Cobro',
-      dataIndex: 'paymentStatus',
-      key: 'paymentStatus',
-      width: 120,
-      render: (status: string) => {
-        let color = 'default';
-        let text = status;
-
-        if (status === 'PAID') { color = 'success'; text = 'COBRADO'; }
-        else if (status === 'PARTIAL') { color = 'processing'; text = 'PARCIAL'; }
-        else if (status === 'PENDING') { color = 'warning'; text = 'PENDIENTE'; }
-
-        return <Tag color={color} className="text-[10px]">{text}</Tag>;
-      }
     }
   ];
 

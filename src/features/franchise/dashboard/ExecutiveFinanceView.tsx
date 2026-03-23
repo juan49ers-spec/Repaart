@@ -11,7 +11,7 @@ import {
     ArrowDownRight,
     Calendar
 } from 'lucide-react';
-import { formatMoney, FinancialReport } from '../../../lib/finance';
+import { formatMoney, FinancialReport, MonthlyData } from '../../../lib/finance';
 import { TaxCalculations } from '../../../hooks/useTaxCalculations';
 import PnLWaterfallChart from './widgets/PnLWaterfallChart';
 import TaxVaultWidget from '../finance/TaxVaultWidget';
@@ -231,7 +231,7 @@ const ExecutiveFinanceView: React.FC<ExecutiveFinanceViewProps> = ({
                         <TaxVaultWidget
                             taxes={taxes}
                             currentMonth={effectiveMonth}
-                            historicalData={trendData as any}
+                            historicalData={trendData as unknown as MonthlyData[]}
                         />
                     </div>
 

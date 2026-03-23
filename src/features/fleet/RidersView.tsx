@@ -10,6 +10,7 @@ import { Table, Column } from '../../components/ui/data-display/Table';
 import { Button } from '../../components/ui/primitives/Button';
 import { Drawer } from '../../components/ui/overlays/Drawer';
 import { RiderForm } from './components/RiderForm';
+import { RiderFormValues } from './schemas/RiderSchema';
 import { cn } from '../../lib/utils';
 import { getRiderInitials, getRiderColor } from '../../utils/colorPalette';
 import { differenceInMonths, parseISO } from 'date-fns';
@@ -441,7 +442,7 @@ export const RidersView: React.FC<RidersViewProps> = ({ franchiseId }) => {
                     initialData={selectedRider ? {
                         ...selectedRider,
                         contractHours: selectedRider.contractHours || 40
-                    } as any : undefined}
+                    } as RiderFormValues & { id: string } : undefined}
                 />
             </Drawer>
         </div >

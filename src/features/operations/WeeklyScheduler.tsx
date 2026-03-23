@@ -122,6 +122,7 @@ const ShiftPill: React.FC<{
                 e.preventDefault();
                 e.stopPropagation();
                 onClick(e); // Select it
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (window as any).showSchedulerContextMenu?.(e, event);
             }}
             title={`${event.riderName} | ${startTime} - ${endTime} (${duration}h)${changeRequested ? ` | MOTIVO: ${changeReason || 'Sin motivo'}` : ''}`}
@@ -541,6 +542,7 @@ const WeeklyScheduler: React.FC<WeeklySchedulerProps> = ({ franchiseId, readOnly
 
     // KEYBOARD SHORTCUTS
     React.useEffect(() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).showSchedulerContextMenu = (e: React.MouseEvent, event: ShiftEvent) => {
             setContextMenu({ x: e.clientX, y: e.clientY, event });
         };

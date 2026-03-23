@@ -27,7 +27,7 @@ export const RiderNotificationsView: React.FC = () => {
             {/* Notifications Component */}
             <main className="p-4 space-y-4">
                 {user && toastHook ? (
-                    <RiderNotifications user={user as any} toast={toastHook.toast} />
+                    <RiderNotifications user={user} toast={toastHook.toast} />
                 ) : (
                     <div className="flex flex-col items-center justify-center py-20 text-slate-400">
                         <p>Inicia sesión para ver tus notificaciones</p>

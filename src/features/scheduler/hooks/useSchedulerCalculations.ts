@@ -93,15 +93,16 @@ export const useSchedulerCalculations = (
         if (!shifts.length) return [];
         const sorted = [...shifts].sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
 
-        const visualBlocks: {
+        type VisualBlock = {
             startAt: string;
             endAt: string;
             ids: string[];
             shifts: Shift[];
             type: 'confirmed' | 'request' | 'draft';
             isNew?: boolean;
-        }[] = [];
-        let currentBlock: any = null;
+        };
+        const visualBlocks: VisualBlock[] = [];
+        let currentBlock: VisualBlock | null = null;
 
         sorted.forEach((s) => {
             const sStart = new Date(s.startAt);

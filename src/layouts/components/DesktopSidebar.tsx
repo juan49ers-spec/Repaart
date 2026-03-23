@@ -68,7 +68,7 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ isAdmin, isFranchise })
     );
 };
 
-const SidebarItem = ({ path, label, icon: Icon }: any) => (
+const SidebarItem = ({ path, label, icon: Icon }: { path: string; label: string; icon: React.ComponentType<{ className?: string }> }) => (
     <NavLink
         to={path}
         className={({ isActive }) => `

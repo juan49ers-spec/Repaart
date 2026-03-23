@@ -125,7 +125,7 @@ const OperationsDashboard: React.FC<OperationsDashboardProps> = () => {
                     onToday={handleJumpToToday}
                 />
 
-                <OperationsTabs activeTab={activeTab} onTabChange={(tab: any) => setActiveTab(tab)} />
+                <OperationsTabs activeTab={activeTab} onTabChange={(tab: OperationsTab) => setActiveTab(tab)} />
             </div>
 
             {/* Content Area */}

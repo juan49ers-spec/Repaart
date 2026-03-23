@@ -67,8 +67,8 @@ export const RectificationModal: React.FC<Props> = ({
             } else {
                 message.error(`Error: ${result.error.type}`);
             }
-        } catch (error: any) {
-            message.error(`Error al crear rectificativa: ${error.message}`);
+        } catch (error: unknown) {
+            message.error(`Error al crear rectificativa: ${error instanceof Error ? error.message : String(error)}`);
         } finally {
             setLoading(false);
         }

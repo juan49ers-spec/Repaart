@@ -29,7 +29,11 @@ interface ExpenseBreakdownWidgetProps {
     breakdown: ExpenseCategory[];
 }
 
-const CustomTooltip = ({ active, payload, totalExpenses }: any) => {
+interface TooltipPayloadEntry {
+    value: number;
+    name: string;
+}
+const CustomTooltip = ({ active, payload, totalExpenses }: { active?: boolean; payload?: TooltipPayloadEntry[]; totalExpenses: number }) => {
     if (active && payload && payload.length) {
         const data = payload[0];
         const percent = totalExpenses > 0 ? (data.value / totalExpenses) * 100 : 0;

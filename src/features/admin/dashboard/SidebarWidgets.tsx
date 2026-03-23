@@ -44,6 +44,7 @@ interface SidebarWidgetsProps {
 const SidebarWidgets: FC<SidebarWidgetsProps> = ({ franchises, setSelectedScorecard }) => {
     // Collect all alerts
     const allAlerts: EnrichedAlert[] = franchises.flatMap(f => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const fAlerts = detectAnomalies(f as any) as Alert[];
         return fAlerts.map(a => ({ ...a, franchiseName: f.name, franchiseId: f.id, franchise: f }));
     });

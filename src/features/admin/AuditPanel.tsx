@@ -11,8 +11,8 @@ interface AuditLog {
     actorEmail?: string;
     actorId: string;
     action: string;
-    details?: any;
-    [key: string]: any;
+    details?: Record<string, unknown>;
+    [key: string]: unknown;
 }
 
 const AuditPanel = () => {

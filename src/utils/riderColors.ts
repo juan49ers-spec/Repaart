@@ -28,7 +28,7 @@ export const getRiderColor = (riderId: string) => {
 /**
  * Gets all unique riders from shifts and assigns them colors
  */
-export const getRiderColorMap = (riders: Array<{ id: string;[key: string]: any }>) => {
+export const getRiderColorMap = (riders: Array<{ id: string }>) => {
     const colorMap = new Map<string, typeof RIDER_COLORS[0]>();
     riders.forEach(rider => {
         colorMap.set(rider.id, getRiderColor(rider.id));

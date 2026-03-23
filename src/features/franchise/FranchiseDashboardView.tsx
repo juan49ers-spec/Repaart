@@ -211,7 +211,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                         {/* Action Primary: Close Month */}
                         {!readOnly && (() => {
                             // Using type assertion to any to access potentially missing fields in rawData
-                            const rawDataAny = rawData as any;
+                            const rawDataAny = rawData as Record<string, unknown>;
                             const rawStatus = rawDataAny?.status;
                             const rawLocked = rawDataAny?.isLocked;
                             const hasData = rawDataAny?.revenue || rawDataAny?.totalIncome;

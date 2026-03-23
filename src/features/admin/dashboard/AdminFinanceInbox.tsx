@@ -130,7 +130,7 @@ const AdminFinanceInbox: React.FC = () => {
                                     </div>
                                     <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">{record.description || 'Sin descripción'}</p>
                                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 capitalize">
-                                        {record.category} • {new Date((record.date as any)?.seconds * 1000 || record.date).toLocaleDateString()}
+                                        {record.category} • {new Date((record.date as unknown as { seconds?: number })?.seconds ? ((record.date as unknown as { seconds: number }).seconds * 1000) : String(record.date)).toLocaleDateString()}
                                     </p>
                                 </div>
                             </div>

@@ -1,3 +1,4 @@
+import type React from 'react';
 import {
     Book,
     LayoutDashboard,
@@ -11,7 +12,7 @@ import {
 export interface ManualTopic {
     id: string;
     title: string;
-    icon: any;
+    icon: React.ElementType;
     role: 'all' | 'admin' | 'franchise';
     content: {
         title: string;

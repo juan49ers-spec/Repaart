@@ -26,7 +26,15 @@ const CATEGORY_COLORS = {
 };
 
 // Input Helper
-const InputRow = ({ label, icon: Icon, value, onChange, placeholder = "0", suffix = "€" }: any) => (
+interface InputRowProps {
+    label: string;
+    icon: React.ElementType;
+    value: number;
+    onChange: (v: number) => void;
+    placeholder?: string;
+    suffix?: string;
+}
+const InputRow = ({ label, icon: Icon, value, onChange, placeholder = "0", suffix = "€" }: InputRowProps) => (
     <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg hover:bg-slate-900 transition-colors border border-transparent hover:border-slate-700 group">
         <div className="flex items-center gap-3">
             <div className={`p-2 rounded-lg bg-slate-800 text-slate-400 group-hover:text-white transition-colors`}>
@@ -49,7 +57,16 @@ const InputRow = ({ label, icon: Icon, value, onChange, placeholder = "0", suffi
 );
 
 // Section Toggle Helper
-const SectionHeader = ({ id, title, icon: Icon, color, total: sectionTotal, activeSection, setActiveSection }: any) => (
+interface SectionHeaderProps {
+    id: string;
+    title: string;
+    icon: React.ElementType;
+    color: string;
+    total: number;
+    activeSection: string | null;
+    setActiveSection: (id: string | null) => void;
+}
+const SectionHeader = ({ id, title, icon: Icon, color, total: sectionTotal, activeSection, setActiveSection }: SectionHeaderProps) => (
     <button
         onClick={() => setActiveSection(activeSection === id ? null : id)}
         className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${activeSection === id

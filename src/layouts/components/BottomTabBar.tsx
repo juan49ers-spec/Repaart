@@ -21,9 +21,9 @@ import { useNotificationBadge } from '../../features/layouts/hooks/useNotificati
 interface TabItem {
     path?: string;
     label: string;
-    icon: any;
+    icon: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
     isMenu?: boolean;
-    subItems?: Array<{ label: string; icon: any; path: string }>;
+    subItems?: Array<{ label: string; icon: React.ComponentType<{ size?: number; className?: string }>; path: string }>;
     badge?: number;
 }
 

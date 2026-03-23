@@ -36,8 +36,9 @@ export const RiderForm: React.FC<RiderFormProps> = ({ onSuccess, onCancel, initi
         }
     });
 
-    const getFirebaseErrorMessage = (error: any) => {
-        const code = error.code || error.message;
+    const getFirebaseErrorMessage = (error: unknown) => {
+        const e = error as { code?: string; message?: string };
+        const code = e.code || e.message;
         if (code?.includes('auth/email-already-in-use')) {
             return 'Este correo electrónico ya está registrado. Intenta con otro o busca al usuario existente.';
         }
@@ -50,7 +51,7 @@ export const RiderForm: React.FC<RiderFormProps> = ({ onSuccess, onCancel, initi
         if (code?.includes('permission-denied')) {
             return 'No tienes permisos para realizar esta acción.';
         }
-        return error.message || "Error al guardar el Rider. Inténtalo de nuevo.";
+        return e.message || "Error al guardar el Rider. Inténtalo de nuevo.";
     };
 
     const onSubmit = async (data: RiderFormValues) => {
@@ -67,7 +68,7 @@ export const RiderForm: React.FC<RiderFormProps> = ({ onSuccess, onCancel, initi
                 await addRider({ ...payload, franchiseId });
             }
             onSuccess();
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error saving rider:', error);
             setSubmitError(getFirebaseErrorMessage(error));
         }

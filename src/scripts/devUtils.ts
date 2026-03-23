@@ -31,8 +31,8 @@ export async function verifyDataIntegrity() {
 
     // 2. Verificar financial_summaries
     const summariesSnapshot = await getDocs(collection(db, 'financial_summaries'));
-    const orphanedRecords: any[] = [];
-    const invalidDataRecords: any[] = [];
+    const orphanedRecords: { id: string; franchiseId: string; month: string }[] = [];
+    const invalidDataRecords: { id: string; reason: string; data: Record<string, unknown> }[] = [];
 
     summariesSnapshot.docs.forEach(doc => {
         const data = doc.data();
@@ -113,9 +113,9 @@ export function captureAppState() {
             acc[key] = sessionStorage.getItem(key);
             return acc;
         }, {} as Record<string, string | null>),
-        errors: (window as any).__RUNTIME_ERRORS__ || [],
+        errors: (window as Window & { __RUNTIME_ERRORS__?: unknown[] }).__RUNTIME_ERRORS__ || [],
         performance: {
-            memory: (performance as any).memory,
+            memory: (performance as Performance & { memory?: unknown }).memory,
             navigation: performance.getEntriesByType('navigation')[0],
             timing: performance.timing
         }
@@ -152,7 +152,7 @@ export async function financialAudit() {
     console.log('💰 Iniciando auditoría financiera...\n');
 
     const summariesSnapshot = await getDocs(collection(db, 'financial_summaries'));
-    const byMonth = new Map<string, any[]>();
+    const byMonth = new Map<string, { id: string; franchiseId: string; income: number; expenses: number }[]>();
 
     summariesSnapshot.docs.forEach(doc => {
         const data = doc.data();
@@ -168,7 +168,7 @@ export async function financialAudit() {
         });
     });
 
-    const report: any[] = [];
+    const report: { month: string; franchises: number; totalIncome: number; totalExpenses: number; profit: number; margin: string; franchiseDetails: { id: string; franchiseId: string; income: number; expenses: number }[] }[] = [];
 
     byMonth.forEach((records, month) => {
         const totalIncome = records.reduce((sum, r) => sum + r.income, 0);
@@ -232,15 +232,15 @@ export function runPerformanceCheck() {
             images: 0,
             total: 0
         },
-        memory: (performance as any).memory ? {
-            used: ((performance as any).memory.usedJSHeapSize / 1048576).toFixed(2) + ' MB',
-            total: ((performance as any).memory.totalJSHeapSize / 1048576).toFixed(2) + ' MB',
-            limit: ((performance as any).memory.jsHeapSizeLimit / 1048576).toFixed(2) + ' MB'
+        memory: (performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory ? {
+            used: ((performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory!.usedJSHeapSize / 1048576).toFixed(2) + ' MB',
+            total: ((performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory!.totalJSHeapSize / 1048576).toFixed(2) + ' MB',
+            limit: ((performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory!.jsHeapSizeLimit / 1048576).toFixed(2) + ' MB'
         } : 'No disponible'
     };
 
     // Page load timing
-    const navigation = performance.getEntriesByType('navigation')[0] as any;
+    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
     if (navigation) {
         metrics.pageLoad.domContentLoaded = navigation.domContentLoadedEventEnd - navigation.fetchStart;
         metrics.pageLoad.loadComplete = navigation.loadEventEnd - navigation.fetchStart;

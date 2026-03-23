@@ -4,8 +4,8 @@ import { lazy, ComponentType } from 'react';
  * A wrapper for React.lazy that detects failure to load a chunk (often due to new deployments)
  * and forces a full page reload to fetch the latest version of the app.
  */
-export const lazyWithRetry = (
-    componentImport: () => Promise<{ default: ComponentType<any> }>
+export const lazyWithRetry = <T = Record<string, unknown>>(
+    componentImport: () => Promise<{ default: ComponentType<T> }>
 ) =>
     lazy(async () => {
         // Check if we already tried reloading in the last 10 seconds to prevent loops
@@ -22,7 +22,7 @@ export const lazyWithRetry = (
                 window.sessionStorage.setItem('last-chunk-retry', now.toString());
                 console.warn("[LAZY RETRY] Outdated chunk detected. Forcing app reload...");
                 window.location.reload();
-                return { default: () => null } as any; // Temporary return while reloading
+                return { default: () => null } as { default: ComponentType<T> }; // Temporary return while reloading
             }
 
             // If it still fails after a reload, throw the error to the ErrorBoundary

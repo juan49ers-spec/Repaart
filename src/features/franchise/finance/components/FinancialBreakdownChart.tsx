@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, Sector } from 'recharts';
+import { ExpenseData } from '../types';
 
 interface FinancialBreakdownChartProps {
     stats: {
@@ -9,7 +10,7 @@ interface FinancialBreakdownChartProps {
         variableCosts: number;
         royaltyAmount: number;
     };
-    expenses: any;
+    expenses: ExpenseData;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

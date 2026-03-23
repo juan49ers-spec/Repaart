@@ -24,16 +24,17 @@ export const repairMyClaims = async () => {
         console.log('⚠️ IMPORTANTE: Haz logout y login nuevamente para refrescar el token');
 
         return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('❌ Error reparando custom claims:', error);
-        console.error('Código:', error.code);
-        console.error('Mensaje:', error.message);
+        const err = error as { code?: string; message?: string };
+        console.error('Código:', err.code);
+        console.error('Mensaje:', err.message);
         return false;
     }
 };
 
 // Ejecutar automáticamente si se importa el script
 if (typeof window !== 'undefined') {
-    (window as any).repairMyClaims = repairMyClaims;
+    (window as unknown as Record<string, unknown>).repairMyClaims = repairMyClaims;
     console.log('💡 Función repairMyClaims disponible. Ejecuta: await repairMyClaims()');
 }

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Zap, User, Truck, Sun, Moon, Split, Copy, Loader2, ArrowRight, Trash2, Users, CheckSquare, Square, Euro, AlertTriangle, Bookmark, Save } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { toLocalISOString } from '../../utils/dateUtils';
-import { shiftService } from '../../services/shiftService';
+import { shiftService, ShiftInput } from '../../services/shiftService';
 import { Shift } from '../../schemas/scheduler';
 
 import { CostService } from '../../services/scheduler/costService';
@@ -63,7 +63,7 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
     const [complianceIssues, setComplianceIssues] = useState<ComplianceIssue[]>([]);
 
     // Templates State
-    const [savedTemplates, setSavedTemplates] = useState<{ name: string, preset: any, start: string, end: string }[]>([]);
+    const [savedTemplates, setSavedTemplates] = useState<{ name: string, preset: PresetType, start: string, end: string }[]>([]);
 
     // Load templates on mount
     React.useEffect(() => {
@@ -245,7 +245,7 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
                 await Promise.all(deletePromises);
             }
 
-            const newShifts: any[] = [];
+            const newShifts: Omit<ShiftInput, 'franchiseId'>[] = [];
 
             for (const dayIso of selectedDays) {
                 if (activePreset === 'partido') {
@@ -289,7 +289,7 @@ const QuickFillModal: React.FC<QuickFillModalProps> = ({
 
             if (newShifts.length > 0) {
                 if (_onCreateShifts) {
-                    await _onCreateShifts(newShifts);
+                    await _onCreateShifts(newShifts as Partial<Shift>[]);
                 } else {
                     const promises = newShifts.map(s => shiftService.createShift({ ...s, franchiseId }));
                     await Promise.all(promises);

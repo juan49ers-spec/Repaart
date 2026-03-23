@@ -118,7 +118,7 @@ export interface MonthlyData {
     isLocked?: boolean;
     unlockReason?: string | null;
     rejectionReason?: string | null;
-    statusHistory?: any[]; // Could be stricter
+    statusHistory?: unknown[]; // Could be stricter
     recordCount?: number;
     logisticsIncome?: number;
 

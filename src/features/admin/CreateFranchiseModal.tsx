@@ -113,7 +113,7 @@ const CreateFranchiseModal: React.FC<CreateFranchiseModalProps> = ({ isOpen, onC
         setError(null);
 
         try {
-            await userService.createFranchise(formData);
+            await userService.createFranchise(formData as unknown as Parameters<typeof userService.createFranchise>[0]);
             onSuccess(); // Notificar al padre para recargar datos
             onClose();   // Cerrar modal
         } catch {

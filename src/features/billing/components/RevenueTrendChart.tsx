@@ -21,12 +21,13 @@ export const RevenueTrendChart: React.FC<Props> = ({ invoices }) => {
             };
         });
 
-        const getInvoiceDate = (date: any): Date => {
+        const getInvoiceDate = (date: { toDate?: () => Date; _seconds?: number } | Date | string | null | undefined): Date => {
             if (!date) return new Date();
             if (date instanceof Date) return date;
+            if (typeof date === 'string') return new Date(date);
             if (typeof date.toDate === 'function') return date.toDate();
             if (date._seconds) return new Date(date._seconds * 1000);
-            return new Date(date);
+            return new Date();
         };
 
         const chartData = [...last6Months];

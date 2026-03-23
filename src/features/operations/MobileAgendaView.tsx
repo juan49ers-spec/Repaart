@@ -11,10 +11,15 @@ interface DayInfo {
     dateObj: Date;
 }
 
+interface DayIntel {
+    type: string;
+    title?: string;
+}
+
 interface MobileAgendaViewProps {
     days: DayInfo[];
     visualEvents: Record<string, ShiftEvent[]>;
-    intelByDay?: Record<string, any[]>;
+    intelByDay?: Record<string, DayIntel[]>;
     onEditShift: (shift: ShiftEvent) => void;
     onDeleteShift: (shiftId: string) => void;
     onAddShift: (isoDate: string) => void;

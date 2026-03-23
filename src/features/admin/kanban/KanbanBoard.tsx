@@ -61,8 +61,8 @@ const KanbanBoard: React.FC = () => {
 
         result.sort((a, b) => {
             if (sortBy === 'newest') {
-                const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : (a.createdAt ? new Date(a.createdAt) : new Date(0));
-                const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : (b.createdAt ? new Date(b.createdAt) : new Date(0));
+                const dateA = a.createdAt ? a.createdAt.toDate() : new Date(0);
+                const dateB = b.createdAt ? b.createdAt.toDate() : new Date(0);
                 return dateB.getTime() - dateA.getTime();
             }
             if (sortBy === 'priority') {
@@ -72,8 +72,8 @@ const KanbanBoard: React.FC = () => {
             if (sortBy === 'due_date') {
                 if (!a.dueDate) return 1;
                 if (!b.dueDate) return -1;
-                const dateA = a.dueDate.toDate ? a.dueDate.toDate() : new Date(a.dueDate);
-                const dateB = b.dueDate.toDate ? b.dueDate.toDate() : new Date(b.dueDate);
+                const dateA = a.dueDate ? a.dueDate.toDate() : new Date(0);
+                const dateB = b.dueDate ? b.dueDate.toDate() : new Date(0);
                 return dateA.getTime() - dateB.getTime();
             }
             return 0;

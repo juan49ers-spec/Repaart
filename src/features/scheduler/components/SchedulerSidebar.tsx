@@ -12,7 +12,7 @@ export const SchedulerSidebar: React.FC<SchedulerSidebarProps> = ({ riders, sear
     // Mock Zone Grouping for Visual Demo
     // In real app, this would come from rider.zoneId
     const groupedRiders = riders.reduce((acc, rider) => {
-        const zone = (rider as any).zone || 'Zona Centro'; // Fallback
+        const zone = (rider as Rider & { zone?: string }).zone || 'Zona Centro'; // Fallback
         if (!acc[zone]) acc[zone] = [];
         acc[zone].push(rider);
         return acc;

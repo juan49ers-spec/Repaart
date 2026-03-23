@@ -20,6 +20,7 @@ const OperationsPage = () => {
 
     // Franchise State for Admin Selector
     const [selectedFranchiseId, setSelectedFranchiseId] = useState<string>(outletContext?.franchiseId || '');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [franchises, setFranchises] = useState<any[]>([]);
     const [loadingFranchises, setLoadingFranchises] = useState(false);
 

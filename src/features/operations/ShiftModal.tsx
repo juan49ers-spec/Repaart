@@ -59,7 +59,7 @@ interface ShiftModalProps {
     isSaving?: boolean;
     riders?: Rider[];
     motos?: Moto[];
-    existingShifts?: any[]; // Using any to avoid complex imports for now, or use Shift if available
+    existingShifts?: { startAt: string | Date; endAt: string | Date; riderId?: string; [key: string]: unknown }[];
 }
 
 interface FormValues {

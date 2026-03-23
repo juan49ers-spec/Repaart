@@ -1,18 +1,34 @@
 import React, { useState } from 'react';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../../../../lib/firebase';
-import { 
-  Play, 
-  AlertCircle, 
+import {
+  Play,
+  AlertCircle,
   Check,
   RefreshCw,
   Calendar
 } from 'lucide-react';
 import { cn } from '../../../../lib/utils';
 
+interface SyncProgress {
+  currentWeek: number;
+  totalWeeks: number;
+  totalSynced: number;
+  currentRange?: string;
+  completed?: boolean;
+}
+
+interface SyncWeekData {
+  stats?: {
+    synced: number;
+    skipped: number;
+    failed: number;
+  };
+}
+
 export const BulkSyncButton: React.FC = () => {
   const [syncing, setSyncing] = useState(false);
-  const [progress, setProgress] = useState<any>(null);
+  const [progress, setProgress] = useState<SyncProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const runBulkSync = async () => {
@@ -68,7 +84,7 @@ export const BulkSyncButton: React.FC = () => {
           endDate: week.end
         });
 
-        const data = response.data as any;
+        const data = response.data as SyncWeekData;
         if (data.stats) {
           totalSynced += data.stats.synced;
           totalSkipped += data.stats.skipped;
@@ -79,9 +95,9 @@ export const BulkSyncButton: React.FC = () => {
         if (i < weeks.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 500));
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(`Error en semana ${week.start}:`, err);
-        setError(`Error en semana ${week.start}: ${err.message}`);
+        setError(`Error en semana ${week.start}: ${err instanceof Error ? err.message : String(err)}`);
         // Continuar con la siguiente semana
       }
     }

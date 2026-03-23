@@ -10,7 +10,7 @@ export const ProfessionalCard = ({
     title?: string,
     children: React.ReactNode,
     className?: string,
-    icon?: any,
+    icon?: React.ElementType,
     action?: React.ReactNode
 }) => (
     <div className={`

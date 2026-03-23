@@ -38,7 +38,7 @@ import { billingController, logisticsBillingEngine } from '../../../services/bil
 import { formatMoney } from '../../../lib/finance';
 import { useInvoicing } from '../../../hooks/useInvoicing';
 import { CreateRestaurantModal } from '../../invoicing/components/CreateRestaurantModal';
-import type { CreateInvoiceRequest } from '../../../types/invoicing';
+import type { CreateInvoiceRequest, FranchiseRestaurant } from '../../../types/invoicing';
 import dayjs from 'dayjs';
 
 const { Content } = Layout;
@@ -81,7 +81,7 @@ export const BillingWizard: React.FC<Props> = ({
     const [isFetchingData, setIsFetchingData] = useState(false);
 
     // Clients State
-    const [customers, setCustomers] = useState<any[]>([]);
+    const [customers, setCustomers] = useState<FranchiseRestaurant[]>([]);
     const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
     const [isCreateCustomerModalOpen, setIsCreateCustomerModalOpen] = useState(false);
 
@@ -94,7 +94,7 @@ export const BillingWizard: React.FC<Props> = ({
         try {
             setIsLoadingCustomers(true);
             const restaurants = await getRestaurants(franchiseId);
-            setCustomers(restaurants);
+            setCustomers(restaurants as FranchiseRestaurant[]);
         } catch (error) {
             console.error('Error loading customers:', error);
             message.error('Error al cargar clientes');
@@ -244,7 +244,7 @@ export const BillingWizard: React.FC<Props> = ({
                             value={customerId}
                             onChange={setCustomerId}
                             loading={isLoadingCustomers}
-                            options={customers.map((customer: any) => ({
+                            options={customers.map((customer) => ({
                                 label: `${customer.fiscalName} (${customer.cif})`,
                                 value: customer.id
                             }))}

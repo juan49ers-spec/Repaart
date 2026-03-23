@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, Trash2, Calendar, Tag } from 'lucide-react';
+import type { Timestamp, FieldValue } from 'firebase/firestore';
 import { PREDEFINED_LABELS, getLabelColor } from '../../../constants/labels';
 
 import FeatureComments from './FeatureComments';
@@ -13,7 +14,7 @@ interface EditFeatureModalProps {
         description: string;
         priority: 'low' | 'medium' | 'high';
         status: 'proposed' | 'in_progress' | 'completed';
-        createdAt: any;
+        createdAt: Timestamp | FieldValue | { toDate?: () => Date } | string | number | null;
         createdByEmail: string;
         labels?: string[];
 
@@ -75,9 +76,9 @@ const EditFeatureModal: React.FC<EditFeatureModalProps> = ({ isOpen, onClose, fe
 
     if (!isOpen || !feature) return null;
 
-    const formatDate = (timestamp: any) => {
+    const formatDate = (timestamp: Timestamp | FieldValue | { toDate?: () => Date } | string | number | null) => {
         if (!timestamp) return 'Reciente';
-        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        const date = (timestamp as { toDate?: () => Date }).toDate ? (timestamp as { toDate: () => Date }).toDate() : new Date(timestamp as string | number);
         return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
     };
 

@@ -6,7 +6,7 @@ import {
     Mail, Phone, Shield, Trash2, Plus, DollarSign, Lock as LockIcon
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
-import { userService, UserProfile } from '../../../services/userService';
+import { userService, User as UserProfile } from '../../../services/userService';
 import { updateProfile } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -108,7 +108,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
             try {
                 // 1. Load Franchise Data
                 const franchiseData = await userService.getUserProfile(targetId);
-                const data = (franchiseData || {}) as UserProfile;
+                const data = (franchiseData || {}) as UserProfile & { name?: string; phone?: string; franchiseName?: string; businessName?: string; taxId?: string; legalName?: string };
 
                 // 2. Load User Data (if self)
                 let userData = {
@@ -131,9 +131,9 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
 
                 reset({
                     // Franchise
-                    legalName: (data as UserProfile & { legalName?: string; businessName?: string }).legalName || (data as UserProfile & { legalName?: string; businessName?: string }).businessName || '',
-                    name: data.name || (data as UserProfile & { franchiseName?: string }).franchiseName || '',
-                    cif: data.cif || (data as UserProfile & { taxId?: string }).taxId || '',
+                    legalName: data.legalName || data.businessName || '',
+                    name: data.name || data.franchiseName || '',
+                    cif: data.cif || data.taxId || '',
                     city: data.city || '',
                     address: data.address || '',
                     email: data.email || (targetId === user?.uid ? (user?.email || '') : ''),
@@ -234,7 +234,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                 city: data.city || (data.address ? data.address.split(',')[1]?.trim() : '')
             };
 
-            await userService.updateUser(targetId, franchisePayload);
+            await userService.updateUser(targetId, franchisePayload as unknown as Parameters<typeof userService.updateUser>[1]);
 
             // 3. Smart Rate Notification
             const newRates = franchisePayload.logisticsRates;

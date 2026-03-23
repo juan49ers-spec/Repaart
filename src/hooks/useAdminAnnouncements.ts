@@ -12,8 +12,8 @@ interface Announcement {
     targetFranchises: string[];
     createdAt: Date;
     reads: string[];
-    votes: any[]; // Define a stricter type if voting structure is known
-    [key: string]: any;
+    votes: unknown[]; // Define a stricter type if voting structure is known
+    [key: string]: unknown;
 }
 
 export const useAdminAnnouncements = () => {

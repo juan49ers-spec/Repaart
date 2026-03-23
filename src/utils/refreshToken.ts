@@ -70,8 +70,8 @@ export async function checkCurrentPermissions() {
 
 // Hacer funciones disponibles globalmente en desarrollo
 if (typeof window !== 'undefined') {
-  (window as any).forceRefreshToken = forceRefreshToken;
-  (window as any).checkCurrentPermissions = checkCurrentPermissions;
+  (window as unknown as Record<string, unknown>).forceRefreshToken = forceRefreshToken;
+  (window as unknown as Record<string, unknown>).checkCurrentPermissions = checkCurrentPermissions;
   console.log('💡 Comandos disponibles:');
   console.log('  - forceRefreshToken() - Refrescar custom claims');
   console.log('  - checkCurrentPermissions() - Verificar permisos actuales');

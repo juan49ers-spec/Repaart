@@ -30,8 +30,8 @@ export interface ShiftChange {
     userId: string;
     shiftId: string;
     type: 'added' | 'removed' | 'modified' | 'requested';
-    oldData?: any;
-    newData?: any;
+    oldData?: { startAt?: string; startTime?: string; endTime?: string; [key: string]: unknown };
+    newData?: { startAt?: string; startTime?: string; endTime?: string; [key: string]: unknown };
     createdAt: Date;
     reason?: string;
     franchiseId?: string;

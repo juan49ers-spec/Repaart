@@ -266,7 +266,8 @@ const ShiftPlanner: FC<ShiftPlannerProps> = ({
         return <div className="p-8 text-center text-red-500">Error: No se ha identificado la franquicia operativa.</div>;
     }
 
-    const onSaveWrapper = async (data: Record<string, any>) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const onSaveWrapper = async (data: any) => {
         const res = await addOrUpdateShift(data, !!editingShift);
         if (res.success) {
             notify(editingShift ? 'Turno actualizado' : 'Turno creado');

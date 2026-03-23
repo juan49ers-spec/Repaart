@@ -19,7 +19,7 @@ export interface MockClosure {
     status: typeof CLOSURE_STATUS[keyof typeof CLOSURE_STATUS];
     editor: string;
     submittedAt: string;
-    documents: any[];
+    documents: unknown[];
     breakdown: {
         labor: number;
         marketing: number;

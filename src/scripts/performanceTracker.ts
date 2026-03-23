@@ -24,8 +24,9 @@ export interface ResourceMetric {
  * Obtiene métricas de memoria (si están disponibles en Chrome)
  */
 export function getMemoryMetrics() {
-    if ((performance as any).memory) {
-        const mem = (performance as any).memory;
+    const perf = performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } };
+    if (perf.memory) {
+        const mem = perf.memory;
         return {
             usedJSHeapSize: Math.round(mem.usedJSHeapSize / 1024 / 1024),
             totalJSHeapSize: Math.round(mem.totalJSHeapSize / 1024 / 1024),

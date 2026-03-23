@@ -10,7 +10,7 @@ export interface Notification {
     title: string;
     message: string;
     shiftId?: string;
-    shiftData?: any;
+    shiftData?: Record<string, unknown>;
     createdAt: Date;
     read: boolean;
     priority?: 'high' | 'medium' | 'low';

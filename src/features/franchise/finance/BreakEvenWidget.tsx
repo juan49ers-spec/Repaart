@@ -1,12 +1,21 @@
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Info } from 'lucide-react';
 
-const BreakEvenWidget = ({ trendData }: { trendData: any[] }) => {
+interface TrendDataItem {
+    orders: number;
+    revenue: number;
+    expenses?: number;
+    totalHours?: number;
+    name: string;
+    fullDate?: string;
+}
+
+const BreakEvenWidget = ({ trendData }: { trendData: TrendDataItem[] }) => {
     // 1. Process Data for the Formula
     // BEP (Orders/Hour) = (Total Expenses / (Revenue / Orders)) / Total Hours
     // Simplified: BEP = Total Expenses / (Avg Ticket * Total Hours)
 
-    const chartData = trendData.map((d: any) => {
+    const chartData = trendData.map((d) => {
         const avgTicket = d.orders > 0 ? d.revenue / d.orders : 0;
         const totalExpenses = d.expenses || 0;
         const totalHours = d.totalHours || 0;

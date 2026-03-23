@@ -83,9 +83,9 @@ const IncomeStep: React.FC<IncomeStepProps> = ({
                         if (fallbackSnap.exists()) setRates(fallbackSnap.data().logisticsRates || []);
                     }
                 }
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error("Error loading rates:", err);
-                if (err.code === 'permission-denied') {
+                if ((err as { code?: string }).code === 'permission-denied') {
                     setError("No tienes permisos para leer la configuración de tarifas.");
                 } else {
                     setError("Error al cargar tarifas.");

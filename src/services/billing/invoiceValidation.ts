@@ -62,8 +62,8 @@ const LogisticsRangeSchema = z.object({
 // Logistics Data Schema
 const LogisticsDataSchema = z.object({
     period: z.object({
-        start: z.union([z.date(), z.any()]), // Firestore Timestamp
-        end: z.union([z.date(), z.any()])
+        start: z.union([z.date(), z.unknown()]), // Firestore Timestamp
+        end: z.union([z.date(), z.unknown()])
     }),
     ranges: z.array(LogisticsRangeSchema),
     totalUnits: z.number().min(0),
@@ -93,10 +93,10 @@ export const InvoiceSchema = z.object({
     issuerSnapshot: EntitySnapshotSchema,
     
     // Dates
-    issueDate: z.union([z.date(), z.any()]), // Firestore Timestamp or Date
-    dueDate: z.union([z.date(), z.any()]),
-    issuedAt: z.union([z.date(), z.any()]).optional(),
-    rectifiedAt: z.union([z.date(), z.any()]).optional(),
+    issueDate: z.union([z.date(), z.unknown()]), // Firestore Timestamp or Date
+    dueDate: z.union([z.date(), z.unknown()]),
+    issuedAt: z.union([z.date(), z.unknown()]).optional(),
+    rectifiedAt: z.union([z.date(), z.unknown()]).optional(),
     
     // Financial Data
     lines: z.array(InvoiceLineSchema).min(1, 'Debe haber al menos una línea'),
@@ -110,8 +110,8 @@ export const InvoiceSchema = z.object({
     totalPaid: z.number().min(0).default(0),
     
     // Audit
-    createdAt: z.union([z.date(), z.any()]).optional(),
-    updatedAt: z.union([z.date(), z.any()]).optional(),
+    createdAt: z.union([z.date(), z.unknown()]).optional(),
+    updatedAt: z.union([z.date(), z.unknown()]).optional(),
     createdBy: z.string().optional(),
     
     // Document
@@ -213,7 +213,7 @@ export type IssueInvoiceRequest = z.infer<typeof IssueInvoiceSchema>;
 export type AddPaymentRequest = z.infer<typeof AddPaymentSchema>;
 
 // Custom validation helper
-export const calculateInvoiceTotals = (lines: any[]) => {
+export const calculateInvoiceTotals = (lines: Array<{ amount?: number; taxRate?: number; taxAmount?: number }>) => {
     const subtotal = lines.reduce((sum, line) => sum + (line.amount || 0), 0);
     
     // Group taxes by rate
@@ -242,7 +242,7 @@ export const calculateInvoiceTotals = (lines: any[]) => {
 };
 
 // Validate invoice totals match
-export const validateInvoiceTotals = (invoice: any): { valid: boolean; errors: string[] } => {
+export const validateInvoiceTotals = (invoice: { lines?: Array<{ amount?: number; taxRate?: number; taxAmount?: number }>; subtotal: number; total: number; taxBreakdown?: unknown[] }): { valid: boolean; errors: string[] } => {
     const errors: string[] = [];
     
     const { subtotal, taxBreakdown, total } = calculateInvoiceTotals(invoice.lines || []);

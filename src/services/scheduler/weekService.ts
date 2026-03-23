@@ -117,7 +117,7 @@ export const WeekService = {
                         console.error("[WeekService] Validation Error on Realtime Update:", err);
                         console.log("[WeekService] Problematic Data:", snap.data());
                         // Fallback: Use raw data but ensure shifts is at least an array to avoid crashes
-                        const rawData = snap.data() as any;
+                        const rawData = snap.data() as WeekData & Record<string, unknown>;
                         callback({
                             ...rawData,
                             id: snap.id,

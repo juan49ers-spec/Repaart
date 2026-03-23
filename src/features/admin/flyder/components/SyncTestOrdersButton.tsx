@@ -3,9 +3,15 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '../../../../lib/firebase';
 import { Play, RefreshCw, Check, AlertCircle, Beaker } from 'lucide-react';
 
+interface SyncTestResult {
+  stats?: {
+    synced: number;
+  };
+}
+
 export const SyncTestOrdersButton: React.FC = () => {
   const [syncing, setSyncing] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<SyncTestResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSync = async () => {
@@ -20,10 +26,10 @@ export const SyncTestOrdersButton: React.FC = () => {
     try {
       const syncFn = httpsCallable(functions, 'syncTestBusinessOrders');
       const response = await syncFn({});
-      const data = response.data as any;
+      const data = response.data as SyncTestResult;
       setResult(data);
-    } catch (err: any) {
-      setError(err.message || 'Error sincronizando pedidos de test');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error sincronizando pedidos de test');
       console.error(err);
     } finally {
       setSyncing(false);

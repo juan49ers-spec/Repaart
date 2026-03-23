@@ -39,7 +39,7 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
     const { saving, handleSave } = useFinancialSave({ franchiseId, month, onSave, onClose });
 
     const [status, setStatus] = useState<'pending' | 'draft' | 'submitted' | 'approved' | 'unlock_requested' | 'locked' | 'open'>(
-        (initialData?.status as any) || 'open'
+        (initialData?.status as 'pending' | 'draft' | 'submitted' | 'approved' | 'unlock_requested' | 'locked' | 'open') || 'open'
     );
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [orders, setOrders] = useState<OrderCounts>({});

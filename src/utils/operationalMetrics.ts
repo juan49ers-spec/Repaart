@@ -14,7 +14,7 @@ export interface Shift {
     day?: string;
     startTime?: string;
     endTime?: string;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 export interface WeeklyMetrics {

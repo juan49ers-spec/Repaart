@@ -13,7 +13,7 @@ interface WeekData {
 interface DayInfo {
     isoDate: string;
     label: string;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 interface WeekMiniMapProps {

@@ -78,11 +78,20 @@ function sanitizeErrorMessage(message: string): string {
 }
 
 /**
+ * Minimal Sentry interface for type-safe access
+ */
+interface SentryInstance {
+  captureException: (error: unknown, options?: unknown) => string;
+  addBreadcrumb: (breadcrumb: unknown) => void;
+  setUser: (user: unknown) => void;
+}
+
+/**
  * Get Sentry instance if available
  */
-function getSentry() {
-  if (typeof window !== 'undefined' && (window as any).Sentry) {
-    return (window as any).Sentry;
+function getSentry(): SentryInstance | null {
+  if (typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).Sentry) {
+    return (window as unknown as Record<string, unknown>).Sentry as SentryInstance;
   }
   return null;
 }

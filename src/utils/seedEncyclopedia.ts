@@ -1211,7 +1211,7 @@ async function seedEncyclopedia() {
 
 // Auto-ejecutar si se importa desde el navegador
 if (typeof window !== 'undefined') {
-    (window as any).seedEncyclopedia = seedEncyclopedia;
+    (window as unknown as Record<string, unknown>).seedEncyclopedia = seedEncyclopedia;
     console.log("✅ Función seedEncyclopedia() disponible en consola del navegador");
 }
 

@@ -1,3 +1,8 @@
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<{ outcome: 'accepted' | 'dismissed' }>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 declare module 'canvas-confetti';
 declare module '*/OperationsHeader';
 declare module '*/components/OperationsTabs';

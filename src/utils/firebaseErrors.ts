@@ -1,10 +1,11 @@
 /**
  * Utility to parse Firebase Errors into user-friendly messages
  */
-export const getFriendlyFirebaseError = (error: any): string => {
+export const getFriendlyFirebaseError = (error: unknown): string => {
     if (!error) return 'Error desconocido';
 
-    const code = error.code || '';
+    const err = error as { code?: string; message?: string };
+    const code = err.code || '';
 
     switch (code) {
         case 'auth/user-not-found':
@@ -24,6 +25,6 @@ export const getFriendlyFirebaseError = (error: any): string => {
         case 'unavailable':
             return 'Servicio temporalmente no disponible.';
         default:
-            return error.message || 'Ocurrió un error inesperado.';
+            return err.message || 'Ocurrió un error inesperado.';
     }
 };

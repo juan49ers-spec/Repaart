@@ -16,7 +16,7 @@ export const LazySkeleton = () => {
     });
 };
 
-export const LazyWrapper = (props: any) => {
+export const LazyWrapper = (props: { component: React.ComponentType; fallback?: React.ReactNode }) => {
     const { component, fallback } = props;
     return React.createElement(
         Suspense,

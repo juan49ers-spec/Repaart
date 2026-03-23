@@ -15,7 +15,7 @@ export interface TicketHistoryProps {
     tickets?: Ticket[];
     loading?: boolean;
     filter?: string;
-    setFilter?: (f: any) => void;
+    setFilter?: React.Dispatch<React.SetStateAction<'open' | 'all' | 'resolved'>>;
     allCount?: number;
     filteredCount?: number;
 }
@@ -162,7 +162,7 @@ const TicketHistory: React.FC<TicketHistoryProps> = ({
                         </div>
                         <span className="text-[10px] text-slate-400/80 dark:text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2 py-1 rounded-lg">
                             <Clock className="w-3 h-3" />
-                            {formatRelativeTime(ticket.lastUpdated || ticket.createdAt)}
+                            {formatRelativeTime((ticket.lastUpdated || ticket.createdAt) as string | number | import('firebase/firestore').Timestamp | undefined)}
                         </span>
                     </div>
  

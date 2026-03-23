@@ -7,7 +7,7 @@ import { useSupportManager } from '../hooks/useSupportManager';
 // or use 'any' if useSupportManager is complex/not migrated yet. 
 // Ideally we should import the return type from useSupportManager.
 // For now, adhering to 'any' to unblock, but commenting for improvement.
-export const SupportContext = createContext<any>(null);
+export const SupportContext = createContext<ReturnType<typeof import('../hooks/useSupportManager').useSupportManager> | null>(null);
 SupportContext.displayName = 'SupportContext';
 
 interface SupportProviderProps {

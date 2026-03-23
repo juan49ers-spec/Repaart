@@ -37,7 +37,7 @@ export const RiderPersonalDataView: React.FC = () => {
         defaultValues: {
             displayName: user?.displayName || '',
             phoneNumber: user?.phoneNumber || '',
-            address: (user as any)?.address || '',
+            address: (user as { address?: string } | null)?.address || '',
         }
     });
 
@@ -47,7 +47,7 @@ export const RiderPersonalDataView: React.FC = () => {
             reset({
                 displayName: user.displayName || '',
                 phoneNumber: user.phoneNumber || '',
-                address: (user as any)?.address || '',
+                address: (user as { address?: string } | null)?.address || '',
             });
         }
     }, [user, reset]);

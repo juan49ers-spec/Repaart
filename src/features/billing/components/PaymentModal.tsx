@@ -155,9 +155,9 @@ export const PaymentModal: React.FC<Props> = ({
                 console.error('[PaymentModal] Transaction failed:', result.error);
                 message.error(`Error: ${result.error.type}`);
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(`[PaymentModal] Exception during ${isRectification ? 'refund' : 'payment'}:`, error);
-            message.error(`Error al registrar ${isRectification ? 'devolución' : 'pago'}: ${error.message}`);
+            message.error(`Error al registrar ${isRectification ? 'devolución' : 'pago'}: ${error instanceof Error ? error.message : String(error)}`);
         } finally {
             setLoading(false);
         }

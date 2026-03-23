@@ -20,7 +20,7 @@ interface ValidationShift {
 interface ConflictResult {
     riderName: string;
     // other relevant info about the conflict shift
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 export const findMotoConflict = (
@@ -65,7 +65,7 @@ export const findMotoConflict = (
         return (newStart < existingEnd && newEnd > existingStart);
     });
 
-    return (conflict as ConflictResult) || null;
+    return (conflict as unknown as ConflictResult) || null;
 };
 
 /**
@@ -94,5 +94,5 @@ export const findRiderConflict = (
         return (newStart < existingEnd && newEnd > existingStart);
     });
 
-    return (conflict as ConflictResult) || null;
+    return (conflict as unknown as ConflictResult) || null;
 };

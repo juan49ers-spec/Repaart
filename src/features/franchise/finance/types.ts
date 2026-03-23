@@ -78,7 +78,7 @@ export interface FinancialRecord {
     orders?: number;
     is_locked?: boolean;
     isLocked?: boolean;
-    updatedAt?: any;
+    updatedAt?: { toDate?: () => Date } | Date | string;
 }
 
 

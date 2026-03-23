@@ -1,7 +1,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { VehicleFormValues, VehicleFormSchema } from '../../../../schemas/fleet';
+import { VehicleFormValues, VehicleFormSchema, Vehicle } from '../../../../schemas/fleet';
 import { Button } from '../../../../components/ui/primitives/Button';
 import { useVehicleStore } from '../../../../store/useVehicleStore';
 // Use a hardcoded franchiseId for now or get from context context, but usually passed via props or store
@@ -38,9 +38,9 @@ export const VehicleForm: React.FC<VehicleFormProps> = ({ onSuccess, onCancel, i
     const onSubmit = async (data: VehicleFormValues) => {
         try {
             if (initialData?.id) {
-                await updateVehicle(initialData.id, data as any);
+                await updateVehicle(initialData.id, data as Partial<Vehicle>);
             } else {
-                await addVehicle(franchiseId, data as any);
+                await addVehicle(franchiseId, data as Partial<Vehicle>);
             }
             onSuccess();
         } catch (error) {

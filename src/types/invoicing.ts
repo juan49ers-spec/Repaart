@@ -377,4 +377,11 @@ export type BillingError =
 // =============================================================================
 // Legacy type aliases for deprecated invoicing components
 export type InvoiceDTO = Invoice;
-export type FranchiseRestaurant = any;
+export interface FranchiseRestaurant {
+    id: string;
+    fiscalName: string;
+    cif?: string;
+    address?: { street?: string; city?: string; zipCode?: string; province?: string; country?: string } | string;
+    email?: string;
+    phone?: string;
+}

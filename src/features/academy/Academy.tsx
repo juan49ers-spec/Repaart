@@ -20,7 +20,7 @@ import {
     useAcademyProfile,
     useAwardXp
 } from '../../hooks/academy';
-import { academyService } from '../../services/academyService';
+import { academyService, AcademyLesson } from '../../services/academyService';
 import { calculateLevel, getXpForLesson, ACADEMY_LEVELS } from '../../lib/academyGamification';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -251,7 +251,7 @@ const Academy = () => {
                         <LearningPath
                             modules={visibleModules}
                             completedLessons={completedLessons}
-                            allLessons={allModulesLessons.filter((l): l is any => !!l.id && !!l.module_id)}
+                            allLessons={allModulesLessons.filter((l): l is AcademyLesson & { id: string; module_id: string } => !!l.id && !!l.module_id)}
                             currentModuleId={module?.id}
                             onSelectModule={handleSelectModule}
                             allProgress={allProgress}
@@ -284,7 +284,7 @@ const Academy = () => {
     const hasVideo = !!currentLesson?.video_url;
     const hasText = !!currentLesson?.content;
 
-    function cn(...classes: any[]) {
+    function cn(...classes: (string | undefined | null | false)[]) {
         return classes.filter(Boolean).join(' ');
     }
 

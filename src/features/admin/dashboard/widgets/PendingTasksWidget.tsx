@@ -6,9 +6,9 @@ import type { FinancialRecord } from '../../../../types/finance';
 import { userService } from '../../../../services/userService';
 
 // Helper for date to string
-const dateToString = (date: Date | any): string => {
+const dateToString = (date: unknown): string => {
     if (date instanceof Date) return date.toLocaleDateString();
-    return new Date(date).toLocaleDateString();
+    return new Date(date as string | number).toLocaleDateString();
 };
 
 interface PendingTasksWidgetProps {
@@ -39,10 +39,10 @@ const PendingTasksWidget: React.FC<PendingTasksWidgetProps> = ({ limit = 3, comp
                     });
                     setFranchiseNames(namesMap);
                 }
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error("Error loading pending tasks:", err);
                 // Si falla, es probable que sea por el índice
-                if (err.code === 'failed-precondition') {
+                if ((err as { code?: string }).code === 'failed-precondition') {
                     setError("Falta Índice en Firestore");
                 } else {
                     setError("Error cargando tareas");

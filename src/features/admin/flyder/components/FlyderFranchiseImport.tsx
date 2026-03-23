@@ -58,7 +58,7 @@ export const FlyderFranchiseImport: React.FC = () => {
     try {
       const getStatusFn = httpsCallable(functions, 'getImportStatus');
       const response = await getStatusFn({});
-      setStatus((response.data as any).stats);
+      setStatus((response.data as { stats: ImportStatus }).stats);
     } catch (err) {
       console.error('Error loading status:', err);
     }
@@ -77,15 +77,15 @@ export const FlyderFranchiseImport: React.FC = () => {
       const importFn = httpsCallable(functions, 'importFlyderFranchises');
       const response = await importFn({});
       
-      const data = response.data as any;
+      const data = response.data as { results: ImportResult };
       setResult(data.results);
-      
+
       // Recargar estado
       await loadStatus();
-      
+
       alert(`✅ Importación completada:\n${data.results.imported.length} franquicias importadas\n${data.results.skipped.length} omitidas\n${data.results.errors.length} errores`);
-    } catch (err: any) {
-      setError(err.message || 'Error en la importación');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error en la importación');
       console.error(err);
     } finally {
       setImporting(false);

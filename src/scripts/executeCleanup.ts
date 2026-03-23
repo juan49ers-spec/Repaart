@@ -25,8 +25,8 @@ export async function cleanupOrphanedFinancialData() {
     // 1. Buscar documentos a eliminar
     const summariesSnapshot = await getDocs(collection(db, 'financial_summaries'));
 
-    const toDelete: any[] = [];
-    const toKeep: any[] = [];
+    const toDelete: { ref: import('firebase/firestore').DocumentReference; id: string; franchiseId: string; month: string; totalIncome: number | undefined }[] = [];
+    const toKeep: { id: string; franchiseId: string; month: string; totalIncome: number | undefined }[] = [];
 
     summariesSnapshot.docs.forEach(doc => {
         const franchiseId = doc.data().franchiseId;

@@ -6,7 +6,7 @@ interface Shift {
     riderName: string;
     startAt: string | Date;
     endAt: string | Date;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 interface ContextMenuProps {

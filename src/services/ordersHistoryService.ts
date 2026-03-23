@@ -65,7 +65,7 @@ export interface OrdersSummary {
 export interface PaginatedOrders {
   orders: Order[];
   hasMore: boolean;
-  lastDoc?: any;
+  lastDoc?: unknown;
 }
 
 class OrdersHistoryService {

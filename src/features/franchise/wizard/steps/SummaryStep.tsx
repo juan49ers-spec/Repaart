@@ -12,7 +12,7 @@ interface SummaryCardProps {
     title: string;
     amount: number;
     type: 'income' | 'expense' | 'profit';
-    icon: any;
+    icon: React.ElementType;
     highlight?: boolean;
 }
 
@@ -55,7 +55,7 @@ export const SummaryStep: React.FC = () => {
 
     const totalIncome = parseFloat(data.totalIncome || '0');
     // Helper to extract numeric values safely from potentially string or number fields
-    const safeVal = (val: any) => parseFloat(val || 0);
+    const safeVal = (val: unknown) => parseFloat(String(val || 0));
 
     // Calculate expenses based on form data structure
     // We replicate the logic from `categoryTotals` but adapting to the form data format

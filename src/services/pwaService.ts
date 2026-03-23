@@ -134,11 +134,11 @@ export const checkConnectivity = () => {
 };
 
 export const getInstallPrompt = async () => {
-    let deferredPrompt: any;
+    let deferredPrompt: BeforeInstallPromptEvent | null = null;
 
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
-        deferredPrompt = e;
+        deferredPrompt = e as BeforeInstallPromptEvent;
         console.log('[PWA] Install prompt captured');
     });
 
@@ -154,7 +154,7 @@ export const getInstallPrompt = async () => {
                 console.log('[PWA] Install prompt result:', result);
 
                 if (result.outcome === 'accepted') {
-                    deferredPrompt.userChoice.then((choiceResult: any) => {
+                    deferredPrompt.userChoice.then((choiceResult: { outcome: string }) => {
                         if (choiceResult.outcome === 'accepted') {
                             console.log('[PWA] App installed');
                         }

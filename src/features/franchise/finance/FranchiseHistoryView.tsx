@@ -10,13 +10,19 @@ interface FranchiseHistoryViewProps {
     franchiseId: string;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipPayloadItem {
+    color: string;
+    name: string;
+    value: number;
+}
+
+const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: TooltipPayloadItem[]; label?: string }) => {
     if (active && payload && payload.length) {
         return (
             <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-xl z-50">
                 <p className="text-slate-800 font-bold mb-3 border-b border-slate-100 pb-2">{label}</p>
                 <div className="space-y-2">
-                    {payload.map((entry: any, index: number) => (
+                    {payload.map((entry, index: number) => (
                         <div key={index} className="flex items-center gap-3 text-xs">
                             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
                             <span className="text-slate-500 w-20">{entry.name}:</span>

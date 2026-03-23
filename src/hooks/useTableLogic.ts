@@ -33,7 +33,7 @@ export interface UseTableLogicReturn<T> {
  * - Synchronizes state with URL Query Params (Deep Linking)
  * - Implements Targeted Search (specific fields only)
  */
-export const useTableLogic = <T extends { id: string | number } & Record<string, any>>(
+export const useTableLogic = <T extends { id: string | number } & Record<string, unknown>>(
     data: T[],
     {
         itemsPerPage = 8,

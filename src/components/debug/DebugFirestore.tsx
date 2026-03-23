@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 export default function DebugFirestore() {
   useEffect(() => {
     // Exponer funciones de debug globalmente
-    (window as any).testInvoiceCreate = async () => {
+    (window as Window & { testInvoiceCreate?: () => Promise<string | undefined> }).testInvoiceCreate = async () => {
       try {
         const auth = getAuth();
         const user = auth.currentUser;
@@ -19,7 +19,7 @@ export default function DebugFirestore() {
         console.log('=== TEST DE PERMISOS FIRESTORE ===');
         console.log('Usuario:', user.email);
         console.log('UID:', user.uid);
-        console.log('FranchiseID:', (user as any).franchiseId);
+        console.log('FranchiseID:', (user as unknown as Record<string, unknown>).franchiseId);
 
         const testInvoice = {
           franchiseId: user.uid,
@@ -61,10 +61,10 @@ export default function DebugFirestore() {
         console.log('🎉 Las reglas de Firestore funcionan correctamente');
         return docRef.id;
 
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('❌ ERROR: No se pudo crear factura');
-        console.error('Código:', error.code);
-        console.error('Mensaje:', error.message);
+        console.error('Código:', error instanceof Error ? (error as Error & { code?: string }).code : undefined);
+        console.error('Mensaje:', error instanceof Error ? error.message : String(error));
         console.error('Error completo:', error);
         throw error;
       }

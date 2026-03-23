@@ -5,7 +5,7 @@ export interface ConsoleLog {
     level: LogLevel;
     message: string;
     timestamp: Date;
-    args: any[];
+    args: unknown[];
 }
 
 let logs: ConsoleLog[] = [];
@@ -20,7 +20,7 @@ const originalConsole = {
     info: console.info
 };
 
-function createLog(level: LogLevel, args: any[]): ConsoleLog {
+function createLog(level: LogLevel, args: unknown[]): ConsoleLog {
     return {
         id: Math.random().toString(36).substr(2, 9),
         level,
@@ -48,22 +48,22 @@ function addLog(log: ConsoleLog) {
  * Intercepta console.log/warn/error/info y captura los mensajes
  */
 export function startConsoleCapture() {
-    console.log = (...args: any[]) => {
+    console.log = (...args: unknown[]) => {
         originalConsole.log(...args);
         addLog(createLog('log', args));
     };
 
-    console.warn = (...args: any[]) => {
+    console.warn = (...args: unknown[]) => {
         originalConsole.warn(...args);
         addLog(createLog('warn', args));
     };
 
-    console.error = (...args: any[]) => {
+    console.error = (...args: unknown[]) => {
         originalConsole.error(...args);
         addLog(createLog('error', args));
     };
 
-    console.info = (...args: any[]) => {
+    console.info = (...args: unknown[]) => {
         originalConsole.info(...args);
         addLog(createLog('info', args));
     };

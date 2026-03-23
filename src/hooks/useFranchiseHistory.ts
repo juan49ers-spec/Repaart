@@ -57,9 +57,9 @@ export const useFranchiseHistory = (franchiseId?: string) => {
                 });
 
             setRecords(data);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Error loading monthly records:', err);
-            setError(err.message || 'Error desconocido');
+            setError(err instanceof Error ? err.message : 'Error desconocido');
         } finally {
             setLoading(false);
         }

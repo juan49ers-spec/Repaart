@@ -5,7 +5,7 @@ import { cn } from '../../../../lib/utils'; // Adjust path if needed
 interface VehicleChecklistModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: any) => Promise<void>;
+    onSubmit: (data: { items: string[]; timestamp: Date }) => Promise<void>;
 }
 
 const CHECKLIST_ITEMS = [

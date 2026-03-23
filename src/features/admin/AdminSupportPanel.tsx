@@ -43,8 +43,8 @@ const AdminSupportContent = () => {
             try {
                 await handleClearAllTickets();
                 alert('Centro de soporte reiniciado correctamente.');
-            } catch (error: any) {
-                alert(error.message);
+            } catch (error: unknown) {
+                alert(error instanceof Error ? error.message : String(error));
             } finally {
                 setIsClearing(false);
             }

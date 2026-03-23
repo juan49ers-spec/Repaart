@@ -21,12 +21,12 @@ vi.mock('lucide-react', () => ({
 
 // Polyfills for Firebase/Firestore in JSDOM
 if (typeof global.TextEncoder === 'undefined') {
-  (global as any).TextEncoder = TextEncoder;
-  (global as any).TextDecoder = TextDecoder;
+  (global as unknown as Record<string, unknown>).TextEncoder = TextEncoder;
+  (global as unknown as Record<string, unknown>).TextDecoder = TextDecoder;
 }
 
 // Ensure jest global is available for legacy mocks if any
-(global as any).jest = vi;
+(global as unknown as Record<string, unknown>).jest = vi;
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -52,7 +52,7 @@ global.IntersectionObserver = class IntersectionObserver {
     return [];
   }
   unobserve() { }
-} as any;
+} as unknown as typeof IntersectionObserver;
 
 // Mock Firebase app
 vi.mock('firebase/app', () => ({
@@ -127,8 +127,8 @@ vi.mock('firebase/firestore', () => {
     runTransaction: vi.fn(),
     serverTimestamp: vi.fn(() => new Date()),
     increment: vi.fn((n: number) => n),
-    arrayUnion: vi.fn((...args: any[]) => args),
-    arrayRemove: vi.fn((...args: any[]) => args),
+    arrayUnion: vi.fn((...args: unknown[]) => args),
+    arrayRemove: vi.fn((...args: unknown[]) => args),
     disableNetwork: vi.fn(),
     persistentLocalCache: vi.fn(() => ({})),
     persistentMultipleTabManager: vi.fn(() => ({})),

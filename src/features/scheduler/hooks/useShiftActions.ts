@@ -17,7 +17,7 @@ interface UseShiftActionsProps {
     setIsPublishing: (val: boolean) => void;
     setIsModalOpen: (val: boolean) => void;
     simpleRiders: { id: string; fullName: string; }[];
-    weekData?: any;
+    weekData?: { shifts?: Shift[] };
 }
 
 export const useShiftActions = ({
@@ -124,7 +124,7 @@ export const useShiftActions = ({
                     isConfirmed: s.isConfirmed
                 };
 
-                const isTrulyNew = (typeof s.id === 'string' && s.id.startsWith('draft-')) || !(weekData?.shifts || []).some((rs: any) => rs.id === s.id);
+                const isTrulyNew = (typeof s.id === 'string' && s.id.startsWith('draft-')) || !(weekData?.shifts || []).some((rs) => rs.id === s.id);
 
                 if (isTrulyNew) {
                     await shiftService.createShift(shiftData as ShiftInput);

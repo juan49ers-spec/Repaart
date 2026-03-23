@@ -12,7 +12,7 @@ interface UseVersioningOptions {
   enabled?: boolean;
 }
 
-export function useVersioning<T extends Record<string, any>>(
+export function useVersioning<T extends Record<string, unknown>>(
   initialData: T,
   options: UseVersioningOptions = {}
 ) {

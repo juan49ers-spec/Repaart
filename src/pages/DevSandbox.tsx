@@ -4,7 +4,7 @@ import SmartFinanceInput from '../components/ui/inputs/smart-input/SmartFinanceI
 interface FormValues {
     amount_happy?: number;
     amount_nolabel?: number;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 export default function DevSandbox() {

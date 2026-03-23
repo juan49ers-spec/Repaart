@@ -83,7 +83,7 @@ export const InvoicingDashboard: React.FC<{ showHeader?: boolean }> = ({ showHea
                 getRestaurants(targetId)
             ]);
             setInvoices(invs);
-            setRestaurants(rests);
+            setRestaurants(rests as FranchiseRestaurant[]);
         } catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
             console.error('Error loading invoicing data:', err);
@@ -341,7 +341,7 @@ export const InvoicingDashboard: React.FC<{ showHeader?: boolean }> = ({ showHea
                                         </div>
                                     </div>
                                     <h4 className="font-bold text-slate-900 dark:text-white mb-1">{rest.fiscalName}</h4>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400 truncate mb-4">{rest.address.street}</p>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 truncate mb-4">{typeof rest.address === 'string' ? rest.address : rest.address?.street}</p>
                                     <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center text-xs text-slate-500">
                                         <span>CIF: {rest.cif}</span>
                                         <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">Activo</span>

@@ -34,7 +34,7 @@ const PageHelpModal: React.FC<PageHelpModalProps> = ({ isOpen, onClose, content 
                             theme.bg, theme.text
                         )}>
                             {React.isValidElement(content.icon) ?
-                                React.cloneElement(content.icon as React.ReactElement<any>, { size: 28, strokeWidth: 2.5 }) :
+                                React.cloneElement(content.icon as React.ReactElement<Record<string, unknown>>, { size: 28, strokeWidth: 2.5 }) :
                                 content.icon}
                         </div>
                         <div>

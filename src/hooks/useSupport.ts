@@ -6,5 +6,5 @@ export const useSupport = () => {
     if (!context) {
         throw new Error('useSupport must be used within a SupportProvider');
     }
-    return context as any; // Cast to any until SupportContext is typed
+    return context as ReturnType<typeof import('../hooks/useSupportManager').useSupportManager>;
 };

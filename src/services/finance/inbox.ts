@@ -108,7 +108,7 @@ export const financeInbox = {
             const revenue = Number(data.revenue || (data.type === 'income' ? data.amount : 0) || 0);
             const expenses = Number(data.expenses || (data.type === 'expense' ? data.amount : 0) || 0);
 
-            const updates: any = {
+            const updates: Record<string, unknown> = {
                 franchiseId,
                 franchise_id: franchiseId,
                 month: monthKey,

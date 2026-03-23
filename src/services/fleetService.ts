@@ -177,14 +177,15 @@ export const fleetService = {
                 metrics: { totalDeliveries: 0, rating: 5, efficiency: 100, joinedAt: riderData.joinedAt || new Date().toISOString() }
             };
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('[FleetService] Error creating rider:', error);
+            const err = error as { message?: string; code?: string };
 
             // Map Cloud Function errors to friendlier UI messages
-            if (error.message?.includes('already-exists') || error.code === 'already-exists') {
+            if (err.message?.includes('already-exists') || err.code === 'already-exists') {
                 throw validationError('createRider', 'Este email ya está registrado en el sistema.');
             }
-            if (error.message?.includes('permission-denied') || error.code === 'permission-denied') {
+            if (err.message?.includes('permission-denied') || err.code === 'permission-denied') {
                 throw permissionError('createRider', 'No tienes permisos para crear este tipo de usuario o para esta franquicia.');
             }
 
@@ -328,16 +329,16 @@ export const fleetService = {
             throw new ServiceError('getVehicles', { cause: error });
         }
     },
-    async createMoto(franchiseId: string, data: Record<string, any>): Promise<Vehicle> {
+    async createMoto(franchiseId: string, data: Record<string, unknown>): Promise<Vehicle> {
         try {
             // Standardize input if it uses snake_case (Legacy Vehicle store)
             const standardized: CreateVehicleInput = {
-                plate: data.matricula || data.plate,
-                brand: data.brand || '',
-                model: data.modelo || data.model,
-                currentKm: data.km_actuales || data.currentKm || 0,
-                nextRevisionKm: data.proxima_revision_km || data.nextRevisionKm || 5000,
-                status: (data.estado === 'activo' ? 'active' : (data.estado === 'mantenimiento' ? 'maintenance' : (data.estado || 'active'))),
+                plate: (data.matricula || data.plate) as string,
+                brand: (data.brand || '') as string,
+                model: (data.modelo || data.model) as string,
+                currentKm: (data.km_actuales || data.currentKm || 0) as number,
+                nextRevisionKm: (data.proxima_revision_km || data.nextRevisionKm || 5000) as number,
+                status: (data.estado === 'activo' ? 'active' : (data.estado === 'mantenimiento' ? 'maintenance' : (data.estado || 'active'))) as VehicleStatus,
                 type: 'vehicle'
             };
             return await this.createVehicle(franchiseId, standardized);

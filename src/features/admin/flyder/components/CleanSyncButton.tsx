@@ -3,9 +3,19 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '../../../../lib/firebase';
 import { Play, RefreshCw, Check, AlertCircle, Trash2 } from 'lucide-react';
 
+interface CleanSyncResult {
+  stats?: {
+    deleted: number;
+    flyderTotal: number;
+    synced: number;
+    skipped: number;
+    finalTotal: number;
+  };
+}
+
 export const CleanSyncButton: React.FC = () => {
   const [syncing, setSyncing] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<CleanSyncResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleCleanSync = async () => {
@@ -27,10 +37,10 @@ export const CleanSyncButton: React.FC = () => {
     try {
       const syncFn = httpsCallable(functions, 'cleanAndSyncAllOrders');
       const response = await syncFn({});
-      const data = response.data as any;
+      const data = response.data as CleanSyncResult;
       setResult(data);
-    } catch (err: any) {
-      setError(err.message || 'Error en sincronización limpia');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error en sincronización limpia');
       console.error(err);
     } finally {
       setSyncing(false);

@@ -5,7 +5,7 @@ import { formatMoney } from '../../../lib/finance';
 interface ScenarioSimulatorProps {
     isOpen: boolean;
     onClose: () => void;
-    currentData: any; // The real month data to use as baseline
+    currentData: Record<string, unknown> | null; // The real month data to use as baseline
 }
 
 // Educational Content Constant
@@ -49,12 +49,13 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({ isOpen, onClose, 
         };
 
         // 1. BASELINE EXTRACTION
-        const baseRevenue = currentData.revenue || currentData.totalIncome || 0;
-        const baseOrders = currentData.orders || 1; // Avoid div by 0
-        const baseTotalExpenses = currentData.totalExpenses || 0;
+        const n = (key: string) => Number(currentData[key] || 0);
+        const baseRevenue = n('revenue') || n('totalIncome');
+        const baseOrders = n('orders') || 1; // Avoid div by 0
+        const baseTotalExpenses = n('totalExpenses');
 
         // Approximate breakdowns if not strictly provided
-        const baseLabor = currentData.salaries || (baseTotalExpenses * 0.60); // Default 60% labor if missing
+        const baseLabor = n('salaries') || (baseTotalExpenses * 0.60); // Default 60% labor if missing
         const baseVariable = (baseTotalExpenses - baseLabor) * 0.40; // Approx 40% of non-labor is variable (gas, repairs)
         const baseFixed = baseTotalExpenses - baseLabor - baseVariable;
 
@@ -120,7 +121,7 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({ isOpen, onClose, 
 
     if (!isOpen) return null;
 
-    const baselineNet = (currentData?.revenue || 0) - (currentData?.totalExpenses || 0);
+    const baselineNet = (Number(currentData?.revenue) || 0) - (Number(currentData?.totalExpenses) || 0);
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm animate-in fade-in duration-300">

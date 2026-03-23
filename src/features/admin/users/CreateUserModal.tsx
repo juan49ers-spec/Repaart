@@ -21,7 +21,7 @@ export interface CreateUserModalProps {
     userToEdit?: User | null;
     isLoading?: boolean;
     initialFranchiseId?: string | null;
-    initialData?: any;
+    initialData?: Record<string, unknown>;
 }
 
 type FormValues = CreateUserInput & { id?: string };
@@ -53,6 +53,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
         setError,
         formState: { errors, dirtyFields }
     } = useForm<FormValues>({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         resolver: zodResolver((userToEdit ? updateUserSchema : createUserSchema) as any),
         defaultValues: {
             role: (initialFranchiseId ? 'rider' : 'franchise') as UserRole,
@@ -98,7 +99,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                 });
             } else {
                 reset({
-                    email: initialData?.email || '',
+                    email: (initialData?.email as string) || '',
                     password: '',
                     displayName: '',
                     phoneNumber: '',
@@ -107,8 +108,8 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                     pack: 'basic',
                     status: 'active',
                     name: '',
-                    legalName: initialData?.legalName || '',
-                    cif: initialData?.cif || '',
+                    legalName: (initialData?.legalName as string) || '',
+                    cif: (initialData?.cif as string) || '',
                     address: ''
                 });
             }
@@ -140,8 +141,8 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
                 await onCreate(data, data.password);
             }
             onClose();
-        } catch (err: any) {
-            const firebaseCode = err.code;
+        } catch (err: unknown) {
+            const firebaseCode = (err as { code?: string }).code;
             if (firebaseCode && firebaseCode.includes('email')) {
                 setError('email', { message: 'El email ya está en uso o es inválido' });
             } else {

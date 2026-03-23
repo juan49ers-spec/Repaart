@@ -18,5 +18,6 @@ export interface Ticket {
     lastUpdated?: Timestamp | Date | string;
     read?: boolean;
     hasAttachment?: boolean;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }

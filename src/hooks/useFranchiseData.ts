@@ -162,7 +162,7 @@ export const validateSpanishDNI = (dni: string): boolean => {
 // Mapear datos de franquicia a placeholders
 export const mapFranchiseToPlaceholders = (
     franchiseData: FranchiseFiscalData | null,
-    adminData: any
+    adminData: { displayName?: string } | null | undefined
 ): Record<string, string> => {
     if (!franchiseData) return {};
 

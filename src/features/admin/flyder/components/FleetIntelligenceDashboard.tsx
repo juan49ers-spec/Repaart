@@ -270,7 +270,7 @@ export const FleetIntelligenceDashboard: React.FC<FleetIntelligenceDashboardProp
                 ].map(chart => (
                   <button
                     key={chart.id}
-                    onClick={() => setSelectedChart(chart.id as any)}
+                    onClick={() => setSelectedChart(chart.id as 'demand' | 'performance' | 'coverage')}
                     className={`px-3 py-1 text-xs sm:text-sm rounded-lg transition-colors ${
                       selectedChart === chart.id
                         ? 'bg-purple-100 text-purple-700'
@@ -320,7 +320,7 @@ export const FleetIntelligenceDashboard: React.FC<FleetIntelligenceDashboardProp
                     formatter={(value: number) => {
                       return [`${value}h`, 'Eficiencia'];
                     }}
-                    labelFormatter={(_label: string, payload: any[]) => {
+                    labelFormatter={(_label: string, payload: Array<{ payload: { fullName?: string } }>) => {
                       if (payload && payload[0] && payload[0].payload) {
                         return payload[0].payload.fullName;
                       }
@@ -336,7 +336,7 @@ export const FleetIntelligenceDashboard: React.FC<FleetIntelligenceDashboardProp
                   <YAxis dataKey="name" type="category" tick={{fontSize: 11}} width={100} />
                   <Tooltip 
                     contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                    formatter={(value: number, _name: string, item: any) => {
+                    formatter={(value: number, _name: string, item: { payload?: { active?: number; total?: number } }) => {
                       const data = item?.payload;
                       if (data) {
                         return [

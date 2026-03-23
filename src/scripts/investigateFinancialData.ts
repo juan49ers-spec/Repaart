@@ -15,7 +15,7 @@ export async function investigateFinancialData() {
     console.log(`📊 Total documentos en financial_summaries: ${allSnapshot.docs.length}`);
 
     // 2. Agrupar por mes
-    const byMonth = new Map();
+    const byMonth = new Map<string, { id: string; franchiseId: string; totalIncome: number; totalExpenses: number }[]>();
 
     allSnapshot.docs.forEach(doc => {
         const data = doc.data();
@@ -37,9 +37,9 @@ export async function investigateFinancialData() {
     console.log('\n📅 Datos por mes:');
     Array.from(byMonth.entries())
         .sort(([a], [b]) => b.localeCompare(a)) // Más reciente primero
-        .forEach(([month, records]: [string, any[]]) => {
-            const totalIncome = records.reduce((sum: number, r: any) => sum + (r.totalIncome || 0), 0);
-            const franchises = [...new Set(records.map((r: any) => r.franchiseId))];
+        .forEach(([month, records]: [string, { id: string; franchiseId: string; totalIncome: number; totalExpenses: number }[]]) => {
+            const totalIncome = records.reduce((sum: number, r) => sum + (r.totalIncome || 0), 0);
+            const franchises = [...new Set(records.map((r) => r.franchiseId))];
 
             console.log(`\n${month}:`);
             console.log(`  - Registros: ${records.length}`);

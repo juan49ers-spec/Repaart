@@ -15,7 +15,7 @@ interface SchedulerHeaderProps {
     setShowDinner: (show: boolean) => void;
     showPrime: boolean;
     setShowPrime: (show: boolean) => void;
-    sheriffResult: any; // Type this properly if possible
+    sheriffResult: { status: string; score: number | string } | null;
     onAudit: () => void;
     hasUnsavedChanges: boolean;
     isPublishing: boolean;

@@ -91,9 +91,9 @@ export const franchiseService = {
 
             return ok(data);
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             // Firebase permission errors
-            if (error.code === 'permission-denied') {
+            if (error instanceof Error && 'code' in error && (error as { code: string }).code === 'permission-denied') {
                 return err({ type: 'PERMISSION_DENIED', franchiseId });
             }
 
@@ -133,7 +133,7 @@ export const franchiseService = {
             });
 
             return ok(franchises);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error fetching franchises from users:', error);
             return err({
                 type: 'NETWORK_ERROR',

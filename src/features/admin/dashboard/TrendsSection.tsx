@@ -121,7 +121,7 @@ const TrendsSection: FC<TrendsSectionProps> = ({ trendData }) => {
                         <ComposedChart
                             data={trendData}
                             margin={{ top: 10, right: 10, bottom: 0, left: -20 }}
-                            onClick={(data: any) => handleChartClick(data)}
+                            onClick={(data: ChartClickData) => handleChartClick(data)}
                         >
                             <defs>
                                 <linearGradient id="colorTrendRevenue" x1="0" y1="0" x2="0" y2="1">

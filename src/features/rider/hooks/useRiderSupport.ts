@@ -28,7 +28,7 @@ export const useRiderSupport = () => {
             }
 
             setTickets(fetchedTickets);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Error fetching rider tickets:', err);
             setError('No se pudieron cargar los tickets. Inténtalo de nuevo.');
         } finally {
@@ -58,7 +58,7 @@ export const useRiderSupport = () => {
             // Refresh list
             await fetchTickets();
             return true;
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Error creating ticket:', err);
             setError('Error al crear el ticket. Inténtalo de nuevo.');
             throw err;

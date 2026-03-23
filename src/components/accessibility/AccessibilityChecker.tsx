@@ -45,8 +45,8 @@ export function AccessibilityChecker({
           console.groupEnd();
 
           // Send to Sentry if available
-          if (typeof window !== 'undefined' && (window as any).Sentry) {
-            (window as any).Sentry.captureException(
+          if (typeof window !== 'undefined' && (window as Window & { Sentry?: { captureException: (error: Error, context?: unknown) => void } }).Sentry) {
+            (window as Window & { Sentry?: { captureException: (error: Error, context?: unknown) => void } }).Sentry!.captureException(
               new Error('Accessibility violations detected'),
               {
                 extra: {
@@ -94,7 +94,7 @@ export function withAccessibility<P extends object>(
 // Utility to create accessible elements
 export const createAccessibleElement = (
   element: 'button' | 'input' | 'a' | 'img',
-  props: Record<string, any>
+  props: Record<string, unknown>
 ) => {
   const accessibleProps = { ...props };
 

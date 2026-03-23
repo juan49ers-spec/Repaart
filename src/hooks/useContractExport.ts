@@ -30,7 +30,7 @@ export const useContractExport = () => {
                 // Si hay marca de agua, agregarla primero
                 if (options?.watermark) {
                     doc.saveGraphicsState();
-                    doc.setGState(new (doc as any).GState({ opacity: 0.1 }));
+                    doc.setGState(new (doc as unknown as { GState: new (opts: { opacity: number }) => Parameters<typeof doc.setGState>[0] }).GState({ opacity: 0.1 }));
                     doc.setTextColor(128, 128, 128);
                     doc.setFontSize(60);
 

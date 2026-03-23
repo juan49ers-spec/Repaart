@@ -47,7 +47,7 @@ export const getFinancialTrend = async (
             summaryKeys.push(key);
         }
 
-        const constraints: any[] = [where('month', 'in', summaryKeys)];
+        const constraints: ReturnType<typeof where>[] = [where('month', 'in', summaryKeys)];
 
         if (monthsBack > 9) {
             constraints.length = 0;
@@ -72,9 +72,10 @@ export const getFinancialTrend = async (
 
             if (monthlyStats.has(data.month)) {
                 const current = monthlyStats.get(data.month)!;
-                const anyData = data as any;
-                const income = data.totalIncome || data.revenue || anyData.summary?.grossIncome || anyData.grossIncome || 0;
-                const expense = data.totalExpenses || data.expenses || anyData.summary?.totalExpenses || 0;
+                const anyData = data as Record<string, unknown>;
+                const summary = anyData.summary as Record<string, unknown> | undefined;
+                const income = data.totalIncome || data.revenue || (summary?.grossIncome as number | undefined) || (anyData.grossIncome as number | undefined) || 0;
+                const expense = data.totalExpenses || data.expenses || (summary?.totalExpenses as number | undefined) || 0;
                 const orders = Number(anyData.orders || 0);
                 const totalHours = Number(anyData.totalHours || 0);
 
@@ -84,7 +85,7 @@ export const getFinancialTrend = async (
                 current.totalHours += totalHours;
 
                 if (anyData.breakdown) {
-                    Object.entries(anyData.breakdown).forEach(([key, val]) => {
+                    Object.entries(anyData.breakdown as Record<string, unknown>).forEach(([key, val]) => {
                         current.breakdown[key] = (current.breakdown[key] || 0) + Number(val || 0);
                     });
                 }

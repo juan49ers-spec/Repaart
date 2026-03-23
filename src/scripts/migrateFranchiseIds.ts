@@ -175,9 +175,9 @@ export async function migrateFranchiseIds(dryRun: boolean = true): Promise<Migra
 
         result.success = true;
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('❌ Migration failed:', error);
-        result.errors.push(error.message);
+        result.errors.push(error instanceof Error ? error.message : String(error));
         result.success = false;
     }
 
@@ -245,7 +245,7 @@ async function migrateCollection(
         console.log(`  ✅ Updated ${docsToUpdate.length} documents in ${collectionName}`);
         return docsToUpdate.length;
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error(`  ❌ Error migrating ${collectionName}:`, error);
         throw error;
     }
@@ -285,8 +285,8 @@ export async function verifyMigration(): Promise<void> {
 
 // Make functions available globally for console use
 if (typeof window !== 'undefined') {
-    (window as any).migrateFranchiseIds = migrateFranchiseIds;
-    (window as any).verifyMigration = verifyMigration;
+    (window as Window & { migrateFranchiseIds?: typeof migrateFranchiseIds; verifyMigration?: typeof verifyMigration }).migrateFranchiseIds = migrateFranchiseIds;
+    (window as Window & { migrateFranchiseIds?: typeof migrateFranchiseIds; verifyMigration?: typeof verifyMigration }).verifyMigration = verifyMigration;
     console.log('✅ Migration script loaded. Available functions:');
     console.log('  - migrateFranchiseIds(dryRun = true)');
     console.log('  - verifyMigration()');
