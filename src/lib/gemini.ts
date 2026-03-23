@@ -592,3 +592,82 @@ SALIDA JSON ESTRICTA (sin markdown):
   }
   return null;
 };
+
+// ─── Rider Advisor Chat (Feature 2) ────────────────────────────────────────
+
+export interface RiderChatContext {
+  riderName: string;
+  upcomingShifts: { date: string; startHour: number; duration: number }[];
+}
+
+const getRiderSystemPrompt = (context: RiderChatContext): string => `
+Eres el asistente de ${context.riderName}, un repartidor de la franquicia Repaart.
+Hablas como un compañero cercano, con frases cortas y sin rollos.
+
+SUS PRÓXIMOS TURNOS:
+${context.upcomingShifts.length > 0
+  ? context.upcomingShifts.map(s => `- ${s.date} a las ${s.startHour}h (${s.duration}h)`).join('\n')
+  : 'No tiene turnos asignados esta semana.'}
+
+LO QUE SABES:
+${FRANCHISE_KNOWLEDGE}
+
+REGLAS:
+- Responde siempre en español, tono muy cercano.
+- Si el rider describe un problema técnico con la app o la moto, añade "TICKET:true" al FINAL de tu respuesta (después del texto visible).
+- Para todo lo demás, responde directamente.
+- No tienes acceso a datos de ganancias — si preguntan, diles que esa función no está disponible todavía.
+`;
+
+export const sendRiderMessage = async (
+  message: string,
+  context: RiderChatContext,
+  history: ChatTurn[]
+): Promise<{ text: string; suggestTicket: boolean; updatedHistory: ChatTurn[] }> => {
+  const key = import.meta.env.VITE_GOOGLE_AI_KEY || '';
+  if (!key) {
+    return { text: '⚠️ No tengo conexión ahora mismo.', suggestTicket: false, updatedHistory: history };
+  }
+
+  const updatedHistory: ChatTurn[] = [
+    ...history,
+    { role: 'user', parts: [{ text: message }] },
+  ];
+
+  const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+  for (const model of models) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: getRiderSystemPrompt(context) }] },
+            contents: updatedHistory,
+            generationConfig: { maxOutputTokens: 1000, temperature: 0.6 },
+          }),
+        }
+      );
+      if (!res.ok) continue;
+      const data = await res.json();
+      const raw: string = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+      if (!raw) continue;
+
+      const suggestTicket = raw.includes('TICKET:true');
+      const text = raw.replace('TICKET:true', '').trim();
+
+      const finalHistory: ChatTurn[] = [
+        ...updatedHistory,
+        { role: 'model', parts: [{ text }] },
+      ];
+      return { text, suggestTicket, updatedHistory: finalHistory };
+    } catch { continue; }
+  }
+
+  return {
+    text: 'Lo siento, no pude conectarme. ¿Lo intentamos de nuevo?',
+    suggestTicket: false,
+    updatedHistory: history,
+  };
+};
