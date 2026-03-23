@@ -56,6 +56,7 @@ import { RiderLayout } from './layouts/RiderLayout';
 const RiderScheduleView = lazyWithRetry(() => import('./features/rider/schedule/RiderScheduleView'));
 const RiderProfileView = lazyWithRetry(() => import('./features/rider/profile/RiderProfileView').then(module => ({ default: module.RiderProfileView })));
 const RiderHomeView = lazyWithRetry(() => import('./features/rider/home/RiderHomeView'));
+const RiderAdvisorView = lazyWithRetry(() => import('./features/rider/advisor/RiderAdvisorView'));
 const RiderPersonalDataView = lazyWithRetry(() => import('./features/rider/profile/RiderPersonalDataView').then(module => ({ default: module.RiderPersonalDataView })));
 const RiderNotificationsView = lazyWithRetry(() => import('./features/rider/profile/RiderNotificationsView').then(module => ({ default: module.RiderNotificationsView })));
 const RiderSecurityView = lazyWithRetry(() => import('./features/rider/profile/RiderSecurityView').then(module => ({ default: module.RiderSecurityView })));
@@ -349,6 +350,7 @@ function App() {
                             <Route path="profile/personal" element={<RiderPersonalDataView />} />
                             <Route path="profile/notifications" element={<RiderNotificationsView />} />
                             <Route path="profile/security" element={<RiderSecurityView />} />
+                            <Route path="advisor" element={<RiderAdvisorView />} />
                         </Route>
                     </Routes>
                 </Suspense>

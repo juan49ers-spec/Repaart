@@ -1,66 +1,39 @@
 import React from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Calendar, User, LayoutDashboard } from 'lucide-react';
-import { useRiderStore } from '../store/useRiderStore';
+import { Calendar, User, LayoutDashboard, Bot } from 'lucide-react';
 
 export const RiderLayout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { myShifts } = useRiderStore();
-
-    const activeShift = React.useMemo(() => {
-        const now = new Date();
-        return myShifts.find(s => {
-            const start = new Date(s.startAt);
-            const end = new Date(s.endAt);
-            return now >= start && now <= end;
-        });
-    }, [myShifts]);
 
     const isActive = (path: string) => location.pathname === path;
-    const isWorking = !!activeShift;
 
     return (
-        <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100 overflow-hidden relative selection:bg-emerald-500/30">
-            {/* ATMOSPHERIC ORBS */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-                <div
-                    className={`absolute -top-24 -left-24 w-96 h-96 blur-[120px] rounded-full animate-orb transition-colors duration-1000 opacity-20
-                        ${isWorking ? 'bg-emerald-500/40' : 'bg-blue-500/30'}`}
-                />
-                <div
-                    className={`absolute top-1/2 -right-24 w-80 h-80 blur-[100px] rounded-full animate-orb transition-colors duration-1000 opacity-10 [animation-delay:2s]
-                        ${isWorking ? 'bg-emerald-400/30' : 'bg-slate-500/20'}`}
-                />
-                <div
-                    className={`absolute -bottom-24 left-1/4 w-96 h-96 blur-[120px] rounded-full animate-orb transition-colors duration-1000 opacity-20 [animation-delay:4s]
-                        ${isWorking ? 'bg-emerald-600/40' : 'bg-indigo-500/30'}`}
-                />
-            </div>
-
+        <div className="flex flex-col h-[100dvh] w-full bg-[#f4f7fb] text-slate-900 overflow-hidden relative selection:bg-cyan-500/30">
             {/* Safe Area Top Spacer */}
-            <div className="h-safe w-full bg-slate-950/20 backdrop-blur-sm sticky top-0 z-[60]" />
+            <div className="h-safe w-full bg-[#f4f7fb]/80 backdrop-blur-md sticky top-0 z-[60]" />
 
             {/* Main Content Area - Scrollable */}
-            <main className="flex-1 relative overflow-y-auto overflow-x-hidden hide-scrollbar z-10">
-                <div className="max-w-md mx-auto w-full min-h-full pb-safe px-4">
-                    <div className="pt-4 pb-48">
+            <main className="flex-1 min-h-0 relative overflow-y-auto overflow-x-hidden hide-scrollbar z-10">
+                <div className="max-w-md mx-auto w-full min-h-full pb-safe px-0">
+                    <div className="pb-40">
                         <Outlet />
                     </div>
                 </div>
             </main>
 
-            {/* Bottom Navigation Bar - Floating Dock style */}
-            <div className="fixed bottom-8 left-0 right-0 z-50 px-6">
-                <nav className="max-w-md mx-auto glass-premium rounded-full p-2 py-3 px-4 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-                    <div className="flex justify-around items-center">
+            {/* Bottom Navigation Bar - Floating Neumorphic Pill */}
+            <div className="absolute bottom-8 left-0 right-0 z-50 px-6 pointer-events-none">
+                <nav className="max-w-md mx-auto bg-white rounded-[2.5rem] p-2 shadow-[0_8px_30px_rgb(0,0,0,0.06)] pointer-events-auto border border-white/60">
+                    <div className="flex justify-around items-center h-16">
                         {/* Home Tab */}
                         <button
                             onClick={() => navigate('/rider/dashboard')}
-                            className={`flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all duration-500 ${isActive('/rider/dashboard')
-                                ? 'bg-emerald-500/10 text-emerald-400 scale-110'
-                                : 'text-slate-500 hover:text-slate-300'
-                                }`}
+                            className={`flex flex-col items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ${
+                                isActive('/rider/dashboard')
+                                    ? 'bg-gradient-to-br from-cyan-400 to-blue-500 text-white shadow-md shadow-cyan-500/20 scale-105'
+                                    : 'text-slate-400 hover:text-slate-600'
+                            }`}
                             title="Inicio"
                         >
                             <LayoutDashboard size={22} strokeWidth={isActive('/rider/dashboard') ? 2.5 : 2} />
@@ -69,10 +42,11 @@ export const RiderLayout: React.FC = () => {
                         {/* Agenda Tab */}
                         <button
                             onClick={() => navigate('/rider/schedule')}
-                            className={`flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all duration-500 ${isActive('/rider/schedule')
-                                ? 'bg-emerald-500/10 text-emerald-400 scale-110'
-                                : 'text-slate-500 hover:text-slate-300'
-                                }`}
+                            className={`flex flex-col items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ${
+                                isActive('/rider/schedule')
+                                    ? 'bg-gradient-to-br from-cyan-400 to-blue-500 text-white shadow-md shadow-cyan-500/20 scale-105'
+                                    : 'text-slate-400 hover:text-slate-600'
+                            }`}
                             title="Agenda"
                         >
                             <Calendar size={22} strokeWidth={isActive('/rider/schedule') ? 2.5 : 2} />
@@ -81,13 +55,26 @@ export const RiderLayout: React.FC = () => {
                         {/* Profile Tab */}
                         <button
                             onClick={() => navigate('/rider/profile')}
-                            className={`flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all duration-500 ${isActive('/rider/profile')
-                                ? 'bg-emerald-500/10 text-emerald-400 scale-110'
-                                : 'text-slate-500 hover:text-slate-300'
-                                }`}
+                            className={`flex flex-col items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ${
+                                isActive('/rider/profile')
+                                    ? 'bg-gradient-to-br from-cyan-400 to-blue-500 text-white shadow-md shadow-cyan-500/20 scale-105'
+                                    : 'text-slate-400 hover:text-slate-600'
+                            }`}
                             title="Perfil"
                         >
                             <User size={22} strokeWidth={isActive('/rider/profile') ? 2.5 : 2} />
+                        </button>
+
+                        {/* Asesor Tab */}
+                        <button
+                            onClick={() => navigate('/rider/advisor')}
+                            className={`flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all duration-500 ${isActive('/rider/advisor')
+                                ? 'bg-orange-500/10 text-orange-400 scale-110'
+                                : 'text-slate-500 hover:text-slate-300'
+                                }`}
+                            title="Asesor IA"
+                        >
+                            <Bot size={22} strokeWidth={isActive('/rider/advisor') ? 2.5 : 2} />
                         </button>
                     </div>
                 </nav>
