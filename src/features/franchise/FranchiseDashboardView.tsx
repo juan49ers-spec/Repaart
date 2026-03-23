@@ -256,6 +256,18 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                                 const liveLaborCost = Number(rawData?.salaries || 0) > 0 ? Number(rawData?.salaries) : totalHours * 7.5;
                                 const liveTotalExpenses = totalExpenses > 0 ? totalExpenses : liveLaborCost;
 
+                                // Sync IRPF to match live values displayed in TakeHomeProfitWidget
+                                const operatingProfit = liveRevenue - liveTotalExpenses;
+                                const irpfPercent = report?.taxes?.irpfPercent || 20;
+                                const liveIrpfPayable = operatingProfit > 0 ? (operatingProfit * irpfPercent) / 100 : 0;
+
+                                const syncedTaxes = taxes ? {
+                                    ...taxes,
+                                    irpfPayable: liveIrpfPayable,
+                                    totalTaxLiability: taxes.ivaPayable + liveIrpfPayable,
+                                    safeToSpend: (report?.netProfit || 0) - (taxes.ivaPayable + liveIrpfPayable)
+                                } : null;
+
                                 return (
                                     <>
                                         {/* Row 1: Core Metrics & Intelligence (4 Columns) */}
@@ -265,6 +277,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                                                     <TakeHomeProfitWidget
                                                         revenue={liveRevenue}
                                                         totalExpenses={liveTotalExpenses}
+                                                        irpfPercent={irpfPercent}
                                                         annualNetProfit={report?.metrics?.profitPerRider || 0}
                                                         onDetailClick={() => setIsWizardOpen(true)}
                                                     />
@@ -276,7 +289,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                                             <ErrorBoundary>
                                                 <div className="h-full bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700">
                                                     <TaxVaultWidget
-                                                        taxes={taxes || null}
+                                                        taxes={syncedTaxes}
                                                         minimal
                                                         currentMonth={effectiveMonth}
                                                         historicalData={trendData as unknown as DashboardTrendItem[]}

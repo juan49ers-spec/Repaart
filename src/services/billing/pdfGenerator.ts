@@ -7,7 +7,7 @@
 
 import jsPDF from 'jspdf';
 import { autoTable } from 'jspdf-autotable';
-import type { Invoice } from '../../types/invoicing';
+import type { Invoice, TaxBreakdown } from '../../types/invoicing';
 import {
     generateInvoiceWithTemplate,
     InvoiceTemplate,
@@ -133,13 +133,13 @@ export const invoicePdfGenerator = {
         const doc = new jsPDF();
 
         // Legacy implementation (simplified version of original)
-        const formatDate = (date: any): string => {
+        const formatDate = (date: unknown): string => {
             if (!date) return '-';
             let d: Date;
             if (date instanceof Date) d = date;
-            else if (typeof date.toDate === 'function') d = date.toDate();
-            else if (date.seconds) d = new Date(date.seconds * 1000);
-            else d = new Date(date);
+            else if (typeof date === 'object' && date !== null && 'toDate' in date && typeof (date as { toDate: unknown }).toDate === 'function') d = (date as { toDate: () => Date }).toDate();
+            else if (typeof date === 'object' && date !== null && 'seconds' in date) d = new Date((date as { seconds: number }).seconds * 1000);
+            else d = new Date(date as string | number);
             return d.toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US');
         };
 
@@ -150,7 +150,7 @@ export const invoicePdfGenerator = {
             }).format(amount || 0);
         };
 
-        const safeText = (text: any, fallback: string = ''): string => {
+        const safeText = (text: unknown, fallback: string = ''): string => {
             if (text === null || text === undefined) return fallback;
             return String(text);
         };
@@ -240,7 +240,7 @@ export const invoicePdfGenerator = {
         y += 5;
 
         if (invoice.taxBreakdown) {
-            invoice.taxBreakdown.forEach((tax: any) => {
+            invoice.taxBreakdown.forEach((tax: TaxBreakdown) => {
                 doc.text(`IVA (${(tax.taxRate * 100).toFixed(0)}%):`, totalsX - 35, y);
                 doc.text(formatCurrency(tax.taxAmount || 0), totalsX + 25, y, { align: 'right' });
                 y += 5;

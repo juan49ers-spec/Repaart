@@ -55,23 +55,24 @@ export const SmartStartButton: React.FC<SmartStartButtonProps> = ({ shiftId, fra
                 throw new Error("No se pudo verificar la ubicación de la base.");
             }
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("SmartStart Error:", error);
             setStatus('error');
-            setErrorMsg(error.message || "Error de ubicación.");
+            setErrorMsg(error instanceof Error ? error.message : "Error de ubicación.");
             // Reset after delay
             setTimeout(() => setStatus('idle'), 3000);
         }
     };
 
     // --- STEP 2: QR SCAN ---
-    const handleScan = async (result: any) => {
+    const handleScan = async (result: Array<{ rawValue?: string }> | string) => {
         // Debounce/Block double scans
         if (status === 'processing' || status === 'success') return;
 
         // Scanner usually returns object or string. @yudiel/react-qr-scanner often returns [{ rawValue: '...' }]
         // Let's safe access
-        const vehicleId = result?.[0]?.rawValue || result;
+        const arr = Array.isArray(result) ? result : null;
+        const vehicleId = arr?.[0]?.rawValue || (typeof result === 'string' ? result : '');
 
         if (!vehicleId) return;
 
@@ -126,7 +127,7 @@ export const SmartStartButton: React.FC<SmartStartButtonProps> = ({ shiftId, fra
                         onScan={(result) => {
                             if (result) handleScan(result);
                         }}
-                        onError={(error: any) => console.log(error?.message)}
+                        onError={(error: unknown) => console.log(error instanceof Error ? error.message : error)}
                         // options={{
                         //     delayBetweenScanAttempts: 300,
                         // }}

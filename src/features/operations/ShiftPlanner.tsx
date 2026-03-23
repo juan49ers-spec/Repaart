@@ -29,7 +29,7 @@ interface Shift {
     riderId: string;
     motoPlate?: string;
     motoId?: string | null;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 interface ShiftCardProps {
@@ -67,7 +67,7 @@ interface ShiftPlannerProps {
     readOnly?: boolean;
     selectedDate?: Date;
     onDateChange?: (date: Date) => void;
-    overrideScheduleState?: any; // Type from useWeeklySchedule if needed
+    overrideScheduleState?: Record<string, unknown>; // Type from useWeeklySchedule if needed
 }
 
 interface NotificationState {

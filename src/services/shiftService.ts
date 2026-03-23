@@ -694,11 +694,18 @@ export const shiftService = {
         try {
             // 1. Handle Deletions
             deletedIds.forEach(id => {
-                batch.delete(doc(db, COLLECTION, id));
+                if (id && id !== 'undefined' && !id.startsWith('draft-')) {
+                    batch.delete(doc(db, COLLECTION, id));
+                }
             });
 
             // 2. Handle Creations and Updates
             for (const s of localShifts) {
+                if (!s.startAt || !s.endAt) {
+                    console.warn("Turno ignorado porque falta startAt o endAt", s);
+                    continue; // Skip invalid shifts
+                }
+
                 const shiftData = {
                     franchiseId: franchiseId,
                     riderId: s.riderId || null,
@@ -724,12 +731,16 @@ export const shiftService = {
                         status: 'scheduled'
                     });
                 } else {
-                    batch.update(doc(db, COLLECTION, String(s.id)), shiftData);
+                    const idToUpdate = String(s.id || s.shiftId);
+                    if (idToUpdate && idToUpdate !== 'undefined') {
+                        batch.update(doc(db, COLLECTION, idToUpdate), shiftData);
+                    }
                 }
             }
 
             await batch.commit();
         } catch (error) {
+            console.error("🔥 Error crítico en publishWeeklySchedule:", error);
             throw new ServiceError('publishWeeklySchedule', { cause: error });
         }
     }

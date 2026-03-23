@@ -20,8 +20,15 @@ interface SummaryStepProps {
 }
 
 // Helper Components
-const SummaryCard = ({ title, value, color, suffix = "€" }: any) => {
-    const colors: any = {
+interface SummaryCardProps {
+    title: string;
+    value: number;
+    color: string;
+    suffix?: string;
+}
+
+const SummaryCard = ({ title, value, color, suffix = "€" }: SummaryCardProps) => {
+    const colors: Record<string, string> = {
         emerald: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
         rose: "text-rose-400 bg-rose-500/10 border-rose-500/20",
         indigo: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
@@ -36,7 +43,12 @@ const SummaryCard = ({ title, value, color, suffix = "€" }: any) => {
     );
 };
 
-const Row = ({ label, value }: any) => (
+interface RowProps {
+    label: string;
+    value: number;
+}
+
+const Row = ({ label, value }: RowProps) => (
     <div className="flex justify-between items-center py-2 border-b border-slate-800/50 last:border-0 hover:bg-slate-800/20 px-2 rounded-lg transition-colors">
         <span className="text-slate-400">{label}</span>
         <span className="text-white font-mono font-bold">{formatMoney(value)}€</span>

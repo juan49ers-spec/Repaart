@@ -19,7 +19,7 @@ const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, hi
 
     if (!taxes) return null;
 
-    const { ivaPayable, irpfPayable, totalTaxLiability } = taxes;
+    const { ivaPayable, irpfPayable, totalTaxLiability, ivaCollected, ivaDeductible } = taxes;
 
     return (
         <div className="workstation-card workstation-scanline p-6 h-full flex flex-col group/card transition-all mechanical-press overflow-hidden">
@@ -58,17 +58,17 @@ const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, hi
             <div className="space-y-4 flex-1">
                 <div className="group/bar">
                     <div 
-                        className={`flex justify-between items-end mb-1 px-1 cursor-pointer transition-colors rounded-md p-1 -mx-1 ${invoicesExpanded ? 'bg-indigo-50/50 dark:bg-indigo-900/20' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                        className={`flex justify-between items-center mb-1 px-1 cursor-pointer transition-colors rounded-lg p-1.5 -mx-1.5 ${invoicesExpanded ? 'bg-indigo-50/80 dark:bg-indigo-900/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
                         onClick={() => setInvoicesExpanded(!invoicesExpanded)}
                     >
                         <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">IVA Repercutido</span>
-                            {currentInvoices && currentInvoices.length > 0 && (
-                                invoicesExpanded ? <ChevronUp className="w-3 h-3 text-slate-400" /> : <ChevronDown className="w-3 h-3 text-slate-400" />
-                            )}
+                            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide">IVA (Rep - Sop)</span>
+                            <div className="bg-white dark:bg-slate-800 rounded p-0.5 border border-slate-200 dark:border-slate-700">
+                                {invoicesExpanded ? <ChevronUp className="w-3 h-3 text-slate-400" /> : <ChevronDown className="w-3 h-3 text-slate-400" />}
+                            </div>
                         </div>
-                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 tabular-nums">{formatMoney(ivaPayable)}€</span>
+                        <span className="text-sm font-bold text-slate-800 dark:text-white tabular-nums">{formatMoney(ivaPayable)}€</span>
                     </div>
                     <div className="h-1.5 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
                         <div
@@ -77,31 +77,25 @@ const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, hi
                         />
                     </div>
                     {/* EXPANDABLE INVOICES SECTION */}
-                    {invoicesExpanded && currentInvoices && currentInvoices.length > 0 && (
-                        <div className="mt-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700 p-2 text-[10px] overflow-hidden animate-in fade-in slide-in-from-top-1 max-h-40 overflow-y-auto custom-scrollbar">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="border-b border-slate-200 dark:border-slate-700">
-                                        <th className="font-semibold text-slate-500 dark:text-slate-400 pb-1">Factura</th>
-                                        <th className="font-semibold text-slate-500 dark:text-slate-400 pb-1 text-right">Base</th>
-                                        <th className="font-semibold text-slate-500 dark:text-slate-400 pb-1 text-right">IVA</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {currentInvoices.map((inv) => {
-                                        const subtotal = inv.subtotal || 0;
-                                        const total = inv.total || 0;
-                                        const iva = total - subtotal;
-                                        return (
-                                            <tr key={inv.id} className="border-b border-slate-100/50 dark:border-slate-700/50 last:border-0 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors">
-                                                <td className="py-1.5 text-slate-600 dark:text-slate-300 font-mono truncate max-w-[80px]" title={inv.fullNumber}>{inv.fullNumber}</td>
-                                                <td className="py-1.5 text-slate-600 dark:text-slate-300 tabular-nums text-right">{formatMoney(subtotal)}€</td>
-                                                <td className="py-1.5 font-semibold text-indigo-600 dark:text-indigo-400 tabular-nums text-right">{formatMoney(iva)}€</td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
+                    {invoicesExpanded && (
+                        <div className="mt-2 bg-white dark:bg-slate-900/50 rounded-xl border border-indigo-100 dark:border-indigo-900/50 shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-1">
+                            {/* Breakdown Header */}
+                            <div className="p-3 border-b border-indigo-50 dark:border-indigo-900/30 bg-indigo-50/30 dark:bg-indigo-900/10 space-y-1.5">
+                                <div className="flex justify-between items-center text-[11px]">
+                                    <span className="text-slate-500 font-medium">IVA Repercutido (Ventas)</span>
+                                    <span className="text-slate-700 dark:text-slate-300 tabular-nums font-semibold">{formatMoney(ivaCollected)}€</span>
+                                </div>
+                                <div className="flex justify-between items-center text-[11px]">
+                                    <span className="text-slate-500 font-medium">IVA Soportado (Gastos)</span>
+                                    <span className="text-rose-600 dark:text-rose-400 tabular-nums font-semibold">-{formatMoney(ivaDeductible)}€</span>
+                                </div>
+                                <div className="pt-1.5 mt-1 border-t border-indigo-100/50 dark:border-indigo-800/50 flex justify-between items-center text-xs">
+                                    <span className="font-bold text-indigo-700 dark:text-indigo-400">A pagar / (A compensar)</span>
+                                    <span className={`tabular-nums font-bold ${ivaPayable > 0 ? 'text-indigo-700 dark:text-indigo-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                                        {formatMoney(ivaPayable)}€
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>

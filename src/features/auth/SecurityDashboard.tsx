@@ -46,7 +46,7 @@ export const SecurityDashboard = () => {
         title: string;
         message: string;
         type: string;
-        createdAt?: any; // Using any for flexibility with Firestore Timestamp/Date
+        createdAt?: { toDate: () => Date } | Date | string;
     }
 
     const [recentAlerts, setRecentAlerts] = useState<SecurityAlert[]>([]);
@@ -146,7 +146,7 @@ export const SecurityDashboard = () => {
                                             <Clock size={12} className="text-slate-600" />
                                             <span>
                                                 {session.lastActive && typeof session.lastActive === 'object' && 'toDate' in session.lastActive
-                                                    ? formatDistanceToNow((session.lastActive as any).toDate(), { addSuffix: true, locale: es })
+                                                    ? formatDistanceToNow((session.lastActive as { toDate: () => Date }).toDate(), { addSuffix: true, locale: es })
                                                     : 'hace un momento'}
                                             </span>
                                         </div>
@@ -193,7 +193,7 @@ export const SecurityDashboard = () => {
                                         <h5 className="text-sm font-semibold text-slate-200 italic">{alert.title}</h5>
                                         <span className="text-[10px] text-slate-500 font-medium uppercase tracking-tighter">
                                             {alert.createdAt && typeof alert.createdAt === 'object' && 'toDate' in alert.createdAt
-                                                ? formatDistanceToNow((alert.createdAt as any).toDate(), { addSuffix: true, locale: es })
+                                                ? formatDistanceToNow((alert.createdAt as { toDate: () => Date }).toDate(), { addSuffix: true, locale: es })
                                                 : 'ahora'}
                                         </span>
                                     </div>

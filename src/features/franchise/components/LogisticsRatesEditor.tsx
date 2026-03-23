@@ -41,20 +41,20 @@ export const LogisticsRatesEditor: React.FC<LogisticsRatesEditorProps> = ({
 
         // Allow decimals by checking if it ends with a dot or is a partial float
         if (field === 'price' || field === 'min' || field === 'max') {
-            // We store as string temporarily in the generic object if needed, 
-            // but strict typing prevents it. 
+            // We store as string temporarily in the generic object if needed,
+            // but strict typing prevents it.
             // However, we can trick React by NOT casting if it's a valid partial number
-            // Actually, the best way for this codebase is to simply implicitly allow string-ish numbers 
+            // Actually, the best way for this codebase is to simply implicitly allow string-ish numbers
             // during edit and clean on save.
-            (rate as any)[field] = value;
+            (rate as Record<keyof LogisticsRate, string | number | undefined>)[field] = value;
         } else {
-            (rate as any)[field] = value;
+            (rate as Record<keyof LogisticsRate, string | number | undefined>)[field] = value;
         }
 
         // Auto-update name if min/max changes
         if (field === 'min' || field === 'max') {
-            const min = (rate as any).min;
-            const max = (rate as any).max;
+            const min = (rate as Record<keyof LogisticsRate, string | number | undefined>).min;
+            const max = (rate as Record<keyof LogisticsRate, string | number | undefined>).max;
             rate.name = `${min}-${max} km`;
         }
 

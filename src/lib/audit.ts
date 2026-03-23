@@ -73,13 +73,14 @@ export const logAction = async (user: AuditUser | null, action: AuditActionType,
                 userAgent: navigator.userAgent
             });
 
-            if ((import.meta as any).env?.DEV) {
+            if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
                 console.log(`Audit: [${action}] logged successfully.`);
             }
             return; // Success, exit function
-        } catch (error: any) {
+        } catch (error: unknown) {
             // Handle collision (already exists)
-            if (error?.code === 'already-exists' || error?.message?.includes('already exists')) {
+            const firebaseError = error as { code?: string; message?: string };
+            if (firebaseError?.code === 'already-exists' || firebaseError?.message?.includes('already exists')) {
                 console.warn(`Audit: [${action}] ID collision or retry success. Log already present.`);
                 return;
             }
@@ -103,7 +104,7 @@ export const logAction = async (user: AuditUser | null, action: AuditActionType,
                     AUDIT_ACTIONS.PASSWORD_CHANGED
                 ];
 
-                if (CRITICAL_ACTIONS.includes(action as any)) {
+                if ((CRITICAL_ACTIONS as string[]).includes(action)) {
                     throw new Error(`CRITICAL SECURITY: Action ${action} blocked because audit log failed after 3 attempts.`);
                 }
             }

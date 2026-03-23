@@ -102,9 +102,8 @@ service cloud.firestore {
     function isValidShift() {
       return
         isNonEmptyString('franchiseId') &&
-        isNonEmptyString('date') &&
-        isNonEmptyString('startAt') &&
-        isNonEmptyString('endAt') &&
+        incomingData().startAt is timestamp &&
+        incomingData().endAt is timestamp &&
         (incomingData().riderId == null || isNonEmptyString('riderId'));
     }
 
@@ -167,6 +166,22 @@ service cloud.firestore {
       );
 
       allow delete: if isAuthed() && (
+        isAdmin() ||
+        (isFranchise() && resource.data.franchiseId == request.auth.token.franchiseId)
+      );
+    }
+    
+    // WEEK TEMPLATES
+    match /week_templates/{templateId} {
+      allow read: if isAuthed() && (
+        isAdmin() || 
+        (isFranchise() && resource.data.franchiseId == request.auth.token.franchiseId)
+      );
+      allow create: if isAuthed() && (
+        isAdmin() ||
+        (isFranchise() && request.resource.data.franchiseId == request.auth.token.franchiseId)
+      );
+      allow update, delete: if isAuthed() && (
         isAdmin() ||
         (isFranchise() && resource.data.franchiseId == request.auth.token.franchiseId)
       );

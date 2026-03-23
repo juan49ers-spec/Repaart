@@ -10,9 +10,9 @@ import {
 } from '../utils/analyticsHelpers';
 
 interface UseIntelligenceParams {
-    tickets?: any[];
-    users?: any[];
-    dashboardData?: any;
+    tickets?: unknown[];
+    users?: unknown[];
+    dashboardData?: unknown;
 }
 
 export const useIntelligence = ({ tickets = [], users = [], dashboardData = {} }: UseIntelligenceParams) => {

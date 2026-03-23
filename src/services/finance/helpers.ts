@@ -1,4 +1,4 @@
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp, DocumentData } from 'firebase/firestore';
 import type { FinancialRecord, MonthlyData, FinanceError } from '../../types/finance';
 
 export const formatFinanceError = (error: FinanceError): string => {
@@ -29,16 +29,16 @@ const normalizeDate = (date: Date | string | Timestamp | { toDate: () => Date })
 };
 
 // Normalize timestamps (ServerTimestamp or Firebase Timestamp)
-const normalizeTimestamp = (ts: any): Date | null => {
+const normalizeTimestamp = (ts: unknown): Date | null => {
     if (!ts) return null;
     if (ts instanceof Date) return ts;
     if (typeof ts === 'string') return new Date(ts);
-    if ('toDate' in ts) return ts.toDate();
+    if (ts !== null && typeof ts === 'object' && 'toDate' in ts) return (ts as { toDate: () => Date }).toDate();
     return null;
 };
 
 // Map Firestore data to FinancialRecord (handle legacy field names)
-export const mapToFinancialRecord = (docSnap: { id: string; data: () => any }): FinancialRecord => {
+export const mapToFinancialRecord = (docSnap: { id: string; data: () => DocumentData }): FinancialRecord => {
     const data = docSnap.data();
     return {
         id: docSnap.id,
@@ -66,7 +66,7 @@ export const mapToFinancialRecord = (docSnap: { id: string; data: () => any }): 
 };
 
 // Map Firestore data to MonthlyData (handle legacy field names)
-export const mapToMonthlyData = (docSnap: { id: string; data: () => any }, franchiseId?: string): MonthlyData => {
+export const mapToMonthlyData = (docSnap: { id: string; data: () => DocumentData }, franchiseId?: string): MonthlyData => {
     const data = docSnap.data();
     const revenue = Number(data.totalIncome || data.revenue || 0);
     const expenses = Number(data.totalExpenses || data.expenses || 0);

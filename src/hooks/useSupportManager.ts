@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp, addDoc, limit, getDocs, writeBatch } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp, addDoc, limit, getDocs, writeBatch, Timestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { logAction, AUDIT_ACTIONS } from '../lib/audit';
 import { sendTicketReplyEmail } from '../lib/email';
@@ -24,9 +24,9 @@ export interface TicketMessage {
     text: string;
     senderId: string;
     senderRole: string;
-    createdAt: any;
+    createdAt: unknown;
     isInternal: boolean;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 export interface SupportMetrics {
@@ -47,7 +47,7 @@ export interface SupportMetrics {
     };
 }
 
-export const useSupportManager = (currentUser: any) => {
+export const useSupportManager = (currentUser: { uid: string; email?: string | null } | null) => {
     // --- STATE ---
     const [tickets, setTickets] = useState<Ticket[]>([]);
     const [loading, setLoading] = useState(true);
@@ -308,8 +308,8 @@ export const useSupportManager = (currentUser: any) => {
         const resolvedWithTime = tickets.filter(t => t.respondedAt && t.createdAt);
         const avgResponseMinutes = resolvedWithTime.length > 0
             ? resolvedWithTime.reduce((acc, t) => {
-                const created = t.createdAt?.toDate ? t.createdAt.toDate() : new Date();
-                const responded = t.respondedAt?.toDate ? t.respondedAt.toDate() : new Date();
+                const created = t.createdAt instanceof Timestamp ? t.createdAt.toDate() : (t.createdAt instanceof Date ? t.createdAt : new Date());
+                const responded = t.respondedAt instanceof Timestamp ? t.respondedAt.toDate() : (t.respondedAt instanceof Date ? t.respondedAt : new Date());
                 return acc + (responded.getTime() - created.getTime()) / (1000 * 60);
             }, 0) / resolvedWithTime.length
             : 0;
@@ -334,7 +334,7 @@ export const useSupportManager = (currentUser: any) => {
             t.category || 'N/A',
             t.urgency,
             t.status,
-            t.createdAt?.toDate ? t.createdAt.toDate().toLocaleDateString() : 'Pendiente',
+            t.createdAt instanceof Timestamp ? t.createdAt.toDate().toLocaleDateString() : (t.createdAt instanceof Date ? t.createdAt.toLocaleDateString() : 'Pendiente'),
             t.response || 'Sin respuesta'
         ]);
 

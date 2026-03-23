@@ -167,7 +167,7 @@ const DevToolsPanel: React.FC<DevToolsPanelProps> = ({
 
 
 
-    const executeAction = async (actionName: string, action: () => Promise<any>): Promise<any> => {
+    const executeAction = async (actionName: string, action: () => Promise<unknown>): Promise<unknown> => {
         setIsExecuting(true);
         const startTime = Date.now();
 
@@ -518,7 +518,7 @@ const DevToolsPanel: React.FC<DevToolsPanelProps> = ({
                                         description="Mostrar errores capturados por la app"
                                         usage="Lista todos los errores JavaScript capturados. Si no hay un error handler global, mostrarácuántos errores tiene almacenados."
                                         onClick={() => {
-                                            const errors = (window as any).__RUNTIME_ERRORS__ || [];
+                                            const errors = (window as Window & { __RUNTIME_ERRORS__?: unknown[] }).__RUNTIME_ERRORS__ || [];
                                             console.log('⚠️ Errores capturados:', errors);
                                             if (errors.length === 0) {
                                                 alert('✅ No hay errores registrados.');

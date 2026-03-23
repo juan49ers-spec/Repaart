@@ -9,7 +9,7 @@ interface ChatMessage {
 }
 
 interface ChatAssistantProps {
-    contextData: any;
+    contextData: { revenue?: number; orders?: number } | null | undefined;
     isOpen?: boolean;
     onClose?: () => void;
 }
@@ -33,7 +33,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ contextData, isOpen, onCl
         scrollToBottom();
     }, [messages]);
 
-    const formatContextData = (data: any) => {
+    const formatContextData = (data: { revenue?: number; orders?: number } | null | undefined) => {
         if (!data) return "Sin datos financieros cargados.";
         // Simplified metric summary
         return `Ingresos: ${data.revenue || 0}€, Pedidos: ${data.orders || 0}`;
@@ -67,7 +67,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ contextData, isOpen, onCl
             const response = await sendMessageToGemini(promptWithContext);
             setMessages(prev => [...prev, { role: 'model', text: response }]);
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Chat Error:", error);
             setMessages(prev => [...prev, { role: 'model', text: 'Lo siento, he tenido un problema de conexión.' }]);
         } finally {

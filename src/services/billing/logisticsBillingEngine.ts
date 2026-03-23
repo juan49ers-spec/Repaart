@@ -141,12 +141,12 @@ export const logisticsBillingEngine = {
                 taxBreakdown,
                 total
             });
-        } catch (error: any) {
-            const sError = new ServiceError('calculateBilling', { cause: error });
+        } catch (error: unknown) {
+            const sError = new ServiceError('calculateBilling', { cause: error instanceof Error ? error : undefined });
             console.error('Error calculating logistics billing:', sError);
             return err({
                 type: 'UNKNOWN_ERROR',
-                message: error.message || 'Failed to calculate logistics billing',
+                message: error instanceof Error ? error.message : 'Failed to calculate logistics billing',
                 cause: error
             });
         }
@@ -223,7 +223,7 @@ export const logisticsBillingEngine = {
         customerId: string,
         customerType: 'FRANCHISE' | 'RESTAURANT',
         period: { start: string; end: string }
-    ): Promise<any[]> => {
+    ): Promise<Record<string, unknown>[]> => {
         try {
             const startDate = new Date(period.start);
             const endDate = new Date(period.end);
@@ -269,7 +269,7 @@ export const logisticsBillingEngine = {
      * @private
      */
     _groupDeliveriesByRange: (
-        deliveryData: any[],
+        deliveryData: Record<string, unknown>[],
         rates: LogisticsRate[]
     ): LogisticsRange[] => {
         // Initialize range groups
@@ -285,7 +285,7 @@ export const logisticsBillingEngine = {
         
         // Group deliveries by range
         deliveryData.forEach(delivery => {
-            const distance = delivery.distance || 0;
+            const distance = (delivery.distance as number) || 0;
             const isNewDelivery = delivery.isNew !== false; // Assume new unless explicitly marked as old
             
             // Find matching range
@@ -294,7 +294,7 @@ export const logisticsBillingEngine = {
                     return distance >= rate.minKm && distance < rate.maxKm;
                 } else {
                     // Special handling for old deliveries (time-based)
-                    const duration = delivery.duration || 0;
+                    const duration = (delivery.duration as number) || 0;
                     if (rate.id === 'range_old_0_35') {
                         return duration < 35;
                     } else if (rate.id === 'range_old_gt_35') {

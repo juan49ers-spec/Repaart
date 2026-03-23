@@ -1,10 +1,10 @@
 import { Truck, MapPin } from 'lucide-react';
-import { calculateLogisticsIntelligence, formatCurrency } from '../../utils/finance';
+import { calculateLogisticsIntelligence, formatCurrency, ZoneStat } from '../../utils/finance';
 
 interface FinanceEntry {
     zone?: string;
     amount?: number;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 interface LogisticsPerformanceCardProps {
@@ -14,8 +14,8 @@ interface LogisticsPerformanceCardProps {
 const LogisticsPerformanceCard = ({ financeEntries }: LogisticsPerformanceCardProps) => {
     // 1. Calculate Aggregated Stats
     const stats = calculateLogisticsIntelligence(financeEntries || []);
-    const totalRevenue = stats.reduce((acc: number, curr: any) => acc + curr.revenue, 0);
-    const totalOrders = stats.reduce((acc: number, curr: any) => acc + curr.count, 0);
+    const totalRevenue = stats.reduce((acc: number, curr: ZoneStat) => acc + curr.revenue, 0);
+    const totalOrders = stats.reduce((acc: number, curr: ZoneStat) => acc + curr.count, 0);
 
     // If no data, render nothing (or a subtle empty state if preferred, but user said "null")
     if (totalRevenue === 0) return null;
@@ -39,7 +39,7 @@ const LogisticsPerformanceCard = ({ financeEntries }: LogisticsPerformanceCardPr
 
             {/* List of Zones */}
             <div className="space-y-4">
-                {stats.map((zone: any, index: number) => (
+                {stats.map((zone: ZoneStat, index: number) => (
                     <div key={index} className="group">
                         {/* Label Row */}
                         <div className="flex justify-between text-xs mb-1.5">

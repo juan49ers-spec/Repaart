@@ -22,7 +22,7 @@ export interface Franchise {
         margin: number;
         revenue?: number;
     };
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 export interface FinancialSummary {
@@ -31,14 +31,14 @@ export interface FinancialSummary {
     month?: string;
     revenue?: number;
     totalIncome?: number;
-    expenses?: number | any; // Could be object or number depending on legacy
+    expenses?: unknown; // Could be object or number depending on legacy
     totalExpenses?: number;
     breakdown?: {
         consultoria?: number;
         premium?: number;
         [key: string]: number | undefined;
     };
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 export interface AdminControlData {

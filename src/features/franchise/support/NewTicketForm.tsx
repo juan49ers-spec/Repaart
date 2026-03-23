@@ -8,12 +8,12 @@ import { suggestSupportSolution } from '../../../lib/gemini';
 import { cn } from '../../../lib/utils';
 
 interface NewTicketFormProps {
-    onSubmit?: (data: any) => void;
+    onSubmit?: (data: TicketFormData) => void;
     onSubjectChange?: (subject: string) => void;
     sending?: boolean;
     success?: boolean;
     setSuccess?: (success: boolean) => void;
-    suggestions?: any[];
+    suggestions?: string[];
     file?: File | null;
     setFile?: (file: File | null) => void;
     uploading?: boolean;
@@ -265,7 +265,7 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
                             {['low', 'medium', 'high'].map((level) => (
                                 <PriorityCard
                                     key={level}
-                                    level={level as any}
+                                    level={level as 'low' | 'medium' | 'high'}
                                     label={level === 'low' ? 'Baja' : level === 'medium' ? 'Media' : 'Alta'}
                                     icon={level === 'low' ? HelpCircle : level === 'medium' ? Zap : AlertCircle}
                                     colorClass={level === 'low' ? 'text-blue-500' : level === 'medium' ? 'text-amber-500' : 'text-rose-500'}

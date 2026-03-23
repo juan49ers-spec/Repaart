@@ -32,14 +32,14 @@ const MonthlyHistoryTable: React.FC<MonthlyHistoryTableProps> = ({ franchiseId, 
 
     const { user } = useAuth();
     // Safe check for admin role
-    const isAdmin = (user as any)?.role === 'admin' || (user as any)?.customClaims?.role === 'admin' || (user?.email?.includes('admin'));
+    const isAdmin = user?.role === 'admin' || (user as unknown as { customClaims?: { role?: string } })?.customClaims?.role === 'admin' || (user?.email?.includes('admin'));
 
 
     // Filters state
     const [searchTerm, setSearchTerm] = useState('');
     const [yearFilter, setYearFilter] = useState<string>('');
 
-    const handleSaveEdit = async (data: any) => {
+    const handleSaveEdit = async (data: Record<string, unknown>) => {
         if (!editingMonth) return;
         try {
             console.log("Saving edited month:", editingMonth, data);

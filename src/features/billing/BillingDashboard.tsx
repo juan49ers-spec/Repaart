@@ -21,6 +21,7 @@ import { useCompanyData } from './hooks/useCompanyData';
 import FranchiseRateConfigurator from '../franchise/FranchiseRateConfigurator';
 import BillingWorkflowGuide from '../franchise/components/BillingWorkflowGuide';
 import { invoiceEngine } from '../../services/billing';
+import { Timestamp } from 'firebase/firestore';
 import dayjs from 'dayjs';
 import './BillingDashboard.css';
 
@@ -45,7 +46,7 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
             const result = await invoiceEngine.getInvoicesByFranchise(franchiseId);
             if (result.success) {
                 const overdue = result.data.filter(inv => {
-                    const issueDate = inv.issueDate && (inv.issueDate as any).toDate ? (inv.issueDate as any).toDate() : new Date(inv.issueDate as any);
+                    const issueDate = inv.issueDate && (inv.issueDate as Timestamp).toDate ? (inv.issueDate as Timestamp).toDate() : new Date(inv.issueDate as Date);
                     const daysSinceIssue = dayjs().diff(dayjs(issueDate), 'day');
                     return inv.status === 'ISSUED' &&
                         inv.paymentStatus !== 'PAID' &&

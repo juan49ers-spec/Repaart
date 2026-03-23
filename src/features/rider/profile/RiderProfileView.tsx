@@ -186,7 +186,7 @@ export const RiderProfileView: React.FC = () => {
 
                     {activeTab === 'soporte' && (
                         <div className="bg-white border border-slate-200 rounded-[2rem] shadow-sm p-8">
-                            <RiderSupport skills={(user as any)?.skills || []} />
+                            <RiderSupport skills={((user as { skills?: string[] })?.skills) || []} />
                         </div>
                     )}
 
@@ -259,7 +259,7 @@ const LoaderScreen = () => (
     </div>
 );
 
-const NavButton = ({ active, onClick, icon: Icon, label, count = 0 }: any) => (
+const NavButton = ({ active, onClick, icon: Icon, label, count = 0 }: { active: boolean; onClick: () => void; icon: React.ElementType; label: string; count?: number }) => (
     <button
         onClick={onClick}
         className={`
@@ -279,7 +279,7 @@ const NavButton = ({ active, onClick, icon: Icon, label, count = 0 }: any) => (
     </button>
 );
 
-const MenuItem = ({ icon, label, desc, onClick }: any) => (
+const MenuItem = ({ icon, label, desc, onClick }: { icon: React.ReactNode; label: string; desc: string; onClick: () => void }) => (
     <button
         onClick={onClick}
         className="w-full flex items-center justify-between px-8 py-6 hover:bg-emerald-50/30 transition-all group border-b border-slate-50 last:border-0"
