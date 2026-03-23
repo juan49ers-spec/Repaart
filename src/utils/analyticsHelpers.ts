@@ -36,13 +36,16 @@ export interface Alert {
  * @param {Array} tickets - List of ticket objects
  * @returns {Object} { status: 'healthy'|'bottleneck', ratio: number, newTickets: number, resolvedTickets: number }
  */
-export const checkSupportHealth = (tickets: any[] = []): SupportAnalysis => {
+type TicketRecord = { createdAt?: { toDate?: () => Date } & Record<string, unknown>; status?: string };
+type UserRecord = { createdAt?: { toDate?: () => Date } & Record<string, unknown> };
+
+export const checkSupportHealth = (tickets: TicketRecord[] = []): SupportAnalysis => {
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
     // Filter last 24h activity
     const recentActivity = tickets.filter(t => {
-        const date = t.createdAt?.toDate ? t.createdAt.toDate() : new Date(t.createdAt);
+        const date = t.createdAt?.toDate ? t.createdAt.toDate() : new Date(t.createdAt as unknown as string | undefined);
         return date > oneDayAgo;
     });
 
@@ -74,13 +77,13 @@ export const checkSupportHealth = (tickets: any[] = []): SupportAnalysis => {
  * @param {Object} salesData - Sales metrics or dashboard data
  * @returns {Object} { detected: boolean, type: string, message: string }
  */
-export const detectUserAnomaly = (users: any[] = [], salesData: any = {}): UserAnomalyAnalysis => {
+export const detectUserAnomaly = (users: UserRecord[] = [], salesData: { currentRevenue?: number } = {}): UserAnomalyAnalysis => {
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
     // New Users last 24h
     const newUsers = users.filter(u => {
-        const date = u.createdAt?.toDate ? u.createdAt.toDate() : new Date(u.createdAt);
+        const date = u.createdAt?.toDate ? u.createdAt.toDate() : new Date(u.createdAt as unknown as string | undefined);
         return date > oneDayAgo;
     });
 

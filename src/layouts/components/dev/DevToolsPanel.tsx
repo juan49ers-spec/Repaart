@@ -409,7 +409,7 @@ const DevToolsPanel: React.FC<DevToolsPanelProps> = ({
                                             const confirmed = confirm('⚠️ Esto eliminará datos de forma PERMANENTE. ¿Continuar?');
                                             if (confirmed) {
                                                 const result = await executeAction('Limpiar Datos Huérfanos', executeCleanup);
-                                                alert(`✅ Eliminados: ${result.deleted} docs\nMantenidos: ${result.kept} docs`);
+                                                const r = result as { deleted?: number; kept?: number }; alert(`✅ Eliminados: ${r.deleted} docs\nMantenidos: ${r.kept} docs`);
                                             }
                                         }}
                                         variant="red"

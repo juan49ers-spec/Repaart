@@ -67,7 +67,7 @@ interface ShiftPlannerProps {
     readOnly?: boolean;
     selectedDate?: Date;
     onDateChange?: (date: Date) => void;
-    overrideScheduleState?: Record<string, unknown>; // Type from useWeeklySchedule if needed
+    overrideScheduleState?: ReturnType<typeof useWeeklySchedule>; // Type from useWeeklySchedule if needed
 }
 
 interface NotificationState {

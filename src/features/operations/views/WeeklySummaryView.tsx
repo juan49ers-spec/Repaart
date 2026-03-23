@@ -1,14 +1,18 @@
 import { useMemo, FC } from 'react';
+import type { WeekData } from '../../../schemas/scheduler';
 import { Clock, Users, AlertTriangle, ShieldCheck } from 'lucide-react';
-import WeeklyCalendarGrid from '../WeeklyCalendarGrid'; // Asegúrate de la ruta correcta
+import WeeklyCalendarGrid from '../WeeklyCalendarGrid'; // Asegurate de la ruta correcta
 // import { useWeeklySchedule } from '../../../hooks/useWeeklySchedule'; // Movido a Dashboard
 import KpiCard from '../components/KpiCard';
 import { calculateWeeklyMetrics } from '../../../utils/operationalMetrics';
 
+type RawShift = Record<string, unknown>;
+type ShiftForGrid = Parameters<typeof calculateWeeklyMetrics>[0][number];
+
 interface WeeklySummaryViewProps {
     currentDate: Date;
-    onSlotClick: (slot: any) => void;
-    weekData: any; // Allow full WeekData or partial
+    onSlotClick: (slot: unknown) => void;
+    weekData: WeekData | null | undefined; // Allow full WeekData or partial
     loading?: boolean;
     franchiseId?: string | null;
 }
@@ -19,18 +23,20 @@ const WeeklySummaryView: FC<WeeklySummaryViewProps> = ({ currentDate, onSlotClic
 
     // Memoize shifts extraction to stabilize dependencies
     const shifts = useMemo(() => {
-        const rawShifts = weekData?.shifts || [];
-        return rawShifts.map((s: any) => ({
+        const rawShifts = (weekData?.shifts || []) as RawShift[];
+        return rawShifts.map((s): ShiftForGrid => ({
             ...s,
-            id: s.shiftId || s.id,
-            riderName: s.riderName || 'Sin asignar',
-            day: s.day || (s.startAt ? new Intl.DateTimeFormat('es-ES', { weekday: 'long' }).format(new Date(s.startAt)) : ''),
-            startTime: s.startTime || (s.startAt ? new Date(s.startAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''),
-            endTime: s.endTime || (s.endAt ? new Date(s.endAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')
+            id: (s.shiftId || s.id) as string | undefined,
+            riderName: (s.riderName as string) || 'Sin asignar',
+            startAt: (s.startAt as string) || '',
+            endAt: (s.endAt as string) || '',
+            day: (s.day as string) || (s.startAt ? new Intl.DateTimeFormat('es-ES', { weekday: 'long' }).format(new Date(s.startAt as string)) : ''),
+            startTime: (s.startTime as string) || (s.startAt ? new Date(s.startAt as string).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''),
+            endTime: (s.endTime as string) || (s.endAt ? new Date(s.endAt as string).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')
         }));
     }, [weekData]);
 
-    // 2. Cálculo de Métricas en Tiempo Real (Memoizado) 🧠
+    // 2. Calculo de Metricas en Tiempo Real (Memoizado)
     // Solo se recalcula si 'shifts' cambia.
     const metrics = useMemo(() => calculateWeeklyMetrics(shifts), [shifts]);
 
@@ -49,31 +55,31 @@ const WeeklySummaryView: FC<WeeklySummaryViewProps> = ({ currentDate, onSlotClic
                 <KpiCard
                     title="Fuerza Operativa"
                     value={metrics.activeRiders}
-                    subtext="Riders únicos asignados"
+                    subtext="Riders unicos asignados"
                     icon={Users}
                     color="blue"
                 />
                 <KpiCard
                     title="Turnos Libres"
                     value={metrics.unassigned}
-                    subtext={metrics.unassigned > 0 ? "⚠️ Requiere asignación" : "Todo cubierto"}
+                    subtext={metrics.unassigned > 0 ? "⚠️ Requiere asignacion" : "Todo cubierto"}
                     icon={AlertTriangle}
-                    // Semáforo visual: Rojo si hay huecos, Gris si está limpio
+                    // Semaforo visual: Rojo si hay huecos, Gris si esta limpio
                     color={metrics.unassigned > 0 ? "rose" : "slate"}
                 />
                 <KpiCard
                     title="Nivel Cobertura"
                     value={`${metrics.coverage}%`}
-                    subtext="Eficiencia de planificación"
+                    subtext="Eficiencia de planificacion"
                     icon={ShieldCheck}
-                    // Semáforo visual: Verde si > 90%, Ámbar si > 75%, Rojo si crítico
+                    // Semaforo visual: Verde si > 90%, Ambar si > 75%, Rojo si critico
                     color={metrics.coverage >= 90 ? "emerald" : metrics.coverage >= 75 ? "amber" : "rose"}
                     // Simulamos una tendencia basada en la cobertura (puedes refinar esto)
                     trend={metrics.coverage >= 95 ? 2.5 : metrics.coverage < 80 ? -5 : 0}
                 />
             </div>
 
-            {/* ÁREA DE VISUALIZACIÓN (GRID) */}
+            {/* AREA DE VISUALIZACION (GRID) */}
             <div className="flex-1 p-6 relative flex flex-col min-h-0 overflow-hidden">
                 <div className="flex-1 border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm relative flex flex-col">
 
@@ -90,7 +96,7 @@ const WeeklySummaryView: FC<WeeklySummaryViewProps> = ({ currentDate, onSlotClic
                     {/* Grid Interactivo */}
                     <div className="flex-1 overflow-auto custom-scrollbar">
                         <WeeklyCalendarGrid
-                            shifts={shifts}
+                            shifts={shifts as { id: string; shiftId: string; riderName: string; day: string; startTime: string; endTime: string; startAt?: string; endAt?: string; zone?: string }[]}
                             currentDate={currentDate}
                             onSlotClick={onSlotClick}
                             readOnly={true}

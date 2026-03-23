@@ -14,8 +14,8 @@ export interface Ticket {
     urgency?: 'low' | 'medium' | 'high' | 'critical'; // Seems urgency/priority are used interchangeably
     category?: string;
     origin?: string;
-    createdAt?: Timestamp | any;
-    lastUpdated?: Timestamp | any;
+    createdAt?: Timestamp | Date | string;
+    lastUpdated?: Timestamp | Date | string;
     read?: boolean;
     hasAttachment?: boolean;
     [key: string]: any;
