@@ -59,10 +59,10 @@ docs/
 | Build | ✅ OK |
 | TypeScript | ⚠️ 10 errores pre-existentes (WIP del usuario) |
 | Tests | ✅ 77/77 archivos · 518/518 tests |
-| Lint | ✅ 0 errores · 257 warnings (0 `any` en producción; resto en test files) |
+| Lint | ✅ 0 errores · 257 warnings (0 `any` en producción; 184 `any` en test files) |
 | Bundle | ⚠️ 5 chunks >500KB (won't fix — lazy loading activo) |
 | Sentry | ✅ Inicializado + ErrorBoundary conectado |
-| E2E CI | ✅ Job `e2e-smoke` en ci-cd.yml (requiere secrets GitHub) |
+| E2E CI | ✅ Job `e2e-smoke` + secrets GitHub configurados (`TEST_USER_EMAIL`, `TEST_USER_PASSWORD`) |
 
 ## Comandos de Verificación
 

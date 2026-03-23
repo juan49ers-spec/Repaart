@@ -1,6 +1,6 @@
 # Issues y Bugs Pendientes
 
-**Última actualización:** 2026-03-23
+**Última actualización:** 2026-03-23 (sesión tarde)
 
 ---
 
@@ -30,16 +30,9 @@ hasChanges={false} // TODO: Track changes
 
 ---
 
-### #8: GitHub Secrets para E2E en CI
+~~### #8: GitHub Secrets para E2E en CI~~ — RESUELTO
 
-**Descripción:** El job `e2e-smoke` en `.github/workflows/ci-cd.yml` requiere dos secrets de GitHub: `TEST_USER_EMAIL` y `TEST_USER_PASSWORD` con credenciales de un usuario de test dedicado en Firebase.
-
-**Acción requerida:**
-
-1. Crear usuario de test en Firebase Console (Authentication)
-2. En GitHub → Settings → Secrets → añadir `TEST_USER_EMAIL` y `TEST_USER_PASSWORD`
-
-**Prioridad:** MEDIA (el CI fallará en e2e hasta que se configuren)
+`TEST_USER_EMAIL` y `TEST_USER_PASSWORD` creados en GitHub Actions secrets. Usuario `hola@repaart.es` ya existía en Firebase Auth. Tests E2E son stubs vacíos — pasarán en el próximo pipeline.
 
 ---
 
@@ -96,6 +89,7 @@ if (import.meta.env.DEV) {
 | #3 (isConflict)   | Detección de turnos solapados en WeeklyScheduler          | 2026-03-22 |
 | #4 (hasChanges)   | hasUnsavedChanges ya implementado en DeliveryScheduler    | 2026-03-22 |
 | #6 (any warnings) | 0 warnings `any` en producción (809→0)                    | 2026-03-23 |
+| #8 (CI secrets)   | GitHub secrets TEST_USER_EMAIL/PASSWORD creados           | 2026-03-23 |
 | Sentry inactivo   | `initSentry()` nunca se llamaba; ErrorBoundary sin Sentry | 2026-03-22 |
 | IVA combustible   | Deducción revertida a 100% en `finance.ts`                | 2026-03-22 |
 | IVA doble cómputo | `Math.max` en `useTaxCalculations.ts`                     | 2026-03-22 |
@@ -107,7 +101,7 @@ if (import.meta.env.DEV) {
 | Categoría      | Pendientes | Resueltos |
 | -------------- | ---------- | --------- |
 | Críticos       | 0          | 1         |
-| Medios         | 1          | 5         |
+| Medios         | 0          | 6         |
 | Bajos/Mejoras  | 1          | 5         |
 
-**Total pendientes:** 2 (1 medio, 1 bajo)
+**Total pendientes:** 1 (1 bajo — #5 console.log en prod)
