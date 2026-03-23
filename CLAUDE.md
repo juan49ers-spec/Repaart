@@ -63,6 +63,7 @@ docs/
 | Bundle | ⚠️ 5 chunks >500KB (won't fix — lazy loading activo) |
 | Sentry | ✅ Inicializado + ErrorBoundary conectado |
 | E2E CI | ✅ Job `e2e-smoke` + secrets GitHub configurados (`TEST_USER_EMAIL`, `TEST_USER_PASSWORD`) |
+| Issues pendientes | ✅ 0 — todos resueltos |
 
 ## Comandos de Verificación
 

@@ -38,26 +38,9 @@ hasChanges={false} // TODO: Track changes
 
 ## 💡 Mejoras Técnicas
 
-### #5: Console.log DEBUG en producción
+~~### #5: Console.log DEBUG en producción~~ — RESUELTO
 
-**Archivos afectados:**
-
-- `src/features/admin/dashboard/AdminHero.tsx:29`
-- `src/features/admin/dashboard/FranchiseDirectory.tsx`
-- `src/features/admin/dashboard/IntelligenceGrid.tsx`
-- `src/features/admin/dashboard/PowerMetrics.tsx`
-
-**Problema:** Logs de debug en código de producción. (Los del módulo Sentry — `src/lib/sentry/index.ts` — ya se eliminaron en sesión 2026-03-22.)
-
-**Solución:**
-
-```typescript
-if (import.meta.env.DEV) {
-  console.log('DEBUG:', data);
-}
-```
-
-**Prioridad:** BAJA (no funcional, solo limpieza)
+Los 4 archivos mencionados (AdminHero, FranchiseDirectory, IntelligenceGrid, PowerMetrics) ya no contienen `console.log`. Los logs restantes en el proyecto son intencionados (utilidades de debug para admins, scripts de seed).
 
 ---
 
@@ -89,6 +72,7 @@ if (import.meta.env.DEV) {
 | #3 (isConflict)   | Detección de turnos solapados en WeeklyScheduler          | 2026-03-22 |
 | #4 (hasChanges)   | hasUnsavedChanges ya implementado en DeliveryScheduler    | 2026-03-22 |
 | #6 (any warnings) | 0 warnings `any` en producción (809→0)                    | 2026-03-23 |
+| #5 (console.log)  | Admin dashboard files ya limpios; logs restantes son OK   | 2026-03-23 |
 | #8 (CI secrets)   | GitHub secrets TEST_USER_EMAIL/PASSWORD creados           | 2026-03-23 |
 | Sentry inactivo   | `initSentry()` nunca se llamaba; ErrorBoundary sin Sentry | 2026-03-22 |
 | IVA combustible   | Deducción revertida a 100% en `finance.ts`                | 2026-03-22 |
@@ -102,6 +86,6 @@ if (import.meta.env.DEV) {
 | -------------- | ---------- | --------- |
 | Críticos       | 0          | 1         |
 | Medios         | 0          | 6         |
-| Bajos/Mejoras  | 1          | 5         |
+| Bajos/Mejoras  | 0          | 6         |
 
-**Total pendientes:** 1 (1 bajo — #5 console.log en prod)
+**Total pendientes:** 0 🎉
