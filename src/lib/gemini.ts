@@ -1,87 +1,98 @@
-import { GoogleGenerativeAI, GenerativeModel, ChatSession } from "@google/generative-ai";
 import { FRANCHISE_KNOWLEDGE } from './companyKnowledge';
 import { APP_CAPABILITIES } from './appCapabilities';
 
 // Initialize the API with the key (will be set in .env)
 const API_KEY = import.meta.env.VITE_GOOGLE_AI_KEY || '';
 
-let chatSession: ChatSession | null = null;
+// Chat history for multi-turn conversations (REST-based, no SDK)
+export interface ChatTurn {
+    role: 'user' | 'model';
+    parts: { text: string }[];
+}
+
+let chatHistory: ChatTurn[] = [];
 
 const SYSTEM_INSTRUCTION = `
-Eres REPAART AI, el asistente virtual experto de la franquicia Repaart.
-Tu objetivo es ayudar a los franquiciados a resolver dudas operativas, financieras y DE USO DE LA PLATAFORMA.
+Eres el asesor de confianza de los franquiciados de Repaart. Eres como ese amigo que sabe mucho de negocios y te explica las cosas sin rollos ni tecnicismos.
 
-CEREBRO 1: CONOCIMIENTO DE LA APP (DÓNDE ESTÁ TODO):
+CÓMO HABLAS:
+- Usa un tono cercano y natural, como si hablaras con alguien cara a cara.
+- Frases cortas. Nada de párrafos eternos.
+- Nada de palabras raras: di "ganancias" en vez de "margen EBITDA", "lo que cobras" en vez de "ingresos brutos", "te está costando dinero" en vez de "impacta negativamente en la rentabilidad".
+- Si hay buenas noticias, alégrate con ellas. Si hay un problema, dilo claro pero con calma.
+- Usa emojis con moderación para hacer el mensaje más visual (✅ ⚠️ 💡 📈 👀).
+- Nunca empieces con "¡Claro!" ni con saludos largos. Ve directo al grano.
+
+LO QUE SABES:
+CONOCIMIENTO DE LA APP (DÓNDE ESTÁ CADA COSA):
 ${APP_CAPABILITIES}
 
-CEREBRO 2: MANUAL OPERATIVO (CÓMO FUNCIONA EL NEGOCIO):
+MANUAL OPERATIVO (CÓMO FUNCIONA EL NEGOCIO):
 ${FRANCHISE_KNOWLEDGE}
 
-TUS SUPERPODERES:
-1. NAVEGADOR: Si preguntan "¿Dónde veo mis facturas?", diles EXACTAMENTE la ruta (Ej: "Ve a Finanzas > Gastos").
-2. SOPORTE TÉCNICO: Si tienen un problema técnico con la app, sugiere limpiar caché o abrir ticket en /support.
-3. OPERACIONES: Resuelve dudas sobre riders, motos y turnos usando el Manual Operativo.
-4. FINANZAS: Explica conceptos financieros basándote en la sección 3 y 4 del manual.
+LO QUE HACES:
+1. Si preguntan dónde está algo en la app → diles la ruta exacta (Ej: "Ve a Finanzas > Gastos").
+2. Si tienen un problema técnico → sugiere pasos concretos o abrir ticket en /support.
+3. Si preguntan por sus riders, turnos o motos → responde usando el manual operativo.
+4. Si preguntan por dinero o finanzas → explícalo como si le hablaras a alguien sin estudios de economía.
 
-TONO Y ESTILO:
-- Profesional pero cercano ("Compañero").
-- Ve al grano. No des discursos vacíos.
-- Si es una duda de APP, usa CEREBRO 1.
-- Si es una duda de NEGOCIO, usa CEREBRO 2.
-
-Si no sabes una respuesta específica, sugiere contactar a soporte@repaart.es o abrir un ticket.
+Si no sabes la respuesta, dilo honestamente y sugiere escribir a soporte@repaart.es.
 `;
+
+const CHAT_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"];
 
 export const initGeminiChat = async (): Promise<boolean> => {
     if (!API_KEY) {
         console.warn("Gemini API Key missing");
         return false;
     }
-
-    try {
-        const genAI = new GoogleGenerativeAI(API_KEY);
-        const model: GenerativeModel = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash",
-            systemInstruction: SYSTEM_INSTRUCTION
-        });
-
-        chatSession = model.startChat({
-            history: [],
-            generationConfig: {
-                maxOutputTokens: 2000, // Increased for Pro
-                temperature: 0.5, // Reduced for more consistent formatting
-            },
-        });
-
-        if (import.meta.env.DEV) {
-            console.log("Gemini Chat Session Initialized ✅ (Pro Model)");
-        }
-        return true;
-    } catch (error) {
-        console.error("Error initializing Gemini:", error);
-        return false;
-    }
+    chatHistory = [];
+    return true;
 };
 
 export const sendMessageToGemini = async (message: string): Promise<string> => {
-    if (!chatSession) {
-        // Try to init if not ready
-        const success = await initGeminiChat();
-        // If still failed (e.g. no key), return mock fallback
-        if (!success) {
-            return "⚠️ No veo mi 'llave maestra' (API Key). Por favor configura la VITE_GOOGLE_AI_KEY en el sistema.";
+    if (!API_KEY) {
+        return "⚠️ No veo mi 'llave maestra' (API Key). Por favor configura la VITE_GOOGLE_AI_KEY en el sistema.";
+    }
+
+    // Append user message to history
+    chatHistory.push({ role: 'user', parts: [{ text: message }] });
+
+    for (const model of CHAT_MODELS) {
+        try {
+            const response = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        system_instruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+                        contents: chatHistory,
+                        generationConfig: { maxOutputTokens: 2000, temperature: 0.5 }
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                console.warn(`Chat model ${model} failed: ${response.status}`);
+                continue;
+            }
+
+            const data = await response.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!text) continue;
+
+            // Append model response to history for multi-turn
+            chatHistory.push({ role: 'model', parts: [{ text }] });
+            return text;
+        } catch (e) {
+            console.warn(`Chat model ${model} error:`, e);
         }
     }
 
-    try {
-        if (!chatSession) throw new Error("Chat session not initialized");
-        const result = await chatSession.sendMessage(message);
-        const response = await result.response;
-        return response.text();
-    } catch (error) {
-        console.error("Gemini Error:", error);
-        return "Lo siento, tuve un problema de conexión. ¿Podrías intentar de nuevo?";
-    }
+    // Remove the user message we added since we failed
+    chatHistory.pop();
+    return "Lo siento, tuve un problema de conexión. ¿Podrías intentar de nuevo?";
 };
 
 /**
@@ -503,4 +514,81 @@ export const generateFullSchedule = async (
     `;
 
     return generateJson(prompt) as Promise<{ shifts: { riderId: string; startDay: string; startHour: number; duration: number; reason: string }[]; explanation: string } | null>;
+};
+
+// ─── Dashboard Alert (Feature 1) ───────────────────────────────────────────
+
+export interface DashboardAlertContext {
+  financial: {
+    revenue: number;
+    expenses: number;
+    profit: number;
+    margin: number;
+    orders: number;
+    month: string;
+  };
+  shifts: {
+    totalThisWeek: number;
+    uncoveredSlots: number;
+    nextWeekCoverage: number;
+  };
+  riders: {
+    active: number;
+    inactive: number;
+  };
+}
+
+export interface DashboardAlert {
+  type: 'positive' | 'warning' | 'critical' | 'info';
+  title: string;
+  message: string;
+}
+
+export const generateDashboardAlert = async (
+  context: DashboardAlertContext
+): Promise<DashboardAlert | null> => {
+  const key = import.meta.env.VITE_GOOGLE_AI_KEY || '';
+  if (!key) return null;
+
+  const prompt = `
+Eres el asesor de una franquicia de reparto. Analiza estos datos y genera UNA SOLA alerta.
+
+DATOS:
+${JSON.stringify(context, null, 2)}
+
+REGLAS:
+- Si el margen es >15%: alerta positiva celebrando el resultado.
+- Si hay turnos sin cubrir (uncoveredSlots > 0): alerta de aviso.
+- Si el margen es <5% o los pedidos caen: alerta crítica.
+- Si todo está bien pero hay algo interesante: alerta informativa.
+- Lenguaje cercano, sin tecnicismos, máximo 2 frases.
+
+SALIDA JSON ESTRICTA (sin markdown):
+{
+  "type": "positive" | "warning" | "critical" | "info",
+  "title": "Título de 4-6 palabras",
+  "message": "Una o dos frases directas y cercanas."
+}
+`;
+
+  const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+  for (const model of models) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        }
+      );
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) continue;
+      const match = text.match(/\{[\s\S]*\}/);
+      if (match) return JSON.parse(match[0]) as DashboardAlert;
+    } catch { continue; }
+  }
+  return null;
 };
