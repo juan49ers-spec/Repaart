@@ -25,6 +25,7 @@ import DynamicBanner from '../../components/common/DynamicBanner';
 import ErrorBoundary from '../../components/ui/feedback/ErrorBoundary';
 import { userService } from '../../services/userService';
 import { useAuth } from '../../context/AuthContext';
+import { DashboardAlertBanner } from './dashboard/components/DashboardAlertBanner';
 
 export interface DashboardTrendItem {
     month: string;
@@ -132,7 +133,14 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
         checkKickoffAndLoadGoal();
     }, [user?.uid, effectiveMonth]);
 
-
+    const alertFinancialData = report ? {
+        revenue,
+        expenses: totalExpenses,
+        profit: revenue - totalExpenses,
+        margin: revenue > 0 ? ((revenue - totalExpenses) / revenue) * 100 : 0,
+        orders: _orders ?? 0,
+        month: effectiveMonth,
+    } : null;
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
@@ -248,6 +256,13 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                 {/* MAIN COCKPIT HORIZONTAL MODULES */}
                 {!isHistoryView ? (
                     <div className="flex flex-col gap-6">
+                        <DashboardAlertBanner
+                            franchiseId={franchiseId ?? ''}
+                            financialData={alertFinancialData}
+                            shiftsData={null}
+                            ridersData={null}
+                            onOpenAdvisor={() => setIsAdvisorOpen(true)}
+                        />
                         <DynamicBanner />
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
