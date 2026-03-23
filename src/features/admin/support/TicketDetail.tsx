@@ -26,9 +26,12 @@ interface SupportContextDetailValue {
 }
 
 // --- SLA Timer ---
-const computeSLA = (createdAt: { toDate?: () => Date; seconds?: number } | null, status: string) => {
+const computeSLA = (createdAt: { toDate?: () => Date; seconds?: number } | Date | string | null | undefined, status: string) => {
     if (status === 'resolved') return { elapsed: 'Resuelto', severity: 'ok' as const };
-    const created = createdAt?.toDate?.() ?? (createdAt?.seconds ? new Date(createdAt.seconds * 1000) : null);
+    const ts = createdAt as { toDate?: () => Date; seconds?: number } | null | undefined;
+    const created = createdAt instanceof Date ? createdAt
+        : typeof createdAt === 'string' ? new Date(createdAt)
+        : ts?.toDate?.() ?? (ts?.seconds ? new Date(ts.seconds * 1000) : null);
     if (!created) return { elapsed: '—', severity: 'ok' as const };
     const diffMs = Date.now() - created.getTime();
     const hours = Math.floor(diffMs / 3600000);
@@ -39,7 +42,7 @@ const computeSLA = (createdAt: { toDate?: () => Date; seconds?: number } | null,
     return { elapsed, severity };
 };
 
-const SLAIndicator = ({ createdAt, status }: { createdAt: { toDate?: () => Date; seconds?: number } | null; status: string }) => {
+const SLAIndicator = ({ createdAt, status }: { createdAt: { toDate?: () => Date; seconds?: number } | Date | string | null | undefined; status: string }) => {
     const [tick, setTick] = useState(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- tick is intentional: drives periodic recomputation
     const { elapsed, severity } = React.useMemo(() => computeSLA(createdAt, status), [createdAt, status, tick]);
@@ -209,9 +212,9 @@ const MessageItem = memo(({ msg, senderName }: MessageItemProps) => {
             <div className={`max-w-[80%] ${senderIsAdmin ? 'flex flex-col items-end' : 'flex flex-col items-start'}`}>
                 <div className={`flex items-center gap-2 mb-1 px-1 ${senderIsAdmin ? 'justify-end' : 'justify-start'}`}>
                     <span className={`text-[9px] font-bold uppercase tracking-wider ${senderIsAdmin ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-300'}`}>
-                        {senderIsAdmin ? 'Soporte HQ' : (msg.senderName || senderName || 'Cliente')}
+                        {senderIsAdmin ? 'Soporte HQ' : ((msg.senderName as string | undefined) || senderName || 'Cliente')}
                     </span>
-                    <span className="text-[9px] font-medium text-slate-400 dark:text-slate-600">{formatDate(msg.createdAt)}</span>
+                    <span className="text-[9px] font-medium text-slate-400 dark:text-slate-600">{formatDate(msg.createdAt as string | Date)}</span>
                 </div>
                 <div className={`p-3.5 rounded-2xl text-sm leading-relaxed ${senderIsAdmin
                     ? 'bg-indigo-600 text-white rounded-br-sm shadow-md shadow-indigo-500/15'

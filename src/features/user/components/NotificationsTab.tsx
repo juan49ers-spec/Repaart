@@ -14,7 +14,7 @@ interface NotificationsTabProps {
     user: User;
     franchiseId?: string;
     isAdmin?: boolean;
-    showMessage: (type: string, text: string) => void;
+    showMessage?: (type: string, text: string) => void;
 }
 
 interface NotificationItem {
@@ -269,7 +269,7 @@ const NotificationsTab: FC<NotificationsTabProps> = ({ user, franchiseId, isAdmi
                 }
             }
 
-            showMessage(
+            showMessage?.(
                 action === 'approve' ? 'success' : 'info',
                 action === 'approve' ? 'Solicitud aprobada y procesada' : 'Solicitud rechazada'
             );
@@ -278,7 +278,7 @@ const NotificationsTab: FC<NotificationsTabProps> = ({ user, franchiseId, isAdmi
             // Revert on error
             console.error("Action failed:", error);
             setNotifications(previousState);
-            showMessage('error', 'No se pudo procesar la acción');
+            showMessage?.('error', 'No se pudo procesar la acción');
         } finally {
             setProcessingId(null);
         }

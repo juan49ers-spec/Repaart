@@ -2,7 +2,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
 @theme {
-  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
 
   --color-indigo-50: hsl(210 20% 96%);
   --color-indigo-100: hsl(210 22% 92%);
@@ -573,7 +574,7 @@ body {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: background-color 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), color 0.3s ease;
@@ -1564,3 +1565,27 @@ a,
 .lesson-content a {
   @apply text-indigo-600 dark:text-indigo-400 underline decoration-indigo-500/30 hover:decoration-indigo-500 transition-all;
 }
+
+@layer utilities {
+  .bg-barber-pole {
+    background-image: linear-gradient(
+      45deg,
+      rgba(0, 0, 0, 0.05) 25%,
+      transparent 25%,
+      transparent 50%,
+      rgba(0, 0, 0, 0.05) 50%,
+      rgba(0, 0, 0, 0.05) 75%,
+      transparent 75%,
+      transparent
+    );
+    background-size: 16px 16px;
+  }
+  .bg-holo-gradient {
+    background: linear-gradient(135deg, rgba(99,102,241,0.4) 0%, rgba(99,102,241,0.1) 100%);
+  }
+  .bg-holo-grid {
+    background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 4px 4px;
+  }
+}
+

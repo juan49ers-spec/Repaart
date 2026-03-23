@@ -37,6 +37,8 @@ export interface ExpenseData {
     other?: number;
     quota?: number;
     repaartServices?: number;
+    extraHours?: number;
+    operativeHours?: number;
 }
 
 export interface FinancialRecord {
@@ -76,6 +78,8 @@ export interface FinancialRecord {
     totalExpenses?: number;
     profit?: number;
     orders?: number;
+    extraHours?: number;
+    operativeHours?: number;
     is_locked?: boolean;
     isLocked?: boolean;
     updatedAt?: { toDate?: () => Date } | Date | string;

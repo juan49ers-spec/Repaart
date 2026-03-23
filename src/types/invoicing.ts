@@ -384,4 +384,5 @@ export interface FranchiseRestaurant {
     address?: { street?: string; city?: string; zipCode?: string; province?: string; country?: string } | string;
     email?: string;
     phone?: string;
+    notes?: string;
 }

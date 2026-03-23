@@ -202,7 +202,8 @@ const ShiftPlanner: FC<ShiftPlannerProps> = ({
     const internalHook = useWeeklySchedule(activeFranchiseId ?? null, !activeFranchiseId, selectedDate);
     const { weekData, loading, riders, motos, updateWeekData, refresh } = overrideScheduleState || internalHook;
 
-    const { isSaving, addOrUpdateShift, removeShift, quickFillShifts } = useShiftOperations(activeFranchiseId || null, weekData, updateWeekData, motos);
+    const motosForOps = motos.map(m => ({ ...m, plate: m.licensePlate }));
+    const { isSaving, addOrUpdateShift, removeShift, quickFillShifts } = useShiftOperations(activeFranchiseId || null, weekData, updateWeekData, motosForOps);
 
     const [viewMode, setViewMode] = useState<'focus' | 'full'>('focus');
     const [searchTerm] = useState('');
@@ -223,7 +224,7 @@ const ShiftPlanner: FC<ShiftPlannerProps> = ({
         const map: Record<number, Shift[]> = {};
         if (!weekData?.shifts) return map;
 
-        weekData.shifts.forEach((shift: Shift) => {
+        weekData.shifts.forEach((shift) => {
             if (!shift.startAt || !shift.startAt.startsWith(selectedIsoDate)) return;
             if (searchTerm && !shift.riderName?.toLowerCase().includes(searchTerm.toLowerCase())) return;
 
@@ -235,7 +236,7 @@ const ShiftPlanner: FC<ShiftPlannerProps> = ({
 
             for (let h = startH; h < endH; h++) {
                 if (!map[h]) map[h] = [];
-                map[h].push(shift);
+                map[h].push(shift as Shift);
             }
         });
         return map;

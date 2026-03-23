@@ -188,12 +188,11 @@ const SupportHub: React.FC = () => {
                     <div className="flex-1 mt-16 overflow-y-auto custom-scrollbar rounded-b-xl">
                         {activeTab === 'ticket' ? (
                             <NewTicketForm
-                                onSubmit={createTicket}
                                 onSubjectChange={handleSubjectChange}
                                 sending={sending}
                                 success={success}
                                 setSuccess={(v) => setSuccess(v)}
-                                suggestions={suggestions}
+                                suggestions={suggestions.map(s => s.title)}
                                 file={file}
                                 setFile={setFile}
                                 uploading={uploading}
