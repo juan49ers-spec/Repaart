@@ -131,9 +131,9 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
 
                 reset({
                     // Franchise
-                    legalName: (data as any).legalName || (data as any).businessName || '',
-                    name: data.name || (data as any).franchiseName || '',
-                    cif: data.cif || (data as any).taxId || '',
+                    legalName: (data as UserProfile & { legalName?: string; businessName?: string }).legalName || (data as UserProfile & { legalName?: string; businessName?: string }).businessName || '',
+                    name: data.name || (data as UserProfile & { franchiseName?: string }).franchiseName || '',
+                    cif: data.cif || (data as UserProfile & { taxId?: string }).taxId || '',
                     city: data.city || '',
                     address: data.address || '',
                     email: data.email || (targetId === user?.uid ? (user?.email || '') : ''),
@@ -153,8 +153,8 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                 // Save initial rates for comparison
                 initialRatesRef.current = data.logisticsRates || [];
 
-            } catch (e: any) {
-                addToast("Error al cargar perfil: " + (e.message || String(e)), "error");
+            } catch (e: unknown) {
+                addToast("Error al cargar perfil: " + (e instanceof Error ? e.message : String(e)), "error");
             }
         };
         loadProfile();
@@ -179,7 +179,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
 
             setValue('userPhotoURL', downloadURL, { shouldDirty: true });
             addToast("Foto de perfil actualizada", "success");
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("[FranchiseProfile] Avatar upload failed:", error);
             addToast("Error al subir imagen", "error");
         } finally {
@@ -287,8 +287,8 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
 
             addToast("Perfil unificado guardado correctamente", "success");
             reset(data); // Reset form state
-        } catch (error: any) {
-            addToast("Error al guardar: " + error.message, "error");
+        } catch (error: unknown) {
+            addToast("Error al guardar: " + (error instanceof Error ? error.message : String(error)), "error");
         } finally {
             setLoading(false);
         }
@@ -377,7 +377,7 @@ const FranchiseProfile: React.FC<FranchiseProfileProps> = ({ franchiseId }) => {
                             <button
                                 key={tab.id}
                                 type="button"
-                                onClick={() => setActiveTab(tab.id as any)}
+                                onClick={() => setActiveTab(tab.id)}
                                 className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all duration-200 ${activeTab === tab.id
                                     ? 'bg-white text-slate-800 shadow-md translate-y-[-1px]'
                                     : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Clock, User } from 'lucide-react';
 import { getLabelDisplay, getLabelColor } from '../../../constants/labels';
+import { Timestamp, FieldValue } from 'firebase/firestore';
 
 interface FeatureRequest {
     id: string;
@@ -10,8 +11,8 @@ interface FeatureRequest {
     priority: 'low' | 'medium' | 'high';
     createdBy: string;
     createdByEmail: string;
-    createdAt: any;
-    updatedAt: any;
+    createdAt: Timestamp | FieldValue | Date | string | null;
+    updatedAt: Timestamp | FieldValue | Date | string | null;
     labels?: string[];
     assignedTo?: string;
 }
@@ -40,9 +41,9 @@ const STATUS_OPTIONS = [
 ];
 
 const FeatureCard: React.FC<FeatureCardProps> = ({ feature, onStatusChange }) => {
-    const formatDate = (timestamp: any) => {
+    const formatDate = (timestamp: Timestamp | FieldValue | Date | string | null) => {
         if (!timestamp) return 'Reciente';
-        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        const date = (timestamp as Timestamp).toDate ? (timestamp as Timestamp).toDate() : new Date(timestamp as string | Date);
         return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
     };
 
@@ -100,7 +101,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ feature, onStatusChange }) =>
             {/* Status Selector */}
             <select
                 value={feature.status}
-                onChange={(e) => onStatusChange(feature.id, e.target.value as any)}
+                onChange={(e) => onStatusChange(feature.id, e.target.value as 'proposed' | 'in_progress' | 'completed')}
                 className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer hover:bg-slate-700 transition-colors"
                 aria-label="Cambiar estado de la mejora"
             >

@@ -12,7 +12,7 @@ interface FranchiseUser {
     franchiseId?: string;
     email: string;
     role: string;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 // Interface for New Post State
@@ -137,7 +137,7 @@ const AnnouncementSystem = () => {
                                     <label className="block text-sm font-bold text-slate-700 mb-1">Prioridad</label>
                                     <select
                                         value={newPost.priority}
-                                        onChange={e => setNewPost({ ...newPost, priority: e.target.value as any })}
+                                        onChange={e => setNewPost({ ...newPost, priority: e.target.value as NewPostState['priority'] })}
                                         className="w-full rounded-lg border-slate-300"
                                     >
                                         <option value="normal">Normal</option>
@@ -149,7 +149,7 @@ const AnnouncementSystem = () => {
                                     <label className="block text-sm font-bold text-slate-700 mb-1">Tipo</label>
                                     <select
                                         value={newPost.type}
-                                        onChange={e => setNewPost({ ...newPost, type: e.target.value as any })}
+                                        onChange={e => setNewPost({ ...newPost, type: e.target.value as NewPostState['type'] })}
                                         className="w-full rounded-lg border-slate-300"
                                     >
                                         <option value="news">Noticia</option>
@@ -264,8 +264,10 @@ const AnnouncementSystem = () => {
 
                                     <span className="text-xs text-slate-400 ml-auto">
                                         {item.createdAt instanceof Date ? item.createdAt.toLocaleDateString() :
-                                            // Handle Firestore Timestamp
-                                            (item.createdAt as any)?.toDate?.().toLocaleDateString() || 'Reciente'
+                                            // Handle Firestore Timestamp (defensive fallback)
+                                            (typeof (item.createdAt as { toDate?: () => Date }).toDate === 'function'
+                                                ? (item.createdAt as { toDate: () => Date }).toDate().toLocaleDateString()
+                                                : 'Reciente')
                                         }
                                     </span>
                                 </div>

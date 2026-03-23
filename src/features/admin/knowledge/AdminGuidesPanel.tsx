@@ -69,8 +69,8 @@ const AdminGuidesPanel: React.FC = () => {
                     description: result.description,
                     content: result.content || result.description, // Fallback to desc if no content
                     category: result.category,
-                    theme: result.theme as any,
-                    icon: result.icon as any,
+                    theme: result.theme as keyof typeof GUIDE_THEMES,
+                    icon: result.icon as keyof typeof GUIDE_ICONS,
                     isCritical: result.isCritical,
                 });
                 setIsAiModalOpen(false);
@@ -78,14 +78,15 @@ const AdminGuidesPanel: React.FC = () => {
                 setPreviewMode('full'); // Show full content
                 setAiPrompt(''); // Clear
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("AI Error:", error);
-            if (error.message && error.message.includes("Invalid JSON")) {
+            const msg = error instanceof Error ? error.message : '';
+            if (msg.includes("Invalid JSON")) {
                 alert("La IA generó una respuesta pero no pudimos leerla correctamente (Error de formato). Por favor, intenta simplificar el texto o inténtalo de nuevo.");
-            } else if (error.message && error.message.includes("No JSON structure")) {
+            } else if (msg.includes("No JSON structure")) {
                 alert("La IA no devolvió un formato válido. Intenta ser más claro en tu petición.");
             } else {
-                alert("Error de conexión o de la IA: " + (error.message || "Desconocido"));
+                alert("Error de conexión o de la IA: " + (msg || "Desconocido"));
             }
         } finally {
             setIsGenerating(false);
@@ -492,7 +493,7 @@ const AdminGuidesPanel: React.FC = () => {
                                     {Object.entries(GUIDE_ICONS).map(([name, Icon]) => (
                                         <button
                                             key={name}
-                                            onClick={() => setFormData({ ...formData, icon: name as any })}
+                                            onClick={() => setFormData({ ...formData, icon: name as keyof typeof GUIDE_ICONS })}
                                             title={name}
                                             className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all ${formData.icon === name
                                                 ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
@@ -510,7 +511,7 @@ const AdminGuidesPanel: React.FC = () => {
                                     {Object.entries(GUIDE_THEMES).map(([key, theme]) => (
                                         <button
                                             key={key}
-                                            onClick={() => setFormData({ ...formData, theme: key as any })}
+                                            onClick={() => setFormData({ ...formData, theme: key as keyof typeof GUIDE_THEMES })}
                                             title={key}
                                             className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${formData.theme === key ? 'ring-2 ring-indigo-500 scale-110' : 'opacity-40 hover:opacity-100'} ${theme.bg}`}
                                         />

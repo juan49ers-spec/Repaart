@@ -16,6 +16,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { cn } from '../../../../lib/utils';
+import { FlyderOrder } from '../../../../services/flyderService';
 
 const FlyderOrdersDashboard: React.FC = () => {
   const { orders, stats, loading, error, refresh } = useFlyderData();
@@ -24,7 +25,7 @@ const FlyderOrdersDashboard: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
 
-  const formatDate = (dateValue: any): string => {
+  const formatDate = (dateValue: unknown): string => {
     if (!dateValue) return '-';
 
     // Options for Spanish timezone (Europe/Madrid)
@@ -40,7 +41,7 @@ const FlyderOrdersDashboard: React.FC = () => {
     // If it's a Date object (check with duck typing)
     if (typeof dateValue === 'object' && dateValue !== null) {
       // Check if it has Date methods
-      if (typeof (dateValue as any).toISOString === 'function') {
+      if (typeof (dateValue as Date).toISOString === 'function') {
         try {
           const date = dateValue as Date;
           if (isNaN(date.getTime())) {
@@ -73,7 +74,7 @@ const FlyderOrdersDashboard: React.FC = () => {
     return String(dateValue);
   };
 
-  const formatCustomerName = (order: any): string => {
+  const formatCustomerName = (order: FlyderOrder): string => {
     if (order.customer_name) {
       return String(order.customer_name);
     }
@@ -115,9 +116,9 @@ const FlyderOrdersDashboard: React.FC = () => {
     });
   };
 
-  const renderExpandedDetails = (order: any) => {
+  const renderExpandedDetails = (order: FlyderOrder) => {
     // Helper function to safely convert any value to string
-    const safeString = (value: any): string => {
+    const safeString = (value: unknown): string => {
       if (value === null || value === undefined) return '';
       if (typeof value === 'object') {
         try {
