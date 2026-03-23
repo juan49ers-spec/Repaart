@@ -25,7 +25,7 @@ const OperationsTabs: FC<OperationsTabsProps> = ({ activeTab, onTabChange }) => 
     ];
 
     return (
-        <div className="px-6 border-b border-slate-200 bg-white flex gap-6 overflow-x-auto no-scrollbar">
+        <div className="px-2 sm:px-6 border-b border-slate-200 bg-white flex gap-1 sm:gap-6 overflow-x-auto no-scrollbar">
             {tabs.map(tab => {
                 const isActive = activeTab === tab.id;
                 const Icon = tab.icon;
@@ -34,15 +34,15 @@ const OperationsTabs: FC<OperationsTabsProps> = ({ activeTab, onTabChange }) => 
                         key={tab.id}
                         onClick={() => onTabChange(tab.id)}
                         className={`
-                            flex items-center gap-2 py-4 text-sm font-bold border-b-2 transition-all whitespace-nowrap outline-none px-2
+                            flex items-center gap-2 py-4 text-sm font-bold border-b-2 transition-all whitespace-nowrap outline-none px-3 sm:px-2 min-w-[44px] justify-center sm:justify-start
                             ${isActive
                                 ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50 rounded-t-lg'
                                 : 'border-transparent text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-slate-50 rounded-t-lg'
                             }
                         `}
                     >
-                        <Icon size={16} />
-                        {tab.label}
+                        <Icon size={16} className="flex-shrink-0" />
+                        <span className="hidden sm:inline">{tab.label}</span>
                     </button>
                 );
             })}
