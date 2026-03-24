@@ -2,7 +2,9 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import { X, Send, Bot, User, Sparkles, TrendingUp, AlertCircle, AlertTriangle, Lightbulb, Target, TrendingDown, Calendar, DollarSign, ArrowRight, BarChart3, Zap, CheckCircle, MessageCircle, PlayCircle, Stethoscope } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../../lib/utils';
-import { sendMessageToGemini } from '../../../lib/gemini';
+import { sendMessageToGemini, seedGeminiHistory, ChatTurn } from '../../../lib/gemini';
+import { useAuth } from '../../../context/AuthContext';
+import { advisorHistoryService, AdvisorMessage } from '../../../services/advisorHistoryService';
 
 interface Message {
     id: string;
@@ -74,6 +76,7 @@ const FinanceAdvisorChat: React.FC<FinanceAdvisorChatProps> = ({
     onOpenSimulator,
     initialMessage
 }) => {
+    const { user } = useAuth();
     const [internalIsOpen, setInternalIsOpen] = useState(false);
     const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
 
@@ -277,6 +280,18 @@ const FinanceAdvisorChat: React.FC<FinanceAdvisorChatProps> = ({
     }, [financialData, insights, messages.length, generateSmartGreeting, initialMessage]);
 
     useEffect(() => {
+        if (!user?.uid) return;
+        advisorHistoryService.load(user.uid, 'franchise')
+            .then(history => {
+                const turns: ChatTurn[] = history
+                    .slice(-20)
+                    .map(m => ({ role: m.role, parts: [{ text: m.text }] }));
+                seedGeminiHistory(turns);
+            })
+            .catch(() => {}); // silent fail
+    }, [user?.uid]);
+
+    useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
@@ -308,6 +323,16 @@ const FinanceAdvisorChat: React.FC<FinanceAdvisorChatProps> = ({
             };
 
             setMessages(prev => [...prev, assistantMessage]);
+
+            // Fire-and-forget — never await, never block UI
+            if (user?.uid) {
+                const now = new Date().toISOString();
+                const toSave: AdvisorMessage[] = [
+                    { role: 'user', text, timestamp: now },
+                    { role: 'model', text: response.content, timestamp: now },
+                ];
+                advisorHistoryService.append(user.uid, 'franchise', toSave).catch(() => {});
+            }
         } catch (error) {
             console.error('Error getting AI response:', error);
 
