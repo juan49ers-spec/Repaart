@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { generateAdvisorOpener } from '../../lib/gemini';
 import { useOutletContext } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useTaxCalculations } from '../../hooks/useTaxCalculations';
@@ -42,6 +43,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
     // State
     const [effectiveMonth, setMonthState] = useState(format(new Date(), 'yyyy-MM'));
     const [isAdvisorOpen, setIsAdvisorOpen] = useState(false);
+    const [advisorOpener, setAdvisorOpener] = useState<string | null>(null);
     const [monthlyInvoicedAmount, setMonthlyInvoicedAmount] = useState(0);
     const [invoicedIva, setInvoicedIva] = useState(0);
     const [currentInvoices, setCurrentInvoices] = useState<Invoice[]>([]);
@@ -113,6 +115,22 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
     }, [activeFranchiseId, effectiveMonth, getInvoices]);
 
     const totalExpenses = (report?.variable.total || 0) + (report?.fixed.total || 0);
+
+    // Pre-generate AI advisor opener in the background
+    useEffect(() => {
+        if (!report) return;
+        const financial = {
+            revenue,
+            expenses: totalExpenses,
+            profit: revenue - totalExpenses,
+            margin: revenue > 0 ? Math.round(((revenue - totalExpenses) / revenue) * 100) : 0,
+            orders,
+            month: displayedMonth,
+        };
+        generateAdvisorOpener(financial)
+            .then(opener => { if (opener) setAdvisorOpener(opener); })
+            .catch(() => {});
+    }, [report]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Expense Breakdown Preparation
     const fullExpenseBreakdown: BreakdownItem[] = useMemo(() => (report?.breakdown || [])
@@ -190,6 +208,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
                     month={displayedMonth}
                     isOpen={isAdvisorOpen}
                     onClose={() => setIsAdvisorOpen(false)}
+                    initialMessage={advisorOpener ?? undefined}
                 />
             )}
         </>

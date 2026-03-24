@@ -46,6 +46,7 @@ interface FinanceAdvisorChatProps {
     isOpen?: boolean;
     onClose?: () => void;
     onOpenSimulator?: () => void;
+    initialMessage?: string;
 }
 
 interface Insight {
@@ -70,7 +71,8 @@ const FinanceAdvisorChat: React.FC<FinanceAdvisorChatProps> = ({
     month: _month,
     isOpen: externalIsOpen,
     onClose,
-    onOpenSimulator
+    onOpenSimulator,
+    initialMessage
 }) => {
     const [internalIsOpen, setInternalIsOpen] = useState(false);
     const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
@@ -259,20 +261,20 @@ const FinanceAdvisorChat: React.FC<FinanceAdvisorChatProps> = ({
 
     useEffect(() => {
         if (messages.length === 0 && financialData) {
-            const initialMessage = generateSmartGreeting(financialData, insights);
+            const content = initialMessage ?? generateSmartGreeting(financialData, insights);
             setMessages([{
                 id: 'welcome',
                 type: 'assistant',
-                content: initialMessage,
+                content,
                 timestamp: new Date(),
-                suggestions: [
+                suggestions: initialMessage ? [] : [
                     '¿Cómo voy este mes?',
                     '¿Qué debo mejorar?',
                     '¿Llegaré a mi objetivo?',
-                ]
+                ],
             }]);
         }
-    }, [financialData, insights, messages.length, generateSmartGreeting]);
+    }, [financialData, insights, messages.length, generateSmartGreeting, initialMessage]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
