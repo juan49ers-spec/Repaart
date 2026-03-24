@@ -38,6 +38,20 @@ describe('analyzeExpenseAmount', () => {
     expect(result).toBeNull();
   });
 
+  it('falls back to second model if first fails', async () => {
+    const mockResult = { message: 'Este gasto en combustible es un 35% más alto.', level: 'high' as const };
+    (fetch as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ ok: false, status: 503 })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          candidates: [{ content: { parts: [{ text: JSON.stringify(mockResult) }] } }]
+        })
+      });
+    const result = await analyzeExpenseAmount('fuel', 400, 200);
+    expect(result).toEqual(mockResult);
+  });
+
   it('returns null when API key is missing', async () => {
     vi.stubEnv('VITE_GOOGLE_AI_KEY', '');
     const result = await analyzeExpenseAmount('fuel', 400, 200);
