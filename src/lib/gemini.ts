@@ -671,3 +671,97 @@ export const sendRiderMessage = async (
     updatedHistory: history,
   };
 };
+
+// ─── Seeds the module-level chatHistory for FinanceAdvisorChat ─────────────
+// SAFETY: Only call on component mount before any messages are sent.
+// Calling mid-conversation overwrites in-flight history.
+export const seedGeminiHistory = (turns: ChatTurn[]): void => {
+  chatHistory = [...turns];
+};
+
+// ─── Advisor Opener (Point 1) ───────────────────────────────────────────────
+export const generateAdvisorOpener = async (
+  context: DashboardAlertContext['financial']
+): Promise<string | null> => {
+  const key = import.meta.env.VITE_GOOGLE_AI_KEY || '';
+  if (!key) return null;
+
+  const prompt = `Eres el asesor financiero de un franquiciado de reparto.
+Analiza estos datos y genera UNA SOLA observación directa y cercana.
+
+DATOS: ${JSON.stringify(context)}
+
+REGLAS:
+- Elige el dato MÁS relevante (positivo o negativo).
+- Máximo 2 frases. Tono cercano, sin tecnicismos.
+- Termina con una pregunta abierta para invitar a continuar.
+- Ejemplos: "Este mes tu margen está al 12%, por debajo de tu objetivo del 15%. ¿Quieres que lo analicemos?" / "¡Buen mes! Llevas 9.200€, un 8% más que el anterior. ¿Revisamos qué ha funcionado bien?"
+
+Responde SOLO con el texto del mensaje, sin JSON ni formato.`;
+
+  const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+  for (const model of models) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+        }
+      );
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+      if (text.trim()) return text.trim();
+    } catch { continue; }
+  }
+  return null;
+};
+
+// ─── Expense Analyzer (Point 2b) ────────────────────────────────────────────
+export const analyzeExpenseAmount = async (
+  category: string,
+  amount: number,
+  historicalAvg: number
+): Promise<{ message: string; level: 'normal' | 'high' | 'very_high' } | null> => {
+  if (historicalAvg === 0 || amount <= historicalAvg * 1.2) return null;
+
+  const key = import.meta.env.VITE_GOOGLE_AI_KEY || '';
+  if (!key) return null;
+
+  const pctAbove = Math.round(((amount - historicalAvg) / historicalAvg) * 100);
+  const level: 'high' | 'very_high' = pctAbove > 50 ? 'very_high' : 'high';
+
+  const prompt = `Eres el asesor de una franquicia de reparto.
+Genera UNA frase informativa muy corta sobre un gasto inusualmente alto.
+
+Categoría: ${category}
+Importe actual: ${amount}€
+Media histórica (últimos 3 meses): ${historicalAvg}€
+Diferencia: +${pctAbove}%
+
+Responde SOLO con el JSON:
+{"message": "Una frase informativa corta (ej: Este gasto en combustible es un 35% más alto que tu media.)", "level": "${level}"}`;
+
+  const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+  for (const model of models) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+        }
+      );
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+      if (!text) continue;
+      const match = text.match(/\{[\s\S]*\}/);
+      if (match) return JSON.parse(match[0]) as { message: string; level: 'normal' | 'high' | 'very_high' };
+    } catch { continue; }
+  }
+  return null;
+};
