@@ -18,6 +18,9 @@ vi.mock('lucide-react', () => {
         ShieldAlert: null, Wrench: null, Users: null, PlayCircle: null, Zap: null, Heart: null, Star: null,
         Award: null, Info: null, AlertTriangle: null, CheckCircle: null, HelpCircle: null, Lightbulb: null,
         Target: null, Plus: null, Trash2: null, Pin: null, RefreshCw: null, Check: null, X: null,
+        Mail: null, Smartphone: null, AppWindow: null,
+        CheckCircle2: null, UserCheck: null, ExternalLink: null,
+        PartyPopper: null, ChevronRight: null, ChevronLeft: null, RotateCcw: null,
     };
     const mockIcons: any = {
         Image: (props: any) => <div data-testid="image-icon" {...props} />,

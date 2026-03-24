@@ -53,6 +53,8 @@ vi.mock('lucide-react', () => {
         Utensils: IconMock('utensils-icon'),
         Shield: IconMock('shield-icon'),
         Info: IconMock('info-icon'),
+        AlertTriangle: IconMock('alert-triangle-icon'),
+        Bot: IconMock('bot-icon'),
     };
 });
 

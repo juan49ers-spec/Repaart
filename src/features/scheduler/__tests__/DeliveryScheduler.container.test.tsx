@@ -14,6 +14,10 @@ vi.mock('lucide-react', () => ({
   XCircle: (props: any) => <div data-testid="x-circle-icon" {...props} />,
   PenLine: (props: any) => <div data-testid="penline-icon" {...props} />,
   Bike: (props: any) => <div data-testid="bike-icon" {...props} />,
+  CheckCircle: (props: any) => <div data-testid="check-circle-icon" {...props} />,
+  AlertTriangle: (props: any) => <div data-testid="alert-triangle-icon" {...props} />,
+  AlertCircle: (props: any) => <div data-testid="alert-circle-icon" {...props} />,
+  Bot: (props: any) => <div data-testid="bot-icon" {...props} />,
 }));
 
 // Mock all dependencies

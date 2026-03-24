@@ -9,15 +9,12 @@ import { vi } from 'vitest';
 import { TextEncoder, TextDecoder } from 'util';
 
 
-// Mock lucide-react icons
-vi.mock('lucide-react', () => ({
-  Loader2: () => null,
-  Eye: () => null,
-  EyeOff: () => null,
-  default: new Proxy({}, {
-    get: () => () => null
-  })
-}));
+// Mock lucide-react icons — use importOriginal so named exports remain available;
+// tests that need specific SVG rendering can override individual icons locally.
+vi.mock('lucide-react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('lucide-react')>();
+  return { ...actual };
+});
 
 // Polyfills for Firebase/Firestore in JSDOM
 if (typeof global.TextEncoder === 'undefined') {

@@ -18,6 +18,7 @@ import ConfirmationModal from '../../components/ui/feedback/ConfirmationModal';
 import { SheriffReportModal } from './SheriffReportModal';
 import { RecurringShiftModal } from './components/RecurringShiftModal';
 import { Shift } from '../../schemas/scheduler';
+import { ShiftCoverageInsight } from '../operations/components/ShiftCoverageInsight';
 
 
 import { useWeeklySchedule } from '../../hooks/useWeeklySchedule';
@@ -1269,7 +1270,7 @@ const DeliveryScheduler: React.FC<{
                                         );
                                     })
                                 ) : (
-                                    <div className="flex-1 flex transition-all min-w-[var(--day-min-width)]" style={{ '--day-min-width': `${dayViewMinWidth}px` } as React.CSSProperties}>
+                                    <div className="flex-1 flex transition-all min-w-[var(--day-min-width)]" {...({ style: { '--day-min-width': `${dayViewMinWidth}px` } as React.CSSProperties })}>
                                         {/* Timeline Header Day View - 24h with 15-min intervals */}
                                         <div
                                             className="prose prose-slate dark:prose-invert max-w-none font-serif"
@@ -1392,23 +1393,22 @@ const DeliveryScheduler: React.FC<{
                                                             isCurrentDay ? "bg-indigo-50/5" : ""
                                                         )}
                                                     >
-                                                        <div className="w-full h-full flex flex-col justify-center gap-0.5">
-                                                            {visualBlocks.map((block, idx) => {
-                                                                const primaryShift = block.shifts[0];
+                                                        <div className="w-full h-full flex flex-col gap-0.5 overflow-hidden py-0.5">
+                                                            {dayShifts.map((shift, idx) => {
                                                                 return (
-                                                                    <div key={block.ids[0]} className="w-full relative group/shift flex-1 min-h-0">
+                                                                    <div key={shift.id || `shift-${idx}`} className="w-full relative group/shift flex-1 min-h-[24px]">
                                                                         <DraggableShift
-                                                                            shift={primaryShift}
-                                                                            gridId={`shift-${primaryShift.id}-${idx}`}
+                                                                            shift={shift}
+                                                                            gridId={`shift-${shift.id}-${idx}`}
                                                                             onClick={(e) => {
                                                                                 e.stopPropagation();
-                                                                                handleEditShift(primaryShift);
+                                                                                handleEditShift(shift);
                                                                             }}
                                                                             onDoubleClick={(e) => {
                                                                                 e.stopPropagation();
-                                                                                handleEditShift(primaryShift);
+                                                                                handleEditShift(shift);
                                                                             }}
-                                                                            onContextMenu={(e) => { e.preventDefault(); handleContextMenu(e, primaryShift); }}
+                                                                            onContextMenu={(e) => { e.preventDefault(); handleContextMenu(e, shift); }}
                                                                         />
                                                                     </div>
                                                                 );
@@ -1418,7 +1418,7 @@ const DeliveryScheduler: React.FC<{
                                                 );
                                             })
                                         ) : (
-                                            <div className="w-full h-full relative min-w-[var(--day-min-width)]" style={{ '--day-min-width': `${dayViewMinWidth}px` } as React.CSSProperties}>
+                                            <div className="w-full h-full relative min-w-[var(--day-min-width)]" {...({ style: { '--day-min-width': `${dayViewMinWidth}px` } as React.CSSProperties })}>
                                                 {/* Grid Background - Nested Structure */}
                                                 <div className="absolute inset-0 flex pointer-events-none">
                                                     {dayStructure.map((hObj) => (
@@ -1469,10 +1469,12 @@ const DeliveryScheduler: React.FC<{
                                                             <div
                                                                 key={shift.id}
                                                                 className="absolute top-[2px] bottom-[2px] z-20 hover:z-50 transition-all duration-200 ease-out rounded-md overflow-hidden shadow-sm hover:shadow-lg hover:shadow-indigo-500/20 hover:scale-[1.02] hover:brightness-105 cursor-pointer ring-0 hover:ring-1 hover:ring-white/50 pointer-events-auto left-[var(--shift-left)] w-[var(--shift-width)]"
-                                                                style={{
-                                                                    '--shift-left': `${leftPct}%`,
-                                                                    '--shift-width': `${widthPct}%`
-                                                                } as React.CSSProperties}
+                                                                {...({
+                                                                    style: {
+                                                                        '--shift-left': `${leftPct}%`,
+                                                                        '--shift-width': `${widthPct}%`
+                                                                    } as React.CSSProperties
+                                                                })}
                                                             >
                                                                 <DraggableShift
                                                                     shift={shift}
@@ -1528,7 +1530,7 @@ const DeliveryScheduler: React.FC<{
                                         );
                                     })
                                 ) : (
-                                    <div className="flex-1 flex items-center px-6 py-2 min-w-[var(--day-min-width)]" style={{ '--day-min-width': `${dayViewMinWidth}px` } as React.CSSProperties}>
+                                    <div className="flex-1 flex items-center px-6 py-2 min-w-[var(--day-min-width)]" {...({ style: { '--day-min-width': `${dayViewMinWidth}px` } as React.CSSProperties })}>
                                         {(() => {
                                             const iso = toLocalDateString(selectedDate);
                                             const counts = coverage[iso] || Array(24).fill(0);
@@ -1889,6 +1891,13 @@ const DeliveryScheduler: React.FC<{
                     isDraft: true
                 } : null}
                 franchiseId={safeFranchiseId}
+            />
+            <ShiftCoverageInsight
+                shifts={mergedShifts.map((s: Shift) => ({
+                    startAt: s.startAt,
+                    endAt: s.endAt,
+                    riderName: s.riderName ?? undefined,
+                }))}
             />
         </div>
     );
