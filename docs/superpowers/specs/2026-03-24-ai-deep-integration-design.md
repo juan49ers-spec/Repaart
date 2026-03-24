@@ -65,9 +65,9 @@ Responde SOLO con el texto del mensaje, sin JSON ni formato.
 **Modelos:** `gemini-2.0-flash` con fallback a `gemini-1.5-flash`.
 **Fallo:** devuelve `null` — el chat abre con saludo genérico.
 
-### Cambios en el componente padre
+### Cambios en `FranchiseDashboard.tsx`
 
-El estado `isAdvisorOpen` y la apertura del chat viven en el componente padre del dashboard (el que renderiza `FinanceAdvisorChat`). Ahí se añade:
+El estado `isAdvisorOpen` y la apertura del chat viven en `src/features/franchise/FranchiseDashboard.tsx` (el componente que renderiza `FinanceAdvisorChat`). Ahí se añade:
 
 ```typescript
 const [advisorOpener, setAdvisorOpener] = useState<string | null>(null);
@@ -132,19 +132,22 @@ export const analyzeExpenseAmount = async (
 ): Promise<{ message: string; level: 'normal' | 'high' | 'very_high' } | null>
 ```
 
+**Fuente de `historicalAvg`:**
+La vista de registro de gastos (`ExpensesStep.tsx` dentro del flujo de entrada mensual) tiene acceso al historial de meses anteriores cargado desde Firestore. El componente padre calcula la media de los últimos 3 meses para cada categoría y la pasa al campo. Si no hay historial disponible (primer mes), `historicalAvg` es `0` y no se llama la función.
+
 **Comportamiento:**
-- Se dispara al hacer `onBlur` en el campo de importe, solo si `amount > historicalAvg * 1.2` (20% por encima de la media).
+- Se dispara al hacer `onBlur` en el campo de importe, solo si `historicalAvg > 0` y `amount > historicalAvg * 1.2` (20% por encima de la media).
 - Muestra una línea sutil debajo del campo: `ℹ️ "Este gasto en combustible es un 35% más alto que tu media de los últimos 3 meses."`
 - Nivel `very_high` (>50% sobre media): texto en ámbar.
 - Nivel `high` (20-50% sobre media): texto en gris informativo.
-- Si `amount <= historicalAvg * 1.2`: no muestra nada.
+- Si `amount <= historicalAvg * 1.2` o `historicalAvg === 0`: no muestra nada.
 - **No bloquea el formulario.** Es informativo.
 
 ---
 
 ### 2c — Formulario de Tickets de Soporte (destacada)
 
-**Dónde:** `NewTicketForm` o similar en el módulo de soporte. La función `suggestSupportSolution` ya existe en `gemini.ts`.
+**Dónde:** `src/features/franchise/support/NewTicketForm.tsx`. Esta vista ya integra `suggestSupportSolution` de forma inline (estado `suggestion`, renderizado dentro del formulario). El componente `TicketSolutionSuggestion` **reemplaza** ese código inline extrayéndolo a un componente reutilizable — se elimina el estado `suggestion` del formulario y se sustituye por `<TicketSolutionSuggestion />`.
 
 **Comportamiento:**
 - Al hacer `onBlur` en el campo de descripción (mínimo 20 caracteres escritos), se llama `suggestSupportSolution(subject, description)`.
@@ -167,11 +170,13 @@ interface TicketSolutionSuggestionProps {
 
 ### Estructura en Firestore
 
+Ambas rutas usan exactamente la misma estructura de `AdvisorMessage`. Son documentos separados para que los historiales del franquiciado y del rider estén aislados.
+
 ```
-users/{userId}/advisorHistory  (documento)
+users/{userId}/advisorHistory  (documento — franquiciado)
   messages: AdvisorMessage[]   (array, crece indefinidamente)
 
-users/{userId}/riderAdvisorHistory  (documento)
+users/{userId}/riderAdvisorHistory  (documento — rider)
   messages: AdvisorMessage[]
 
 interface AdvisorMessage {
@@ -238,10 +243,10 @@ Mismo patrón con `type: 'rider'`. El `chatHistory` de tipo `ChatTurn[]` se inic
 | Archivo | Cambio |
 |---------|--------|
 | `src/lib/gemini.ts` | Añadir `generateAdvisorOpener()` y `analyzeExpenseAmount()` |
-| Componente padre del dashboard | Añadir pre-generación del opener en background |
+| `src/features/franchise/FranchiseDashboard.tsx` | Añadir pre-generación del opener en background |
 | `src/features/franchise/finance/FinanceAdvisorChat.tsx` | Prop `initialMessage`, carga historial Firestore |
-| Formulario de gastos | Integrar `analyzeExpenseAmount` en onBlur |
-| Formulario de nuevo ticket | Integrar `TicketSolutionSuggestion` |
+| `src/features/franchise/finance/components/ExpensesStep.tsx` | Integrar `analyzeExpenseAmount` en onBlur de cada campo de gasto |
+| `src/features/franchise/support/NewTicketForm.tsx` | Reemplazar lógica inline de sugerencia con `<TicketSolutionSuggestion />` |
 | `src/features/rider/advisor/RiderAdvisorView.tsx` | Carga y guarda historial Firestore |
 
 ---
