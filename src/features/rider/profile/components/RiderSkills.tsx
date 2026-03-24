@@ -77,7 +77,7 @@ const RiderSkills: React.FC<RiderSkillsProps> = ({ skills }) => {
 
     if (!skills || skills.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-12 text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+            <div className="flex flex-col items-center justify-center py-12 text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                 <Star size={48} className="mb-4 opacity-20" />
                 <p className="text-sm font-medium">No hay habilidades registradas</p>
                 <p className="text-xs opacity-60 mt-1">Las habilidades se asignan desde administración</p>
@@ -93,8 +93,8 @@ const RiderSkills: React.FC<RiderSkillsProps> = ({ skills }) => {
 
                 return (
                     <div key={category.id} className="space-y-3">
-                        <h3 className="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                            <span className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                        <h3 className="flex items-center gap-2 text-sm font-bold text-slate-700 uppercase tracking-wider">
+                            <span className="p-1.5 rounded-lg bg-slate-100 text-slate-500">
                                 {category.icon}
                             </span>
                             {category.label}
@@ -112,8 +112,8 @@ const RiderSkills: React.FC<RiderSkillsProps> = ({ skills }) => {
 
             {groupedSkills['other'] && groupedSkills['other'].length > 0 && (
                 <div className="space-y-3">
-                    <h3 className="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                        <span className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                    <h3 className="flex items-center gap-2 text-sm font-bold text-slate-700 uppercase tracking-wider">
+                        <span className="p-1.5 rounded-lg bg-slate-100 text-slate-500">
                             {OTHER_CATEGORY.icon}
                         </span>
                         {OTHER_CATEGORY.label}

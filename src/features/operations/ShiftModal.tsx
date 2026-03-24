@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { X, Truck, Clock, Plus, Trash2, Calendar, AlertCircle, Save, ArrowRight, ChevronRight, Loader2 } from 'lucide-react';
+import { X, Truck, Clock, Calendar, AlertCircle, ArrowRight, ChevronRight, Loader2 } from 'lucide-react';
 import { toLocalDateString, toLocalISOStringWithOffset } from '../../utils/dateUtils';
-import { getRiderColor } from '../../utils/riderColors';
 import { getRiderInitials } from '../../utils/colorPalette';
 import { cn } from '../../lib/utils';
 
@@ -118,18 +117,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
     const endTimeStr = watch('endTime');
     const selectedRiderId = watch('riderId');
 
-    // [NEW] Real-time Duration Calculation
-    const currentDuration = React.useMemo(() => {
-        if (!startDate || !startTimeStr || !endDate || !endTimeStr) return 0;
-        try {
-            const start = new Date(`${startDate}T${startTimeStr}`).getTime();
-            const end = new Date(`${endDate}T${endTimeStr}`).getTime();
-            if (isNaN(start) || isNaN(end) || start >= end) return 0;
-            return (end - start) / (1000 * 60 * 60);
-        } catch (e) {
-            return 0;
-        }
-    }, [startDate, startTimeStr, endDate, endTimeStr]);
+    // Duration calculation was removed since it's no longer shown in UI
 
     // Sync EndDate when StartDate changes (User Convenience)
     useEffect(() => {
@@ -138,7 +126,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
         }
     }, [startDate, setValue]);
 
-    const isRiderBusy = (riderId: string) => {
+    const isRiderBusy = React.useCallback((riderId: string) => {
         if (!existingShifts || !startDate || !startTimeStr || !endDate || !endTimeStr) return false;
 
         const currentStart = new Date(`${startDate}T${startTimeStr}`).getTime();
@@ -155,7 +143,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
             // Overlap check: (StartA < EndB) && (EndA > StartB)
             return (currentStart < sEnd) && (currentEnd > sStart);
         });
-    };
+    }, [existingShifts, startDate, startTimeStr, endDate, endTimeStr, initialData?.shiftId]);
 
     // [SMART SUGGESTIONS] Calculate rider suggestions based on availability and workload
     const riderSuggestions = React.useMemo(() => {
@@ -169,7 +157,7 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
             if (!isNaN(start) && !isNaN(end) && end > start) {
                 shiftDuration = (end - start) / (1000 * 60 * 60);
             }
-        } catch (e) {
+        } catch {
             shiftDuration = 0;
         }
         
@@ -311,185 +299,109 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-lg sm:max-w-xl rounded-[2rem] shadow-2xl border border-slate-200/60 dark:border-slate-800/60 flex flex-col overflow-hidden max-h-[85vh] ring-1 ring-black/5">
+        <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-[2px] z-[100] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-[360px] aspect-square rounded-[36px] shadow-2xl flex flex-col overflow-hidden">
 
-                {/* HEADER (Premium Ribbon Look) */}
-                <div className="relative px-5 pt-5 pb-4 md:px-6 md:pt-6 md:pb-4 border-b border-slate-100 dark:border-slate-800/50">
+                {/* HEADER */}
+                <div className="relative px-5 pt-5 pb-2">
                     <div className="flex justify-between items-start">
-                        <div className="flex items-center gap-2 md:gap-4">
-                            <div className={cn(
-                                "p-2 md:p-2.5 rounded-2xl shadow-inner-sm transition-all duration-300",
-                                initialData
-                                    ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400 ring-1 ring-indigo-100 dark:ring-indigo-800/50"
-                                    : "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400 ring-1 ring-emerald-100 dark:ring-emerald-800/50"
-                            )}>
-                                {initialData ? <Clock className="w-5 h-5 md:w-6 md:h-6" /> : <Plus className="w-5 h-5 md:w-6 md:h-6" />}
-                            </div>
-                            <div>
-                                <h2 className="text-base md:text-lg lg:text-xl font-semibold tracking-tight text-slate-800 dark:text-white">
-                                    {initialData ? 'Editar Turno' : 'Nuevo Turno'}
-                                </h2>
-                                <p className="text-[9px] md:text-[10px] font-medium uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500 mt-1">
-                                    Despacho • Repaart
-                                </p>
-                            </div>
+                        <div className="flex flex-col">
+                            <h2 className="text-[20px] font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
+                                {initialData ? 'Editar Turno' : 'Nuevo Turno'}
+                            </h2>
+                            <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
+                                {initialData ? 'Modifica los detalles del turno' : 'Planifica la disponibilidad'}
+                            </p>
                         </div>
                         <button
                             onClick={onClose}
                             disabled={isSaving}
-                            className="p-2 rounded-full text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all active:scale-90"
+                            className="p-1.5 -mr-1 -mt-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                             title="Cerrar modal"
                         >
-                            <X size={20} />
+                            <X size={20} strokeWidth={2.5} />
                         </button>
                     </div>
                 </div>
 
-                {/* BODY */}
-                <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+                {/* BODY (Scrollable si es necesario, pero intentando ajustar) */}
+                <div className="flex-1 overflow-y-auto px-5 py-1 space-y-4 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700">
 
                     {/* ERROR ALERT */}
                     {error && (
-                        <div className="flex items-start gap-3 p-4 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-2xl text-sm border border-rose-100 dark:border-rose-900/30 animate-in slide-in-from-top-2">
-                            <AlertCircle className="w-5 h-5 shrink-0" />
-                            <p className="font-medium">{error}</p>
+                        <div className="flex items-start gap-2 p-3 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-xl text-[12px] font-medium animate-in slide-in-from-top-2">
+                            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                            <p>{error}</p>
                         </div>
                     )}
 
                     {/* CHANGE REQUEST HIGHLIGHT */}
                     {initialData?.changeRequested && (
-                        <div className="flex flex-col gap-2 p-5 bg-amber-50/50 dark:bg-amber-900/10 text-amber-800 dark:text-amber-400 rounded-2xl text-sm border border-amber-200/50 dark:border-amber-900/30 shadow-sm">
-                            <div className="flex items-center gap-2 font-bold uppercase tracking-widest text-[10px]">
+                        <div className="flex flex-col gap-1.5 p-3 bg-amber-50 dark:bg-amber-900/10 text-amber-800 dark:text-amber-400 rounded-xl text-[12px] font-medium shadow-sm">
+                            <div className="flex items-center gap-1.5">
                                 <AlertCircle className="w-4 h-4" />
-                                Solicitud de Cambio
+                                <span>Solicitud de Cambio Pendiente</span>
                             </div>
-                            <p className="font-medium italic text-slate-600 dark:text-slate-300 bg-white/40 dark:bg-black/20 p-3 rounded-xl border border-amber-100 dark:border-amber-900/20">
+                            <p className="text-amber-700/80 dark:text-amber-500/80 italic pl-5 line-clamp-2">
                                 &quot;{initialData.changeReason || 'Sin motivo especificado'}&quot;
                             </p>
                         </div>
                     )}
 
-                    {/* SMART SUGGESTIONS */}
-                    {!initialData && riderSuggestions.length > 0 && (
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <label className="text-[10px] font-semibold uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                                    </svg>
-                                    Sugerencias Inteligentes
-                                </label>
-                                <span className="text-[9px] text-slate-400">
+                    {/* SELECTOR DE RIDER */}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <label className="text-[12px] font-bold text-slate-900 dark:text-slate-100">
+                                Asignar a...
+                            </label>
+                            {!initialData && riderSuggestions.length > 0 && (
+                                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-400 px-2 py-0.5 rounded-full">
                                     {riderSuggestions.length} disponibles
                                 </span>
-                            </div>
-                            <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-thin">
-                                {riderSuggestions.slice(0, 5).map((rider) => {
-                                    const color = getRiderColor(rider.id);
-                                    const isSelected = selectedRiderId === rider.id;
-                                    return (
-                                        <button
-                                            key={rider.id}
-                                            type="button"
-                                            onClick={() => setValue('riderId', rider.id)}
-                                            className={cn(
-                                                "flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border transition-all hover:scale-105",
-                                                isSelected 
-                                                    ? "bg-emerald-50 border-emerald-300 ring-2 ring-emerald-500/20" 
-                                                    : "bg-white border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/30",
-                                                rider.wouldExceedLimit && "border-amber-200 bg-amber-50/30"
-                                            )}
-                                        >
-                                            <div className={cn(
-                                                "w-8 h-8 rounded-xl flex items-center justify-center text-[10px] font-bold",
-                                                color.bg, color.text
-                                            )}>
-                                                {getRiderInitials(rider.fullName)}
-                                            </div>
-                                            <div className="text-left">
-                                                <p className="text-[11px] font-semibold text-slate-700 truncate max-w-[80px]">
-                                                    {rider.fullName.split(' ')[0]}
-                                                </p>
-                                                <div className="flex items-center gap-1">
-                                                    <span className={cn(
-                                                        "text-[9px] font-medium",
-                                                        rider.weeklyHours > 35 ? "text-amber-600" : "text-emerald-600"
-                                                    )}>
-                                                        {rider.weeklyHours.toFixed(1)}h
-                                                    </span>
-                                                    <span className="text-[9px] text-slate-400">/ sem</span>
-                                                </div>
-                                            </div>
-                                            {rider.wouldExceedLimit && (
-                                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center text-[8px] text-white font-bold" title="Cerca del límite">
-                                                    !
-                                                </span>
-                                            )}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                            <p className="text-[9px] text-slate-400 italic">
-                                Ordenados por disponibilidad y carga de trabajo (menos horas primero)
-                            </p>
+                            )}
                         </div>
-                    )}
 
-                    {/* SELECTOR DE RIDER (Visual Grid) */}
-                    <div className="space-y-4">
-                        <label className="text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">
-                            Asignar Rider
-                        </label>
-                        <div className="flex flex-wrap gap-3 sm:gap-4">
-                            {riders.map(r => {
-                                const color = getRiderColor(r.id);
-                                const isSelected = selectedRiderId === r.id;
+                        <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-none snap-x">
+                            {Array.from(new Set([...riderSuggestions.map(r=>r.id), ...riders.map(r=>r.id)])).map(id => {
+                                const r = riders.find(rider => rider.id === id);
+                                if (!r) return null;
                                 const isBusy = isRiderBusy(r.id);
+                                const isSelected = selectedRiderId === r.id;
+                                const isSuggested = riderSuggestions.some(s => s.id === r.id);
+                                
                                 return (
                                     <button
                                         key={r.id}
                                         type="button"
                                         onClick={() => setValue('riderId', r.id)}
                                         className={cn(
-                                            "group relative flex flex-col items-center gap-2 transition-all p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 min-w-0",
-                                            isSelected ? "scale-105 bg-indigo-50/50 dark:bg-indigo-900/20" : "hover:scale-105"
+                                            "snap-start flex-shrink-0 flex flex-col items-center justify-center gap-1.5 transition-all p-2 rounded-[20px] w-[64px] relative border border-transparent",
+                                            isSelected 
+                                                ? "bg-slate-900 text-white shadow-md dark:bg-white dark:text-slate-900" 
+                                                : "bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-100 dark:border-slate-700",
+                                            isBusy && !isSelected && "opacity-40"
                                         )}
-                                        title={r.fullName + (isBusy ? ' (Ocupado)' : '')}
                                     >
                                         <div className={cn(
-                                            "w-12 sm:w-14 h-12 sm:h-14 rounded-2xl flex items-center justify-center text-xs sm:text-base font-bold transition-all relative overflow-hidden shadow-sm shrink-0",
-                                            color.bg, color.text,
-                                            isSelected
-                                                ? "shadow-[0_0_20px_-5px_rgba(99,102,241,0.5)] ring-2 ring-indigo-500 dark:ring-indigo-400 scale-110"
-                                                : "opacity-60 grayscale-[0.3] hover:grayscale-0 hover:opacity-100 ring-1 ring-slate-100 dark:ring-slate-800",
-                                            isBusy && !isSelected && "opacity-30 grayscale contrast-75"
+                                            "w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold transition-all shadow-sm ring-1 ring-black/5 dark:ring-white/10",
+                                            isSelected 
+                                                ? "bg-white/20 dark:bg-black/10 text-white dark:text-slate-900" 
+                                                : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
                                         )}>
                                             {getRiderInitials(r.fullName)}
-                                            {isSelected && (
-                                                <div className="absolute right-1.5 top-1.5 w-2 h-2 rounded-full bg-white shadow-sm ring-1 ring-indigo-100" />
-                                            )}
-                                            {isBusy && (
-                                                <div className="absolute inset-0 bg-rose-500/10 flex items-center justify-center backdrop-blur-[1px]">
-                                                    <div className="w-full h-px bg-rose-500/50 rotate-45" />
-                                                    <div className="absolute w-full h-px bg-rose-500/50 -rotate-45" />
-                                                </div>
-                                            )}
                                         </div>
-                                        <div className="flex flex-col items-center gap-0.5 min-w-0">
-                                            <span className={cn(
-                                                "text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-center break-words max-w-[60px] sm:max-w-[72px] leading-tight truncate",
-                                                isSelected ? "text-indigo-600 dark:text-indigo-400" : "text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300",
-                                                isBusy && "text-rose-400"
-                                            )}>
+                                        <div className="flex flex-col items-center w-full relative">
+                                            <span className="text-[10px] font-bold truncate w-full text-center leading-tight">
                                                 {r.fullName.split(' ')[0]}
                                             </span>
-                                            {isBusy && (
-                                                <span className="px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-900/30 text-[7px] font-extrabold text-rose-600 dark:text-rose-400 uppercase tracking-wider border border-rose-200 dark:border-rose-800">
-                                                    Ocupado
-                                                </span>
-                                            )}
                                         </div>
+                                        {/* Badge Indicador Sutil */}
+                                        {isSuggested && !isSelected && !isBusy && (
+                                            <div className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full border border-white bg-emerald-500 dark:border-slate-900" />
+                                        )}
+                                        {isBusy && !isSelected && (
+                                            <div className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full border border-white bg-rose-400 dark:border-slate-900" />
+                                        )}
                                     </button>
                                 );
                             })}
@@ -497,97 +409,69 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                         <input type="hidden" {...register('riderId', { required: true })} />
                     </div>
 
-                    <div className="h-px bg-slate-100 dark:bg-slate-800/50" />
-
-                    {/* DATES & TIME RANGE (Unified) */}
-                    <div className="space-y-4">
-                        <label className="text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">
-                            Horario y Fecha
-                        </label>
-                        <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-3xl p-6 border border-slate-100 dark:border-slate-800/50 shadow-inner-sm">
-                            <div className="flex flex-col gap-6">
-                                {/* Date Input */}
-                                <div className="relative group">
-                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors">
-                                        <Calendar size={18} />
-                                    </div>
-                                    <input
-                                        {...register('startDate')}
-                                        type="date"
-                                        className="w-full bg-white dark:bg-slate-800 border-none rounded-2xl pl-12 pr-4 py-4 text-sm font-semibold outline-none ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
-                                    />
+                    {/* SETTINGS GROUP - APPLE STYLE */}
+                    <div className="bg-[#FCFCFD] dark:bg-slate-800/40 rounded-[20px] border border-slate-100 dark:border-slate-700/50 flex flex-col">
+                        
+                        {/* Fecha */}
+                        <div className="flex justify-between items-center px-4 py-3.5 border-b border-slate-100 dark:border-slate-700/50">
+                            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2.5">
+                                <div className="p-1.5 bg-rose-100/80 dark:bg-rose-500/20 text-rose-500 dark:text-rose-400 rounded-[8px]">
+                                    <Calendar size={15} strokeWidth={2.5} />
                                 </div>
+                                Fecha
+                            </label>
+                            <input
+                                {...register('startDate')}
+                                type="date"
+                                className="bg-transparent border-none text-[13px] font-bold text-right outline-none text-slate-900 dark:text-white focus:ring-0 p-0"
+                            />
+                        </div>
 
-                                {/* Start - End Time Range */}
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex-1 relative group">
-                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors">
-                                                <Clock size={16} />
-                                            </div>
-                                            <input
-                                                {...register('startTime')}
-                                                type="time"
-                                                className="w-full bg-white dark:bg-slate-800 border-none rounded-2xl pl-12 pr-4 py-4 text-sm font-semibold outline-none ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-emerald-500 shadow-sm transition-all"
-                                            />
-                                        </div>
-                                        <div className="text-slate-300 dark:text-slate-700 flex flex-col items-center">
-                                            <ArrowRight size={16} strokeWidth={2.5} />
-                                            <div className="h-4 w-px bg-current mt-1" />
-                                        </div>
-                                        <div className="flex-1 relative group">
-                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-rose-500 transition-colors">
-                                                <Clock size={16} />
-                                            </div>
-                                            <input
-                                                {...register('endTime')}
-                                                type="time"
-                                                className="w-full bg-white dark:bg-slate-800 border-none rounded-2xl pl-12 pr-4 py-4 text-sm font-semibold outline-none ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-rose-500 shadow-sm transition-all"
-                                            />
-                                        </div>
+                        {/* Hora */}
+                        <div className="flex flex-col px-4 py-3.5 gap-3 border-b border-slate-100 dark:border-slate-700/50">
+                            <div className="flex justify-between items-center">
+                                <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2.5">
+                                    <div className="p-1.5 bg-amber-100/80 dark:bg-orange-500/20 text-amber-500 dark:text-orange-400 rounded-[8px]">
+                                        <Clock size={15} strokeWidth={2.5} />
                                     </div>
-
-                                    {/* Duration Indicator */}
-                                    {currentDuration > 0 && (
-                                        <div className="flex justify-center">
-                                            <div className="px-4 py-2 bg-indigo-50/50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100/50 dark:border-indigo-800/30 flex items-center gap-3 animate-in zoom-in-95 duration-200">
-                                                <div className="flex flex-col items-end leading-none">
-                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-400">Duración</span>
-                                                    <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">{currentDuration.toFixed(1)}h</span>
-                                                </div>
-                                                <div className="w-px h-6 bg-indigo-200/50 dark:bg-indigo-800/50" />
-                                                <div className="flex flex-col items-start leading-none opacity-60">
-                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Carga</span>
-                                                    <span className="text-sm font-bold text-slate-600 dark:text-slate-300">{Math.round((currentDuration / 8) * 100)}% Jornada</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                                    Horario
+                                </label>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    {...register('startTime')}
+                                    type="time"
+                                    className="flex-1 bg-slate-100/60 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700 rounded-[10px] px-3 py-2.5 text-[13px] font-semibold text-center outline-none focus:ring-1 focus:ring-slate-300 transition-all text-slate-900 dark:text-white"
+                                />
+                                <span className="text-slate-300 dark:text-slate-600 shrink-0"><ArrowRight size={14} strokeWidth={2.5} /></span>
+                                <input
+                                    {...register('endTime')}
+                                    type="time"
+                                    className="flex-1 bg-slate-100/60 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700 rounded-[10px] px-3 py-2.5 text-[13px] font-semibold text-center outline-none focus:ring-1 focus:ring-slate-300 transition-all text-slate-900 dark:text-white"
+                                />
                             </div>
                         </div>
-                    </div>
 
-                    {/* MOTO SELECT (Elegante) */}
-                    <div className="space-y-3">
-                        <label className="text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">
-                            Vehículo Asignado
-                        </label>
-                        <div className="relative group">
-                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 transition-colors">
-                                <Truck size={18} />
-                            </div>
-                            <select
-                                {...register('motoId')}
-                                className="w-full bg-white dark:bg-slate-800 border-none rounded-2xl pl-12 pr-10 py-4 text-sm font-semibold outline-none ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-orange-500 appearance-none shadow-sm transition-all"
-                            >
-                                <option value="">Sin vehículo (Reparto a pie / Propio)</option>
-                                {motos.map(m => (
-                                    <option key={m.id} value={m.id}>{m.licensePlate} • {m.model}</option>
-                                ))}
-                            </select>
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-300">
-                                <ChevronRight size={16} className="rotate-90" />
+                        {/* Vehículo */}
+                        <div className="flex justify-between items-center px-4 py-3.5">
+                            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2.5">
+                                <div className="p-1.5 bg-indigo-100/80 dark:bg-indigo-500/20 text-indigo-500 dark:text-indigo-400 rounded-[8px]">
+                                    <Truck size={15} strokeWidth={2.5} />
+                                </div>
+                                Moto
+                            </label>
+                            <div className="relative flex items-center">
+                                <select
+                                    {...register('motoId')}
+                                    className="bg-transparent border-none text-[13px] font-bold text-right outline-none text-slate-500 hover:text-slate-700 dark:text-slate-400 focus:ring-0 p-0 pr-4 appearance-none cursor-pointer"
+                                    dir="rtl"
+                                >
+                                    <option value="">A pie / Propio</option>
+                                    {motos.map(m => (
+                                        <option key={m.id} value={m.id}>{m.licensePlate}</option>
+                                    ))}
+                                </select>
+                                <ChevronRight size={14} className="absolute right-0 text-slate-300 dark:text-slate-600 pointer-events-none" />
                             </div>
                         </div>
                     </div>
@@ -595,51 +479,45 @@ const ShiftModal: React.FC<ShiftModalProps> = ({
                 </div>
 
                 {/* FOOTER */}
-                <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900 flex justify-between items-center">
-                    <div>
-                        {initialData && onDelete && (
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    if (confirm('¿Eliminar este turno permanentemente?')) {
-                                        const deleteId = initialData.shiftId || initialData.id;
-                                        if (deleteId) {
-                                            onDelete(deleteId);
-                                            onClose();
-                                        }
+                <div className="px-5 py-4 mt-auto flex items-center justify-between">
+                    {initialData && onDelete ? (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (confirm('¿Eliminar este turno permanentemente?')) {
+                                    const deleteId = initialData.shiftId || initialData.id;
+                                    if (deleteId) {
+                                        onDelete(deleteId);
+                                        onClose();
                                     }
-                                }}
-                                disabled={isSaving}
-                                className="flex items-center gap-2 px-4 py-2.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/40 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all active:scale-90"
-                            >
-                                <Trash2 size={16} strokeWidth={2.5} />
-                                <span className="hidden sm:inline">Eliminar</span>
-                            </button>
-                        )}
-                    </div>
-                    <div className="flex gap-4">
+                                }
+                            }}
+                            disabled={isSaving}
+                            className="text-[13px] text-rose-500 font-semibold hover:text-rose-600 dark:hover:text-rose-400 transition-colors bg-transparent border-none p-0 mx-2"
+                        >
+                            Eliminar
+                        </button>
+                    ) : (
                         <button
                             type="button"
                             onClick={onClose}
-                            disabled={isSaving}
-                            className="px-6 py-2.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-semibold text-sm transition-all active:scale-95"
+                            className="text-[13px] text-slate-500 dark:text-slate-400 font-semibold hover:text-slate-700 transition-colors bg-transparent border-none p-0 mx-2"
                         >
                             Cancelar
                         </button>
-                        <button
-                            onClick={handleSubmit(onSubmit)}
-                            disabled={isSaving}
-                            className={cn(
-                                "flex items-center gap-2 px-10 py-3 rounded-2xl font-bold text-sm uppercase tracking-widest transition-all transform active:scale-95 shadow-xl disabled:opacity-50",
-                                initialData
-                                    ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/20"
-                                    : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20"
-                            )}
-                        >
-                            {isSaving ? <Loader2 className="animate-spin w-4 h-4" /> : <Save className="w-4 h-4" strokeWidth={2.5} />}
-                            {isSaving ? 'Enviando...' : 'Guardar'}
-                        </button>
-                    </div>
+                    )}
+                    
+                    <button
+                        onClick={handleSubmit(onSubmit)}
+                        disabled={isSaving}
+                        className={cn(
+                            "flex items-center justify-center gap-1.5 px-6 py-2.5 rounded-[12px] font-bold text-[13px] text-white transition-all transform active:scale-95 shadow-sm flex-1 ml-2",
+                            isSaving ? "opacity-70 bg-[#0F172A] dark:bg-white dark:text-[#0F172A]" : "bg-[#0F172A] hover:bg-slate-800 dark:bg-white dark:text-[#0F172A] dark:hover:bg-slate-100"
+                        )}
+                    >
+                        {isSaving ? <Loader2 className="animate-spin w-4 h-4" /> : null}
+                        {isSaving ? 'Guardando...' : initialData ? 'Guardar Cambios' : 'Crear Turno'}
+                    </button>
                 </div>
             </div>
         </div>

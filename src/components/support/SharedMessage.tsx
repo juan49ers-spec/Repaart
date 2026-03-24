@@ -6,7 +6,7 @@ import { Timestamp } from 'firebase/firestore';
 export interface Message {
     id: string;
     text: string;
-    senderRole: 'admin' | 'user' | 'franchise' | 'rider' | 'system';
+    senderRole: 'admin' | 'user' | 'franchise' | 'rider' | 'system' | 'agent';
     senderName?: string;
     isInternal?: boolean;
     createdAt?: string | number | Timestamp;
@@ -61,6 +61,7 @@ export const formatRelativeTime = (date: string | number | Timestamp | undefined
 
 const SharedMessage: React.FC<SharedMessageProps> = memo(({ msg }) => {
     const senderIsAdmin = msg.senderRole === 'admin';
+    const senderIsAgent = msg.senderRole === 'agent';
     const senderIsSystem = msg.senderRole === 'system';
     const isInternal = msg.isInternal;
 
@@ -83,25 +84,25 @@ const SharedMessage: React.FC<SharedMessageProps> = memo(({ msg }) => {
     return (
         <div className={cn(
             "flex w-full animate-in fade-in slide-in-from-bottom-2 duration-300",
-            senderIsAdmin ? 'justify-end' : 'justify-start'
+            (senderIsAdmin || senderIsAgent) ? 'justify-end' : 'justify-start'
         )}>
             <div className={cn(
                 "max-w-[90%] md:max-w-[80%] lg:max-w-[75%] transition-all shadow-sm",
-                senderIsAdmin
+                (senderIsAdmin || senderIsAgent)
                     ? 'flex flex-col items-end'
                     : 'flex flex-col items-start'
             )}>
                 <div className={cn(
                     "flex items-center gap-2 mb-2 px-1",
-                    senderIsAdmin ? 'justify-end' : 'justify-start'
+                    (senderIsAdmin || senderIsAgent) ? 'justify-end' : 'justify-start'
                 )}>
                     <span className={cn(
                         "text-[10px] font-semibold uppercase tracking-wider",
-                        senderIsAdmin
-                            ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded-lg'
-                            : 'text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/50 px-2 py-0.5 rounded-lg'
+                        senderIsAdmin && 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded-lg',
+                        senderIsAgent && 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-200 dark:border-emerald-500/20',
+                        (!senderIsAdmin && !senderIsAgent) && 'text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/50 px-2 py-0.5 rounded-lg'
                     )}>
-                        {senderIsAdmin ? 'Soporte' : (msg.senderName || 'Tú')}
+                        {senderIsAdmin ? 'Soporte' : senderIsAgent ? '✨ IA de Servicio' : (msg.senderName || 'Tú')}
                     </span>
                     <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide">
                         {formatRelativeTime(msg.createdAt || msg.timestamp)}
@@ -110,14 +111,14 @@ const SharedMessage: React.FC<SharedMessageProps> = memo(({ msg }) => {
 
                 <div className={cn(
                     "p-5 rounded-2xl text-sm leading-relaxed backdrop-blur-sm transition-all",
-                    senderIsAdmin
-                        ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 dark:from-indigo-600 dark:to-blue-700 text-white shadow-md shadow-indigo-500/20 rounded-br-md'
-                        : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-sm rounded-bl-md'
+                    senderIsAdmin && 'bg-gradient-to-br from-indigo-600 to-indigo-700 dark:from-indigo-600 dark:to-blue-700 text-white shadow-md shadow-indigo-500/20 rounded-br-md',
+                    senderIsAgent && 'bg-gradient-to-br from-emerald-600 to-teal-700 dark:from-emerald-700 dark:to-teal-800 text-white shadow-md shadow-emerald-500/20 rounded-br-md',
+                    (!senderIsAdmin && !senderIsAgent) && 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-sm rounded-bl-md'
                 )}>
                     <div
                         className={cn(
                             "prose prose-sm",
-                            senderIsAdmin ? 'prose-invert' : 'prose-slate dark:prose-invert'
+                            (senderIsAdmin || senderIsAgent) ? 'prose-invert' : 'prose-slate dark:prose-invert'
                         )}
                         dangerouslySetInnerHTML={{ __html: msg.text }}
                     />

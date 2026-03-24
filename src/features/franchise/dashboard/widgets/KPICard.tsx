@@ -171,7 +171,7 @@ const KPICard: React.FC<KPICardProps> = ({
                                 goalProgress >= 100 ? 'bg-emerald-500' :
                                     goalProgress >= 75 ? 'bg-rose-500' : 'bg-amber-500'
                             )}
-                            style={{ width: `${goalProgress}%` }}
+                            {...({ style: { width: `${goalProgress}%` } })}
                         />
                     </div>
                 </div>

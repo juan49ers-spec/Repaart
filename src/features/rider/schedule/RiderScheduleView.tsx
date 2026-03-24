@@ -120,26 +120,26 @@ const RiderScheduleView: React.FC = () => {
     return (
         <div className="flex flex-col gap-4 pb-20">
             {/* COMPACT DASHBOARD HEADER */}
-            <div className="sticky top-0 z-30 pt-4 pb-2 bg-[#09090b]">
-                <div className="mx-3 rounded-[24px] bg-[#121214] border border-white/5 shadow-2xl relative overflow-hidden h-[72px] flex items-center px-4">
+            <div className="sticky top-0 z-30 pt-4 pb-2 bg-[#f4f7fb]/90 backdrop-blur-md">
+                <div className="mx-6 rounded-[2rem] bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden h-[72px] flex items-center px-4">
 
                     {/* CENTERED NAVIGATION GROUP (Absolute Center) */}
                     <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-4 z-20">
                         <button
                             onClick={handlePrevWeek}
-                            className="w-10 h-10 flex items-center justify-center text-zinc-500 hover:text-white transition-colors active:scale-90 rounded-full hover:bg-white/5"
+                            className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-800 transition-colors active:scale-90 rounded-full hover:bg-slate-50"
                             aria-label="Semana anterior"
                         >
                             <ChevronLeft size={20} />
                         </button>
 
-                        <span className="text-lg font-bold text-white tracking-tight capitalize min-w-[140px] text-center">
+                        <span className="text-lg font-black text-slate-800 tracking-tight capitalize min-w-[140px] text-center">
                             {dateRangeLabel}
                         </span>
 
                         <button
                             onClick={handleNextWeek}
-                            className="w-10 h-10 flex items-center justify-center text-zinc-500 hover:text-white transition-colors active:scale-90 rounded-full hover:bg-white/5"
+                            className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-800 transition-colors active:scale-90 rounded-full hover:bg-slate-50"
                             aria-label="Semana siguiente"
                         >
                             <ChevronRight size={20} />
@@ -147,9 +147,9 @@ const RiderScheduleView: React.FC = () => {
                     </div>
 
                     {/* Hours Metric (Pushed to the far right) */}
-                    <div className="ml-auto z-20 flex flex-col items-end justify-center">
-                        <span className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em] leading-none mb-1">HORAS</span>
-                        <span className="text-lg font-bold text-white tracking-tighter leading-none">{totalHours.toFixed(1)}h</span>
+                    <div className="ml-auto z-20 flex flex-col items-end justify-center pr-2">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] leading-none mb-1">HORAS</span>
+                        <span className="text-lg font-black text-cyan-600 tracking-tighter leading-none">{totalHours.toFixed(1)}h</span>
                     </div>
                 </div>
             </div>

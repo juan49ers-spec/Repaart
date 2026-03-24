@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Zap, TrendingUp, ChevronRight, ChevronDown, BarChart3, RefreshCw, Target, ArrowUp, Plus } from 'lucide-react';
+import { Clock, Zap, ChevronRight, ChevronDown, BarChart3, RefreshCw, Target, ArrowUp, Plus } from 'lucide-react';
 import ShiftCard, { ShiftEvent } from './ShiftCard';
 import { cn } from '../../lib/utils';
 import { CostService, EST_HOURLY_BASE } from '../../services/scheduler/costService';
@@ -111,30 +111,38 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> =({
     };
 
     return (
-        <div className="relative pb-32 min-h-screen bg-slate-50 dark:bg-black transition-colors duration-300">
-            <div className="relative z-10 pt-4 pb-12 px-4">
+        <div className="relative pb-32 min-h-screen bg-transparent transition-colors duration-300">
+            {/* Animated background subtle blobs for Glass effect */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-[100px] -mr-40 -mt-40 mix-blend-multiply dark:mix-blend-screen" />
+                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-[100px] -ml-40 -mb-40 mix-blend-multiply dark:mix-blend-screen" />
+            </div>
+
+            <div className="relative z-10 pt-4 pb-12 px-4 space-y-4">
 
                 {/* RIDER HUD - COMPACT PREMIUM SUMMARY CARD */}
                 {isRiderMode && (
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-4 p-4 rounded-2xl bg-[#1c1c1e] border border-white/5 shadow-lg relative overflow-hidden"
+                        className="mb-4 p-5 rounded-[2rem] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden"
                     >
-                        {/* Background mesh/glow - Reduced size */}
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-ruby-600/5 blur-[40px] rounded-full -mr-8 -mt-8 pointer-events-none" />
-                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-indigo-500/5 blur-[30px] rounded-full -ml-6 -mb-6 pointer-events-none" />
+                        {/* Subtle background glow */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-50/50 blur-[40px] rounded-[4rem] -mr-8 -mt-8 pointer-events-none" />
+                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-50/50 blur-[30px] rounded-[3rem] -ml-6 -mb-6 pointer-events-none" />
 
                         <div className="relative z-10">
                             {/* Header - More compact */}
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-1.5">
-                                    <TrendingUp size={10} className="text-ruby-500" />
-                                    <span className="text-[8px] font-black text-zinc-400 uppercase tracking-widest font-mono">Resumen Semanal</span>
+                                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Resumen Semanal</span>
                                 </div>
                                 <button
                                     onClick={handleRefresh}
                                     disabled={isRefreshing}
+                                    title="Actualizar métricas"
+                                    aria-label="Actualizar métricas"
                                     className="p-1.5 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors disabled:opacity-50"
                                 >
                                     <RefreshCw size={12} className={cn("text-zinc-400", isRefreshing && "animate-spin")} />
@@ -144,10 +152,10 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> =({
                             {/* Main Stats - Compact */}
                             <div className="flex items-end justify-between mb-3">
                                 <div className="flex items-baseline gap-1.5">
-                                    <span className="text-2xl font-black text-white tracking-tighter tabular-nums">
+                                    <span className="text-2xl font-black text-slate-800 tracking-tighter tabular-nums">
                                         {CostService.formatCurrency(stats.earnings).split(',')[0]}
                                     </span>
-                                    <span className="text-lg font-black text-white/20">€</span>
+                                    <span className="text-lg font-black text-slate-300">€</span>
                                 </div>
 
                                 {/* Weekly Progress Bar */}
@@ -178,22 +186,22 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> =({
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                                        <span className="text-[10px] font-bold text-zinc-400">
+                                        <span className="text-[10px] font-bold text-slate-500">
                                             {stats.totalHours.toFixed(1)}h
                                         </span>
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-ruby-500" />
-                                        <span className="text-[10px] font-bold text-zinc-400">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
+                                        <span className="text-[10px] font-bold text-slate-500">
                                             {stats.middayCount + stats.nightCount} turnos
                                         </span>
                                     </div>
 
                                     {/* Comparison Badge */}
-                                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100">
                                         <ArrowUp size={8} className="text-emerald-500" />
-                                        <span className="text-[9px] font-bold text-emerald-500">
+                                        <span className="text-[9px] font-bold text-emerald-600">
                                             +15%
                                         </span>
                                     </div>
@@ -202,12 +210,12 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> =({
                                 {/* Expand Button */}
                                 <button
                                     onClick={() => setShowDetails(!showDetails)}
-                                    className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
+                                    className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors"
                                 >
-                                    <span className="text-[10px] font-medium text-zinc-400">
+                                    <span className="text-[10px] font-bold text-slate-400">
                                         {showDetails ? 'Ocultar' : 'Ver'} detalles
                                     </span>
-                                    <ChevronDown size={12} className={cn("text-zinc-400 transition-transform", showDetails && "rotate-180")} />
+                                    <ChevronDown size={12} className={cn("text-slate-400 transition-transform", showDetails && "rotate-180")} />
                                 </button>
 
                                 {/* Expanded Details */}
@@ -223,59 +231,59 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> =({
                                             <div className="pt-2 space-y-2">
                                                 {/* Distribution Grid */}
                                                 <div className="grid grid-cols-2 gap-2">
-                                                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/5">
+                                                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-100">
                                                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                                                         <div className="flex flex-col">
-                                                            <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider">Mediodía</span>
-                                                            <span className="text-xs font-bold text-white">{stats.middayCount}</span>
+                                                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Mediodía</span>
+                                                            <span className="text-xs font-black text-slate-800">{stats.middayCount}</span>
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/5">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-ruby-500" />
+                                                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-100">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
                                                         <div className="flex flex-col">
-                                                            <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider">Noche</span>
-                                                            <span className="text-xs font-bold text-white">{stats.nightCount}</span>
+                                                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Noche</span>
+                                                            <span className="text-xs font-black text-slate-800">{stats.nightCount}</span>
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 {/* Weekly Goal */}
-                                                <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 border border-white/5">
+                                                <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 border border-slate-100">
                                                     <div className="flex items-center gap-2">
-                                                        <Target size={12} className="text-zinc-400" />
-                                                        <span className="text-[10px] font-bold text-zinc-400">Objetivo semanal</span>
+                                                        <Target size={12} className="text-slate-400" />
+                                                        <span className="text-[10px] font-bold text-slate-500">Objetivo semanal</span>
                                                     </div>
-                                                    <span className="text-sm font-bold text-white">
+                                                    <span className="text-sm font-black text-slate-800">
                                                         {CostService.formatCurrency(stats.weeklyGoal)}
                                                     </span>
                                                 </div>
 
                                                 {/* Previous Week Comparison */}
-                                                <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 border border-white/5">
+                                                <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 border border-slate-100">
                                                     <div className="flex items-center gap-2">
-                                                        <BarChart3 size={12} className="text-zinc-400" />
-                                                        <span className="text-[10px] font-bold text-zinc-400">Semana anterior</span>
+                                                        <BarChart3 size={12} className="text-slate-400" />
+                                                        <span className="text-[10px] font-bold text-slate-500">Semana anterior</span>
                                                     </div>
-                                                    <span className="text-sm font-bold text-zinc-400">
+                                                    <span className="text-sm font-bold text-slate-400">
                                                         {CostService.formatCurrency(stats.previousWeekEarnings)}
                                                     </span>
                                                 </div>
 
                                                 {/* NEXT SHIFT CALLOUT - More Compact */}
                                                 {stats.nextShift && (
-                                                    <div className="flex items-center justify-between p-3 rounded-xl bg-ruby-600 shadow-lg">
+                                                    <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-md">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white">
+                                                            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white backdrop-blur-sm">
                                                                 <Zap size={16} className="fill-white" />
                                                             </div>
                                                             <div className="flex flex-col">
-                                                                <span className="text-[8px] font-bold text-white/60 uppercase tracking-wider">Siguiente</span>
-                                                                <span className="text-xs font-bold text-white">
+                                                                <span className="text-[8px] font-bold text-cyan-100 uppercase tracking-wider">Siguiente</span>
+                                                                <span className="text-xs font-black text-white">
                                                                     {new Date(stats.nextShift.startAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                                 </span>
                                                             </div>
                                                         </div>
-                                                        <ChevronRight size={14} className="text-white/60" />
+                                                        <ChevronRight size={14} className="text-cyan-100" />
                                                     </div>
                                                 )}
 
@@ -283,10 +291,10 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> =({
                                                 <div className="flex gap-2">
                                                     <button
                                                         onClick={() => onAddShift(new Date().toISOString().split('T')[0])}
-                                                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
+                                                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors shadow-sm"
                                                     >
-                                                        <Plus size={12} className="text-zinc-400" />
-                                                        <span className="text-[10px] font-bold text-zinc-400">Añadir turno</span>
+                                                        <Plus size={14} className="text-slate-500" />
+                                                        <span className="text-[10px] font-bold text-slate-600">Añadir turno</span>
                                                     </button>
                                                 </div>
                                             </div>
@@ -324,12 +332,12 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> =({
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: dayIdx * 0.05 }}
-                                className="bg-white dark:bg-[#1c1c1e] rounded-2xl border border-slate-200 dark:border-white/5 overflow-hidden shadow-sm"
+                                className="bg-white/70 dark:bg-[#1c1c1e] backdrop-blur-xl rounded-2xl border border-white/60 dark:border-white/5 overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none"
                             >
                                 {/* ACCORDION HEADER - CLICKABLE */}
                                 <button
                                     onClick={() => toggleDay(day.isoDate)}
-                                    className="w-full px-5 py-3.5 flex items-center justify-between bg-slate-50/50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                                    className="w-full px-5 py-4 flex items-center justify-between bg-white/40 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 transition-colors border-b border-slate-200/50 dark:border-white/5"
                                 >
                                     <div className="flex items-baseline gap-3">
                                         <span className={cn(
@@ -376,9 +384,9 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> =({
                                             transition={{ duration: 0.3, ease: "easeInOut" }}
                                         >
                                             <div className="px-4 py-5 relative">
-                                                {/* TIMELINE VERTICAL LINE */}
+                                                {/* TIMELINE VERTICAL LINE (Fiber Optic Style) */}
                                                 {sortedEvents.length > 1 && (
-                                                    <div className="absolute left-[18px] top-5 bottom-5 w-[2px] bg-gradient-to-b from-indigo-500/30 via-slate-200/20 to-indigo-500/30 dark:from-indigo-400/20 dark:via-white/5 dark:to-indigo-400/20" />
+                                                    <div className="absolute left-[18px] top-5 bottom-5 w-[2px] bg-gradient-to-b from-transparent via-indigo-500/30 to-transparent dark:via-indigo-400/40" />
                                                 )}
 
                                                 {/* SHIFTS or REST? */}
@@ -440,7 +448,7 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> =({
             </div>
 
             {/* Bottom Gradient Fade */}
-            <div className="fixed bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white dark:from-[#000000] to-transparent pointer-events-none z-30 opacity-90" />
+            <div className="fixed bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-slate-50 dark:from-[#000000] to-transparent pointer-events-none z-30 opacity-100" />
         </div>
     );
 };

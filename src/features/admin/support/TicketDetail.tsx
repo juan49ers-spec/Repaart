@@ -192,6 +192,7 @@ interface MessageItemProps {
 
 const MessageItem = memo(({ msg, senderName }: MessageItemProps) => {
     const senderIsAdmin = msg.senderRole === 'admin';
+    const senderIsAgent = msg.senderRole === 'agent';
 
     if (msg.isInternal) {
         return (
@@ -208,19 +209,21 @@ const MessageItem = memo(({ msg, senderName }: MessageItemProps) => {
     }
 
     return (
-        <div className={`flex ${senderIsAdmin ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-1 duration-200`}>
-            <div className={`max-w-[80%] ${senderIsAdmin ? 'flex flex-col items-end' : 'flex flex-col items-start'}`}>
-                <div className={`flex items-center gap-2 mb-1 px-1 ${senderIsAdmin ? 'justify-end' : 'justify-start'}`}>
-                    <span className={`text-[9px] font-bold uppercase tracking-wider ${senderIsAdmin ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-300'}`}>
-                        {senderIsAdmin ? 'Soporte HQ' : ((msg.senderName as string | undefined) || senderName || 'Cliente')}
+        <div className={`flex ${(senderIsAdmin || senderIsAgent) ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-1 duration-200`}>
+            <div className={`max-w-[80%] ${(senderIsAdmin || senderIsAgent) ? 'flex flex-col items-end' : 'flex flex-col items-start'}`}>
+                <div className={`flex items-center gap-2 mb-1 px-1 ${(senderIsAdmin || senderIsAgent) ? 'justify-end' : 'justify-start'}`}>
+                    <span className={`text-[9px] font-bold uppercase tracking-wider ${senderIsAdmin ? 'text-indigo-600 dark:text-indigo-400' : senderIsAgent ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-300'}`}>
+                        {senderIsAdmin ? 'Soporte HQ' : senderIsAgent ? '✨ IA de Servicio' : ((msg.senderName as string | undefined) || senderName || 'Cliente')}
                     </span>
                     <span className="text-[9px] font-medium text-slate-400 dark:text-slate-600">{formatDate(msg.createdAt as string | Date)}</span>
                 </div>
                 <div className={`p-3.5 rounded-2xl text-sm leading-relaxed ${senderIsAdmin
                     ? 'bg-indigo-600 text-white rounded-br-sm shadow-md shadow-indigo-500/15'
+                    : senderIsAgent
+                    ? 'bg-emerald-600 text-white rounded-br-sm shadow-md shadow-emerald-500/15'
                     : 'bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/50 text-slate-700 dark:text-slate-200 rounded-bl-sm shadow-sm'
                     }`}>
-                    <div className={`prose prose-sm ${senderIsAdmin ? 'prose-invert' : 'prose-slate dark:prose-invert'}`} dangerouslySetInnerHTML={{ __html: msg.text }} />
+                    <div className={`prose prose-sm ${(senderIsAdmin || senderIsAgent) ? 'prose-invert' : 'prose-slate dark:prose-invert'}`} dangerouslySetInnerHTML={{ __html: msg.text }} />
                 </div>
             </div>
         </div>

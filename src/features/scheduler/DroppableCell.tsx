@@ -50,8 +50,8 @@ export const DroppableCell: React.FC<DroppableCellProps> = ({
             left: `${leftPct}%`,
             width: `${widthPct}%`,
             position: 'absolute',
-            top: '10%',
-            bottom: '10%',
+            top: '8%',
+            bottom: '8%',
             zIndex: 5
         };
     }
@@ -67,9 +67,9 @@ export const DroppableCell: React.FC<DroppableCellProps> = ({
                 }
             }}
             className={cn(
-                "relative h-full transition-colors border-r border-slate-100 dark:border-slate-800 group/cell touch-manipulation", // Added touch-manipulation
-                isToday && "bg-slate-50/30",
-                isOver ? "bg-indigo-50/50 dark:bg-indigo-900/20" : "bg-transparent",
+                "relative h-full transition-all duration-300 border-r border-slate-100 dark:border-slate-800/80 group/cell touch-manipulation",
+                isToday && "bg-slate-50/50 dark:bg-slate-800/20",
+                isOver ? "bg-indigo-50/40 dark:bg-indigo-900/20" : "bg-transparent",
                 className
             )}
         >
@@ -77,25 +77,25 @@ export const DroppableCell: React.FC<DroppableCellProps> = ({
             <div className="absolute left-0 top-0 bottom-0 w-8 flex flex-col items-center justify-center gap-1 opacity-100 md:opacity-0 md:group-hover/cell:opacity-100 pointer-events-none transition-opacity z-20">
                 <button
                     onClick={(e) => { e.stopPropagation(); onQuickAdd(13); }}
-                    className="w-6 h-6 flex items-center justify-center pointer-events-auto bg-amber-400 hover:bg-amber-500 text-amber-900 rounded-full shadow-md transform md:scale-0 md:group-hover/cell:scale-100 transition-all active:scale-95 border border-amber-300 pointer-events-auto" // Added pointer-events-auto
+                    className="w-5 h-5 flex items-center justify-center pointer-events-auto bg-amber-100 hover:bg-amber-200 text-amber-600 rounded-full shadow-sm transform md:scale-0 md:group-hover/cell:scale-100 transition-all active:scale-95 border border-amber-200"
                     title="Añadir Mediodía (13h-17h)"
                 >
-                    <Sun size={12} strokeWidth={3} />
+                    <Sun size={10} strokeWidth={3} />
                 </button>
                 <button
                     onClick={(e) => { e.stopPropagation(); onQuickAdd(21); }}
-                    className="w-6 h-6 flex items-center justify-center pointer-events-auto bg-indigo-500 hover:bg-indigo-600 text-white rounded-full shadow-md transform md:scale-0 md:group-hover/cell:scale-100 transition-all active:scale-95 border border-indigo-400 pointer-events-auto" // Added pointer-events-auto
+                    className="w-5 h-5 flex items-center justify-center pointer-events-auto bg-indigo-100 hover:bg-indigo-200 text-indigo-600 rounded-full shadow-sm transform md:scale-0 md:group-hover/cell:scale-100 transition-all active:scale-95 border border-indigo-200"
                     title="Añadir Noche (21h-01h)"
                 >
-                    <Moon size={12} strokeWidth={3} />
+                    <Moon size={10} strokeWidth={3} />
                 </button>
             </div>
 
-            {/* Ghost Shift */}
+            {/* Ghost Shift (Holo-Snap Preview) */}
             {isOver && activeDragShift && (
                 <div
-                    className="rounded-md bg-indigo-500/30 border-2 border-indigo-400/50 border-dashed backdrop-blur-sm shadow-sm pointer-events-none animate-pulse"
-                    style={ghostStyle}
+                    className="rounded-md ring-2 ring-indigo-400 dark:ring-indigo-500 bg-indigo-100/50 dark:bg-indigo-900/50 backdrop-blur-sm pointer-events-none transition-all duration-150 ease-out z-50 flex items-center justify-center opacity-100 shadow-[0_0_15px_rgba(99,102,241,0.2)]"
+                    {...({ style: ghostStyle })}
                 />
             )}
 
@@ -103,3 +103,4 @@ export const DroppableCell: React.FC<DroppableCellProps> = ({
         </div>
     );
 };
+

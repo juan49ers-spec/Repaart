@@ -9,9 +9,9 @@ export const RiderLayout: React.FC = () => {
     const isActive = (path: string) => location.pathname === path;
 
     return (
-        <div className="flex flex-col h-[100dvh] w-full bg-[#f4f7fb] text-slate-900 overflow-hidden relative selection:bg-cyan-500/30">
+        <div className="flex flex-col h-[100dvh] w-full bg-white text-slate-900 overflow-hidden relative selection:bg-cyan-500/30">
             {/* Safe Area Top Spacer */}
-            <div className="h-safe w-full bg-[#f4f7fb]/80 backdrop-blur-md sticky top-0 z-[60]" />
+            <div className="h-safe w-full bg-white/80 backdrop-blur-md sticky top-0 z-[60]" />
 
             {/* Main Content Area - Scrollable */}
             <main className="flex-1 min-h-0 relative overflow-y-auto overflow-x-hidden hide-scrollbar z-10">

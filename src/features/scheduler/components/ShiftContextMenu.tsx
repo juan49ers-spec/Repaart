@@ -9,6 +9,8 @@ export interface ContextMenuShift {
     isDraft?: boolean;
     startAt: string;
     endAt: string;
+    riderName?: string;
+    motoPlate?: string;
     [key: string]: unknown;
 }
 
@@ -72,16 +74,26 @@ export const ShiftContextMenu: React.FC<ShiftContextMenuProps> = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [onClose]);
 
+    const startTime = new Date(shift.startAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const endTime = new Date(shift.endAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
     return createPortal(
         <div
             ref={menuRef}
             className="fixed z-[9999] w-56 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden animate-in zoom-in-95 duration-100"
         >
-            <div className="p-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Acciones Rápidas</span>
+            <div className="p-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-start">
+                <div className="flex flex-col">
+                    <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                        {shift.riderName || 'Turno Nuevo'}
+                    </span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {startTime} - {endTime} {shift.motoPlate ? `• 🏍️ ${shift.motoPlate}` : ''}
+                    </span>
+                </div>
                 <button
                     onClick={onClose}
-                    className="text-slate-400 hover:text-slate-600 transition-colors"
+                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors mt-0.5"
                     title="Cerrar menú"
                 >
                     <X size={14} />

@@ -10,6 +10,7 @@ export { calculateWeekStats } from './triggers/onWeekWrite';
 export { onIncidentCreated } from './triggers/onIncident';
 export { deleteUserSync } from './triggers/onUserDelete';
 export { syncUserClaims } from './triggers/onUserWrite';
+export { onTicketCreated } from './triggers/onTicketCreated';
 
 // Export Callable Functions
 export { createUserManaged } from './callables/createUser';

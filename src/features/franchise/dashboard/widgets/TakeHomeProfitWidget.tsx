@@ -60,12 +60,14 @@ const MoneyRain = () => {
                 <div
                     key={item.id}
                     className="absolute top-[-50px] animate-fall-sway opacity-0"
-                    style={{
-                        '--item-left': item.left,
-                        '--item-delay': item.delay,
-                        '--item-duration': item.duration,
-                        '--item-scale': item.scale
-                    } as React.CSSProperties}
+                    {...({
+                        style: {
+                            '--item-left': item.left,
+                            '--item-delay': item.delay,
+                            '--item-duration': item.duration,
+                            '--item-scale': item.scale
+                        } as React.CSSProperties
+                    })}
                 >
                     <div className="drop-shadow-md">{renderItem(item.type)}</div>
                 </div>
@@ -113,11 +115,13 @@ const StormRain = () => {
                 <div
                     key={item.id}
                     className="absolute top-[-20px] w-[2px] h-4 bg-slate-400 dark:bg-slate-500 rounded-full opacity-60 animate-rain"
-                    style={{
-                        '--rain-left': item.left,
-                        '--rain-delay': item.delay,
-                        '--rain-duration': item.duration
-                    } as React.CSSProperties}
+                    {...({
+                        style: {
+                            '--rain-left': item.left,
+                            '--rain-delay': item.delay,
+                            '--rain-duration': item.duration
+                        } as React.CSSProperties
+                    })}
                 />
             ))}
             <style>{`
@@ -166,9 +170,9 @@ const TakeHomeProfitWidget: React.FC<TakeHomeProfitWidgetProps> = ({
     const isProfitable = (annualNetProfit || 0) > 0;
 
     return (
-        <div className="workstation-card workstation-scanline p-4 h-full flex flex-col group/card transition-all mechanical-press overflow-hidden">
+        <div className="workstation-card workstation-scanline p-5 h-full flex flex-col justify-between group/card transition-all mechanical-press overflow-hidden">
             {/* HEADER */}
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="p-1.5 bg-ruby-50 dark:bg-ruby-900/10 rounded-lg">
                         <Wallet className="w-3.5 h-3.5 text-ruby-600" />
@@ -187,34 +191,35 @@ const TakeHomeProfitWidget: React.FC<TakeHomeProfitWidgetProps> = ({
                 </div>
             </div>
 
-            {/* MAIN VALUE DISPLAY */}
-            <div className="mb-3">
+            {/* MAIN METRIC & BREAKDOWN GROUPED */}
+            <div className="flex flex-col gap-3">
+                {/* MAIN VALUE DISPLAY */}
                 <div className="flex items-baseline gap-1">
                     <span className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight tabular-nums">
                         {formatMoney(takeHomeProfit)}€
                     </span>
                     <span className="text-xs font-medium text-slate-400 ml-1">liquidez</span>
                 </div>
-            </div>
 
-            {/* HIGH-DENSITY BREAKDOWN */}
-            <div className="space-y-1 mb-3">
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Ingresos Netos</span>
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200 tabular-nums">+{formatMoney(revenue)}€</span>
-                </div>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Gasto Estructural</span>
-                    <span className="text-xs font-bold text-rose-600 tabular-nums">-{formatMoney(totalExpenses)}€</span>
-                </div>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide text-[10px]">Impuestos (Est.)</span>
-                    <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 tabular-nums">-{formatMoney(estimatedTax)}€</span>
+                {/* HIGH-DENSITY BREAKDOWN */}
+                <div className="space-y-1">
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                        <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Ingresos Netos</span>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-200 tabular-nums">+{formatMoney(revenue)}€</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                        <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Gasto Estructural</span>
+                        <span className="text-xs font-bold text-rose-600 tabular-nums">-{formatMoney(totalExpenses)}€</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                        <span className="text-xs font-medium text-slate-500 uppercase tracking-wide text-[10px]">Impuestos (Est.)</span>
+                        <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 tabular-nums">-{formatMoney(estimatedTax)}€</span>
+                    </div>
                 </div>
             </div>
 
             {/* YEARLY ANALYTICS PORT */}
-            <div className="mt-auto pt-4 border-t border-slate-100 dark:border-white/5">
+            <div className="pt-4 border-t border-slate-100 dark:border-white/5">
                 <button
                     onClick={(e) => { e.stopPropagation(); setShowYTDModal(true); }}
                     className="w-full py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-950 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-wide hover:bg-ruby-600 dark:hover:bg-ruby-600 hover:text-white transition-all flex items-center justify-center gap-1.5 md:gap-3 shadow-sm hover:shadow-lg px-2"

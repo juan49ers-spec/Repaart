@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { X, Send, Bot, User, Sparkles, TrendingUp, AlertCircle, AlertTriangle, Lightbulb, Target, TrendingDown, Calendar, DollarSign, ArrowRight, BarChart3, Zap, CheckCircle, MessageCircle, PlayCircle, Stethoscope } from 'lucide-react';
+import { Bot, X, Send, Sparkles, AlertCircle, DollarSign, Target, Lightbulb, MessageCircle, BarChart3, Zap, Calendar, AlertTriangle, PlayCircle, User, ArrowRight, CheckCircle, Stethoscope } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../../lib/utils';
 import { sendMessageToGemini, seedGeminiHistory, ChatTurn } from '../../../lib/gemini';
@@ -716,7 +716,7 @@ Puedo ayudarte con cosas como:
                         initial={{ opacity: 0, y: 20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                        className="fixed top-24 right-6 z-50 w-[520px] max-w-[calc(100vw-48px)] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden max-h-[calc(100vh-120px)] flex flex-col"
+                        className="fixed top-24 right-6 z-50 w-[380px] max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden max-h-[calc(100vh-140px)] flex flex-col"
                     >
                         {/* Header */}
                         <div className="bg-slate-900 p-4">
@@ -785,19 +785,16 @@ Puedo ayudarte con cosas como:
                                     label: 'Lo que te queda por pedido',
                                     value: `${margin.toFixed(1)}%`,
                                     score: margin >= 20 ? 100 : margin >= 15 ? 80 : margin >= 10 ? 60 : margin >= 5 ? 35 : 15,
-                                    ideal: 'Ideal: +15%',
                                 },
                                 {
                                     label: 'Tendencia de ingresos',
                                     value: `${trendVal > 0 ? '+' : ''}${trendVal.toFixed(1)}%`,
                                     score: trendVal > 10 ? 100 : trendVal > 5 ? 85 : trendVal > 0 ? 70 : trendVal > -5 ? 50 : 30,
-                                    ideal: 'Ideal: subiendo',
                                 },
                                 {
-                                    label: 'Cuánto gastas de lo que ingresas',
-                                    value: `${(expRatio * 100).toFixed(0)} céntimos/€`,
+                                    label: 'Gastos sobre ingresos',
+                                    value: `${(expRatio * 100).toFixed(0)} cént/€`,
                                     score: expRatio < 0.6 ? 100 : expRatio < 0.7 ? 85 : expRatio < 0.8 ? 65 : expRatio < 0.9 ? 40 : 15,
-                                    ideal: 'Ideal: <70 céntimos',
                                 },
                             ];
 
@@ -808,161 +805,141 @@ Puedo ayudarte con cosas como:
                             );
 
                             const getScoreColor = (s: number) => {
-                                if (s >= 70) return { text: 'text-emerald-500', stroke: 'stroke-emerald-500', label: '🟢 Vas bien' };
-                                if (s >= 45) return { text: 'text-amber-500', stroke: 'stroke-amber-500', label: '🟡 Puedes mejorar' };
-                                return { text: 'text-rose-500', stroke: 'stroke-rose-500', label: '🔴 Necesitas actuar' };
+                                if (s >= 70) return { text: 'text-emerald-600', bg: 'bg-emerald-100', stroke: 'stroke-emerald-500', label: '🟢 Vas bien' };
+                                if (s >= 45) return { text: 'text-amber-600', bg: 'bg-amber-100', stroke: 'stroke-amber-500', label: '🟡 Puedes mejorar' };
+                                return { text: 'text-rose-600', bg: 'bg-rose-100', stroke: 'stroke-rose-500', label: '🔴 Necesitas actuar' };
                             };
 
-                            const { text: scoreText, stroke: scoreStroke, label: scoreLabelText } = getScoreColor(totalScore);
+                            const { text: scoreText, bg: scoreBg, label: scoreLabelText } = getScoreColor(totalScore);
 
                             return (
-                                <div className="flex-1 overflow-y-auto p-4 bg-slate-50">
-                                    <div className="space-y-4">
-                                        {/* Score */}
-                                        <div className="text-center py-3">
-                                            <div className="relative inline-flex items-center justify-center w-28 h-28">
-                                                <svg width={112} height={112} viewBox="0 0 112 112" className="transform -rotate-90">
-                                                    <circle cx={56} cy={56} r={46} fill="none" stroke="#e2e8f0" strokeWidth={6} />
-                                                    <circle
-                                                        cx={56} cy={56} r={46} fill="none"
-                                                        stroke="currentColor" strokeWidth={6}
-                                                        strokeDasharray={2 * Math.PI * 46}
-                                                        strokeDashoffset={2 * Math.PI * 46 * (1 - totalScore / 100)}
-                                                        strokeLinecap="round"
-                                                        className={cn("transition-all duration-1000 ease-out", scoreStroke)}
-                                                    />
-                                                </svg>
-                                                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                                    <span className={cn("text-3xl font-bold tabular-nums", scoreText)}>{totalScore}</span>
-                                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">/100</span>
-                                                </div>
+                                <div className="flex-1 overflow-y-auto p-3 bg-slate-50 space-y-4">
+                                    
+                                    {/* Score - Compact horizontal pill */}
+                                    <div className="flex items-center justify-between bg-white border border-slate-200 p-3 rounded-xl shadow-sm">
+                                        <div className="flex items-center gap-3">
+                                            <div className={cn("w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg", scoreBg, scoreText)}>
+                                                {totalScore}
                                             </div>
-                                            <p className={cn("mt-1.5 text-sm font-semibold", scoreText)}>{scoreLabelText}</p>
+                                            <div>
+                                                <h4 className="text-sm font-bold text-slate-800">Salud Financiera</h4>
+                                                <p className="text-xs font-medium text-slate-500">{scoreLabelText}</p>
+                                            </div>
                                         </div>
+                                    </div>
 
-                                        {/* Factors */}
-                                        <div className="space-y-2">
-                                            {factors.map((f, idx) => {
-                                                const barColor = f.score >= 70 ? 'bg-emerald-500' : f.score >= 45 ? 'bg-amber-500' : 'bg-rose-500';
-                                                return (
-                                                    <div key={idx} className="bg-white rounded-xl p-3 border border-slate-100">
-                                                        <div className="flex items-center justify-between mb-1.5">
-                                                            <span className="text-xs font-semibold text-slate-700">{f.label}</span>
-                                                            <span className="text-xs font-mono font-bold text-slate-900">{f.value}</span>
-                                                        </div>
-                                                        <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                                            <motion.div
-                                                                initial={{ width: 0 }}
-                                                                animate={{ width: `${f.score}%` }}
-                                                                transition={{ duration: 1, ease: "easeOut" }}
-                                                                className={cn('h-full rounded-full', barColor)}
-                                                            />
-                                                        </div>
-                                                        <p className="text-[10px] text-slate-400 mt-1">{f.ideal}</p>
+                                    {/* Factors - Compact mini bars row */}
+                                    <div className="grid grid-cols-1 gap-2">
+                                        {factors.map((f, idx) => {
+                                            const barColor = f.score >= 70 ? 'bg-emerald-500' : f.score >= 45 ? 'bg-amber-500' : 'bg-rose-500';
+                                            return (
+                                                <div key={idx} className="bg-white rounded-lg px-3 py-2 border border-slate-100 shadow-sm flex flex-col justify-center">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className="text-[11px] font-semibold text-slate-600">{f.label}</span>
+                                                        <span className="text-[11px] font-mono font-bold text-slate-800">{f.value}</span>
                                                     </div>
-                                                );
-                                            })}
-                                        </div>
+                                                    <div className="h-1 bg-slate-100 rounded-full overflow-hidden w-full">
+                                                        <motion.div
+                                                            initial={{ width: 0 }}
+                                                            animate={{ width: `${f.score}%` }}
+                                                            transition={{ duration: 1, ease: "easeOut" }}
+                                                            className={cn('h-full rounded-full', barColor)}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
 
-                                        {/* Insights with "Ask about this" buttons */}
-                                        {insights.length > 0 && (
-                                            <div className="space-y-2">
-                                                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                                                    <Lightbulb className="w-3.5 h-3.5" />
-                                                    Lo que he detectado
-                                                </h4>
-                                                {insights.map((insight, idx) => (
-                                                    <div
-                                                        key={idx}
-                                                        className={cn(
-                                                            "p-3 rounded-xl border",
-                                                            getInsightBg(insight.type)
-                                                        )}
-                                                    >
-                                                        <div className="flex items-start gap-2.5">
-                                                            {getInsightIcon(insight.type)}
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="flex items-center justify-between mb-0.5">
-                                                                    <h5 className="font-bold text-xs text-slate-800">{insight.title}</h5>
-                                                                    {insight.metric && (
-                                                                        <span className="text-[11px] font-bold text-slate-700 bg-white/60 px-1.5 py-0.5 rounded">
-                                                                            {insight.metric}
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                                <p className="text-[11px] text-slate-600 leading-relaxed">
-                                                                    {insight.description}
-                                                                </p>
-                                                                {insight.trend !== undefined && (
-                                                                    <div className={cn(
-                                                                        "mt-1 text-[10px] font-medium flex items-center gap-1",
-                                                                        insight.trend > 0 ? "text-emerald-600" : "text-rose-600"
-                                                                    )}>
-                                                                        {insight.trend > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                                                                        {insight.trend > 0 ? '+' : ''}{insight.trend.toFixed(1)}% vs mes anterior
-                                                                    </div>
-                                                                )}
-                                                                {insight.question && (
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            setActiveTab('chat');
-                                                                            sendMessage(insight.question!);
-                                                                        }}
-                                                                        className="mt-2 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors"
-                                                                    >
-                                                                        <MessageCircle className="w-3 h-3" />
-                                                                        {insight.question}
-                                                                    </button>
+                                    {/* Insights with "Ask about this" buttons - Tighter layout */}
+                                    {insights.length > 0 && (
+                                        <div className="space-y-1.5">
+                                            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                                                <Lightbulb className="w-3 h-3" />
+                                                Lo que he detectado
+                                            </h4>
+                                            {insights.map((insight, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    className={cn(
+                                                        "p-2.5 rounded-lg border shadow-sm",
+                                                        getInsightBg(insight.type)
+                                                    )}
+                                                >
+                                                    <div className="flex items-start gap-2">
+                                                        <div className="mt-0.5">{getInsightIcon(insight.type)}</div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center justify-between mb-0.5">
+                                                                <h5 className="font-bold text-xs text-slate-800 leading-tight">{insight.title}</h5>
+                                                                {insight.metric && (
+                                                                    <span className="text-[10px] font-bold text-slate-700 bg-white/60 px-1 py-0.5 rounded ml-2 whitespace-nowrap">
+                                                                        {insight.metric}
+                                                                    </span>
                                                                 )}
                                                             </div>
+                                                            <p className="text-[11px] text-slate-600 leading-snug mt-1">
+                                                                {insight.description}
+                                                            </p>
+                                                            {insight.question && (
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setActiveTab('chat');
+                                                                        sendMessage(insight.question!);
+                                                                    }}
+                                                                    className="mt-1.5 text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors"
+                                                                >
+                                                                    <MessageCircle className="w-3 h-3" />
+                                                                    {insight.question}
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        {/* Quick Actions */}
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {onOpenSimulator && (
-                                                <button
-                                                    onClick={onOpenSimulator}
-                                                    className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs font-bold text-amber-800 hover:bg-amber-100 transition-colors"
-                                                >
-                                                    <PlayCircle className="w-4 h-4 text-amber-600" />
-                                                    Simulador
-                                                </button>
-                                            )}
-                                            <button
-                                                onClick={() => {
-                                                    setActiveTab('chat');
-                                                    sendMessage('¿Cómo voy este mes?');
-                                                }}
-                                                className="flex items-center gap-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-xs font-bold text-indigo-800 hover:bg-indigo-100 transition-colors"
-                                            >
-                                                <BarChart3 className="w-4 h-4 text-indigo-600" />
-                                                Análisis rápido
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    setActiveTab('chat');
-                                                    sendMessage('¿Cómo fue el mes pasado?');
-                                                }}
-                                                className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition-colors"
-                                            >
-                                                <Calendar className="w-4 h-4 text-emerald-600" />
-                                                Comparar meses
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    setActiveTab('chat');
-                                                    sendMessage('¿Llegaré a mi objetivo?');
-                                                }}
-                                                className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-bold text-rose-800 hover:bg-rose-100 transition-colors"
-                                            >
-                                                <Zap className="w-4 h-4 text-rose-600" />
-                                                Proyección
-                                            </button>
+                                                </div>
+                                            ))}
                                         </div>
+                                    )}
+
+                                    {/* Quick Actions - More compact */}
+                                    <div className="grid grid-cols-2 gap-1.5 mt-2">
+                                        {onOpenSimulator && (
+                                            <button
+                                                onClick={onOpenSimulator}
+                                                className="flex justify-center items-center gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-lg text-[11px] font-bold text-amber-800 hover:bg-amber-100 transition-colors"
+                                            >
+                                                <PlayCircle className="w-3.5 h-3.5" />
+                                                Simulador
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => {
+                                                setActiveTab('chat');
+                                                sendMessage('¿Cómo voy este mes?');
+                                            }}
+                                            className="flex justify-center items-center gap-1.5 p-2 bg-indigo-50 border border-indigo-200 rounded-lg text-[11px] font-bold text-indigo-800 hover:bg-indigo-100 transition-colors"
+                                        >
+                                            <BarChart3 className="w-3.5 h-3.5" />
+                                            Análisis
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setActiveTab('chat');
+                                                sendMessage('¿Cómo fue el mes pasado?');
+                                            }}
+                                            className="flex justify-center items-center gap-1.5 p-2 bg-emerald-50 border border-emerald-200 rounded-lg text-[11px] font-bold text-emerald-800 hover:bg-emerald-100 transition-colors"
+                                        >
+                                            <Calendar className="w-3.5 h-3.5" />
+                                            Histórico
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setActiveTab('chat');
+                                                sendMessage('¿Llegaré a mi objetivo?');
+                                            }}
+                                            className="flex justify-center items-center gap-1.5 p-2 bg-rose-50 border border-rose-200 rounded-lg text-[11px] font-bold text-rose-800 hover:bg-rose-100 transition-colors"
+                                        >
+                                            <Zap className="w-3.5 h-3.5" />
+                                            Proyección
+                                        </button>
                                     </div>
                                 </div>
                             );

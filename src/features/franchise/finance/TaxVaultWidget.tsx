@@ -13,7 +13,7 @@ interface TaxVaultWidgetProps {
     currentInvoices?: Invoice[];
 }
 
-const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, historicalData, currentInvoices }) => {
+const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, historicalData, currentInvoices: _currentInvoices }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [invoicesExpanded, setInvoicesExpanded] = useState(false);
 
@@ -73,7 +73,7 @@ const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, hi
                     <div className="h-1.5 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-indigo-500 rounded-full transition-all duration-1000"
-                            style={{ width: `${Math.min((ivaPayable / (totalTaxLiability || 1)) * 100, 100)}%` }}
+                            {...({ style: { width: `${Math.min((ivaPayable / (totalTaxLiability || 1)) * 100, 100)}%` } })}
                         />
                     </div>
                     {/* EXPANDABLE INVOICES SECTION */}
@@ -111,7 +111,7 @@ const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, hi
                     <div className="h-1.5 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-amber-500 rounded-full transition-all duration-1000"
-                            style={{ width: `${Math.min((irpfPayable / (totalTaxLiability || 1)) * 100, 100)}%` }}
+                            {...({ style: { width: `${Math.min((irpfPayable / (totalTaxLiability || 1)) * 100, 100)}%` } })}
                         />
                     </div>
                 </div>

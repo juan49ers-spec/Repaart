@@ -14,12 +14,12 @@ interface ControlEarningsWidgetProps {
 const ControlEarningsWidget: React.FC<ControlEarningsWidgetProps> = ({ data, loading, onNavigate }) => {
     if (loading) {
         return (
-            <div className="workstation-card p-4 h-full flex flex-col items-center justify-center space-y-3">
-                <div className="h-3 w-16 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
-                <div className="h-8 w-32 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
+            <div className="bg-[#12141A] rounded-xl border border-white/5 shadow-2xl p-4 h-full flex flex-col items-center justify-center space-y-3">
+                <div className="h-3 w-16 bg-white/5 rounded animate-pulse" />
+                <div className="h-8 w-32 bg-white/5 rounded animate-pulse" />
                 <div className="w-full grid grid-cols-2 gap-2 mt-2">
-                    <div className="h-12 bg-slate-50 dark:bg-slate-800/40 rounded animate-pulse" />
-                    <div className="h-12 bg-slate-50 dark:bg-slate-800/40 rounded animate-pulse" />
+                    <div className="h-12 bg-white/5 rounded animate-pulse" />
+                    <div className="h-12 bg-white/5 rounded animate-pulse" />
                 </div>
             </div>
         );
@@ -33,51 +33,54 @@ const ControlEarningsWidget: React.FC<ControlEarningsWidgetProps> = ({ data, loa
     return (
         <div
             onClick={onNavigate ? () => onNavigate('finance') : undefined}
-            className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between group/card cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all h-full relative overflow-hidden"
+            className="bg-[#12141A] rounded-xl border border-white/5 shadow-2xl flex flex-col justify-between group/card cursor-pointer hover:border-indigo-500/30 transition-all h-full relative overflow-hidden"
         >
+            {/* Ambient Base Layer */}
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-transparent pointer-events-none" />
+
             {/* HEADER */}
-            <div className="p-5 pb-0">
+            <div className="p-5 pb-0 relative z-10">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
-                            <Wallet className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                        <div className="p-2 bg-white/5 rounded-lg border border-white/10 group-hover/card:border-indigo-500/30 transition-colors">
+                            <Wallet className="w-4 h-4 text-indigo-400" />
                         </div>
-                        <h3 className="text-sm font-bold text-slate-800 dark:text-white leading-tight">
+                        <h3 className="text-sm font-bold text-white uppercase tracking-wide">
                             Terminal Financiera
                         </h3>
                     </div>
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100">
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                         <span className="relative flex h-1.5 w-1.5">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
                         </span>
-                        <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-wide">En vivo</span>
+                        <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wide">En vivo</span>
                     </div>
                 </div>
 
                 {/* MAIN STAT AREA */}
                 <div className="flex flex-col">
                     <div className="flex items-baseline gap-1 relative">
-                        <span className="text-4xl font-black tracking-tight tabular-nums text-slate-900 dark:text-white">
+                        <span className="text-4xl font-black tracking-tight tabular-nums text-white">
                             {totalAdminCredit.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </span>
-                        <span className="text-xl font-bold text-slate-400">€</span>
+                        <span className="text-xl font-bold text-slate-500">€</span>
 
-                        <div className={`ml-auto flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold ${isNegative ? 'text-rose-600 bg-rose-50 dark:bg-rose-900/20' : 'text-emerald-600 bg-emerald-50 dark:bg-emerald-400/20'}`}>
+                        <div className={`ml-auto flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold border ${isNegative ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
                             {isNegative ? '↓' : '↑'}{Math.abs(trend).toFixed(1)}%
                         </div>
                     </div>
 
                     {/* Sparkline Histogram */}
-                    <div className="mt-6 flex items-end gap-1 h-8 w-full">
+                    <div className="mt-6 flex items-end gap-1 h-8 w-full group-hover/card:h-10 transition-all duration-300">
                         {[65, 75, 60, 80, 70, 85, 95, 80, 100].map((h, i) => (
                             <div
                                 key={i}
                                 className={`flex-1 rounded-t-sm transition-all duration-700 ${i === 8
-                                    ? (isNegative ? 'bg-rose-500' : 'bg-indigo-500')
-                                    : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200'
+                                    ? (isNegative ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]' : 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.4)]')
+                                    : 'bg-white/5 hover:bg-white/10'
                                     }`}
-                                style={{ height: `${h}%` }}
+                                {...({ style: { height: `${h}%` } })}
                             />
                         ))}
                     </div>
@@ -85,36 +88,36 @@ const ControlEarningsWidget: React.FC<ControlEarningsWidgetProps> = ({ data, loa
             </div>
 
             {/* DATA GRID */}
-            <div className="p-5 pt-0 mt-auto">
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <div className="p-5 pt-0 mt-auto relative z-10">
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
                     <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Royalties</span>
-                        <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                        <span className="text-sm font-bold text-slate-200 tabular-nums">
                             +{data.royalties.toLocaleString('es-ES')}€
                         </span>
                     </div>
-                    <div className="flex flex-col gap-1 border-l border-slate-100 dark:border-slate-800 pl-4">
+                    <div className="flex flex-col gap-1 border-l border-white/5 pl-4">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Servicios</span>
-                        <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                        <span className="text-sm font-bold text-slate-200 tabular-nums">
                             +{data.services.toLocaleString('es-ES')}€
                         </span>
                     </div>
                 </div>
 
                 {/* MICRO KPI FOOTER */}
-                <div className="mt-4 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                <div className="mt-4 flex items-center justify-between bg-white/5 p-3 rounded-lg border border-white/5 transition-colors group-hover/card:border-white/10">
                     <div className="flex flex-col gap-0.5">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Volumen 24h</span>
-                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">12.4k€</span>
+                        <span className="text-[11px] font-mono font-bold text-slate-300">12.4k€</span>
                     </div>
                     <div className="flex flex-col text-right gap-0.5">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">SLA Delta</span>
-                        <span className="text-[11px] font-bold text-emerald-600">+2.4%</span>
+                        <span className="text-[11px] font-mono font-bold text-emerald-400">+2.4%</span>
                     </div>
                 </div>
             </div>
             
-            <div className="absolute top-5 right-5 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 text-slate-300 hover:text-indigo-500">
+            <div className="absolute top-5 right-5 opacity-0 group-hover/card:opacity-100 transition-all translate-x-2 group-hover/card:translate-x-0 text-slate-600 hover:text-indigo-400 z-10">
                 <ArrowUpRight className="w-4 h-4" />
             </div>
         </div>

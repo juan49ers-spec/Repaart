@@ -82,7 +82,7 @@ export const useFranchiseFinance = ({ franchiseId, month, tariffs }: FranchiseFi
 
     // A. Operational Data (From useFinancialPulse)
     const operations = useMemo(() => ({
-        totalOperationalHours: Number(currentData.totalOperationalHours || 0),
+        totalOperationalHours: Number((currentData.totalOperationalHours ?? currentData.totalHours) || 0),
         totalShiftsCount: Number(currentData.totalShiftsCount || 0),
         // Add other operational fields here as needed
     }), [currentData]);

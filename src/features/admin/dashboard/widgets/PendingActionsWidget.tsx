@@ -37,11 +37,11 @@ const PendingActionsWidget: React.FC<ControlPendingActionsWidgetProps> = ({ data
 
     if (loading) {
         return (
-            <div className="workstation-card p-4 h-full flex flex-col space-y-3">
-                <div className="h-3 w-32 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
+            <div className="bg-[#12141A] rounded-xl border border-white/5 p-4 h-full flex flex-col space-y-3">
+                <div className="h-3 w-32 bg-white/5 rounded animate-pulse" />
                 <div className="space-y-2 flex-1">
                     {[1, 2, 3, 4].map(i => (
-                        <div key={i} className="h-10 bg-slate-50 dark:bg-slate-800/40 rounded animate-pulse" />
+                        <div key={i} className="h-10 bg-white/5 rounded animate-pulse" />
                     ))}
                 </div>
             </div>
@@ -53,30 +53,33 @@ const PendingActionsWidget: React.FC<ControlPendingActionsWidgetProps> = ({ data
     };
 
     return (
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-full overflow-hidden transition-all hover:shadow-md">
+        <div className="bg-[#12141A] rounded-xl border border-white/5 shadow-2xl flex flex-col h-full overflow-hidden transition-all group/card hover:border-rose-500/30 relative">
+            {/* Ambient Base Layer */}
+            <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 via-transparent to-transparent pointer-events-none" />
+
             {/* HEADER */}
-            <div className="p-5 pb-3">
+            <div className="p-5 pb-3 relative z-10">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-rose-50 dark:bg-rose-900/20 rounded-lg">
-                            <Inbox className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                        <div className="p-2 bg-white/5 border border-white/10 group-hover/card:border-rose-500/30 transition-colors rounded-lg">
+                            <Inbox className="w-4 h-4 text-rose-400" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-slate-800 dark:text-white leading-tight">
+                            <h3 className="text-sm font-bold text-white uppercase tracking-wide">
                                 Acciones Pendientes
                             </h3>
-                            <div className="text-xs font-medium text-slate-500 dark:text-slate-400">{data.total} tareas en cola</div>
+                            <div className="text-xs font-medium text-slate-400">{data.total} tareas en cola</div>
                         </div>
                     </div>
 
-                    <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <div className="flex bg-white/5 p-0.5 rounded-lg border border-white/5">
                         {(['all', 'premium', 'support'] as const).map((tab) => (
                             <button
                                 key={tab}
                                 onClick={(e) => { e.stopPropagation(); setFilter(tab); }}
                                 className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all ${filter === tab
-                                    ? 'bg-white dark:bg-slate-700 shadow-sm text-rose-600 dark:text-white'
-                                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                                    ? 'bg-white/10 shadow-sm text-white'
+                                    : 'text-slate-500 hover:text-slate-300'
                                     }`}
                             >
                                 {tab === 'all' ? 'Todo' : tab === 'premium' ? 'VIP' : 'Soporte'}
@@ -87,11 +90,11 @@ const PendingActionsWidget: React.FC<ControlPendingActionsWidgetProps> = ({ data
             </div>
 
             {/* ACTION LIST */}
-            <div className="flex-1 space-y-1 overflow-y-auto custom-scrollbar px-3 pb-3">
+            <div className="flex-1 space-y-1 overflow-y-auto custom-scrollbar px-3 pb-3 relative z-10">
                 {filteredList.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center py-6 text-slate-400">
                         <CheckCircle2 className="w-10 h-10 mb-3 opacity-20" />
-                        <p className="text-xs font-bold text-slate-500">Todo al día</p>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Todo al día</p>
                     </div>
                 ) : (
                     filteredList.slice(0, 6).map(action => (
@@ -108,16 +111,16 @@ const PendingActionsWidget: React.FC<ControlPendingActionsWidgetProps> = ({ data
                             className={`
                                 flex items-center gap-3 p-3 rounded-lg border border-transparent transition-all cursor-pointer relative overflow-hidden group
                                 ${action.priority === 'critical'
-                                    ? 'bg-rose-50 border-rose-100 dark:bg-rose-900/20 dark:border-rose-800/30'
-                                    : 'hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-50 dark:border-slate-800/50'
+                                    ? 'bg-rose-500/10 border-rose-500/20'
+                                    : 'hover:bg-white/5 border-white/5'
                                 }
                             `}
                         >
                             <div className={`
-                                w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors
+                                w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors border
                                 ${action.priority === 'critical' 
-                                    ? 'bg-rose-100 text-rose-600 dark:bg-rose-800 dark:text-rose-100' 
-                                    : 'bg-slate-100 text-slate-500 group-hover:bg-white group-hover:shadow-sm dark:bg-slate-800 dark:text-slate-400'
+                                    ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' 
+                                    : 'bg-white/5 text-slate-400 border-white/10 group-hover:bg-white/10'
                                 }
                             `}>
                                 <IconForType type={action.type} priority={action.priority} />
@@ -125,20 +128,20 @@ const PendingActionsWidget: React.FC<ControlPendingActionsWidgetProps> = ({ data
 
                             <div className="min-w-0 flex-1">
                                 <div className="flex justify-between items-center mb-0.5">
-                                    <h4 className={`text-xs font-bold truncate ${action.priority === 'critical' ? 'text-rose-700 dark:text-rose-300' : 'text-slate-800 dark:text-slate-200'
+                                    <h4 className={`text-xs font-bold truncate ${action.priority === 'critical' ? 'text-rose-400' : 'text-slate-200'
                                         }`}>
                                         {action.title}
                                     </h4>
-                                    <span className="text-[10px] font-medium text-slate-400 ml-2">
+                                    <span className="text-[10px] font-medium text-slate-500 ml-2 font-mono">
                                         {getRelativeTime(action.timestamp)}
                                     </span>
                                 </div>
-                                <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                                <p className="text-[11px] text-slate-400 truncate font-sans">
                                     {action.subtitle}
                                 </p>
                             </div>
                             {action.priority === 'critical' && (
-                                <div className="absolute left-0 top-0 w-1 h-full bg-rose-500" />
+                                <div className="absolute left-0 top-0 w-1 h-full bg-rose-500/50" />
                             )}
                         </div>
                     ))
@@ -146,10 +149,10 @@ const PendingActionsWidget: React.FC<ControlPendingActionsWidgetProps> = ({ data
             </div>
 
             {/* FOOTER ACTION */}
-            <div className="p-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+            <div className="p-3 bg-transparent border-t border-white/5 relative z-10">
                 <button
                     onClick={(e) => { e.stopPropagation(); navigate('/admin/support'); }}
-                    className="w-full bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold uppercase tracking-wide text-[10px] py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 group shadow-sm hover:shadow-md"
+                    className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold uppercase tracking-wide text-[10px] py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 group shadow-sm hover:shadow-md"
                 >
                     Centro de Soporte
                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />

@@ -137,6 +137,7 @@ jobs:
         run: npm run build
         env:
           VITE_FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG_STAGING }}
+          VITE_GOOGLE_AI_KEY: ${{ secrets.VITE_GOOGLE_AI_KEY }}
 
       - name: Deploy to Firebase Staging
         uses: FirebaseExtended/action-hosting-deploy@v0
@@ -169,6 +170,7 @@ jobs:
         run: npm run build
         env:
           VITE_FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG_PRODUCTION }}
+          VITE_GOOGLE_AI_KEY: ${{ secrets.VITE_GOOGLE_AI_KEY }}
 
       - name: Deploy to Firebase Production
         uses: FirebaseExtended/action-hosting-deploy@v0

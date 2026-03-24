@@ -40,14 +40,14 @@ const OperationalMetrics: React.FC<OperationalMetricsProps> = ({ franchises, onC
             {/* Charts Grid */}
             <div className="flex flex-col gap-4">
                 {/* Productivity Chart */}
-                <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800 hover:border-slate-700 transition-colors">
-                    <h4 className="flex justify-between items-center mb-4">
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Productividad (Peds/H)</span>
-                        <span className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <div className="bg-[#12141A] p-4 rounded-xl border border-white/5 shadow-lg relative overflow-hidden group/chart transition-all hover:border-white/10">
+                    <h4 className="flex justify-between items-center mb-4 relative z-10">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Productividad (Peds/H)</span>
+                        <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded-md text-[9px] font-bold text-slate-300 uppercase tracking-widest">
                             Target {'>'} 2.5
                         </span>
                     </h4>
-                    <div className="h-40 cursor-pointer">
+                    <div className="h-40 cursor-pointer relative z-10">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart
                                 layout="vertical"
@@ -67,17 +67,18 @@ const OperationalMetrics: React.FC<OperationalMetricsProps> = ({ franchises, onC
                                     }
                                 }}
                             >
-                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#334155" />
+                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#ffffff10" />
                                 <XAxis type="number" hide />
-                                <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                                <Tooltip content={<CustomChartTooltip />} cursor={{ fill: '#1e293b' }} />
-                                <Bar dataKey="metrics.productivity" name="Peds/H" fill="#8b5cf6" radius={[0, 4, 4, 0]} barSize={8}>
+                                <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                                <Tooltip content={<CustomChartTooltip />} cursor={{ fill: '#ffffff05' }} />
+                                <Bar dataKey="metrics.productivity" name="Peds/H" fill="#6366f1" radius={[0, 4, 4, 0]} barSize={8}>
                                     {franchises.slice(0, 5).map((entry, index) => {
                                         const productivity = entry.metrics?.productivity || 0;
                                         return (
                                             <Cell
                                                 key={`cell-${index}`}
-                                                fill={productivity < 2 ? '#f43f5e' : '#8b5cf6'}
+                                                fill={productivity < 2 ? '#f43f5e' : '#6366f1'}
+                                                style={{ filter: 'drop-shadow(0px 0px 4px rgba(99,102,241,0.3))' }}
                                                 onMouseEnter={() => handlePrefetch(entry.id)}
                                             />
                                         );
@@ -89,14 +90,14 @@ const OperationalMetrics: React.FC<OperationalMetricsProps> = ({ franchises, onC
                 </div>
 
                 {/* Distance Chart */}
-                <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800 hover:border-slate-700 transition-colors">
-                    <h4 className="flex justify-between items-center mb-4">
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Eficiencia Logística</span>
-                        <span className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <div className="bg-[#12141A] p-4 rounded-xl border border-white/5 shadow-lg relative overflow-hidden group/chart transition-all hover:border-white/10">
+                    <h4 className="flex justify-between items-center mb-4 relative z-10">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Eficiencia Logística</span>
+                        <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded-md text-[9px] font-bold text-slate-300 uppercase tracking-widest">
                             {'<'} 3.5km
                         </span>
                     </h4>
-                    <div className="h-40 cursor-pointer">
+                    <div className="h-40 cursor-pointer relative z-10">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart
                                 layout="vertical"
@@ -116,11 +117,11 @@ const OperationalMetrics: React.FC<OperationalMetricsProps> = ({ franchises, onC
                                     }
                                 }}
                             >
-                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#334155" />
+                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#ffffff10" />
                                 <XAxis type="number" hide />
-                                <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                                <Tooltip content={<CustomChartTooltip />} cursor={{ fill: '#1e293b' }} />
-                                <Bar dataKey="metrics.avgDistance" name="Km" fill="#06b6d4" radius={[0, 4, 4, 0]} barSize={8} />
+                                <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                                <Tooltip content={<CustomChartTooltip />} cursor={{ fill: '#ffffff05' }} />
+                                <Bar dataKey="metrics.avgDistance" name="Km" fill="#0ea5e9" radius={[0, 4, 4, 0]} barSize={8} style={{ filter: 'drop-shadow(0px 0px 4px rgba(14,165,233,0.3))' }} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>

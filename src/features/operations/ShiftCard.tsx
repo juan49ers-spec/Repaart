@@ -107,21 +107,21 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
 
     // Priority: Night (Red) > Midday (Blue) > Default (Indigo)
     let themeLabel = "Mañana";
-    let ringClass = "ring-indigo-500/10";
+    let ringClass = "border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.1)] group-hover:shadow-[0_0_20px_rgba(99,102,241,0.2)]";
 
     if (isMidday) {
         themeLabel = "Mediodía";
-        ringClass = "ring-blue-500/10";
+        ringClass = "border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)] group-hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]";
     } else if (isNight) {
         themeLabel = "Noche";
-        ringClass = "ring-rose-500/10";
+        ringClass = "border border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.1)] group-hover:shadow-[0_0_20px_rgba(244,63,94,0.2)]";
     }
 
-    if (isCurrent) ringClass = "ring-2 ring-white/20";
+    if (isCurrent) ringClass = "border-2 border-slate-400/50 dark:border-white/30 shadow-[0_0_20px_rgba(255,255,255,0.1)]";
     // Change Request accent
-    if (changeRequested) ringClass = "ring-1 ring-amber-500/30";
+    if (changeRequested) ringClass = "border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.15)]";
     // Confirmed accent
-    if (isConfirmed) ringClass = "ring-1 ring-emerald-500/30";
+    if (isConfirmed) ringClass = "border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)] group-hover:shadow-[0_0_25px_rgba(16,185,129,0.25)]";
 
     // Get rider color
     const riderColor = getRiderColor(riderId || '');
@@ -263,23 +263,23 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                 isDragging ? 'opacity-40 cursor-grabbing scale-95 ring-2 ring-indigo-400 ring-offset-2' : 'cursor-grab',
                 // Priority States (Admin & Common)
                 hasConflict
-                    ? 'bg-red-50/90 border border-red-200 shadow-sm'
-                    : changeRequested
-                        ? 'bg-amber-50/90 border border-amber-200 shadow-sm'
+                    ? 'bg-red-50/80 dark:bg-red-900/30 border border-red-200 dark:border-red-900/50 backdrop-blur-md shadow-sm'
+                    : changeRequested && !isRiderMode
+                        ? 'bg-amber-50/80 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-900/50 backdrop-blur-md shadow-sm'
                         : !isRiderMode && isConfirmed
-                            ? 'bg-emerald-50/40 border-emerald-100/80 shadow-sm'
+                            ? 'bg-emerald-50/80 dark:bg-emerald-900/30 border-emerald-200/80 dark:border-emerald-900/50 backdrop-blur-md shadow-sm'
                             : isRiderMode
-                                ? cn("bg-[#1c1c1e] shadow-2xl shadow-black/60", ringClass)
+                                ? cn("bg-white/60 dark:bg-white/5 backdrop-blur-2xl transition-all", ringClass, "hover:bg-white/80 dark:hover:bg-white/10 hover:-translate-y-1")
                                 : cn(
-                                    "bg-white border text-left",
-                                    "border-slate-200/60 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)]",
-                                    "hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-0.5 hover:border-indigo-200/50"
+                                    "bg-white/70 dark:bg-white/5 backdrop-blur-md border border-white/40 dark:border-white/10 text-left transition-all",
+                                    "shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-none",
+                                    "hover:bg-white/90 dark:hover:bg-white/10 hover:shadow-xl hover:shadow-indigo-500/15 hover:-translate-y-0.5 hover:border-indigo-200/50 dark:hover:border-indigo-500/30"
                                 ),
                 canDrag && "touch-feedback-subtle active:cursor-grabbing",
                 isExpanded && isRiderMode && "ring-1 ring-white/20",
                 className
             )}
-            style={style}
+            {...(style ? { style } : {})}
             onClick={onClick}
             onContextMenu={handleRightClick}
             onMouseEnter={() => setShowActions(true)}
@@ -311,11 +311,11 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                                 </div>
                             ) : changeRequested ? (
                                 <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
-                                    <span className="text-[10px] font-bold text-amber-400 uppercase tracking-tight">Cambio Solicitado</span>
+                                    <span className="text-[10px] font-bold text-amber-500 dark:text-amber-400 uppercase tracking-tight">Cambio Solicitado</span>
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/5 border border-white/5">
-                                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-tight">{themeLabel}</span>
+                                <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-200/50 dark:bg-white/5 border border-slate-300/50 dark:border-white/5">
+                                    <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 uppercase tracking-tight">{themeLabel}</span>
                                 </div>
                             )}
 
@@ -338,9 +338,9 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
 
                         <div className="flex items-center gap-2">
                             {moto && (
-                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/10">
-                                    <Truck size={10} className={cn("text-white/40", isCurrent && (isConfirmed ? "text-emerald-400" : "text-white"))} />
-                                    <span className="text-[10px] font-bold text-zinc-400 font-mono tracking-tighter">{moto.plate}</span>
+                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-200/50 dark:bg-white/5 border border-slate-300/50 dark:border-white/10">
+                                    <Truck size={10} className={cn("text-slate-500 dark:text-white/40", isCurrent && (isConfirmed ? "text-emerald-500 dark:text-emerald-400" : "text-slate-800 dark:text-white"))} />
+                                    <span className="text-[10px] font-bold text-slate-600 dark:text-zinc-400 font-mono tracking-tighter">{moto.plate}</span>
                                 </div>
                             )}
                         </div>
@@ -351,16 +351,16 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                         <div className="flex flex-col gap-1 w-full mr-3">
                             {/* Time Text */}
                             <div className="flex items-baseline gap-1.5 sm:gap-2">
-                                <span className="text-xl sm:text-3xl font-light text-white tracking-tighter">{startTime}</span>
-                                <span className="text-zinc-700 text-lg sm:text-xl font-thin">—</span>
-                                <span className="text-lg sm:text-2xl font-light text-zinc-500 tracking-tighter">{endTime}</span>
+                                <span className="text-xl sm:text-3xl font-light text-slate-800 dark:text-white tracking-tighter">{startTime}</span>
+                                <span className="text-slate-400 dark:text-zinc-700 text-lg sm:text-xl font-thin">—</span>
+                                <span className="text-lg sm:text-2xl font-light text-slate-500 dark:text-zinc-500 tracking-tighter">{endTime}</span>
                             </div>
 
                             {/* Visual Timeline Bar */}
-                            <div className="h-1.5 w-full bg-zinc-800 rounded-full relative overflow-hidden mt-0.5">
+                            <div className="h-1.5 w-full bg-slate-200/80 dark:bg-zinc-800/80 rounded-full relative overflow-hidden mt-0.5 shadow-inner">
                                 {/* Track Markers (Optional, e.g. every 3h) */}
-                                <div className="absolute left-[33%] top-0 bottom-0 w-[1px] bg-zinc-700/50" />
-                                <div className="absolute left-[66%] top-0 bottom-0 w-[1px] bg-zinc-700/50" />
+                                <div className="absolute left-[33%] top-0 bottom-0 w-[1px] bg-slate-300/50 dark:bg-zinc-700/50" />
+                                <div className="absolute left-[66%] top-0 bottom-0 w-[1px] bg-slate-300/50 dark:bg-zinc-700/50" />
 
                                 {/* The Shift Bar */}
                                 {(() => {
@@ -384,23 +384,23 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                                     const widthPct = Math.max(5, Math.min(100, ((endH - startH) / totalWindowHours) * 100));
 
                                     return (
-                                        <div
-                                            className={cn(
-                                                "absolute top-0 bottom-0 rounded-full bg-gradient-to-r",
-                                                isConfirmed ? "from-emerald-500 to-emerald-400" :
-                                                    changeRequested ? "from-amber-500 to-amber-400" :
-                                                        isNight ? "from-rose-500 to-rose-400" : "from-indigo-500 to-blue-400"
-                                            )}
-                                            style={{ left: `${startPct}%`, width: `${widthPct}%` }}
-                                        />
-                                    );
-                                })()}
-                            </div>
+                                            <div
+                                                className={cn(
+                                                    "absolute top-0 bottom-0 rounded-full bg-gradient-to-r shadow-sm",
+                                                    isConfirmed ? "from-emerald-500 to-emerald-400 shadow-emerald-500/20" :
+                                                        changeRequested ? "from-amber-500 to-amber-400 shadow-amber-500/20" :
+                                                            isNight ? "from-rose-500 to-rose-400 shadow-rose-500/20" : "from-indigo-500 to-blue-400 shadow-indigo-500/20"
+                                                )}
+                                                {...({ style: { left: `${startPct}%`, width: `${widthPct}%` } })}
+                                            />
+                                        );
+                                    })()}
+                                </div>
 
-                            <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">{duration}H</span>
-                                {isConfirmed && <div className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[8px] font-black tracking-tighter uppercase">OK</div>}
-                            </div>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-[9px] font-bold text-slate-500 dark:text-zinc-600 uppercase tracking-widest">{duration}H</span>
+                                    {isConfirmed && <div className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[8px] font-black tracking-tighter uppercase">OK</div>}
+                                </div>
                         </div>
 
                         {/* Actions Right (Apple Style Buttons) */}
@@ -413,8 +413,8 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                                     className={cn(
                                         "w-12 h-12 rounded-full flex items-center justify-center transition-all active:scale-90 border",
                                         changeRequested
-                                            ? "bg-amber-500/10 border-amber-500/30 text-amber-500"
-                                            : "bg-zinc-800/80 border-white/5 text-zinc-500"
+                                            ? "bg-amber-100 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/30 text-amber-600 dark:text-amber-500"
+                                            : "bg-slate-200/50 dark:bg-zinc-800/80 border-slate-300/50 dark:border-white/5 text-slate-500 dark:text-zinc-500"
                                     )}
                                     title="Solicitar cambio"
                                 >
@@ -429,8 +429,8 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
                                 className={cn(
                                     "w-12 h-12 rounded-full flex items-center justify-center transition-all active:scale-90 border",
                                     isConfirmed
-                                        ? "bg-emerald-500 border-none text-white shadow-[0_0_20px_rgba(16,185,129,0.4)]"
-                                        : "bg-emerald-500/10 border-emerald-500/30 text-emerald-500"
+                                        ? "bg-emerald-500 border-emerald-500 text-white shadow-[0_4px_15px_rgba(16,185,129,0.4)]"
+                                        : "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-500"
                                 )}
                                 title={isConfirmed ? "Confirmado" : "Confirmar turno"}
                             >

@@ -7,7 +7,7 @@ import type { Invoice } from '../../types/invoicing';
 import { TaxCalculations } from '../../hooks/useTaxCalculations';
 
 
-// Components
+import { cn } from '../../lib/utils';
 import TaxVaultWidget from './finance/TaxVaultWidget';
 import FinancialControlCenter from './FinancialControlCenter';
 import FranchiseHistoryView from './finance/FranchiseHistoryView';
@@ -16,7 +16,7 @@ import ExpenseBreakdownWidget from './dashboard/widgets/ExpenseBreakdownWidget';
 import TakeHomeProfitWidget from './dashboard/widgets/TakeHomeProfitWidget';
 import RevenueAreaChart from './dashboard/widgets/RevenueAreaChart';
 import HourlyCostWidget from './dashboard/widgets/HourlyCostWidget';
-import FinancialAdvisorWidget from './dashboard/widgets/FinancialAdvisorWidget';
+
 
 import WidgetLegendModal from './dashboard/WidgetLegendModal';
 import FinancialWorkflowGuide from './components/FinancialWorkflowGuide';
@@ -208,13 +208,36 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
 
 
                         {/* AI Advisor */}
-                        <button
-                            onClick={() => setIsAdvisorOpen(true)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-[10px] font-semibold uppercase tracking-wider transition-all border border-blue-200 shadow-sm"
-                        >
-                            <Bot className="w-3.5 h-3.5" />
-                            <span>Tu Asesor</span>
-                        </button>
+                        {(() => {
+                            const liveRevenue = revenue > 0 ? revenue : (monthlyInvoicedAmount || 0);
+                            const liveLaborCost = Number(rawData?.salaries || 0) > 0 ? Number(rawData?.salaries) : totalHours * 7.5;
+                            const liveTotalExpenses = totalExpenses > 0 ? totalExpenses : liveLaborCost;
+                            const margin = liveRevenue > 0 ? (((liveRevenue - liveTotalExpenses) - ((liveRevenue - liveTotalExpenses) > 0 ? (liveRevenue - liveTotalExpenses) * 0.20 : 0)) / liveRevenue) * 100 : 0;
+                            const expenseRatio = liveRevenue > 0 ? liveTotalExpenses / liveRevenue : 0;
+                            const hourlyCost = totalHours > 0 ? liveTotalExpenses / totalHours : 0;
+                            const hasAlerts = margin < 15 || expenseRatio > 0.7 || hourlyCost > 22 || revenueTrend < -3 || (liveRevenue > 0 && liveTotalExpenses > liveRevenue);
+
+                            return (
+                                <button
+                                    onClick={() => setIsAdvisorOpen(true)}
+                                    className={cn(
+                                        "relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wider transition-all border shadow-sm",
+                                        hasAlerts 
+                                            ? "bg-amber-50 hover:bg-amber-100 text-amber-600 border-amber-300 ring-2 ring-amber-400/50 shadow-amber-200/50" 
+                                            : "bg-blue-50 hover:bg-blue-100 text-blue-600 border-blue-200"
+                                    )}
+                                >
+                                    <Bot className={cn("w-3.5 h-3.5", hasAlerts && "animate-pulse")} />
+                                    <span>Tu Asesor</span>
+                                    {hasAlerts && (
+                                        <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })()}
 
                         {/* Action Primary: Close Month */}
                         {!readOnly && (() => {
@@ -265,7 +288,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                         />
                         <DynamicBanner />
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                             {(() => {
                                 const liveRevenue = revenue > 0 ? revenue : (monthlyInvoicedAmount || 0);
                                 const liveLaborCost = Number(rawData?.salaries || 0) > 0 ? Number(rawData?.salaries) : totalHours * 7.5;
@@ -285,7 +308,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
 
                                 return (
                                     <>
-                                        {/* Row 1: Core Metrics & Intelligence (4 Columns) */}
+                                        {/* Row 1: Core Metrics & Intelligence (3 Columns) */}
                                         <div className="col-span-1">
                                             <ErrorBoundary>
                                                 <div className="h-full bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700">
@@ -317,27 +340,6 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                                         <div className="col-span-1">
                                             <ErrorBoundary>
                                                 <div className="h-full bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700">
-                                                    <FinancialAdvisorWidget
-                                                        revenue={liveRevenue}
-                                                        expenses={liveTotalExpenses}
-                                                        margin={(() => {
-                                                            if (liveRevenue <= 0) return 0;
-                                                            const opProfit = liveRevenue - liveTotalExpenses;
-                                                            const tax = opProfit > 0 ? opProfit * 0.20 : 0;
-                                                            return ((opProfit - tax) / liveRevenue) * 100;
-                                                        })()}
-                                                        hourlyCost={totalHours > 0 ? liveTotalExpenses / totalHours : 0}
-                                                        taxReserve={liveRevenue * 0.21}
-                                                        trend={revenueTrend}
-                                                        onOpenAdvisor={() => setIsAdvisorOpen(true)}
-                                                    />
-                                                </div>
-                                            </ErrorBoundary>
-                                        </div>
-
-                                        <div className="col-span-1">
-                                            <ErrorBoundary>
-                                                <div className="h-full bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-700">
                                                     <HourlyCostWidget
                                                         totalCost={liveTotalExpenses}
                                                         totalHours={totalHours}
@@ -350,7 +352,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                                         </div>
 
                                         {/* Row 2: Charts and Breakdowns */}
-                                        <div className="col-span-1 md:col-span-2 lg:col-span-3 p-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 transition-all hover:border-slate-300 dark:hover:border-slate-700">
+                                        <div className="col-span-1 md:col-span-2 lg:col-span-2 p-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 transition-all hover:border-slate-300 dark:hover:border-slate-700">
                                             <div className="flex items-center justify-between mb-2">
                                                 <div className="flex items-center gap-2">
                                                     <div className="h-3 w-1 bg-indigo-500 rounded-full" />

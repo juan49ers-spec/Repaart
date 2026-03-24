@@ -605,7 +605,7 @@ const LessonEditorModal: React.FC<LessonEditorModalProps> = ({
                         <div className="flex flex-1 overflow-hidden relative bg-transparent">
 
                             {/* LEFT SIDEBAR - CONFIGURATION */}
-                            <div className="w-80 border-r border-slate-200/50 dark:border-slate-800/50 bg-white/40 dark:bg-slate-950/40 backdrop-blur-sm overflow-y-auto flex flex-col shrink-0">
+                            <div className="hidden md:flex w-80 border-r border-slate-200/50 dark:border-slate-800/50 bg-white/40 dark:bg-slate-950/40 backdrop-blur-sm overflow-y-auto flex-col shrink-0">
                                 {/* Completeness Donut */}
                                 <div className="p-6 border-b border-slate-100 dark:border-slate-800/60">
                                     <h3 className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase mb-5">Estado de la Lección</h3>

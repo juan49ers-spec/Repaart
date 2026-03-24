@@ -57,7 +57,7 @@ const RiderLeaderboard: React.FC<RiderLeaderboardProps> = ({ entries, currentRid
 
     return (
         <div className="rider-leaderboard">
-            <div className="glass-premium rounded-[2rem] p-6 relative overflow-hidden">
+            <div className="glass-premium rounded-[2rem] p-4 sm:p-6 relative overflow-hidden">
                 <div className="absolute top-0 bottom-0 left-0 w-1 bg-gradient-to-b from-amber-500 to-amber-400" />
 
                 <div className="relative z-10">
@@ -72,7 +72,7 @@ const RiderLeaderboard: React.FC<RiderLeaderboardProps> = ({ entries, currentRid
                     </div>
 
                     {/* Podium - Top 3 */}
-                    <div className="grid grid-cols-3 gap-3 mb-6">
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-6">
                         {top3.map((entry, index) => (
                             <div
                                 key={entry.id}

@@ -16,11 +16,14 @@ import {
     Briefcase,
     BookOpen,
     Layout,
-    Loader2
+    Loader2,
+    Smartphone,
+    X
 } from 'lucide-react';
 import DocPreviewModal from '../../components/ui/overlays/DocPreviewModal';
 import GuideViewerModal from './components/GuideViewerModal';
 import { GUIDE_THEMES, GUIDE_ICONS } from '../../lib/constants';
+import FlyderInstallGuide from '../common/guides/FlyderInstallGuide';
 
 interface Resource {
     id: string;
@@ -67,6 +70,7 @@ const ResourcesPanel: React.FC = () => {
     const [previewFile, setPreviewFile] = useState<Resource | null>(null);
     const [previewGuide, setPreviewGuide] = useState<Resource | null>(null);
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+    const [showFlyderGuide, setShowFlyderGuide] = useState(false);
 
     const handleDownload = async (item: Resource, e?: React.MouseEvent) => {
         e?.stopPropagation();
@@ -334,6 +338,35 @@ const ResourcesPanel: React.FC = () => {
                         <>
                             {viewMode === 'grid' ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+
+                                    {/* Flyder iOS — tarjeta estática siempre visible en Manuales */}
+                                    {activeCategory === 'manuals' && !searchTerm && (
+                                        <div
+                                            onClick={() => setShowFlyderGuide(true)}
+                                            className="group bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl p-4 hover:shadow-lg hover:shadow-indigo-500/10 hover:border-indigo-500/30 transition-all duration-300 cursor-pointer overflow-hidden relative flex flex-col h-full"
+                                        >
+                                            <div className="absolute -right-6 -top-6 w-20 h-20 rounded-full bg-indigo-100 dark:bg-indigo-900/30 opacity-20 group-hover:scale-150 transition-transform duration-500" />
+                                            <div className="flex justify-between items-start mb-3 relative z-10">
+                                                <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center transition-transform group-hover:scale-110">
+                                                    <Smartphone className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                                                </div>
+                                                <span className="bg-indigo-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm">iOS</span>
+                                            </div>
+                                            <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-1.5 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                                Instalar Flyder en iPhone
+                                            </h4>
+                                            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium line-clamp-2 mb-3 flex-1">
+                                                Guía paso a paso para descargar e instalar Flyder vía TestFlight.
+                                            </p>
+                                            <div className="pt-2 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between mt-auto">
+                                                <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Guía Interactiva</span>
+                                                <span className="text-[9px] font-bold text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                                                    Ver <Eye className="w-2.5 h-2.5" />
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {filteredItems.map((item) => {
                                         // GUIDE CARD RENDER
                                         if (item.isGuide) {
@@ -439,6 +472,27 @@ const ResourcesPanel: React.FC = () => {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                                            {/* Flyder iOS — fila estática en vista lista */}
+                                            {activeCategory === 'manuals' && !searchTerm && (
+                                                <tr
+                                                    className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer"
+                                                    onClick={() => setShowFlyderGuide(true)}
+                                                >
+                                                    <td className="p-4 pl-6 font-medium text-slate-900 dark:text-white flex items-center gap-3">
+                                                        <div className="transform scale-75">
+                                                            <Smartphone className="w-10 h-10 text-indigo-500" />
+                                                        </div>
+                                                        Instalar Flyder en iPhone
+                                                    </td>
+                                                    <td className="p-4 text-slate-500 font-mono text-xs">Guía Interactiva</td>
+                                                    <td className="p-4 text-slate-500">—</td>
+                                                    <td className="p-4 text-right pr-6">
+                                                        <button title="Ver Guía" className="p-2 text-slate-400 hover:text-indigo-600 transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+                                                            <Eye className="w-4 h-4" />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            )}
                                             {filteredItems.map(item => (
                                                 <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer" onClick={() => handleItemClick(item)}>
                                                     <td className="p-4 pl-6 font-medium text-slate-900 dark:text-white flex items-center gap-3">
@@ -506,6 +560,18 @@ const ResourcesPanel: React.FC = () => {
                 onClose={() => setIsRequestModalOpen(false)}
                 folders={FOLDERS}
             />
+
+            {/* Flyder iOS Install Guide — modal */}
+            {showFlyderGuide && (
+                <div
+                    className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+                    onClick={() => setShowFlyderGuide(false)}
+                >
+                    <div onClick={e => e.stopPropagation()} className="w-full max-w-[400px] relative">
+                        <FlyderInstallGuide onClose={() => setShowFlyderGuide(false)} />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
