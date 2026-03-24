@@ -4,8 +4,8 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Send, AlertCircle, HelpCircle, Zap, LucideIcon, Plus } from 'lucide-react';
 import { notificationService } from '../../../services/notificationService';
 import { useAuth } from '../../../context/AuthContext';
-import { suggestSupportSolution } from '../../../lib/gemini';
 import { cn } from '../../../lib/utils';
+import { TicketSolutionSuggestion } from './components/TicketSolutionSuggestion';
 
 interface NewTicketFormProps {
     onSubmit?: (data: TicketFormData) => void;
@@ -42,35 +42,6 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
         priority: 'low'
     });
     const [loading, setLoading] = useState(false);
-    const [suggestion, setSuggestion] = useState<{ text: string, confidence: number } | null>(null);
-
-    // AI AUTO-RESOLUTION
-    useEffect(() => {
-        const timer = setTimeout(async () => {
-            // Updated Logic: Trigger if Subject is meaningful (>4 chars) OR Description is meaningful
-            const hasSubject = formData.subject.length > 4;
-            const hasDesc = formData.description.length > 4;
-
-            if (hasSubject || hasDesc) {
-                // Determine text to analyze
-                const subjectText = hasSubject ? formData.subject : "Consulta General";
-                const descText = hasDesc ? formData.description : formData.subject; // Fallback to subject if desc is empty
-
-                console.log("🤖 Asking Gemini:", subjectText, descText); // Debug log
-
-                const result = await suggestSupportSolution(subjectText, descText);
-                if (result && result.isSolvable) {
-                    setSuggestion({ text: result.suggestion, confidence: result.confidence });
-                } else {
-                    setSuggestion(null);
-                }
-            } else {
-                setSuggestion(null);
-            }
-        }, 1000); // Reduced delay to 1.0s for snappier feel
-
-        return () => clearTimeout(timer);
-    }, [formData.description, formData.subject]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -186,44 +157,13 @@ const NewTicketForm: React.FC<NewTicketFormProps> = ({ onClose }) => {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 h-full content-start pb-4">
 
                     {/* AI SUGGESTION BANNER */}
-                    {suggestion && (
-                        <div className="lg:col-span-12 px-1 animate-in fade-in slide-in-from-top-2 duration-500">
-                            <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 rounded-xl p-3 flex gap-3 shadow-sm">
-                                <div className="p-2 bg-white dark:bg-emerald-900 rounded-lg shadow-sm shrink-0 h-fit">
-                                    <Zap className="w-4 h-4 text-emerald-500 animate-pulse" />
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex justify-between items-start">
-                                        <h4 className="text-xs font-bold text-emerald-800 dark:text-emerald-300 mb-1">
-                                            Solución Inteligente Detectada
-                                        </h4>
-                                        <span className="text-[10px] bg-emerald-100 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-200 px-1.5 py-0.5 rounded font-bold">
-                                            {suggestion.confidence}% Confianza
-                                        </span>
-                                    </div>
-                                    <p className="text-xs text-emerald-700 dark:text-emerald-400 leading-relaxed font-medium">
-                                        {suggestion.text}
-                                    </p>
-                                    <div className="mt-2 flex gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => onClose ? onClose() : alert("Genial! Ticket evitado.")}
-                                            className="text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-md font-bold transition-colors shadow-sm"
-                                        >
-                                            ¡Funcionó! (Cerrar)
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setSuggestion(null)}
-                                            className="text-[10px] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-800/50 px-3 py-1 rounded-md font-bold transition-colors"
-                                        >
-                                            No ayudó
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    <div className="lg:col-span-12 px-1">
+                        <TicketSolutionSuggestion
+                            subject={formData.subject}
+                            description={formData.description}
+                            onResolved={() => { if (onClose) onClose(); }}
+                        />
+                    </div>
 
                     {/* Row 1: Asunto (Full) */}
                     <div className="lg:col-span-12 space-y-1.5 shrink-0">
