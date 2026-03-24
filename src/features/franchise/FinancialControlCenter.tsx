@@ -184,6 +184,7 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
                                     royaltyAmount={stats.royaltyAmount}
                                     calculatedOperativeHours={operativeHours}
                                     calculatedRiderExpenses={calculatedRiderExpenses}
+                                    historicalAvg={{}}
                                 />
                             </div>
                         )}

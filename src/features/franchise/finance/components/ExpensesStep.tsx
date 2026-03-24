@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { RefreshCw, Users, Truck, Building2, Wallet, Calculator } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ProfessionalInput } from './ui/ProfessionalInput';
 import { formatMoney } from '../../../../lib/finance';
+import { analyzeExpenseAmount } from '../../../../lib/gemini';
 
 interface ExpenseData {
     renting?: {
@@ -41,6 +42,7 @@ interface ExpensesStepProps {
     royaltyAmount: number;
     calculatedOperativeHours?: number;
     calculatedRiderExpenses?: { payroll: number; socialSecurity: number };
+    historicalAvg?: Record<string, number>;
 }
 
 interface SectionProps {
@@ -86,8 +88,36 @@ export const ExpensesStep: React.FC<ExpensesStepProps> = ({
     totalExpenses,
     royaltyAmount,
     calculatedOperativeHours = 0,
-    calculatedRiderExpenses = { payroll: 0, socialSecurity: 0 }
+    calculatedRiderExpenses = { payroll: 0, socialSecurity: 0 },
+    historicalAvg = {},
 }) => {
+    const [expenseHints, setExpenseHints] = useState<Record<string, { message: string; level: string }>>({});
+
+    useEffect(() => {
+        const categoriesToCheck: Array<{ key: string; value: number | undefined }> = [
+            { key: 'fuel', value: expenses.fuel },
+            { key: 'repairs', value: expenses.repairs },
+            { key: 'payroll', value: expenses.payroll },
+            { key: 'marketing', value: expenses.marketing },
+            { key: 'insurance', value: expenses.insurance },
+        ];
+
+        const timer = setTimeout(async () => {
+            const updates: Record<string, { message: string; level: string }> = {};
+            await Promise.all(
+                categoriesToCheck.map(async ({ key, value }) => {
+                    const avg = historicalAvg[key] ?? 0;
+                    if (!value || avg === 0 || value <= avg * 1.2) return;
+                    const result = await analyzeExpenseAmount(key, value, avg);
+                    if (result) updates[key] = result;
+                })
+            );
+            setExpenseHints(updates);
+        }, 800);
+
+        return () => clearTimeout(timer);
+    }, [expenses.fuel, expenses.repairs, expenses.payroll, expenses.marketing, expenses.insurance, historicalAvg]);
+
     const syncWithLogistics = () => {
         setTotalHours(calculatedOperativeHours);
         setExpenses(prev => ({
@@ -165,7 +195,14 @@ export const ExpensesStep: React.FC<ExpensesStepProps> = ({
                             icon={<Users className="w-3.5 h-3.5" />}
                             highlight={true}
                         >
-                            <ProfessionalInput label="Salarios Netos" value={expenses.payroll} onChange={(v) => setExpenses(e => ({ ...e, payroll: v }))} prefix="€" size="small" taxType="exempt" />
+                            <div>
+                                <ProfessionalInput label="Salarios Netos" value={expenses.payroll} onChange={(v) => setExpenses(e => ({ ...e, payroll: v }))} prefix="€" size="small" taxType="exempt" />
+                                {expenseHints.payroll && (
+                                    <p className={`text-xs mt-1 ${expenseHints.payroll.level === 'very_high' ? 'text-amber-600' : 'text-slate-500'}`}>
+                                        ℹ️ {expenseHints.payroll.message}
+                                    </p>
+                                )}
+                            </div>
                             <ProfessionalInput label="Seg. Sociales" value={expenses.socialSecurity} onChange={(v) => setExpenses(e => ({ ...e, socialSecurity: v }))} prefix="€" size="small" taxType="exempt" />
                             <ProfessionalInput label="Cuota Autónomo" value={expenses.quota} onChange={(v) => setExpenses(e => ({ ...e, quota: v }))} prefix="€" size="small" taxType="exempt" />
                             <ProfessionalInput label="Horas Operativas" value={totalHours} onChange={setTotalHours} type="number" size="small" />
@@ -184,7 +221,14 @@ export const ExpensesStep: React.FC<ExpensesStepProps> = ({
                                 <span className="text-[10px] font-black text-slate-800 dark:text-slate-200 tabular-nums tracking-tight">{formatMoney(rentingTotal)}€</span>
                             </div>
 
-                            <ProfessionalInput label="Gasto Gasolina" value={expenses.fuel} onChange={(v) => setExpenses(e => ({ ...e, fuel: v }))} prefix="€" size="small" taxType="standard" />
+                            <div>
+                                <ProfessionalInput label="Gasto Gasolina" value={expenses.fuel} onChange={(v) => setExpenses(e => ({ ...e, fuel: v }))} prefix="€" size="small" taxType="standard" />
+                                {expenseHints.fuel && (
+                                    <p className={`text-xs mt-1 ${expenseHints.fuel.level === 'very_high' ? 'text-amber-600' : 'text-slate-500'}`}>
+                                        ℹ️ {expenseHints.fuel.message}
+                                    </p>
+                                )}
+                            </div>
                         </Section>
 
                         {/* Estructura */}
@@ -206,9 +250,30 @@ export const ExpensesStep: React.FC<ExpensesStepProps> = ({
                             title="Gastos Extraordinarios"
                             icon={<Wallet className="w-3.5 h-3.5" />}
                         >
-                            <ProfessionalInput label="Seguros RC/Flota" value={expenses.insurance} onChange={(v) => setExpenses(e => ({ ...e, insurance: v }))} prefix="€" size="small" taxType="exempt" />
-                            <ProfessionalInput label="Mantenimiento" value={expenses.repairs} onChange={(v) => setExpenses(e => ({ ...e, repairs: v }))} prefix="€" size="small" taxType="standard" />
-                            <ProfessionalInput label="Marketing" value={expenses.marketing} onChange={(v) => setExpenses(e => ({ ...e, marketing: v }))} prefix="€" size="small" taxType="standard" />
+                            <div>
+                                <ProfessionalInput label="Seguros RC/Flota" value={expenses.insurance} onChange={(v) => setExpenses(e => ({ ...e, insurance: v }))} prefix="€" size="small" taxType="exempt" />
+                                {expenseHints.insurance && (
+                                    <p className={`text-xs mt-1 ${expenseHints.insurance.level === 'very_high' ? 'text-amber-600' : 'text-slate-500'}`}>
+                                        ℹ️ {expenseHints.insurance.message}
+                                    </p>
+                                )}
+                            </div>
+                            <div>
+                                <ProfessionalInput label="Mantenimiento" value={expenses.repairs} onChange={(v) => setExpenses(e => ({ ...e, repairs: v }))} prefix="€" size="small" taxType="standard" />
+                                {expenseHints.repairs && (
+                                    <p className={`text-xs mt-1 ${expenseHints.repairs.level === 'very_high' ? 'text-amber-600' : 'text-slate-500'}`}>
+                                        ℹ️ {expenseHints.repairs.message}
+                                    </p>
+                                )}
+                            </div>
+                            <div>
+                                <ProfessionalInput label="Marketing" value={expenses.marketing} onChange={(v) => setExpenses(e => ({ ...e, marketing: v }))} prefix="€" size="small" taxType="standard" />
+                                {expenseHints.marketing && (
+                                    <p className={`text-xs mt-1 ${expenseHints.marketing.level === 'very_high' ? 'text-amber-600' : 'text-slate-500'}`}>
+                                        ℹ️ {expenseHints.marketing.message}
+                                    </p>
+                                )}
+                            </div>
                             <ProfessionalInput label="Servicios Repaart" value={expenses.repaartServices} onChange={(v) => setExpenses(e => ({ ...e, repaartServices: v }))} prefix="€" size="small" taxType="standard" />
                             <ProfessionalInput label="Incidencias" value={expenses.incidents} onChange={(v) => setExpenses(e => ({ ...e, incidents: v }))} prefix="€" size="small" taxType="standard" />
                             <ProfessionalInput label="Otros Gastos" value={expenses.other} onChange={(v) => setExpenses(e => ({ ...e, other: v }))} prefix="€" size="small" taxType="standard" />
