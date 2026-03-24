@@ -724,7 +724,7 @@ export const analyzeExpenseAmount = async (
   category: string,
   amount: number,
   historicalAvg: number
-): Promise<{ message: string; level: 'normal' | 'high' | 'very_high' } | null> => {
+): Promise<{ message: string; level: 'high' | 'very_high' } | null> => {
   if (historicalAvg === 0 || amount <= historicalAvg * 1.2) return null;
 
   const key = import.meta.env.VITE_GOOGLE_AI_KEY || '';
@@ -742,7 +742,7 @@ Media histórica (últimos 3 meses): ${historicalAvg}€
 Diferencia: +${pctAbove}%
 
 Responde SOLO con el JSON:
-{"message": "Una frase informativa corta (ej: Este gasto en combustible es un 35% más alto que tu media.)", "level": "${level}"}`;
+{"message": "Una frase informativa corta (ej: Este gasto en combustible es un 35% más alto que tu media.)"}`;
 
   const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
   for (const model of models) {
@@ -760,7 +760,10 @@ Responde SOLO con el JSON:
       const text: string = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
       if (!text) continue;
       const match = text.match(/\{[\s\S]*\}/);
-      if (match) return JSON.parse(match[0]) as { message: string; level: 'normal' | 'high' | 'very_high' };
+      if (match) {
+        const parsed = JSON.parse(match[0]) as { message: string };
+        return { message: parsed.message, level };
+      }
     } catch { continue; }
   }
   return null;

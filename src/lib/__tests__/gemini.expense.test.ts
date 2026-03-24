@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-vi.stubEnv('VITE_GOOGLE_AI_KEY', 'test-key-123');
-
 import { analyzeExpenseAmount } from '../gemini';
 
 describe('analyzeExpenseAmount', () => {
-  beforeEach(() => { vi.stubGlobal('fetch', vi.fn()); });
+  beforeEach(() => {
+    vi.stubEnv('VITE_GOOGLE_AI_KEY', 'test-key-123');
+    vi.stubGlobal('fetch', vi.fn());
+  });
   afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
   it('returns a result when amount is >20% above avg', async () => {
@@ -39,7 +40,7 @@ describe('analyzeExpenseAmount', () => {
   });
 
   it('falls back to second model if first fails', async () => {
-    const mockResult = { message: 'Este gasto en combustible es un 35% más alto.', level: 'high' as const };
+    const mockResult = { message: 'Este gasto en combustible es un 35% más alto.', level: 'very_high' as const };
     (fetch as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce({ ok: false, status: 503 })
       .mockResolvedValueOnce({

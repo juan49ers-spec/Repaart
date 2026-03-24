@@ -1,7 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-vi.stubEnv('VITE_GOOGLE_AI_KEY', 'test-key-123');
-
 import { generateAdvisorOpener } from '../gemini';
 import type { DashboardAlertContext } from '../gemini';
 
@@ -15,7 +13,10 @@ const mockFinancial: DashboardAlertContext['financial'] = {
 };
 
 describe('generateAdvisorOpener', () => {
-  beforeEach(() => { vi.stubGlobal('fetch', vi.fn()); });
+  beforeEach(() => {
+    vi.stubEnv('VITE_GOOGLE_AI_KEY', 'test-key-123');
+    vi.stubGlobal('fetch', vi.fn());
+  });
   afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
   it('returns a string when API responds with text', async () => {
