@@ -1332,6 +1332,8 @@ export const invoiceEngine = {
             });
 
             const ids = Array.from(possibleIds).filter(id => typeof id === 'string' && id.length > 0);
+            console.log(`[invoiceEngine] Resolved IDs for ${franchiseId}:`, ids);
+            
             const invoicesCollection = collection(db, INVOICES_COLLECTION);
 
             // Perform queries to support both franchiseId and franchise_id fields
@@ -1347,12 +1349,15 @@ export const invoiceEngine = {
             })));
 
             const rawDocs = querySnaps.flatMap((qs: QuerySnapshot<DocumentData>) => qs.docs || []);
+            console.log(`[invoiceEngine] Total raw docs found: ${rawDocs.length}`);
 
-            // Memory filter for status and date
+            // Memory filter for status (ISSUED and RECTIFIED only, include RECTIFICATIVE type for net calculation)
             const allDocs = rawDocs.filter((d) => {
                 const data = d.data();
-                return data.status === 'ISSUED';
+                return data.status === 'ISSUED' || data.status === 'RECTIFIED';
             });
+
+            console.log(`[invoiceEngine] After status filter (ISSUED/RECTIFIED): ${allDocs.length} docs`);
 
             // Log invoice discovery for troubleshooting
             if (allDocs.length > 0) {
@@ -1382,39 +1387,75 @@ export const invoiceEngine = {
             const finalIncome = uniqueDocs.reduce((acc, doc) => {
                 const data = doc.data();
 
-                // Memory filtering for date range
-                const issueField = data.issueDate || data.issuedAt || data.issued_at;
-                if (!issueField) {
-                    console.log(`[invoiceEngine] Debug: Skipping invoice ${doc.id} - No issue date field found`);
-                    return acc;
-                }
+                // Memory filtering for date range - Check if invoice belongs to this month's operations
+                let isForThisMonth = false;
 
-                // Ultra-robust date parsing
-                let issueDate: Date;
-                try {
-                    if (typeof issueField === 'object' && issueField !== null && 'toDate' in issueField && typeof (issueField as { toDate: () => Date }).toDate === 'function') {
-                        issueDate = (issueField as { toDate: () => Date }).toDate();
-                    } else if (typeof issueField === 'object' && issueField !== null && 'seconds' in issueField && typeof (issueField as { seconds: number }).seconds === 'number') {
-                        issueDate = new Date((issueField as { seconds: number }).seconds * 1000);
-                    } else if (typeof issueField === 'object' && issueField !== null && 'value' in issueField && (typeof (issueField as { value: string | number }).value === 'string' || typeof (issueField as { value: string | number }).value === 'number')) {
-                        issueDate = new Date((issueField as { value: string | number }).value);
-                    } else {
-                        issueDate = new Date(issueField as string | number | Date);
+                // 1. First priority: Check actual billed period (logisticsData.period.start)
+                if (data.logisticsData?.period?.start) {
+                    const startField = data.logisticsData.period.start;
+                    let periodStart: Date | null = null;
+                    
+                    try {
+                        if (typeof startField === 'object' && startField !== null && 'toDate' in startField && typeof (startField as { toDate: () => Date }).toDate === 'function') {
+                            periodStart = (startField as { toDate: () => Date }).toDate();
+                        } else if (typeof startField === 'object' && startField !== null && 'seconds' in startField && typeof (startField as { seconds: number }).seconds === 'number') {
+                            periodStart = new Date((startField as { seconds: number }).seconds * 1000);
+                        } else {
+                            periodStart = new Date(startField as string | number | Date);
+                        }
+                    } catch (err) {
+                        console.warn(`[invoiceEngine] Failed to parse logisticsData.period.start for invoice ${doc.id}`);
                     }
-                } catch {
-                    console.error('[invoiceEngine] Failed to parse date for invoice:', doc.id, issueField);
-                    return acc;
+
+                    if (periodStart && !isNaN(periodStart.getTime())) {
+                        if (periodStart >= startDate && periodStart <= endDate) {
+                            isForThisMonth = true;
+                        } else {
+                            console.log(`[invoiceEngine] Debug: Skipping invoice ${doc.id} (Logistics period start ${periodStart.toISOString()} is outside range ${startDate.toISOString()} - ${endDate.toISOString()})`);
+                            return acc;
+                        }
+                    }
                 }
 
-                if (isNaN(issueDate.getTime())) {
-                    console.error('[invoiceEngine] Invalid date result for invoice:', doc.id, issueField);
-                    return acc;
+                // 2. Fallback: Check issueDate if period was missing
+                if (!isForThisMonth) {
+                    const issueField = data.issueDate || data.issuedAt || data.issued_at;
+                    if (!issueField) {
+                        console.log(`[invoiceEngine] Debug: Skipping invoice ${doc.id} - No issue date field found`);
+                        return acc;
+                    }
+
+                    // Ultra-robust date parsing
+                    let issueDate: Date;
+                    try {
+                        if (typeof issueField === 'object' && issueField !== null && 'toDate' in issueField && typeof (issueField as { toDate: () => Date }).toDate === 'function') {
+                            issueDate = (issueField as { toDate: () => Date }).toDate();
+                        } else if (typeof issueField === 'object' && issueField !== null && 'seconds' in issueField && typeof (issueField as { seconds: number }).seconds === 'number') {
+                            issueDate = new Date((issueField as { seconds: number }).seconds * 1000);
+                        } else if (typeof issueField === 'object' && issueField !== null && 'value' in issueField && (typeof (issueField as { value: string | number }).value === 'string' || typeof (issueField as { value: string | number }).value === 'number')) {
+                            issueDate = new Date((issueField as { value: string | number }).value);
+                        } else {
+                            issueDate = new Date(issueField as string | number | Date);
+                        }
+                    } catch {
+                        console.error('[invoiceEngine] Failed to parse date for invoice:', doc.id, issueField);
+                        return acc;
+                    }
+
+                    if (isNaN(issueDate.getTime())) {
+                        console.error('[invoiceEngine] Invalid date result for invoice:', doc.id, issueField);
+                        return acc;
+                    }
+
+                    if (issueDate >= startDate && issueDate <= endDate) {
+                        isForThisMonth = true;
+                    } else {
+                        console.log(`[invoiceEngine] Debug: Skipping invoice ${doc.id} (Date: ${issueDate.toISOString()} is outside range ${startDate.toISOString()} - ${endDate.toISOString()})`);
+                        return acc;
+                    }
                 }
 
-                if (issueDate < startDate || issueDate > endDate) {
-                    console.log(`[invoiceEngine] Debug: Skipping invoice ${doc.id} (Date: ${issueDate.toISOString()} is outside range ${startDate.toISOString()} - ${endDate.toISOString()})`);
-                    return acc;
-                }
+                if (!isForThisMonth) return acc;
 
                 console.log(`[invoiceEngine] Debug: ✅ MATCH found! Invoice ${doc.id} (${data.fullNumber}) - Subtotal: ${data.subtotal}`);
 
