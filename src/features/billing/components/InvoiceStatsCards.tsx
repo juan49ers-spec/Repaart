@@ -44,17 +44,17 @@ export const InvoiceStatsCards: React.FC<Props> = ({ franchiseId, refreshTrigger
         try {
             setLoading(true);
 
-            // Fetch the pre-aggregated billing document (O(1) reading!)
             const { db } = await import('../../../lib/firebase');
-            const { doc, getDoc } = await import('firebase/firestore');
+            const { doc, getDoc, collection, query, where, getDocs } = await import('firebase/firestore');
 
+            // 1. Intentar leer stats pre-agregadas (O(1))
             const statsRef = doc(db, 'billing_stats', franchiseId);
             const statsSnap = await getDoc(statsRef);
 
             if (statsSnap.exists()) {
                 const data = statsSnap.data();
-                const totalInvoiced = data.totalInvoiced || 0;
-                const outstandingRaw = data.totalOutstanding || 0;
+                const totalInvoiced = data.totalInvoiced || data.totalIssued || 0;
+                const outstandingRaw = data.totalOutstanding || data.totalPending || 0;
                 const pendingPayments = outstandingRaw > 0 ? outstandingRaw : 0;
                 
                 const collectionRate = totalInvoiced > 0
@@ -64,21 +64,63 @@ export const InvoiceStatsCards: React.FC<Props> = ({ franchiseId, refreshTrigger
                 setStats({
                     totalInvoiced,
                     pendingPayments,
-                    paidInvoices: data.paidInvoicesCount || 0,
-                    overdueInvoices: data.overdueInvoicesCount || 0,
+                    paidInvoices: data.paidInvoicesCount || data.countPaid || 0,
+                    overdueInvoices: data.overdueInvoicesCount || data.countOverdue || 0,
                     collectionRate,
                     averagePaymentDays: data.averagePaymentDays || 0 
                 });
-            } else {
-                setStats({
-                    totalInvoiced: 0,
-                    pendingPayments: 0,
-                    paidInvoices: 0,
-                    overdueInvoices: 0,
-                    collectionRate: 100,
-                    averagePaymentDays: 0
-                });
+                return;
             }
+
+            // 2. Fallback: billing_stats no existe → calcular directo de facturas
+            console.warn('[InvoiceStatsCards] billing_stats no existe, calculando desde facturas...');
+            const invoicesRef = collection(db, 'invoices');
+            const q = query(invoicesRef, where('franchiseId', '==', franchiseId));
+            const invoicesSnap = await getDocs(q);
+
+            let totalInvoiced = 0;
+            let pendingPayments = 0;
+            let paidCount = 0;
+            let overdueCount = 0;
+            const now = new Date();
+
+            invoicesSnap.docs.forEach(d => {
+                const inv = d.data();
+                // Solo ISSUED estándar (no VOIDED, DRAFT, RECTIFIED)
+                if (inv.status !== 'ISSUED' || inv.type === 'RECTIFICATIVE') return;
+
+                const total = Number(inv.total) || 0;
+                totalInvoiced += total;
+
+                if (inv.paymentStatus === 'PAID') {
+                    paidCount++;
+                } else {
+                    const remaining = total - (Number(inv.totalPaid) || 0);
+                    pendingPayments += remaining > 0 ? remaining : 0;
+
+                    // Verificar si está vencida
+                    const dueField = inv.dueDate;
+                    let dueDate: Date | null = null;
+                    if (dueField?.toDate) dueDate = dueField.toDate();
+                    else if (dueField?.seconds) dueDate = new Date(dueField.seconds * 1000);
+                    else if (dueField) dueDate = new Date(dueField);
+
+                    if (dueDate && dueDate < now && remaining > 0) overdueCount++;
+                }
+            });
+
+            const collectionRate = totalInvoiced > 0
+                ? ((totalInvoiced - pendingPayments) / totalInvoiced) * 100
+                : 100;
+
+            setStats({
+                totalInvoiced,
+                pendingPayments,
+                paidInvoices: paidCount,
+                overdueInvoices: overdueCount,
+                collectionRate,
+                averagePaymentDays: 0
+            });
         } catch (error) {
             console.error('[InvoiceStatsCards] Error fetching stats:', error);
         } finally {

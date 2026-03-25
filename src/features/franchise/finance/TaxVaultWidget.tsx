@@ -22,9 +22,9 @@ const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, hi
     const { ivaPayable, irpfPayable, totalTaxLiability, ivaCollected, ivaDeductible } = taxes;
 
     return (
-        <div className="workstation-card workstation-scanline p-6 h-full flex flex-col group/card transition-all mechanical-press overflow-hidden">
+        <div className="workstation-card workstation-scanline p-5 h-full flex flex-col justify-between group/card transition-all mechanical-press overflow-hidden">
             {/* HEADER */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="p-1.5 bg-indigo-50 dark:bg-indigo-900/10 rounded-lg">
                         <Landmark className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
@@ -45,9 +45,9 @@ const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, hi
             </div>
 
             {/* MAIN VAULT DISPLAY */}
-            <div className="mb-5">
+            <div>
                 <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight tabular-nums">
+                    <span className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight tabular-nums">
                         {formatMoney(totalTaxLiability)}€
                     </span>
                     <span className="text-xs font-medium text-slate-400 ml-1">reserva total</span>

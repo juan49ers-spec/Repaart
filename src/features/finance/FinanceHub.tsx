@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { FileText, PieChart, Wallet, Lock, CreditCard } from 'lucide-react';
-import { BillingDashboard } from '../billing/BillingDashboard';
-import FranchiseDashboard from '../franchise/FranchiseDashboard';
 import { useInvoicingModule } from '../../hooks/useInvoicingModule';
+
+const BillingDashboard = lazy(() => import('../billing/BillingDashboard').then(m => ({ default: m.BillingDashboard })));
+const FranchiseDashboard = lazy(() => import('../franchise/FranchiseDashboard'));
 
 type ActiveTab = 'invoicing' | 'results';
 
@@ -96,7 +97,9 @@ export const FinanceHub: React.FC<{ franchiseId?: string }> = ({ franchiseId: pr
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
                             </div>
                         ) : invoicingEnabled ? (
+                            <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div></div>}>
                             <BillingDashboard franchiseId={targetFranchiseId || ''} />
+                            </Suspense>
                         ) : (
                             <div className="flex flex-col items-center justify-center py-20 px-6">
                                 <div className="bg-white dark:bg-slate-800 rounded-3xl p-12 max-w-2xl w-full border border-slate-200 dark:border-slate-700 shadow-sm text-center">
@@ -133,7 +136,9 @@ export const FinanceHub: React.FC<{ franchiseId?: string }> = ({ franchiseId: pr
 
                 {activeTab === 'results' && (
                     <div className="animate-in slide-in-from-bottom-4 duration-500 fade-in">
+                        <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div></div>}>
                         <FranchiseDashboard franchiseId={targetFranchiseId} />
+                        </Suspense>
                     </div>
                 )}
             </div>

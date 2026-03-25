@@ -89,7 +89,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ contextData, isOpen, onCl
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
     const handleMouseDown = (e: React.MouseEvent) => {
-        if (window.innerWidth < 768) return; // Disable drag on mobile (sheet mode)
+        if (window.matchMedia('(max-width: 767px)').matches) return; // Disable drag on mobile (sheet mode)
         setIsDragging(true);
         const rect = e.currentTarget.getBoundingClientRect();
         setDragOffset({
@@ -135,22 +135,18 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ contextData, isOpen, onCl
             {/* Chat Window */}
             <div
                 style={{
-                    bottom: window.innerWidth >= 768 ? `${position.bottom}px` : '0',
-                    right: window.innerWidth >= 768 ? `${position.right}px` : '0',
-                    left: window.innerWidth >= 768 ? 'auto' : '0'
-                }}
-                className={`fixed bg-white z-[70] flex flex-col overflow-hidden transition-all duration-300 shadow-2xl border-blue-100
+                    '--chat-bottom': `${position.bottom}px`,
+                    '--chat-right': `${position.right}px`
+                } as React.CSSProperties}
+                className={`fixed bg-white z-[70] flex flex-col overflow-hidden transition-all duration-300 shadow-2xl border-blue-100 chat-window-responsive
                     md:rounded-2xl md:border
-                    ${window.innerWidth < 768
-                        ? 'min-h-[85vh] max-h-[85vh] rounded-t-[32px] animate-slide-up-mobile safe-bottom'
-                        : `animate-fade-in-up ${isExpanded ? 'w-[600px] h-[70vh]' : 'w-80 h-96'}`
-                    }
+                    ${isExpanded ? 'chat-expanded' : 'chat-collapsed'}
                 `}
             >
                 {/* Header with Drag Handler */}
                 <div
                     onMouseDown={handleMouseDown}
-                    className={`bg-gradient-to-r from-slate-800 to-slate-900 p-4 md:p-3 flex justify-between items-center text-white shrink-0 ${window.innerWidth >= 768 ? 'cursor-move' : ''}`}
+                    className="bg-gradient-to-r from-slate-800 to-slate-900 p-4 md:p-3 flex justify-between items-center text-white shrink-0 md:cursor-move"
                 >
                     <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-inner">
@@ -218,7 +214,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ contextData, isOpen, onCl
                 </div>
 
                 {/* Input */}
-                <form onSubmit={handleSend} className="p-2.5 bg-white border-t border-slate-100 flex gap-2 shrink-0">
+                <form onSubmit={handleSend} className="p-2.5 pb-safe bg-white border-t border-slate-100 flex gap-2 shrink-0">
                     <input
                         type="text"
                         value={input}

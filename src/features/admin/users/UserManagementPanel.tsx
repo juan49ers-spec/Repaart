@@ -296,8 +296,8 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
 
             {/* --- TABS --- */}
             {!franchiseId && (
-                <div className="flex items-center justify-between gap-2 pb-0 shrink-0 px-0 pt-0 mb-6 border-b border-slate-100 dark:border-slate-800">
-                    <div className="flex gap-2">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-0 shrink-0 px-0 pt-0 mb-6 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex gap-2 w-full md:w-auto overflow-x-auto no-scrollbar pb-1">
                         <button
                             onClick={() => setActiveTab('structure')}
                             className={`px-4 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 ${activeTab === 'structure' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}`}
@@ -335,9 +335,9 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
             )}
 
             {/* Toolbar (Simplified - Clean Apple Style) */}
-            <div className="flex flex-col lg:flex-row gap-4 mb-6 justify-between items-end lg:items-center px-0 shrink-0">
+            <div className="flex flex-col md:flex-row gap-4 mb-6 justify-between items-stretch md:items-center px-0 shrink-0">
                 {/* Search */}
-                <div className="relative flex-1 w-full lg:max-w-sm">
+                <div className="relative flex-1 w-full md:max-w-sm">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                     <input
                         type="text"
@@ -349,7 +349,7 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
                     />
                 </div>
 
-                <div className="flex items-center gap-2 w-full lg:w-auto">
+                <div className="flex items-center gap-2 w-full md:w-auto flex-wrap sm:flex-nowrap">
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
@@ -372,10 +372,10 @@ const UserManagementPanel: React.FC<UserManagementPanelProps> = ({ franchiseId =
                     {!readOnly && (
                         <button
                             onClick={() => setModalConfig({ isOpen: true, type: 'create', target: null })}
-                            className="flex items-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-2 rounded-lg text-xs font-semibold shadow-sm hover:shadow hover:-translate-y-0.5 transition-all"
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-2 rounded-lg text-xs font-semibold shadow-sm hover:shadow hover:-translate-y-0.5 transition-all w-full sm:w-auto whitespace-nowrap"
                         >
-                            <UserPlus className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">
+                            <UserPlus className="w-3.5 h-3.5 shrink-0" />
+                            <span className="sm:inline">
                                 {isGlobalAdmin && !franchiseId ? (activeTab === 'structure' ? 'Crear Administrador/Franquicia' : 'Alta Rider') : 'Alta Usuario'}
                             </span>
                         </button>

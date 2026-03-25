@@ -112,11 +112,12 @@ export const SmartStartButton: React.FC<SmartStartButtonProps> = ({ shiftId, fra
     // 1. SCANNER OVERLAY
     if (status === 'scanning' || status === 'processing') {
         return (
-            <div className="fixed inset-0 z-50 bg-black flex flex-col">
-                <div className="absolute top-4 right-4 z-50">
+            <div className="fixed inset-0 z-50 bg-black flex flex-col pt-safe pb-safe">
+                <div className="absolute top-2 right-4 z-50">
                     <button
                         onClick={() => setStatus('idle')}
                         className="bg-black/50 p-2 rounded-full text-white"
+                        aria-label="Cerrar escáner"
                     >
                         <X size={24} />
                     </button>

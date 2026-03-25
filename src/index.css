@@ -16,6 +16,22 @@
   --color-indigo-800: hsl(210 40% 23%);
   --color-indigo-900: hsl(210 61% 16%);
   --color-indigo-950: hsl(210 64% 11%);
+  
+  --color-slate-400: var(--color-text-tertiary);
+  --color-slate-500: var(--color-text-muted);
+
+  --animate-slide-up-mobile: slide-up-mobile 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-fade-in-up: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+  @keyframes slide-up-mobile {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes fade-in-up {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
 }
 
 /* ============================================== */
@@ -586,8 +602,7 @@ body {
   /* Native Mobile Hardening */
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
+  /* Safe area padding delegado a cada Layout para evitar conflicto con viewport-fixed (100dvh) */
 
   /* SF Pro uses double-story 'a', so we keep Inter defaults.
      ss01 (open digits) or cv05 (l with tail) are optional preferences.
@@ -1157,25 +1172,25 @@ a,
 
 .tab-dock {
   position: fixed;
-  bottom: 0px;
-  left: 0;
-  right: 0;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  left: 12px;
+  right: 12px;
   z-index: 50;
   background: rgba(255, 255, 255, 0.85);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   backdrop-filter: blur(20px) saturate(180%);
-  border-radius: 0;
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.08);
-  border-top: 1px solid rgba(255, 255, 255, 0.5);
-  padding-bottom: calc(4px + env(safe-area-inset-bottom));
+  border-radius: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  padding: 4px;
+  padding-bottom: 4px;
   overflow: visible;
-  /* To allow FAB to pop out */
 }
 
 .dark .tab-dock {
   background: rgba(15, 23, 42, 0.85);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
 }
 
 /* Tab Item Pill - Compact for 6 items */
@@ -1305,7 +1320,8 @@ a,
   animation: slide-up 0.3s ease-out forwards;
 }
 
-/* ============================================== */
+/* PWA MOBILE ANIMATIONS (Moved to @theme) */
+
 /* PULL INDICATOR (for refreshes)        */
 /* ============================================== */
 
@@ -1333,192 +1349,44 @@ a,
 }
 
 /* ============================================== */
-/* ANIMATED PAGE TRANSITIONS              */
+/* RIDER NAV & CHAT SAFE POSITIONING        */
 /* ============================================== */
 
-@keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+.rider-nav-safe-bottom {
+  bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+}
+
+.chat-window-responsive {
+  /* Mobile - Sheet mode */
+  bottom: 0;
+  right: 0;
+  left: 0;
+  @apply min-h-[85vh] max-h-[85vh] rounded-t-[32px] animate-slide-up-mobile;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (min-width: 768px) {
+  .chat-window-responsive {
+    /* Desktop base */
+    left: auto;
+    bottom: var(--chat-bottom, 24px);
+    right: var(--chat-right, 24px);
+    @apply rounded-2xl border;
+    min-height: 0;
+    max-height: none;
+    animation: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  
+  .chat-collapsed.chat-window-responsive {
+    @apply w-80 h-96;
   }
-}
-
-.animate-slide-up {
-  animation: slide-up 0.3s ease-out forwards;
-}
-
-/* ============================================== */
-/* PULL INDICATOR (for refreshes)        */
-/* ============================================== */
-
-.pull-indicator {
-  @apply w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mb-2;
-}
-
-/* ============================================== */
-/* CATEGORY BUBBLES (Glovo Style)          */
-/* ============================================== */
-
-.category-bubble {
-  @apply flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-200;
-  @apply bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700;
-  @apply transition-transform duration-150 active:scale-95;
-}
-
-.category-bubble-icon {
-  @apply w-12 h-12 rounded-full flex items-center justify-center;
-  @apply bg-gradient-to-br from-blue-500 to-indigo-600 text-white;
-}
-
-.category-bubble-label {
-  @apply text-xs font-bold text-slate-600 dark:text-slate-300 text-center;
-}
-
-/* ============================================== */
-/* ANIMATED PAGE TRANSITIONS              */
-/* ============================================== */
-
-@keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  
+  .chat-expanded.chat-window-responsive {
+    @apply w-[600px] h-[70vh];
   }
 }
 
-.animate-slide-up {
-  animation: slide-up 0.3s ease-out forwards;
-}
 
-/* ============================================== */
-/* PULL INDICATOR (for refreshes)        */
-/* ============================================== */
-
-.pull-indicator {
-  @apply w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mb-2;
-}
-
-/* ============================================== */
-/* CATEGORY BUBBLES (Glovo Style)          */
-/* ============================================== */
-
-.category-bubble {
-  @apply flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-200;
-  @apply bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700;
-  @apply transition-transform duration-150 active:scale-95;
-}
-
-.category-bubble-icon {
-  @apply w-12 h-12 rounded-full flex items-center justify-center;
-  @apply bg-gradient-to-br from-blue-500 to-indigo-600 text-white;
-}
-
-.category-bubble-label {
-  @apply text-xs font-bold text-slate-600 dark:text-slate-300 text-center;
-}
-
-/* ============================================== */
-/* ANIMATED PAGE TRANSITIONS              */
-/* ============================================== */
-
-@keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-slide-up {
-  animation: slide-up 0.3s ease-out forwards;
-}
-
-/* ============================================== */
-/* PULL INDICATOR (for refreshes)        */
-/* ============================================== */
-
-.pull-indicator {
-  @apply w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mb-2;
-}
-
-/* ============================================== */
-/* CATEGORY BUBBLES (Glovo Style)          */
-/* ============================================== */
-
-.category-bubble {
-  @apply flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-200;
-  @apply bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700;
-  @apply transition-transform duration-150 active:scale-95;
-}
-
-.category-bubble-icon {
-  @apply w-12 h-12 rounded-full flex items-center justify-center;
-  @apply bg-gradient-to-br from-blue-500 to-indigo-600 text-white;
-}
-
-.category-bubble-label {
-  @apply text-xs font-bold text-slate-600 dark:text-slate-300 text-center;
-}
-
-/* ============================================== */
-/* ANIMATED PAGE TRANSITIONS              */
-/* ============================================== */
-
-@keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-slide-up {
-  animation: slide-up 0.3s ease-out forwards;
-}
-
-/* ============================================== */
-/* PULL INDICATOR (for refreshes)        */
-/* ============================================== */
-
-.pull-indicator {
-  @apply w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mb-2;
-}
-
-/* ============================================== */
-/* CATEGORY BUBBLES (Glovo Style)          */
-/* ============================================== */
-
-.category-bubble {
-  @apply flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-200;
-  @apply bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700;
-  @apply transition-transform duration-150 active:scale-95;
-}
-
-.category-bubble-icon {
-  @apply w-12 h-12 rounded-full flex items-center justify-center;
-  @apply bg-gradient-to-br from-blue-500 to-indigo-600 text-white;
-}
-
-.category-bubble-label {
-  @apply text-xs font-bold text-slate-600 dark:text-slate-300 text-center;
-}
 
 /* ============================================== */
 /* ACADEMY TYPOGRAPHY SYSTEM                */

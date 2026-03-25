@@ -97,7 +97,7 @@ const Login: FC = () => {
         }
     };
     return (
-        <div className="min-h-screen w-full flex bg-white dark:bg-slate-950">
+        <div className="min-h-screen w-full flex bg-white dark:bg-slate-950 safe-all">
 
             {/* LEFT SIDE - FORM */}
             <div className="w-full lg:w-[45%] flex flex-col justify-center items-center px-8 py-12 lg:px-24 xl:px-32 relative bg-gradient-to-br from-white to-slate-50 dark:from-slate-950 dark:to-slate-900">

@@ -74,19 +74,19 @@ export const LogisticsRatesEditor: React.FC<LogisticsRatesEditorProps> = ({
     }, [rates]);
 
     return (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm overflow-hidden flex flex-col transition-colors">
             {/* Header */}
-            <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
                 <div>
-                    <h4 className="text-[13px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                    <h4 className="text-[13px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest flex items-center gap-2">
                         <DollarSign className="w-4 h-4 text-emerald-500" /> Tarifas por Distancia
                     </h4>
-                    <p className="text-xs text-slate-500 mt-0.5">Define los rangos de precios para el envío logístico</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Precios de envío escalonados por km</p>
                 </div>
             </div>
 
             {rates.length > 0 ? (
-                <div className="p-3 md:p-5 flex flex-col gap-3 bg-slate-50/30">
+                <div className="p-4 md:p-6 flex flex-col gap-4 bg-slate-50/30 dark:bg-slate-900/30">
                     <AnimatePresence mode="popLayout">
                         {rates.map((rate, index) => {
                             const hasError = !!errors[index];
@@ -97,17 +97,16 @@ export const LogisticsRatesEditor: React.FC<LogisticsRatesEditorProps> = ({
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
                                     key={`rate-${index}-${rate.min}`} 
-                                    className={`relative flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 md:px-5 md:py-4 rounded-xl border bg-white transition-all shadow-sm ${hasError ? 'border-rose-300 ring-2 ring-rose-50' : 'border-slate-200 hover:border-slate-300 hover:shadow-md'}`}
+                                    className={`relative flex flex-col sm:flex-row items-start sm:items-center gap-4 p-5 rounded-2xl border bg-white dark:bg-slate-900 transition-all shadow-sm ${hasError ? 'border-rose-300 dark:border-rose-500/50 ring-2 ring-rose-50 dark:ring-rose-500/20' : 'border-slate-200/60 dark:border-slate-700/60 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md'}`}
                                 >
                                     {/* Index Identifier */}
-                                    <div className="hidden sm:flex shrink-0 w-8 h-8 rounded-full bg-slate-100 text-slate-500 text-xs font-bold items-center justify-center border border-slate-200 shadow-inner">
+                                    <div className="hidden sm:flex shrink-0 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-bold items-center justify-center border border-slate-200 dark:border-slate-700 shadow-inner">
                                         {index + 1}
                                     </div>
 
                                     {/* Distance Capsule */}
                                     <div className="flex-1 flex flex-col gap-1 w-full sm:w-auto">
-                                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Rango de Distancia</div>
-                                        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 p-1 rounded-lg">
+                                        <div className="flex items-center gap-2">
                                             <input
                                                 type="number"
                                                 step="0.1"
@@ -115,9 +114,9 @@ export const LogisticsRatesEditor: React.FC<LogisticsRatesEditorProps> = ({
                                                 onChange={(e) => handleChange(index, 'min', e.target.value)}
                                                 disabled={readOnly}
                                                 aria-label={`Distancia mínima rango ${index + 1}`}
-                                                className="w-full sm:w-24 bg-white border border-slate-200 shadow-sm rounded-md py-1.5 px-2 text-center text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none disabled:bg-slate-50"
+                                                className="w-full sm:w-20 bg-slate-50/50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm rounded-lg py-2 px-3 text-center text-sm font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none disabled:opacity-50 transition-colors"
                                             />
-                                            <span className="text-slate-400 font-bold px-1">—</span>
+                                            <span className="text-slate-400 dark:text-slate-500 font-medium px-1">—</span>
                                             <input
                                                 type="number"
                                                 step="0.1"
@@ -125,18 +124,17 @@ export const LogisticsRatesEditor: React.FC<LogisticsRatesEditorProps> = ({
                                                 onChange={(e) => handleChange(index, 'max', e.target.value)}
                                                 disabled={readOnly}
                                                 aria-label={`Distancia máxima rango ${index + 1}`}
-                                                className="w-full sm:w-24 bg-white border border-slate-200 shadow-sm rounded-md py-1.5 px-2 text-center text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none disabled:bg-slate-50"
+                                                className="w-full sm:w-20 bg-slate-50/50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm rounded-lg py-2 px-3 text-center text-sm font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none disabled:opacity-50 transition-colors"
                                             />
-                                            <span className="text-[11px] font-bold text-slate-400 px-2 uppercase">km</span>
+                                            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 px-2 uppercase tracking-widest">km</span>
                                         </div>
                                     </div>
 
                                     {/* Price Card */}
-                                    <div className="flex flex-col gap-1 w-full sm:w-40">
-                                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Precio Final</div>
+                                    <div className="flex flex-col gap-1 w-full sm:w-40 shrink-0">
                                         <div className="relative group/price">
-                                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                                <span className="text-emerald-600 font-bold text-sm">€</span>
+                                            <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                                                <span className="text-emerald-600 dark:text-emerald-400 font-bold text-sm">€</span>
                                             </div>
                                             <input
                                                 type="number"
@@ -145,7 +143,7 @@ export const LogisticsRatesEditor: React.FC<LogisticsRatesEditorProps> = ({
                                                 onChange={(e) => handleChange(index, 'price', e.target.value)}
                                                 disabled={readOnly}
                                                 aria-label={`Precio rango ${index + 1}`}
-                                                className="w-full bg-emerald-50/50 border border-emerald-200 shadow-sm rounded-lg py-1.5 pl-3 pr-8 text-center text-base font-bold text-emerald-700 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none disabled:opacity-50 transition-colors hover:bg-emerald-50"
+                                                className="w-full bg-emerald-50/50 dark:bg-emerald-500/5 border border-emerald-200 dark:border-emerald-500/20 shadow-sm rounded-xl py-2 pl-4 pr-10 text-center text-base font-black text-emerald-700 dark:text-emerald-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 outline-none disabled:opacity-50 transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
                                             />
                                         </div>
                                     </div>
@@ -155,7 +153,7 @@ export const LogisticsRatesEditor: React.FC<LogisticsRatesEditorProps> = ({
                                         <button
                                             type="button"
                                             onClick={() => handleRemove(index)}
-                                            className="absolute top-3 right-3 sm:relative sm:top-0 sm:right-0 p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                                            className="absolute top-4 right-4 sm:relative sm:top-0 sm:right-0 p-2 text-slate-300 dark:text-slate-600 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-colors shrink-0"
                                             title="Eliminar rango"
                                         >
                                             <Trash2 className="w-5 h-5" />
@@ -179,9 +177,9 @@ export const LogisticsRatesEditor: React.FC<LogisticsRatesEditorProps> = ({
                             layout
                             type="button"
                             onClick={handleAdd}
-                            className="flex items-center justify-center gap-2 w-full p-4 rounded-xl border-2 border-dashed border-slate-300 hover:border-emerald-400 bg-transparent hover:bg-emerald-50/50 text-slate-400 hover:text-emerald-600 font-bold text-sm transition-all group mt-1"
+                            className="flex items-center justify-center gap-3 w-full p-4 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-emerald-400/50 dark:hover:border-emerald-500/50 bg-transparent hover:bg-emerald-50/30 dark:hover:bg-emerald-500/5 text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 font-bold text-[13px] uppercase tracking-wider transition-all group mt-2"
                         >
-                            <div className="w-6 h-6 rounded-full bg-slate-100 group-hover:bg-emerald-100 flex items-center justify-center transition-colors">
+                            <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-500/20 flex items-center justify-center transition-colors">
                                 <Plus className="w-3.5 h-3.5" />
                             </div>
                             Añadir Siguiente Rango
@@ -189,18 +187,18 @@ export const LogisticsRatesEditor: React.FC<LogisticsRatesEditorProps> = ({
                     )}
                 </div>
             ) : (
-                <div className="p-12 flex flex-col items-center justify-center text-center bg-slate-50/30">
-                    <div className="w-16 h-16 bg-white shadow-sm border border-slate-100 rounded-full flex items-center justify-center mb-5 relative group">
-                        <div className="absolute inset-0 bg-emerald-100 rounded-full scale-0 group-hover:scale-110 transition-transform duration-300 ease-out opacity-50" />
+                <div className="p-12 flex flex-col items-center justify-center text-center bg-slate-50/30 dark:bg-slate-900/30">
+                    <div className="w-16 h-16 bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 rounded-full flex items-center justify-center mb-5 relative group">
+                        <div className="absolute inset-0 bg-emerald-100 dark:bg-emerald-500/20 rounded-full scale-0 group-hover:scale-110 transition-transform duration-300 ease-out opacity-50" />
                         <MapPin className="w-8 h-8 text-emerald-500 relative z-10" />
                     </div>
-                    <h3 className="text-slate-900 font-bold text-lg mb-1">Sin tarifas configuradas</h3>
-                    <p className="text-slate-500 text-sm mb-6 max-w-sm mx-auto leading-relaxed">Configura los precios de envío escalonados según la distancia percorrida por el rider.</p>
+                    <h3 className="text-slate-900 dark:text-white font-black text-lg mb-2">Sin tarifas configuradas</h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 max-w-sm mx-auto leading-relaxed">Configura los precios de envío escalonados según la distancia percorrida por el rider.</p>
                     {!readOnly && (
                         <button
                             type="button"
                             onClick={handleAdd}
-                            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2 active:scale-95"
+                            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[13px] font-bold uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2 active:scale-[0.97]"
                         >
                             <Plus className="w-4 h-4" /> Crear Primera Tarifa
                         </button>

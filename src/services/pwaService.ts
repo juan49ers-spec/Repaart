@@ -1,50 +1,17 @@
 /**
  * PWA Service Worker Handler
  *
- * Manages service worker registration, updates, and offline functionality
+ * vite-plugin-pwa maneja el registro del SW automáticamente.
+ * Este módulo expone utilidades de conectividad, notificaciones y estado.
  */
 
-export const PWA_SERVICE_WORKER_URL = '/sw.js';
-export const PWA_SERVICE_WORKER_ENABLED = import.meta.env.MODE === 'production';
-
+/**
+ * registerServiceWorker ya NO registra manualmente.
+ * vite-plugin-pwa (registerType: 'autoUpdate') lo hace por nosotros.
+ * Mantenemos la función por compatibilidad con main.tsx PWAWrapper.
+ */
 export const registerServiceWorker = async () => {
-    if ('serviceWorker' in navigator && PWA_SERVICE_WORKER_ENABLED) {
-        try {
-            const registration = await navigator.serviceWorker.register(PWA_SERVICE_WORKER_URL, {
-                scope: '/',
-                updateViaCache: 'none'
-            });
-
-            console.log('[PWA] Service worker registered:', registration);
-
-            registration.addEventListener('updatefound', () => {
-                const newWorker = registration.installing;
-                if (newWorker) {
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            console.log('[PWA] New service worker available, waiting to activate');
-                            // Show update notification to user
-                            showUpdateNotification();
-                        }
-                    });
-                }
-            });
-
-            registration.addEventListener('controllerchange', () => {
-                console.log('[PWA] Service worker controller changed, reloading page');
-                window.location.reload();
-            });
-
-            // Check for updates periodically (every 30 minutes)
-            setInterval(() => {
-                registration.update();
-            }, 30 * 60 * 1000);
-
-            return registration;
-        } catch (error) {
-            console.error('[PWA] Service worker registration failed:', error);
-        }
-    }
+    console.log('[PWA] Service Worker managed by vite-plugin-pwa (autoUpdate)');
     return null;
 };
 
@@ -68,17 +35,6 @@ export const checkForUpdates = async () => {
     }
 };
 
-const showUpdateNotification = () => {
-    if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('Nueva versión disponible', {
-            body: 'Actualiza para obtener las últimas mejoras',
-            icon: '/pwa-192x192.png',
-            badge: '/pwa-64x64.png',
-            tag: 'pwa-update',
-            requireInteraction: true
-        });
-    }
-};
 
 export const requestNotificationPermission = async () => {
     if ('Notification' in window) {
@@ -133,51 +89,14 @@ export const checkConnectivity = () => {
     };
 };
 
-export const getInstallPrompt = async () => {
-    let deferredPrompt: BeforeInstallPromptEvent | null = null;
+// Install prompt ahora gestionado por el componente InstallPrompt.tsx
+// Se mantienen las funciones como no-ops por compatibilidad
+export const getInstallPrompt = async () => ({
+    prompt: async () => false,
+    canPrompt: () => false
+});
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e as BeforeInstallPromptEvent;
-        console.log('[PWA] Install prompt captured');
-    });
-
-    return {
-        prompt: async () => {
-            if (!deferredPrompt) {
-                console.warn('[PWA] No install prompt available');
-                return false;
-            }
-
-            try {
-                const result = await deferredPrompt.prompt();
-                console.log('[PWA] Install prompt result:', result);
-
-                if (result.outcome === 'accepted') {
-                    deferredPrompt.userChoice.then((choiceResult: { outcome: string }) => {
-                        if (choiceResult.outcome === 'accepted') {
-                            console.log('[PWA] App installed');
-                        }
-                    });
-                }
-
-                deferredPrompt = null;
-                return result.outcome === 'accepted';
-            } catch (error) {
-                console.error('[PWA] Install prompt error:', error);
-                return false;
-            }
-        },
-        canPrompt: () => !!deferredPrompt
-    };
-};
-
-export const dismissInstallPrompt = () => {
-    window.addEventListener('appinstalled', () => {
-        console.log('[PWA] App installed');
-        // Clear any stored install prompts
-    });
-};
+export const dismissInstallPrompt = () => {};
 
 export const showOfflineBanner = () => {
     if (isOffline()) {

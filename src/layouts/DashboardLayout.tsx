@@ -54,7 +54,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
 
     return (
-        <div className="print:hidden viewport-fixed bg-slate-50 dark:bg-slate-950 font-sans relative transition-colors duration-300">
+        <div className="print:hidden viewport-fixed pt-safe bg-[#F8FAFC] dark:bg-[#0B0F19] font-sans relative transition-colors duration-300">
             <ImpersonationBanner />
             <Header {...headerProps} />
 

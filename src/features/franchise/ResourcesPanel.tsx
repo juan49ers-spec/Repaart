@@ -195,10 +195,10 @@ const ResourcesPanel: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col md:flex-row h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
+        <div className="flex flex-col md:flex-row h-screen bg-[#F8FAFC] dark:bg-[#0B0F19] overflow-hidden font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
 
             {/* 📂 SIDEBAR (Folders) */}
-            <aside className="hidden md:flex w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col pt-6 pb-4">
+            <aside className="hidden md:flex w-72 bg-white/60 dark:bg-[#111827]/60 backdrop-blur-xl border-r border-slate-200/60 dark:border-white/5 flex-col pt-6 pb-4 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)] z-20">
                 <div className="px-6 mb-8">
                     <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                         <FolderOpen className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
@@ -215,8 +215,8 @@ const ResourcesPanel: React.FC = () => {
                                 key={folder.id}
                                 onClick={() => setActiveCategory(folder.id)}
                                 className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group ${isActive
-                                    ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200 dark:ring-indigo-800'
-                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                    ? 'bg-slate-900 text-white shadow-md dark:bg-white dark:text-slate-900'
+                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5'
                                     }`}
                             >
                                 <div className="flex items-center gap-3">
@@ -262,7 +262,7 @@ const ResourcesPanel: React.FC = () => {
             </aside>
 
             {/* 📱 MOBILE TOP NAV (Folder selection on small screens) */}
-            <div className="md:hidden shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 overflow-x-auto whitespace-nowrap p-4 no-scrollbar flex gap-2">
+            <div className="md:hidden shrink-0 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/5 overflow-x-auto whitespace-nowrap p-4 no-scrollbar flex gap-2">
                 {FOLDERS.map(folder => {
                     const isActive = activeCategory === folder.id;
                     return (
@@ -270,8 +270,8 @@ const ResourcesPanel: React.FC = () => {
                             key={folder.id}
                             onClick={() => setActiveCategory(folder.id)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${isActive
-                                ? 'bg-indigo-600 text-white shadow-lg'
-                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                                ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-md'
+                                : 'bg-white dark:bg-[#111827] text-slate-500 border border-slate-200/60 dark:border-white/5'
                                 }`}
                         >
                             <folder.icon size={14} />
@@ -282,10 +282,10 @@ const ResourcesPanel: React.FC = () => {
             </div>
 
             {/* 📄 MAIN CONTENT (Grid) */}
-            <main className="flex-1 flex flex-col min-w-0 bg-slate-50/50 dark:bg-slate-950/50 relative overflow-hidden">
+            <main className="flex-1 flex flex-col min-w-0 bg-transparent relative overflow-hidden">
 
                 {/* Header / Search */}
-                <div className="h-auto md:h-20 p-4 md:px-8 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shrink-0 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md sticky top-0 z-10">
+                <div className="h-auto md:h-20 p-4 md:px-8 border-b border-slate-200/60 dark:border-white/5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shrink-0 bg-white/40 dark:bg-[#0B0F19]/40 backdrop-blur-xl sticky top-0 z-10">
                     <div className="flex items-center gap-4">
                         <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white truncate">
                             {FOLDERS.find(f => f.id === activeCategory)?.label}
@@ -303,10 +303,10 @@ const ResourcesPanel: React.FC = () => {
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 placeholder="Buscar..."
-                                className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm"
+                                className="w-full pl-10 pr-4 py-2 bg-white dark:bg-[#111827] border border-slate-200/60 dark:border-white/5 rounded-xl text-xs md:text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm"
                             />
                         </div>
-                        <div className="flex bg-white dark:bg-slate-900 rounded-lg p-1 border border-slate-200 dark:border-slate-700 shadow-sm shrink-0">
+                        <div className="flex bg-white dark:bg-[#111827] rounded-lg p-1 border border-slate-200/60 dark:border-white/5 shadow-sm shrink-0">
                             <button onClick={() => setViewMode('grid')} title="Vista Cuadrícula" className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
                                 <Grid className="w-4 h-4" />
                             </button>
@@ -321,7 +321,7 @@ const ResourcesPanel: React.FC = () => {
                 <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
                     {loading ? (
                         <div className="grid grid-cols-4 gap-6 animate-pulse">
-                            {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-48 bg-slate-200 dark:bg-slate-800 rounded-2xl" />)}
+                            {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-48 bg-slate-200/60 dark:bg-[#111827] rounded-2xl" />)}
                         </div>
                     ) : filteredItems.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-center opacity-80 animate-in fade-in zoom-in-95 duration-500">
@@ -343,7 +343,7 @@ const ResourcesPanel: React.FC = () => {
                                     {activeCategory === 'manuals' && !searchTerm && (
                                         <div
                                             onClick={() => setShowFlyderGuide(true)}
-                                            className="group bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl p-4 hover:shadow-lg hover:shadow-indigo-500/10 hover:border-indigo-500/30 transition-all duration-300 cursor-pointer overflow-hidden relative flex flex-col h-full"
+                                            className="group bg-white dark:bg-[#111827] border border-slate-200/60 dark:border-white/5 rounded-xl p-4 hover:shadow-lg hover:shadow-indigo-500/10 hover:border-indigo-500/30 transition-all duration-300 cursor-pointer overflow-hidden relative flex flex-col h-full"
                                         >
                                             <div className="absolute -right-6 -top-6 w-20 h-20 rounded-full bg-indigo-100 dark:bg-indigo-900/30 opacity-20 group-hover:scale-150 transition-transform duration-500" />
                                             <div className="flex justify-between items-start mb-3 relative z-10">
@@ -358,7 +358,7 @@ const ResourcesPanel: React.FC = () => {
                                             <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium line-clamp-2 mb-3 flex-1">
                                                 Guía paso a paso para descargar e instalar Flyder vía TestFlight.
                                             </p>
-                                            <div className="pt-2 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between mt-auto">
+                                            <div className="pt-2 border-t border-slate-200/60 dark:border-white/5 flex items-center justify-between mt-auto">
                                                 <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Guía Interactiva</span>
                                                 <span className="text-[9px] font-bold text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                                                     Ver <Eye className="w-2.5 h-2.5" />
@@ -377,7 +377,7 @@ const ResourcesPanel: React.FC = () => {
                                                 <div
                                                     key={item.id}
                                                     onClick={() => handleItemClick(item)}
-                                                    className="group bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl p-4 hover:shadow-lg hover:shadow-indigo-500/10 hover:border-indigo-500/30 transition-all duration-300 cursor-pointer overflow-hidden relative flex flex-col h-full"
+                                                    className="group bg-white dark:bg-[#111827] border border-slate-200/60 dark:border-white/5 rounded-xl p-4 hover:shadow-lg hover:shadow-indigo-500/10 hover:border-indigo-500/30 transition-all duration-300 cursor-pointer overflow-hidden relative flex flex-col h-full"
                                                 >
                                                     {/* Decorative Background */}
                                                     <div className={`absolute -right-6 -top-6 w-20 h-20 rounded-full ${theme.bg} opacity-20 group-hover:scale-150 transition-transform duration-500`} />
@@ -417,7 +417,7 @@ const ResourcesPanel: React.FC = () => {
                                             <div
                                                 key={item.id}
                                                 onClick={() => handleItemClick(item)}
-                                                className="group bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2rem] p-5 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col items-center text-center relative overflow-hidden"
+                                                className="group bg-white dark:bg-[#111827] border border-slate-200/60 dark:border-white/5 rounded-[2rem] p-5 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col items-center text-center relative overflow-hidden"
                                             >
                                                 {item.isMock && (
                                                     <div className="absolute top-3 right-3">
@@ -439,7 +439,7 @@ const ResourcesPanel: React.FC = () => {
 
                                                 <span className="text-[10px] font-mono text-slate-400 mb-4">{formatBytes(item.size)}</span>
 
-                                                <div className="mt-auto pt-4 w-full border-t border-slate-50 dark:border-slate-800 flex items-center justify-between gap-2 opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-300">
+                                                <div className="mt-auto pt-4 w-full border-t border-slate-200/60 dark:border-white/5 flex items-center justify-between gap-2 opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-300">
                                                     <button
                                                         onClick={() => handleItemClick(item)}
                                                         className="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-indigo-500 uppercase tracking-wider hover:text-indigo-600 transition-colors"
@@ -461,9 +461,9 @@ const ResourcesPanel: React.FC = () => {
                                     })}
                                 </div>
                             ) : (
-                                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                                <div className="bg-white dark:bg-[#111827] border border-slate-200/60 dark:border-white/5 rounded-2xl overflow-hidden shadow-sm">
                                     <table className="w-full text-left">
-                                        <thead className="bg-slate-50 dark:bg-slate-950 text-xs uppercase font-bold text-slate-500 tracking-wider">
+                                        <thead className="bg-[#F8FAFC] dark:bg-[#0B0F19] text-xs uppercase font-bold text-slate-500 tracking-wider">
                                             <tr>
                                                 <th className="p-4 pl-6">Documento</th>
                                                 <th className="p-4">Tipo</th>
@@ -471,11 +471,11 @@ const ResourcesPanel: React.FC = () => {
                                                 <th className="p-4 text-right pr-6">Acción</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                                        <tbody className="divide-y divide-slate-200/60 dark:divide-white/5 text-sm">
                                             {/* Flyder iOS — fila estática en vista lista */}
                                             {activeCategory === 'manuals' && !searchTerm && (
                                                 <tr
-                                                    className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer"
+                                                    className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group cursor-pointer"
                                                     onClick={() => setShowFlyderGuide(true)}
                                                 >
                                                     <td className="p-4 pl-6 font-medium text-slate-900 dark:text-white flex items-center gap-3">
@@ -494,7 +494,7 @@ const ResourcesPanel: React.FC = () => {
                                                 </tr>
                                             )}
                                             {filteredItems.map(item => (
-                                                <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer" onClick={() => handleItemClick(item)}>
+                                                <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group cursor-pointer" onClick={() => handleItemClick(item)}>
                                                     <td className="p-4 pl-6 font-medium text-slate-900 dark:text-white flex items-center gap-3">
                                                         <div className="transform scale-75">
                                                             {item.isGuide ? (

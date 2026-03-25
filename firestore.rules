@@ -56,6 +56,20 @@ service cloud.firestore {
       return incomingData()[fieldName] is number;
     }
 
+    // --- FISCAL LOCK HELPERS ---
+    function getPeriod(dateTs) {
+      let year = string(dateTs.date().year());
+      let month = dateTs.date().month();
+      let monthStr = month < 10 ? '0' + string(month) : string(month);
+      return year + '-' + monthStr;
+    }
+
+    function isMonthLocked(franchiseId, dateTs) {
+      let period = getPeriod(dateTs);
+      let taxVaultDoc = get(/databases/$(database)/documents/tax_vault/$(franchiseId + '_' + period));
+      return taxVaultDoc != null && taxVaultDoc.data.isLocked == true;
+    }
+
     // --- SCHEMA VALIDATORS ---
     
     function isValidFinancialRecord() {
@@ -200,15 +214,16 @@ service cloud.firestore {
       allow create: if isAuthed() && (
         isAdmin() ||
         isFranchise()
-      ) && isValidFinancialRecord();
+      ) && isValidFinancialRecord() && !isMonthLocked(request.resource.data.franchiseId, request.resource.data.date);
       allow update: if isAuthed() && (
         isAdmin() ||
         isFranchise()
-      ) && isValidFinancialRecord();
+      ) && isValidFinancialRecord() && !isMonthLocked(request.resource.data.franchiseId, request.resource.data.date)
+      && !isMonthLocked(resource.data.franchiseId, resource.data.date);
       allow delete: if isAuthed() && (
         isAdmin() ||
         isFranchise()
-      );
+      ) && !isMonthLocked(resource.data.franchiseId, resource.data.date);
     }
     match /financial_data/{docId} {
       allow read: if isAuthed() && (
@@ -585,19 +600,20 @@ service cloud.firestore {
       allow create: if isAuthed() && (
         isAdmin() || 
         (isFranchise() && request.resource.data.franchiseId == request.auth.uid)
-      );
+      ) && !isMonthLocked(request.resource.data.franchiseId, request.resource.data.issueDate);
       
       // Update: admin o franchise dueña (solo drafts editables desde frontend)
       allow update: if isAuthed() && (
         isAdmin() || 
         (canManageFinances(resource.data.franchiseId) && resource.data.status != 'VOIDED')
-      );
+      ) && !isMonthLocked(request.resource.data.franchiseId, request.resource.data.issueDate)
+        && !isMonthLocked(resource.data.franchiseId, resource.data.issueDate);
       
       // Delete: admin o franchise dueña (solo drafts borrables por la franquicia)
       allow delete: if isAuthed() && (
         isAdmin() || 
         (isFranchise() && resource.data.franchiseId == request.auth.uid && resource.data.status == 'DRAFT')
-      );
+      ) && !isMonthLocked(resource.data.franchiseId, resource.data.issueDate);
     }
 
     // --- BILLING: STATS & WALLETS ---

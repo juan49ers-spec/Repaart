@@ -63,9 +63,9 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
 
     if (!user) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+            <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0B0F19]">
                 <div className="animate-pulse flex flex-col items-center gap-4">
-                    <div className="h-12 w-12 bg-indigo-100 rounded-full"></div>
+                    <div className="h-12 w-12 bg-indigo-100 dark:bg-indigo-900/50 rounded-full"></div>
                     <div className="text-slate-400 font-medium">Cargando perfil...</div>
                 </div>
             </div>
@@ -81,7 +81,7 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
     // --- UNIFIED VIEW FOR FRANCHISE ---
     if (roleConfig?.role === 'franchise') {
         return (
-            <div className="h-[calc(100vh-64px)] overflow-hidden bg-slate-50">
+            <div className="h-[calc(100vh-64px)] overflow-hidden bg-[#F8FAFC] dark:bg-[#0B0F19]">
                 <Suspense fallback={<div className="p-10 flex items-center justify-center text-slate-400">Cargando perfil unificado...</div>}>
                     <FranchiseProfile />
                 </Suspense>
@@ -91,11 +91,11 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
 
     // --- PRO DESIGN: MESH GRADIENT & GLASS STRUCTURE ---
     return (
-        <div className="relative min-h-[calc(100vh-64px)] overflow-hidden bg-slate-50/50">
+        <div className="relative min-h-[calc(100vh-64px)] overflow-hidden bg-[#F8FAFC]/50 dark:bg-[#0B0F19]/50 transition-colors duration-300">
             {/* Dynamic Background Mesh */}
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[100px] animate-pulse" />
-                <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[120px] animate-pulse delay-1000" />
+                <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-indigo-500/10 dark:bg-indigo-500/5 rounded-full blur-[100px] animate-pulse" />
+                <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-blue-500/10 dark:bg-blue-500/5 rounded-full blur-[120px] animate-pulse delay-1000" />
                 <div className="absolute top-[20%] left-[30%] w-[300px] h-[300px] bg-purple-500/5 rounded-full blur-[80px]" />
             </div>
 
@@ -116,13 +116,13 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
                         <div className="relative group perspective-1000">
                             <div className="absolute -inset-1 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-500"></div>
                             <div
-                                className="relative w-36 h-36 rounded-full border-4 border-white shadow-2xl overflow-hidden bg-white cursor-pointer group-hover:scale-[1.02] transition-all duration-300 ease-out"
+                                className="relative w-32 h-32 md:w-36 md:h-36 rounded-full border-4 border-white dark:border-slate-800 shadow-2xl overflow-hidden bg-white dark:bg-slate-900 cursor-pointer group-hover:scale-[1.02] transition-all duration-300 ease-out shrink-0 mx-auto md:mx-0"
                                 onClick={() => fileInputRef.current?.click()}
                             >
                                 {user.photoURL ? (
                                     <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-slate-100 text-3xl md:text-4xl font-black text-slate-300">
+                                    <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-3xl md:text-4xl font-black text-slate-300 dark:text-slate-600">
                                         {user.email?.charAt(0).toUpperCase()}
                                     </div>
                                 )}
@@ -135,7 +135,7 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
                             </div>
 
                             {/* Status Indicator */}
-                            <div className="absolute bottom-2 right-2 w-5 h-5 md:w-6 md:h-6 bg-emerald-500 border-4 border-white rounded-full shadow-lg" title="Online"></div>
+                            <div className="absolute bottom-2 right-2 md:bottom-2 md:right-2 w-5 h-5 md:w-6 md:h-6 bg-emerald-500 border-4 border-white dark:border-slate-800 rounded-full shadow-lg" title="Online"></div>
                         </div>
 
                         <input
@@ -148,30 +148,29 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
                         />
 
                         {/* User Identity */}
-                        <div className="flex-1 text-center md:text-left space-y-1 md:space-y-2">
-
-                            <h1 className="text-xl md:text-3xl font-bold text-slate-900 tracking-tight">
+                        <div className="flex-1 text-center md:text-left space-y-2 md:space-y-3 mt-4 md:mt-0">
+                            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight break-words">
                                 {user.displayName || 'Usuario'}
                             </h1>
-                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2 text-slate-500 font-medium pt-1">
-                                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200/60 shadow-sm transition-shadow hover:shadow-md">
-                                    <Mail className="w-4 h-4 text-slate-400" />
-                                    <span className="text-sm font-semibold text-slate-600">{user.email}</span>
+                            <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-x-4 gap-y-2 text-slate-500 dark:text-slate-400 font-medium">
+                                <div className="flex items-center gap-2 bg-white dark:bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-200/60 dark:border-white/5 shadow-sm transition-shadow hover:shadow-md max-w-full overflow-hidden">
+                                    <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                                    <span className="text-sm font-semibold text-slate-600 dark:text-slate-300 truncate">{user.email}</span>
                                 </div>
-                                <span className="hidden md:inline text-slate-300 font-light">|</span>
-                                <div className="text-sm font-bold text-slate-400 tracking-wider">
-                                    ID: <span className="font-mono text-slate-500">{user.uid}</span>
+                                <span className="hidden sm:inline text-slate-300 dark:text-slate-600 font-light">|</span>
+                                <div className="text-xs sm:text-sm font-bold text-slate-400 tracking-wider flex items-center gap-1">
+                                    ID: <span className="font-mono text-slate-500 dark:text-slate-400 truncate max-w-[120px] sm:max-w-[200px]">{user.uid}</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Actions */}
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center mt-2 md:mt-0">
                             <Button
                                 variant="secondary"
                                 onClick={handleLogout}
                                 icon={LogOut}
-                                className="bg-white/80 hover:bg-white text-rose-600 border-white shadow-sm hover:shadow-md backdrop-blur-sm transition-all"
+                                className="bg-white/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-800 text-rose-600 dark:text-rose-400 border-white dark:border-slate-800 shadow-sm hover:shadow-md backdrop-blur-sm transition-all"
                             >
                                 Cerrar Sesión
                             </Button>
@@ -180,8 +179,8 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
                 </div>
 
                 {/* --- FLOATING TAB DOCK --- */}
-                <div className="sticky top-0 z-30 pt-2 pb-6 -mx-4 px-4 bg-gradient-to-b from-slate-50/50 via-slate-50/80 to-transparent backdrop-blur-[1px]">
-                    <div className="bg-white/70 backdrop-blur-xl border border-white/40 shadow-xl shadow-slate-200/40 rounded-2xl p-1.5 flex items-center gap-1 max-w-fit mx-auto md:mx-0">
+                <div className="sticky top-0 z-30 pt-2 pb-6 -mx-4 px-4 bg-gradient-to-b from-[#F8FAFC]/90 via-[#F8FAFC]/80 dark:from-[#0B0F19]/90 dark:via-[#0B0F19]/80 to-transparent backdrop-blur-[2px]">
+                    <div className="bg-white/70 dark:bg-[#111827]/70 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-xl shadow-slate-200/40 dark:shadow-none rounded-2xl p-1.5 flex items-center justify-center md:justify-start gap-1 max-w-fit mx-auto md:mx-0 overflow-x-auto no-scrollbar w-full sm:w-auto">
                         <TabButton
                             active={activeTab === 'profile'}
                             onClick={() => setActiveTab('profile')}
@@ -213,7 +212,7 @@ const UserProfile: FC<UserProfileProps> = ({ setViewMode }) => {
 
                 {/* --- CONTENT AREA (Clean Apple Card) --- */}
                 <div className="relative min-h-[500px]">
-                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 md:p-10 animate-in fade-in slide-in-from-bottom-8 duration-500 ease-out">
+                    <div className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-white/5 rounded-2xl shadow-sm p-5 sm:p-6 md:p-10 animate-in fade-in slide-in-from-bottom-8 duration-500 ease-out">
 
                         {activeTab === 'profile' && (
                             <ProfileTab
@@ -265,15 +264,15 @@ const TabButton = ({ active, onClick, icon: Icon, label }: TabButtonProps) => {
         <button
             onClick={onClick}
             className={`
-                relative flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200
+                relative flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 shrink-0
                 ${active
-                    ? 'bg-slate-900 text-white shadow-sm'
-                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50'
                 }
             `}
         >
-            <Icon className={`w-3.5 h-3.5 ${active ? 'text-white' : 'text-slate-400'}`} />
-            {label}
+            <Icon className={`w-3.5 h-3.5 ${active ? 'text-white dark:text-slate-900' : 'text-slate-400'}`} />
+            <span className="hidden sm:inline">{label}</span>
         </button>
     );
 };

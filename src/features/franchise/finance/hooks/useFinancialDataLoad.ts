@@ -33,6 +33,7 @@ import { invoiceEngine } from '../../../../services/billing/invoiceEngine';
 import { shiftService } from '../../../../services/shiftService';
 import { userService } from '../../../../services/userService';
 import { LogisticsRate } from '../../../../types/franchise';
+import { monthlyCloseWizard } from '../../../../services/billing/taxVault';
 
 // Fallbacks de estimación salarial — se sobreescriben con los valores del perfil de franquicia
 const DEFAULT_HOURLY_RATE = 8.5;     // €/h base si la franquicia no tiene tarifa configurada
@@ -75,6 +76,7 @@ export const useFinancialDataLoad = ({ franchiseId, month, initialData, user }: 
     const [operativeHours, setOperativeHours] = useState(0);
     const [calculatedRiderExpenses, setCalculatedRiderExpenses] = useState({ payroll: 0, socialSecurity: 0 });
     const [franchisePack, setFranchisePack] = useState<'basic' | 'premium' | 'admin'>('basic');
+    const [isLocked, setIsLocked] = useState(false);
 
     useEffect(() => {
         async function loadData() {
@@ -93,7 +95,7 @@ export const useFinancialDataLoad = ({ franchiseId, month, initialData, user }: 
                 // Improved Resilient Fetching - Use real UID for franchise users to bypass slug resolution issues
                 const targetId = (user?.role === 'franchise' && user?.uid) ? user.uid : franchiseId;
 
-                const [data, yearlyData, monthInvoiced, monthShifts, profile] = await Promise.all([
+                const [data, yearlyData, monthInvoiced, monthShifts, profile, isLockedVault] = await Promise.all([
                     (async () => {
                         try {
                             return initialData || await financeService.getFinancialData(targetId, month) as FinancialRecord;
@@ -135,11 +137,28 @@ export const useFinancialDataLoad = ({ franchiseId, month, initialData, user }: 
                             console.error('[FinanceLoad] Failed to load franchise profile:', e instanceof Error ? e.message : e);
                             return null;
                         }
+                    })(),
+                    (async () => {
+                        try {
+                            const res = await monthlyCloseWizard.getTaxVaultEntry(targetId, month);
+                            if (res.success && res.data) return res.data.isLocked;
+                            return false;
+                        } catch (e: unknown) {
+                            console.error('[FinanceLoad] Failed to load tax vault info:', e instanceof Error ? e.message : e);
+                            return false;
+                        }
                     })()
                 ]);
 
                 if (data) setRecord(data);
-                if (monthInvoiced) setInvoicedIncome(monthInvoiced);
+                setIsLocked(isLockedVault || false);
+                if (monthInvoiced) {
+                    setInvoicedIncome(monthInvoiced);
+                    if (monthInvoiced.subtotal === 0) {
+                        console.warn('[FinanceLoad] ⚠️ invoicedIncome.subtotal=0 for', targetId, month,
+                            '→ Botón Sincronizar no aparecerá. Verificar que franchiseId coincide con facturas.');
+                    }
+                }
                 if (profile?.logisticsRates) setLogisticsRates(profile.logisticsRates);
 
                 // Calculate operative hours from shifts
@@ -224,6 +243,7 @@ export const useFinancialDataLoad = ({ franchiseId, month, initialData, user }: 
         invoicedIncome,
         operativeHours,
         calculatedRiderExpenses,
-        franchisePack
+        franchisePack,
+        isLocked
     };
 };

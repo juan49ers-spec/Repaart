@@ -83,32 +83,32 @@ export const RiderStatsOverview: React.FC<RiderStatsOverviewProps> = ({ myShifts
                 <div className="flex flex-col justify-center space-y-4">
                     <div className="flex items-end justify-between">
                         <div>
-                            <p className="text-sm font-semibold text-slate-500 mb-1">Horas Semanales</p>
+                            <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">Horas Semanales</p>
                             <div className="flex items-baseline gap-2">
-                                <span className="text-5xl md:text-6xl font-black tracking-tight text-slate-900 drop-shadow-sm">
+                                <span className="text-5xl md:text-6xl font-black tracking-tight text-slate-900 dark:text-white drop-shadow-sm">
                                     {stats.thisWeekHours.toFixed(1)}
                                 </span>
-                                <span className="text-xl font-bold text-slate-400">/ {stats.target}h</span>
+                                <span className="text-xl font-bold text-slate-400 dark:text-slate-500">/ {stats.target}h</span>
                             </div>
                         </div>
-                        <div className={`flex flex-col items-end ${stats.trend >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                            <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg">
+                        <div className={`flex flex-col items-end ${stats.trend >= 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
+                            <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-800/50 px-2 py-1 rounded-lg">
                                 {stats.trend >= 0 ? <ArrowUpRight size={18} className="stroke-[3]" /> : <ArrowDownRight size={18} className="stroke-[3]" />}
                                 <span className="font-bold text-sm">{Math.abs(stats.trend).toFixed(0)}%</span>
                             </div>
                         </div>
                     </div>
                     
-                    <div className="relative h-3 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner flex items-center">
+                    <div className="relative h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner flex items-center">
                         <div 
-                            className={`absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-1000 ease-out`}
+                            className={`absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-blue-400 dark:from-blue-600 dark:to-blue-500 transition-all duration-1000 ease-out`}
                             {...({ style: { width: `${stats.percent}%` } })}
                         />
                     </div>
                     
-                    <div className="flex justify-between items-center text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <div className="flex justify-between items-center text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                         <span>Progreso</span>
-                        <span className={stats.percent >= 100 ? 'text-blue-500' : ''}>
+                        <span className={stats.percent >= 100 ? 'text-blue-500 dark:text-blue-400' : ''}>
                             {stats.percent >= 100 ? 'Objetivo Cumplido' : `${(stats.target - stats.thisWeekHours).toFixed(1)}h restantes`}
                         </span>
                     </div>
@@ -133,7 +133,7 @@ export const RiderStatsOverview: React.FC<RiderStatsOverviewProps> = ({ myShifts
 
             {/* Distribution */}
             <div>
-                <h4 className="text-[11px] font-black text-slate-400 mb-3 uppercase tracking-widest opacity-80">Distribución</h4>
+                <h4 className="text-[11px] font-black text-slate-400 dark:text-slate-500 mb-3 uppercase tracking-widest opacity-80">Distribución</h4>
                 <div className="grid grid-cols-3 gap-2 sm:gap-4">
                     <DistributionCard 
                         icon={<Sun size={16} className="text-amber-500" strokeWidth={2.5} />} 
@@ -155,24 +155,24 @@ export const RiderStatsOverview: React.FC<RiderStatsOverviewProps> = ({ myShifts
 
             {/* Motivation Banner */}
             {stats.percent >= 80 && stats.percent < 100 && (
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200/50 rounded-[1.25rem] p-4 sm:p-5 flex items-start gap-4 shadow-sm relative overflow-hidden group">
-                    <div className="w-10 h-10 shrink-0 rounded-xl bg-blue-100 flex items-center justify-center border border-blue-200">
-                        <Award size={20} className="text-blue-500" strokeWidth={2.5} />
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/10 border border-blue-200/50 dark:border-blue-800/30 rounded-[1.25rem] p-4 sm:p-5 flex items-start gap-4 shadow-sm relative overflow-hidden group">
+                    <div className="w-10 h-10 shrink-0 rounded-xl bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center border border-blue-200 dark:border-blue-700/50">
+                        <Award size={20} className="text-blue-500 dark:text-blue-400" strokeWidth={2.5} />
                     </div>
                     <div className="relative z-10">
-                        <p className="font-bold text-[15px] mb-0.5 text-blue-900 tracking-tight">¡Casi lo tienes!</p>
-                        <p className="text-blue-700/80 font-medium text-xs leading-relaxed">Estás muy cerca de completar tu objetivo semanal.</p>
+                        <p className="font-bold text-[15px] mb-0.5 text-blue-900 dark:text-blue-100 tracking-tight">¡Casi lo tienes!</p>
+                        <p className="text-blue-700/80 dark:text-blue-300/80 font-medium text-xs leading-relaxed">Estás muy cerca de completar tu objetivo semanal.</p>
                     </div>
                 </div>
             )}
              {stats.percent >= 100 && (
-                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200/50 rounded-[1.25rem] p-4 sm:p-5 flex items-start gap-4 shadow-sm relative overflow-hidden group">
-                    <div className="w-10 h-10 shrink-0 rounded-xl bg-emerald-100 flex items-center justify-center border border-emerald-200">
-                        <Award size={20} className="text-emerald-500" strokeWidth={2.5} />
+                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-900/20 dark:to-emerald-800/10 border border-emerald-200/50 dark:border-emerald-800/30 rounded-[1.25rem] p-4 sm:p-5 flex items-start gap-4 shadow-sm relative overflow-hidden group">
+                    <div className="w-10 h-10 shrink-0 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center border border-emerald-200 dark:border-emerald-700/50">
+                        <Award size={20} className="text-emerald-500 dark:text-emerald-400" strokeWidth={2.5} />
                     </div>
                     <div className="relative z-10">
-                        <p className="font-bold text-[15px] mb-0.5 text-emerald-900 tracking-tight">¡Objetivo Cumplido!</p>
-                        <p className="text-emerald-700/80 font-medium text-xs leading-relaxed">Has superado tu meta semanal.</p>
+                        <p className="font-bold text-[15px] mb-0.5 text-emerald-900 dark:text-emerald-100 tracking-tight">¡Objetivo Cumplido!</p>
+                        <p className="text-emerald-700/80 dark:text-emerald-300/80 font-medium text-xs leading-relaxed">Has superado tu meta semanal.</p>
                     </div>
                 </div>
             )}
@@ -183,30 +183,30 @@ export const RiderStatsOverview: React.FC<RiderStatsOverviewProps> = ({ myShifts
 // --- PRIVATE HELPERS ---
 
 const StatCard = ({ icon, label, value, sub }: { icon: React.ReactNode, label: string, value: string | number, sub: string }) => (
-    <div className="bg-slate-50 rounded-[1.25rem] p-4 border border-slate-100 flex flex-col justify-between shadow-sm min-h-[110px]">
+    <div className="bg-slate-50 dark:bg-[#111827] rounded-[1.25rem] p-4 border border-slate-100 dark:border-white/5 flex flex-col justify-between shadow-sm min-h-[110px]">
         <div className="flex flex-col gap-2 mb-3">
-            <div className="p-1.5 w-fit rounded-lg bg-white border border-slate-200/50 shadow-sm">
+            <div className="p-1.5 w-fit rounded-lg bg-white dark:bg-slate-800 border border-slate-200/50 dark:border-white/10 shadow-sm">
                 {icon}
             </div>
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
+            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{label}</span>
         </div>
         <div>
             <div className="flex items-baseline gap-1.5 drop-shadow-sm">
-                <span className="text-2xl font-black tracking-tight text-slate-900">{value}</span>
-                <span className="text-[10px] whitespace-nowrap font-bold text-slate-500 uppercase tracking-widest">{sub}</span>
+                <span className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">{value}</span>
+                <span className="text-[10px] whitespace-nowrap font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{sub}</span>
             </div>
         </div>
     </div>
 );
 
 const DistributionCard = ({ icon, label, count }: { icon: React.ReactNode, label: string, count: number }) => (
-    <div className="bg-slate-50 rounded-[1rem] p-3 flex flex-col items-center justify-center gap-1.5 border border-slate-100 shadow-sm text-center">
-        <div className="bg-white p-1.5 rounded-lg border border-slate-200/50 shadow-sm mb-1">
+    <div className="bg-slate-50 dark:bg-[#111827] rounded-[1rem] p-3 flex flex-col items-center justify-center gap-1.5 border border-slate-100 dark:border-white/5 shadow-sm text-center">
+        <div className="bg-white dark:bg-slate-800 p-1.5 rounded-lg border border-slate-200/50 dark:border-white/10 shadow-sm mb-1">
             {icon}
         </div>
         <div className="flex flex-col items-center gap-0">
-            <span className="font-black text-slate-400 text-[9px] uppercase tracking-widest mb-0.5">{label}</span>
-            <span className="text-lg font-black text-slate-900 drop-shadow-sm">{count}</span>
+            <span className="font-black text-slate-400 dark:text-slate-500 text-[9px] uppercase tracking-widest mb-0.5">{label}</span>
+            <span className="text-lg font-black text-slate-900 dark:text-white drop-shadow-sm">{count}</span>
         </div>
     </div>
 );

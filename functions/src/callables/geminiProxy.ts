@@ -4,7 +4,8 @@ import { deepSanitizeGeminiBody } from '../utils/aiDefence';
 
 export const callGeminiProxy = onCall({
   enforceAppCheck: false,
-  secrets: ["GOOGLE_AI_KEY"]
+  secrets: ["GOOGLE_AI_KEY"],
+  cors: true
 }, async (request) => {
   // Authentication check
   if (!request.auth) {

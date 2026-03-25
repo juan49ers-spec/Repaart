@@ -16,7 +16,7 @@ import NotFound from './layouts/pages/NotFound';
 import DebugFirestore from './components/debug/DebugFirestore';
 // Page Components
 const DashboardSwitcher = lazyWithRetry(() => import('./layouts/components/DashboardSwitcher'));
-import UserProfile from './features/user/UserProfile';
+const UserProfile = lazyWithRetry(() => import('./features/user/UserProfile'));
 
 const Login = lazyWithRetry(() => import('./features/auth/Login'));
 const NotificationsPage = lazyWithRetry(() => import('./features/user/NotificationsPage'));
@@ -25,7 +25,7 @@ const WeeklyScheduler = lazyWithRetry(() => import('./features/operations/Weekly
 const AdminFlyderDashboard = lazyWithRetry(() => import('./features/admin/flyder/AdminFlyderDashboard'));
 const UserManagementPanel = lazyWithRetry(() => import('./features/admin/users/UserManagementPanel'));
 const AdminBillingDashboard = lazyWithRetry(() => import('./features/admin/billing/AdminBillingDashboard'));
-import DevSandbox from './pages/DevSandbox';
+const DevSandbox = lazyWithRetry(() => import('./pages/DevSandbox'));
 
 // Other Panels (Mapped from legacy ViewSwitcher)
 const SupportHub = lazyWithRetry(() => import('./features/franchise/SupportHub'));
@@ -50,6 +50,7 @@ const AcademyAdmin = lazyWithRetry(() => import('./features/academy/admin/Academ
 import { useFranchiseFinance } from './hooks/useFranchiseFinance';
 import { useVersionCheck } from './hooks/useVersionCheck';
 import { RiderLayout } from './layouts/RiderLayout';
+import InstallPrompt from './components/pwa/InstallPrompt';
 
 
 
@@ -101,6 +102,8 @@ function App() {
 
 
 
+    // Only fetch finance data for admin/franchise — riders never use it
+    const isRiderRole = roleConfig?.role === 'rider';
     const {
         rawData: currentData,
         accounting,
@@ -108,7 +111,7 @@ function App() {
         isSaving: saving,
         analysis
     } = useFranchiseFinance({
-        franchiseId: user ? (dataHookFranchiseId || undefined) : undefined,
+        franchiseId: user && !isRiderRole ? (dataHookFranchiseId || undefined) : undefined,
         month: selectedMonth
     });
 
@@ -354,6 +357,9 @@ function App() {
                         </Route>
                     </Routes>
                 </Suspense>
+                
+                {/* PWA Install Prompt (Detects iOS/Android/Desktop) */}
+                <InstallPrompt />
             </ErrorBoundaryWithToast>
 
             {/* Global Toast Notifications */}

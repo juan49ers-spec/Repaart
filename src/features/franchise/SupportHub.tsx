@@ -45,7 +45,7 @@ const SupportHub: React.FC = () => {
     const filteredCount = tickets.length;
 
     return (
-        <div className="p-4 lg:p-6 min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col gap-6 relative">
+        <div className="p-4 lg:p-6 min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F19] flex flex-col gap-6 relative font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
 
             {/* Top Bar Actions */}
             <div className="flex flex-col sm:flex-row justify-between items-end sm:items-center shrink-0 gap-4 sm:gap-0">
@@ -63,9 +63,9 @@ const SupportHub: React.FC = () => {
             <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
                 {/* LEFT PANEL: History (4 cols) */}
-                <div className="lg:col-span-4 @container flex flex-col bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden min-h-[400px]">
+                <div className="lg:col-span-4 @container flex flex-col bg-white dark:bg-[#111827] rounded-3xl border border-slate-200/60 dark:border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] overflow-hidden min-h-[400px]">
                     {/* Mini-Dashboard Header */}
-                    <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-sm z-10">
+                    <div className="p-5 border-b border-slate-200/60 dark:border-white/5 bg-slate-50/50 dark:bg-[#111827]/50 backdrop-blur-sm z-10">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm">
                                 <Activity className="w-5 h-5" />
@@ -85,7 +85,7 @@ const SupportHub: React.FC = () => {
                                     <span className="text-[10px] text-indigo-500 mb-1 font-semibold animate-pulse">ACTIVOS</span>
                                 </div>
                             </div>
-                            <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                            <div className="bg-slate-50 dark:bg-[#111827]/40 p-3 rounded-xl border border-slate-200/60 dark:border-white/5 shadow-sm">
                                 <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Total</div>
                                 <div className="text-xl font-bold text-slate-900 dark:text-white flex items-end gap-1">
                                     {allTicketsCount}
@@ -109,7 +109,7 @@ const SupportHub: React.FC = () => {
                 </div>
 
                 {/* RIGHT PANEL: New Ticket Form (8 cols) */}
-                <div className="lg:col-span-8 @container flex flex-col relative rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 min-h-[600px] overflow-hidden">
+                <div className="lg:col-span-8 @container flex flex-col relative rounded-3xl border border-slate-200/60 dark:border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] bg-white dark:bg-[#111827] min-h-[600px] overflow-hidden">
 
                     {/* Quick Actions Header */}
                     <div className="absolute top-5 right-6 z-30 flex flex-col items-end gap-2">
@@ -121,7 +121,7 @@ const SupportHub: React.FC = () => {
                                     flex items-center gap-2 px-3 py-1.5 backdrop-blur-md border rounded-lg text-xs font-medium uppercase tracking-wider transition-all shadow-sm
                                     ${showInfo
                                         ? 'bg-indigo-100 dark:bg-indigo-900/40 border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300'
-                                        : 'bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                        : 'bg-white/80 dark:bg-[#0B0F19]/80 border-slate-200/60 dark:border-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'
                                     }
                                 `}
                             >
@@ -132,8 +132,8 @@ const SupportHub: React.FC = () => {
 
                         {/* Info Card Popover */}
                         {showInfo && (
-                            <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700 p-4 rounded-xl shadow-xl w-64 animate-in fade-in slide-in-from-top-2 duration-200 text-right sm:text-left z-50">
-                                <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                            <div className="bg-white/95 dark:bg-[#111827]/95 backdrop-blur-xl border border-slate-200/60 dark:border-white/5 p-4 rounded-xl shadow-xl w-64 animate-in fade-in slide-in-from-top-2 duration-200 text-right sm:text-left z-50">
+                                <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-2 border-b border-slate-200/60 dark:border-white/5 pb-2">
                                     Información Importante
                                 </h4>
                                 <ul className="space-y-2">
@@ -155,13 +155,13 @@ const SupportHub: React.FC = () => {
                     </div>
 
                     {/* Tab Switcher */}
-                    <div className="absolute top-5 left-6 z-30 flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div className="absolute top-5 left-6 z-30 flex gap-1 bg-slate-100 dark:bg-[#0B0F19] p-1 rounded-lg border border-slate-200/60 dark:border-white/5 shadow-sm">
                         <button
                             onClick={() => setActiveTab('ticket')}
                             className={`
                                     px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all
                                     ${activeTab === 'ticket'
-                                    ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                                    ? 'bg-white dark:bg-[#111827] text-indigo-600 dark:text-indigo-400 shadow-sm'
                                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                                 }
                                 `}
@@ -174,7 +174,7 @@ const SupportHub: React.FC = () => {
                             className={`
                                     px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all
                                     ${activeTab === 'services'
-                                    ? 'bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-400 shadow-sm'
+                                    ? 'bg-white dark:bg-[#111827] text-purple-600 dark:text-purple-400 shadow-sm'
                                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                                 }
                                 `}

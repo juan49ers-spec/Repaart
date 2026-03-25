@@ -180,6 +180,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
                 franchiseId={activeFranchiseId}
                 effectiveMonth={displayedMonth}
                 readOnly={false}
+                isLoading={loading}
                 revenue={revenue}
                 orders={orders}
                 totalExpenses={totalExpenses}

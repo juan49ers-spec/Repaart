@@ -261,9 +261,9 @@
     /* Text */
     --color-text-primary: #f8fafc;
     --color-text-secondary: #e2e8f0;
-    --color-text-tertiary: #94a3b8;
+    --color-text-tertiary: #cbd5e1; /* Brightened from #94a3b8 for accessibility */
     --color-text-inverse: #0f172a;
-    --color-text-muted: #64748b;
+    --color-text-muted: #94a3b8;    /* Brightened from #64748b for accessibility */
 
     /* Borders */
     --color-border-primary: #334155;
@@ -378,29 +378,29 @@ body:not(.offline) .offline-only {
 /* =====================================================
    CONTAINER QUERY STYLES
    ===================================================== */
-@container (min-width: 300px) {
+@container (min-width: 300px) { :where(*) {
     --container-font-size: var(--font-size-sm);
     --container-spacing: var(--space-2);
     --container-grid-columns: 1;
-}
+}}
 
-@container (min-width: 600px) {
+@container (min-width: 600px) { :where(*) {
     --container-font-size: var(--font-size-base);
     --container-spacing: var(--space-4);
     --container-grid-columns: 2;
-}
+}}
 
-@container (min-width: 900px) {
+@container (min-width: 900px) { :where(*) {
     --container-font-size: var(--font-size-lg);
     --container-spacing: var(--space-6);
     --container-grid-columns: 3;
-}
+}}
 
-@container (min-width: 1200px) {
+@container (min-width: 1200px) { :where(*) {
     --container-font-size: var(--font-size-xl);
     --container-spacing: var(--space-8);
     --container-grid-columns: 4;
-}
+}}
 
 /* =====================================================
    UTILITY CLASSES

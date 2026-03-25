@@ -1,6 +1,6 @@
 import React from 'react';
 import { AlertTriangle, Activity } from 'lucide-react';
-import DashboardSkeleton from '../../../components/ui/layout/DashboardSkeleton';
+import AdminOverviewSkeleton from './AdminOverviewSkeleton';
 import EmptyState from '../../../components/ui/feedback/EmptyState';
 import { useAdminControl } from '../../../hooks/useAdminControl';
 
@@ -18,7 +18,7 @@ interface OverviewTabProps {
 const OverviewTab: React.FC<OverviewTabProps> = ({ onNavigate, selectedMonth }) => {
     const { data, loading, error } = useAdminControl(selectedMonth);
 
-    if (loading) return <DashboardSkeleton />;
+    if (loading) return <AdminOverviewSkeleton />;
     if (error) return <EmptyState title="Error de conexión" description={error || 'Unknown error'} icon={AlertTriangle} />;
 
     return (

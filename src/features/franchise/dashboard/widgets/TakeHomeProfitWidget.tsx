@@ -1,7 +1,7 @@
  
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Wallet, Trophy, Activity, ShieldCheck } from 'lucide-react';
+import { Wallet, Trophy, Activity, CheckCircle } from 'lucide-react';
 import { formatMoney } from '../../../../lib/finance';
 import { cn } from '../../../../lib/utils';
 
@@ -203,17 +203,17 @@ const TakeHomeProfitWidget: React.FC<TakeHomeProfitWidgetProps> = ({
 
                 {/* HIGH-DENSITY BREAKDOWN */}
                 <div className="space-y-1">
-                    <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-                        <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Ingresos Netos</span>
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/30">
+                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Ingresos Netos</span>
                         <span className="text-xs font-bold text-slate-700 dark:text-slate-200 tabular-nums">+{formatMoney(revenue)}€</span>
                     </div>
-                    <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-                        <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Gasto Estructural</span>
-                        <span className="text-xs font-bold text-rose-600 tabular-nums">-{formatMoney(totalExpenses)}€</span>
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/30">
+                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Gasto Estructural</span>
+                        <span className="text-xs font-bold text-rose-600 dark:text-rose-400 tabular-nums">-{formatMoney(totalExpenses)}€</span>
                     </div>
-                    <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-                        <span className="text-xs font-medium text-slate-500 uppercase tracking-wide text-[10px]">Impuestos (Est.)</span>
-                        <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 tabular-nums">-{formatMoney(estimatedTax)}€</span>
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/30">
+                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide text-[10px]">Impuestos (Est.)</span>
+                        <span className="text-xs font-bold text-indigo-600 dark:text-indigo-300 tabular-nums">-{formatMoney(estimatedTax)}€</span>
                     </div>
                 </div>
             </div>
@@ -259,7 +259,7 @@ const TakeHomeProfitWidget: React.FC<TakeHomeProfitWidgetProps> = ({
 
                         <div className="space-y-3 mb-8 text-left">
                             <div className="flex items-center gap-4 p-4 bg-white/50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl">
-                                <ShieldCheck className="w-5 h-5 text-ruby-600" />
+                                <CheckCircle className="w-5 h-5 text-ruby-600" />
                                 <div>
                                     <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Eficiencia Verificada</p>
                                     <p className="text-[9px] text-slate-500 uppercase tracking-tight font-bold">Margen operativo +12% vs media red</p>

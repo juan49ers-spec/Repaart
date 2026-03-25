@@ -86,11 +86,26 @@ const RiderScheduleView: React.FC = () => {
     );
 
     const handleConfirmShift = async (shiftId: string) => {
+        // Optimistic UI: Guardamos backup y mutamos instantáneamente en local (0ms lag)
+        const previousShifts = [...shifts];
+        setShifts(prev => prev.map(s => s.shiftId === shiftId ? { ...s, isConfirmed: true } : s));
+        
+        toast.success('¡Turno confirmado!', {
+            icon: '🚀',
+            style: { borderRadius: '16px', background: '#10B981', color: '#fff', fontWeight: 'bold' },
+            duration: 2000,
+        });
+
         try {
+            // Se envía a Firebase (con caché persistente esto es súper rápido o en diferido si está offline)
             await shiftService.confirmShift(shiftId);
-            toast.success('Turno confirmado');
-        } catch {
-            toast.error('Error al confirmar el turno');
+        } catch (error) {
+            // Rollback UI si falla por algún motivo de base de datos
+            setShifts(previousShifts);
+            toast.error('Error de conexión. Se revertió el estado.', {
+                style: { borderRadius: '16px' }
+            });
+            console.error('Error confirming shift:', error);
         }
     };
 
@@ -154,29 +169,35 @@ const RiderScheduleView: React.FC = () => {
                 </div>
             </div>
 
-            {/* Pending confirmation banner */}
+            {/* Pending confirmation banner (Premium & Dark Mode Ready) */}
             {unconfirmedShifts.length > 0 && (
-                <div className="mx-3 mb-2 rounded-2xl bg-amber-500/10 border border-amber-500/20 p-4 space-y-3">
-                    <p className="text-[10px] font-black text-amber-400 uppercase tracking-[0.2em]">
+                <div className="mx-3 mb-4 rounded-2xl bg-amber-500/10 dark:bg-amber-500/5 border border-amber-500/20 dark:border-amber-500/10 p-4 space-y-3 transition-all duration-300">
+                    <p className="text-[10px] font-black text-amber-500 dark:text-amber-400 uppercase tracking-[0.2em] flex items-center gap-1.5">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                        </span>
                         {unconfirmedShifts.length} turno{unconfirmedShifts.length > 1 ? 's' : ''} por confirmar
                     </p>
-                    {unconfirmedShifts.map(shift => (
-                        <div key={shift.shiftId} className="flex items-center justify-between bg-white/5 rounded-xl px-3 py-2">
-                            <span className="text-sm font-bold text-white tabular-nums">
-                                {format(new Date(shift.startAt), 'EEE d MMM', { locale: es })}
-                                {' · '}
-                                {format(new Date(shift.startAt), 'HH:mm')}–{format(new Date(shift.endAt), 'HH:mm')}
-                            </span>
-                            <button
-                                type="button"
-                                onClick={() => handleConfirmShift(shift.shiftId)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-transform"
-                            >
-                                <CheckCircle2 size={12} />
-                                Confirmar
-                            </button>
-                        </div>
-                    ))}
+                    <div className="flex flex-col gap-2">
+                        {unconfirmedShifts.map(shift => (
+                            <div key={shift.shiftId} className="flex items-center justify-between bg-white/40 dark:bg-[#111827]/40 backdrop-blur-sm shadow-sm border border-white/50 dark:border-white/5 rounded-xl px-3 py-2.5 transition-all">
+                                <span className="text-sm font-bold text-slate-800 dark:text-slate-200 tabular-nums">
+                                    {format(new Date(shift.startAt), 'EEE d MMM', { locale: es })}
+                                    <span className="mx-1.5 opacity-40">·</span>
+                                    {format(new Date(shift.startAt), 'HH:mm')}–{format(new Date(shift.endAt), 'HH:mm')}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => handleConfirmShift(shift.shiftId)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white rounded-lg text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-sm"
+                                >
+                                    <CheckCircle2 size={14} />
+                                    Confirmar
+                                </button>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 

@@ -41,7 +41,7 @@ export const InstallPrompt: React.FC = () => {
     if (!isVisible) return null;
 
     return (
-        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-8 z-50 animate-in slide-in-from-bottom-5 fade-in duration-500">
+        <div className="fixed bottom-24 xl:bottom-4 left-4 right-4 md:left-auto md:right-8 z-50 animate-in slide-in-from-bottom-5 fade-in duration-500">
             <div className="bg-slate-900 dark:bg-slate-800 text-white p-4 rounded-xl shadow-xl flex items-center justify-between gap-4 border border-slate-700/50">
                 <div className="flex-1">
                     <h4 className="font-semibold text-sm">Instalar App</h4>

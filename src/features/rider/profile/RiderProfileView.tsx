@@ -34,30 +34,37 @@ export const RiderProfileView: React.FC = () => {
     if (!user) return <LoaderScreen />;
 
     return (
-        <div className="min-h-[calc(100vh-64px)] overflow-y-auto bg-[#f5f5f7] pb-24 font-[-apple-system,BlinkMacSystemFont,'Segoe_UI',Roboto,Helvetica,Arial,sans-serif]">
+        <div className="relative min-h-[calc(100vh-64px)] overflow-y-auto bg-[#f5f5f7] dark:bg-[#0B0F19] transition-colors duration-300 pb-24 font-[-apple-system,BlinkMacSystemFont,'Segoe_UI',Roboto,Helvetica,Arial,sans-serif]">
             
-            <div className="max-w-md mx-auto px-5 py-6 flex flex-col gap-6">
+            {/* Dynamic Background Mesh (Premium dark/light feel) */}
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-[-10%] right-[-10%] w-[300px] h-[300px] bg-indigo-500/10 dark:bg-indigo-500/5 rounded-full blur-[80px]" />
+                <div className="absolute top-[10%] left-[-10%] w-[250px] h-[250px] bg-blue-500/10 dark:bg-blue-500/5 rounded-full blur-[80px]" />
+            </div>
+
+            <div className="relative z-10 max-w-md mx-auto px-5 py-6 flex flex-col gap-6">
                 
                 {/* HERO SECTION */}
                 {!showSupport && (
                     <header className="flex flex-col items-center mt-6 mb-2 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
-                        <div className="relative mb-5">
-                            <div className="w-[104px] h-[104px] rounded-full overflow-hidden bg-white shadow-sm border border-slate-200/60 p-1">
-                                <div className="w-full h-full rounded-full overflow-hidden bg-slate-100">
+                        <div className="relative mb-5 group">
+                            <div className="absolute -inset-1 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-full blur opacity-30 dark:opacity-40 transition duration-500"></div>
+                            <div className="relative w-[104px] h-[104px] rounded-full overflow-hidden bg-white dark:bg-slate-900 shadow-xl border-4 border-white dark:border-[#111827]">
+                                <div className="w-full h-full rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800">
                                     {user.photoURL ? (
                                         <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-3xl font-medium text-slate-500">
+                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 text-3xl font-medium text-slate-500 dark:text-slate-400">
                                             {user.email?.charAt(0).toUpperCase()}
                                         </div>
                                     )}
                                 </div>
                             </div>
                         </div>
-                        <h1 className="text-[26px] font-bold text-slate-900 tracking-tight leading-tight">
+                        <h1 className="text-[26px] font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
                             {user.displayName || 'Rider Profesional'}
                         </h1>
-                        <p className="text-[14px] font-medium text-slate-500 mt-1">
+                        <p className="text-[14px] font-medium text-slate-500 dark:text-slate-400 mt-1">
                             {user.email}
                         </p>
                     </header>
@@ -70,11 +77,11 @@ export const RiderProfileView: React.FC = () => {
                         <div className="space-y-6">
                             
                             {/* Stats Overview Card */}
-                            <section className="bg-white rounded-[20px] shadow-[0_2px_10px_rgb(0,0,0,0.02)] border border-[#e5e5ea] overflow-hidden">
+                            <section className="bg-white/80 dark:bg-[#111827]/80 backdrop-blur-md rounded-[20px] shadow-[0_4px_24px_rgb(0,0,0,0.04)] dark:shadow-none border border-slate-200/50 dark:border-white/5 overflow-hidden transition-all duration-300">
                                 <div className="p-5">
                                     {isLoading ? (
                                         <div className="h-32 flex items-center justify-center">
-                                            <Loader2 className="animate-spin text-slate-300" size={24} />
+                                            <Loader2 className="animate-spin text-slate-300 dark:text-slate-600" size={24} />
                                         </div>
                                     ) : (
                                         <RiderStatsOverview myShifts={myShifts} />
@@ -85,8 +92,8 @@ export const RiderProfileView: React.FC = () => {
                             {/* Settings Groups */}
                             <div className="space-y-5">
                                 {/* Group 1: General Info */}
-                                <div className="bg-white rounded-[20px] shadow-[0_2px_10px_rgb(0,0,0,0.02)] border border-[#e5e5ea] overflow-hidden">
-                                    <div className="divide-y divide-slate-100">
+                                <div className="bg-white dark:bg-[#111827] rounded-[20px] shadow-[0_2px_10px_rgb(0,0,0,0.02)] dark:shadow-none border border-slate-200/60 dark:border-white/5 overflow-hidden">
+                                    <div className="divide-y divide-slate-100 dark:divide-slate-800">
                                         <MenuItem 
                                             icon={<div className="w-7 h-7 rounded-md bg-blue-500 flex items-center justify-center"><MapPin size={16} className="text-white" /></div>} 
                                             label="Disponibilidad y Zonas" 
@@ -102,8 +109,8 @@ export const RiderProfileView: React.FC = () => {
                                 </div>
 
                                 {/* Group 2: Preferences & Security */}
-                                <div className="bg-white rounded-[20px] shadow-[0_2px_10px_rgb(0,0,0,0.02)] border border-[#e5e5ea] overflow-hidden">
-                                    <div className="divide-y divide-slate-100">
+                                <div className="bg-white dark:bg-[#111827] rounded-[20px] shadow-[0_2px_10px_rgb(0,0,0,0.02)] dark:shadow-none border border-slate-200/60 dark:border-white/5 overflow-hidden">
+                                    <div className="divide-y divide-slate-100 dark:divide-slate-800">
                                         <MenuItem 
                                             icon={<div className="w-7 h-7 rounded-md bg-red-500 flex items-center justify-center"><Bell size={16} className="text-white fill-current" /></div>} 
                                             label="Notificaciones" 
@@ -119,7 +126,7 @@ export const RiderProfileView: React.FC = () => {
                                 </div>
 
                                 {/* Group 3: Support */}
-                                <div className="bg-white rounded-[20px] shadow-[0_2px_10px_rgb(0,0,0,0.02)] border border-[#e5e5ea] overflow-hidden">
+                                <div className="bg-white dark:bg-[#111827] rounded-[20px] shadow-[0_2px_10px_rgb(0,0,0,0.02)] dark:shadow-none border border-slate-200/60 dark:border-white/5 overflow-hidden">
                                     <MenuItem 
                                         icon={<div className="w-7 h-7 rounded-md bg-purple-500 flex items-center justify-center"><HelpCircle size={16} className="text-white" /></div>} 
                                         label="Soporte y Ayuda" 
@@ -129,26 +136,27 @@ export const RiderProfileView: React.FC = () => {
                                     />
                                 </div>
                                 
-                                {/* Action Group: Logout */}
+                                {/* Action Group: Logout (Destructive Ghost Button) */}
                                 <div className="mt-8 mb-4">
                                     <button 
                                         onClick={handleLogout}
-                                        className="w-full bg-white rounded-[20px] shadow-[0_2px_10px_rgb(0,0,0,0.02)] border border-[#e5e5ea] py-3.5 text-center text-rose-500 font-medium text-[16px] active:scale-[0.98] transition-all focus:outline-none"
+                                        className="w-full bg-rose-500/5 hover:bg-rose-500/10 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 rounded-[20px] shadow-sm border border-rose-500/20 py-3.5 text-center text-rose-600 dark:text-rose-400 font-semibold text-[16px] active:scale-[0.96] transition-all focus:outline-none flex items-center justify-center gap-2"
                                     >
+                                        <User size={18} className="opacity-50" />
                                         Cerrar Sesión
                                     </button>
                                 </div>
                             </div>
                             
-                            <div className="text-center opacity-40 py-2">
-                                <p className="text-[12px] font-medium tracking-wide">Repaart Mobile v4.3.0</p>
+                            <div className="text-center opacity-40 dark:opacity-30 py-2">
+                                <p className="text-[12px] font-medium tracking-wide dark:text-slate-400">Repaart Mobile v4.3.0</p>
                             </div>
                         </div>
                     ) : (
-                        <div className="bg-white rounded-[20px] shadow-sm border border-[#e5e5ea] p-4 sm:p-6 min-h-[50vh] animate-in fade-in slide-in-from-right-4 duration-300">
+                        <div className="bg-white dark:bg-[#111827] rounded-[20px] shadow-sm border border-slate-200/60 dark:border-white/5 p-4 sm:p-6 min-h-[50vh] animate-in fade-in slide-in-from-right-4 duration-300">
                             <button 
                                 onClick={() => setShowSupport(false)}
-                                className="mb-6 flex items-center gap-1.5 text-blue-500 hover:text-blue-600 transition-colors font-medium text-[16px] active:scale-95 origin-left"
+                                className="mb-6 flex items-center gap-1.5 text-blue-500 dark:text-blue-400 hover:text-blue-600 transition-colors font-medium text-[16px] active:scale-95 origin-left"
                             >
                                 <ChevronRight size={22} className="rotate-180" />
                                 Volver
@@ -165,21 +173,21 @@ export const RiderProfileView: React.FC = () => {
 // --- PRIVATE HELPERS ---
 
 const LoaderScreen = () => (
-    <div className="min-h-screen flex items-center justify-center bg-[#f5f5f7]">
-        <Loader2 className="animate-spin text-slate-300" size={32} />
+    <div className="min-h-screen flex items-center justify-center bg-[#f5f5f7] dark:bg-[#0B0F19]">
+        <Loader2 className="animate-spin text-slate-300 dark:text-slate-600" size={32} />
     </div>
 );
 
 const MenuItem = ({ icon, label, onClick, isFirst, isLast }: { icon: React.ReactNode; label: string; onClick: () => void; isFirst?: boolean; isLast?: boolean }) => (
     <button
         onClick={onClick}
-        className={`w-full flex items-center justify-between px-4 py-3.5 bg-white hover:bg-slate-50 active:bg-slate-100 transition-colors ${isFirst ? 'rounded-t-[20px]' : ''} ${isLast ? 'rounded-b-[20px]' : ''}`}
+        className={`group w-full flex items-center justify-between px-4 py-3.5 bg-white dark:bg-[#111827] hover:bg-slate-50 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-800 transition-colors ${isFirst ? 'rounded-t-[20px]' : ''} ${isLast ? 'rounded-b-[20px]' : ''}`}
     >
         <div className="flex items-center gap-4">
             {icon}
-            <span className="font-medium text-slate-900 text-[16px]">{label}</span>
+            <span className="font-medium text-slate-900 dark:text-white text-[16px]">{label}</span>
         </div>
-        <ChevronRight size={20} className="text-slate-300" />
+        <ChevronRight size={20} className="text-slate-300 dark:text-slate-600 group-active:translate-x-1 transition-transform" />
     </button>
 );
 

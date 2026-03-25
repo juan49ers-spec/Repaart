@@ -1,17 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { DashboardAlertBanner } from '../DashboardAlertBanner';
-
-vi.mock('../../../../../lib/gemini', () => ({
-  generateDashboardAlert: vi.fn(),
-}));
-
-// Rate limiter transparente: ejecuta el callback sin delay ni caché
-vi.mock('../../../../../lib/aiRateLimiter', () => ({
-  aiLimiter: {
-    execute: (_key: string, fn: () => Promise<unknown>) => fn(),
-  },
-}));
 
 vi.mock('lucide-react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('lucide-react')>();
@@ -25,8 +14,6 @@ vi.mock('lucide-react', async (importOriginal) => {
     Bot: (props: Record<string, unknown>) => <svg data-testid="icon-bot" {...props} />,
   };
 });
-
-import { generateDashboardAlert } from '../../../../../lib/gemini';
 
 const baseProps = {
   franchiseId: 'franchise-1',
@@ -42,59 +29,50 @@ describe('DashboardAlertBanner', () => {
   });
 
   it('shows skeleton while loading', () => {
-    (generateDashboardAlert as ReturnType<typeof vi.fn>).mockReturnValue(new Promise(() => {}));
-    render(<DashboardAlertBanner {...baseProps} />);
+    render(<DashboardAlertBanner {...baseProps} alertData="loading" />);
     expect(screen.getByTestId('alert-skeleton')).toBeInTheDocument();
   });
 
-  it('renders alert title and message after load', async () => {
-    (generateDashboardAlert as ReturnType<typeof vi.fn>).mockResolvedValue({
-      type: 'positive',
-      title: '¡Buen margen este mes!',
-      message: 'Estás al 30%, muy por encima de la media.',
-    });
-    render(<DashboardAlertBanner {...baseProps} />);
-    await waitFor(() => {
-      expect(screen.getByText('¡Buen margen este mes!')).toBeInTheDocument();
-      expect(screen.getByText('Estás al 30%, muy por encima de la media.')).toBeInTheDocument();
-    });
+  it('renders alert title and message', () => {
+    render(
+      <DashboardAlertBanner
+        {...baseProps}
+        alertData={{ type: 'positive', title: '¡Buen margen este mes!', message: 'Estás al 30%, muy por encima de la media.' }}
+      />
+    );
+    expect(screen.getByText('¡Buen margen este mes!')).toBeInTheDocument();
+    expect(screen.getByText('Estás al 30%, muy por encima de la media.')).toBeInTheDocument();
   });
 
-  it('renders nothing when generateDashboardAlert returns null', async () => {
-    (generateDashboardAlert as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-    const { container } = render(<DashboardAlertBanner {...baseProps} />);
-    await waitFor(() => {
-      expect(container.firstChild).toBeNull();
-    });
+  it('renders nothing when alertData is null', () => {
+    const { container } = render(<DashboardAlertBanner {...baseProps} alertData={null} />);
+    expect(container.firstChild).toBeNull();
   });
 
-  it('renders nothing when financialData is null', async () => {
-    const { container } = render(<DashboardAlertBanner {...baseProps} financialData={null} />);
-    await waitFor(() => {
-      expect(container.firstChild).toBeNull();
-    });
+  it('renders nothing when financialData is null', () => {
+    const { container } = render(<DashboardAlertBanner {...baseProps} financialData={null} alertData={null} />);
+    expect(container.firstChild).toBeNull();
   });
 
-  it('calls onOpenAdvisor when advisor button is clicked', async () => {
-    (generateDashboardAlert as ReturnType<typeof vi.fn>).mockResolvedValue({
-      type: 'info',
-      title: 'Todo en orden',
-      message: 'Esta semana va bien.',
-    });
-    render(<DashboardAlertBanner {...baseProps} />);
-    await waitFor(() => screen.getByText('Todo en orden'));
+  it('calls onOpenAdvisor when advisor button is clicked', () => {
+    render(
+      <DashboardAlertBanner
+        {...baseProps}
+        alertData={{ type: 'info', title: 'Todo en orden', message: 'Esta semana va bien.' }}
+      />
+    );
     fireEvent.click(screen.getByRole('button', { name: /asesor/i }));
     expect(baseProps.onOpenAdvisor).toHaveBeenCalled();
   });
 
-  it('dismisses banner when X is clicked', async () => {
-    (generateDashboardAlert as ReturnType<typeof vi.fn>).mockResolvedValue({
-      type: 'warning',
-      title: 'Hay huecos esta semana',
-      message: 'Tienes 2 turnos sin cubrir.',
-    });
-    const { container } = render(<DashboardAlertBanner {...baseProps} />);
-    await waitFor(() => screen.getByText('Hay huecos esta semana'));
+  it('dismisses banner when X is clicked', () => {
+    const { container } = render(
+      <DashboardAlertBanner
+        {...baseProps}
+        alertData={{ type: 'warning', title: 'Hay huecos esta semana', message: 'Tienes 2 turnos sin cubrir.' }}
+      />
+    );
+    expect(screen.getByText('Hay huecos esta semana')).toBeInTheDocument();
     fireEvent.click(screen.getByTitle('Descartar'));
     expect(container.firstChild).toBeNull();
   });

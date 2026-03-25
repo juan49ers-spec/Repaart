@@ -63,6 +63,7 @@ export interface FranchiseDashboardViewProps {
     setIsAdvisorOpen: (open: boolean) => void;
     isHistoryView: boolean;
     setIsHistoryView: (view: boolean) => void;
+    isLoading?: boolean;
     drillDown: string | null;
     setDrillDown: (val: string | null) => void;
     isLegendOpen: boolean;
@@ -97,6 +98,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
     setIsAdvisorOpen,
     isHistoryView,
     setIsHistoryView,
+    isLoading = false,
     isLegendOpen,
     setIsLegendOpen,
     showGuide,
@@ -145,15 +147,63 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
         month: effectiveMonth,
     } : null;
 
+    if (isLoading) {
+        return (
+            <div className="min-h-0 flex-1 bg-slate-50 dark:bg-slate-950 font-sans p-4 md:p-8 w-full animate-pulse transition-colors duration-300">
+                <div className="max-w-[1700px] mx-auto flex flex-col gap-6">
+                    {/* Header Skeleton */}
+                    <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="w-[180px] h-10 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+                            <div className="hidden md:flex w-[160px] h-10 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+                            <div className="flex gap-2">
+                                <div className="w-[100px] h-10 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                                <div className="hidden sm:block w-[120px] h-10 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Grid Top Widgets Skeleton */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <div className="h-[220px] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 p-6 flex flex-col justify-between">
+                            <div className="flex justify-between items-start"><div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800" /><div className="w-16 h-4 rounded-full bg-slate-200 dark:bg-slate-800" /></div>
+                            <div className="space-y-3"><div className="w-32 h-8 rounded-lg bg-slate-200 dark:bg-slate-800" /><div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800/50" /></div>
+                        </div>
+                        <div className="h-[220px] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 p-6 flex flex-col justify-between">
+                            <div className="flex justify-between items-start"><div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800" /><div className="w-16 h-4 rounded-full bg-slate-200 dark:bg-slate-800" /></div>
+                            <div className="space-y-3"><div className="w-32 h-8 rounded-lg bg-slate-200 dark:bg-slate-800" /><div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800/50" /></div>
+                        </div>
+                        <div className="h-[220px] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 p-6 flex flex-col justify-between">
+                            <div className="flex justify-between items-start"><div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800" /><div className="w-16 h-4 rounded-full bg-slate-200 dark:bg-slate-800" /></div>
+                            <div className="space-y-3"><div className="w-32 h-8 rounded-lg bg-slate-200 dark:bg-slate-800" /><div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800/50" /></div>
+                        </div>
+
+                        {/* Chart & Breakdown Skeleton */}
+                        <div className="col-span-1 md:col-span-2 lg:col-span-2 h-[340px] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 p-6">
+                            <div className="w-40 h-4 bg-slate-200 dark:bg-slate-800 rounded mb-8" />
+                            <div className="w-full h-[220px] bg-slate-100 dark:bg-slate-800/50 rounded-xl" />
+                        </div>
+                        <div className="col-span-1 md:col-span-2 lg:col-span-1 h-[340px] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 p-6">
+                            <div className="w-32 h-4 bg-slate-200 dark:bg-slate-800 rounded mb-8" />
+                            <div className="flex justify-center mb-6"><div className="w-32 h-32 rounded-full border-8 border-slate-200 dark:border-slate-800" /></div>
+                            <div className="space-y-2"><div className="w-full h-3 bg-slate-200 dark:bg-slate-800 rounded" /><div className="w-5/6 h-3 bg-slate-200 dark:bg-slate-800 rounded" /></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
-            <div className="max-w-[1700px] mx-auto px-4 md:px-8 py-6">
+        <div className="min-h-0 flex-1 bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
+            <div className="max-w-[1700px] mx-auto px-3 sm:px-4 md:px-8 py-4 md:py-6">
 
                 {/* TACTICAL HEADER */}
-                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-4 mt-2 relative">
-                    {/* Month Navigator */}
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center bg-white dark:bg-slate-800 rounded-xl p-0.5 shadow-sm border border-slate-200 dark:border-slate-700">
+                <div className="flex flex-col gap-3 mb-4 mt-2">
+                    {/* Row 1: Month Navigator + View Switcher (desktop) + Actions */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-center md:justify-between gap-4">
+                        {/* Month Navigator */}
+                        <div className="flex items-center bg-white dark:bg-slate-800 rounded-xl p-0.5 shadow-sm border border-slate-200 dark:border-slate-700 shrink-0">
                             <button
                                 onClick={() => {
                                     const date = new Date(effectiveMonth + '-01');
@@ -182,101 +232,131 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                                 <ChevronRight className="w-4 h-4" />
                             </button>
                         </div>
-                    </div>
 
-                    {/* View Switcher Capsule (Centered) */}
-                    <div className="static lg:absolute lg:left-1/2 lg:-translate-x-1/2 flex bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-100 dark:border-slate-700 mx-auto">
-                        <button
-                            onClick={() => setIsHistoryView(false)}
-                            className={`px-5 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-all mechanical-press ${!isHistoryView
-                                ? 'bg-blue-200 dark:bg-blue-900 text-blue-800 dark:text-blue-100 shadow-sm border border-blue-300 dark:border-blue-800'
-                                : 'text-blue-400 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300'
-                                }`}
-                        >
-                            mensual
-                        </button>
-                        <button
-                            onClick={() => setIsHistoryView(true)}
-                            className={`px-5 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-all mechanical-press ${isHistoryView
-                                ? 'bg-blue-200 dark:bg-blue-900 text-blue-800 dark:text-blue-100 shadow-sm border border-blue-300 dark:border-blue-800'
-                                : 'text-blue-400 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300'
-                                }`}
-                        >
-                            histórico
-                        </button>
-                    </div>
+                        {/* View Switcher - Desktop only (centered) */}
+                        <div className="hidden md:flex bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-100 dark:border-slate-700">
+                            <button
+                                onClick={() => setIsHistoryView(false)}
+                                className={`px-5 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-all mechanical-press ${!isHistoryView
+                                    ? 'bg-blue-200 dark:bg-blue-900 text-blue-800 dark:text-blue-100 shadow-sm border border-blue-300 dark:border-blue-800'
+                                    : 'text-blue-400 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300'
+                                    }`}
+                            >
+                                mensual
+                            </button>
+                            <button
+                                onClick={() => setIsHistoryView(true)}
+                                className={`px-5 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-all mechanical-press ${isHistoryView
+                                    ? 'bg-blue-200 dark:bg-blue-900 text-blue-800 dark:text-blue-100 shadow-sm border border-blue-300 dark:border-blue-800'
+                                    : 'text-blue-400 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300'
+                                    }`}
+                            >
+                                histórico
+                            </button>
+                        </div>
 
+                        {/* Actions cluster */}
+                        <div className="flex items-center gap-2 shrink-0">
+                            {/* AI Advisor */}
+                            {(() => {
+                                const liveRevenue = revenue > 0 ? revenue : (monthlyInvoicedAmount || 0);
+                                const liveLaborCost = Number(rawData?.salaries || 0) > 0 ? Number(rawData?.salaries) : totalHours * 7.5;
+                                const liveTotalExpenses = totalExpenses > 0 ? totalExpenses : liveLaborCost;
+                                const margin = liveRevenue > 0 ? (((liveRevenue - liveTotalExpenses) - ((liveRevenue - liveTotalExpenses) > 0 ? (liveRevenue - liveTotalExpenses) * 0.20 : 0)) / liveRevenue) * 100 : 0;
+                                const expenseRatio = liveRevenue > 0 ? liveTotalExpenses / liveRevenue : 0;
+                                const hourlyCost = totalHours > 0 ? liveTotalExpenses / totalHours : 0;
+                                const hasAlerts = margin < 15 || expenseRatio > 0.7 || hourlyCost > 22 || revenueTrend < -3 || (liveRevenue > 0 && liveTotalExpenses > liveRevenue);
 
-                    <div className="flex flex-wrap items-center gap-3">
-
-
-                        {/* AI Advisor */}
-                        {(() => {
-                            const liveRevenue = revenue > 0 ? revenue : (monthlyInvoicedAmount || 0);
-                            const liveLaborCost = Number(rawData?.salaries || 0) > 0 ? Number(rawData?.salaries) : totalHours * 7.5;
-                            const liveTotalExpenses = totalExpenses > 0 ? totalExpenses : liveLaborCost;
-                            const margin = liveRevenue > 0 ? (((liveRevenue - liveTotalExpenses) - ((liveRevenue - liveTotalExpenses) > 0 ? (liveRevenue - liveTotalExpenses) * 0.20 : 0)) / liveRevenue) * 100 : 0;
-                            const expenseRatio = liveRevenue > 0 ? liveTotalExpenses / liveRevenue : 0;
-                            const hourlyCost = totalHours > 0 ? liveTotalExpenses / totalHours : 0;
-                            const hasAlerts = margin < 15 || expenseRatio > 0.7 || hourlyCost > 22 || revenueTrend < -3 || (liveRevenue > 0 && liveTotalExpenses > liveRevenue);
-
-                            return (
-                                <button
-                                    onClick={() => setIsAdvisorOpen(true)}
-                                    className={cn(
-                                        "relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wider transition-all border shadow-sm",
-                                        hasAlerts 
-                                            ? "bg-amber-50 hover:bg-amber-100 text-amber-600 border-amber-300 ring-2 ring-amber-400/50 shadow-amber-200/50" 
-                                            : "bg-blue-50 hover:bg-blue-100 text-blue-600 border-blue-200"
-                                    )}
-                                >
-                                    <Bot className={cn("w-3.5 h-3.5", hasAlerts && "animate-pulse")} />
-                                    <span>Tu Asesor</span>
-                                    {hasAlerts && (
-                                        <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
-                                        </span>
-                                    )}
-                                </button>
-                            );
-                        })()}
-
-                        {/* Action Primary: Close Month */}
-                        {!readOnly && (() => {
-                            // Using type assertion to any to access potentially missing fields in rawData
-                            const rawDataAny = rawData as Record<string, unknown>;
-                            const rawStatus = rawDataAny?.status;
-                            const rawLocked = rawDataAny?.isLocked;
-                            const hasData = rawDataAny?.revenue || rawDataAny?.totalIncome;
-                            
-                            const status = rawStatus || (rawLocked ? 'locked' : (!hasData ? 'open' : 'draft'));
-                            
-                            return (
-                                <div className="relative">
-                                    <div className="absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 px-2 py-0.5 bg-slate-800 dark:bg-slate-700 text-white rounded shadow-md border border-slate-700/50 flex items-center gap-1.5 whitespace-nowrap z-40 pointer-events-none animate-in fade-in slide-in-from-bottom-1">
-                                        <span className="text-[8px] font-bold uppercase tracking-widest text-slate-400">Estado:</span>
-                                        <span className="text-[9px] font-bold uppercase tracking-wider">
-                                            {status === 'draft' && <span className="flex items-center gap-1 text-yellow-400"><span className="w-1.5 h-1.5 rounded-full bg-yellow-400"></span> Borrador</span>}
-                                            {status === 'approved' && <span className="flex items-center gap-1 text-emerald-400"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Aprobado</span>}
-                                            {status === 'locked' && <span className="flex items-center gap-1 text-slate-300"><span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Cerrado</span>}
-                                            {status === 'open' && <span className="flex items-center gap-1 text-indigo-300"><span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span> Abierto</span>}
-                                        </span>
-                                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 dark:bg-slate-700 border-r border-b border-slate-700/50 rotate-45"></div>
-                                    </div>
-
+                                return (
                                     <button
-                                        onClick={() => setIsWizardOpen(true)}
-                                        className="px-4 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-all mechanical-press shadow-sm flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white border border-red-400 hover:shadow-md hover:scale-[1.01]"
+                                        onClick={() => setIsAdvisorOpen(true)}
+                                        className={cn(
+                                            "relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wider transition-all border shadow-sm",
+                                            hasAlerts
+                                                ? "bg-amber-50 hover:bg-amber-100 text-amber-600 border-amber-300 ring-2 ring-amber-400/50 shadow-amber-200/50"
+                                                : "bg-blue-50 hover:bg-blue-100 text-blue-600 border-blue-200"
+                                        )}
                                     >
-                                        <Activity className="w-3.5 h-3.5" />
-                                        <span>ejecutar.cierre</span>
+                                        <Bot className={cn("w-3.5 h-3.5", hasAlerts && "animate-pulse")} />
+                                        <span className="hidden sm:inline">Tu Asesor</span>
+                                        {hasAlerts && (
+                                            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                                            </span>
+                                        )}
                                     </button>
-                                </div>
-                            );
-                        })()}
+                                );
+                            })()}
+
+                            {/* Close Month with hover tooltip */}
+                            {!readOnly && (() => {
+                                const rawDataAny = rawData as Record<string, unknown>;
+                                const rawStatus = rawDataAny?.status;
+                                const rawLocked = rawDataAny?.isLocked;
+                                const hasData = rawDataAny?.revenue || rawDataAny?.totalIncome;
+                                const status = rawStatus || (rawLocked ? 'locked' : (!hasData ? 'open' : 'draft'));
+
+                                const statusConfig: Record<string, { label: string; dotColor: string }> = {
+                                    draft: { label: 'Borrador', dotColor: 'bg-yellow-400' },
+                                    approved: { label: 'Aprobado', dotColor: 'bg-emerald-400' },
+                                    locked: { label: 'Cerrado', dotColor: 'bg-slate-400' },
+                                    open: { label: 'Abierto', dotColor: 'bg-indigo-400' },
+                                };
+                                const cfg = statusConfig[status as string] || statusConfig.open;
+
+                                return (
+                                    <div className="group/status relative">
+                                        {/* Tooltip visible solo en hover */}
+                                        <div className="absolute bottom-[calc(100%+8px)] right-0 md:left-1/2 md:-translate-x-1/2 md:right-auto px-2 py-0.5 bg-slate-800 dark:bg-slate-700 text-white rounded shadow-md border border-slate-700/50 flex items-center gap-1.5 whitespace-nowrap z-40 pointer-events-none opacity-0 group-hover/status:opacity-100 transition-opacity duration-200">
+                                            <span className="text-[8px] font-bold uppercase tracking-widest text-slate-400">Estado:</span>
+                                            <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider">
+                                                <span className={`w-1.5 h-1.5 rounded-full ${cfg.dotColor}`}></span>
+                                                {cfg.label}
+                                            </span>
+                                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 dark:bg-slate-700 border-r border-b border-slate-700/50 rotate-45"></div>
+                                        </div>
+
+                                        <button
+                                            onClick={() => setIsWizardOpen(true)}
+                                            className="px-4 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-all mechanical-press shadow-sm flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white border border-red-400 hover:shadow-md hover:scale-[1.01]"
+                                        >
+                                            <span className={`w-1.5 h-1.5 rounded-full ${cfg.dotColor} shrink-0`}></span>
+                                            <Activity className="w-3.5 h-3.5 shrink-0" />
+                                            <span className="hidden sm:inline">ejecutar.cierre</span>
+                                            <span className="sm:hidden">cierre</span>
+                                        </button>
+                                    </div>
+                                );
+                            })()}
+                        </div>
+                    </div>
+
+                    {/* Row 2: View Switcher - Mobile only (centered) */}
+                    <div className="flex md:hidden justify-center w-full px-2">
+                        <div className="flex bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-100 dark:border-slate-700">
+                            <button
+                                onClick={() => setIsHistoryView(false)}
+                                className={`px-5 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-all mechanical-press ${!isHistoryView
+                                    ? 'bg-blue-200 dark:bg-blue-900 text-blue-800 dark:text-blue-100 shadow-sm border border-blue-300 dark:border-blue-800'
+                                    : 'text-blue-400 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300'
+                                    }`}
+                            >
+                                mensual
+                            </button>
+                            <button
+                                onClick={() => setIsHistoryView(true)}
+                                className={`px-5 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-all mechanical-press ${isHistoryView
+                                    ? 'bg-blue-200 dark:bg-blue-900 text-blue-800 dark:text-blue-100 shadow-sm border border-blue-300 dark:border-blue-800'
+                                    : 'text-blue-400 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300'
+                                    }`}
+                            >
+                                histórico
+                            </button>
+                        </div>
                     </div>
                 </div>
+
 
 
                 {/* MAIN COCKPIT HORIZONTAL MODULES */}
@@ -363,7 +443,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                                                     <h3 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[.2em]">Evolución Mensual</h3>
                                                 </div>
                                             </div>
-                                            <div className="h-[280px]">
+                                            <div className="h-[280px] w-full min-w-0 overflow-hidden">
                                                 <RevenueAreaChart data={formattedTrendData} />
                                             </div>
                                         </div>

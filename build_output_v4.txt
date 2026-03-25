@@ -1,0 +1,238 @@
+
+> synthetic-sagan@4.1.0 build
+> node scripts/generate-version.mjs && tsc -b && vite build
+
+Generated version.json with version: 1774464370719
+[36mvite v7.3.0 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mÔ£ô[39m 7984 modules transformed.
+rendering chunks...
+[plugin vite:reporter] 
+(!) C:/Users/Usuario/.gemini/antigravity/playground/repaart/src/lib/academyGamification.ts is dynamically imported by C:/Users/Usuario/.gemini/antigravity/playground/repaart/src/services/academyService.ts, C:/Users/Usuario/.gemini/antigravity/playground/repaart/src/services/academyService.ts but also statically imported by C:/Users/Usuario/.gemini/antigravity/playground/repaart/src/features/academy/Academy.tsx, C:/Users/Usuario/.gemini/antigravity/playground/repaart/src/features/academy/admin/components/LessonEditorModal.tsx, dynamic import will not move module into another chunk.
+
+[plugin vite:reporter] 
+(!) C:/Users/Usuario/.gemini/antigravity/playground/repaart/src/services/billing/adminInvoices.ts is dynamically imported by C:/Users/Usuario/.gemini/antigravity/playground/repaart/src/features/admin/billing/components/InvoiceCreatorWizard.tsx but also statically imported by C:/Users/Usuario/.gemini/antigravity/playground/repaart/src/features/admin/billing/AdminBillingDashboard.tsx, C:/Users/Usuario/.gemini/antigravity/playground/repaart/src/features/admin/billing/components/AdminInvoiceDetailModal.tsx, C:/Users/Usuario/.gemini/antigravity/playground/repaart/src/features/admin/billing/components/InvoicePaymentModal.tsx, dynamic import will not move module into another chunk.
+
+computing gzip size...
+[2mdist/[22m[32mregisterSW.js                                    [39m[1m[2m    0.13 kB[22m[1m[22m
+[2mdist/[22m[32mmanifest.webmanifest                             [39m[1m[2m    1.09 kB[22m[1m[22m
+[2mdist/[22m[32mindex.html                                       [39m[1m[2m    5.31 kB[22m[1m[22m[2m Ôöé gzip:   1.65 kB[22m
+[2mdist/[22m[32massets/YamimotoCapa-1-DT6QvfOE.png               [39m[1m[2m    8.97 kB[22m[1m[22m
+[2mdist/[22m[32massets/flyder-logo-new-transparent-DQA-qz_Q.png  [39m[1m[2m   37.30 kB[22m[1m[22m
+[2mdist/[22m[32massets/repaart-logo-full-C5HT5_rc.png            [39m[1m[2m  103.98 kB[22m[1m[22m
+[2mdist/[22m[32massets/login-hero-BhW1xNZe.png                   [39m[1m[2m  770.13 kB[22m[1m[22m
+[2mdist/[22m[35massets/BillingDashboard-BAzEIkgg.css             [39m[1m[2m    1.70 kB[22m[1m[22m[2m Ôöé gzip:   0.64 kB[22m
+[2mdist/[22m[35massets/AcademyAdmin-DHbyAF6f.css                 [39m[1m[2m   10.62 kB[22m[1m[22m[2m Ôöé gzip:   2.14 kB[22m
+[2mdist/[22m[35massets/Academy-3RR3KurV.css                      [39m[1m[2m   33.93 kB[22m[1m[22m[2m Ôöé gzip:   4.85 kB[22m
+[2mdist/[22m[35massets/index-DC_kahpP.css                        [39m[1m[2m  546.42 kB[22m[1m[22m[2m Ôöé gzip:  60.82 kB[22m
+[2mdist/[22m[36massets/defaultOptions-w47s-j-e.js                [39m[1m[2m    0.10 kB[22m[1m[22m[2m Ôöé gzip:   0.12 kB[22m[2m Ôöé map:     0.46 kB[22m
+[2mdist/[22m[36massets/subDays-ICFyIjH8.js                       [39m[1m[2m    0.14 kB[22m[1m[22m[2m Ôöé gzip:   0.15 kB[22m[2m Ôöé map:     1.37 kB[22m
+[2mdist/[22m[36massets/constructNow-ChI4OA3q.js                  [39m[1m[2m    0.14 kB[22m[1m[22m[2m Ôöé gzip:   0.15 kB[22m[2m Ôöé map:     1.47 kB[22m
+[2mdist/[22m[36massets/isSameDay-BIESHdl6.js                     [39m[1m[2m    0.17 kB[22m[1m[22m[2m Ôöé gzip:   0.17 kB[22m[2m Ôöé map:     1.85 kB[22m
+[2mdist/[22m[36massets/endOfDay-CVpPNkwi.js                      [39m[1m[2m    0.17 kB[22m[1m[22m[2m Ôöé gzip:   0.17 kB[22m[2m Ôöé map:     1.50 kB[22m
+[2mdist/[22m[36massets/chevron-up-CX5KsILR.js                    [39m[1m[2m    0.18 kB[22m[1m[22m[2m Ôöé gzip:   0.18 kB[22m[2m Ôöé map:     0.80 kB[22m
+[2mdist/[22m[36massets/chevron-left-Bs47U5Mx.js                  [39m[1m[2m    0.18 kB[22m[1m[22m[2m Ôöé gzip:   0.18 kB[22m[2m Ôöé map:     0.82 kB[22m
+[2mdist/[22m[36massets/plus-BFVpa10l.js                          [39m[1m[2m    0.20 kB[22m[1m[22m[2m Ôöé gzip:   0.18 kB[22m[2m Ôöé map:     0.86 kB[22m
+[2mdist/[22m[36massets/navigation-DmEgz-UO.js                    [39m[1m[2m    0.20 kB[22m[1m[22m[2m Ôöé gzip:   0.19 kB[22m[2m Ôöé map:     0.83 kB[22m
+[2mdist/[22m[36massets/addDays-cO45GgA2.js                       [39m[1m[2m    0.20 kB[22m[1m[22m[2m Ôöé gzip:   0.19 kB[22m[2m Ôöé map:     1.84 kB[22m
+[2mdist/[22m[36massets/arrow-left-BnZjdGXc.js                    [39m[1m[2m    0.21 kB[22m[1m[22m[2m Ôöé gzip:   0.20 kB[22m[2m Ôöé map:     0.91 kB[22m
+[2mdist/[22m[36massets/gauge-nUThwzqV.js                         [39m[1m[2m    0.22 kB[22m[1m[22m[2m Ôöé gzip:   0.20 kB[22m[2m Ôöé map:     0.89 kB[22m
+[2mdist/[22m[36massets/arrow-up-right-C_zZlB8Z.js                [39m[1m[2m    0.22 kB[22m[1m[22m[2m Ôöé gzip:   0.19 kB[22m[2m Ôöé map:     0.93 kB[22m
+[2mdist/[22m[36massets/circle-check-ot7A6HCw.js                  [39m[1m[2m    0.22 kB[22m[1m[22m[2m Ôöé gzip:   0.20 kB[22m[2m Ôöé map:     0.96 kB[22m
+[2mdist/[22m[36massets/trending-up-C0HmqklM.js                   [39m[1m[2m    0.23 kB[22m[1m[22m[2m Ôöé gzip:   0.21 kB[22m[2m Ôöé map:     0.93 kB[22m
+[2mdist/[22m[36massets/endOfMonth-Bn43dHUW.js                    [39m[1m[2m    0.23 kB[22m[1m[22m[2m Ôöé gzip:   0.21 kB[22m[2m Ôöé map:     1.70 kB[22m
+[2mdist/[22m[36massets/isWithinInterval-C1VGcIYo.js              [39m[1m[2m    0.23 kB[22m[1m[22m[2m Ôöé gzip:   0.21 kB[22m[2m Ôöé map:     2.06 kB[22m
+[2mdist/[22m[36massets/isToday-DDDBGpA2.js                       [39m[1m[2m    0.23 kB[22m[1m[22m[2m Ôöé gzip:   0.20 kB[22m[2m Ôöé map:     1.20 kB[22m
+[2mdist/[22m[36massets/play-BXdqGm4O.js                          [39m[1m[2m    0.23 kB[22m[1m[22m[2m Ôöé gzip:   0.22 kB[22m[2m Ôöé map:     0.87 kB[22m
+[2mdist/[22m[36massets/flame-UCXpoVo2.js                         [39m[1m[2m    0.24 kB[22m[1m[22m[2m Ôöé gzip:   0.22 kB[22m[2m Ôöé map:     0.89 kB[22m
+[2mdist/[22m[36massets/smartphone-CvjQe7Vh.js                    [39m[1m[2m    0.25 kB[22m[1m[22m[2m Ôöé gzip:   0.22 kB[22m[2m Ôöé map:     1.01 kB[22m
+[2mdist/[22m[36massets/circle-x-B8Opuo-v.js                      [39m[1m[2m    0.25 kB[22m[1m[22m[2m Ôöé gzip:   0.21 kB[22m[2m Ôöé map:     1.02 kB[22m
+[2mdist/[22m[36massets/rotate-ccw-CnRV0yTy.js                    [39m[1m[2m    0.25 kB[22m[1m[22m[2m Ôöé gzip:   0.22 kB[22m[2m Ôöé map:     0.95 kB[22m
+[2mdist/[22m[36massets/text-align-start-Bx9E9xTO.js              [39m[1m[2m    0.26 kB[22m[1m[22m[2m Ôöé gzip:   0.21 kB[22m[2m Ôöé map:     1.04 kB[22m
+[2mdist/[22m[36massets/mail-C4jSvNf8.js                          [39m[1m[2m    0.26 kB[22m[1m[22m[2m Ôöé gzip:   0.24 kB[22m[2m Ôöé map:     0.98 kB[22m
+[2mdist/[22m[36massets/target-u-6WwOiu.js                        [39m[1m[2m    0.27 kB[22m[1m[22m[2m Ôöé gzip:   0.20 kB[22m[2m Ôöé map:     1.08 kB[22m
+[2mdist/[22m[36massets/briefcase-zZ9LivV0.js                     [39m[1m[2m    0.27 kB[22m[1m[22m[2m Ôöé gzip:   0.24 kB[22m[2m Ôöé map:     1.02 kB[22m
+[2mdist/[22m[36massets/copy-Bsh7B1ld.js                          [39m[1m[2m    0.27 kB[22m[1m[22m[2m Ôöé gzip:   0.24 kB[22m[2m Ôöé map:     1.01 kB[22m
+[2mdist/[22m[36massets/paperclip-CEcG9iRY.js                     [39m[1m[2m    0.28 kB[22m[1m[22m[2m Ôöé gzip:   0.24 kB[22m[2m Ôöé map:     0.95 kB[22m
+[2mdist/[22m[36massets/pen-DJpkAM-f.js                           [39m[1m[2m    0.28 kB[22m[1m[22m[2m Ôöé gzip:   0.24 kB[22m[2m Ôöé map:     0.91 kB[22m
+[2mdist/[22m[36massets/panels-top-left-DoPKRiKB.js               [39m[1m[2m    0.28 kB[22m[1m[22m[2m Ôöé gzip:   0.23 kB[22m[2m Ôöé map:     1.12 kB[22m
+[2mdist/[22m[36massets/square-check-big-B3egnM-l.js              [39m[1m[2m    0.28 kB[22m[1m[22m[2m Ôöé gzip:   0.23 kB[22m[2m Ôöé map:     1.03 kB[22m
+[2mdist/[22m[36massets/database-C081JrB4.js                      [39m[1m[2m    0.29 kB[22m[1m[22m[2m Ôöé gzip:   0.24 kB[22m[2m Ôöé map:     1.09 kB[22m
+[2mdist/[22m[36massets/eye-DwD8mlCt.js                           [39m[1m[2m    0.29 kB[22m[1m[22m[2m Ôöé gzip:   0.23 kB[22m[2m Ôöé map:     1.02 kB[22m
+[2mdist/[22m[36massets/funnel-Clxz0jfK.js                        [39m[1m[2m    0.30 kB[22m[1m[22m[2m Ôöé gzip:   0.25 kB[22m[2m Ôöé map:     0.95 kB[22m
+[2mdist/[22m[36massets/archive-B2GevA8B.js                       [39m[1m[2m    0.30 kB[22m[1m[22m[2m Ôöé gzip:   0.25 kB[22m[2m Ôöé map:     1.10 kB[22m
+[2mdist/[22m[36massets/map-pin-Dh8jvsx2.js                       [39m[1m[2m    0.30 kB[22m[1m[22m[2m Ôöé gzip:   0.26 kB[22m[2m Ôöé map:     1.05 kB[22m
+[2mdist/[22m[36massets/circle-question-mark-CsJh7FAZ.js          [39m[1m[2m    0.30 kB[22m[1m[22m[2m Ôöé gzip:   0.24 kB[22m[2m Ôöé map:     1.14 kB[22m
+[2mdist/[22m[36massets/chart-column-CG4rRUgL.js                  [39m[1m[2m    0.30 kB[22m[1m[22m[2m Ôöé gzip:   0.23 kB[22m[2m Ôöé map:     1.13 kB[22m
+[2mdist/[22m[36massets/euro-M8zhI0dU.js                          [39m[1m[2m    0.30 kB[22m[1m[22m[2m Ôöé gzip:   0.25 kB[22m[2m Ôöé map:     1.07 kB[22m
+[2mdist/[22m[36massets/external-link-nTxBUrZl.js                 [39m[1m[2m    0.30 kB[22m[1m[22m[2m Ôöé gzip:   0.24 kB[22m[2m Ôöé map:     1.08 kB[22m
+[2mdist/[22m[36massets/monitor-DiIUTNpL.js                       [39m[1m[2m    0.31 kB[22m[1m[22m[2m Ôöé gzip:   0.24 kB[22m[2m Ôöé map:     1.19 kB[22m
+[2mdist/[22m[36massets/shield-CC8SW1mU.js                        [39m[1m[2m    0.31 kB[22m[1m[22m[2m Ôöé gzip:   0.26 kB[22m[2m Ôöé map:     0.97 kB[22m
+[2mdist/[22m[36massets/award-BxoaqEdn.js                         [39m[1m[2m    0.31 kB[22m[1m[22m[2m Ôöé gzip:   0.26 kB[22m[2m Ôöé map:     1.05 kB[22m
+[2mdist/[22m[36massets/chart-pie-eoI5eWWM.js                     [39m[1m[2m    0.32 kB[22m[1m[22m[2m Ôöé gzip:   0.26 kB[22m[2m Ôöé map:     1.05 kB[22m
+[2mdist/[22m[36massets/pen-line-BbJgJBLK.js                      [39m[1m[2m    0.32 kB[22m[1m[22m[2m Ôöé gzip:   0.26 kB[22m[2m Ôöé map:     1.04 kB[22m
+[2mdist/[22m[36massets/bike-ZrANLzG_.js                          [39m[1m[2m    0.33 kB[22m[1m[22m[2m Ôöé gzip:   0.24 kB[22m[2m Ôöé map:     1.19 kB[22m
+[2mdist/[22m[36massets/sticky-note-DIT52qzn.js                   [39m[1m[2m    0.33 kB[22m[1m[22m[2m Ôöé gzip:   0.25 kB[22m[2m Ôöé map:     1.07 kB[22m
+[2mdist/[22m[36massets/inbox-CiJsTxEa.js                         [39m[1m[2m    0.33 kB[22m[1m[22m[2m Ôöé gzip:   0.27 kB[22m[2m Ôöé map:     1.04 kB[22m
+[2mdist/[22m[36massets/git-compare-DeGay5C3.js                   [39m[1m[2m    0.33 kB[22m[1m[22m[2m Ôöé gzip:   0.25 kB[22m[2m Ôöé map:     1.21 kB[22m
+[2mdist/[22m[36massets/wallet-DuiWQ_6o.js                        [39m[1m[2m    0.33 kB[22m[1m[22m[2m Ôöé gzip:   0.25 kB[22m[2m Ôöé map:     1.04 kB[22m
+[2mdist/[22m[36massets/send-CQUStoC_.js                          [39m[1m[2m    0.33 kB[22m[1m[22m[2m Ôöé gzip:   0.27 kB[22m[2m Ôöé map:     1.04 kB[22m
+[2mdist/[22m[36massets/hash-BCZviIza.js                          [39m[1m[2m    0.34 kB[22m[1m[22m[2m Ôöé gzip:   0.23 kB[22m[2m Ôöé map:     1.30 kB[22m
+[2mdist/[22m[36massets/wrench-C-kY6BcN.js                        [39m[1m[2m    0.34 kB[22m[1m[22m[2m Ôöé gzip:   0.27 kB[22m[2m Ôöé map:     1.00 kB[22m
+[2mdist/[22m[36massets/list-By7QGoVV.js                          [39m[1m[2m    0.35 kB[22m[1m[22m[2m Ôöé gzip:   0.23 kB[22m[2m Ôöé map:     1.26 kB[22m
+[2mdist/[22m[36massets/users-CU_eappY.js                         [39m[1m[2m    0.35 kB[22m[1m[22m[2m Ôöé gzip:   0.26 kB[22m[2m Ôöé map:     1.18 kB[22m
+[2mdist/[22m[36massets/tag-6HWYfIH_.js                           [39m[1m[2m    0.36 kB[22m[1m[22m[2m Ôöé gzip:   0.29 kB[22m[2m Ôöé map:     1.11 kB[22m
+[2mdist/[22m[36massets/shield-check-BOllDVhq.js                  [39m[1m[2m    0.37 kB[22m[1m[22m[2m Ôöé gzip:   0.29 kB[22m[2m Ôöé map:     1.11 kB[22m
+[2mdist/[22m[36massets/phone-D11XPn1-.js                         [39m[1m[2m    0.37 kB[22m[1m[22m[2m Ôöé gzip:   0.26 kB[22m[2m Ôöé map:     1.01 kB[22m
+[2mdist/[22m[36massets/square-pen-Bc3PURyU.js                    [39m[1m[2m    0.37 kB[22m[1m[22m[2m Ôöé gzip:   0.27 kB[22m[2m Ôöé map:     1.10 kB[22m
+[2mdist/[22m[36massets/save-CRDstGQu.js                          [39m[1m[2m    0.37 kB[22m[1m[22m[2m Ôöé gzip:   0.27 kB[22m[2m Ôöé map:     1.14 kB[22m
+[2mdist/[22m[36massets/trash-2-D9XGNOBM.js                       [39m[1m[2m    0.37 kB[22m[1m[22m[2m Ôöé gzip:   0.26 kB[22m[2m Ôöé map:     1.24 kB[22m
+[2mdist/[22m[36massets/camera-C0hRld8a.js                        [39m[1m[2m    0.38 kB[22m[1m[22m[2m Ôöé gzip:   0.29 kB[22m[2m Ôöé map:     1.12 kB[22m
+[2mdist/[22m[36massets/startOfWeek-D43Yf-ER.js                   [39m[1m[2m    0.38 kB[22m[1m[22m[2m Ôöé gzip:   0.27 kB[22m[2m Ôöé map:     2.47 kB[22m
+[2mdist/[22m[36massets/subMonths-CpyNG7BR.js                     [39m[1m[2m    0.39 kB[22m[1m[22m[2m Ôöé gzip:   0.28 kB[22m[2m Ôöé map:     5.21 kB[22m
+[2mdist/[22m[36massets/endOfWeek-BCOHS1cx.js                     [39m[1m[2m    0.39 kB[22m[1m[22m[2m Ôöé gzip:   0.28 kB[22m[2m Ôöé map:     2.47 kB[22m
+[2mdist/[22m[36massets/megaphone-DuVA9vIy.js                     [39m[1m[2m    0.39 kB[22m[1m[22m[2m Ôöé gzip:   0.28 kB[22m[2m Ôöé map:     1.18 kB[22m
+[2mdist/[22m[36massets/package-4zrGlRY5.js                       [39m[1m[2m    0.42 kB[22m[1m[22m[2m Ôöé gzip:   0.29 kB[22m[2m Ôöé map:     1.26 kB[22m
+[2mdist/[22m[36massets/building-2-BwPj1fSo.js                    [39m[1m[2m    0.43 kB[22m[1m[22m[2m Ôöé gzip:   0.28 kB[22m[2m Ôöé map:     1.35 kB[22m
+[2mdist/[22m[36massets/car-BX7Y0-Au.js                           [39m[1m[2m    0.44 kB[22m[1m[22m[2m Ôöé gzip:   0.32 kB[22m[2m Ôöé map:     1.32 kB[22m
+[2mdist/[22m[36massets/loader-B5ZWaBn4.js                        [39m[1m[2m    0.46 kB[22m[1m[22m[2m Ôöé gzip:   0.28 kB[22m[2m Ôöé map:     1.51 kB[22m
+[2mdist/[22m[36massets/type-CqtaEvm9.js                          [39m[1m[2m    0.46 kB[22m[1m[22m[2m Ôöé gzip:   0.30 kB[22m[2m Ôöé map:     1.89 kB[22m
+[2mdist/[22m[36massets/layers-UYuQQScD.js                        [39m[1m[2m    0.47 kB[22m[1m[22m[2m Ôöé gzip:   0.28 kB[22m[2m Ôöé map:     1.31 kB[22m
+[2mdist/[22m[36massets/timer-CaaV7W1S.js                         [39m[1m[2m    0.48 kB[22m[1m[22m[2m Ôöé gzip:   0.34 kB[22m[2m Ôöé map:     1.95 kB[22m
+[2mdist/[22m[36massets/eye-off-a4XfUv6m.js                       [39m[1m[2m    0.48 kB[22m[1m[22m[2m Ôöé gzip:   0.31 kB[22m[2m Ôöé map:     1.35 kB[22m
+[2mdist/[22m[36massets/octagon-alert-DXSThAHP.js                 [39m[1m[2m    0.48 kB[22m[1m[22m[2m Ôöé gzip:   0.29 kB[22m[2m Ôöé map:     1.29 kB[22m
+[2mdist/[22m[36massets/advisorHistoryService-BolV1SpK.js         [39m[1m[2m    0.48 kB[22m[1m[22m[2m Ôöé gzip:   0.33 kB[22m[2m Ôöé map:     1.92 kB[22m
+[2mdist/[22m[36massets/star-Biz6MOq0.js                          [39m[1m[2m    0.52 kB[22m[1m[22m[2m Ôöé gzip:   0.33 kB[22m[2m Ôöé map:     1.15 kB[22m
+[2mdist/[22m[36massets/pen-tool-CwI2ywNd.js                      [39m[1m[2m    0.52 kB[22m[1m[22m[2m Ôöé gzip:   0.34 kB[22m[2m Ôöé map:     1.42 kB[22m
+[2mdist/[22m[36massets/costService-x-e__aGD.js                   [39m[1m[2m    0.52 kB[22m[1m[22m[2m Ôöé gzip:   0.39 kB[22m[2m Ôöé map:     2.95 kB[22m
+[2mdist/[22m[36massets/trophy-BdWbnKN7.js                        [39m[1m[2m    0.52 kB[22m[1m[22m[2m Ôöé gzip:   0.31 kB[22m[2m Ôöé map:     1.46 kB[22m
+[2mdist/[22m[36massets/lightbulb-DODKdJry.js                     [39m[1m[2m    0.54 kB[22m[1m[22m[2m Ôöé gzip:   0.36 kB[22m[2m Ôöé map:     2.03 kB[22m
+[2mdist/[22m[36massets/sparkles-CMnfqRqb.js                      [39m[1m[2m    0.54 kB[22m[1m[22m[2m Ôöé gzip:   0.32 kB[22m[2m Ôöé map:     1.41 kB[22m
+[2mdist/[22m[36massets/store-CUTTTBZr.js                         [39m[1m[2m    0.54 kB[22m[1m[22m[2m Ôöé gzip:   0.32 kB[22m[2m Ôöé map:     1.31 kB[22m
+[2mdist/[22m[36massets/defineProperty-DevPl9dM.js                [39m[1m[2m    0.55 kB[22m[1m[22m[2m Ôöé gzip:   0.37 kB[22m[2m Ôöé map:     1.97 kB[22m
+[2mdist/[22m[36massets/wand-sparkles-Dvr9-jLC.js                 [39m[1m[2m    0.57 kB[22m[1m[22m[2m Ôöé gzip:   0.33 kB[22m[2m Ôöé map:     1.68 kB[22m
+[2mdist/[22m[36massets/calculator-CSIO52Ek.js                    [39m[1m[2m    0.58 kB[22m[1m[22m[2m Ôöé gzip:   0.32 kB[22m[2m Ôöé map:     1.91 kB[22m
+[2mdist/[22m[36massets/formatDate-DwdHxSFj.js                    [39m[1m[2m    0.59 kB[22m[1m[22m[2m Ôöé gzip:   0.33 kB[22m[2m Ôöé map:     2.24 kB[22m
+[2mdist/[22m[36massets/building-D13jmn1r.js                      [39m[1m[2m    0.61 kB[22m[1m[22m[2m Ôöé gzip:   0.32 kB[22m[2m Ôöé map:     1.91 kB[22m
+[2mdist/[22m[36massets/sun-BO6mdsBQ.js                           [39m[1m[2m    0.68 kB[22m[1m[22m[2m Ôöé gzip:   0.39 kB[22m[2m Ôöé map:     2.39 kB[22m
+[2mdist/[22m[36massets/differenceInMonths-CLpP7pIu.js            [39m[1m[2m    0.70 kB[22m[1m[22m[2m Ôöé gzip:   0.42 kB[22m[2m Ôöé map:     6.88 kB[22m
+[2mdist/[22m[36massets/Card-ELpaPjr1.js                          [39m[1m[2m    0.70 kB[22m[1m[22m[2m Ôöé gzip:   0.38 kB[22m[2m Ôöé map:     3.22 kB[22m
+[2mdist/[22m[36massets/useRiderStore-ccsocvpV.js                 [39m[1m[2m    0.71 kB[22m[1m[22m[2m Ôöé gzip:   0.42 kB[22m[2m Ôöé map:     3.25 kB[22m
+[2mdist/[22m[36massets/useInvoicingModule-Ryli4z8Y.js            [39m[1m[2m    0.78 kB[22m[1m[22m[2m Ôöé gzip:   0.44 kB[22m[2m Ôöé map:     3.16 kB[22m
+[2mdist/[22m[36massets/premiumServiceService-DlNoSeZO.js         [39m[1m[2m    1.01 kB[22m[1m[22m[2m Ôöé gzip:   0.45 kB[22m[2m Ôöé map:     4.52 kB[22m
+[2mdist/[22m[36massets/useFleetStore-C-cbXn1K.js                 [39m[1m[2m    1.05 kB[22m[1m[22m[2m Ôöé gzip:   0.44 kB[22m[2m Ôöé map:     4.79 kB[22m
+[2mdist/[22m[36massets/scheduler-BX3zedmS.js                     [39m[1m[2m    1.12 kB[22m[1m[22m[2m Ôöé gzip:   0.50 kB[22m[2m Ôöé map:     4.70 kB[22m
+[2mdist/[22m[36massets/useInvoicing-1r3MEGe7.js                  [39m[1m[2m    1.17 kB[22m[1m[22m[2m Ôöé gzip:   0.46 kB[22m[2m Ôöé map:     4.71 kB[22m
+[2mdist/[22m[36massets/useBanner-DgXbkCaG.js                     [39m[1m[2m    1.24 kB[22m[1m[22m[2m Ôöé gzip:   0.75 kB[22m[2m Ôöé map:     5.06 kB[22m
+[2mdist/[22m[36massets/slicedToArray-D6Gft5C9.js                 [39m[1m[2m    1.37 kB[22m[1m[22m[2m Ôöé gzip:   0.76 kB[22m[2m Ôöé map:     5.19 kB[22m
+[2mdist/[22m[36massets/Button-BCmhHz2G.js                        [39m[1m[2m    1.51 kB[22m[1m[22m[2m Ôöé gzip:   0.79 kB[22m[2m Ôöé map:     3.76 kB[22m
+[2mdist/[22m[36massets/intelService-DVJNDtfi.js                  [39m[1m[2m    1.51 kB[22m[1m[22m[2m Ôöé gzip:   0.78 kB[22m[2m Ôöé map:     5.31 kB[22m
+[2mdist/[22m[36massets/email-hOYqaX_7.js                         [39m[1m[2m    1.57 kB[22m[1m[22m[2m Ôöé gzip:   0.65 kB[22m[2m Ôöé map:     3.90 kB[22m
+[2mdist/[22m[36massets/SupportService-DVT6ushs.js                [39m[1m[2m    1.64 kB[22m[1m[22m[2m Ôöé gzip:   0.56 kB[22m[2m Ôöé map:     8.05 kB[22m
+[2mdist/[22m[36massets/franchiseService-Bcl7yoUL.js              [39m[1m[2m    1.65 kB[22m[1m[22m[2m Ôöé gzip:   0.84 kB[22m[2m Ôöé map:     7.85 kB[22m
+[2mdist/[22m[36massets/colorPalette-Db6HIEns.js                  [39m[1m[2m    1.78 kB[22m[1m[22m[2m Ôöé gzip:   0.58 kB[22m[2m Ôöé map:     5.40 kB[22m
+[2mdist/[22m[36massets/riderColors-y_LgJ6jt.js                   [39m[1m[2m    1.95 kB[22m[1m[22m[2m Ôöé gzip:   0.80 kB[22m[2m Ôöé map:     6.04 kB[22m
+[2mdist/[22m[36massets/ConfirmationModal-DYSDo-aC.js             [39m[1m[2m    2.01 kB[22m[1m[22m[2m Ôöé gzip:   0.85 kB[22m[2m Ôöé map:     5.40 kB[22m
+[2mdist/[22m[36massets/DashboardSwitcher-msOssUHD.js             [39m[1m[2m    2.11 kB[22m[1m[22m[2m Ôöé gzip:   1.03 kB[22m[2m Ôöé map:     2.57 kB[22m
+[2mdist/[22m[36massets/SystemReset-CL3PAQXQ.js                   [39m[1m[2m    2.26 kB[22m[1m[22m[2m Ôöé gzip:   1.09 kB[22m[2m Ôöé map:     4.96 kB[22m
+[2mdist/[22m[36massets/parseISO-DNBF-RmO.js                      [39m[1m[2m    2.71 kB[22m[1m[22m[2m Ôöé gzip:   1.25 kB[22m[2m Ôöé map:    13.59 kB[22m
+[2mdist/[22m[36massets/ordersHistoryService-QaLvhcvY.js          [39m[1m[2m    2.86 kB[22m[1m[22m[2m Ôöé gzip:   1.08 kB[22m[2m Ôöé map:    12.54 kB[22m
+[2mdist/[22m[36massets/zod-SjjQsJha.js                           [39m[1m[2m    2.88 kB[22m[1m[22m[2m Ôöé gzip:   1.07 kB[22m[2m Ôöé map:     7.57 kB[22m
+[2mdist/[22m[36massets/TariffEditor-DGdLrt4Z.js                  [39m[1m[2m    3.79 kB[22m[1m[22m[2m Ôöé gzip:   1.41 kB[22m[2m Ôöé map:    11.46 kB[22m
+[2mdist/[22m[36massets/useWeeklySchedule-_4M6GJiA.js             [39m[1m[2m    3.83 kB[22m[1m[22m[2m Ôöé gzip:   1.80 kB[22m[2m Ôöé map:    20.28 kB[22m
+[2mdist/[22m[36massets/DevSandbox-C0zivd-4.js                    [39m[1m[2m    3.84 kB[22m[1m[22m[2m Ôöé gzip:   1.82 kB[22m[2m Ôöé map:    16.51 kB[22m
+[2mdist/[22m[36massets/EmptyState-DBjuh6se.js                    [39m[1m[2m    4.01 kB[22m[1m[22m[2m Ôöé gzip:   1.19 kB[22m[2m Ôöé map:     9.25 kB[22m
+[2mdist/[22m[36massets/constants-CGVK1Yxh.js                     [39m[1m[2m    4.04 kB[22m[1m[22m[2m Ôöé gzip:   1.79 kB[22m[2m Ôöé map:    10.49 kB[22m
+[2mdist/[22m[36massets/RiderSecurityView-BTh34QMY.js             [39m[1m[2m    4.48 kB[22m[1m[22m[2m Ôöé gzip:   1.62 kB[22m[2m Ôöé map:    10.43 kB[22m
+[2mdist/[22m[36massets/userService-COQ_mZGJ.js                   [39m[1m[2m    5.20 kB[22m[1m[22m[2m Ôöé gzip:   2.00 kB[22m[2m Ôöé map:    19.87 kB[22m
+[2mdist/[22m[36massets/RiderPersonalDataView-CovpL7pu.js         [39m[1m[2m    5.69 kB[22m[1m[22m[2m Ôöé gzip:   2.06 kB[22m[2m Ôöé map:    14.94 kB[22m
+[2mdist/[22m[36massets/NotificationsPage-C8GMCTnv.js             [39m[1m[2m    5.97 kB[22m[1m[22m[2m Ôöé gzip:   2.19 kB[22m[2m Ôöé map:    17.34 kB[22m
+[2mdist/[22m[36massets/es-BHtuYeuJ.js                            [39m[1m[2m    6.02 kB[22m[1m[22m[2m Ôöé gzip:   2.09 kB[22m[2m Ôöé map:    17.50 kB[22m
+[2mdist/[22m[36massets/RiderScheduleView-B3_FAbp6.js             [39m[1m[2m    6.09 kB[22m[1m[22m[2m Ôöé gzip:   2.57 kB[22m[2m Ôöé map:    19.31 kB[22m
+[2mdist/[22m[36massets/fleetService-BCoocDMZ.js                  [39m[1m[2m    6.57 kB[22m[1m[22m[2m Ôöé gzip:   2.29 kB[22m[2m Ôöé map:    25.30 kB[22m
+[2mdist/[22m[36massets/sortable.esm-RarfDJcS.js                  [39m[1m[2m    6.70 kB[22m[1m[22m[2m Ôöé gzip:   2.82 kB[22m[2m Ôöé map:    33.19 kB[22m
+[2mdist/[22m[36massets/react-BGJMV2lA.js                         [39m[1m[2m    6.72 kB[22m[1m[22m[2m Ôöé gzip:   2.85 kB[22m[2m Ôöé map:    24.25 kB[22m
+[2mdist/[22m[36massets/en-US-BtrU1Zf5.js                         [39m[1m[2m    7.08 kB[22m[1m[22m[2m Ôöé gzip:   2.48 kB[22m[2m Ôöé map:    24.36 kB[22m
+[2mdist/[22m[36massets/react-Bdajba6B.js                         [39m[1m[2m    7.16 kB[22m[1m[22m[2m Ôöé gzip:   3.07 kB[22m[2m Ôöé map:    24.76 kB[22m
+[2mdist/[22m[36massets/AuditPanel-CLCZ1qDG.js                    [39m[1m[2m    7.48 kB[22m[1m[22m[2m Ôöé gzip:   2.47 kB[22m[2m Ôöé map:    17.04 kB[22m
+[2mdist/[22m[36massets/AdminFinanceInbox-4R7qQmsO.js             [39m[1m[2m    7.50 kB[22m[1m[22m[2m Ôöé gzip:   2.45 kB[22m[2m Ôöé map:    18.19 kB[22m
+[2mdist/[22m[36massets/RiderAdvisorView-C6aF9zYM.js              [39m[1m[2m    7.51 kB[22m[1m[22m[2m Ôöé gzip:   2.98 kB[22m[2m Ôöé map:    16.97 kB[22m
+[2mdist/[22m[36massets/react-1UhE8FHd.js                         [39m[1m[2m    7.71 kB[22m[1m[22m[2m Ôöé gzip:   3.08 kB[22m[2m Ôöé map:    26.88 kB[22m
+[2mdist/[22m[36massets/Login-DCSy925z.js                         [39m[1m[2m    8.22 kB[22m[1m[22m[2m Ôöé gzip:   2.84 kB[22m[2m Ôöé map:    20.10 kB[22m
+[2mdist/[22m[36massets/resourceRequestService-D2moWYvO.js        [39m[1m[2m    8.31 kB[22m[1m[22m[2m Ôöé gzip:   3.18 kB[22m[2m Ôöé map:    27.31 kB[22m
+[2mdist/[22m[36massets/AnnouncementSystem-WR7Yrek3.js            [39m[1m[2m    8.46 kB[22m[1m[22m[2m Ôöé gzip:   2.82 kB[22m[2m Ôöé map:    27.24 kB[22m
+[2mdist/[22m[36massets/FinanceHub-CG3hDeVA.js                    [39m[1m[2m    8.56 kB[22m[1m[22m[2m Ôöé gzip:   2.94 kB[22m[2m Ôöé map:    12.34 kB[22m
+[2mdist/[22m[36massets/react-D8Ttw__f.js                         [39m[1m[2m    8.82 kB[22m[1m[22m[2m Ôöé gzip:   3.55 kB[22m[2m Ôöé map:    30.33 kB[22m
+[2mdist/[22m[36massets/RiderAvailabilityView-eV32Wd5V.js         [39m[1m[2m    9.08 kB[22m[1m[22m[2m Ôöé gzip:   2.63 kB[22m[2m Ôöé map:    26.12 kB[22m
+[2mdist/[22m[36massets/react-BrAMNYnW.js                         [39m[1m[2m    9.48 kB[22m[1m[22m[2m Ôöé gzip:   3.72 kB[22m[2m Ôöé map:    35.44 kB[22m
+[2mdist/[22m[36massets/RiderNotificationsView-FaPqx_Q7.js        [39m[1m[2m   10.11 kB[22m[1m[22m[2m Ôöé gzip:   3.13 kB[22m[2m Ôöé map:    29.56 kB[22m
+[2mdist/[22m[36massets/confetti.module-oQXWb4Lk.js               [39m[1m[2m   10.72 kB[22m[1m[22m[2m Ôöé gzip:   4.32 kB[22m[2m Ôöé map:    42.37 kB[22m
+[2mdist/[22m[36massets/AdminFranchiseView-DW6XAZSp.js            [39m[1m[2m   10.80 kB[22m[1m[22m[2m Ôöé gzip:   4.10 kB[22m[2m Ôöé map:    22.75 kB[22m
+[2mdist/[22m[36massets/academyGamification-BZlQfeZo.js           [39m[1m[2m   11.24 kB[22m[1m[22m[2m Ôöé gzip:   3.01 kB[22m[2m Ôöé map:    53.01 kB[22m
+[2mdist/[22m[36massets/react-DGVAHgRg.js                         [39m[1m[2m   11.75 kB[22m[1m[22m[2m Ôöé gzip:   4.41 kB[22m[2m Ôöé map:    39.38 kB[22m
+[2mdist/[22m[36massets/FleetManager-BqKBZyBj.js                  [39m[1m[2m   11.84 kB[22m[1m[22m[2m Ôöé gzip:   3.52 kB[22m[2m Ôöé map:    30.82 kB[22m
+[2mdist/[22m[36massets/shiftService-lClXAMHM.js                  [39m[1m[2m   11.85 kB[22m[1m[22m[2m Ôöé gzip:   3.55 kB[22m[2m Ôöé map:    52.08 kB[22m
+[2mdist/[22m[36massets/format-1glmJnDa.js                        [39m[1m[2m   12.14 kB[22m[1m[22m[2m Ôöé gzip:   3.29 kB[22m[2m Ôöé map:    92.54 kB[22m
+[2mdist/[22m[36massets/ShiftPlanner-BzOw2SEz.js                  [39m[1m[2m   13.84 kB[22m[1m[22m[2m Ôöé gzip:   5.01 kB[22m[2m Ôöé map:    40.96 kB[22m
+[2mdist/[22m[36massets/DashboardGuideModal-DolcWxsU.js           [39m[1m[2m   14.41 kB[22m[1m[22m[2m Ôöé gzip:   5.31 kB[22m[2m Ôöé map:    28.61 kB[22m
+[2mdist/[22m[36massets/FlyderInstallGuide-C7jJEKk5.js            [39m[1m[2m   15.18 kB[22m[1m[22m[2m Ôöé gzip:   5.23 kB[22m[2m Ôöé map:    37.58 kB[22m
+[2mdist/[22m[36massets/TicketDetail-C2c8R6Lf.js                  [39m[1m[2m   17.13 kB[22m[1m[22m[2m Ôöé gzip:   5.10 kB[22m[2m Ôöé map:    42.57 kB[22m
+[2mdist/[22m[36massets/AdminNetworkDashboard-Cugc9Ksw.js         [39m[1m[2m   18.27 kB[22m[1m[22m[2m Ôöé gzip:   4.45 kB[22m[2m Ôöé map:    49.11 kB[22m
+[2mdist/[22m[36massets/OperationsPage-COqCI440.js                [39m[1m[2m   19.91 kB[22m[1m[22m[2m Ôöé gzip:   5.63 kB[22m[2m Ôöé map:    50.57 kB[22m
+[2mdist/[22m[36massets/RiderHomeView-1n4Dc-0j.js                 [39m[1m[2m   21.75 kB[22m[1m[22m[2m Ôöé gzip:   6.20 kB[22m[2m Ôöé map:    63.61 kB[22m
+[2mdist/[22m[36massets/FranchiseProfile-Df5QH9e6.js              [39m[1m[2m   21.85 kB[22m[1m[22m[2m Ôöé gzip:   5.45 kB[22m[2m Ôöé map:    53.54 kB[22m
+[2mdist/[22m[36massets/AdminSupportPanel-CySRcHNM.js             [39m[1m[2m   21.87 kB[22m[1m[22m[2m Ôöé gzip:   6.77 kB[22m[2m Ôöé map:    58.22 kB[22m
+[2mdist/[22m[36massets/purify.es-Bzr520pe.js                     [39m[1m[2m   22.50 kB[22m[1m[22m[2m Ôöé gzip:   8.67 kB[22m[2m Ôöé map:    92.90 kB[22m
+[2mdist/[22m[36massets/MobileAgendaView-RMa2ohKV.js              [39m[1m[2m   27.11 kB[22m[1m[22m[2m Ôöé gzip:   7.27 kB[22m[2m Ôöé map:    83.64 kB[22m
+[2mdist/[22m[36massets/index.esm-CZloSN7T.js                     [39m[1m[2m   27.43 kB[22m[1m[22m[2m Ôöé gzip:  10.25 kB[22m[2m Ôöé map:   163.44 kB[22m
+[2mdist/[22m[36massets/RiderProfileView-DEGats1y.js              [39m[1m[2m   27.88 kB[22m[1m[22m[2m Ôöé gzip:   7.60 kB[22m[2m Ôöé map:    73.08 kB[22m
+[2mdist/[22m[36massets/OperationsDashboard-BeLhfGTI.js           [39m[1m[2m   29.06 kB[22m[1m[22m[2m Ôöé gzip:   9.03 kB[22m[2m Ôöé map:    75.53 kB[22m
+[2mdist/[22m[36massets/RidersView-DrCDncgE.js                    [39m[1m[2m   29.42 kB[22m[1m[22m[2m Ôöé gzip:   7.39 kB[22m[2m Ôöé map:    73.13 kB[22m
+[2mdist/[22m[36massets/ResourcesPanel-D-q-myGF.js                [39m[1m[2m   31.17 kB[22m[1m[22m[2m Ôöé gzip:   7.67 kB[22m[2m Ôöé map:    81.24 kB[22m
+[2mdist/[22m[36massets/KanbanBoard-DlSV21sZ.js                   [39m[1m[2m   31.34 kB[22m[1m[22m[2m Ôöé gzip:   8.82 kB[22m[2m Ôöé map:    93.11 kB[22m
+[2mdist/[22m[36massets/OverviewTab-DiRTd9e2.js                   [39m[1m[2m   31.51 kB[22m[1m[22m[2m Ôöé gzip:   7.62 kB[22m[2m Ôöé map:    87.82 kB[22m
+[2mdist/[22m[36massets/QuickFillModal-m9GPC_kI.js                [39m[1m[2m   33.72 kB[22m[1m[22m[2m Ôöé gzip:   9.55 kB[22m[2m Ôöé map:   114.60 kB[22m
+[2mdist/[22m[36massets/gemini-CRRtKY5S.js                        [39m[1m[2m   37.03 kB[22m[1m[22m[2m Ôöé gzip:  17.16 kB[22m[2m Ôöé map:    70.18 kB[22m
+[2mdist/[22m[36massets/WeeklyScheduler-Buv4islq.js               [39m[1m[2m   37.35 kB[22m[1m[22m[2m Ôöé gzip:  11.33 kB[22m[2m Ôöé map:   123.98 kB[22m
+[2mdist/[22m[36massets/UserManagementPanel-BVfQ3erE.js           [39m[1m[2m   40.91 kB[22m[1m[22m[2m Ôöé gzip:  11.29 kB[22m[2m Ôöé map:   120.96 kB[22m
+[2mdist/[22m[36massets/core.esm-Ilf3Eafm.js                      [39m[1m[2m   43.22 kB[22m[1m[22m[2m Ôöé gzip:  14.44 kB[22m[2m Ôöé map:   191.11 kB[22m
+[2mdist/[22m[36massets/Academy-BCxUhkBr.js                       [39m[1m[2m   49.15 kB[22m[1m[22m[2m Ôöé gzip:  12.98 kB[22m[2m Ôöé map:   163.83 kB[22m
+[2mdist/[22m[36massets/react-BBqTO_bk.js                         [39m[1m[2m   49.64 kB[22m[1m[22m[2m Ôöé gzip:  15.43 kB[22m[2m Ôöé map:   211.32 kB[22m
+[2mdist/[22m[36massets/AcademyAdmin-DiXEoeSn.js                  [39m[1m[2m   58.30 kB[22m[1m[22m[2m Ôöé gzip:  13.08 kB[22m[2m Ôöé map:   171.88 kB[22m
+[2mdist/[22m[36massets/AdminBillingDashboard-BVSSN8K6.js         [39m[1m[2m   61.41 kB[22m[1m[22m[2m Ôöé gzip:  14.25 kB[22m[2m Ôöé map:   146.83 kB[22m
+[2mdist/[22m[36massets/schemas-owyjl1dT.js                       [39m[1m[2m   65.69 kB[22m[1m[22m[2m Ôöé gzip:  17.77 kB[22m[2m Ôöé map:   362.89 kB[22m
+[2mdist/[22m[36massets/UserProfile-DKxP4SYg.js                   [39m[1m[2m   65.92 kB[22m[1m[22m[2m Ôöé gzip:  16.71 kB[22m[2m Ôöé map:   188.10 kB[22m
+[2mdist/[22m[36massets/SupportHub-Rk9yVFmA.js                    [39m[1m[2m   73.37 kB[22m[1m[22m[2m Ôöé gzip:  17.51 kB[22m[2m Ôöé map:   194.42 kB[22m
+[2mdist/[22m[36massets/MonthlyHistoryTable-BK6pLXBt.js           [39m[1m[2m   74.30 kB[22m[1m[22m[2m Ôöé gzip:  18.77 kB[22m[2m Ôöé map:   233.77 kB[22m
+[2mdist/[22m[36massets/DeliveryScheduler-CT1beCVJ.js             [39m[1m[2m   88.50 kB[22m[1m[22m[2m Ôöé gzip:  22.70 kB[22m[2m Ôöé map:   280.07 kB[22m
+[2mdist/[22m[36massets/index-D9_-WueZ.js                         [39m[1m[2m  117.67 kB[22m[1m[22m[2m Ôöé gzip:  36.23 kB[22m[2m Ôöé map:   719.06 kB[22m
+[2mdist/[22m[36massets/proxy-C1wVt_8f.js                         [39m[1m[2m  118.50 kB[22m[1m[22m[2m Ôöé gzip:  39.13 kB[22m[2m Ôöé map:   653.53 kB[22m
+[2mdist/[22m[36massets/AdminDashboard-BHDHuVPe.js                [39m[1m[2m  129.40 kB[22m[1m[22m[2m Ôöé gzip:  38.29 kB[22m[2m Ôöé map:   453.29 kB[22m
+[2mdist/[22m[36massets/FranchiseDashboard-utQFfnLC.js            [39m[1m[2m  139.66 kB[22m[1m[22m[2m Ôöé gzip:  37.68 kB[22m[2m Ôöé map:   395.13 kB[22m
+[2mdist/[22m[36massets/index.es-DBHaHsoV.js                      [39m[1m[2m  158.24 kB[22m[1m[22m[2m Ôöé gzip:  52.82 kB[22m[2m Ôöé map:   640.16 kB[22m
+[2mdist/[22m[36massets/index-XQNbPqmk.js                         [39m[1m[2m  159.73 kB[22m[1m[22m[2m Ôöé gzip:  57.11 kB[22m[2m Ôöé map:   771.52 kB[22m
+[2mdist/[22m[36massets/html2canvas.esm-Ge7aVWlp.js               [39m[1m[2m  201.45 kB[22m[1m[22m[2m Ôöé gzip:  47.53 kB[22m[2m Ôöé map:   603.10 kB[22m
+[2mdist/[22m[36massets/AdminResourcesPanel-DnSDzynG.js           [39m[1m[2m  284.40 kB[22m[1m[22m[2m Ôöé gzip:  72.99 kB[22m[2m Ôöé map:   858.11 kB[22m
+[2mdist/[22m[36massets/jspdf.es.min-BBJh7Cap.js                  [39m[1m[2m  383.52 kB[22m[1m[22m[2m Ôöé gzip: 125.06 kB[22m[2m Ôöé map: 1,283.61 kB[22m
+[2mdist/[22m[36massets/index-S9dFQBrT.js                         [39m[1m[2m  411.88 kB[22m[1m[22m[2m Ôöé gzip: 132.68 kB[22m[2m Ôöé map: 2,039.44 kB[22m
+[2mdist/[22m[36massets/AdminFlyderDashboard-C7MwMsaB.js          [39m[1m[2m  445.95 kB[22m[1m[22m[2m Ôöé gzip: 125.12 kB[22m[2m Ôöé map: 1,861.94 kB[22m
+[2mdist/[22m[36massets/vendor-charts-DZvpX7aP.js                 [39m[1m[2m  455.95 kB[22m[1m[22m[2m Ôöé gzip: 121.45 kB[22m[2m Ôöé map: 1,922.19 kB[22m
+[2mdist/[22m[36massets/vendor-firebase-DdtkcWG-.js               [39m[1m[2m  473.45 kB[22m[1m[22m[2m Ôöé gzip: 145.29 kB[22m[2m Ôöé map: 2,529.90 kB[22m
+[2mdist/[22m[36massets/index-wCzmwwDR.js                         [39m[1m[33m  503.17 kB[39m[22m[2m Ôöé gzip: 131.55 kB[22m[2m Ôöé map: 1,249.28 kB[22m
+[2mdist/[22m[36massets/BillingDashboard-DYMpd_wR.js              [39m[1m[33m1,134.55 kB[39m[22m[2m Ôöé gzip: 328.74 kB[22m[2m Ôöé map: 4,639.85 kB[22m
+[2mdist/[22m[36massets/vendor-video-BP1iwVQz.js                  [39m[1m[33m1,548.45 kB[39m[22m[2m Ôöé gzip: 479.56 kB[22m[2m Ôöé map: 4,230.04 kB[22m
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[32mÔ£ô built in 51.53s[39m
+
+PWA v1.2.0
+mode      generateSW
+precache  40 entries (5178.69 KiB)
+files generated
+  dist/sw.js.map
+  dist/sw.js
+  dist/workbox-58bd4dca.js.map
+  dist/workbox-58bd4dca.js

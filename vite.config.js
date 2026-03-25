@@ -32,13 +32,13 @@ export default defineConfig(async ({ mode }) => {
     plugins.push(
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+        includeAssets: ['favicon.png', 'apple-touch-icon.png', 'pwa-192x192.svg'],
         manifest: {
           name: 'Repaart Operativa',
           short_name: 'Repaart',
           description: 'Sistema Operativo para Franquicias de Última Milla',
-          theme_color: '#6366f1',
-          background_color: '#ffffff',
+          theme_color: '#020617',
+          background_color: '#020617',
           display: 'standalone',
           orientation: 'portrait-primary',
           scope: '/',
@@ -183,8 +183,25 @@ export default defineConfig(async ({ mode }) => {
       sourcemap: true,
       rollupOptions: {
         output: {
-          // Removemos manualChunks para dejar la división default de Vite
-          // manualChunks estaba causando problemas de dependencias circulares y errores de 'Cannot access X before initialization'
+          manualChunks(id) {
+            // Firebase SDK — separado del main bundle para caching independiente
+            if (id.includes('node_modules/@firebase') || id.includes('node_modules/firebase')) {
+              return 'vendor-firebase';
+            }
+            // Recharts + D3 — solo se carga en dashboards con gráficos
+            if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) {
+              return 'vendor-charts';
+            }
+            // Video player — solo se carga en Academy admin
+            if (
+              id.includes('node_modules/react-player') ||
+              id.includes('node_modules/hls.js') ||
+              id.includes('node_modules/dashjs') ||
+              id.includes('node_modules/dash-video-element')
+            ) {
+              return 'vendor-video';
+            }
+          }
         }
       }
     },

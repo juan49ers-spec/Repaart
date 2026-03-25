@@ -448,7 +448,7 @@ const MobileAgendaView: React.FC<MobileAgendaViewProps> =({
             </div>
 
             {/* Bottom Gradient Fade */}
-            <div className="fixed bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-slate-50 dark:from-[#000000] to-transparent pointer-events-none z-30 opacity-100" />
+            <div className="fixed bottom-20 xl:bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-50 dark:from-[#000000] to-transparent pointer-events-none z-30 opacity-100" />
         </div>
     );
 };

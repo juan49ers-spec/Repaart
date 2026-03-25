@@ -16,6 +16,7 @@ import React, { useState, useEffect } from 'react';
 import { Save, Plus, Trash2, FileText, Calculator } from 'lucide-react';
 import { Modal, Form, Select, Input, InputNumber, Button, DatePicker, Table, Card, Row, Col, Alert, message } from 'antd';
 import { billingController } from '../../../services/billing';
+import { monthlyCloseWizard } from '../../../services/billing/taxVault';
 import type { CreateInvoiceRequest } from '../../../types/invoicing';
 import { formatCurrency } from '../../../utils/formatters';
 
@@ -137,6 +138,18 @@ export const CreateInvoiceModal: React.FC<Props> = ({
                 message.error('Debe haber al menos una línea válida');
                 setLoading(false);
                 return;
+            }
+
+            // Validar mes bloqueado
+            const issueDateVal = values.issueDate ? values.issueDate.toDate() : new Date();
+            const period = `${issueDateVal.getFullYear()}-${String(issueDateVal.getMonth() + 1).padStart(2, '0')}`;
+            const taxVaultRes = await monthlyCloseWizard.getTaxVaultEntry(franchiseId, period);
+            if (taxVaultRes.success) {
+                if (taxVaultRes.data.isLocked) {
+                    message.error(`El mes ${period} está cerrado fiscalmente. No se pueden crear facturas.`);
+                    setLoading(false);
+                    return;
+                }
             }
 
             // Create invoice request

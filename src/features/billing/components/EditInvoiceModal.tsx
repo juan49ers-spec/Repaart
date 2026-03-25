@@ -3,6 +3,7 @@ import { Modal, Button, Form, Input, DatePicker, Select, message, Card, Row, Col
 import { Edit, Trash2, Plus, Info } from 'lucide-react';
 import type { Invoice, InvoiceLine, TaxBreakdown, CustomerSnapshot } from '../../../types/invoicing';
 import { invoiceEngine } from '../../../services/billing';
+import { monthlyCloseWizard } from '../../../services/billing/taxVault';
 import { formatCurrency } from '../../../utils/formatters';
 import dayjs from 'dayjs';
 
@@ -128,6 +129,18 @@ export const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
     try {
       setLoading(true);
       const values = await form.validateFields();
+
+      // Validar mes bloqueado
+      const issueDateVal = values.issueDate ? values.issueDate.toDate() : new Date();
+      const period = `${issueDateVal.getFullYear()}-${String(issueDateVal.getMonth() + 1).padStart(2, '0')}`;
+      const taxVaultRes = await monthlyCloseWizard.getTaxVaultEntry(franchiseId, period);
+      if (taxVaultRes.success) {
+          if (taxVaultRes.data.isLocked) {
+              message.error(`El mes ${period} está cerrado fiscalmente. No se puede editar la factura.`);
+              setLoading(false);
+              return;
+          }
+      }
 
       const updates = {
         customerId: values.customerId,

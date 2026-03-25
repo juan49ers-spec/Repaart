@@ -63,7 +63,7 @@ const HourlyCostWidget: FC<HourlyCostWidgetProps> = ({
                 {/* MAIN PERFORMANCE DISPLAY */}
                 <div>
                     <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight tabular-nums">
+                        <span className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight tabular-nums">
                             {totalHours > 0 ? `${formatMoney(costPerHour)}€` : '--'}
                         </span>
                         <span className={cn("text-xs font-medium ml-1", totalHours > 0 ? "text-slate-400" : "text-amber-500/70 dark:text-amber-400/70")}>

@@ -33,7 +33,7 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
     const { user } = useAuth();
 
     const {
-        loading, logisticsRates, record, invoicedIncome, operativeHours, calculatedRiderExpenses, franchisePack
+        loading, logisticsRates, record, invoicedIncome, operativeHours, calculatedRiderExpenses, franchisePack, isLocked
     } = useFinancialDataLoad({ franchiseId, month, initialData, user });
 
     const { saving, handleSave } = useFinancialSave({ franchiseId, month, onSave, onClose });
@@ -57,8 +57,6 @@ const FinancialControlCenter: React.FC<FinancialControlCenterProps> = ({
         appFlyder: 0, marketing: 0, incidents: 0, other: 0,
         royaltyPercent: defaultRoyalty, irpfPercent: 20, repaartServices: 0, socialSecurity: 0
     });
-
-    const isLocked = false;
 
     // --- Auto-cálculo de ingresos desde pedidos ---
     useEffect(() => {

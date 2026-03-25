@@ -104,7 +104,7 @@ const InputSidebar: React.FC<InputSidebarProps> = ({
     const estimatedKm = gasolinePrice > 0 ? (gasoline / gasolinePrice) * 35 : 0;
 
     return (
-        <div className={`fixed inset-y-0 left-0 w-full md:w-96 bg-white dark:bg-slate-900 border-r dark:border-slate-800 shadow-2xl transform transition-transform duration-300 ease-in-out z-50 overflow-y-auto ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className={`fixed inset-y-0 left-0 w-full md:w-96 bg-white dark:bg-slate-900 border-r dark:border-slate-800 shadow-2xl transform transition-transform duration-300 ease-in-out z-50 overflow-y-auto pt-safe pb-safe ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
             <div className="p-4 md:p-6">
                 <div className="flex justify-between items-center mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
                     <div className="flex items-center gap-2">
@@ -203,8 +203,8 @@ const InputSidebar: React.FC<InputSidebarProps> = ({
                                 <div className="grid grid-cols-2 gap-3">
                                     {[['0-4km', 'ordersNew0To4'], ['4-5km', 'ordersNew4To5'], ['5-6km', 'ordersNew5To6'], ['6-7km', 'ordersNew6To7'], ['>7km', 'ordersNewGt7']].map(([label, name]) => (
                                         <div key={name}>
-                                            <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">{label}</label>
-                                            <input disabled={readOnly} type="number" name={name} value={formData?.[name] || ''} onChange={handleChange} className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-slate-700 dark:text-slate-200 text-sm font-medium focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 dark:focus:ring-indigo-900 focus:outline-none disabled:bg-slate-50 dark:disabled:bg-slate-900 transition-all shadow-sm" min="0" onFocus={(e) => e.target.select()} />
+                                            <label htmlFor={name} className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">{label}</label>
+                                            <input id={name} disabled={readOnly} type="number" name={name} value={formData?.[name] || ''} onChange={handleChange} className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-slate-700 dark:text-slate-200 text-sm font-medium focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 dark:focus:ring-indigo-900 focus:outline-none disabled:bg-slate-50 dark:disabled:bg-slate-900 transition-all shadow-sm" min="0" onFocus={(e) => e.target.select()} />
                                         </div>
                                     ))}
                                 </div>
@@ -215,8 +215,8 @@ const InputSidebar: React.FC<InputSidebarProps> = ({
                                 <div className="grid grid-cols-2 gap-3">
                                     {[['0-3.5km', 'ordersOld0To35'], ['>3.5km', 'ordersOldGt35']].map(([label, name]) => (
                                         <div key={name}>
-                                            <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">{label}</label>
-                                            <input disabled={readOnly} type="number" name={name} value={formData?.[name] || ''} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-slate-600 dark:text-slate-300 text-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 dark:disabled:bg-slate-900 transition-all" min="0" onFocus={(e) => e.target.select()} />
+                                            <label htmlFor={`old-${name}`} className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">{label}</label>
+                                            <input id={`old-${name}`} disabled={readOnly} type="number" name={name} value={formData?.[name] || ''} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-slate-600 dark:text-slate-300 text-sm focus:border-slate-400 focus:outline-none disabled:bg-slate-50 dark:disabled:bg-slate-900 transition-all" min="0" onFocus={(e) => e.target.select()} />
                                         </div>
                                     ))}
                                 </div>
@@ -309,8 +309,8 @@ const InputSidebar: React.FC<InputSidebarProps> = ({
 
                                 {[['Seguros', 'insurance'], ['Gestoría', 'agencyFee'], ['PRL', 'prlFee'], ['S. Financieros', 'accountingFee'], ['S. Profesionales', 'services'], ['Cuota Autónomo', 'quota']].map(([label, name]) => (
                                     <div key={name}>
-                                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">{label}</label>
-                                        <input disabled={readOnly} type="number" name={name} value={formData?.[name] || ''} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-slate-600 dark:text-slate-300 text-sm font-medium focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 dark:focus:ring-indigo-900 focus:outline-none transition-all" min="0" onFocus={(e) => e.target.select()} />
+                                        <label htmlFor={`fix-${name}`} className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">{label}</label>
+                                        <input id={`fix-${name}`} disabled={readOnly} type="number" name={name} value={formData?.[name] || ''} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-slate-600 dark:text-slate-300 text-sm font-medium focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 dark:focus:ring-indigo-900 focus:outline-none transition-all" min="0" onFocus={(e) => e.target.select()} />
                                     </div>
                                 ))}
 
@@ -334,7 +334,7 @@ const InputSidebar: React.FC<InputSidebarProps> = ({
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">Gasolina (Base)</label>
-                                    <input disabled={readOnly} type="number" name="gasoline" value={formData.gasoline || ''} onChange={handleChange} className="w-full bg-orange-50/50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-800 rounded-lg px-2 py-2 text-slate-700 dark:text-slate-200 text-sm font-bold focus:border-orange-500 focus:outline-none" min="0" onFocus={(e) => e.target.select()} />
+                                    <input id="gasoline" disabled={readOnly} type="number" name="gasoline" value={formData.gasoline || ''} onChange={handleChange} aria-label="Gasolina base" className="w-full bg-orange-50/50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-800 rounded-lg px-2 py-2 text-slate-700 dark:text-slate-200 text-sm font-bold focus:border-orange-500 focus:outline-none" min="0" onFocus={(e) => e.target.select()} />
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">Precio/L (Base)</label>
@@ -342,11 +342,11 @@ const InputSidebar: React.FC<InputSidebarProps> = ({
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">Reparaciones</label>
-                                    <input disabled={readOnly} type="number" name="repairs" value={formData.repairs || ''} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-slate-600 dark:text-slate-300 text-sm focus:border-orange-500 focus:outline-none" min="0" onFocus={(e) => e.target.select()} />
+                                    <input id="repairs" disabled={readOnly} type="number" name="repairs" value={formData.repairs || ''} onChange={handleChange} aria-label="Reparaciones" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-slate-600 dark:text-slate-300 text-sm focus:border-orange-500 focus:outline-none" min="0" onFocus={(e) => e.target.select()} />
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">Otros Costes</label>
-                                    <input disabled={readOnly} type="number" name="otherExpenses" value={formData.otherExpenses || ''} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-slate-600 dark:text-slate-300 text-sm focus:border-orange-500 focus:outline-none" min="0" onFocus={(e) => e.target.select()} />
+                                    <input id="otherExpenses" disabled={readOnly} type="number" name="otherExpenses" value={formData.otherExpenses || ''} onChange={handleChange} aria-label="Otros costes" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-slate-600 dark:text-slate-300 text-sm focus:border-orange-500 focus:outline-none" min="0" onFocus={(e) => e.target.select()} />
                                 </div>
                                 <div className="col-span-2 border-t border-slate-100 dark:border-slate-700 pt-3 mt-1">
                                     <label className="text-[10px] font-bold text-rose-600 dark:text-rose-400 block mb-1 uppercase tracking-tight">Mermas e Incidencias</label>
@@ -365,7 +365,7 @@ const InputSidebar: React.FC<InputSidebarProps> = ({
                             <div>
                                 <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-tight">IRPF Estimado (%)</label>
                                 <div className="relative">
-                                    <input disabled={readOnly} type="number" name="irpfPercent" value={formData.irpfPercent || ''} onChange={handleChange} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-900 dark:text-slate-100 text-sm font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 dark:focus:ring-indigo-900 focus:outline-none" min="0" onFocus={(e) => e.target.select()} />
+                                    <input id="irpfPercent" disabled={readOnly} type="number" name="irpfPercent" value={formData.irpfPercent || ''} onChange={handleChange} aria-label="IRPF estimado porcentaje" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-900 dark:text-slate-100 text-sm font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-50 dark:focus:ring-indigo-900 focus:outline-none" min="0" onFocus={(e) => e.target.select()} />
                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">%</span>
                                 </div>
                             </div>
