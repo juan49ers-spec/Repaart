@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { generateAdvisorOpener } from '../../lib/gemini';
+import { generateDashboardIntelligence, DashboardAlert, DashboardAlertContext } from '../../lib/gemini';
 import { aiLimiter } from '../../lib/aiRateLimiter';
 import { useOutletContext } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -45,6 +45,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
     const [effectiveMonth, setMonthState] = useState(format(new Date(), 'yyyy-MM'));
     const [isAdvisorOpen, setIsAdvisorOpen] = useState(false);
     const [advisorOpener, setAdvisorOpener] = useState<string | null>(null);
+    const [dashboardAlert, setDashboardAlert] = useState<DashboardAlert | null | 'loading'>('loading');
     const [monthlyInvoicedAmount, setMonthlyInvoicedAmount] = useState(0);
     const [invoicedIva, setInvoicedIva] = useState(0);
     const [currentInvoices, setCurrentInvoices] = useState<Invoice[]>([]);
@@ -117,22 +118,37 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
 
     const totalExpenses = (report?.variable.total || 0) + (report?.fixed.total || 0);
 
-    // Pre-generate AI advisor opener in the background
+    // Pre-generate AI Multiplexed Intelligence in the background (1 call for Alert + Opener)
     useEffect(() => {
         if (!report) return;
-        const financial = {
-            revenue,
-            expenses: totalExpenses,
-            profit: revenue - totalExpenses,
-            margin: revenue > 0 ? Math.round(((revenue - totalExpenses) / revenue) * 100) : 0,
-            orders,
-            month: displayedMonth,
+        
+        const context: DashboardAlertContext = {
+            financial: {
+                revenue,
+                expenses: totalExpenses,
+                profit: revenue - totalExpenses,
+                margin: revenue > 0 ? Math.round(((revenue - totalExpenses) / revenue) * 100) : 0,
+                orders,
+                month: displayedMonth,
+            },
+            shifts: { totalThisWeek: 0, uncoveredSlots: 0, nextWeekCoverage: 100 },
+            riders: { active: 0, inactive: 0 }
         };
-        const cacheKey = `advisor-opener-${activeFranchiseId}-${displayedMonth}`;
-        aiLimiter.execute(cacheKey, () => generateAdvisorOpener(financial))
-            .then(opener => { if (opener) setAdvisorOpener(opener); })
-            .catch(() => {});
-    }, [report]); // eslint-disable-line react-hooks/exhaustive-deps
+
+        const cacheKey = `dashboard-intel-${activeFranchiseId}-${displayedMonth}`;
+        aiLimiter.execute(cacheKey, () => generateDashboardIntelligence(context))
+            .then(intel => { 
+                if (intel) {
+                    setAdvisorOpener(intel.advisorOpener); 
+                    setDashboardAlert(intel.alert);
+                } else {
+                    setDashboardAlert(null);
+                }
+            })
+            .catch(() => {
+                setDashboardAlert(null);
+            });
+    }, [report, activeFranchiseId, displayedMonth, revenue, totalExpenses, orders]);
 
     // Expense Breakdown Preparation
     const fullExpenseBreakdown: BreakdownItem[] = useMemo(() => (report?.breakdown || [])
@@ -191,6 +207,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
                 onUpdateFinance={updateFinance}
                 monthlyInvoicedAmount={monthlyInvoicedAmount}
                 currentInvoices={currentInvoices}
+                alertData={dashboardAlert}
             />
 
             {/* AI Finance Advisor Chat */}

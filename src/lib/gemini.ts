@@ -1,8 +1,11 @@
 import { FRANCHISE_KNOWLEDGE } from './companyKnowledge';
 import { APP_CAPABILITIES } from './appCapabilities';
 
-// Initialize the API with the key (will be set in .env)
-const API_KEY = import.meta.env.VITE_GOOGLE_AI_KEY || '';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from './firebase';
+
+// API Keys are now safely hidden in backend. Using proxy stub.
+const API_KEY = 'managed-by-cloud-functions';
 
 // Chat history for multi-turn conversations (REST-based, no SDK)
 export interface ChatTurn {
@@ -39,28 +42,67 @@ LO QUE HACES:
 Si no sabes la respuesta, dilo honestamente y sugiere escribir a soporte@repaart.es.
 `;
 
-const CHAT_MODELS = ["gemini-2.0-flash", "gemini-2.5-flash"];
+const CHAT_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash"];
+
+interface FetchResponseMock {
+    ok: boolean;
+    status: number;
+    json?: () => Promise<any>;
+    text?: () => Promise<string>;
+}
+
+const fetchWithRetry = async (url: string, options: RequestInit, retries = 3, initialDelay = 1000): Promise<FetchResponseMock> => {
+    const modelMatch = url.match(/models\/(gemini-.*?):generateContent/);
+    const model = modelMatch ? modelMatch[1] : 'gemini-1.5-flash';
+    const requestBody = JSON.parse(options.body as string);
+
+    let delay = initialDelay;
+    for (let i = 0; i <= retries; i++) {
+        try {
+            const runner = httpsCallable(functions, 'callGeminiProxy');
+            const result = await runner({ model, requestBody });
+            
+            // Return fake Response adapter to prevent modifying component's code 
+            return {
+                ok: true,
+                status: 200,
+                json: async () => result.data,
+                text: async () => JSON.stringify(result.data)
+            };
+        } catch (error: unknown) {
+            const err = error as { code?: string; message?: string };
+            const code = err?.code || err?.message || 'unknown';
+            if ((code === 'resource-exhausted' || code.includes('429')) && i < retries) {
+                console.warn(`Gemini Proxy rate limited. Retrying in ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2; // Exponential backoff
+                continue;
+            }
+            if (i === retries) {
+                return {
+                    ok: false,
+                    status: code === 'resource-exhausted' ? 429 : 500,
+                    text: async () => String(error)
+                };
+            }
+        }
+    }
+    return { ok: false, status: 500 };
+};
 
 export const initGeminiChat = async (): Promise<boolean> => {
-    if (!API_KEY) {
-        console.warn("Gemini API Key missing");
-        return false;
-    }
     chatHistory = [];
     return true;
 };
 
 export const sendMessageToGemini = async (message: string): Promise<string> => {
-    if (!API_KEY) {
-        return "⚠️ No veo mi 'llave maestra' (API Key). Por favor configura la VITE_GOOGLE_AI_KEY en el sistema.";
-    }
 
     // Append user message to history
     chatHistory.push({ role: 'user', parts: [{ text: message }] });
 
     for (const model of CHAT_MODELS) {
         try {
-            const response = await fetch(
+            const response = await fetchWithRetry(
                 `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`,
                 {
                     method: 'POST',
@@ -112,10 +154,8 @@ export const generateGuideContent = async (rawText: string): Promise<{
     content: string; // NEW: Full markdown content
     confidence: number;
 } | null> => {
-    const API_KEY = import.meta.env.VITE_GOOGLE_AI_KEY || '';
-    if (!API_KEY) {
-        throw new Error("Falta la API Key de Gemini (VITE_GOOGLE_AI_KEY). Por favor, configúrala en el archivo .env.");
-    }
+    // Enforced to use Cloud Function
+    const API_KEY = 'managed-by-cloud-functions';
 
     const prompt = `
     ${SYSTEM_INSTRUCTION}
@@ -155,12 +195,12 @@ export const generateGuideContent = async (rawText: string): Promise<{
     `;
 
     // List of models to try via REST (Based on authenticated user availability)
-    const models = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash", "gemini-flash-latest", "gemini-pro-latest"];
+    const models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash", "gemini-flash-latest", "gemini-pro-latest"];
 
     for (const model of models) {
         try {
-            console.log(`🤖 REST Attempt: ${model}...`);
-            const response = await fetch(
+            console.log(` REST Attempt: ${model}...`);
+            const response = await fetchWithRetry(
                 `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`,
                 {
                     method: 'POST',
@@ -286,14 +326,13 @@ export const analyzeFinancialMonthlyReport = async (financialData: FinancialMont
 
 // Internal Helper for JSON Generation (Reuses the robust logic)
 const generateJson = async (promptText: string): Promise<unknown> => {
-    const API_KEY = import.meta.env.VITE_GOOGLE_AI_KEY || '';
-    if (!API_KEY) return null;
+    const API_KEY = 'managed-by-cloud-functions';
 
     // Use best available model from diagnosis knowledge
-    const modelName = "gemini-2.5-flash";
+    const modelName = "gemini-1.5-flash";
 
     try {
-        const response = await fetch(
+        const response = await fetchWithRetry(
             `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${API_KEY}`,
             {
                 method: 'POST',
@@ -516,7 +555,7 @@ export const generateFullSchedule = async (
     return generateJson(prompt) as Promise<{ shifts: { riderId: string; startDay: string; startHour: number; duration: number; reason: string }[]; explanation: string } | null>;
 };
 
-// ─── Dashboard Alert (Feature 1) ───────────────────────────────────────────
+// ─── Franchise Dashboard Multiplexing (Feature 1) ─────────────────────────
 
 export interface DashboardAlertContext {
   financial: {
@@ -544,37 +583,54 @@ export interface DashboardAlert {
   message: string;
 }
 
-export const generateDashboardAlert = async (
+export interface DashboardIntelligence {
+  alert: DashboardAlert | null;
+  advisorOpener: string | null;
+}
+
+/**
+ * ⚡ Multi-plexed Intelligence: 
+ * Fusiones de calls a Gemini. Junta el "Saludo del Asesor" y "Alerta" en un solo super-prompt HTTP 
+ * para reducir 429 Límite de Cuota y dividir la latencia a la mitad.
+ */
+export const generateDashboardIntelligence = async (
   context: DashboardAlertContext
-): Promise<DashboardAlert | null> => {
-  const key = import.meta.env.VITE_GOOGLE_AI_KEY || '';
-  if (!key) return null;
+): Promise<DashboardIntelligence> => {
+  const key = 'managed-by-cloud-functions';
 
   const prompt = `
-Eres el asesor de una franquicia de reparto. Analiza estos datos y genera UNA SOLA alerta.
+  Eres el asesor financiero principal de una franquicia de reparto.
+  Analiza estos datos operativos y financieros y realiza DOS tareas en un solo JSON:
+  
+  DATOS:
+  ${JSON.stringify(context, null, 2)}
+  
+  TAREA 1: "alert" (Alerta para el Dashboard)
+  - Margen >15%: alerta "positive" (Buen trabajo).
+  - Si hay "uncoveredSlots > 0" en turnos: "warning".
+  - Si el margen <5% o pérdidas graves: "critical".
+  - Lenguaje cercano, sin tecnicismos, máximo 2 frases para la alerta.
+  
+  TAREA 2: "advisorOpener" (El saludo del chat asesor)
+  - Elige el dato MÁS relevante.
+  - Máximo 2 frases. Tono cercano (como un compañero) en español de España.
+  - Termina con una pregunta abierta para iniciar un chat (Ej: "¿Quieres que analicemos el gasto alto en combustible?").
+  
+  SALIDA JSON ESTRICTA OBLIGATORIA (sin formato markdown \`\`\`json, solo llaves):
+  {
+    "alert": {
+      "type": "positive" | "warning" | "critical" | "info",
+      "title": "Título corto (4-6 palabras)",
+      "message": "Mensaje de la alerta"
+    },
+    "advisorOpener": "Texto del saludo del asesor para iniciar el chat."
+  }
+  `;
 
-DATOS:
-${JSON.stringify(context, null, 2)}
-
-REGLAS:
-- Si el margen es >15%: alerta positiva celebrando el resultado.
-- Si hay turnos sin cubrir (uncoveredSlots > 0): alerta de aviso.
-- Si el margen es <5% o los pedidos caen: alerta crítica.
-- Si todo está bien pero hay algo interesante: alerta informativa.
-- Lenguaje cercano, sin tecnicismos, máximo 2 frases.
-
-SALIDA JSON ESTRICTA (sin markdown):
-{
-  "type": "positive" | "warning" | "critical" | "info",
-  "title": "Título de 4-6 palabras",
-  "message": "Una o dos frases directas y cercanas."
-}
-`;
-
-  const models = ['gemini-2.0-flash', 'gemini-2.5-flash'];
+  const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
   for (const model of models) {
     try {
-      const res = await fetch(
+      const res = await fetchWithRetry(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
         {
           method: 'POST',
@@ -586,12 +642,26 @@ SALIDA JSON ESTRICTA (sin markdown):
       const data = await res.json();
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!text) continue;
+      
       const match = text.match(/\{[\s\S]*\}/);
-      if (match) return JSON.parse(match[0]) as DashboardAlert;
-    } catch { continue; }
+      if (match) {
+         const parsed = JSON.parse(match[0]);
+         return {
+            alert: parsed.alert || null,
+            advisorOpener: parsed.advisorOpener || null
+         };
+      }
+    } catch (e) { 
+        console.warn('Multiplexing AI failed:', e);
+        continue; 
+    }
   }
-  return null;
+  
+  return { alert: null, advisorOpener: null };
 };
+
+// Se mantienen por compatibilidad de tipos pero se marcarán como deprecated internamente
+export const generateDashboardAlert = async (_context: DashboardAlertContext): Promise<DashboardAlert | null> => null;
 
 // ─── Rider Advisor Chat (Feature 2) ────────────────────────────────────────
 
@@ -600,13 +670,13 @@ export interface RiderChatContext {
   upcomingShifts: { date: string; startHour: number; duration: number }[];
 }
 
-const getRiderSystemPrompt = (context: RiderChatContext): string => `
-Eres el asistente de ${context.riderName}, un repartidor de la franquicia Repaart.
+const getRiderSystemPrompt = (ctx: RiderChatContext): string => `
+Eres el asistente de ${ctx.riderName}, un repartidor de la franquicia Repaart.
 Hablas como un compañero cercano, con frases cortas y sin rollos.
 
 SUS PRÓXIMOS TURNOS:
-${context.upcomingShifts.length > 0
-  ? context.upcomingShifts.map(s => `- ${s.date} a las ${s.startHour}h (${s.duration}h)`).join('\n')
+${ctx.upcomingShifts.length > 0
+  ? ctx.upcomingShifts.map(s => `- ${s.date} a las ${s.startHour}h (${s.duration}h)`).join('\n')
   : 'No tiene turnos asignados esta semana.'}
 
 LO QUE SABES:
@@ -624,20 +694,17 @@ export const sendRiderMessage = async (
   context: RiderChatContext,
   history: ChatTurn[]
 ): Promise<{ text: string; suggestTicket: boolean; updatedHistory: ChatTurn[] }> => {
-  const key = import.meta.env.VITE_GOOGLE_AI_KEY || '';
-  if (!key) {
-    return { text: '⚠️ No tengo conexión ahora mismo.', suggestTicket: false, updatedHistory: history };
-  }
+  const key = 'managed-by-cloud-functions';
 
   const updatedHistory: ChatTurn[] = [
     ...history,
     { role: 'user', parts: [{ text: message }] },
   ];
 
-  const models = ['gemini-2.0-flash', 'gemini-2.5-flash'];
+  const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
   for (const model of models) {
     try {
-      const res = await fetch(
+      const res = await fetchWithRetry(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
         {
           method: 'POST',
@@ -683,8 +750,7 @@ export const seedGeminiHistory = (turns: ChatTurn[]): void => {
 export const generateAdvisorOpener = async (
   context: DashboardAlertContext['financial']
 ): Promise<string | null> => {
-  const key = import.meta.env.VITE_GOOGLE_AI_KEY || '';
-  if (!key) return null;
+  const key = 'managed-by-cloud-functions';
 
   const prompt = `Eres el asesor financiero de un franquiciado de reparto.
 Analiza estos datos y genera UNA SOLA observación directa y cercana.
@@ -699,10 +765,10 @@ REGLAS:
 
 Responde SOLO con el texto del mensaje, sin JSON ni formato.`;
 
-  const models = ['gemini-2.0-flash', 'gemini-2.5-flash'];
+  const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
   for (const model of models) {
     try {
-      const res = await fetch(
+      const res = await fetchWithRetry(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
         {
           method: 'POST',
@@ -727,8 +793,7 @@ export const analyzeExpenseAmount = async (
 ): Promise<{ message: string; level: 'high' | 'very_high' } | null> => {
   if (historicalAvg === 0 || amount <= historicalAvg * 1.2) return null;
 
-  const key = import.meta.env.VITE_GOOGLE_AI_KEY || '';
-  if (!key) return null;
+  const key = 'managed-by-cloud-functions';
 
   const pctAbove = Math.round(((amount - historicalAvg) / historicalAvg) * 100);
   const level: 'high' | 'very_high' = pctAbove > 50 ? 'very_high' : 'high';
@@ -744,10 +809,10 @@ Diferencia: +${pctAbove}%
 Responde SOLO con el JSON:
 {"message": "Una frase informativa corta (ej: Este gasto en combustible es un 35% más alto que tu media.)"}`;
 
-  const models = ['gemini-2.0-flash', 'gemini-2.5-flash'];
+  const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
   for (const model of models) {
     try {
-      const res = await fetch(
+      const res = await fetchWithRetry(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
         {
           method: 'POST',

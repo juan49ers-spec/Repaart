@@ -70,6 +70,6 @@ App Builder Process:
    ├─ Pages (feed, profile, upload)
    └─ Components (PostCard, Feed, LikeButton)
 4. Coordinate agents
-5. Report progress
-6. Start preview
+6. Execute workflow `/react-scan-setup` automatically (Mandatory for ALL React/Vite/NextJS Apps)
+7. Start preview
 ```

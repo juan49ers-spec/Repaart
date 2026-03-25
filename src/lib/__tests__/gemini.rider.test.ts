@@ -1,7 +1,10 @@
-// src/lib/__tests__/gemini.rider.test.ts
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-vi.stubEnv('VITE_GOOGLE_AI_KEY', 'test-key-123');
+const mockRunner = vi.fn();
+vi.mock('firebase/functions', () => ({
+  httpsCallable: () => mockRunner,
+}));
+vi.mock('../firebase', () => ({ functions: {} }));
 
 import { sendRiderMessage } from '../gemini';
 
@@ -12,20 +15,18 @@ const mockContext = {
 
 describe('sendRiderMessage', () => {
   beforeEach(() => {
-    vi.stubGlobal('fetch', vi.fn());
+    mockRunner.mockReset();
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
-    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
   });
 
   it('returns text response and history is updated', async () => {
-    (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
+    mockRunner.mockResolvedValueOnce({
+      data: {
         candidates: [{ content: { parts: [{ text: 'Hola! El lunes trabajas a las 20h.' }] } }]
-      })
+      }
     });
 
     const result = await sendRiderMessage('¿Cuándo trabajo?', mockContext, []);
@@ -35,11 +36,10 @@ describe('sendRiderMessage', () => {
   });
 
   it('detects TICKET:true flag and removes it from text', async () => {
-    (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
+    mockRunner.mockResolvedValueOnce({
+      data: {
         candidates: [{ content: { parts: [{ text: 'Voy a revisar eso ahora mismo. TICKET:true' }] } }]
-      })
+      }
     });
 
     const result = await sendRiderMessage('La app no me deja fichar', mockContext, []);
@@ -53,28 +53,21 @@ describe('sendRiderMessage', () => {
       { role: 'user' as const, parts: [{ text: 'hola' }] },
       { role: 'model' as const, parts: [{ text: '¡Hola! ¿En qué te ayudo?' }] },
     ];
-    (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
+    mockRunner.mockResolvedValueOnce({
+      data: {
         candidates: [{ content: { parts: [{ text: 'Trabajas el viernes.' }] } }]
-      })
+      }
     });
 
     const result = await sendRiderMessage('¿Y el viernes?', mockContext, existingHistory);
     expect(result.updatedHistory).toHaveLength(4);
   });
 
-  it('returns connection error and unchanged history on network failure', async () => {
-    (fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('timeout'));
+  it('returns connection error and unchanged history on proxy failure', async () => {
+    mockRunner.mockRejectedValueOnce(new Error('timeout'));
     const result = await sendRiderMessage('Hola', mockContext, []);
     expect(result.text).toContain('conectarme');
     expect(result.suggestTicket).toBe(false);
     expect(result.updatedHistory).toHaveLength(0);
-  });
-
-  it('returns no-key message when API key is missing', async () => {
-    vi.stubEnv('VITE_GOOGLE_AI_KEY', '');
-    const result = await sendRiderMessage('Hola', mockContext, []);
-    expect(result.text).toContain('conexión');
   });
 });

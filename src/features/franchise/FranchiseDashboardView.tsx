@@ -26,6 +26,7 @@ import ErrorBoundary from '../../components/ui/feedback/ErrorBoundary';
 import { userService } from '../../services/userService';
 import { useAuth } from '../../context/AuthContext';
 import { DashboardAlertBanner } from './dashboard/components/DashboardAlertBanner';
+import { DashboardAlert } from '../../lib/gemini';
 
 export interface DashboardTrendItem {
     month: string;
@@ -72,6 +73,7 @@ export interface FranchiseDashboardViewProps {
     onUpdateFinance: (data: Partial<MonthlyData>) => Promise<void>;
     monthlyInvoicedAmount?: number;
     currentInvoices?: Invoice[];
+    alertData?: DashboardAlert | null | 'loading';
 }
 
 const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
@@ -102,7 +104,8 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
     onMonthChange,
     onUpdateFinance,
     monthlyInvoicedAmount,
-    currentInvoices
+    currentInvoices,
+    alertData
 }: FranchiseDashboardViewProps) => {
     const { user } = useAuth();
 
@@ -284,6 +287,7 @@ const FranchiseDashboardView: React.FC<FranchiseDashboardViewProps> = ({
                             financialData={alertFinancialData}
                             shiftsData={null}
                             ridersData={null}
+                            alertData={alertData ?? null}
                             onOpenAdvisor={() => setIsAdvisorOpen(true)}
                         />
                         <DynamicBanner />

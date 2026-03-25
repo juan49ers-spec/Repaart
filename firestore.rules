@@ -600,6 +600,17 @@ service cloud.firestore {
       );
     }
 
+    // --- BILLING: STATS & WALLETS ---
+    match /billing_stats/{franchiseId} {
+      allow read: if isAuthed() && (isAdmin() || request.auth.token.franchiseId == franchiseId || request.auth.uid == franchiseId);
+      allow write: if false; // Solo Cloud Functions escriben en billing_stats
+    }
+
+    match /customer_wallets/{walletId} {
+      allow read: if isAuthed() && (isAdmin() || isFranchise());
+      allow write: if isAuthed() && (isAdmin() || isFranchise());
+    }
+
     // CUALQUIER OTRA COLECCIÓN ESTÁ DENEGADA POR DEFECTO. NO HAY WILDCARD.
   }
 }

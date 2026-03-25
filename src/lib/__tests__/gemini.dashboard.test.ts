@@ -1,6 +1,14 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 
-vi.stubEnv('VITE_GOOGLE_AI_KEY', 'test-key-123');
+// generateDashboardAlert fue deprecada (stub => null) tras la migración
+// al multiplexer getDashboardAIBundle. Estos tests verifican que
+// el stub no rompe componentes que aún la referencian.
+
+const mockRunner = vi.fn();
+vi.mock('firebase/functions', () => ({
+  httpsCallable: () => mockRunner,
+}));
+vi.mock('../firebase', () => ({ functions: {} }));
 
 import { generateDashboardAlert } from '../gemini';
 
@@ -10,53 +18,18 @@ const mockContext = {
   riders: { active: 5, inactive: 1 },
 };
 
-describe('generateDashboardAlert', () => {
-  beforeEach(() => {
-    vi.stubGlobal('fetch', vi.fn());
-  });
-
+describe('generateDashboardAlert (deprecated stub)', () => {
   afterEach(() => {
-    vi.unstubAllGlobals();
-    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
   });
 
-  it('returns a DashboardAlert when API responds with valid JSON', async () => {
-    const mockAlert = { type: 'positive', title: '¡Buen margen este mes!', message: 'Tu margen está al 30%, muy por encima de lo normal.' };
-    (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        candidates: [{ content: { parts: [{ text: JSON.stringify(mockAlert) }] } }]
-      })
-    });
-
-    const result = await generateDashboardAlert(mockContext);
-    expect(result).toEqual(mockAlert);
-  });
-
-  it('returns null when API key is missing', async () => {
-    vi.stubEnv('VITE_GOOGLE_AI_KEY', '');
+  it('always returns null (function is a deprecated stub)', async () => {
     const result = await generateDashboardAlert(mockContext);
     expect(result).toBeNull();
   });
 
-  it('returns null on network error (silent fail)', async () => {
-    (fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network error'));
-    const result = await generateDashboardAlert(mockContext);
-    expect(result).toBeNull();
-  });
-
-  it('falls back to second model if first fails', async () => {
-    const mockAlert = { type: 'warning', title: 'Turnos sin cubrir', message: 'Tienes 2 huecos esta semana.' };
-    (fetch as ReturnType<typeof vi.fn>)
-      .mockResolvedValueOnce({ ok: false, status: 503 })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          candidates: [{ content: { parts: [{ text: JSON.stringify(mockAlert) }] } }]
-        })
-      });
-
-    const result = await generateDashboardAlert(mockContext);
-    expect(result).toEqual(mockAlert);
+  it('never calls the proxy (no network requests)', async () => {
+    await generateDashboardAlert(mockContext);
+    expect(mockRunner).not.toHaveBeenCalled();
   });
 });

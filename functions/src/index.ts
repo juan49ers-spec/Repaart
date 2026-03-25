@@ -20,6 +20,7 @@ export { adminDeleteUser } from './callables/adminDeleteUser';
 export { repairCustomClaims } from './callables/repairCustomClaims';
 export { setRole } from './callables/setRole';
 export { setUserStatus } from './callables/setUserStatus';
+export { callGeminiProxy } from './callables/geminiProxy';
 
 // Flyder Integration
 export { getFlyderOrders, getFlyderOrdersStats } from './callables/getFlyderOrders';

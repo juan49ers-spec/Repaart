@@ -38,3 +38,5 @@ Monorepo:
 | Payment | Stripe | LemonSqueezy, Paddle |
 | Email | - | Resend, SendGrid |
 | Search | - | Algolia, Typesense |
+| **AI LLM Simple Calls** | **Native Fetch / Firebase Functions** (YAGNI / KISS) | - |
+| **Multi-channel AI Agents & MCP** | **Hermes Agent (NousResearch)** | Evitar LangChain (Wrapper Hell) |

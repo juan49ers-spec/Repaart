@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
+const mockRunner = vi.fn();
+vi.mock('firebase/functions', () => ({
+  httpsCallable: () => mockRunner,
+}));
+vi.mock('../firebase', () => ({ functions: {} }));
+
 import { generateAdvisorOpener } from '../gemini';
 import type { DashboardAlertContext } from '../gemini';
 
@@ -14,42 +20,36 @@ const mockFinancial: DashboardAlertContext['financial'] = {
 
 describe('generateAdvisorOpener', () => {
   beforeEach(() => {
-    vi.stubEnv('VITE_GOOGLE_AI_KEY', 'test-key-123');
-    vi.stubGlobal('fetch', vi.fn());
+    mockRunner.mockReset();
   });
-  afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
-  it('returns a string when API responds with text', async () => {
-    (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('returns a string when proxy responds with text', async () => {
+    mockRunner.mockResolvedValueOnce({
+      data: {
         candidates: [{ content: { parts: [{ text: 'Tu margen está al 33%. ¿Lo analizamos?' }] } }]
-      })
+      }
     });
     const result = await generateAdvisorOpener(mockFinancial);
     expect(result).toBe('Tu margen está al 33%. ¿Lo analizamos?');
   });
 
-  it('returns null when API key is missing', async () => {
-    vi.stubEnv('VITE_GOOGLE_AI_KEY', '');
-    const result = await generateAdvisorOpener(mockFinancial);
-    expect(result).toBeNull();
-  });
-
-  it('returns null on network error (silent fail)', async () => {
-    (fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('timeout'));
+  it('returns null on proxy error (silent fail)', async () => {
+    mockRunner.mockRejectedValueOnce(new Error('timeout'));
     const result = await generateAdvisorOpener(mockFinancial);
     expect(result).toBeNull();
   });
 
   it('falls back to second model if first fails', async () => {
-    (fetch as ReturnType<typeof vi.fn>)
-      .mockResolvedValueOnce({ ok: false, status: 503 })
+    mockRunner
+      .mockRejectedValueOnce({ code: 'internal', message: 'Gemini request failed: 503' })
       .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
+        data: {
           candidates: [{ content: { parts: [{ text: 'Buen mes. ¿Revisamos?' }] } }]
-        })
+        }
       });
     const result = await generateAdvisorOpener(mockFinancial);
     expect(result).toBe('Buen mes. ¿Revisamos?');

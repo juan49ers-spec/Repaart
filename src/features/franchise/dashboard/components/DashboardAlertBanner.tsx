@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { TrendingUp, AlertTriangle, AlertCircle, Lightbulb, X, Bot } from 'lucide-react';
-import { generateDashboardAlert, DashboardAlert, DashboardAlertContext } from '../../../../lib/gemini';
-import { aiLimiter } from '../../../../lib/aiRateLimiter';
+import { DashboardAlert, DashboardAlertContext } from '../../../../lib/gemini';
 
 interface DashboardAlertBannerProps {
   franchiseId: string;
   financialData: DashboardAlertContext['financial'] | null;
   shiftsData: DashboardAlertContext['shifts'] | null;
   ridersData: DashboardAlertContext['riders'] | null;
+  alertData: DashboardAlert | null | 'loading';
   onOpenAdvisor?: () => void;
 }
 
@@ -19,40 +19,24 @@ const TYPE_CONFIG = {
 } as const;
 
 export const DashboardAlertBanner: React.FC<DashboardAlertBannerProps> = ({
-  franchiseId, financialData, shiftsData, ridersData, onOpenAdvisor,
+  alertData, onOpenAdvisor,
 }) => {
-  const [alert, setAlert] = useState<DashboardAlert | null | 'loading'>(
-    financialData ? 'loading' : null
-  );
   const [dismissed, setDismissed] = useState(false);
 
-  useEffect(() => {
-    if (!financialData) return;
+  if (dismissed || alertData === null) return null;
 
-    const context: DashboardAlertContext = {
-      financial: financialData,
-      shifts: shiftsData ?? { totalThisWeek: 0, uncoveredSlots: 0, nextWeekCoverage: 100 },
-      riders: ridersData ?? { active: 0, inactive: 0 },
-    };
-
-    const cacheKey = `dashboard-alert-${franchiseId}-${financialData.month}`;
-    aiLimiter.execute(cacheKey, () => generateDashboardAlert(context)).then(setAlert);
-  }, [franchiseId, financialData, shiftsData, ridersData]);
-
-  if (dismissed || alert === null) return null;
-
-  if (alert === 'loading') {
+  if (alertData === 'loading') {
     return <div data-testid="alert-skeleton" className="mx-4 mb-4 h-16 rounded-xl bg-slate-100 animate-pulse" />;
   }
 
-  const { bg, border, icon: Icon, iconColor } = TYPE_CONFIG[alert.type];
+  const { bg, border, icon: Icon, iconColor } = TYPE_CONFIG[alertData.type];
 
   return (
     <div className={`mx-4 mb-4 flex items-start gap-3 rounded-xl border-l-4 p-4 ${bg} ${border}`}>
       <Icon className={`mt-0.5 h-5 w-5 shrink-0 ${iconColor}`} />
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-slate-800 text-sm">{alert.title}</p>
-        <p className="text-slate-600 text-sm mt-0.5">{alert.message}</p>
+        <p className="font-semibold text-slate-800 text-sm">{alertData.title}</p>
+        <p className="text-slate-600 text-sm mt-0.5">{alertData.message}</p>
       </div>
       <div className="flex items-center gap-2 shrink-0">
         {onOpenAdvisor && (
