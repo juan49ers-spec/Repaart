@@ -5,6 +5,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import { invoicePdfGenerator } from '../../../services/billing';
 import type { Invoice, IssuerSnapshot } from '../../../types/invoicing';
+import { formatCurrency } from '../../../utils/formatters';
 
 interface InvoicePreviewModalProps {
     invoice: Invoice | null;
@@ -351,15 +352,15 @@ export const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
                                                 <div className="space-y-2 text-sm">
                                                     <div className="flex justify-between">
                                                         <span className="text-slate-500">Subtotal</span>
-                                                        <span className="text-slate-900 dark:text-white">{invoice.subtotal?.toFixed(2)}€</span>
+                                                        <span className="text-slate-900 dark:text-white">{formatCurrency(invoice.subtotal || 0)}</span>
                                                     </div>
                                                     <div className="flex justify-between">
                                                         <span className="text-slate-500">IVA</span>
-                                                        <span className="text-slate-900 dark:text-white">{(invoice.total - invoice.subtotal)?.toFixed(2)}€</span>
+                                                        <span className="text-slate-900 dark:text-white">{formatCurrency((invoice.total || 0) - (invoice.subtotal || 0))}</span>
                                                     </div>
                                                     <div className="border-t border-slate-200 dark:border-slate-700 pt-2 flex justify-between font-semibold">
                                                         <span className="text-slate-900 dark:text-white">Total</span>
-                                                        <span className="text-indigo-600 dark:text-indigo-400">{invoice.total?.toFixed(2)}€</span>
+                                                        <span className="text-indigo-600 dark:text-indigo-400">{formatCurrency(invoice.total || 0)}</span>
                                                     </div>
                                                 </div>
                                             </div>

@@ -146,18 +146,18 @@ const WidgetLegendModal: React.FC<WidgetLegendModalProps> = ({ isOpen, onClose }
             intro: 'Ratio de Eficiencia Operativa (Unit Economics).',
             description: 'Coste estructural total dividido por horas productivas de servicio.',
             formula: '€/Hora = (Masa Salarial + Flota + Estructura) / Horas Totales',
-            detailedExplanation: 'En delivery, el tiempo es el "inventario" que caduca al instante. El Coste por Hora audita la saturación de tu estructura. Un coste alto (>18€) indica "Overstaffing" o ineficiencia en cuadrantes (pagar por horas sin pedidos). Un coste bajo (<14€) puede indicar riesgo operativo por saturación. La excelencia está en el equilibrio dinámico.',
+            detailedExplanation: 'En delivery, el tiempo es el "inventario" que caduca al instante. El Coste por Hora audita la saturación de tu estructura. Un coste alto (>20€) indica "Overstaffing" o ineficiencia en cuadrantes (pagar por horas sin pedidos). Un coste bajo (<15€) puede indicar riesgo operativo por saturación. La excelencia está en el equilibrio dinámico.',
             practicalExample: {
                 scenario: 'Coste/Hora dispara a 25€ (ROJO) un martes valle.',
                 result: 'Diagnóstico: Sobredimensionamiento de flota. Acción: Ajuste de turnos para eliminar horas improductivas.'
             },
             academicNote: 'El "Idle Time" (Tiempo Muerto) es el mayor destructor de EBITDA en delivery.',
             keyMetrics: [
-                { label: 'BENCHMARK', value: '15-16€', desc: 'Rango de excelencia sectorial.' },
+                { label: 'BENCHMARK', value: '17-18€', desc: 'Rango de excelencia sectorial.' },
                 { label: 'RATIO SALARIAL', value: '< 40%', desc: 'Tope máximo de peso nómina.' }
             ],
             strategicAdvice: [
-                'Si el coste > 18€, ejecuta una revisión inmediata de cuadrantes.',
+                'Si el coste > 20€, ejecuta una revisión inmediata de cuadrantes.',
                 'La optimización de 1€/hora impacta directamente al Bottom Line (+500€/mes).',
                 'Pre-visualiza el impacto marginal de cada contratación nueva.'
             ],
@@ -186,6 +186,8 @@ const WidgetLegendModal: React.FC<WidgetLegendModalProps> = ({ isOpen, onClose }
                 {/* Close Button - Compact */}
                 <button
                     onClick={onClose}
+                    title="Cerrar"
+                    aria-label="Cerrar"
                     className="absolute top-3 right-3 z-[110] p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-rose-100 dark:hover:bg-rose-900/40 text-slate-400 hover:text-rose-500 transition-colors"
                 >
                     <X className="w-4 h-4" />

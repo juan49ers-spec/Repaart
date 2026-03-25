@@ -17,8 +17,6 @@ import {
     Typography,
     Divider,
     message,
-    Row,
-    Col,
     Popconfirm
 } from 'antd';
 import {
@@ -35,6 +33,7 @@ import { useInvoicing } from '../../../hooks/useInvoicing';
 import { CreateRestaurantModal } from '../../invoicing/components/CreateRestaurantModal';
 import type { CreateInvoiceRequest, InvoiceLine, CustomerSnapshot } from '../../../types/invoicing';
 import type { LogisticsRate } from '../../../types/franchise';
+import { formatCurrency } from '../../../utils/formatters';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -84,6 +83,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
         };
 
         initializeData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [franchiseId]);
 
     // Cargar tarifas de la franquicia
@@ -431,16 +431,16 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm">
                                     <Text>Subtotal:</Text>
-                                    <Text strong>{totals.subtotal.toFixed(2)} €</Text>
+                                    <Text strong>{formatCurrency(totals.subtotal)}</Text>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <Text>IVA (21%):</Text>
-                                    <Text>{totals.totalTax.toFixed(2)} €</Text>
+                                    <Text>{formatCurrency(totals.totalTax)}</Text>
                                 </div>
                                 <Divider className="my-2" />
                                 <div className="flex justify-between">
                                     <Text strong className="text-lg">TOTAL:</Text>
-                                    <Text strong className="text-lg text-indigo-600">{totals.total.toFixed(2)} €</Text>
+                                    <Text strong className="text-lg text-indigo-600">{formatCurrency(totals.total)}</Text>
                                 </div>
                             </div>
                         </Card>
@@ -557,7 +557,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                                                                 }
                                                             }}
                                                             options={rates.map((rate, idx: number) => ({
-                                                                label: `${rate.name || `${rate.min}-${rate.max}km`} — ${Number(rate.price).toFixed(2)}€`,
+                                                                label: `${rate.name || `${rate.min}-${rate.max}km`} — ${formatCurrency(Number(rate.price))}`,
                                                                 value: idx.toString()
                                                             }))}
                                                         />
@@ -610,7 +610,7 @@ export const SimpleInvoiceCreator: React.FC<Props> = ({
                                                         <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-lg p-3 border border-indigo-100/50 dark:border-indigo-800/50 flex flex-col items-end justify-center h-[40px] mt-auto shadow-inner">
                                                             <Text type="secondary" className="text-[10px] font-bold uppercase tracking-wider text-indigo-500/80 dark:text-indigo-400/80 leading-none mb-1">Total Línea</Text>
                                                             <div className="text-lg font-black text-indigo-700 dark:text-indigo-300 leading-none">
-                                                                {line.total.toFixed(2)} €
+                                                                {formatCurrency(line.total)}
                                                             </div>
                                                         </div>
                                                     </div>

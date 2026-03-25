@@ -12,13 +12,16 @@ import type { Timestamp } from 'firebase/firestore';
 export enum InvoiceStatus {
     DRAFT = 'DRAFT',           // Editable, deletable
     ISSUED = 'ISSUED',         // Immutable, read-only, legal serial number generated
-    RECTIFIED = 'RECTIFIED'    // Annulled, linked to rectifying invoice
+    RECTIFIED = 'RECTIFIED',   // Annulled, linked to rectifying invoice
+    VOIDED = 'VOIDED',         // Voided/Cancelled without issuing rectification (only if unpaid)
+    DELETED = 'DELETED'        // Soft deleted draft
 }
 
 export enum PaymentStatus {
     PENDING = 'PENDING',       // No payments received
     PARTIAL = 'PARTIAL',       // Partial payments received
-    PAID = 'PAID'              // Fully paid
+    PAID = 'PAID',             // Fully paid
+    VOIDED = 'VOIDED'          // Invoice was voided/cancelled
 }
 
 export enum InvoiceType {
@@ -71,9 +74,14 @@ export interface Invoice {
     issuedAt?: Date | Timestamp;       // When transitioned to ISSUED
     rectifiedAt?: Date | Timestamp;    // When transitioned to RECTIFIED
     
-    // Rectification
+    // Rectification & Voiding
     originalInvoiceId?: string;        // For rectifying invoices
     rectifyingInvoiceIds?: string[];   // For original invoices
+    voidReason?: string;
+    voidedAt?: Date | Timestamp;
+    voidedBy?: string;
+    deletedAt?: Date | Timestamp;
+    deletedBy?: string;
     
     // Financial Data (Immutable after ISSUED)
     lines: InvoiceLine[];
@@ -162,7 +170,7 @@ export interface PaymentReceipt {
     // Payment Details
     amount: number;
     paymentDate: Date | Timestamp;
-    paymentMethod: 'TRANSFER' | 'CASH' | 'CARD' | 'DIRECT_DEBIT' | 'OTHER';
+    paymentMethod: 'TRANSFER' | 'CASH' | 'CARD' | 'DIRECT_DEBIT' | 'OTHER' | 'WALLET_CREDIT' | 'BIZUM' | 'CHECK';
     
     // Reference
     reference?: string;                // Bank transfer reference, receipt number, etc.
@@ -326,7 +334,7 @@ export interface RectifyInvoiceRequest {
 export interface AddPaymentRequest {
     invoiceId: string;
     amount: number;
-    paymentMethod: 'TRANSFER' | 'CASH' | 'CARD' | 'DIRECT_DEBIT' | 'OTHER';
+    paymentMethod: 'TRANSFER' | 'CASH' | 'CARD' | 'DIRECT_DEBIT' | 'OTHER' | 'WALLET_CREDIT' | 'BIZUM' | 'CHECK';
     paymentDate?: string;              // ISO date string
     reference?: string;
     notes?: string;
@@ -370,6 +378,7 @@ export type BillingError =
     | { type: 'MONTH_ALREADY_CLOSED'; period: string; franchiseId: string }
     | { type: 'INSUFFICIENT_LOGISTICS_DATA'; message: string }
     | { type: 'NETWORK_ERROR'; cause: Error }
+    | { type: 'INVOICE_ALREADY_VOIDED'; invoiceId: string }
     | { type: 'UNKNOWN_ERROR'; message: string; cause?: unknown };
 
 // =============================================================================

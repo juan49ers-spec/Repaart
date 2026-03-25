@@ -1,6 +1,6 @@
 import { Timestamp } from 'firebase/firestore';
 
-export type AdminInvoiceDocumentStatus = 'draft' | 'issued' | 'void';
+export type AdminInvoiceDocumentStatus = 'draft' | 'issued' | 'void' | 'deleted';
 export type AdminInvoicePaymentStatus = 'unpaid' | 'partially_paid' | 'paid' | 'overdue';
 export type Currency = 'EUR';
 export type AdminInvoiceItemCategory = 'royalty' | 'consulting' | 'marketing' | 'other';

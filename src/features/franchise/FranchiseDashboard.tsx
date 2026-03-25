@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { generateAdvisorOpener } from '../../lib/gemini';
+import { aiLimiter } from '../../lib/aiRateLimiter';
 import { useOutletContext } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useTaxCalculations } from '../../hooks/useTaxCalculations';
@@ -97,7 +98,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
                             date = new Date(inv.issueDate as unknown as string);
                         }
 
-                        return date.toISOString().slice(0, 7) === effectiveMonth && inv.status === 'ISSUED';
+                        return date.toISOString().slice(0, 7) === displayedMonth && (inv.status === 'ISSUED' || inv.status === 'RECTIFIED');
                     });
 
                     const total = filteredInvoices.reduce((sum: number, inv: Invoice) => sum + (inv.subtotal || 0), 0);
@@ -112,7 +113,7 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
             }
         };
         fetchInvoices();
-    }, [activeFranchiseId, effectiveMonth, getInvoices]);
+    }, [activeFranchiseId, displayedMonth, getInvoices]);
 
     const totalExpenses = (report?.variable.total || 0) + (report?.fixed.total || 0);
 
@@ -127,7 +128,8 @@ const FranchiseDashboard: React.FC<FranchiseDashboardProps> = ({ franchiseId: pr
             orders,
             month: displayedMonth,
         };
-        generateAdvisorOpener(financial)
+        const cacheKey = `advisor-opener-${activeFranchiseId}-${displayedMonth}`;
+        aiLimiter.execute(cacheKey, () => generateAdvisorOpener(financial))
             .then(opener => { if (opener) setAdvisorOpener(opener); })
             .catch(() => {});
     }, [report]); // eslint-disable-line react-hooks/exhaustive-deps

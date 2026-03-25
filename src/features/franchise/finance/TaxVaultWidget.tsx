@@ -229,7 +229,7 @@ const TaxVaultWidget: React.FC<TaxVaultWidgetProps> = ({ taxes, currentMonth, hi
                     <QuarterlyTaxModal
                         isOpen={isModalOpen}
                         onClose={() => setIsModalOpen(false)}
-                        currentMonth={targetMonthStr}
+                        currentMonth={showPaymentMode ? targetMonthStr : currentMonth}
                         historicalData={historicalData}
                         currentMonthTaxes={showPaymentMode ? undefined : { ivaAPagar: ivaPayable, irpfPago: irpfPayable }}
                         isPaymentMode={showPaymentMode}

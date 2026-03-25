@@ -74,7 +74,7 @@ const Section: React.FC<SectionProps> = ({ title, icon, highlight, children }) =
             </div>
         </div>
 
-        <div className={`grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-2 gap-y-2`}>
+        <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-2`}>
             {children}
         </div>
     </div>

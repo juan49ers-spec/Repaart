@@ -38,7 +38,8 @@ export {
   syncInvoiceToTaxVault,
   onInvoiceDeleted,
   cleanupDraftInvoices,
-  sendPaymentReminders
+  preAggregateBillingStats,
+  dunningProcess
 } from './billing';
 
 // Push Notifications

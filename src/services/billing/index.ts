@@ -13,6 +13,8 @@ export { invoiceEngine } from './invoiceEngine';
 export { logisticsBillingEngine } from './logisticsBillingEngine';
 export { accountsReceivable } from './accountsReceivable';
 export { taxVaultObserver, monthlyCloseWizard } from './taxVault';
+export { customerWallet } from './customerWallet';
+export type { CustomerWalletEntry, WalletMovement } from './customerWallet';
 
 // PDF Generation - Enhanced with Templates
 export { invoicePdfGenerator } from './pdfGenerator';

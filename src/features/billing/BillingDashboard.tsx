@@ -48,7 +48,7 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
                 const overdue = result.data.filter(inv => {
                     const issueDate = inv.issueDate && (inv.issueDate as Timestamp).toDate ? (inv.issueDate as Timestamp).toDate() : new Date(inv.issueDate as Date);
                     const daysSinceIssue = dayjs().diff(dayjs(issueDate), 'day');
-                    return inv.status === 'ISSUED' &&
+                    return (inv.status === 'ISSUED' || inv.status === 'RECTIFIED') &&
                         inv.paymentStatus !== 'PAID' &&
                         inv.remainingAmount > 0 &&
                         daysSinceIssue > 5;
@@ -114,7 +114,7 @@ export const BillingDashboard: React.FC<Props> = ({ franchiseId }) => {
                             Define los precios por kilómetro para el cálculo automático de facturas logísticas.
                         </p>
                     </div>
-                    <FranchiseRateConfigurator franchiseId={franchiseId} />
+                    <FranchiseRateConfigurator franchiseId={franchiseId} onClose={() => setActiveTab('customers')} />
                 </div>
             )
         },

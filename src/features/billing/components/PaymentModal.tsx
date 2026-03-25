@@ -24,6 +24,7 @@ import React, { useState, useEffect } from 'react';
 import { CreditCard, DollarSign, Save, AlertCircle, CheckCircle2, Calendar, Wallet, Hash, FileText } from 'lucide-react';
 import { Modal, Form, Input, InputNumber, Button, Select, DatePicker, Row, Col, message } from 'antd';
 import { billingController } from '../../../services/billing';
+import { customerWallet } from '../../../services/billing/customerWallet';
 import type { AddPaymentRequest, Invoice } from '../../../types/invoicing';
 import { formatCurrency } from '../../../utils/formatters';
 import { useAuth } from '../../../context/AuthContext';
@@ -53,6 +54,7 @@ export const PaymentModal: React.FC<Props> = ({
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [paymentAmount, setPaymentAmount] = useState(0);
+    const [availableCredit, setAvailableCredit] = useState(0);
 
     const remainingAmount = invoice.remainingAmount;
     const totalPaid = invoice.totalPaid;
@@ -63,14 +65,22 @@ export const PaymentModal: React.FC<Props> = ({
             form.resetFields();
             form.setFieldValue('amount', remainingAmount);
             setPaymentAmount(remainingAmount);
+            
+            // Check if customer has wallet credit
+            customerWallet.getBalance(invoice.franchiseId, invoice.customerId).then(res => {
+                if (res.success) {
+                    setAvailableCredit(res.data.creditBalance);
+                }
+            });
         }
-    }, [isOpen, form, remainingAmount]);
+    }, [isOpen, form, remainingAmount, invoice.franchiseId, invoice.customerId]);
 
     const paymentMethods: PaymentMethod[] = [
         { value: 'TRANSFER', label: 'Transferencia Bancaria' },
         { value: 'CASH', label: 'Efectivo' },
         { value: 'CARD', label: 'Tarjeta Crédito/Débito' },
         { value: 'BIZUM', label: 'Bizum' },
+        { value: 'WALLET_CREDIT', label: 'Saldo a favor del Cliente' },
         { value: 'CHECK', label: 'Cheque' },
         { value: 'OTHER', label: 'Otros' }
     ];
@@ -266,6 +276,37 @@ export const PaymentModal: React.FC<Props> = ({
                             Esta factura ya ha sido completamente saldada. No hay acciones pendientes.
                         </p>
                     </div>
+                </div>
+            )}
+
+            {availableCredit > 0 && remainingAmount > 0 && (
+                <div 
+                    className="mb-6 flex items-center justify-between p-3.5 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-500/15 transition-colors"
+                >
+                    <div className="flex items-center gap-3">
+                        <Wallet className="w-5 h-5 text-blue-500 shrink-0" />
+                        <div>
+                            <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-400">
+                                Saldo a favor disponible
+                            </h4>
+                            <p className="text-xs text-blue-700 dark:text-blue-500 mt-0.5 font-medium">
+                                El cliente tiene {formatCurrency(availableCredit)} en su billetera.
+                            </p>
+                        </div>
+                    </div>
+                    <Button 
+                        type="primary" 
+                        size="small" 
+                        className="bg-blue-600 hover:bg-blue-500"
+                        onClick={() => {
+                            const amountToUse = Math.min(availableCredit, remainingAmount);
+                            form.setFieldValue('paymentMethod', 'WALLET_CREDIT');
+                            form.setFieldValue('amount', amountToUse);
+                            setPaymentAmount(amountToUse);
+                        }}
+                    >
+                        Usar Saldo
+                    </Button>
                 </div>
             )}
 

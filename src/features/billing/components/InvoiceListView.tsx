@@ -35,6 +35,7 @@ import {
   X,
   ChevronDown,
   FileBarChart,
+  XCircle,
 } from 'lucide-react';
 import {
   Table, Tag, Space, Button, Tooltip, Modal, message, Popconfirm, Select, Col, Input, Row, DatePicker, Dropdown, Divider, Slider, Progress, Alert
@@ -45,7 +46,7 @@ import { InvoicePreviewModal } from './InvoicePreviewModal';
 import { EditInvoiceModal } from './EditInvoiceModal';
 import { PaymentModal } from './PaymentModal';
 import { RectificationModal } from './RectificationModal';
-
+import { VoidConfirmModal } from './VoidConfirmModal';
 
 interface Props {
   franchiseId: string;
@@ -67,6 +68,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [rectificationModalOpen, setRectificationModalOpen] = useState(false);
+  const [voidModalOpen, setVoidModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [issueConfirmModalOpen, setIssueConfirmModalOpen] = useState(false);
   const [invoiceToIssue, setInvoiceToIssue] = useState<Invoice | null>(null);
@@ -76,9 +78,6 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
   const [editInvoice, setEditInvoice] = useState<Invoice | null>(null);
   const [devMode, setDevMode] = useState(false);
   const [devModeModalOpen, setDevModeModalOpen] = useState(false);
-  const [deleteReasonModalOpen, setDeleteReasonModalOpen] = useState(false);
-  const [deleteReason, setDeleteReason] = useState('');
-  const [invoiceToDelete, setInvoiceToDelete] = useState<Invoice | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
   const [quickFilter, setQuickFilter] = useState<'all' | 'draft' | 'issued' | 'unpaid'>('all');
@@ -299,14 +298,14 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'r' || e.key === 'R') {
         // Only refresh if no major modals are open
-        if (!paymentModalOpen && !rectificationModalOpen && !devModeModalOpen && !deleteReasonModalOpen && !issueConfirmModalOpen) {
+        if (!paymentModalOpen && !rectificationModalOpen && !voidModalOpen && !devModeModalOpen && !issueConfirmModalOpen) {
           fetchInvoices();
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [fetchInvoices, paymentModalOpen, rectificationModalOpen, devModeModalOpen, deleteReasonModalOpen, issueConfirmModalOpen]);
+  }, [fetchInvoices, paymentModalOpen, rectificationModalOpen, voidModalOpen, devModeModalOpen, issueConfirmModalOpen]);
 
   // Apply filters
   const handleBulkDelete = async () => {
@@ -448,11 +447,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
     }
   };
 
-  // Open delete reason modal for development mode
-  const openDeleteReasonModal = (invoice: Invoice) => {
-    setInvoiceToDelete(invoice);
-    setDeleteReasonModalOpen(true);
-  };
+
 
   // Open edit modal for draft invoices
   const openEditModal = (invoice: Invoice) => {
@@ -462,36 +457,6 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
     }
     setEditInvoice(invoice);
     setEditModalOpen(true);
-  };
-
-  // Force delete any invoice (DANGEROUS - only for development)
-  const handleForceDelete = async () => {
-    if (!invoiceToDelete || !deleteReason || deleteReason.trim().length === 0) {
-      message.error('Debe proporcionar un motivo claro para eliminar la factura');
-      return;
-    }
-
-    try {
-      console.log('[InvoiceListView] Force delete requested for invoice:', invoiceToDelete.fullNumber);
-      console.log('[InvoiceListView] Delete reason:', deleteReason);
-
-      const result = await invoiceEngine.deleteInvoiceForced(invoiceToDelete.id, true, deleteReason);
-
-      if (result.success) {
-        message.warning(`⚠️ Factura ${invoiceToDelete.fullNumber} eliminada (modo desarrollo)`);
-        console.warn('[InvoiceListView] Invoice deleted with reason:', deleteReason);
-
-        setDeleteReasonModalOpen(false);
-        setInvoiceToDelete(null);
-        setDeleteReason('');
-        await fetchInvoices();
-        if (onRefresh) onRefresh();
-      } else {
-        message.error(`Error: ${result.error.type}`);
-      }
-    } catch (error: unknown) {
-      message.error(`Error al eliminar factura: ${error instanceof Error ? error.message : 'Error desconocido'}`);
-    }
   };
 
   // View PDF
@@ -647,7 +612,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
       sorter: (a: Invoice, b: Invoice) => a.total - b.total,
       render: (_: unknown, record: Invoice) => (
         <span className="text-[13px] font-semibold text-slate-900 dark:text-slate-100">
-          €{record.total.toFixed(2)}
+          {formatCurrency(record.total)}
         </span>
       )
     },
@@ -659,15 +624,18 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
       filters: [
         { text: 'Borrador', value: 'DRAFT' },
         { text: 'Emitida', value: 'ISSUED' },
-        { text: 'Rectificada', value: 'RECTIFIED' }
+        { text: 'Rectificada', value: 'RECTIFIED' },
+        { text: 'Anulada', value: 'VOIDED' }
       ],
       render: (status: InvoiceStatus) => {
-        const statusConfig = {
+        const statusConfig: Record<string, { bg: string; text: string; icon: React.ReactNode; label: string }> = {
           DRAFT: { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-600 dark:text-slate-300', icon: <Clock className="w-3 h-3" />, label: 'Borrador' },
           ISSUED: { bg: 'bg-emerald-50 dark:bg-emerald-900/30', text: 'text-emerald-600 dark:text-emerald-400', icon: <CheckCircle className="w-3 h-3" />, label: 'Emitida' },
-          RECTIFIED: { bg: 'bg-red-50 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400', icon: <AlertCircle className="w-3 h-3" />, label: 'Rectificada' }
+          RECTIFIED: { bg: 'bg-red-50 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400', icon: <AlertCircle className="w-3 h-3" />, label: 'Rectificada' },
+          VOIDED: { bg: 'bg-slate-100 dark:bg-slate-800/50', text: 'text-slate-500 dark:text-slate-400', icon: <XCircle className="w-3 h-3" />, label: 'Anulada' }
         };
-        const config = statusConfig[status];
+        const defaultStyle = { bg: 'bg-slate-100', text: 'text-slate-600', icon: <Clock className="w-3 h-3" />, label: status || '---' };
+        const config = statusConfig[status] || defaultStyle;
         return (
           <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ${config.bg} ${config.text}`}>
             {config.icon}
@@ -683,16 +651,19 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
       filters: [
         { text: 'Pendiente', value: 'PENDING' },
         { text: 'Parcial', value: 'PARTIAL' },
-        { text: 'Pagado/Cobrado', value: 'PAID' }
+        { text: 'Pagado/Cobrado', value: 'PAID' },
+        { text: 'Anulado', value: 'VOIDED' }
       ],
       render: (_: unknown, record: Invoice) => {
         const status = record.paymentStatus;
-        const config = {
+        const config: Record<string, { bg: string; text: string; label: string }> = {
           PENDING: { bg: 'bg-amber-50 dark:bg-amber-900/30', text: 'text-amber-600 dark:text-amber-400', label: 'Pendiente' },
           PARTIAL: { bg: 'bg-indigo-50 dark:bg-indigo-900/30', text: 'text-indigo-600 dark:text-indigo-400', label: 'Parcial' },
-          PAID: { bg: 'bg-emerald-50 dark:bg-emerald-900/30', text: 'text-emerald-600 dark:text-emerald-400', label: record.status === 'RECTIFIED' ? 'Devuelto' : 'Cobrado' }
+          PAID: { bg: 'bg-emerald-50 dark:bg-emerald-900/30', text: 'text-emerald-600 dark:text-emerald-400', label: record.status === 'RECTIFIED' ? 'Devuelto' : 'Cobrado' },
+          VOIDED: { bg: 'bg-slate-100 dark:bg-slate-800/50', text: 'text-slate-500 dark:text-slate-400', label: 'Anulado' }
         };
-        const c = config[status];
+        const defaultStyle = { bg: 'bg-slate-100', text: 'text-slate-600', label: status || '---' };
+        const c = config[status] || defaultStyle;
 
         return (
           <div className="flex flex-col items-start gap-1">
@@ -701,7 +672,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
             </div>
             {record.remainingAmount > 0 && (
               <span className="text-[10px] font-medium text-red-500 dark:text-red-400">
-                Faltan €{record.remainingAmount.toFixed(2)}
+                Faltan {formatCurrency(record.remainingAmount)}
               </span>
             )}
           </div>
@@ -769,7 +740,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
             </>
           )}
 
-          {record.status === 'ISSUED' && (
+          {(record.status === 'ISSUED' || record.status === 'RECTIFIED') && (
             <>
               {record.remainingAmount > 0 && (
                 <Tooltip title="Registrar Cobro">
@@ -789,16 +760,29 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
                 </Tooltip>
               )}
               
-              <Tooltip title="Eliminar factura emitida (ATENCIÓN: Causa un salto en la numeración)">
-                <Button
-                  size="small"
-                  danger
-                  type="text"
-                  icon={<Trash2 style={{ width: 14 }} />}
-                  onClick={(e) => { e.stopPropagation(); openDeleteReasonModal(record); }}
-                  className="text-xs text-[10px] h-6 px-1.5 hover:bg-red-50 dark:hover:bg-red-900/20"
-                />
-              </Tooltip>
+              {record.paymentStatus === 'PENDING' ? (
+                <Tooltip title="Anular factura (Baja Lógica sin rectificar)">
+                  <Button
+                    size="small"
+                    danger
+                    type="text"
+                    icon={<XCircle style={{ width: 14 }} />}
+                    onClick={(e) => { e.stopPropagation(); setSelectedInvoice(record); setVoidModalOpen(true); }}
+                    className="text-[10px] h-6 px-1.5 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  />
+                </Tooltip>
+              ) : (
+                <Tooltip title="Emitir Factura Rectificativa (Abono)">
+                  <Button
+                    size="small"
+                    danger
+                    type="text"
+                    icon={<FileText style={{ width: 14 }} />}
+                    onClick={(e) => { e.stopPropagation(); setSelectedInvoice(record); setRectificationModalOpen(true); }}
+                    className="text-[10px] h-6 px-1.5 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                  />
+                </Tooltip>
+              )}
 
               <Dropdown
                 menu={{ items: getExportMenuItems(record) }}
@@ -838,16 +822,18 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
                 </Tooltip>
               )}
               
-              <Tooltip title="Eliminar factura rectificada (ATENCIÓN: Causa un salto en la numeración)">
-                <Button
-                  size="small"
-                  danger
-                  type="text"
-                  icon={<Trash2 style={{ width: 14 }} />}
-                  onClick={(e) => { e.stopPropagation(); openDeleteReasonModal(record); }}
-                  className="text-xs text-[10px] h-6 px-1.5 hover:bg-red-50 dark:hover:bg-red-900/20"
-                />
-              </Tooltip>
+              {record.paymentStatus === 'PENDING' && (
+                <Tooltip title="Anular factura rectificativa (Baja Lógica)">
+                  <Button
+                    size="small"
+                    danger
+                    type="text"
+                    icon={<XCircle style={{ width: 14 }} />}
+                    onClick={(e) => { e.stopPropagation(); setSelectedInvoice(record); setVoidModalOpen(true); }}
+                    className="text-[10px] h-6 px-1.5 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  />
+                </Tooltip>
+              )}
 
               <Dropdown
                 menu={{ items: getExportMenuItems(record) }}
@@ -998,6 +984,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
             <Select.Option value="DRAFT">📝 Borradores</Select.Option>
             <Select.Option value="ISSUED">✅ Emitidas</Select.Option>
             <Select.Option value="RECTIFIED">❌ Rectificadas</Select.Option>
+            <Select.Option value="VOIDED">🗑️ Anuladas</Select.Option>
           </Select>
         </Col>
         <Col xs={12} sm={6} md={3}>
@@ -1170,6 +1157,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
         rowClassName={(record) => {
           let classes = '';
           if (record.status === 'DRAFT') classes += 'bg-blue-50/50 ';
+          if (record.status === 'VOIDED') classes += 'opacity-40 grayscale line-through ';
           if (record.paymentStatus === 'PAID') classes += 'opacity-60 grayscale-[0.3] ';
           return classes;
         }}
@@ -1305,7 +1293,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
                       Ver PDF
                     </Button>
                   )}
-                  {record.status === 'ISSUED' && record.remainingAmount > 0 && (
+                  {(record.status === 'ISSUED' || record.status === 'RECTIFIED') && record.remainingAmount > 0 && (
                     <Button
                       size="small"
                       type="primary"
@@ -1448,6 +1436,24 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
         />
       )}
 
+      {/* Void Confirm Modal */}
+      {selectedInvoice && (
+        <VoidConfirmModal
+          isOpen={voidModalOpen}
+          onClose={() => {
+            setVoidModalOpen(false);
+            setSelectedInvoice(null);
+          }}
+          onSuccess={() => {
+            setVoidModalOpen(false);
+            setSelectedInvoice(null);
+            fetchInvoices();
+            if (onRefresh) onRefresh();
+          }}
+          invoice={selectedInvoice}
+        />
+      )}
+
       {/* Modal de Confirmación para Emitir Factura */}
       <Modal
         title={
@@ -1537,7 +1543,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
                 {invoiceToIssue.lines?.map((line, idx) => (
                   <div key={idx} className="flex justify-between text-sm">
                     <span className="text-slate-600">{line.description}</span>
-                    <span className="font-medium">{line.quantity} x {line.unitPrice.toFixed(2)}€</span>
+                    <span className="font-medium">{line.quantity} x {formatCurrency(line.unitPrice)}</span>
                   </div>
                 ))}
               </div>
@@ -1546,7 +1552,7 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
 
               <div className="flex justify-between items-center">
                 <span className="text-lg font-bold text-slate-900">TOTAL:</span>
-                <span className="text-2xl font-bold text-emerald-600">{invoiceToIssue.total.toFixed(2)}€</span>
+                <span className="text-2xl font-bold text-emerald-600">{formatCurrency(invoiceToIssue.total)}</span>
               </div>
             </div>
           </div>
@@ -1620,91 +1626,6 @@ export const InvoiceListView: React.FC<Props> = ({ franchiseId, refreshTrigger, 
             </p>
           </div>
         </div>
-      </Modal>
-
-      {/* Delete Reason Modal */}
-      <Modal
-        title={
-          <div className="flex items-center gap-2">
-            <AlertCircle className="w-6 h-6 text-orange-600" />
-            <span className="text-orange-600 font-bold">🗑️ Motivo de Eliminación</span>
-          </div>
-        }
-        open={deleteReasonModalOpen}
-        onCancel={() => {
-          setDeleteReasonModalOpen(false);
-          setInvoiceToDelete(null);
-          setDeleteReason('');
-        }}
-        width={600}
-        footer={[
-          <Button
-            key="cancel"
-            onClick={() => {
-              setDeleteReasonModalOpen(false);
-              setInvoiceToDelete(null);
-              setDeleteReason('');
-            }}
-          >
-            Cancelar
-          </Button>,
-          <Button
-            key="delete"
-            type="primary"
-            danger
-            onClick={handleForceDelete}
-            disabled={!deleteReason || deleteReason.trim().length < 10}
-          >
-            🗑️ Eliminar Factura
-          </Button>
-        ]}
-      >
-        {invoiceToDelete && (
-          <div className="space-y-4">
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-              <p className="font-bold text-orange-800 mb-2">⚠️ Vas a eliminar:</p>
-              <div className="text-sm text-orange-700 space-y-1">
-                <p><strong>Número:</strong> {invoiceToDelete.fullNumber}</p>
-                <p><strong>Cliente:</strong> {invoiceToDelete.customerSnapshot.fiscalName}</p>
-                <p><strong>Importe:</strong> €{invoiceToDelete.total.toFixed(2)}</p>
-                <p><strong>Estado:</strong> {invoiceToDelete.status}</p>
-              </div>
-              {(invoiceToDelete.status === 'ISSUED' || invoiceToDelete.status === 'RECTIFIED') && (
-                <div className="mt-4 bg-red-100 p-3 rounded-md text-red-800 font-bold border border-red-300 text-xs shadow-sm">
-                  ❗ ¡ATENCIÓN! Estás eliminando una factura {invoiceToDelete.status === 'ISSUED' ? 'emitida' : 'rectificativa'}.
-                  Esto provocará un SALTO en la numeración correlativa.
-                  Hacer esto puede traerte problemas fiscales. Asegúrate de justificar este salto o reemitir otra factura para rellenar este hueco de forma legal.
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="block font-semibold text-slate-800 mb-2">
-                📝 Motivo de eliminación <span className="text-red-600">*</span>
-              </label>
-              <Input.TextArea
-                rows={4}
-                placeholder="Explica CLARAMENTE por qué necesitas eliminar esta factura. Mínimo 10 caracteres.
-
-Ejemplos válidos:
-- Factura de prueba creada por error al validar el flujo de facturación
-- Datos de cliente incorrectos en factura de desarrollo XYZ
-- Factura duplicada generada durante pruebas de integración"
-                value={deleteReason}
-                onChange={(e) => setDeleteReason(e.target.value)}
-                maxLength={500}
-                showCount
-              />
-            </div>
-
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-xs text-red-700">
-                <strong>Recuerda:</strong> Sin un motivo claro y detallado, no podrás eliminar la factura.
-                Esta acción es irreversible y quedará registrada.
-              </p>
-            </div>
-          </div>
-        )}
       </Modal>
 
       {/* Invoice Preview Modal */}

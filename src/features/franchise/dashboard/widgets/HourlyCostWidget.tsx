@@ -24,8 +24,8 @@ const HourlyCostWidget: FC<HourlyCostWidgetProps> = ({
     const laborPercentage = totalCost > 0 ? (laborCost / totalCost) * 100 : 0;
     const otherPercentage = totalCost > 0 ? (otherCosts / totalCost) * 100 : 0;
 
-    const INDUSTRY_BENCHMARK_MIN = 15;
-    const INDUSTRY_BENCHMARK_MAX = 16;
+    const INDUSTRY_BENCHMARK_MIN = 17;
+    const INDUSTRY_BENCHMARK_MAX = 18;
 
     const isUnderBenchmark = costPerHour < INDUSTRY_BENCHMARK_MIN;
     const isOverBenchmark = costPerHour > INDUSTRY_BENCHMARK_MAX;

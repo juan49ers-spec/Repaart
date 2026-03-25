@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Sparkles, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, BrainCircuit } from 'lucide-react';
 import { analyzeFinancialMonthlyReport } from '../../../lib/gemini';
+import { aiLimiter } from '../../../lib/aiRateLimiter';
 import { SimpleFinanceData } from '../finance/types';
 
 interface AIInsightCardProps {
@@ -22,7 +23,8 @@ export const AIInsightCard: React.FC<AIInsightCardProps> = ({ data }) => {
     const handleAnalyze = async () => {
         setLoading(true);
         try {
-            const result = await analyzeFinancialMonthlyReport(data);
+            const cacheKey = `ai-insight-${data.revenue}-${data.totalExpenses}-${data.orders}`;
+            const result = await aiLimiter.execute(cacheKey, () => analyzeFinancialMonthlyReport(data));
             setAnalysis(result);
         } catch (error) {
             console.error("AI Analysis failed", error);

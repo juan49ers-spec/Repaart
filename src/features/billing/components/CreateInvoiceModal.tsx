@@ -17,6 +17,7 @@ import { Save, Plus, Trash2, FileText, Calculator } from 'lucide-react';
 import { Modal, Form, Select, Input, InputNumber, Button, DatePicker, Table, Card, Row, Col, Alert, message } from 'antd';
 import { billingController } from '../../../services/billing';
 import type { CreateInvoiceRequest } from '../../../types/invoicing';
+import { formatCurrency } from '../../../utils/formatters';
 
 interface Props {
     isOpen: boolean;
@@ -256,7 +257,7 @@ export const CreateInvoiceModal: React.FC<Props> = ({
             key: 'total',
             width: '12%',
             render: (value: number) => (
-                <span>€{value.toFixed(2)}</span>
+                <span>{formatCurrency(value)}</span>
             )
         },
         {
@@ -433,19 +434,19 @@ export const CreateInvoiceModal: React.FC<Props> = ({
                         <Col xs={24} md={8}>
                             <div className="flex justify-between">
                                 <span className="text-gray-600">Subtotal:</span>
-                                <span className="font-semibold">€{totals.subtotal.toFixed(2)}</span>
+                                <span className="font-semibold">{formatCurrency(totals.subtotal)}</span>
                             </div>
                         </Col>
                         <Col xs={24} md={8}>
                             <div className="flex justify-between">
                                 <span className="text-gray-600">IVA:</span>
-                                <span className="font-semibold">€{totals.totalTax.toFixed(2)}</span>
+                                <span className="font-semibold">{formatCurrency(totals.totalTax)}</span>
                             </div>
                         </Col>
                         <Col xs={24} md={8}>
                             <div className="flex justify-between text-lg">
                                 <span className="font-semibold">TOTAL:</span>
-                                <span className="font-bold text-blue-600">€{totals.total.toFixed(2)}</span>
+                                <span className="font-bold text-blue-600">{formatCurrency(totals.total)}</span>
                             </div>
                         </Col>
                     </Row>

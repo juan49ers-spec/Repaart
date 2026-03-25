@@ -380,7 +380,7 @@ export const InvoicingDashboard: React.FC<{ showHeader?: boolean }> = ({ showHea
                             </button>
                         </div>
                         <div className="flex-1 overflow-y-auto p-6">
-                            <FranchiseRateConfigurator franchiseId={profileId} />
+                            <FranchiseRateConfigurator franchiseId={profileId} onClose={() => setShowRateConfig(false)} />
                         </div>
                     </div>
                 </div>

@@ -29,7 +29,7 @@ export const useContractAI = () => {
     const suggestClause = async (prompt: string, currentContract: string) => {
         setLoading(true);
         try {
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
             const fullPrompt = `
                 Actúa como un experto legal en logística y la "Ley Rider" en España.
@@ -61,7 +61,7 @@ export const useContractAI = () => {
     const reviewContract = async (currentContract: string): Promise<ComplianceReport> => {
         setLoading(true);
         try {
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
             const fullPrompt = `
                 Actúa como un experto legal especializado en la "Ley Rider" española (Ley 12/2021) y normativa laboral de riders.

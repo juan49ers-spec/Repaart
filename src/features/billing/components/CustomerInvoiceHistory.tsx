@@ -58,7 +58,9 @@ const getStatusTag = (status: InvoiceStatus) => {
     const config: Record<InvoiceStatus, { color: string; text: string }> = {
         [InvStatus.DRAFT]: { color: 'default', text: 'Borrador' },
         [InvStatus.ISSUED]: { color: 'blue', text: 'Emitida' },
-        [InvStatus.RECTIFIED]: { color: 'red', text: 'Rectificada' }
+        [InvStatus.RECTIFIED]: { color: 'red', text: 'Rectificada' },
+        [InvStatus.VOIDED]: { color: 'default', text: 'Anulada' },
+        [InvStatus.DELETED]: { color: 'red', text: 'Eliminada' }
     };
     const { color, text } = config[status] || { color: 'default', text: status };
     return <Tag color={color}>{text}</Tag>;
@@ -68,7 +70,8 @@ const getPaymentTag = (status: PaymentStatus) => {
     const config: Record<PaymentStatus, { color: string; text: string }> = {
         [PayStatus.PENDING]: { color: 'orange', text: 'Pendiente' },
         [PayStatus.PARTIAL]: { color: 'gold', text: 'Parcial' },
-        [PayStatus.PAID]: { color: 'green', text: 'Pagada' }
+        [PayStatus.PAID]: { color: 'green', text: 'Pagada' },
+        [PayStatus.VOIDED]: { color: 'default', text: 'Anulada' }
     };
     const { color, text } = config[status] || { color: 'default', text: status };
     return <Tag color={color}>{text}</Tag>;

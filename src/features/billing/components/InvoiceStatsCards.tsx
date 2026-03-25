@@ -17,9 +17,7 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, DollarSign, Clock, AlertCircle, CheckCircle } from 'lucide-react';
 import { Card, Row, Col, Statistic } from 'antd';
-import { invoiceEngine } from '../../../services/billing';
-import { Timestamp } from 'firebase/firestore';
-import dayjs from 'dayjs';
+import { formatStatistic } from '../../../utils/formatters';
 
 interface Props {
     franchiseId: string;
@@ -46,21 +44,19 @@ export const InvoiceStatsCards: React.FC<Props> = ({ franchiseId, refreshTrigger
         try {
             setLoading(true);
 
-            const invoicesResult = await invoiceEngine.getInvoicesByFranchise(franchiseId);
+            // Fetch the pre-aggregated billing document (O(1) reading!)
+            const { db } = await import('../../../lib/firebase');
+            const { doc, getDoc } = await import('firebase/firestore');
 
-            if (invoicesResult.success) {
-                const invoices = invoicesResult.data;
+            const statsRef = doc(db, 'billing_stats', franchiseId);
+            const statsSnap = await getDoc(statsRef);
 
-                const issuedInvoices = invoices.filter(inv => inv.status === 'ISSUED');
-                const totalInvoiced = issuedInvoices.reduce((sum, inv) => sum + inv.total, 0);
-                const pendingPayments = issuedInvoices.reduce((sum, inv) => sum + inv.remainingAmount, 0);
-                const paidInvoices = issuedInvoices.filter(inv => inv.paymentStatus === 'PAID').length;
-                const overdueInvoices = issuedInvoices.filter(inv => {
-                    const issueDate = inv.issueDate && (inv.issueDate as Timestamp).toDate ? (inv.issueDate as Timestamp).toDate() : new Date(inv.issueDate as Date);
-                    const daysSinceIssue = dayjs().diff(dayjs(issueDate), 'day');
-                    return inv.paymentStatus !== 'PAID' && daysSinceIssue > 5;
-                }).length;
-
+            if (statsSnap.exists()) {
+                const data = statsSnap.data();
+                const totalInvoiced = data.totalInvoiced || 0;
+                const outstandingRaw = data.totalOutstanding || 0;
+                const pendingPayments = outstandingRaw > 0 ? outstandingRaw : 0;
+                
                 const collectionRate = totalInvoiced > 0
                     ? ((totalInvoiced - pendingPayments) / totalInvoiced) * 100
                     : 100;
@@ -68,14 +64,23 @@ export const InvoiceStatsCards: React.FC<Props> = ({ franchiseId, refreshTrigger
                 setStats({
                     totalInvoiced,
                     pendingPayments,
-                    paidInvoices,
-                    overdueInvoices,
+                    paidInvoices: data.paidInvoicesCount || 0,
+                    overdueInvoices: data.overdueInvoicesCount || 0,
                     collectionRate,
-                    averagePaymentDays: 0 // TODO: Calculate from payment receipts
+                    averagePaymentDays: data.averagePaymentDays || 0 
+                });
+            } else {
+                setStats({
+                    totalInvoiced: 0,
+                    pendingPayments: 0,
+                    paidInvoices: 0,
+                    overdueInvoices: 0,
+                    collectionRate: 100,
+                    averagePaymentDays: 0
                 });
             }
         } catch (error) {
-            console.error('Error fetching stats:', error);
+            console.error('[InvoiceStatsCards] Error fetching stats:', error);
         } finally {
             setLoading(false);
         }
@@ -93,7 +98,7 @@ export const InvoiceStatsCards: React.FC<Props> = ({ franchiseId, refreshTrigger
                             </span>
                         }
                         value={stats.totalInvoiced}
-                        precision={2}
+                        formatter={formatStatistic}
                         prefix="€"
                         styles={{ content: { color: '#1890ff' } }}
                         loading={loading}
@@ -111,7 +116,7 @@ export const InvoiceStatsCards: React.FC<Props> = ({ franchiseId, refreshTrigger
                             </span>
                         }
                         value={stats.pendingPayments}
-                        precision={2}
+                        formatter={formatStatistic}
                         prefix="€"
                         styles={{
                             content: { color: stats.pendingPayments > 0 ? '#faad14' : '#52c41a' }

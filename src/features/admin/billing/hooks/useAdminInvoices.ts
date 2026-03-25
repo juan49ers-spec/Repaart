@@ -20,7 +20,7 @@ export const useAdminInvoices = () => {
         const data = snapshot.docs.map((doc) => {
           const raw = doc.data();
           return { ...raw, id: doc.id } as AdminInvoice;
-        });
+        }).filter(inv => inv.documentStatus !== 'deleted');
         setInvoices(data);
         setLoading(false);
         setError(null);

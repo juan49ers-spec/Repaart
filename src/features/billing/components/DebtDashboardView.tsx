@@ -18,7 +18,7 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Clock, Mail, Download, Filter, DollarSign, CheckCircle } from 'lucide-react';
 import { Card, Table, Row, Col, Button, Space, Select, message, Tooltip, Progress, Tag } from 'antd';
-import { accountsReceivable } from '../../../services/billing';
+import { accountsReceivable, customerWallet } from '../../../services/billing';
 import type { DebtDashboard, CustomerDebt, InvoiceDebt } from '../../../types/invoicing';
 import { formatCurrency } from '../../../utils/formatters';
 
@@ -39,6 +39,7 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
     const [loading, setLoading] = useState(false);
     const [debtData, setDebtData] = useState<DebtDashboard | null>(null);
     const [agingFilter, setAgingFilter] = useState<string>('ALL');
+    const [creditMap, setCreditMap] = useState<Map<string, number>>(new Map());
 
     const HealthSemaphore = () => {
         if (!debtData) return null;
@@ -75,12 +76,17 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
         try {
             setLoading(true);
 
-            const result = await accountsReceivable.generateDebtDashboard(franchiseId);
+            const [debtResult, credits] = await Promise.all([
+                accountsReceivable.generateDebtDashboard(franchiseId),
+                customerWallet.getCreditMap(franchiseId)
+            ]);
 
-            if (result.success) {
-                setDebtData(result.data);
+            setCreditMap(credits);
+
+            if (debtResult.success) {
+                setDebtData(debtResult.data);
             } else {
-                message.error(`Error: ${result.error.type}`);
+                message.error(`Error: ${debtResult.error.type}`);
             }
         } catch (error: unknown) {
             const err = error as Error;
@@ -107,7 +113,14 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
                         <div className={`w-1.5 h-1.5 rounded-full ${statusColor}`} />
                         <div>
                             <div className="font-semibold text-[13px] leading-tight">{name}</div>
-                            <div className="text-[10px] text-gray-400">{record.invoices.length} facturas</div>
+                            <div className="text-[10px] text-gray-400">
+                            {record.invoices.length} facturas
+                            {(creditMap.get(record.customerId) ?? 0) > 0 && (
+                                <span className="ml-1 text-indigo-500 font-semibold">
+                                    · Crédito: {formatCurrency(creditMap.get(record.customerId)!)}
+                                </span>
+                            )}
+                        </div>
                         </div>
                     </div>
                 );
@@ -323,6 +336,26 @@ export const DebtDashboardView: React.FC<Props> = ({ franchiseId, refreshTrigger
                             </div>
                         </div>
                     </Col>
+
+                    {/* CRÉDITOS A FAVOR CARD */}
+                    {Array.from(creditMap.values()).reduce((s, v) => s + v, 0) > 0 && (
+                        <Col xs={24} md={8}>
+                            <div className="rounded-lg bg-white dark:bg-slate-900 p-3 mb-0 shadow-sm border border-indigo-200 dark:border-indigo-800">
+                                <div className="flex items-center gap-1.5 mb-1.5">
+                                    <DollarSign className="w-3.5 h-3.5 text-indigo-500" />
+                                    <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
+                                        Créditos a Favor
+                                    </span>
+                                </div>
+                                <div className="text-xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight">
+                                    {formatCurrency(Array.from(creditMap.values()).reduce((s, v) => s + v, 0))}
+                                </div>
+                                <div className="mt-1 flex items-center gap-1 text-[10px] text-indigo-400 font-medium">
+                                    Saldo disponible de clientes
+                                </div>
+                            </div>
+                        </Col>
+                    )}
 
                     {/* CORRIENTE CARD */}
                     <Col xs={24} md={8}>

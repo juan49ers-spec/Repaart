@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { TrendingUp, AlertTriangle, AlertCircle, Lightbulb, X, Bot } from 'lucide-react';
 import { generateDashboardAlert, DashboardAlert, DashboardAlertContext } from '../../../../lib/gemini';
+import { aiLimiter } from '../../../../lib/aiRateLimiter';
 
 interface DashboardAlertBannerProps {
   franchiseId: string;
@@ -18,7 +19,7 @@ const TYPE_CONFIG = {
 } as const;
 
 export const DashboardAlertBanner: React.FC<DashboardAlertBannerProps> = ({
-  financialData, shiftsData, ridersData, onOpenAdvisor,
+  franchiseId, financialData, shiftsData, ridersData, onOpenAdvisor,
 }) => {
   const [alert, setAlert] = useState<DashboardAlert | null | 'loading'>(
     financialData ? 'loading' : null
@@ -34,8 +35,9 @@ export const DashboardAlertBanner: React.FC<DashboardAlertBannerProps> = ({
       riders: ridersData ?? { active: 0, inactive: 0 },
     };
 
-    generateDashboardAlert(context).then(setAlert);
-  }, [financialData, shiftsData, ridersData]);
+    const cacheKey = `dashboard-alert-${franchiseId}-${financialData.month}`;
+    aiLimiter.execute(cacheKey, () => generateDashboardAlert(context)).then(setAlert);
+  }, [franchiseId, financialData, shiftsData, ridersData]);
 
   if (dismissed || alert === null) return null;
 

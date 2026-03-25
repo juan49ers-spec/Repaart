@@ -102,7 +102,7 @@ export const CustomersManager: React.FC<Props> = ({ franchiseId }) => {
                     let previousMonthInvoiced = 0;
 
                     if (invoicesResult.success) {
-                        const issuedInvoices = invoicesResult.data.filter(inv => inv.status !== 'RECTIFIED');
+                        const issuedInvoices = invoicesResult.data.filter(inv => inv.status === 'ISSUED' || inv.status === 'RECTIFIED');
                         for (const inv of issuedInvoices) {
                             let issueDate: Date;
 

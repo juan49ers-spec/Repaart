@@ -6,6 +6,13 @@ vi.mock('../../../../../lib/gemini', () => ({
   generateDashboardAlert: vi.fn(),
 }));
 
+// Rate limiter transparente: ejecuta el callback sin delay ni caché
+vi.mock('../../../../../lib/aiRateLimiter', () => ({
+  aiLimiter: {
+    execute: (_key: string, fn: () => Promise<unknown>) => fn(),
+  },
+}));
+
 vi.mock('lucide-react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('lucide-react')>();
   return {

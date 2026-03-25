@@ -4,7 +4,6 @@ import {
   doc, 
   setDoc, 
   updateDoc, 
-  deleteDoc,
   getDoc,
   serverTimestamp, 
   runTransaction,
@@ -261,8 +260,17 @@ export const adminInvoicesService = {
         return err(new Error('Solo se pueden eliminar borradores. Las facturas emitidas deben anularse.'));
       }
 
-      await deleteDoc(invoiceRef);
-      console.info(`[Billing] Draft ${invoiceId} deleted by ${adminUid}`);
+      const updates: Partial<AdminInvoice> = {
+        documentStatus: 'deleted',
+        updatedAt: serverTimestamp() as Timestamp,
+        updatedBy: adminUid,
+        voidedAt: serverTimestamp() as Timestamp,
+        voidedBy: adminUid,
+        voidReason: 'Borrador eliminado'
+      };
+
+      await updateDoc(invoiceRef, updates as Record<string, unknown>);
+      console.info(`[Billing] Draft ${invoiceId} soft-deleted by ${adminUid}`);
       return ok(undefined);
     } catch (error: unknown) {
       return err(new ServiceError('deleteDraftInvoice', { cause: error }));

@@ -190,73 +190,93 @@ export const generateRectificationPdf = functions
 export const syncInvoiceToTaxVault = functions
     .region('europe-west1')
     .firestore.document('invoices/{invoiceId}')
-    .onUpdate(async (change, context) => {
-        const newData = change.after.data();
-        const previousData = change.before.data();
+    .onWrite(async (change, context) => {
+        const newData = change.after.exists ? change.after.data() : null;
+        const previousData = change.before.exists ? change.before.data() : null;
 
-        // Only process when status changes to ISSUED
-        if (newData.status === 'ISSUED' && previousData.status === 'DRAFT') {
-            try {
-                // Extract period from issue date
-                const issueDate = newData.issueDate?.toDate
-                    ? newData.issueDate.toDate()
-                    : new Date(newData.issueDate._seconds * 1000);
+        if (!newData) return null; // Deletion is handled by onInvoiceDeleted
 
-                const period = `${issueDate.getFullYear()}-${String(issueDate.getMonth() + 1).padStart(2, '0')}`;
-                const taxVaultId = `${newData.franchiseId}_${period}`;
-                const taxVaultRef = db.collection('tax_vault').doc(taxVaultId);
+        const isNowValid = newData.status === 'ISSUED' || newData.status === 'RECTIFIED';
+        const wasValid = previousData && (previousData.status === 'ISSUED' || previousData.status === 'RECTIFIED');
 
-                await db.runTransaction(async (transaction) => {
-                    const taxVaultSnap = await transaction.get(taxVaultRef);
+        // Case 1: Transitioned from invalid to valid (e.g. DRAFT to ISSUED, or newly created as ISSUED/RECTIFIED)
+        const isNewlyAdded = isNowValid && !wasValid;
+        
+        // Case 2: Transitioned from valid to invalid (e.g. ISSUED to VOIDED)
+        const isNewlyRemoved = !isNowValid && wasValid;
 
-                    // Calculate tax totals
-                    let ivaRepercutido = 0;
-                    newData.taxBreakdown?.forEach((tax: any) => {
-                        ivaRepercutido += tax.taxAmount || 0;
-                    });
-
-                    if (taxVaultSnap.exists) {
-                        const taxVault = taxVaultSnap.data();
-
-                        // Check if month is locked
-                        if (taxVault?.isLocked) {
-                            console.warn(`Tax vault locked for period ${period}`);
-                            return;
-                        }
-
-                        // Update existing entry
-                        transaction.update(taxVaultRef, {
-                            ivaRepercutido: admin.firestore.FieldValue.increment(ivaRepercutido),
-                            invoiceIds: admin.firestore.FieldValue.arrayUnion(context.params.invoiceId),
-                            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                        });
-                    } else {
-                        // Create new entry
-                        transaction.set(taxVaultRef, {
-                            id: taxVaultId,
-                            franchiseId: newData.franchiseId,
-                            period,
-                            ivaRepercutido,
-                            ivaSoportado: 0,
-                            irpfReserva: 0,
-                            isLocked: false,
-                            invoiceIds: [context.params.invoiceId],
-                            expenseRecordIds: [],
-                            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-                        });
-                    }
-                });
-
-                console.log(`Invoice synced to tax vault: ${taxVaultId}`);
-                return null;
-            } catch (error) {
-                console.error('Error syncing invoice to tax vault:', error);
-                return null;
-            }
+        if (!isNewlyAdded && !isNewlyRemoved) {
+            return null; // Status didn't change relevance for Tax Vault
         }
 
-        return null;
+        try {
+            // Extract period from issue date
+            const targetData = isNewlyAdded ? newData : previousData;
+            if (!targetData) return null; // Should not happen
+
+            const issueDate = targetData.issueDate?.toDate
+                ? targetData.issueDate.toDate()
+                : new Date(targetData.issueDate._seconds * 1000);
+
+            const period = `${issueDate.getFullYear()}-${String(issueDate.getMonth() + 1).padStart(2, '0')}`;
+            const taxVaultId = `${targetData.franchiseId}_${period}`;
+            const taxVaultRef = db.collection('tax_vault').doc(taxVaultId);
+
+            await db.runTransaction(async (transaction) => {
+                const taxVaultSnap = await transaction.get(taxVaultRef);
+
+                // Calculate tax totals
+                let ivaRepercutido = 0;
+                targetData.taxBreakdown?.forEach((tax: any) => {
+                    ivaRepercutido += tax.taxAmount || 0;
+                });
+
+                if (isNewlyRemoved) {
+                    // Reverse the addition (subtract)
+                    ivaRepercutido = -ivaRepercutido;
+                }
+
+                if (taxVaultSnap.exists) {
+                    const taxVault = taxVaultSnap.data();
+
+                    // Check if month is locked
+                    if (taxVault?.isLocked) {
+                        console.warn(`Tax vault locked for period ${period}`);
+                        return;
+                    }
+
+                    // Update existing entry
+                    transaction.update(taxVaultRef, {
+                        ivaRepercutido: admin.firestore.FieldValue.increment(ivaRepercutido),
+                        invoiceIds: isNewlyAdded 
+                            ? admin.firestore.FieldValue.arrayUnion(context.params.invoiceId)
+                            : admin.firestore.FieldValue.arrayRemove(context.params.invoiceId),
+                        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                    });
+                } else if (isNewlyAdded) {
+                    // Create new entry
+                    transaction.set(taxVaultRef, {
+                        id: taxVaultId,
+                        franchiseId: newData.franchiseId,
+                        period,
+                        ivaRepercutido,
+                        ivaSoportado: 0,
+                        irpfReserva: 0,
+                        isLocked: false,
+                        invoiceIds: [context.params.invoiceId],
+                        expenseRecordIds: [],
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+            });
+
+            console.log(`Invoice ${isNewlyAdded ? 'added to' : 'removed from'} tax vault: ${taxVaultId}`);
+            return null;
+        } catch (error) {
+            console.error('Error syncing invoice to tax vault:', error);
+            return null;
+        }
     });
 
 /**
@@ -275,8 +295,8 @@ export const onInvoiceDeleted = functions
 
         console.log(`[onInvoiceDeleted] Processing deletion for invoice: ${invoice.fullNumber || invoiceId}`);
 
-        // 1. Cleanup Tax Vault if invoice was ISSUED
-        if (invoice.status === 'ISSUED') {
+        // 1. Cleanup Tax Vault if invoice was ISSUED or RECTIFIED
+        if (invoice.status === 'ISSUED' || invoice.status === 'RECTIFIED') {
             try {
                 // Determine period and taxVaultId
                 const issueDate = invoice.issueDate?.toDate
@@ -456,58 +476,262 @@ export const cleanupDraftInvoices = functions
     });
 
 /**
- * Send Payment Reminders
+ * Pre-aggregate Billing Stats
  * 
- * Scheduled function to send payment reminders for overdue invoices
- * Runs daily at 9 AM
+ * Trigger: Every write to invoices/{invoiceId}
+ * Recalculates billing_stats/{franchiseId} with totals, counts by status,
+ * aging buckets, and tax summaries. Eliminates expensive client-side O(n) calculations.
  * 
  * @region europe-west1
  */
-export const sendPaymentReminders = functions
+export const preAggregateBillingStats = functions
+    .region('europe-west1')
+    .firestore.document('invoices/{invoiceId}')
+    .onWrite(async (change, context) => {
+        const data = change.after.exists ? change.after.data() : change.before.data();
+        if (!data) return null;
+
+        const franchiseId = data.franchiseId;
+        if (!franchiseId) return null;
+
+        try {
+            // Fetch ALL invoices for this franchise (only active statuses)
+            const invoicesSnap = await db.collection('invoices')
+                .where('franchiseId', '==', franchiseId)
+                .get();
+
+            const now = new Date();
+            let totalIssued = 0;
+            let totalPaid = 0;
+            let totalPending = 0;
+            let totalOverdue = 0;
+            let countIssued = 0;
+            let countPaid = 0;
+            let countPending = 0;
+            let countOverdue = 0;
+            let countVoided = 0;
+            let countRectified = 0;
+            let ivaRepercutido = 0;
+            const aging = { current: 0, d30: 0, d60: 0, d90: 0, d90plus: 0 };
+
+            invoicesSnap.docs.forEach(docSnap => {
+                const inv = docSnap.data();
+                const status = inv.status;
+                const payStatus = inv.paymentStatus;
+                const total = inv.total || 0;
+
+                if (status === 'VOIDED' || status === 'DELETED') {
+                    if (status === 'VOIDED') countVoided++;
+                    return; // No cuentan en métricas financieras
+                }
+
+                if (status === 'RECTIFIED') {
+                    countRectified++;
+                    return; // La rectificativa ya está contada por separado
+                }
+
+                if (status === 'ISSUED' || status === 'PAID') {
+                    countIssued++;
+                    totalIssued += total;
+
+                    // Acumular IVA solo de emitidas/pagadas
+                    (inv.taxBreakdown || []).forEach((tax: { taxAmount?: number }) => {
+                        ivaRepercutido += tax.taxAmount || 0;
+                    });
+
+                    if (payStatus === 'PAID') {
+                        countPaid++;
+                        totalPaid += total;
+                    } else if (payStatus === 'PENDING' || payStatus === 'PARTIAL') {
+                        const remaining = total - (inv.paidAmount || 0);
+                        totalPending += remaining;
+                        countPending++;
+
+                        // Aging bucket
+                        const dueDate = inv.dueDate?.toDate
+                            ? inv.dueDate.toDate()
+                            : inv.dueDate?._seconds
+                                ? new Date(inv.dueDate._seconds * 1000)
+                                : null;
+
+                        if (dueDate && dueDate < now) {
+                            countOverdue++;
+                            totalOverdue += remaining;
+
+                            const daysOverdue = Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+                            if (daysOverdue <= 30) aging.d30 += remaining;
+                            else if (daysOverdue <= 60) aging.d60 += remaining;
+                            else if (daysOverdue <= 90) aging.d90 += remaining;
+                            else aging.d90plus += remaining;
+                        } else {
+                            aging.current += remaining;
+                        }
+                    }
+                }
+            });
+
+            // Write pre-aggregated stats
+            const statsRef = db.collection('billing_stats').doc(franchiseId);
+            await statsRef.set({
+                franchiseId,
+                totalIssued,
+                totalPaid,
+                totalPending,
+                totalOverdue,
+                countIssued,
+                countPaid,
+                countPending,
+                countOverdue,
+                countVoided,
+                countRectified,
+                ivaRepercutido,
+                aging,
+                lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+                triggerInvoiceId: context.params.invoiceId
+            }, { merge: true });
+
+            console.log(`[preAggregateBillingStats] Updated stats for franchise ${franchiseId}`);
+            return null;
+        } catch (error) {
+            console.error('[preAggregateBillingStats] Error:', error);
+            return null;
+        }
+    });
+
+/**
+ * Automated Dunning Process
+ * 
+ * Scheduled function that sends escalating notifications for overdue invoices:
+ * - 7 días vencida → Recordatorio amable
+ * - 15 días vencida → Aviso urgente
+ * - 30 días vencida → Último aviso + notificación admin
+ * - 60+ días vencida → Escalamiento a contabilidad
+ * 
+ * Runs daily at 9 AM Madrid time
+ * @region europe-west1
+ */
+export const dunningProcess = functions
     .region('europe-west1')
     .pubsub.schedule('0 9 * * *')
     .timeZone('Europe/Madrid')
-    .onRun(async (context) => {
-        const today = new Date();
-        const overdueThreshold = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+    .onRun(async () => {
+        const now = new Date();
 
         try {
+            // Facturas emitidas con pago pendiente o parcial
             const snapshot = await db.collection('invoices')
                 .where('status', '==', 'ISSUED')
                 .where('paymentStatus', 'in', ['PENDING', 'PARTIAL'])
-                .where('dueDate', '<', overdueThreshold)
                 .get();
 
-            console.log(`Found ${snapshot.size} overdue invoices`);
-
-            // Group by franchise
-            const invoicesByFranchise = new Map<string, any[]>();
-            snapshot.docs.forEach((doc) => {
-                const invoice = doc.data();
-                const franchiseId = invoice.franchiseId;
-
-                if (!invoicesByFranchise.has(franchiseId)) {
-                    invoicesByFranchise.set(franchiseId, []);
-                }
-
-                invoicesByFranchise.get(franchiseId)!.push({
-                    id: doc.id,
-                    ...invoice
-                });
-            });
-
-            // Send reminders for each franchise
-            for (const [franchiseId, invoices] of invoicesByFranchise.entries()) {
-                // TODO: Send email notification
-                console.log(`Payment reminder for franchise ${franchiseId}: ${invoices.length} overdue invoices`);
-
-                // Example: Send email using Firebase Admin SDK or external service
-                // await sendPaymentReminderEmail(franchiseId, invoices);
+            if (snapshot.empty) {
+                console.log('[dunningProcess] No overdue invoices found');
+                return null;
             }
 
+            const batch = db.batch();
+            let notificationsCreated = 0;
+
+            for (const docSnap of snapshot.docs) {
+                const invoice = docSnap.data();
+                const dueDate = invoice.dueDate?.toDate
+                    ? invoice.dueDate.toDate()
+                    : invoice.dueDate?._seconds
+                        ? new Date(invoice.dueDate._seconds * 1000)
+                        : null;
+
+                if (!dueDate || dueDate >= now) continue; // No vencida
+
+                const daysOverdue = Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+                const lastDunningLevel = invoice.dunningLevel || 0;
+
+                let dunningLevel = 0;
+                let severity: 'info' | 'warning' | 'error' | 'critical' = 'info';
+                let message = '';
+
+                if (daysOverdue >= 60 && lastDunningLevel < 4) {
+                    dunningLevel = 4;
+                    severity = 'critical';
+                    message = `ESCALAMIENTO: Factura ${invoice.fullNumber} vencida hace ${daysOverdue} días. Importe pendiente: ${(invoice.total - (invoice.paidAmount || 0)).toFixed(2)}€. Requiere intervención de contabilidad.`;
+                } else if (daysOverdue >= 30 && lastDunningLevel < 3) {
+                    dunningLevel = 3;
+                    severity = 'error';
+                    message = `ÚLTIMO AVISO: Factura ${invoice.fullNumber} vencida hace ${daysOverdue} días. Importe: ${(invoice.total - (invoice.paidAmount || 0)).toFixed(2)}€.`;
+                } else if (daysOverdue >= 15 && lastDunningLevel < 2) {
+                    dunningLevel = 2;
+                    severity = 'warning';
+                    message = `Aviso urgente: Factura ${invoice.fullNumber} vencida hace ${daysOverdue} días.`;
+                } else if (daysOverdue >= 7 && lastDunningLevel < 1) {
+                    dunningLevel = 1;
+                    severity = 'info';
+                    message = `Recordatorio: La factura ${invoice.fullNumber} está vencida desde hace ${daysOverdue} días.`;
+                } else {
+                    continue; // Ya se envió la notificación de este nivel
+                }
+
+                // Crear notificación para la franquicia
+                const notifRef = db.collection('notifications').doc();
+                batch.set(notifRef, {
+                    userId: invoice.franchiseId,
+                    type: 'DUNNING',
+                    severity,
+                    title: dunningLevel >= 3 ? '⚠️ Factura vencida - Acción requerida' : '📋 Recordatorio de pago',
+                    message,
+                    metadata: {
+                        invoiceId: docSnap.id,
+                        invoiceNumber: invoice.fullNumber,
+                        daysOverdue,
+                        dunningLevel,
+                        amountDue: invoice.total - (invoice.paidAmount || 0)
+                    },
+                    read: false,
+                    createdAt: admin.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Actualizar nivel de dunning en la factura
+                batch.update(docSnap.ref, {
+                    dunningLevel,
+                    lastDunningAt: admin.firestore.FieldValue.serverTimestamp()
+                });
+
+                notificationsCreated++;
+
+                // Si es nivel 3+, notificar también a admins
+                if (dunningLevel >= 3) {
+                    const adminsSnap = await db.collection('users')
+                        .where('role', '==', 'admin')
+                        .where('status', '==', 'active')
+                        .get();
+
+                    for (const adminDoc of adminsSnap.docs) {
+                        const adminNotifRef = db.collection('notifications').doc();
+                        batch.set(adminNotifRef, {
+                            userId: adminDoc.id,
+                            type: 'DUNNING_ADMIN',
+                            severity: 'error',
+                            title: `🚨 Factura impagada: ${invoice.fullNumber}`,
+                            message: `Franquicia ${invoice.franchiseId}: ${message}`,
+                            metadata: {
+                                invoiceId: docSnap.id,
+                                franchiseId: invoice.franchiseId,
+                                daysOverdue,
+                                dunningLevel
+                            },
+                            read: false,
+                            createdAt: admin.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                }
+            }
+
+            if (notificationsCreated > 0) {
+                await batch.commit();
+            }
+
+            console.log(`[dunningProcess] Created ${notificationsCreated} dunning notifications`);
             return null;
         } catch (error) {
-            console.error('Error sending payment reminders:', error);
+            console.error('[dunningProcess] Error:', error);
             return null;
         }
     });

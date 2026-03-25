@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import React, { useMemo } from 'react';
 import { financeService } from '../services/financeService';
-import { calculateMonthlyRevenue, calculateExpenses, analyzeFinancialHealth, DEFAULT_MONTH_DATA, type MonthlyData, type FinancialReport, type FinancialAnalysis, type TariffConfig } from '../lib/finance';
+import { calculateMonthlyRevenue, calculateExpenses, analyzeFinancialHealth, getDefaultMonthData, DEFAULT_MONTH_DATA, type MonthlyData, type FinancialReport, type FinancialAnalysis, type TariffConfig } from '../lib/finance';
 import type { TrendItem } from '../types/finance';
 import { useAuth } from '../context/AuthContext';
 import { logAction, AUDIT_ACTIONS } from '../lib/audit';
@@ -40,18 +40,20 @@ export const useFranchiseFinance = ({ franchiseId, month, tariffs }: FranchiseFi
 
     // 1. REAL-TIME DATA SYNC
     // Instead of useQuery, we use a subscription effect for the active month
-    const [rawData, setRawData] = React.useState<MonthlyData>(DEFAULT_MONTH_DATA);
+    const [rawData, setRawData] = React.useState<MonthlyData>(getDefaultMonthData());
     const [isLoading, setIsLoading] = React.useState(true);
     const [error, setError] = React.useState<Error | null>(null);
 
     React.useEffect(() => {
         if (!franchiseId || !month || !user || user.role === 'rider') {
-            setRawData(DEFAULT_MONTH_DATA);
+            setRawData(getDefaultMonthData());
             setIsLoading(false);
             return;
         }
 
         setIsLoading(true);
+        // We MUST clear the data immediately when month changes so old data doesn't leak
+        setRawData(getDefaultMonthData());
 
         const unsubscribe = financeService.subscribeToFinancialData(
             franchiseId,
@@ -59,9 +61,9 @@ export const useFranchiseFinance = ({ franchiseId, month, tariffs }: FranchiseFi
             (data) => {
                 // Filter out deleted records
                 if (data?.status === 'deleted') {
-                    setRawData(DEFAULT_MONTH_DATA);
+                    setRawData(getDefaultMonthData());
                 } else {
-                    setRawData(data || DEFAULT_MONTH_DATA);
+                    setRawData(data || getDefaultMonthData());
                 }
                 setIsLoading(false);
                 setError(null);

@@ -63,4 +63,21 @@ describe('Facturación <> Finanzas: Auditoría de Sincronización', () => {
 
         expect(lockedSummary.revenue).toBe(initialRevenue);
     });
+
+    it('debe reducir el revenue y el IVA al ANULAR (VOIDED) una factura ISSUED', () => {
+        // Al anular una factura incobrada, el impacto financiero es virtualmente idéntico
+        // a si la factura no existiera. Se resta lo sumado.
+        const summary = { ...mockState.financial_summaries['franchise_2026-03'] };
+        const vault = { ...mockState.tax_vault['franchise_2026-03'] };
+
+        // Simulando lógica de anulación
+        summary.revenue -= invoiceToDelete.subtotal;
+        summary.totalIncome -= invoiceToDelete.subtotal;
+        
+        const ivaToRemove = invoiceToDelete.taxBreakdown[0].taxAmount;
+        vault.ivaRepercutido -= ivaToRemove;
+        
+        expect(summary.revenue).toBe(450);
+        expect(vault.ivaRepercutido).toBe(88.73);
+    });
 });

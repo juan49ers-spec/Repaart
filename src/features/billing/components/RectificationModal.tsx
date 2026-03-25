@@ -65,10 +65,21 @@ export const RectificationModal: React.FC<Props> = ({
                 onSuccess();
                 onClose();
             } else {
-                message.error(`Error: ${result.error.type}`);
+                const errorMessages: Record<string, string> = {
+                    INVOICE_NOT_FOUND: 'Factura original no encontrada.',
+                    INVOICE_ALREADY_RECTIFIED: 'Esta factura ya ha sido rectificada.',
+                    INVALID_RECTIFICATION: 'La factura debe estar en estado EMITIDA para poder rectificarla.',
+                    UNKNOWN_ERROR: 'Error desconocido al procesar la rectificación.'
+                };
+                message.error(errorMessages[result.error.type] || `Error: ${result.error.type}`);
             }
         } catch (error: unknown) {
-            message.error(`Error al crear rectificativa: ${error instanceof Error ? error.message : String(error)}`);
+            const errorMessage = error instanceof Error
+                ? error.message
+                : (typeof error === 'object' && error !== null && 'message' in error)
+                    ? String((error as { message: unknown }).message)
+                    : 'Error inesperado al crear la rectificativa.';
+            message.error(errorMessage);
         } finally {
             setLoading(false);
         }

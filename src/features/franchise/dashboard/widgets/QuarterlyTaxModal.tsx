@@ -47,34 +47,57 @@ const QuarterlyTaxModal: React.FC<QuarterlyTaxModalProps> = ({ isOpen, onClose, 
             const dataMonth = anyData.month || anyData.id;
             const revenue = monthData.revenue || monthData.totalIncome || anyData.grossIncome || 0;
 
+            if (dataMonth === currentMonth && currentMonthTaxes) {
+                // Handled outside the loop to forcefully include live data
+                if (revenue > 0) {
+                    totalRevenue += revenue;
+                }
+                return;
+            }
+
             if (revenue > 0 && dataMonth) {
                 // Track which month index (0, 1, 2) this is within the quarter
                 const dDate = new Date(dataMonth + '-01');
                 const relIndex = dDate.getMonth() % 3;
                 includedMonths.add(relIndex);
 
-                const isCurrentMonth = dataMonth === currentMonth;
-                if (isCurrentMonth && currentMonthTaxes) {
-                    totalIVA += currentMonthTaxes.ivaAPagar;
-                    totalIRPF += currentMonthTaxes.irpfPago;
+                const storedIVA = anyData.breakdown?.['IVA a Pagar'] || anyData.breakdown?.['IVA'] || anyData.taxes?.ivaAPagar;
+                const storedIRPF = anyData.breakdown?.['IRPF'] || anyData.breakdown?.['IRPF Pago'] || anyData.taxes?.irpfPago;
+                
+                if (storedIVA !== undefined || storedIRPF !== undefined) {
+                    totalIVA += Number(storedIVA || 0);
+                    totalIRPF += Number(storedIRPF || 0);
                 } else {
-                    const storedIVA = anyData.breakdown?.['IVA a Pagar'] || anyData.breakdown?.['IVA'] || anyData.taxes?.ivaAPagar;
-                    const storedIRPF = anyData.breakdown?.['IRPF'] || anyData.breakdown?.['IRPF Pago'] || anyData.taxes?.irpfPago;
-                    if (storedIVA !== undefined || storedIRPF !== undefined) {
-                        totalIVA += Number(storedIVA || 0);
-                        totalIRPF += Number(storedIRPF || 0);
-                    } else {
-                        const orders = monthData.orders || 0;
-                        const report = calculateExpenses(revenue, orders, monthData);
-                        totalIVA += report.taxes.ivaAPagar;
-                        totalIRPF += report.taxes.irpfPago;
-                    }
+                    const orders = monthData.orders || 0;
+                    const report = calculateExpenses(revenue, orders, monthData);
+                    totalIVA += report.taxes.ivaAPagar;
+                    totalIRPF += report.taxes.irpfPago;
                 }
                 totalRevenue += revenue;
             }
         });
-        return { totalIVA, totalIRPF, totalRevenue, includedMonths };
-    }, [quarterData, currentMonth, currentMonthTaxes]);
+
+        // Forcefully add currentMonthTaxes if it belongs to this quarter
+        if (currentMonthTaxes && currentMonth) {
+            const cmDate = new Date(currentMonth + '-01');
+            const cYear = cmDate.getFullYear();
+            const cMonth = cmDate.getMonth();
+            const cQuarter = Math.floor(cMonth / 3);
+            
+            if (cYear === currentYear && cQuarter === quarterIndex) {
+                totalIVA += currentMonthTaxes.ivaAPagar || 0;
+                totalIRPF += currentMonthTaxes.irpfPago || 0;
+                includedMonths.add(cMonth % 3);
+            }
+        }
+
+        return {
+            totalIVA,
+            totalIRPF,
+            totalRevenue,
+            includedMonths
+        };
+    }, [quarterData, currentMonth, currentMonthTaxes, currentYear, quarterIndex]);
 
     const deadlines = useMemo(() => {
         const nextQuarterMonthIndex = (quarterIndex + 1) * 3;
@@ -123,7 +146,7 @@ const QuarterlyTaxModal: React.FC<QuarterlyTaxModalProps> = ({ isOpen, onClose, 
                                 </div>
                             </div>
                         </div>
-                        <button onClick={onClose} className="p-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl transition-colors">
+                        <button onClick={onClose} title="Cerrar modal" aria-label="Cerrar modal" className="p-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl transition-colors">
                             <X className="w-4 h-4 text-slate-400" strokeWidth={2} />
                         </button>
                     </div>

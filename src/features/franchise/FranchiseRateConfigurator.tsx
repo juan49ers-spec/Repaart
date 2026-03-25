@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { Save, AlertCircle, Info, RotateCw } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { LogisticsRate } from '../../types/franchise';
 import { LogisticsRatesEditor } from './components/LogisticsRatesEditor';
 import { notificationService } from '../../services/notificationService';
@@ -141,6 +142,8 @@ const FranchiseRateConfigurator: React.FC<FranchiseRateConfiguratorProps> = ({ f
             // Sync state
             setInitialRates(cleanRates);
             setMigratedFromLegacy(false);
+
+            toast.success('✅ Configuración guardada');
 
             if (onClose) {
                 onClose();

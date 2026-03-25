@@ -194,7 +194,7 @@ export const DashboardInvoiceTable: React.FC<Props> = ({ invoices, onRefresh }) 
     // Totals
     const totalAmount = invoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
     const totalPaid = invoices.reduce((sum, inv) => sum + (inv.totalPaid || 0), 0);
-    const totalPending = totalAmount - totalPaid;
+    const totalPending = invoices.reduce((sum, inv) => sum + (inv.remainingAmount ?? (inv.total - (inv.totalPaid || 0))), 0);
 
     if (invoices.length === 0) {
         return (
@@ -283,7 +283,7 @@ export const DashboardInvoiceTable: React.FC<Props> = ({ invoices, onRefresh }) 
                                                 </button>
                                             </>
                                         )}
-                                        {inv.status === 'ISSUED' && inv.paymentStatus !== 'PAID' && (
+                                        {(inv.status === 'ISSUED' || inv.status === 'RECTIFIED') && inv.paymentStatus !== 'PAID' && (
                                             <button onClick={() => handlePayment(inv)} className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded" title="Registrar pago">
                                                 <CreditCard className="w-3.5 h-3.5" />
                                             </button>

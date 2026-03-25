@@ -3,6 +3,7 @@ import { Modal, Button, Form, Input, DatePicker, Select, message, Card, Row, Col
 import { Edit, Trash2, Plus, Info } from 'lucide-react';
 import type { Invoice, InvoiceLine, TaxBreakdown, CustomerSnapshot } from '../../../types/invoicing';
 import { invoiceEngine } from '../../../services/billing';
+import { formatCurrency } from '../../../utils/formatters';
 import dayjs from 'dayjs';
 
 interface EditInvoiceModalProps {
@@ -28,6 +29,29 @@ export const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
 
   // Cargar clientes y líneas cuando se abre el modal
   useEffect(() => {
+    const loadCustomers = async () => {
+      setLoadingCustomers(true);
+      try {
+        const { collection, getDocs, query, where } = await import('firebase/firestore');
+        const { db } = await import('../../../lib/firebase');
+
+        const customersRef = collection(db, 'customers');
+        const q = query(customersRef, where('franchiseId', '==', franchiseId));
+        const querySnap = await getDocs(q);
+
+        const customersData = querySnap.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as CustomerSnapshot));
+
+        setCustomers(customersData);
+      } catch (error) {
+        console.error('[EditInvoiceModal] Error loading customers:', error);
+      } finally {
+        setLoadingCustomers(false);
+      }
+    };
+
     const loadData = async () => {
       if (isOpen && invoice) {
         // Cargar líneas de la factura
@@ -54,30 +78,7 @@ export const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
     };
 
     loadData();
-  }, [isOpen, invoice, form]);
-
-  const loadCustomers = async () => {
-    setLoadingCustomers(true);
-    try {
-      const { collection, getDocs, query, where } = await import('firebase/firestore');
-      const { db } = await import('../../../lib/firebase');
-
-      const customersRef = collection(db, 'customers');
-      const q = query(customersRef, where('franchiseId', '==', franchiseId));
-      const querySnap = await getDocs(q);
-
-      const customersData = querySnap.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as CustomerSnapshot));
-
-      setCustomers(customersData);
-    } catch (error) {
-      console.error('[EditInvoiceModal] Error loading customers:', error);
-    } finally {
-      setLoadingCustomers(false);
-    }
-  };
+  }, [isOpen, invoice, form, franchiseId]);
 
   const addLine = () => {
     const newLine: InvoiceLine = {
@@ -303,7 +304,7 @@ export const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
                   <Col span={4}>
                     <div className="text-right font-medium">
                       <div className="text-xs text-slate-400">Total</div>
-                      <div className="text-sm">€{(line.amount || 0).toFixed(2)}</div>
+                      <div className="text-sm">{formatCurrency(line.amount || 0)}</div>
                     </div>
                   </Col>
                   <Col span={3}>
@@ -326,15 +327,15 @@ export const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({
             <div className="text-right">
               <div className="flex justify-between gap-8 mb-1">
                 <span className="text-slate-500">Subtotal:</span>
-                <span className="font-medium">€{totals.subtotal.toFixed(2)}</span>
+                <span className="font-medium">{formatCurrency(totals.subtotal)}</span>
               </div>
               <div className="flex justify-between gap-8 mb-1">
                 <span className="text-slate-500">IVA:</span>
-                <span className="font-medium">€{totals.totalTax.toFixed(2)}</span>
+                <span className="font-medium">{formatCurrency(totals.totalTax)}</span>
               </div>
               <div className="flex justify-between gap-8 mt-2 pt-2 border-t border-slate-300">
                 <span className="text-lg font-bold">TOTAL:</span>
-                <span className="text-lg font-bold text-emerald-600">€{totals.total.toFixed(2)}</span>
+                <span className="text-lg font-bold text-emerald-600">{formatCurrency(totals.total)}</span>
               </div>
             </div>
           </div>

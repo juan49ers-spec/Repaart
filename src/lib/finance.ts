@@ -159,7 +159,7 @@ export const TARIFFS: TariffConfig = {
     }
 };
 
-export const DEFAULT_MONTH_DATA: MonthlyData = {
+export const getDefaultMonthData = (): MonthlyData => ({
     revenue: 0,
     orders: 0,
     ordersNew0To4: 0,
@@ -187,7 +187,10 @@ export const DEFAULT_MONTH_DATA: MonthlyData = {
     quota: 0,
     royaltyPercent: 5,
     irpfPercent: 20
-};
+});
+
+// Deprecated: use getDefaultMonthData instead
+export const DEFAULT_MONTH_DATA: MonthlyData = getDefaultMonthData();
 
 const THRESHOLDS = {
     MARGIN_WARNING: 15.0, // %

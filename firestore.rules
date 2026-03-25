@@ -498,11 +498,11 @@ service cloud.firestore {
 
     // Invoice history (audit trail) - totally immutable by clients
     match /invoices_history/{historyId} {
-      allow read: if isAuthed() && (
+      allow read, create: if isAuthed() && (
         isAdmin() ||
         isFranchise()
       );
-      allow create, update, delete: if false;
+      allow update, delete: if false;
     }
 
     // PAYMENT RECEIPTS - Inmutables una vez creados. Solo admin y franchise pueden generar cobros.
@@ -590,7 +590,7 @@ service cloud.firestore {
       // Update: admin o franchise dueña (solo drafts editables desde frontend)
       allow update: if isAuthed() && (
         isAdmin() || 
-        canManageFinances(resource.data.franchiseId)
+        (canManageFinances(resource.data.franchiseId) && resource.data.status != 'VOIDED')
       );
       
       // Delete: admin o franchise dueña (solo drafts borrables por la franquicia)

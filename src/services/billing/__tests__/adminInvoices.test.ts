@@ -44,12 +44,16 @@ describe('adminInvoicesService - New Features', () => {
       };
       
       vi.mocked(firestore.getDoc).mockResolvedValue(mockSnap as any);
-      vi.mocked(firestore.deleteDoc).mockResolvedValue(undefined);
+      vi.mocked(firestore.updateDoc).mockResolvedValue(undefined);
 
       const result = await adminInvoicesService.deleteDraftInvoice(mockInvoiceId, mockAdminUid);
 
       expect(result.success).toBe(true);
-      expect(firestore.deleteDoc).toHaveBeenCalled();
+      expect(firestore.updateDoc).toHaveBeenCalled();
+      expect(firestore.updateDoc).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ documentStatus: 'deleted' })
+      );
     });
 
     it('should return error if invoice is not draft', async () => {

@@ -105,10 +105,7 @@ export const accountsReceivable = {
                     throw new Error('INVALID_PAYMENT:Draft invoices cannot receive payments');
                 }
 
-                if (invoice.status === InvoiceStatus.RECTIFIED) {
-                    console.error('[accountsReceivable.addPayment] Cannot pay RECTIFIED invoice');
-                    throw new Error('INVALID_PAYMENT:Rectified invoices cannot receive payments');
-                }
+                // Allow RECTIFIED invoices to be paid/refunded as part of correcting the balance
 
                 // Check if payment amount exceeds remaining amount
                 if (amount > invoice.remainingAmount) {
@@ -117,6 +114,38 @@ export const accountsReceivable = {
                         remaining: invoice.remainingAmount
                     });
                     throw new Error(`PAYMENT_EXCEEDS_TOTAL:${invoice.total}:${amount}:${invoice.remainingAmount}`);
+                }
+
+                if (paymentMethod === 'WALLET_CREDIT') {
+                    const walletDocId = `${invoice.franchiseId}_${invoice.customerId}`;
+                    const walletRef = doc(db, 'customer_wallets', walletDocId);
+                    const walletSnap = await transaction.get(walletRef);
+                    
+                    if (!walletSnap.exists()) {
+                        throw new Error('INSUFFICIENT_CREDIT:Wallet_Not_Found');
+                    }
+                    
+                    const wallet = walletSnap.data();
+                    if (wallet.creditBalance < amount) {
+                        throw new Error(`INSUFFICIENT_CREDIT:Balance_${wallet.creditBalance}_Required_${amount}`);
+                    }
+                    
+                    const newBalance = wallet.creditBalance - amount;
+                    const movement = {
+                        type: 'DEBIT',
+                        amount,
+                        description: `Pago factura ${invoice.fullNumber || invoiceId}`,
+                        invoiceId,
+                        createdAt: new Date(),
+                        createdBy
+                    };
+                    
+                    transaction.update(walletRef, {
+                        creditBalance: newBalance,
+                        movements: [...(wallet.movements || []), movement],
+                        updatedAt: serverTimestamp()
+                    });
+                    console.log(`[accountsReceivable.addPayment] Deducted ${amount} from wallet ${walletDocId}. New Balance: ${newBalance}`);
                 }
 
                 // Create payment receipt
@@ -363,7 +392,6 @@ export const accountsReceivable = {
             const invoicesQuery = query(
                 collection(db, INVOICES_COLLECTION),
                 where('franchiseId', '==', franchiseId),
-                where('status', '==', InvoiceStatus.ISSUED),
                 orderBy('dueDate', 'desc')
             );
 
@@ -371,7 +399,7 @@ export const accountsReceivable = {
             const invoices = invoicesSnap.docs.map(docSnap => ({
                 id: docSnap.id,
                 ...docSnap.data()
-            } as Invoice));
+            } as Invoice)).filter(inv => inv.status === InvoiceStatus.ISSUED || inv.status === InvoiceStatus.RECTIFIED);
 
             // Filter invoices with remaining amount
             const unpaidInvoices = invoices.filter(
@@ -461,7 +489,6 @@ export const accountsReceivable = {
                 collection(db, INVOICES_COLLECTION),
                 where('franchiseId', '==', franchiseId),
                 where('customerId', '==', customerId),
-                where('status', '==', InvoiceStatus.ISSUED),
                 orderBy('dueDate', 'desc')
             );
 
@@ -469,7 +496,7 @@ export const accountsReceivable = {
             const invoices = invoicesSnap.docs.map(docSnap => ({
                 id: docSnap.id,
                 ...docSnap.data()
-            } as Invoice));
+            } as Invoice)).filter(inv => inv.status === InvoiceStatus.ISSUED || inv.status === InvoiceStatus.RECTIFIED);
 
             // Filter invoices with remaining amount
             const unpaidInvoices = invoices.filter(

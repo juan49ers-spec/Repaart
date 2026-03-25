@@ -23,6 +23,7 @@ import {
     where,
     getDocs,
     arrayUnion,
+    arrayRemove,
     increment
 } from 'firebase/firestore';
 import type {
@@ -153,6 +154,68 @@ export const taxVaultObserver = {
             return err({
                 type: 'UNKNOWN_ERROR',
                 message: error instanceof Error ? error.message : 'Failed to process invoice issuance',
+                cause: error
+            });
+        }
+    },
+
+    /**
+     * Handle invoice voiding event
+     * Subtracts invoice amounts from the corresponding tax vault entry
+     * 
+     * @param invoiceId - ID of the voided invoice
+     * @param franchiseId - Franchise ID
+     * @param issueDate - Issue date (to determine period)
+     * @param taxBreakdown - Tax breakdown to subtract
+     */
+    onInvoiceVoided: async (
+        invoiceId: string,
+        franchiseId: string,
+        issueDate: Date | { seconds: number; nanoseconds: number },
+        taxBreakdown: { taxAmount: number }[]
+    ): Promise<Result<void, BillingError>> => {
+        try {
+            const period = extractPeriod(issueDate);
+            const taxVaultId = generateTaxVaultId(franchiseId, period);
+            const taxVaultRef = doc(db, TAX_VAULT_COLLECTION, taxVaultId);
+
+            await runTransaction(db, async (transaction) => {
+                const taxVaultSnap = await transaction.get(taxVaultRef);
+
+                if (taxVaultSnap.exists()) {
+                    const taxVault = taxVaultSnap.data() as TaxVaultEntry;
+
+                    if (taxVault.isLocked) {
+                        throw new Error('TAX_VAULT_LOCKED');
+                    }
+
+                    const ivaToSubtract = taxBreakdown.reduce((sum, tax) => sum + tax.taxAmount, 0);
+
+                    transaction.update(taxVaultRef, {
+                        ivaRepercutido: increment(-ivaToSubtract),
+                        invoiceIds: arrayRemove(invoiceId),
+                        updatedAt: serverTimestamp(),
+                        updated_at: serverTimestamp()
+                    });
+                }
+            });
+
+            return ok(undefined);
+        } catch (error: unknown) {
+            const sError = new ServiceError('onInvoiceVoided', { cause: error });
+            console.error('Error processing invoice voiding:', sError);
+
+            if (error instanceof Error && error.message === 'TAX_VAULT_LOCKED') {
+                return err({
+                    type: 'TAX_VAULT_LOCKED',
+                    period: extractPeriod(issueDate),
+                    franchiseId
+                });
+            }
+
+            return err({
+                type: 'UNKNOWN_ERROR',
+                message: error instanceof Error ? error.message : 'Failed to process invoice voiding',
                 cause: error
             });
         }
@@ -306,7 +369,6 @@ export const monthlyCloseWizard = {
                 const invoicesQuery = query(
                     collection(db, INVOICES_COLLECTION),
                     where('franchiseId', '==', franchiseId),
-                    where('status', '==', InvoiceStatus.ISSUED),
                     where('issueDate', '>=', startDate),
                     where('issueDate', '<=', endDate)
                 );
@@ -314,7 +376,7 @@ export const monthlyCloseWizard = {
                 const invoices = invoicesSnap.docs.map(docSnap => ({
                     id: docSnap.id,
                     ...docSnap.data()
-                } as Invoice));
+                } as Invoice)).filter(inv => inv.status === InvoiceStatus.ISSUED || inv.status === InvoiceStatus.RECTIFIED);
 
                 // Fetch all expense records for the period
                 const expensesQuery = query(
@@ -563,13 +625,13 @@ export const monthlyCloseWizard = {
             const invoicesQuery = query(
                 collection(db, INVOICES_COLLECTION),
                 where('franchiseId', 'in', ids),
-                where('status', '==', InvoiceStatus.ISSUED),
                 where('issueDate', '>=', startDate),
                 where('issueDate', '<=', endDate)
             );
 
             const invoicesSnap = await getDocs(invoicesQuery);
-            const invoices = invoicesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Invoice));
+            const invoices = invoicesSnap.docs.map(snap => ({ id: snap.id, ...snap.data() } as Invoice))
+                .filter(inv => inv.status === InvoiceStatus.ISSUED || inv.status === InvoiceStatus.RECTIFIED);
 
             console.log(`[taxVault] Found ${invoices.length} issued invoices using IDs: ${ids.join(', ')}`);
 

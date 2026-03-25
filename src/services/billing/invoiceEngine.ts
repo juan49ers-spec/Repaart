@@ -48,6 +48,7 @@ import { InvoiceType, PaymentStatus, InvoiceStatus } from '../../types/invoicing
 import { Result, ok, err } from '../../types/result';
 import { ServiceError } from '../../utils/ServiceError';
 import { ordersHistoryService } from '../ordersHistoryService';
+import { taxVaultObserver } from './taxVault';
 
 const INVOICES_COLLECTION = 'invoices';
 const INVOICE_COUNTERS_COLLECTION = 'invoice_counters';
@@ -610,7 +611,7 @@ export const invoiceEngine = {
                     subtotal,
                     taxBreakdown,
                     total,
-                    remainingAmount: -total, // Negative, so this represents a credit
+                    remainingAmount: total, // Same polarity as total
                     totalPaid: 0,
                     issuedAt: serverTimestamp(),
                     rectifiedAt: serverTimestamp(),
@@ -621,7 +622,7 @@ export const invoiceEngine = {
                     // Firestore compatibility
                     original_invoice_id: invoiceId,
                     rectification_reason: reason,
-                    remaining_amount: -total,
+                    remaining_amount: total,
                     total_paid: 0,
                     issued_at: serverTimestamp(),
                     rectified_at: serverTimestamp(),
@@ -630,7 +631,9 @@ export const invoiceEngine = {
                     created_by: rectifiedBy
                 };
 
-                const rectifyingRef = await addDoc(collection(db, INVOICES_COLLECTION), rectifyingData);
+                // doc() sin segundo argumento genera un ID automático — válido dentro de transaction
+                const rectifyingRef = doc(collection(db, INVOICES_COLLECTION));
+                transaction.set(rectifyingRef, rectifyingData);
 
                 // Update original invoice
                 transaction.update(originalInvoiceRef, {
@@ -707,6 +710,143 @@ export const invoiceEngine = {
     },
 
     /**
+     * Void an ISSUED invoice
+     * Strictly limits voiding to UNPAID invoices in UNLOCKED periods.
+     * Decrements the Tax Vault immutably.
+     */
+    voidInvoice: async (
+        request: { invoiceId: string; reason: string; voidedBy: string; franchiseId?: string; issueDate?: Date }
+    ): Promise<Result<Invoice, BillingError>> => {
+        try {
+            const { invoiceId, reason, voidedBy } = request;
+            const invoiceRef = doc(db, INVOICES_COLLECTION, invoiceId);
+
+            let updatedInvoiceData: Invoice | null = null;
+            let taxBreakdownToRevert: TaxBreakdown[] = [];
+            let finalFranchiseId = request.franchiseId;
+            let finalIssueDate = request.issueDate;
+
+            await runTransaction(db, async (transaction) => {
+                const invoiceSnap = await transaction.get(invoiceRef);
+
+                if (!invoiceSnap.exists()) {
+                    throw new Error('INVOICE_NOT_FOUND');
+                }
+
+                const invoice = invoiceSnap.data() as Invoice;
+
+                if (invoice.status === InvoiceStatus.VOIDED) {
+                    throw new Error('INVOICE_ALREADY_VOIDED');
+                }
+
+                if (invoice.status !== InvoiceStatus.ISSUED) {
+                    throw new Error(`INVALID_VOID_STATUS:${invoice.status}`);
+                }
+
+                if ((invoice.totalPaid || 0) > 0) {
+                    throw new Error('CANNOT_VOID_PAID_INVOICE');
+                }
+
+                // Verify Tax Vault is not locked
+                const issueDateObj = invoice.issueDate instanceof Timestamp 
+                    ? invoice.issueDate.toDate() 
+                    : new Date((invoice.issueDate as unknown as {seconds?: number})?.seconds ? (invoice.issueDate as unknown as {seconds: number}).seconds * 1000 : (invoice.issueDate as unknown as string));
+                
+                const period = `${issueDateObj.getFullYear()}-${String(issueDateObj.getMonth() + 1).padStart(2, '0')}`;
+                
+                const taxVaultRef = doc(db, 'tax_vault', `${invoice.franchiseId}_${period}`);
+                const taxVaultSnap = await transaction.get(taxVaultRef);
+                
+                if (taxVaultSnap.exists() && taxVaultSnap.data()?.isLocked) {
+                     throw new Error('TAX_VAULT_LOCKED');
+                }
+
+                // Prepare updates for the invoice
+                const updates = {
+                    status: InvoiceStatus.VOIDED,
+                    voidReason: reason,
+                    voidedBy,
+                    voidedAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                    paymentStatus: PaymentStatus.VOIDED,
+                    remainingAmount: 0,
+                    
+                    // Firestore compatibility
+                    void_reason: reason,
+                    voided_by: voidedBy,
+                    voided_at: serverTimestamp(),
+                    updated_at: serverTimestamp(),
+                    payment_status: PaymentStatus.VOIDED
+                };
+
+                transaction.update(invoiceRef, updates);
+                
+                // Keep data for the Tax Vault decrement
+                taxBreakdownToRevert = invoice.taxBreakdown || [];
+                finalFranchiseId = invoice.franchiseId;
+                finalIssueDate = issueDateObj;
+                updatedInvoiceData = { ...invoice, ...updates } as unknown as Invoice;
+            });
+            
+            // Revert taxes in the tax vault
+            const result = await taxVaultObserver.onInvoiceVoided(
+               invoiceId, 
+               finalFranchiseId!, 
+               finalIssueDate!, 
+               taxBreakdownToRevert
+            );
+            
+            if (!result.success) {
+                 console.error('[invoiceEngine] WARNING: Invoice voided but TaxVault decrement failed.', result.error);
+            }
+
+            return ok(updatedInvoiceData!);
+        } catch (error: unknown) {
+            const sError = new ServiceError('voidInvoice', { cause: error });
+            console.error('Error voiding invoice:', sError);
+            const errObj = error as Error;
+
+            if (errObj.message === 'INVOICE_NOT_FOUND') {
+                return err({
+                    type: 'INVOICE_NOT_FOUND',
+                    invoiceId: request.invoiceId
+                });
+            }
+            if (errObj.message === 'INVOICE_ALREADY_VOIDED') {
+                return err({
+                    type: 'INVOICE_ALREADY_VOIDED',
+                    invoiceId: request.invoiceId
+                });
+            }
+            if (errObj.message.startsWith('INVALID_VOID_STATUS:')) {
+                return err({
+                    type: 'UNKNOWN_ERROR',
+                    message: `Cannot void invoice. Status is ${errObj.message.split(':')[1]}`
+                });
+            }
+            if (errObj.message === 'CANNOT_VOID_PAID_INVOICE') {
+                return err({
+                    type: 'UNKNOWN_ERROR',
+                    message: `Cannot void an invoice that has registered payments. Rectify it instead.`
+                });
+            }
+            if (errObj.message === 'TAX_VAULT_LOCKED') {
+                 return err({
+                    type: 'TAX_VAULT_LOCKED',
+                    period: '',
+                    franchiseId: request.franchiseId
+                });
+            }
+
+            return err({
+                type: 'UNKNOWN_ERROR',
+                message: errObj.message || 'Failed to void invoice',
+                cause: error
+            });
+        }
+    },
+
+    /**
      * Update a DRAFT invoice
      * Only DRAFT invoices can be edited
      */
@@ -770,7 +910,8 @@ export const invoiceEngine = {
      * Only DRAFT invoices can be deleted
      */
     deleteDraft: async (
-        invoiceId: string
+        invoiceId: string,
+        deletedBy: string = 'unknown' // Track exactly who deleted the draft
     ): Promise<Result<void, BillingError>> => {
         try {
             const invoiceRef = doc(db, INVOICES_COLLECTION, invoiceId);
@@ -793,14 +934,21 @@ export const invoiceEngine = {
                 });
             }
 
-            // Un borrador (DRAFT) no tiene recibos de pago ni entradas fiscales.
-            // Las reglas de Firestore además prohíben el borrado en esas colecciones por el cliente.
-            // Por lo tanto, simplemente eliminamos el documento de la factura.
+            // STRICT COMPLIANCE: Hard deletes (`deleteDoc`) are legally/architecturally unsafe in invoicing.
+            // We use Soft Deletes.
+            await updateDoc(invoiceRef, {
+                status: InvoiceStatus.DELETED,
+                deletedAt: serverTimestamp(),
+                deletedBy,
+                updatedAt: serverTimestamp(),
+                
+                // Firestore compatibility
+                deleted_at: serverTimestamp(),
+                deleted_by: deletedBy,
+                updated_at: serverTimestamp()
+            });
 
-            // 3. Finally delete the invoice
-            await deleteDoc(invoiceRef);
-
-            console.log(`[invoiceEngine] Invoice ${invoiceId} and all related data deleted successfully`);
+            console.log(`[invoiceEngine] Invoice ${invoiceId} and all related data soft-deleted successfully`);
 
             return ok(undefined);
         } catch (error: unknown) {
@@ -935,7 +1083,7 @@ export const invoiceEngine = {
             const invoices = querySnap.docs.map(docSnap => ({
                 id: docSnap.id,
                 ...(docSnap.data() as Record<string, unknown>)
-            } as Invoice));
+            } as Invoice)).filter(inv => inv.status !== InvoiceStatus.DELETED);
 
             return ok(invoices);
         } catch (error: unknown) {
@@ -999,7 +1147,7 @@ export const invoiceEngine = {
             const invoices = querySnap.docs.map(docSnap => ({
                 id: docSnap.id,
                 ...(docSnap.data() as Record<string, unknown>)
-            } as Invoice));
+            } as Invoice)).filter(inv => inv.status !== InvoiceStatus.DELETED);
 
             return ok(invoices);
         } catch (error: unknown) {
@@ -1031,12 +1179,15 @@ export const invoiceEngine = {
             const invoices = result.data;
             let totalInvoiced = 0;
             let totalPaid = 0;
+            let totalPending = 0;
             let lastInvoiceDate: Date | undefined;
 
             for (const invoice of invoices) {
-                if (invoice.status !== InvoiceStatus.RECTIFIED) {
+                if (invoice.status === InvoiceStatus.ISSUED || invoice.status === InvoiceStatus.RECTIFIED) {
                     totalInvoiced += invoice.total;
                     totalPaid += invoice.totalPaid || 0;
+                    totalPending += invoice.remainingAmount ?? (invoice.total - (invoice.totalPaid || 0));
+                    
                     const issueDate = invoice.issueDate instanceof Timestamp
                         ? invoice.issueDate.toDate()
                         : new Date(invoice.issueDate as Date);
@@ -1049,7 +1200,7 @@ export const invoiceEngine = {
             return ok({
                 totalInvoiced,
                 totalPaid,
-                totalPending: totalInvoiced - totalPaid,
+                totalPending,
                 invoiceCount: invoices.length,
                 lastInvoiceDate
             });

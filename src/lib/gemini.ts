@@ -39,7 +39,7 @@ LO QUE HACES:
 Si no sabes la respuesta, dilo honestamente y sugiere escribir a soporte@repaart.es.
 `;
 
-const CHAT_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"];
+const CHAT_MODELS = ["gemini-2.0-flash", "gemini-2.5-flash"];
 
 export const initGeminiChat = async (): Promise<boolean> => {
     if (!API_KEY) {
@@ -571,7 +571,7 @@ SALIDA JSON ESTRICTA (sin markdown):
 }
 `;
 
-  const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+  const models = ['gemini-2.0-flash', 'gemini-2.5-flash'];
   for (const model of models) {
     try {
       const res = await fetch(
@@ -634,7 +634,7 @@ export const sendRiderMessage = async (
     { role: 'user', parts: [{ text: message }] },
   ];
 
-  const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+  const models = ['gemini-2.0-flash', 'gemini-2.5-flash'];
   for (const model of models) {
     try {
       const res = await fetch(
@@ -699,7 +699,7 @@ REGLAS:
 
 Responde SOLO con el texto del mensaje, sin JSON ni formato.`;
 
-  const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+  const models = ['gemini-2.0-flash', 'gemini-2.5-flash'];
   for (const model of models) {
     try {
       const res = await fetch(
@@ -744,7 +744,7 @@ Diferencia: +${pctAbove}%
 Responde SOLO con el JSON:
 {"message": "Una frase informativa corta (ej: Este gasto en combustible es un 35% más alto que tu media.)"}`;
 
-  const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+  const models = ['gemini-2.0-flash', 'gemini-2.5-flash'];
   for (const model of models) {
     try {
       const res = await fetch(
